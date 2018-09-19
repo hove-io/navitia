@@ -30,6 +30,7 @@ from __future__ import absolute_import
 from . import helper_future
 from jormungandr import new_relic
 
+
 class PlaceByUri:
     def __init__(self, future_manager, instance, uri):
         self._future_manager = future_manager

@@ -63,7 +63,9 @@ class PlacesFreeAccess:
 
         if place.embedded_type == type_pb2.STOP_AREA:
             custom_event = new_relic.DistributedEvent(self._instance.georef, "get_stop_points", "places")
-            stop_points = custom_event.time_function(self._instance.georef.get_stop_points_for_stop_area, place.uri)
+            stop_points = custom_event.time_function(
+                self._instance.georef.get_stop_points_for_stop_area, place.uri
+            )
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
             stop_points = [sp for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points]
         elif place.embedded_type == type_pb2.STOP_POINT:

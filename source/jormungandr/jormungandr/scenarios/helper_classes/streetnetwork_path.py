@@ -86,7 +86,12 @@ class StreetNetworkPath:
         custom_event = new_relic.DistributedEvent(self._instance, "direct_path", "street_network")
         dp = custom_event.time_function(
             self._instance.direct_path_with_fp,
-                self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
+            self._mode,
+            self._orig_obj,
+            self._dest_obj,
+            self._fallback_extremity,
+            self._request,
+            self._path_type,
         )
 
         if getattr(dp, "journeys", None):

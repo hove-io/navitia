@@ -97,12 +97,12 @@ class PtJourney:
         custom_event = new_relic.DistributedEvent(self._instance.planner, "journeys", "journeys")
         resp = custom_event.time_function(
             self._instance.planner.journeys,
-                orig_fallback_durations,
-                dest_fallback_durations,
-                self._periode_extremity.datetime,
-                self._periode_extremity.represents_start,
-                self._journey_params,
-                self._bike_in_pt,
+            orig_fallback_durations,
+            dest_fallback_durations,
+            self._periode_extremity.datetime,
+            self._periode_extremity.represents_start,
+            self._journey_params,
+            self._bike_in_pt,
         )
 
         for j in resp.journeys:

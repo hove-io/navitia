@@ -76,11 +76,11 @@ class ProximitiesByCrowfly:
             custom_event = new_relic.DistributedEvent(self._instance.georef, "direct_path", "street_network")
             crow_fly = custom_event.time_function(
                 self._instance.georef.get_crow_fly,
-                    utils.get_uri_pt_object(self._requested_place_obj),
-                    self._mode,
-                    self._max_duration,
-                    self._max_nb_crowfly,
-                    **self._speed_switcher
+                utils.get_uri_pt_object(self._requested_place_obj),
+                self._mode,
+                self._max_duration,
+                self._max_nb_crowfly,
+                **self._speed_switcher
             )
 
             logger.debug(

@@ -159,7 +159,12 @@ class FallbackDurations:
 
         sn_routing_matrix = custom_event.time_function(
             self._instance.get_street_network_routing_matrix,
-                origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
+            origins,
+            destinations,
+            self._mode,
+            self._max_duration_to_pt,
+            self._request,
+            **self._speed_switcher
         )
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
