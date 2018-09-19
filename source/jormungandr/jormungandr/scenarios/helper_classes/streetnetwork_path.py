@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from . import helper_future
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -83,9 +83,22 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        dp = self._instance.direct_path_with_fp(
-            self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
-        )
+        event_params = {
+            "connector_name" : type(self._instance).__name__,
+            "call" : "street_network_path",
+            "status" : "ok",
+        }
+
+        try:
+            dp = self._instance.direct_path_with_fp(
+                self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
+            )
+        except Exception as e:
+            event_params["status"] = "failed"
+            event_params.update({"exception" : e})
+
+        new_relic.record_custom_event("street_network", event_params)
+
         if getattr(dp, "journeys", None):
             if self._mode == "ridesharing":
                 switch_back_to_ridesharing(dp, True)

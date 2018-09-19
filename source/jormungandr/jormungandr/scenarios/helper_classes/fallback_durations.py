@@ -34,6 +34,7 @@ from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from jormungandr import new_relic
 import logging
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
@@ -152,9 +153,23 @@ class FallbackDurations:
         else:
             origins = places_isochrone
             destinations = [center_isochrone]
-        sn_routing_matrix = self._instance.get_street_network_routing_matrix(
-            origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
-        )
+
+        streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
+        event_params = {
+            "connector_name" : type(streetnetwork_service).__name__,
+            "call" : "street_network_routing_matrix",
+            "status" : "ok",
+        }
+
+        try:
+            sn_routing_matrix = self._instance.get_street_network_routing_matrix(
+                origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
+            )
+        except Exception as e:
+            event_params["status"] = "failed"
+            event_params.update({"exception" : e})
+
+        new_relic.record_custom_event("street_network", event_params)
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
