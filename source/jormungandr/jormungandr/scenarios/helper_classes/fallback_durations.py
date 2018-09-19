@@ -175,6 +175,7 @@ class FallbackDurations:
             result[center_isochrone.uri] = DurationElement(0, response_pb2.reached)
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+
         return result
 
     def _async_request(self):

@@ -78,7 +78,7 @@ def record_custom_event(event_type, params):
         except RuntimeError:
             pass  # we are outside of a flask context :(
         try:
-            agent.record_custom_event(event_type, params)
+            agent.record_custom_event(event_type, params, agent.application())
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while reporting to newrelic')
