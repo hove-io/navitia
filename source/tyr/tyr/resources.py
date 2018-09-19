@@ -58,6 +58,7 @@ from tyr.validations import datetime_format
 from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
+from werkzeug.exceptions import BadRequest
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -1634,3 +1635,69 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
             return_status = 404
 
         return {'action': return_msg}, return_status
+
+
+class BssProvider(flask_restful.Resource):
+    @marshal_with(bss_provider_list_fields)
+    def get(self, id=None):
+        if id:
+            try:
+                return {'bss_providers': [models.BssProvider.find_by_id(id)]}
+            except sqlalchemy.orm.exc.NoResultFound:
+                return {'bss_providers': []}, 404
+        else:
+            return {'bss_providers': models.BssProvider.all()}
+
+    def post(self, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+            # TODO validate input
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        provider = models.BssProvider(id, input_json)
+        try:
+            models.db.session.add(provider)
+            models.db.session.commit()
+        except sqlalchemy.exc.IntegrityError as ex:
+            abort(400, status="error", message=str(ex))
+        return marshal(provider, bss_provider_fields), 201
+
+    def put(self, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+            # TODO validate input
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        try:
+            provider = models.BssProvider.find_by_id(id)
+            status = 200
+        except sqlalchemy.orm.exc.NoResultFound:
+            provider = models.BssProvider(id)
+            models.db.session.add(provider)
+            status = 201
+
+        provider.from_json(input_json)
+        try:
+            models.db.session.commit()
+        except sqlalchemy.exc.IntegrityError as ex:
+            abort(400, status="error", message=str(ex))
+        return marshal(provider, bss_provider_fields), status
+
+    def delete(self, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+        try:
+            provider = models.BssProvider.find_by_id(id)
+            provider.discarded = True
+            models.db.session.commit()
+            return None, 204
+        except sqlalchemy.orm.exc.NoResultFound:
+            abort(404, status="error", message='object not found')

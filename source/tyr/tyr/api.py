@@ -78,6 +78,8 @@ api.add_resource(
     resources.DeleteDataset, '/v0/instances/<string:instance_name>/actions/delete_dataset/<string:type>'
 )
 
+api.add_resource(resources.BssProvider, '/v0/bss_providers', '/v0/bss_providers/<string:id>')
+
 
 @app.errorhandler(Exception)
 def error_handler(exception):

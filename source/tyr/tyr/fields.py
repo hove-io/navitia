@@ -213,3 +213,16 @@ autocomplete_parameter_fields = {
 }
 
 error_fields = {'error': fields.Nested({'message': fields.String})}
+
+
+bss_provider_fields = {
+    'id': fields.Raw,
+    'network': fields.Raw,
+    'klass': fields.Raw,
+    'args': fields.Raw,
+    'timeout': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'discarded': fields.Raw,
+}
+bss_provider_list_fields = {'bss_providers': fields.List(fields.Nested(bss_provider_fields))}
