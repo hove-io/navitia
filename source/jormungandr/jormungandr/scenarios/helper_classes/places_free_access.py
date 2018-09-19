@@ -29,7 +29,7 @@
 from __future__ import absolute_import
 from . import helper_future
 from navitiacommon import type_pb2
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
 
@@ -62,7 +62,8 @@ class PlacesFreeAccess:
         place = self._requested_place_obj
 
         if place.embedded_type == type_pb2.STOP_AREA:
-            stop_points = self._instance.georef.get_stop_points_for_stop_area(place.uri)
+            custom_event = new_relic.DistributedEvent(self._instance, "get_stop_points", "places")
+            stop_points = custom_event.time_function(self._instance.georef.get_stop_points_for_stop_area, place.uri)
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
             stop_points = [sp for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points]
         elif place.embedded_type == type_pb2.STOP_POINT:
@@ -74,7 +75,8 @@ class PlacesFreeAccess:
         odt = set()
 
         if coord:
-            odt_sps = self._instance.georef.get_odt_stop_points(coord)
+            custom_event = new_relic.DistributedEvent(self._instance, "get_odt_stop_points", "places")
+            odt_sps = custom_event.time_function(self._instance.georef.get_odt_stop_points, coord)
             [odt.add(stop_point.uri) for stop_point in odt_sps]
 
         logger.debug("finish places with free access from %s", self._requested_place_obj.uri)

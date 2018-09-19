@@ -83,21 +83,11 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        event_params = {
-            "connector_name" : type(self._instance).__name__,
-            "call" : "street_network_path",
-            "status" : "ok",
-        }
-
-        try:
-            dp = self._instance.direct_path_with_fp(
+        custom_event = new_relic.DistributedEvent(self._instance, "direct_path", "street_network")
+        dp = custom_event.time_function(
+            self._instance.direct_path_with_fp,
                 self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
-            )
-        except Exception as e:
-            event_params["status"] = "failed"
-            event_params.update({"exception" : e})
-
-        new_relic.record_custom_event("street_network", event_params)
+        )
 
         if getattr(dp, "journeys", None):
             if self._mode == "ridesharing":

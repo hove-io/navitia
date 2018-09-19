@@ -155,21 +155,12 @@ class FallbackDurations:
             destinations = [center_isochrone]
 
         streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
-        event_params = {
-            "connector_name" : type(streetnetwork_service).__name__,
-            "call" : "street_network_routing_matrix",
-            "status" : "ok",
-        }
+        custom_event = new_relic.DistributedEvent(streetnetwork_service, "routing_matrix", "street_network")
 
-        try:
-            sn_routing_matrix = self._instance.get_street_network_routing_matrix(
+        sn_routing_matrix = custom_event.time_function(
+            self._instance.get_street_network_routing_matrix,
                 origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
-            )
-        except Exception as e:
-            event_params["status"] = "failed"
-            event_params.update({"exception" : e})
-
-        new_relic.record_custom_event("street_network", event_params)
+        )
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)

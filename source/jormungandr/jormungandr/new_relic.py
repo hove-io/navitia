@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import flask
 import os
+import timeit
 
 try:
     from newrelic import agent
@@ -38,7 +39,6 @@ except ImportError:
     logger = logging.getLogger(__name__)
     logger.exception('failure while importing newrelic')
     agent = None
-
 
 def init(config):
     if not agent or not config:
@@ -94,3 +94,34 @@ def ignore():
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while ignoring transaction')
+
+
+class DistributedEvent:
+    """
+    Custom event that we publish to New Relic for distributed scenario
+    """
+    def __init__(self, service, call_name, group_name):
+        self.event_params = {
+            "service" : type(service).__name__,
+            "call" : call_name,
+            "group" : group_name,
+            "status" : "ok",
+        }
+
+
+    def time_function(self, function, *args, **kwargs):
+        start_time = timeit.default_timer()
+        result = None
+        try:
+            result = function(*args, **kwargs)
+        except Exception as e:
+            self.event_params["status"] = "failed"
+            self.event_params.update({"exception" : e})
+
+        duration = timeit.default_timer() - start_time
+        self.event_params.update({"duration" : duration})
+
+        # Send the custom event to newrelic !
+        record_custom_event("distributed", self.event_params)
+        return result
+
