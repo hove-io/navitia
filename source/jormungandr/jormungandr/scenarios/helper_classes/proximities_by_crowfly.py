@@ -73,7 +73,7 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            custom_event = new_relic.DistributedEvent(self._instance, "direct_path", "street_network")
+            custom_event = new_relic.DistributedEvent(self._instance.georef, "direct_path", "street_network")
             crow_fly = custom_event.time_function(
                 self._instance.georef.get_crow_fly,
                     utils.get_uri_pt_object(self._requested_place_obj),

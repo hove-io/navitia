@@ -94,7 +94,7 @@ class PtJourney:
         ):
             return None
 
-        custom_event = new_relic.DistributedEvent(self._instance, "journeys", "journeys")
+        custom_event = new_relic.DistributedEvent(self._instance.planner, "journeys", "journeys")
         resp = custom_event.time_function(
             self._instance.planner.journeys,
                 orig_fallback_durations,

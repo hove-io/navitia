@@ -39,7 +39,7 @@ class PlaceByUri:
         self._async_request()
 
     def _do_request(self):
-        custom_event = new_relic.DistributedEvent(self._instance, "place_by_uri", "places")
+        custom_event = new_relic.DistributedEvent(self._instance.georef, "place_by_uri", "places")
         return custom_event.time_function(self._instance.georef.place, self._uri)
 
     def _async_request(self):
