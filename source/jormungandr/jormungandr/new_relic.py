@@ -97,31 +97,37 @@ def ignore():
             logger.exception('failure while ignoring transaction')
 
 
-class DistributedEvent:
+def distributedEvent(call_name, group_name):
     """
     Custom event that we publish to New Relic for distributed scenario
     """
 
-    def __init__(self, service, call_name, group_name):
-        self.event_params = {
-            "service": type(service).__name__,
-            "call": call_name,
-            "group": group_name,
-            "status": "ok",
-        }
+    def wrap(func):
+        def wrapper(obj, service, *args, **kwargs):
+            event_params = {
+                "service": type(service).__name__,
+                "call": call_name,
+                "group": group_name,
+                "status": "ok",
+            }
 
-    def time_function(self, function, *args, **kwargs):
-        start_time = timeit.default_timer()
-        result = None
-        try:
-            result = function(*args, **kwargs)
-        except Exception as e:
-            self.event_params["status"] = "failed"
-            self.event_params.update({"exception": e})
+            start_time = timeit.default_timer()
+            result = None
+            try:
+                result = func(obj, *args, **kwargs)
+            except Exception as e:
+                event_params["status"] = "failed"
+                event_params.update({"exception": e})
+                raise
 
-        duration = timeit.default_timer() - start_time
-        self.event_params.update({"duration": duration})
+            duration = timeit.default_timer() - start_time
+            event_params.update({"duration": duration})
 
-        # Send the custom event to newrelic !
-        record_custom_event("distributed", self.event_params)
-        return result
+            # Send the custom event to newrelic !
+            record_custom_event("distributed", event_params)
+
+            return result
+
+        return wrapper
+
+    return wrap

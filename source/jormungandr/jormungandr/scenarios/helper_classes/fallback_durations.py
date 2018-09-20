@@ -101,6 +101,12 @@ class FallbackDurations:
         }
         return map_response[resp.routing_status]
 
+    @new_relic.distributedEvent("routing_matrix", "street_network")
+    def _get_street_network_routing_matrix(self, origins, destinations):
+        return self._instance.get_street_network_routing_matrix(
+            origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
@@ -155,17 +161,7 @@ class FallbackDurations:
             destinations = [center_isochrone]
 
         streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
-        custom_event = new_relic.DistributedEvent(streetnetwork_service, "routing_matrix", "street_network")
-
-        sn_routing_matrix = custom_event.time_function(
-            self._instance.get_street_network_routing_matrix,
-            origins,
-            destinations,
-            self._mode,
-            self._max_duration_to_pt,
-            self._request,
-            **self._speed_switcher
-        )
+        sn_routing_matrix = self._get_street_network_routing_matrix(streetnetwork_service, origins, destinations)
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)

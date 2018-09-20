@@ -39,9 +39,12 @@ class PlaceByUri:
         self._value = None
         self._async_request()
 
+    @new_relic.distributedEvent("place_by_uri", "places")
+    def _place(self):
+        return self._instance.georef.place(self._uri)
+
     def _do_request(self):
-        custom_event = new_relic.DistributedEvent(self._instance.georef, "place_by_uri", "places")
-        return custom_event.time_function(self._instance.georef.place, self._uri)
+        return self._place(self._instance.georef)
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

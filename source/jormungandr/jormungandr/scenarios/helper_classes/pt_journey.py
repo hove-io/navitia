@@ -71,6 +71,17 @@ class PtJourney:
 
         self._async_request()
 
+    @new_relic.distributedEvent("journeys", "journeys")
+    def _journeys(self, orig_fallback_durations, dest_fallback_durations):
+        return self._instance.planner.journeys(
+            orig_fallback_durations,
+            dest_fallback_durations,
+            self._periode_extremity.datetime,
+            self._periode_extremity.represents_start,
+            self._journey_params,
+            self._bike_in_pt,
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
@@ -94,16 +105,7 @@ class PtJourney:
         ):
             return None
 
-        custom_event = new_relic.DistributedEvent(self._instance.planner, "journeys", "journeys")
-        resp = custom_event.time_function(
-            self._instance.planner.journeys,
-            orig_fallback_durations,
-            dest_fallback_durations,
-            self._periode_extremity.datetime,
-            self._periode_extremity.represents_start,
-            self._journey_params,
-            self._bike_in_pt,
-        )
+        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())

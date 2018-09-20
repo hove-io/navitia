@@ -73,6 +73,12 @@ class StreetNetworkPath:
 
         self._async_request()
 
+    @new_relic.distributedEvent("direct_path", "street_network")
+    def _direct_path_with_fp(self):
+        return self._instance.direct_path_with_fp(
+            self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug(
@@ -83,16 +89,7 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        custom_event = new_relic.DistributedEvent(self._instance, "direct_path", "street_network")
-        dp = custom_event.time_function(
-            self._instance.direct_path_with_fp,
-            self._mode,
-            self._orig_obj,
-            self._dest_obj,
-            self._fallback_extremity,
-            self._request,
-            self._path_type,
-        )
+        dp = self._direct_path_with_fp(self._instance)
 
         if getattr(dp, "journeys", None):
             if self._mode == "ridesharing":
