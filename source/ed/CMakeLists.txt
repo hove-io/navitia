@@ -52,7 +52,7 @@ add_executable(synonym2ed synonym2ed.cpp)
 target_link_libraries(synonym2ed transportation_data_import connectors)
 
 set(ED_TARGETS_TO_INSTALL gtfs2ed osm2ed ed2nav fusio2ed fare2ed geopal2ed poi2ed synonym2ed)
-install(TARGETS ${ED_TARGETS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(TARGETS ${ED_TARGETS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 add_custom_target(ed_executables DEPENDS ${ED_TARGETS_TO_INSTALL})
 

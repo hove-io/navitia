@@ -24,7 +24,7 @@ project(Kraken)
 
 # List of directories to search for CMake modules
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
-set(CMAKE_INSTALL_PREFIX "/usr/bin/")
+set(CMAKE_INSTALL_PREFIX "/usr")
 
 # project version,
 # get git revision as the version number
