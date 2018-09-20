@@ -1664,6 +1664,7 @@ class Cities(flask_restful.Resource):
             osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), osm_file.filename))
             osm_file.save(osm_file_path)
 
-            cities(osm_file_path)
+             if cities.delay(osm_file_path) != 0:
+                return {'message': 'cities failed!'}, 400
 
             return {'message': 'OK'}, 200

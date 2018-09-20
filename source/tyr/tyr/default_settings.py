@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 from celery import schedules
+import os
 
 # URL for the brokker, by default it's the local rabbitmq
 # For amqp (rabbitMQ) the syntax is:
@@ -19,10 +20,10 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
 # URI for cities database
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 # http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-CITIES_DATABASE_URI = 'postgresql://navitia:navitia@localhost/cities'
+CITIES_DATABASE_URI = os.getenv('TYR_CITIES_DATABASE_URI', 'postgresql://navitia:navitia@localhost/cities')
 
 # Path where the cities osm file will be saved
-CITIES_OSM_FILE_PATH = '.'
+CITIES_OSM_FILE_PATH = os.getenv('TYR_CITIES_OSM_FILE_PATH', '.')
 
 # Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = '.'
