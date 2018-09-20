@@ -168,7 +168,7 @@ class Scenario(simple.Scenario):
         return req
 
     def call_kraken(self, req, instance, tag=None):
-        record_custom_parameter('scenario', "simple")
+        record_custom_parameter('scenario', 'default')
         resp = None
 
         """

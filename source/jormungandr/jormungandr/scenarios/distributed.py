@@ -193,7 +193,7 @@ class Scenario(new_default.Scenario):
         return res
 
     def call_kraken(self, request_type, request, instance, krakens_call):
-        record_custom_parameter('scenario', "distributed")
+        record_custom_parameter('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         logger.warning("using experimental scenario!!")
         """
