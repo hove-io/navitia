@@ -1,5 +1,5 @@
-INSTALL_PROGRAMS(/usr/share/navitia/ed/scripts FILES update_db.sh)
-INSTALL_PROGRAMS(/usr/share/navitiacommon/scripts FILES init_db.sh)
+install(FILES update_db.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/navitia/ed/scripts)
+install(FILES init_db.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/navitiacommon/scripts)
 
-INSTALL_PROGRAMS(/usr/share/jormungandr/scripts FILES createinstance.sh)
+install(FILES createinstance.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/jormungandr/scripts)
 
