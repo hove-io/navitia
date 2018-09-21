@@ -40,6 +40,14 @@ class FieldDate(fields.Raw):
             return 'null'
 
 
+class FieldTimedelta(fields.Raw):
+    def format(self, value):
+        if value:
+            return value.total_seconds()
+        else:
+            return 'null'
+
+
 class HasShape(fields.Raw):
     def output(self, key, obj):
         return obj.has_shape()
@@ -220,7 +228,7 @@ bss_provider_fields = {
     'network': fields.Raw,
     'klass': fields.Raw,
     'args': fields.Raw,
-    'timeout': fields.Raw,
+    'timeout': FieldTimedelta,
     'created_at': FieldDate,
     'updated_at': FieldDate,
     'discarded': fields.Raw,

@@ -21,7 +21,7 @@ def upgrade():
         sa.Column('id', sa.Text(), nullable=False),
         sa.Column('network', sa.Text(), nullable=False),
         sa.Column('klass', sa.Text(), nullable=False),
-        sa.Column('timeout', sa.Float(), nullable=False),
+        sa.Column('timeout', sa.Interval(), nullable=False),
         sa.Column('discarded', sa.Boolean(), nullable=False),
         sa.Column('args', postgresql.JSONB(), server_default='{}', nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),

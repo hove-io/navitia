@@ -32,13 +32,14 @@
 from __future__ import absolute_import
 from sqlalchemy.dialects.postgresql.json import JSONB
 from navitiacommon.models import db, TimestampMixin
+from datetime import timedelta
 
 
 class BssProvider(db.Model, TimestampMixin):
     id = db.Column(db.Text, primary_key=True)
     network = db.Column(db.Text, unique=False, nullable=False)
     klass = db.Column(db.Text, unique=False, nullable=False)
-    timeout = db.Column(db.Float, nullable=False, default=2)
+    timeout = db.Column(db.Interval, nullable=False, default=timedelta(seconds=2))
     discarded = db.Column(db.Boolean, nullable=False, default=False)
     args = db.Column(JSONB, server_default='{}')
 
@@ -51,7 +52,7 @@ class BssProvider(db.Model, TimestampMixin):
         self.network = json['network']
         self.klass = json['klass']
         self.args = json['args']
-        self.timeout = json['timeout'] if 'timeout' in json else self.timeout
+        self.timeout = timedelta(seconds=json['timeout']) if 'timeout' in json else self.timeout
         self.discarded = json['discarded'] if 'discarded' in json else self.discarded
 
     def __repr__(self):
@@ -73,7 +74,11 @@ class BssProvider(db.Model, TimestampMixin):
         return self.updated_at if self.updated_at else self.created_at
 
     def full_args(self):
-        args = {'network': self.network, 'timeout': self.timeout}
+        """
+        generate args form jormungandr implementation of a providers
+        """
+        timeout = self.timeout.total_seconds() if self.timeout else 2
+        args = {'network': self.network, 'timeout': timeout}
         if self.args:
             args.update(self.args)
         return args
