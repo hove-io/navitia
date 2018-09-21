@@ -32,6 +32,7 @@ import logging
 import flask
 import os
 import timeit
+import functools
 
 try:
     from newrelic import agent
@@ -103,6 +104,7 @@ def distributedEvent(call_name, group_name):
     """
 
     def wrap(func):
+        @functools.wraps(func)
         def wrapper(obj, service, *args, **kwargs):
             event_params = {
                 "service": type(service).__name__,
