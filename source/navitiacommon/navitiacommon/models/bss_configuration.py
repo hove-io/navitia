@@ -68,3 +68,12 @@ class BssProvider(db.Model, TimestampMixin):
     @classmethod
     def find_by_id(cls, id):
         return cls.query.filter_by(id=id).one()
+
+    def last_update(self):
+        return self.updated_at if self.updated_at else self.created_at
+
+    def full_args(self):
+        args = {'network': self.network, 'timeout': self.timeout}
+        if self.args:
+            args.update(self.args)
+        return args

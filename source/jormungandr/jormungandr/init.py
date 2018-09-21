@@ -63,3 +63,14 @@ def patch_http():
 
     monkey.patch_ssl()
     monkey.patch_socket()
+
+
+def bss_providers(app):
+    from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
+
+    if app.config['DISABLE_DATABASE']:
+        return BssProviderManager(app.config['BSS_PROVIDER'])
+    else:
+        from navitiacommon import models
+
+        return BssProviderManager(app.config['BSS_PROVIDER'], models.BssProvider.all)
