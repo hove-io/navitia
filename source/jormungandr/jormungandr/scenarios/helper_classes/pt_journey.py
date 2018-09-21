@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from . import helper_future
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2
 from collections import namedtuple
@@ -71,6 +71,17 @@ class PtJourney:
 
         self._async_request()
 
+    @new_relic.distributedEvent("journeys", "journeys")
+    def _journeys(self, orig_fallback_durations, dest_fallback_durations):
+        return self._instance.planner.journeys(
+            orig_fallback_durations,
+            dest_fallback_durations,
+            self._periode_extremity.datetime,
+            self._periode_extremity.represents_start,
+            self._journey_params,
+            self._bike_in_pt,
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
@@ -93,14 +104,9 @@ class PtJourney:
             or not self._request.get('max_duration', 0)
         ):
             return None
-        resp = self._instance.planner.journeys(
-            orig_fallback_durations,
-            dest_fallback_durations,
-            self._periode_extremity.datetime,
-            self._periode_extremity.represents_start,
-            self._journey_params,
-            self._bike_in_pt,
-        )
+
+        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
+
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
 

@@ -30,7 +30,7 @@ from __future__ import absolute_import
 from . import helper_future
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from .helper_utils import get_max_fallback_duration
-from jormungandr import utils
+from jormungandr import utils, new_relic
 import logging
 
 
@@ -56,6 +56,16 @@ class ProximitiesByCrowfly:
         self._value = None
         self._async_request()
 
+    @new_relic.distributedEvent("direct_path", "street_network")
+    def _get_crow_fly(self):
+        return self._instance.georef.get_crow_fly(
+            utils.get_uri_pt_object(self._requested_place_obj),
+            self._mode,
+            self._max_duration,
+            self._max_nb_crowfly,
+            **self._speed_switcher
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug(
@@ -73,13 +83,7 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._instance.georef.get_crow_fly(
-                utils.get_uri_pt_object(self._requested_place_obj),
-                self._mode,
-                self._max_duration,
-                self._max_nb_crowfly,
-                **self._speed_switcher
-            )
+            crow_fly = self._get_crow_fly(self._instance.georef)
 
             logger.debug(
                 "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode

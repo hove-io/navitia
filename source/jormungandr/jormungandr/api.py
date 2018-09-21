@@ -41,6 +41,7 @@ import ujson
 import logging
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+from jormungandr._version import __version__
 import six
 
 
@@ -92,6 +93,7 @@ def add_info_newrelic(response, *args, **kwargs):
         if user:
             record_custom_parameter('user_id', str(user.id))
         record_custom_parameter('token_name', app_name)
+        record_custom_parameter('version', __version__)
         coverages = get_used_coverages()
         if coverages:
             record_custom_parameter('coverage', coverages[0])
