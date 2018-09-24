@@ -36,7 +36,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.interfaces.parsers import float_gt_0, UnsignedInteger
+from jormungandr.interfaces.parsers import float_gt_0
 from flask_restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
@@ -52,6 +52,7 @@ from navitiacommon.parser_args_type import (
     BooleanType,
     OptionValue,
     DescribedOptionValue,
+    UnsignedInteger,
 )
 
 
