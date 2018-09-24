@@ -890,6 +890,11 @@ class Scenario(simple.Scenario):
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
 
+        #Initialize les variables for the scenario distibuted
+        #request.get('_override_scenario') == 'distributed':
+        #if getattr(g.scenario, '__module__', None) == 'jormungandr.scenarios.distributed':
+        g.already_done = False
+
         # min_nb_journeys option
         if request['min_nb_journeys']:
             min_nb_journeys = request['min_nb_journeys']
