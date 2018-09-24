@@ -36,6 +36,7 @@ from .check_utils import (
     get_used_vj,
     get_all_element_disruptions,
 )
+import pytest
 
 
 # Looking for (identifiable) objects impacted by 'disruptions' inputed
@@ -56,7 +57,7 @@ def impacted_ids(disruptions):
         return id
 
     ids = set()
-    for label, d in disruptions.iteritems():
+    for d in disruptions.values():
         ids.update(set(get_id(o) for o in d))
 
     return ids
@@ -280,14 +281,14 @@ class TestLineSections(AbstractTestFixture):
         we should be able to find the related line section disruption with /traffic_report
         """
 
-        # The commented results are not working for now, in those cases, the disruption affects at least 1 stop
-        # of the line whereas the line itself is not concerned (the disrupted routes are linked to other lines)
+        # some of the tests are failing and are runned in the next function named
+        # test_failing_traffic_reports_on_lines
 
         # line_section_on_line_1
         scenario = {
             'line:1': True,
             'line:2': False,
-            # 'line:3': False
+            # 'line:3': False,
         }
 
         for line, result in scenario.iteritems():
@@ -345,21 +346,47 @@ class TestLineSections(AbstractTestFixture):
             'lines/line:1/traffic_reports', 'line_section_on_line_2', ObjGetter('lines', 'line:1')
         )
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason="the disruption affects at least 1 stop of the line whereas the line itself is not impacted",
+        raises=AssertionError,
+    )
+    def test_failing_traffic_reports_on_lines(self):
+        """
+            specific cases for lines where the actual behavior is undesirable
+        """
+
+        assert not self.has_tf_disruption(
+            'lines/line:3/traffic_reports',
+            'line_section_on_line_1'
+        )
+
+        assert not self.has_tf_disruption(
+            'lines/line:2/traffic_reports',
+            'line_section_on_line_1_other_effect'
+        )
+
+        assert not self.has_tf_disruption(
+            'lines/line:3/traffic_reports',
+            'line_section_on_line_2'
+        )
+
     def test_traffic_reports_on_routes(self):
         """
         for routes since we display the impacts on all the stops (but we do not display a route object)
         we display the disruption even if the route has not been directly impacted
         """
 
+        # some of the tests are failing and are runned in the next function named
+        # test_failing_traffic_reports_on_routes
+
         # line_section_on_line_1
-        # route 3 has been impacted by the line section but it has no stoppoint
-        # in the line section so in this case we do not display the disruption
         scenario = {
             'route:line:1:1': True,
             'route:line:1:2': False,
             'route:line:1:3': False,
             'route:line:2:1': False,
-            'route:line:3:1': True,
+            # 'route:line:3:1': False,
         }
 
         for route, result in scenario.iteritems():
@@ -370,7 +397,7 @@ class TestLineSections(AbstractTestFixture):
             'route:line:1:1': True,
             'route:line:1:2': False,
             'route:line:1:3': True,
-            'route:line:2:1': True,
+            # 'route:line:2:1': False,
             'route:line:3:1': False,
         }
 
@@ -381,9 +408,9 @@ class TestLineSections(AbstractTestFixture):
 
         # line_section_on_line_2
         scenario = {
-            'route:line:1:1': True,
+            # 'route:line:1:1': False,
             'route:line:1:2': False,
-            'route:line:1:3': True,
+            # 'route:line:1:3': False,
             'route:line:2:1': True,
             'route:line:3:1': False,
         }
@@ -391,13 +418,52 @@ class TestLineSections(AbstractTestFixture):
         for route, result in scenario.iteritems():
             assert result == self.has_dis('routes/{}/traffic_reports'.format(route), 'line_section_on_line_2')
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason="The disruptions shouldn't be displayed if only the stop point is impacted but not the route point",
+        raises=AssertionError,
+    )
+    def test_failing_traffic_reports_on_routes(self):
+        """
+            specific cases for routes where the actual behavior is undesirable
+        """
+
+        assert not self.has_dis(
+            'routes/route:line:3:1/traffic_reports',
+            'line_section_on_line_1'
+        )
+
+        assert not self.has_dis(
+            'routes/route:line:2:1/traffic_reports',
+            'line_section_on_line_1_other_effect'
+        )
+
+        assert not self.has_dis(
+            'routes/route:line:1:1/traffic_reports',
+            'line_section_on_line_2'
+        )
+
+        assert not self.has_dis(
+            'routes/route:line:1:3/traffic_reports',
+            'line_section_on_line_2'
+        )
+
     def test_traffic_reports_on_vjs(self):
         """
         for /traffic_reports on vjs it's a bit the same as the lines
         we display a line section disruption if it impacts the stops of the vj
         """
+        # some of the tests are failing and are runned in the next function named
+        # test_failing_traffic_reports_on_vjs
+
         # line_section_on_line_1
-        scenario = {'vj:1:1': True, 'vj:1:2': False, 'vj:1:3': False, 'vj:2': False, 'vj:3': True}
+        scenario = {
+            'vj:1:1': True,
+            'vj:1:2': False,
+            'vj:1:3': False,
+            'vj:2': False,
+            # 'vj:3': False,
+        }
 
         for vj, result in scenario.iteritems():
             assert result == self.has_dis(
@@ -405,7 +471,13 @@ class TestLineSections(AbstractTestFixture):
             )
 
         # line_section_on_line_1_other_effect
-        scenario = {'vj:1:1': True, 'vj:1:2': False, 'vj:1:3': True, 'vj:2': True, 'vj:3': False}
+        scenario = {
+            'vj:1:1': True,
+            'vj:1:2': False,
+            'vj:1:3': True,
+            # 'vj:2': False,
+            'vj:3': False,
+        }
 
         for vj, result in scenario.iteritems():
             assert result == self.has_dis(
@@ -413,12 +485,45 @@ class TestLineSections(AbstractTestFixture):
             )
 
         # line_section_on_line_2
-        scenario = {'vj:1:1': True, 'vj:1:2': False, 'vj:1:3': True, 'vj:2': True, 'vj:3': False}
+        scenario = {
+            # 'vj:1:1': False,
+            'vj:1:2': False,
+            # 'vj:1:3': False,
+            'vj:2': True,
+            'vj:3': False,
+        }
 
         for vj, result in scenario.iteritems():
             assert result == self.has_dis(
                 'vehicle_journeys/{}/traffic_reports'.format(vj), 'line_section_on_line_2'
             )
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason="The disruptions shouldn't be displayed if only the stop point is impacted but not the route point",
+        raises=AssertionError,
+    )
+    def test_failing_traffic_reports_on_vjs(self):
+        """
+            specific cases for vjs where the actual behavior is undesirable
+        """
+
+        assert not self.has_dis(
+            'vehicle_journeys/vj:3/traffic_reports',
+            'line_section_on_line_1'
+        )
+        assert not self.has_dis(
+            'vehicle_journeys/vj:2/traffic_reports',
+            'line_section_on_line_1_other_effect'
+        )
+        assert not self.has_dis(
+            'vehicle_journeys/vj:1:1/traffic_reports',
+            'line_section_on_line_2'
+        )
+        assert not self.has_dis(
+            'vehicle_journeys/vj:1:3/traffic_reports',
+            'line_section_on_line_2'
+        )
 
     def test_traffic_reports_on_stop_points(self):
         """
@@ -696,169 +801,88 @@ class TestLineSections(AbstractTestFixture):
             assert result == (disruption in d)
         assert not impacted_ids(d)
 
-    def test_stop_schedule_impacted_by_line_section(self):
-        """
-        For /stop_schedules we display a line section impact if the stoppoint is part of a line section impact
-        """
-        cur = '_current_datetime=20170101T100000'
-        dt = 'from_datetime=20170101T080000'
-        fresh = 'data_freshness=base_schedule'
-        query = 'stop_areas/{sa}/stop_schedules?{cur}&{d}&{f}'
-
-        # A
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='A', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert not impacted_ids(d)
-
-        # B
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': True,
-        }
-        r = self.query_region(query.format(sa='B', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:2'}
-
-        # C
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='C', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        # the impact is linked in the response only to the stop_schedule.datetime
-        assert impacted_ids(d) == {'vj:1:1'}
-
-        # D
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='D', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:1:1'}
-
-        # E
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': True,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='E', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:1:1'}
-
-        # F
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='F', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['stop_schedules'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert not impacted_ids(d)
-
-    def test_departures_impacted_by_line_section(self):
+    def test_stops_schedules_and_departures_impacted_by_line_section(self):
         """
         For /departures we display a line section impact if the stoppoint is part of a line section impact
         """
         cur = '_current_datetime=20170101T100000'
         dt = 'from_datetime=20170101T080000'
         fresh = 'data_freshness=base_schedule'
-        query = 'stop_areas/{sa}/departures?{cur}&{d}&{f}'
+        query = 'stop_areas/{sa}/{q}?{cur}&{d}&{f}'
 
-        # A
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='A', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert not impacted_ids(d)
+        for q in ['departures', 'stop_schedules']:
+            # A
+            scenario = {
+                'line_section_on_line_1': False,
+                'line_section_on_line_1_other_effect': False,
+                'line_section_on_line_2': False,
+            }
+            r = self.query_region(query.format(sa='A', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            assert not impacted_ids(d)
 
-        # B
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': True,
-        }
-        r = self.query_region(query.format(sa='B', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:2'}
+            # B
+            scenario = {
+                'line_section_on_line_1': False,
+                'line_section_on_line_1_other_effect': False,
+                'line_section_on_line_2': True,
+            }
+            r = self.query_region(query.format(sa='B', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            assert impacted_ids(d) == {'vj:2'}
 
-        # C
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='C', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        # the impact is linked in the response to the stop point and the vj
-        assert impacted_ids(d) == {'vj:1:1'}
+            # C
+            scenario = {
+                'line_section_on_line_1': True,
+                'line_section_on_line_1_other_effect': False,
+                'line_section_on_line_2': False,
+            }
+            r = self.query_region(query.format(sa='C', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            # the impact is linked in the response to the stop point and the vj
+            assert impacted_ids(d) == {'vj:1:1'}
 
-        # D
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='D', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:1:1'}
+            # D
+            scenario = {
+                'line_section_on_line_1': True,
+                'line_section_on_line_1_other_effect': False,
+                'line_section_on_line_2': False,
+            }
+            r = self.query_region(query.format(sa='D', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            assert impacted_ids(d) == {'vj:1:1'}
 
-        # E
-        scenario = {
-            'line_section_on_line_1': True,
-            'line_section_on_line_1_other_effect': True,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='E', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert impacted_ids(d) == {'vj:1:1'}
+            # E
+            scenario = {
+                'line_section_on_line_1': True,
+                'line_section_on_line_1_other_effect': True,
+                'line_section_on_line_2': False,
+            }
+            r = self.query_region(query.format(sa='E', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            assert impacted_ids(d) == {'vj:1:1'}
 
-        # F
-        scenario = {
-            'line_section_on_line_1': False,
-            'line_section_on_line_1_other_effect': False,
-            'line_section_on_line_2': False,
-        }
-        r = self.query_region(query.format(sa='F', cur=cur, d=dt, f=fresh))
-        d = get_all_element_disruptions(r['departures'], r)
-        for disruption, result in scenario.iteritems():
-            assert result == (disruption in d)
-        assert not impacted_ids(d)
+            # F
+            scenario = {
+                'line_section_on_line_1': False,
+                'line_section_on_line_1_other_effect': False,
+                'line_section_on_line_2': False,
+            }
+            r = self.query_region(query.format(sa='F', cur=cur, d=dt, f=fresh, q=q))
+            d = get_all_element_disruptions(r[q], r)
+            for disruption, result in scenario.iteritems():
+                assert result == (disruption in d)
+            assert not impacted_ids(d)
 
     def test_route_schedule_impacted_by_line_section(self):
         cur = '_current_datetime=20170101T100000'

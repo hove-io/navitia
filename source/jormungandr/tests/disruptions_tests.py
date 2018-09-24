@@ -704,15 +704,13 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             )
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert (
-            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_2'
-        assert (
-            line_reports[0]['pt_objects'][4]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
+        links = [l['id'] for l in line_reports[0]['pt_objects'][3]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect']:
+            assert d in links
+
+        links = [l['id'] for l in line_reports[0]['pt_objects'][4]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect', 'line_section_on_line_2']:
+            assert d in links
 
     def test_line_reports_with_current_datetime_outof_application_period(self):
         # without since/until we use since=production_date.begin and until = production_date.end
@@ -743,15 +741,14 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             )
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert (
-            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_2'
-        assert (
-            line_reports[0]['pt_objects'][4]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
+
+        links = [l['id'] for l in line_reports[0]['pt_objects'][3]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect']:
+            assert d in links
+
+        links = [l['id'] for l in line_reports[0]['pt_objects'][4]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect', 'line_section_on_line_2']:
+            assert d in links
 
     def test_line_reports_with_since_intersects_application_period(self):
         response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170104T130000")
@@ -774,15 +771,13 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             )
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert (
-            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_2'
-        assert (
-            line_reports[0]['pt_objects'][4]['stop_point']['links'][1]['id']
-            == 'line_section_on_line_1_other_effect'
-        )
+        links = [l['id'] for l in line_reports[0]['pt_objects'][3]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect']:
+            assert d in links
+
+        links = [l['id'] for l in line_reports[0]['pt_objects'][4]['stop_point']['links']]
+        for d in ['line_section_on_line_1_other_effect', 'line_section_on_line_2']:
+            assert d in links
 
     def test_line_reports_with_since_until_outof_application_period(self):
         response = self.query_region(
