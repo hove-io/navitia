@@ -34,12 +34,12 @@ from future.moves.itertools import zip_longest
 import json
 from jormungandr.scenarios.qualifier import compare_field, reverse_compare_field
 from navitiacommon import request_pb2, response_pb2
+from navitiacommon.parser_args_type import UnsignedInteger
 from datetime import datetime
 import logging
 import re
 from shapely.geometry import shape
 import sys
-from jormungandr.interfaces.parsers import UnsignedInteger
 from six.moves.urllib.parse import unquote
 import six
 

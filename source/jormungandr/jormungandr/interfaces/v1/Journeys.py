@@ -68,7 +68,7 @@ from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue
+from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -471,12 +471,12 @@ class Journeys(JourneyCommon):
         )
         parser_get.add_argument(
             "min_nb_journeys",
-            type=inputs.natural,
+            type=UnsignedInteger(),
             help='Minimum number of different suggested journeys, must be >= 0',
         )
         parser_get.add_argument(
             "max_nb_journeys",
-            type=inputs.positive,
+            type=PositiveInteger(),
             help='Maximum number of different suggested journeys, must be > 0',
         )
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
