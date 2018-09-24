@@ -70,18 +70,3 @@ class DateTimeFormat(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str, metadata={'format': 'date-time'})
-
-
-class UnsignedInteger(CustomSchemaType):
-    def __call__(self, value):
-        try:
-            d = int(value)
-            if d < 0:
-                raise ValueError('invalid positive int')
-
-            return d
-        except ValueError as e:
-            raise ValueError("Unable to evaluate, {}".format(e))
-
-    def schema(self):
-        return TypeSchema(type=int, metadata={'minimum': 0})
