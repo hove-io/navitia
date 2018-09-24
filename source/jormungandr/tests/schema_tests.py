@@ -100,6 +100,29 @@ class SchemaChecker:
                 raise
             return obj, collect_all_errors(e)
 
+    def check_schema_parameters_structure(self, url):
+        """
+        Test the schema's parameters types
+        """
+        response = self.get_api_schema(url)
+
+        params = get_params(response)
+
+        assert len(params) > 1
+
+        for name, param in params.iteritems():
+            assert param.has_key('name')
+            assert param.has_key('description')
+            assert param.has_key('type')
+
+            assert type(param['name']) is unicode
+            assert type(param['description']) is unicode
+
+            assert any(
+                param['type'] == t
+                for t in ['integer', 'number', 'float', 'string', 'unicode', 'boolean', 'array']
+            )
+
 
 @dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
 class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
@@ -299,6 +322,9 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
         self._check_schema(query)
+
+    def test_journeys_schema_parameters(self):
+        self.check_schema_parameters_structure('v1/coverage/main_routing_test/journeys?schema=true')
 
 
 @dataset({"main_ptref_test": {}})
