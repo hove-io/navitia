@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, division
 import xml.etree.ElementTree as et
 import pytest
 from jormungandr.realtime_schedule.synthese import Synthese, SyntheseRoutePoint
-from jormungandr.interfaces.parsers import DateTimeFormat
+from navitiacommon.parser_args_type import DateTimeFormat
 import pytz
 
 

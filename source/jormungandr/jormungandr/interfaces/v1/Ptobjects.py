@@ -48,8 +48,8 @@ from jormungandr.interfaces.v1.fields import (
 )
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
-from navitiacommon.parser_args_type import BooleanType, OptionValue
+from jormungandr.interfaces.parsers import default_count_arg_type
+from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFormat, DepthArgument
 
 from datetime import datetime
 import six
@@ -89,7 +89,7 @@ class Ptobjects(ResourceUri):
             action="append",
             help="If filled, will restrain the search within " "the given admin uris",
         )
-        self.parsers["get"].add_argument("depth", type=depth_argument, default=1, help="The depth of objects")
+        self.parsers["get"].add_argument("depth", type=DepthArgument(), default=1, help="The depth of objects")
         self.parsers["get"].add_argument(
             "_current_datetime",
             type=DateTimeFormat(),

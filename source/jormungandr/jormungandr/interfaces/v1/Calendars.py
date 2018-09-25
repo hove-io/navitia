@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import (
@@ -49,7 +49,7 @@ from jormungandr.interfaces.v1.fields import (
     disruption_marshaller,
 )
 from jormungandr.interfaces.v1.serializer import api
-
+from navitiacommon.parser_args_type import DateTimeFormat, DepthArgument
 from datetime import datetime
 import six
 
@@ -90,7 +90,7 @@ class Calendars(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.CalendarsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=depth_argument, default=1, help="The depth of your object")
+        parser_get.add_argument("depth", type=DepthArgument(), default=1, help="The depth of your object")
         parser_get.add_argument(
             "count", type=default_count_arg_type, default=10, help="Number of calendars per page"
         )
