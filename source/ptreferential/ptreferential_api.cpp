@@ -49,13 +49,12 @@ static void extract_data(navitia::PbCreator& pb_creator,
                          const type::Indexes& rows,
                          const int depth) {
     pb_creator.action_period = data.meta->production_period();
-    const auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes};
     switch(requested_type){
     case Type_e::ValidityPattern:
         pb_creator.pb_fill(data.get_data<nt::ValidityPattern>(rows), depth);
         return;
     case Type_e::Line:
-        pb_creator.pb_fill(data.get_data<nt::Line>(rows), depth, with_line_sections);
+        pb_creator.pb_fill(data.get_data<nt::Line>(rows), depth);
         return;
     case Type_e::LineGroup:
         pb_creator.pb_fill(data.get_data<nt::LineGroup>(rows), depth);
@@ -69,7 +68,7 @@ static void extract_data(navitia::PbCreator& pb_creator,
         return;
         }
     case Type_e::StopPoint:
-        pb_creator.pb_fill(data.get_data<nt::StopPoint>(rows), depth, with_line_sections);
+        pb_creator.pb_fill(data.get_data<nt::StopPoint>(rows), depth);
         return;
     case Type_e::StopArea:
         pb_creator.pb_fill(data.get_data<nt::StopArea>(rows), depth);
@@ -107,7 +106,7 @@ static void extract_data(navitia::PbCreator& pb_creator,
         pb_creator.pb_fill(data.get_data<nt::StopPointConnection>(rows), depth);
         return;
     case Type_e::VehicleJourney:
-        pb_creator.pb_fill(data.get_data<nt::VehicleJourney>(rows), depth, with_line_sections);
+        pb_creator.pb_fill(data.get_data<nt::VehicleJourney>(rows), depth);
         return;
     case Type_e::Calendar:
         pb_creator.pb_fill(data.get_data<nt::Calendar>(rows), depth);

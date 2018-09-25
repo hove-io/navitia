@@ -347,7 +347,6 @@ template<typename NAV, typename PB>
 void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
     if (nav_object == nullptr) { return; }
     DumpMessageOptions new_dump_options{dump_message_options};
-    new_dump_options.dump_line_section = DumpLineSectionMessage::No;
     copy(depth-1, new_dump_options).fill_pb_object(nav_object, get_sub_object(nav_object, pb_object));
 }
 template<typename NAV, typename F>
@@ -448,7 +447,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     }
     if (depth > 1) {
         // for the admin we add the main stop area, but with the minimum vital information
-        auto minimum_filler = Filler(0, {DumpMessage::No, DumpLineSectionMessage::No}, pb_creator);
+        auto minimum_filler = Filler(0, {DumpMessage::No}, pb_creator);
         for (const auto& sa: adm->main_stop_areas) {
             auto* pb_sa = admin->add_main_stop_areas();
 
@@ -619,7 +618,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         pb_property->set_value(property.second);
     }
 
-    if (dump_message_options ==  DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes} ) {
+    if (dump_message_options ==  DumpMessageOptions{DumpMessage::Yes} ) {
         /*
          * Here we dump the impacts which impact LineSection.
          * We could have link the LineSection impact with the line, but that would change the code and

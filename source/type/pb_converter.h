@@ -46,19 +46,12 @@ enum class DumpMessage: bool {
     No
 };
 
-enum class DumpLineSectionMessage: bool {
-    Yes,
-    No
-};
-
 struct DumpMessageOptions {
     DumpMessage dump_message;
-    DumpLineSectionMessage dump_line_section;
-    constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes,
-            DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No):
-                        dump_message(dump_message), dump_line_section(dump_line_section){}
+    constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes):
+        dump_message(dump_message){}
     constexpr bool operator==(const DumpMessageOptions& rhs) const {
-        return dump_message == rhs.dump_message && dump_line_section == rhs.dump_line_section;
+        return dump_message == rhs.dump_message;
     }
 };
 
@@ -387,9 +380,7 @@ private:
         void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
             if (nav_obj == nullptr) {return ;}
             if (dump_message_options.dump_message == DumpMessage::No) { return; }
-            const bool dump_line_sections = dump_message_options.dump_line_section == DumpLineSectionMessage::Yes;
             for (const auto& message: nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
-                if (!dump_line_sections && message->is_only_line_section()) { continue; }
                 fill_message(message, pb_obj);
             }
         }
@@ -495,7 +486,7 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Da
                                  const DumpMessage dump_message = DumpMessage::Yes){
     PbCreator creator(&data, now, action_period, disable_geojson);
 
-    creator.pb_fill(nt_objects, depth, {dump_message, DumpLineSectionMessage::No});
+    creator.pb_fill(nt_objects, depth, {dump_message});
     return creator.get_response();
 }
 
