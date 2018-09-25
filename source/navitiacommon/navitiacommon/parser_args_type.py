@@ -185,3 +185,33 @@ class CoordFormat(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str, metadata={'pattern': '.*;.*'})
+
+
+class UnsignedInteger(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            d = int(value)
+            if d < 0:
+                raise ValueError('invalid unsigned int')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 0})
+
+
+class PositiveInteger(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            d = int(value)
+            if d <= 0:
+                raise ValueError('invalid positive int')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 1})

@@ -47,11 +47,11 @@ from jormungandr.interfaces.v1.fields import (
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+from navitiacommon.parser_args_type import UnsignedInteger
 
 graphical_isochrone = {
     "geojson": JsonString(),

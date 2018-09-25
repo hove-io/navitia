@@ -1013,7 +1013,10 @@ class JourneyCommon(object):
 
             response = self.query_region(query, check=False)
             assert response[1] == 400
-            assert "max_nb_journeys must be a positive integer" in response[0]['message']
+            assert (
+                'parameter "max_nb_journeys" invalid: Unable to evaluate, invalid positive int\nmax_nb_journeys description: Maximum number of different suggested journeys, must be > 0'
+                in response[0]['message']
+            )
 
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}".format(
             from_sa="stopA", to_sa="stopB", datetime="20120614T223000", min_nb_journeys=int(-42)
@@ -1021,7 +1024,10 @@ class JourneyCommon(object):
 
         response = self.query_region(query, check=False)
         assert response[1] == 400
-        assert "min_nb_journeys must be a non-negative integer" in response[0]['message']
+        assert (
+            'parameter "min_nb_journeys" invalid: Unable to evaluate, invalid unsigned int\nmin_nb_journeys description: Minimum number of different suggested journeys, must be >= 0'
+            in response[0]['message']
+        )
 
 
 @dataset({"main_stif_test": {}})
