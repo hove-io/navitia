@@ -85,7 +85,7 @@ class Schedules(ResourceUri, ResourceUtc):
         self.endpoint = endpoint
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("filter", type=six.text_type)
+        parser_get.add_argument("filter", type=six.text_type, help="use to filter PT objects")
         parser_get.add_argument(
             "from_datetime",
             type=DateTimeFormat(),
@@ -104,7 +104,7 @@ class Schedules(ResourceUri, ResourceUtc):
             default=3600 * 24,
             help="Maximum duration between datetime and the retrieved stop time",
         )
-        parser_get.add_argument("depth", type=DepthArgument(), default=2)
+        parser_get.add_argument("depth", type=DepthArgument(), default=2, help="The depth of your object")
         parser_get.add_argument(
             "count", type=default_count_arg_type, default=10, help="Number of schedules per page"
         )
