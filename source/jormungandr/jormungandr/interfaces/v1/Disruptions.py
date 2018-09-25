@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument
+from jormungandr.interfaces.parsers import default_count_arg_type, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import (
@@ -51,8 +51,7 @@ from jormungandr.interfaces.v1.fields import (
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
-from navitiacommon.parser_args_type import BooleanType
-
+from navitiacommon.parser_args_type import BooleanType, DateTimeFormat
 from flask_restful import fields
 from flask.globals import g
 from datetime import datetime

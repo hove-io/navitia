@@ -38,7 +38,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.fields import get_collections
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
-from jormungandr.interfaces.parsers import depth_argument, DateTimeFormat, default_count_arg_type
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.timezone import set_request_timezone
@@ -50,7 +50,7 @@ from flask import g
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue
+from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFormat
 
 
 class Uri(ResourceUri, ResourceUtc):

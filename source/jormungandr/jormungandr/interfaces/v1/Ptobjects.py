@@ -48,8 +48,8 @@ from jormungandr.interfaces.v1.fields import (
 )
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
-from navitiacommon.parser_args_type import BooleanType, OptionValue
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
+from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFormat
 
 from datetime import datetime
 import six

@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
+from jormungandr.interfaces.parsers import default_count_arg_type, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import (
@@ -49,7 +49,7 @@ from jormungandr.interfaces.v1.fields import (
     disruption_marshaller,
 )
 from jormungandr.interfaces.v1.serializer import api
-
+from navitiacommon.parser_args_type import DateTimeFormat
 from datetime import datetime
 import six
 

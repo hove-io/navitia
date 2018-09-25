@@ -58,7 +58,7 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api, pt
 from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument
+from jormungandr.interfaces.parsers import default_count_arg_type, depth_argument
 from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
@@ -67,9 +67,9 @@ from jormungandr.interfaces.v1.make_links import create_external_link, create_in
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
+from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, DateTimeFormat
 from jormungandr.exceptions import InvalidArguments
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger
 
 
 class Schedules(ResourceUri, ResourceUtc):

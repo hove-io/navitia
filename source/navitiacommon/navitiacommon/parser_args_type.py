@@ -33,6 +33,7 @@ from collections import namedtuple
 import ujson
 import geojson
 import flask
+from dateutil import parser
 from flask_restful.inputs import boolean
 
 
@@ -215,3 +216,31 @@ class PositiveInteger(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=int, metadata={'minimum': 1})
+
+
+def _parse_input_date(date):
+    """
+    datetime parse date seems broken, '155' with format '%H%M%S' is not
+    rejected but parsed as 1h, 5mn, 5s...
+    so use use for the input date parse dateutil even if the 'guess'
+    mechanism seems a bit dangerous
+    """
+    return parser.parse(date, dayfirst=False, yearfirst=True)
+
+
+class DateTimeFormat(CustomSchemaType):
+    def __call__(self, value):
+        """
+        we want to valid the date format
+        """
+        try:
+            d = _parse_input_date(value)
+            if d.year < 1970:
+                raise ValueError('date is too early!')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to parse datetime, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=str, metadata={'format': 'date-time'})

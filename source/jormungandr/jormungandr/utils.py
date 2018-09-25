@@ -35,6 +35,7 @@ from google.protobuf.descriptor import FieldDescriptor
 import pytz
 from jormungandr.timezone import get_timezone
 from navitiacommon import response_pb2, type_pb2
+from navitiacommon.parser_args_type import DateTimeFormat
 from builtins import range, zip
 from importlib import import_module
 import logging
@@ -134,8 +135,6 @@ def date_to_timestamp(date):
 
 
 def str_datetime_utc_to_local(dt, timezone):
-    from jormungandr.interfaces.parsers import DateTimeFormat
-
     if dt:
         utc_dt = DateTimeFormat()(dt)
     else:

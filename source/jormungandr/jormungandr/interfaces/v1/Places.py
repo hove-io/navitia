@@ -36,7 +36,6 @@ from flask.globals import g
 from jormungandr.authentication import get_all_available_instances
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
-from navitiacommon import parser_args_type
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import (
@@ -49,7 +48,7 @@ from jormungandr.interfaces.v1.fields import (
     feed_publisher,
 )
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
@@ -57,7 +56,15 @@ from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
 from jormungandr.scenarios.utils import places_type
-from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType, BooleanType, OptionValue
+from navitiacommon import parser_args_type
+from navitiacommon.parser_args_type import (
+    TypeSchema,
+    CoordFormat,
+    CustomSchemaType,
+    BooleanType,
+    OptionValue,
+    DateTimeFormat,
+)
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 import six
 

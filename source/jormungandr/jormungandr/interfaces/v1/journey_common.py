@@ -30,7 +30,6 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import DateTimeFormat
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
@@ -53,6 +52,7 @@ from navitiacommon.parser_args_type import (
     OptionValue,
     DescribedOptionValue,
     UnsignedInteger,
+    DateTimeFormat,
 )
 
 

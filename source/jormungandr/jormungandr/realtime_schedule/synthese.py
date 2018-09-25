@@ -34,7 +34,6 @@ import itertools
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
-from jormungandr.interfaces.parsers import DateTimeFormat
 import pytz
 from flask import logging
 import pybreaker
@@ -43,6 +42,7 @@ from jormungandr import cache, app
 from datetime import datetime
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from navitiacommon import type_pb2
+from navitiacommon.parser_args_type import DateTimeFormat
 import redis
 
 
