@@ -1100,10 +1100,10 @@ class Scenario(simple.Scenario):
         """
 
         # If Kraken send a new request date time, we use it
-        # for the next call to skip current Journeys
-        if responses and responses[0].HasField('next_request_date_time'):
-            request['datetime'] = responses[0].next_request_date_time
-        else:
+        # use the minimum value among the journeys with 'next_request_date_time'
+        request['datetime'] = self.get_next_datetime(responses)
+
+        if request['datetime'] is None:
             vjs = journey_filter.get_qualified_journeys(responses)
             if request["clockwise"]:
                 request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
@@ -1167,3 +1167,11 @@ class Scenario(simple.Scenario):
                 return bragi.get_object_by_uri(entrypoint, instances=[instance])
 
         return None
+
+    def get_next_datetime(self, responses):
+        request_datetime_list = []
+        for r in responses:
+            if r.HasField('next_request_date_time'):
+                request_datetime_list.append(r.next_request_date_time)
+
+        return min(request_datetime_list)
