@@ -1099,16 +1099,12 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
 
-        # If Kraken send a new request date time, we use it
-        # use the minimum value among the journeys with 'next_request_date_time'
-        request['datetime'] = self.get_next_datetime(responses)
-
-        if request['datetime'] is None:
-            vjs = journey_filter.get_qualified_journeys(responses)
-            if request["clockwise"]:
-                request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
-            else:
-                request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+        # We always calculate the next_request_datetime from current journeys
+        vjs = journey_filter.get_qualified_journeys(responses)
+        if request["clockwise"]:
+            request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
+        else:
+            request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
 
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
