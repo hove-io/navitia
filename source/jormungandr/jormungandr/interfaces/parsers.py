@@ -26,14 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
+from __future__ import absolute_import, print_function, unicode_literals, division
+
 from jormungandr import app
 from navitiacommon import parser_args_type
 
-# TODO: to be moved completely into navitiacommon
-from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
-
 parser_max_count = app.config['PARSER_MAX_COUNT']
-
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
