@@ -28,12 +28,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from collections import deque, defaultdict, namedtuple
+from collections import defaultdict, namedtuple
 from functools import partial
 from future.moves.itertools import zip_longest
 import json
 from jormungandr.scenarios.qualifier import compare_field, reverse_compare_field
-from navitiacommon import request_pb2, response_pb2
 from navitiacommon.parser_args_type import UnsignedInteger
 from datetime import datetime
 import logging
