@@ -34,8 +34,6 @@ from navitiacommon import parser_args_type
 # TODO: to be moved completely into navitiacommon
 from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
-depth_argument = parser_args_type.DepthArgument()
-
 float_gt_0 = parser_args_type.PositiveFloat()
 
 parser_max_count = app.config['PARSER_MAX_COUNT']

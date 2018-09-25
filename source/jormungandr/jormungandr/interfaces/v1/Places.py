@@ -48,7 +48,7 @@ from jormungandr.interfaces.v1.fields import (
     feed_publisher,
 )
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type
+from jormungandr.interfaces.parsers import default_count_arg_type
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
@@ -64,6 +64,7 @@ from navitiacommon.parser_args_type import (
     BooleanType,
     OptionValue,
     DateTimeFormat,
+    DepthArgument,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 import six
@@ -114,7 +115,7 @@ class Places(ResourceUri):
             action="append",
             help="If filled, will restrain the search within the " "given admin uris",
         )
-        self.parsers["get"].add_argument("depth", type=depth_argument, default=1, help="The depth of objects")
+        self.parsers["get"].add_argument("depth", type=DepthArgument(), default=1, help="The depth of objects")
         self.parsers["get"].add_argument(
             "_current_datetime",
             type=DateTimeFormat(),
@@ -286,7 +287,7 @@ class PlacesNearby(ResourceUri):
             "count", type=default_count_arg_type, default=10, help="Elements per page"
         )
         self.parsers["get"].add_argument(
-            "depth", type=depth_argument, default=1, help="Maximum depth on objects"
+            "depth", type=DepthArgument(), default=1, help="Maximum depth on objects"
         )
         self.parsers["get"].add_argument(
             "start_page", type=int, default=0, help="The page number of the ptref result"
