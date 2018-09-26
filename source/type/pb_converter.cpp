@@ -103,7 +103,6 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     void operator()(const nd::UnknownPtObj&) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
         auto* pobj = add_pt_object(mvj);
-
         //for meta vj we also need to output the impacted stoptimes
         for (const auto& stu: impact.aux_info.stop_times) {
             auto* impacted_stop = pobj->add_impacted_stops();
@@ -355,6 +354,18 @@ void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator) {
     copy(depth-1, dump_message_options).fill_pb_object(nav_object, creator());
 }
 
+template<typename F>
+void PbCreator::Filler::fill_with_creator(const nt::EntryPoint* nav_object, F creator, const nt::Route* route) {
+    if (nav_object == nullptr) { return; }
+    copy(depth-1, dump_message_options).fill_pb_object(nav_object, creator(), route);
+}
+
+template<typename F>
+void PbCreator::Filler::fill_with_creator(const nt::StopPoint* nav_object, F creator, const nt::Route* route) {
+    if (nav_object == nullptr) { return; }
+    copy(depth-1, dump_message_options).fill_pb_object(nav_object, creator(), route);
+}
+
 template<typename T>
 void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
     if(value == nullptr) { return; }
@@ -364,6 +375,21 @@ void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_o
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
+
+void PbCreator::Filler::fill_pb_object(
+    const nt::StopPoint* stop,
+    pbnavitia::PtObject* pt_object,
+    const nt::Route* route
+) {
+    if(stop == nullptr) { return; }
+
+    fill_pb_object(stop, get_sub_object(stop, pt_object), route);
+    pt_object->set_name(get_label(stop));
+    pt_object->set_uri(stop->uri);
+    pt_object->set_embedded_type(get_pb_type<nt::StopPoint>());
+}
+
+
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::Calendar>(const nt::Calendar*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::Company>(const nt::Company*, pbnavitia::PtObject*);
@@ -460,7 +486,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {
+void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point, const nt::Route* route) {
 
     stop_point->set_uri(sp->uri);
     add_contributor(sp);
@@ -533,7 +559,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         farezone->set_name(sp->fare_zone);
     }
 
-    fill_messages(sp, stop_point);
+    fill_messages(sp, stop_point, route);
     fill_codes(sp, stop_point);
 }
 
@@ -1295,6 +1321,32 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     }
 }
 
+void PbCreator::Filler::fill_messages(const nt::StopPoint* sp,
+                                      pbnavitia::StopPoint* pb_obj,
+                                      const nt::Route* route) {
+    if (sp == nullptr) {return ;}
+    if (dump_message_options.dump_message == DumpMessage::No) { return; }
+    if (route == nullptr) {
+        for (const auto& message: sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+            fill_message(message, pb_obj);
+        }
+        return;
+    }
+
+    for (const auto& message: sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        bool has_link = false;
+        for (const auto& ptobj : message->informed_entities()) {
+            const auto line_section = boost::get<nt::disruption::LineSection>(&ptobj);
+            if (line_section == nullptr || line_section->line == route->line) {
+                has_link = true;
+                break;
+            }
+        }
+        if (has_link == true) {
+            fill_message(message, pb_obj);
+        }
+    }
+}
 
 void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
                                        pbnavitia::PtDisplayInfo* pt_display_info) {
@@ -1429,11 +1481,11 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::PtObject* place){
+void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::PtObject* place, const nt::Route* route){
     if (point->type == nt::Type_e::StopPoint) {
         const auto it = pb_creator.data->pt_data->stop_points_map.find(point->uri);
         if (it != pb_creator.data->pt_data->stop_points_map.end()) {
-            fill_with_creator(it->second, [&](){return place;});
+            fill_with_creator(it->second, [&](){return place;}, route);
         }
     } else if (point->type == nt::Type_e::StopArea) {
         const auto it = pb_creator.data->pt_data->stop_areas_map.find(point->uri);
@@ -1891,14 +1943,26 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
     }
 }
 
-void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
-                          const time_duration& crow_fly_duration, type::Mode_e mode,
-                          pt::ptime origin_time, pbnavitia::Journey* pb_journey) {
+void PbCreator::fill_crowfly_section(
+        const type::EntryPoint& origin,
+        const type::EntryPoint& destination,
+        const time_duration& crow_fly_duration,
+        type::Mode_e mode,
+        pt::ptime origin_time,
+        pbnavitia::Journey* pb_journey,
+        const nt::Route* route,
+        const bool route_switch
+    ) {
     pbnavitia::Section* section = pb_journey->add_sections();
     section->set_id(this->register_section());
 
-    fill(&origin, section->mutable_origin(), 2);
-    fill(&destination, section->mutable_destination(), 2);
+    if (route_switch == false) {
+        fill(&origin, section->mutable_origin(), 2, route);
+        fill(&destination, section->mutable_destination(), 2);
+    } else {
+        fill(&origin, section->mutable_origin(), 2);
+        fill(&destination, section->mutable_destination(), 2, route);
+    }
 
     //we want to store the transportation mode used
     switch (mode) {

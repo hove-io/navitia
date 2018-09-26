@@ -399,7 +399,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = pb_creator.data->pt_data->stop_points[spidx];
             pbnavitia::RouteScheduleRow* row = table->add_rows();
-            pb_creator.fill(sp, row->mutable_stop_point(), max_depth);
+            pb_creator.fill(sp, row->mutable_stop_point(), max_depth, route);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 const auto& dt_stop_time  = matrix[i][j];

@@ -111,7 +111,7 @@ void fill_route_point(PbCreator& pb_creator,
                       const type::Route* route,
                       const type::StopPoint* stop_point,
                       T* pb) {
-    pb_creator.fill(stop_point, pb->mutable_stop_point(), depth);
+    pb_creator.fill(stop_point, pb->mutable_stop_point(), depth, route);
     const type::Line* line = route->line;
     auto m_route = pb->mutable_route();
     pb_creator.fill(route, m_route, 0);

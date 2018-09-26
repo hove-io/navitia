@@ -221,6 +221,20 @@ struct PbCreator {
     PbCreator(const PbCreator&) = delete;
     PbCreator& operator=(const PbCreator&) = delete;
 
+    template<typename P>
+    void fill(const nt::StopPoint* item, P* proto, int depth,
+              const nt::Route* route,
+              const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+        Filler(depth, dump_message_options, *this).fill_pb_object(item, proto, route);
+    }
+
+    template<typename P>
+    void fill(const nt::EntryPoint* item, P* proto, int depth,
+              const nt::Route* route,
+              const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+        Filler(depth, dump_message_options, *this).fill_pb_object(item, proto, route);
+    }
+
     template<typename N, typename P>
     void fill(const N& item, P* proto, int depth,
             const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
@@ -252,9 +266,15 @@ struct PbCreator {
     void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
     void fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare);
 
-    void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
-                              const time_duration& crow_fly_duration, type::Mode_e mode,
-                              pt::ptime origin_time, pbnavitia::Journey* pb_journey);
+    void fill_crowfly_section(const type::EntryPoint& origin,
+                              const type::EntryPoint& destination,
+                              const time_duration& crow_fly_duration,
+                              type::Mode_e mode,
+                              pt::ptime origin_time,
+                              pbnavitia::Journey* pb_journey,
+                              const nt::Route* route = nullptr,
+                              const bool way = false);
+
 
     void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path,
                               pbnavitia::Journey* pb_journey, const pt::ptime departure,
@@ -333,6 +353,12 @@ private:
         template<typename NAV, typename F>
         void fill_with_creator(NAV* nav_object, F creator);
 
+        template<typename F>
+        void fill_with_creator(const nt::EntryPoint* nav_object, F creator, const nt::Route* route = nullptr);
+
+        template<typename F>
+        void fill_with_creator(const nt::StopPoint* nav_object, F creator, const nt::Route* route = nullptr);
+
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
             copy(depth-1, dump_message_options).fill_pb_object(nav_object, pb_object);
@@ -386,6 +412,8 @@ private:
         }
         // override fill_messages for journey sections to handle line sections impacts
         void fill_messages(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
+        // override fill_messages for stop point to handle line sections impacts
+        void fill_messages(const nt::StopPoint*, pbnavitia::StopPoint*, const nt::Route* = nullptr);
 
         template <typename Target, typename Source>
         std::vector<Target*> ptref_indexes(const Source* nav_obj);
@@ -426,7 +454,7 @@ private:
         void fill_pb_object(const nt::Contributor*, pbnavitia::Contributor*);
         void fill_pb_object(const nt::Dataset*, pbnavitia::Dataset*);
         void fill_pb_object(const nt::StopArea*, pbnavitia::StopArea*);
-        void fill_pb_object(const nt::StopPoint*, pbnavitia::StopPoint*);
+        void fill_pb_object(const nt::StopPoint*, pbnavitia::StopPoint*, const nt::Route* = nullptr);
         void fill_pb_object(const nt::Company*, pbnavitia::Company*);
         void fill_pb_object(const nt::Network*, pbnavitia::Network*);
         void fill_pb_object(const nt::PhysicalMode*, pbnavitia::PhysicalMode*);
@@ -462,13 +490,15 @@ private:
         void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
         void fill_pb_object(const nt::VehicleJourney*, pbnavitia::hasEquipments*);
         void fill_pb_object(const StopTimeCalendar*, pbnavitia::ScheduleStopTime*);
-        void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
+        void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*, const nt::Route* = nullptr);
         void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);
 
         // Used for place
         template<typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
+
+        void fill_pb_object(const nt::StopPoint*, pbnavitia::PtObject*, const nt::Route* = nullptr);
     };
     // Raptor api
     pbnavitia::Section* create_section(pbnavitia::Journey*, const ng::PathItem&, int);

@@ -585,7 +585,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 pb_creator.action_period = bt::time_period(p_deptime, p_arrtime + bt::seconds(1));
-                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 0);
+                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 0, vj->route);
                 pb_creator.fill(item.stop_times[i], stop_time, 1);
 
                 // L'heure de départ du véhicule au premier stop point
@@ -600,8 +600,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 //in this case we want to display this only point as the departure and the destination of this section
 
                 pb_creator.action_period = bt::time_period(item.departures[0], item.arrivals[0] + bt::seconds(1));
-                pb_creator.fill(item.stop_points.front(), pb_section->mutable_origin(), 1);
-                pb_creator.fill(item.stop_points.back(), pb_section->mutable_destination(), 1);
+                pb_creator.fill(item.stop_points.front(), pb_section->mutable_origin(), 1, vj->route);
+                pb_creator.fill(item.stop_points.back(), pb_section->mutable_destination(), 1, vj->route);
             }
             pb_creator.action_period = bt::time_period(departure_ptime, arrival_ptime + bt::seconds(1));
             fill_section(pb_creator, pb_section, vj, item.stop_times);
@@ -800,12 +800,32 @@ void make_pathes(PbCreator& pb_creator,
                 time_duration crow_fly_duration = duration_to_departure ? *duration_to_departure : time_duration() ;
                 auto seconds_to_departure = pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 auto departure_time = path.items.front().departures.front() - seconds_to_departure;
-                pb_creator.fill_crowfly_section(origin,
-                                                destination_tmp,
-                                                crow_fly_duration,
-                                                worker.departure_path_finder.mode,
-                                                departure_time,
-                                                pb_journey);
+
+                // Getting section route in order to filter messages for route point
+                const auto& section = path.items.front();
+                if (section.type == ItemType::public_transport) {
+                    const type::VehicleJourney* const vj = section.get_vj();
+
+                    pb_creator.fill_crowfly_section(
+                        origin,
+                        destination_tmp,
+                        crow_fly_duration,
+                        worker.departure_path_finder.mode,
+                        departure_time,
+                        pb_journey,
+                        vj->route,
+                        true
+                    );
+                } else {
+                    pb_creator.fill_crowfly_section(
+                        origin,
+                        destination_tmp,
+                        crow_fly_duration,
+                        worker.departure_path_finder.mode,
+                        departure_time,
+                        pb_journey
+                    );
+                }
             } else if (!sn_departure_path.path_items.empty()) {
                 //because of projection problem, the walking path might not join
                 //exactly the routing one
@@ -875,12 +895,32 @@ void make_pathes(PbCreator& pb_creator,
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
                 time_duration crow_fly_duration = duration_to_arrival ? *duration_to_arrival : time_duration();
                 arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin_tmp,
-                                                destination,
-                                                crow_fly_duration,
-                                                worker.arrival_path_finder.mode,
-                                                dt,
-                                                pb_journey);
+
+                // Getting section route in order to filter messages for route point
+                const auto& section = path.items.back();
+                if (section.type == ItemType::public_transport) {
+                    const type::VehicleJourney* const vj = section.get_vj();
+
+                    pb_creator.fill_crowfly_section(
+                        origin_tmp,
+                        destination,
+                        crow_fly_duration,
+                        worker.arrival_path_finder.mode,
+                        dt,
+                        pb_journey,
+                        vj->route,
+                        false
+                    );
+                } else {
+                    pb_creator.fill_crowfly_section(
+                        origin_tmp,
+                        destination,
+                        crow_fly_duration,
+                        worker.arrival_path_finder.mode,
+                        dt,
+                        pb_journey
+                    );
+                }
             }
             // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point

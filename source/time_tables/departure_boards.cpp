@@ -89,7 +89,13 @@ render(PbCreator& pb_creator,
         //Each schedule has a stop_point and a route
         const auto* stop_point = pb_creator.data->pt_data->stop_points[id_vec.first.second.val];
         const auto* route = pb_creator.data->pt_data->routes[id_vec.first.first.val];
-        pb_creator.fill(stop_point, schedule->mutable_stop_point(), depth);
+
+        pb_creator.fill(
+            stop_point,
+            schedule->mutable_stop_point(),
+            depth,
+            route
+        );
 
         auto m_route = schedule->mutable_route();
 
