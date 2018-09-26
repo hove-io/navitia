@@ -36,20 +36,20 @@ from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from flask import g
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.scenarios.simple import Context
 
 
 class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
+        self._context = Context()
 
-    @staticmethod
-    def _compute_all(future_manager, request, instance, krakens_call):
+    def _compute_all(self, future_manager, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
         return the list of all responses
         """
-
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
@@ -60,18 +60,18 @@ class Scenario(new_default.Scenario):
 
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-        if not g.already_done:
-            g.requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
-            g.requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
+        if not g.exist_distributed_streetnetworks:
+            self._context.requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
+            self._context.requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
 
-            g.requested_orig_obj = get_entry_point_or_raise(g.requested_orig, request['origin'])
-            g.requested_dest_obj = get_entry_point_or_raise(g.requested_dest, request['destination'])
-            g.streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
+            self._context.requested_orig_obj = get_entry_point_or_raise(self._context.requested_orig, request['origin'])
+            self._context.requested_dest_obj = get_entry_point_or_raise(self._context.requested_dest, request['destination'])
+            self._context.streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
 
             for mode in requested_dep_modes:
-                g.streetnetwork_path_pool.add_async_request(
-                    requested_orig_obj=g.requested_orig_obj,
-                    requested_dest_obj=g.requested_dest_obj,
+                self._context.streetnetwork_path_pool.add_async_request(
+                    requested_orig_obj=self._context.requested_orig_obj,
+                    requested_dest_obj=self._context.requested_dest_obj,
                     mode=mode,
                     period_extremity=period_extremity,
                     request=request,
@@ -82,9 +82,9 @@ class Scenario(new_default.Scenario):
             # we return all direct path without pt
             if request['max_duration'] == 0:
                 return [
-                    g.streetnetwork_path_pool.wait_and_get(
-                        requested_orig_obj=g.requested_orig_obj,
-                        requested_dest_obj=g.requested_dest_obj,
+                    self._context.streetnetwork_path_pool.wait_and_get(
+                        requested_orig_obj=self._context.requested_orig_obj,
+                        requested_dest_obj=self._context.requested_dest_obj,
                         mode=mode,
                         request=request,
                         period_extremity=period_extremity,
@@ -96,55 +96,55 @@ class Scenario(new_default.Scenario):
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
             # FallbackDurationsPool.
             # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
-            g.direct_paths_by_mode = g.streetnetwork_path_pool.get_all_direct_paths()
+            self._context.direct_paths_by_mode = self._context.streetnetwork_path_pool.get_all_direct_paths()
 
-            g.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
+            self._context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
-                requested_place_obj=g.requested_orig_obj,
+                requested_place_obj=self._context.requested_orig_obj,
                 modes=requested_dep_modes,
                 request=request,
-                direct_paths_by_mode=g.direct_paths_by_mode,
+                direct_paths_by_mode=self._context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
             )
 
-            g.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
+            self._context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
-                requested_place_obj=g.requested_dest_obj,
+                requested_place_obj=self._context.requested_dest_obj,
                 modes=requested_arr_modes,
                 request=request,
-                direct_paths_by_mode=g.direct_paths_by_mode,
+                direct_paths_by_mode=self._context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
             )
 
-            g.orig_places_free_access = PlacesFreeAccess(
-                future_manager=future_manager, instance=instance, requested_place_obj=g.requested_orig_obj
+            self._context.orig_places_free_access = PlacesFreeAccess(
+                future_manager=future_manager, instance=instance, requested_place_obj=self._context.requested_orig_obj
             )
-            g.dest_places_free_access = PlacesFreeAccess(
-                future_manager=future_manager, instance=instance, requested_place_obj=g.requested_dest_obj
+            self._context.dest_places_free_access = PlacesFreeAccess(
+                future_manager=future_manager, instance=instance, requested_place_obj=self._context.requested_dest_obj
             )
 
-            g.orig_fallback_durations_pool = FallbackDurationsPool(
+            self._context.orig_fallback_durations_pool = FallbackDurationsPool(
                 future_manager=future_manager,
                 instance=instance,
-                requested_place_obj=g.requested_orig_obj,
+                requested_place_obj=self._context.requested_orig_obj,
                 modes=requested_dep_modes,
-                proximities_by_crowfly_pool=g.orig_proximities_by_crowfly,
-                places_free_access=g.orig_places_free_access,
-                direct_paths_by_mode=g.direct_paths_by_mode,
+                proximities_by_crowfly_pool=self._context.orig_proximities_by_crowfly,
+                places_free_access=self._context.orig_places_free_access,
+                direct_paths_by_mode=self._context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
             )
 
-            g.dest_fallback_durations_pool = FallbackDurationsPool(
+            self._context.dest_fallback_durations_pool = FallbackDurationsPool(
                 future_manager=future_manager,
                 instance=instance,
-                requested_place_obj=g.requested_dest_obj,
+                requested_place_obj=self._context.requested_dest_obj,
                 modes=requested_arr_modes,
-                proximities_by_crowfly_pool=g.dest_proximities_by_crowfly,
-                places_free_access=g.dest_places_free_access,
-                direct_paths_by_mode=g.direct_paths_by_mode,
+                proximities_by_crowfly_pool=self._context.dest_proximities_by_crowfly,
+                places_free_access=self._context.dest_places_free_access,
+                direct_paths_by_mode=self._context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
             )
@@ -152,33 +152,33 @@ class Scenario(new_default.Scenario):
         pt_journey_pool = PtJourneyPool(
             future_manager=future_manager,
             instance=instance,
-            requested_orig_obj=g.requested_orig_obj,
-            requested_dest_obj=g.requested_dest_obj,
-            streetnetwork_path_pool=g.streetnetwork_path_pool,
+            requested_orig_obj=self._context.requested_orig_obj,
+            requested_dest_obj=self._context.requested_dest_obj,
+            streetnetwork_path_pool=self._context.streetnetwork_path_pool,
             krakens_call=krakens_call,
-            orig_fallback_durations_pool=g.orig_fallback_durations_pool,
-            dest_fallback_durations_pool=g.dest_fallback_durations_pool,
+            orig_fallback_durations_pool=self._context.orig_fallback_durations_pool,
+            dest_fallback_durations_pool=self._context.dest_fallback_durations_pool,
             request=request,
         )
 
         completed_pt_journeys = wait_and_complete_pt_journey(
             future_manager=future_manager,
-            requested_orig_obj=g.requested_orig_obj,
-            requested_dest_obj=g.requested_dest_obj,
+            requested_orig_obj=self._context.requested_orig_obj,
+            requested_dest_obj=self._context.requested_dest_obj,
             pt_journey_pool=pt_journey_pool,
-            streetnetwork_path_pool=g.streetnetwork_path_pool,
-            orig_places_free_access=g.orig_places_free_access,
-            dest_places_free_access=g.dest_places_free_access,
-            orig_fallback_durations_pool=g.orig_fallback_durations_pool,
-            dest_fallback_durations_pool=g.dest_fallback_durations_pool,
+            streetnetwork_path_pool=self._context.streetnetwork_path_pool,
+            orig_places_free_access=self._context.orig_places_free_access,
+            dest_places_free_access=self._context.dest_places_free_access,
+            orig_fallback_durations_pool=self._context.orig_fallback_durations_pool,
+            dest_fallback_durations_pool=self._context.dest_fallback_durations_pool,
             request=request,
         )
 
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
-        if not g.already_done:
+        if not g.exist_distributed_streetnetworks:
             for mode in requested_dep_modes:
-                dp = g.direct_paths_by_mode.get(mode).wait_and_get()
+                dp = self._context.direct_paths_by_mode.get(mode).wait_and_get()
                 if getattr(dp, "journeys", None):
                     if mode == "ridesharing":
                         switch_back_to_ridesharing(dp, True)
@@ -187,12 +187,13 @@ class Scenario(new_default.Scenario):
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
         res.extend((j for j in completed_pt_journeys if j))
 
-        check_final_results_or_raise(res, g.orig_fallback_durations_pool, g.dest_fallback_durations_pool)
+        check_final_results_or_raise(res, self._context.orig_fallback_durations_pool,
+                                     self._context.dest_fallback_durations_pool)
 
         for r in res:
             fill_uris(r)
 
-        g.already_done = True
+        g.exist_distributed_streetnetworks = True
         return res
 
     def call_kraken(self, request_type, request, instance, krakens_call):

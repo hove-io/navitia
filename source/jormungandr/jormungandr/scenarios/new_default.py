@@ -893,7 +893,7 @@ class Scenario(simple.Scenario):
         #Initialize les variables for the scenario distibuted
         #request.get('_override_scenario') == 'distributed':
         #if getattr(g.scenario, '__module__', None) == 'jormungandr.scenarios.distributed':
-        g.already_done = False
+        g.exist_distributed_streetnetworks = False
 
         # min_nb_journeys option
         if request['min_nb_journeys']:
