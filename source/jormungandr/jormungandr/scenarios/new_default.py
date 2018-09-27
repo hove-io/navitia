@@ -1109,7 +1109,7 @@ class Scenario(simple.Scenario):
 
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
-            logger.error("Impossible to calculate new date_time from journeys in response for next call")
+            logger.warning("Impossible to calculate new date_time from journeys in response for next call")
             return None
 
         # TODO forbid ODTs

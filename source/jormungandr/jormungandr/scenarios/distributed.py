@@ -34,11 +34,10 @@ from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
-from flask import g
 from jormungandr.new_relic import record_custom_parameter
 
 
-class Context:
+class PartialResponseContext(object):
     requested_orig = None
     requested_dest = None
     requested_orig_obj = None
@@ -46,7 +45,7 @@ class Context:
     streetnetwork_path_pool = None
     orig_fallback_durations_pool = None
     dest_fallback_durations_pool = None
-    is_initialized = False
+    partial_response_is_empty = True
 
 
 class Scenario(new_default.Scenario):
@@ -54,7 +53,7 @@ class Scenario(new_default.Scenario):
         super(Scenario, self).__init__()
 
     def get_context(self):
-        return Context()
+        return PartialResponseContext()
 
     @staticmethod
     def _compute_all(future_manager, request, instance, krakens_call, context):
@@ -73,7 +72,7 @@ class Scenario(new_default.Scenario):
 
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-        if not context.is_initialized:
+        if context.partial_response_is_empty:
             context.requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
             context.requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
 
@@ -189,7 +188,7 @@ class Scenario(new_default.Scenario):
 
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
-        if not context.is_initialized:
+        if context.partial_response_is_empty:
             for mode in requested_dep_modes:
                 dp = context.direct_paths_by_mode.get(mode).wait_and_get()
                 if getattr(dp, "journeys", None):
@@ -206,7 +205,7 @@ class Scenario(new_default.Scenario):
         for r in res:
             fill_uris(r)
 
-        context.is_initialized = True
+        context.partial_response_is_empty = False
         return res
 
     def call_kraken(self, request_type, request, instance, krakens_call, context):
