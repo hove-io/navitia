@@ -88,16 +88,6 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
-class Context:
-    requested_orig = None
-    requested_dest = None
-    requested_orig_obj = None
-    requested_dest_obj = None
-    streetnetwork_path_pool = None
-    orig_fallback_durations_pool = None
-    dest_fallback_durations_pool = None
-
-
 class Scenario(object):
     """
     the most basic scenario, it's so simple it don't implements journeys!

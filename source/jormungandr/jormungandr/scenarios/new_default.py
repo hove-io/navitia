@@ -859,6 +859,9 @@ class Scenario(simple.Scenario):
         super(Scenario, self).__init__()
         self.nb_kraken_calls = 0
 
+    def get_context(self):
+        return None
+
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
@@ -890,11 +893,6 @@ class Scenario(simple.Scenario):
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
 
-        #Initialize les variables for the scenario distibuted
-        #request.get('_override_scenario') == 'distributed':
-        #if getattr(g.scenario, '__module__', None) == 'jormungandr.scenarios.distributed':
-        g.exist_distributed_streetnetworks = False
-
         # min_nb_journeys option
         if request['min_nb_journeys']:
             min_nb_journeys = request['min_nb_journeys']
@@ -911,6 +909,9 @@ class Scenario(simple.Scenario):
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
+        #Initialize a context for distributed
+        distributed_context = self.get_context()
+
         while request is not None and (
             (nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls) or nb_try < min_journeys_calls
         ):
@@ -926,7 +927,7 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            new_resp = self.call_kraken(request_type, request, instance, krakens_call, distributed_context)
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
@@ -1018,7 +1019,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call):
+    def call_kraken(self, request_type, request, instance, krakens_call, context=None):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1108,7 +1109,7 @@ class Scenario(simple.Scenario):
 
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
-            logger.error("In response next_request_date_time does not exist")
+            logger.error("Impossible to calculate new date_time from journeys in response for next call")
             return None
 
         # TODO forbid ODTs
@@ -1163,11 +1164,3 @@ class Scenario(simple.Scenario):
                 return bragi.get_object_by_uri(entrypoint, instances=[instance])
 
         return None
-
-    def get_next_datetime(self, responses):
-        request_datetime_list = []
-        for r in responses:
-            if r.HasField('next_request_date_time'):
-                request_datetime_list.append(r.next_request_date_time)
-
-        return min(request_datetime_list)
