@@ -266,7 +266,7 @@ def _build_to(
     return pt_journeys
 
 
-def _clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt):
+def clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt):
     if pt_journeys and pt_journeys.HasField(b"error"):
         if (
             pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution')
@@ -301,21 +301,17 @@ def compute_fallback(
     orig_places_free_access,
     dest_places_free_access,
     request,
+    pt_journeys,
 ):
     """
     Launching fallback computation asynchronously once the pt_journey is finished
     """
     logger = logging.getLogger(__name__)
 
-    has_valid_direct_paths = streetnetwork_path_pool.has_valid_direct_paths()
-    for (dep_mode, arr_mode, pt_journey_f) in pt_journey_pool:
-        logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
+    for (dep_mode, arr_mode, pt_journey) in pt_journeys:
+        logger.debug("completing pt journey that starts with %s and ends with %s", dep_mode, arr_mode)
 
-        pt_journeys = pt_journey_f.wait_and_get()
-
-        _clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
-
-        if not getattr(pt_journeys, "journeys", None):
+        if not getattr(pt_journey, "journeys", None):
             continue
 
         places_free_access = orig_places_free_access.wait_and_get()
@@ -327,7 +323,7 @@ def compute_fallback(
             places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
         )
 
-        for journey in pt_journeys.journeys:
+        for journey in pt_journey.journeys:
             # from
             pt_orig = journey.sections[0].origin
             direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK

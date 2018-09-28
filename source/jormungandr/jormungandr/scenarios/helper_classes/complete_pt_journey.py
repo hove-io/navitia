@@ -27,8 +27,23 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+import logging
 from . import helper_future
-from .helper_utils import complete_pt_journey, compute_fallback
+from .helper_utils import complete_pt_journey, compute_fallback, clean_pt_journey_error_or_raise
+
+
+def wait_and_get_pt_journeys(pt_journey_pool, has_valid_direct_paths):
+    logger = logging.getLogger(__name__)
+    res = []
+    for (dep_mode, arr_mode, pt_journey_f) in pt_journey_pool:
+        logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
+
+        pt_journeys = pt_journey_f.wait_and_get()
+        clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
+
+        res.append((dep_mode, arr_mode, pt_journeys))
+
+    return res
 
 
 def wait_and_complete_pt_journey(
@@ -42,6 +57,7 @@ def wait_and_complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     request,
+    pt_journeys,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -56,6 +72,7 @@ def wait_and_complete_pt_journey(
         orig_places_free_access=orig_places_free_access,
         dest_places_free_access=dest_places_free_access,
         request=request,
+        pt_journeys=pt_journeys,
     )
 
     futures = []
