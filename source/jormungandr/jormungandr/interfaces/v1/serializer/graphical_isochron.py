@@ -39,22 +39,18 @@ import serpy
 
 class GraphicalIsrochoneSerializer(serpy.Serializer):
 
-    geojson = JsonStrField(schema_metadata={
-        'type': 'object',
-        'properties': {
-            'type': {
-                # Must be MultiPolygon
-                'enum': ['MultiPolygon']
+    geojson = JsonStrField(
+        schema_metadata={
+            'type': 'object',
+            'properties': {
+                'type': {
+                    # Must be MultiPolygon
+                    'enum': ['MultiPolygon']
+                },
+                'coordinates': {'type': 'array', 'items': {'type': 'array', 'items': point_2D_schema}},
             },
-            'coordinates': {
-                'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': point_2D_schema
-                }
-            }
         }
-    })
+    )
     max_duration = Field(schema_type=int)
     min_duration = Field(schema_type=int)
     origin = PlaceSerializer(label='from')
@@ -62,4 +58,3 @@ class GraphicalIsrochoneSerializer(serpy.Serializer):
     requested_date_time = DateTimeField()
     min_date_time = DateTimeField()
     max_date_time = DateTimeField()
-

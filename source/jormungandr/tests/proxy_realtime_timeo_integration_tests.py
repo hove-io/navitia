@@ -48,11 +48,20 @@ class Obj(object):
 
 
 class MockTimeo(Timeo):
-
-    def __init__(self, id, service_url, service_args, timezone,
-                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10):
-        Timeo.__init__(self, id, service_url, service_args, timezone,
-                       object_id_tag, destination_id_tag, instance, timeout)
+    def __init__(
+        self,
+        id,
+        service_url,
+        service_args,
+        timezone,
+        object_id_tag=None,
+        destination_id_tag=None,
+        instance=None,
+        timeout=10,
+    ):
+        Timeo.__init__(
+            self, id, service_url, service_args, timezone, object_id_tag, destination_id_tag, instance, timeout
+        )
 
     def _call_timeo(self, url):
         resp = Obj()
@@ -74,18 +83,12 @@ class MockTimeo(Timeo):
                             "Way": "A",
                             "LineMainDirection": "DIRECTION AA",
                             "NextExpectedStopTime": [
-                                {
-                                    "NextStop": "10:00:52",
-                                    "Destination": "DIRECTION AA"
-                                },
-                                {
-                                    "NextStop": "10:13:52",
-                                    "Destination": "DIRECTION AA"
-                                }
-                            ]
-                        }
+                                {"NextStop": "10:00:52", "Destination": "DIRECTION AA"},
+                                {"NextStop": "10:13:52", "Destination": "DIRECTION AA"},
+                            ],
+                        },
                     }
-                ]
+                ],
             }
         if url == 'S42':
             json = {
@@ -106,24 +109,24 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43"
-
+                                    "Terminus": "Kisio数字_C:S43",
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43"
-                                }
-                            ]
-                        }
+                                    "Terminus": "Kisio数字_C:S43",
+                                },
+                            ],
+                        },
                     }
-                ]
+                ],
             }
         resp.json = MagicMock(return_value=json)
         return resp
 
     def _make_url(self, route_point, count=None, from_dt=None):
         return route_point.pb_stop_point.uri
+
 
 MOCKED_PROXY_CONF = [
     {
@@ -135,23 +138,20 @@ MOCKED_PROXY_CONF = [
             "timezone": "Europe/Paris",
             "service_url": "http://XXXX",
             "timeout": 15,
-            "service_args": {
-                "serviceID": "X",
-                "EntityID": "XX",
-                "Media": "XXX"
-            }
-        }
+            "service_args": {"serviceID": "X", "EntityID": "XX", "Media": "XXX"},
+        },
     }
 ]
 
 
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}' \
-                     '&_current_datetime={c_dt}'
+    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}' '&_current_datetime={c_dt}'
 
     def test_stop_schedule_without_rt(self):
-        query = self.query_template.format(sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template.format(
+            sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']

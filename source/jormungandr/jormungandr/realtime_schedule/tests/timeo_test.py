@@ -41,8 +41,12 @@ from six.moves import range
 
 
 def make_url_test():
-    timeo = Timeo(id='tata', timezone='Europe/Paris', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
 
     url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'))
 
@@ -65,12 +69,19 @@ def make_url_count_and_dt_test():
     """
     same as make_url_test but with a count and a from_dt
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'},
-                  from_datetime_step=30)
+    timeo = Timeo(
+        id='tata',
+        timezone='UTC',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+        from_datetime_step=30,
+    )
 
-    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
-                          count=2, from_dt=_timestamp("12:00"))
+    url = timeo._make_url(
+        MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+        count=2,
+        from_dt=_timestamp("12:00"),
+    )
 
     # it should be a valid url
     assert validators.url(url)
@@ -85,13 +96,19 @@ def make_url_count_and_dt_test():
     assert 'NextStopTimeNumber=2' in url
     assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
 
-    #same as before we only update the seconds of dt
-    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
-            count=2, from_dt=_timestamp("12:00:04"))
+    # same as before we only update the seconds of dt
+    url = timeo._make_url(
+        MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+        count=2,
+        from_dt=_timestamp("12:00:04"),
+    )
     assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
 
-    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
-            count=2, from_dt=_timestamp("12:00:59"))
+    url = timeo._make_url(
+        MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+        count=2,
+        from_dt=_timestamp("12:00:59"),
+    )
     assert 'NextStopReferenceTime=2016-02-07T12:00:30' in url
 
 
@@ -101,8 +118,12 @@ def make_url_invalid_code_test():
 
     we should not get any url
     """
-    timeo = Timeo(id='tata', timezone='Europe/Paris', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
 
     url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id=None))
 
@@ -127,25 +148,13 @@ def mock_good_timeo_response():
                     "Way": "route_tata",
                     "LineMainDirection": "Bicharderies",
                     "NextExpectedStopTime": [
-                        {
-                            "NextStop": "15:40:04",
-                            "Destination": "A direction",
-                            "Terminus": "StopPoint_Bob"
-                        },
-                        {
-                            "NextStop": "15:55:04",
-                            "Destination": "A direction",
-                            "Terminus": "StopPoint_Bob"
-                        },
-                        {
-                            "NextStop": "16:10:04",
-                            "Destination": "A direction",
-                            "Terminus": "StopPoint_Bob"
-                        }
-                    ]
-                }
+                        {"NextStop": "15:40:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+                        {"NextStop": "15:55:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+                        {"NextStop": "16:10:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+                    ],
+                },
             }
-        ]
+        ],
     }
     return mock_response
 
@@ -156,14 +165,17 @@ def get_passages_test():
 
     the timezone is UTC for convenience
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
     mock_response = mock_good_timeo_response()
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
-    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ):
         passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
         assert len(passages) == 3
@@ -177,8 +189,9 @@ def get_passages_no_passages_test():
     """
     test that if timeo returns 0 response, we return an empty list
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
@@ -196,15 +209,17 @@ def get_passages_no_passages_test():
                     "LineTimeoCode": "line_toto",
                     "Way": "route_tata",
                     "LineMainDirection": "Bicharderies",
-                    "NextExpectedStopTime": []  # emtpy list
-                }
+                    "NextExpectedStopTime": [],  # emtpy list
+                },
             }
-        ]
+        ],
     }
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
-    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ):
         passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
         assert len(passages) == 0
@@ -214,18 +229,20 @@ def get_passages_wrong_response_test():
     """
     test that if timeo returns a not valid response, we get None (and not an empty list)
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}]
+        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
     }
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
-    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None),\
-            raises(RealtimeProxyError):
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ), raises(RealtimeProxyError):
         passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
 
@@ -234,19 +251,26 @@ def next_passage_for_route_point_test():
     test the whole next_passage_for_route_point
     mock the http call to return a good timeo response, we should get some next_passages
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeType=TR&LineTimeoCode'
-        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeoCode=stop_tutu;':
-        (mock_good_timeo_response(), 200)
-    })
+    mock_requests = MockRequests(
+        {
+            'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeType=TR&LineTimeoCode'
+            '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeoCode=stop_tutu;': (
+                mock_good_timeo_response(),
+                200,
+            )
+        }
+    )
 
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+        with mock.patch(
+            'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        ):
             passages = timeo.next_passage_for_route_point(route_point, current_dt=_dt("02:02"))
 
             assert len(passages) == 3
@@ -262,14 +286,16 @@ def next_passage_for_route_point_timeo_failure_test():
 
     the timeo's response is in error (status = 404), we should get 'None'
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
-        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;':
-        (mock_good_timeo_response(), 404)
-    })
+    mock_requests = MockRequests(
+        {
+            'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
+            '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;': (mock_good_timeo_response(), 404)
+        }
+    )
 
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
     with mock.patch('requests.get', mock_requests.get):
@@ -289,8 +315,9 @@ def timeo_circuit_breaker_test():
 
     There should be only 4 timeo calls
     """
-    timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
 
     timeo.breaker.fail_max = 2
     timeo.breaker.reset_timeout = 99999
@@ -299,6 +326,7 @@ def timeo_circuit_breaker_test():
 
     class Mocker:
         timeo_call = 0
+
         def get(self, *args, **kwargs):
             self.timeo_call += 1
             if self.timeo_call == 2:
@@ -314,11 +342,16 @@ def timeo_circuit_breaker_test():
             with raises(RealtimeProxyError):
                 timeo._call_timeo('http://bob.com')
 
-
         # we should have called timeo only 4 times
         assert m.timeo_call == 4
 
+
 def status_test():
-    timeo = Timeo(id=u"tata-é$~#@\"*!'`§èû", timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(
+        id=u"tata-é$~#@\"*!'`§èû",
+        timezone='UTC',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
     status = timeo.status()
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'

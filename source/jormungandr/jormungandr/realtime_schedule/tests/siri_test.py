@@ -132,10 +132,9 @@ def next_passage_for_route_point_test():
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
 
     with mock.patch('requests.post', mock_requests.post):
-        passages = siri._get_next_passage_for_route_point(route_point,
-                                                          from_dt=_timestamp("12:00"),
-                                                          current_dt=_timestamp("12:00"),
-                                                          count=1)
+        passages = siri._get_next_passage_for_route_point(
+            route_point, from_dt=_timestamp("12:00"), current_dt=_timestamp("12:00"), count=1
+        )
         assert len(passages) == 1
         assert passages[0].datetime == datetime.datetime(2016, 3, 29, 13, 37, tzinfo=pytz.UTC)
 
@@ -156,6 +155,7 @@ def next_passage_for_route_point_failure_test():
         passages = siri.next_passage_for_route_point(route_point, from_dt=_timestamp("12:00"), count=2)
 
         assert passages is None
+
 
 def status_test():
     siri = Siri(id=u"tata-é$~#@\"*!'`§èû", service_url='http://bob.com/', requestor_ref='Stibada')

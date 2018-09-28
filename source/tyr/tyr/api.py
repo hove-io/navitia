@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding: utf-8
+# coding: utf-8
 
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
@@ -40,11 +40,9 @@ api.app.url_map.strict_slashes = False
 api.add_resource(resources.Instance, '/v0/instances/', '/v0/instances/<int:id>/', '/v0/instances/<string:name>/')
 api.add_resource(resources.Api, '/v0/api/')
 
-api.add_resource(resources.User, '/v0/users/',
-                                 '/v0/users/<int:user_id>/')
+api.add_resource(resources.User, '/v0/users/', '/v0/users/<int:user_id>/')
 
-api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/',
-                                '/v0/users/<int:user_id>/keys/<int:key_id>/')
+api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/', '/v0/users/<int:user_id>/keys/<int:key_id>/')
 
 api.add_resource(resources.Authorization, '/v0/users/<int:user_id>/authorizations/')
 
@@ -52,35 +50,33 @@ api.add_resource(resources.Index, '/')
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint=str('jobs'))
 api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint=str('end_points'))
 
-api.add_resource(resources.TravelerProfile,
-                 '/v0/instances/<string:name>/traveler_profiles/',
-                 '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>')
+api.add_resource(
+    resources.TravelerProfile,
+    '/v0/instances/<string:name>/traveler_profiles/',
+    '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>',
+)
 
-api.add_resource(resources.BillingPlan,
-                 '/v0/billing_plans/',
-                 '/v0/billing_plans/<int:billing_plan_id>')
+api.add_resource(resources.BillingPlan, '/v0/billing_plans/', '/v0/billing_plans/<int:billing_plan_id>')
 
-api.add_resource(resources.PoiType,
-                 '/v0/instances/<string:instance_name>/poi_types')
+api.add_resource(resources.PoiType, '/v0/instances/<string:instance_name>/poi_types')
 
-api.add_resource(resources.AutocompleteParameter,
-                 '/v0/autocomplete_parameters/',
-                 '/v0/autocomplete_parameters/<string:name>')
+api.add_resource(
+    resources.AutocompleteParameter, '/v0/autocomplete_parameters/', '/v0/autocomplete_parameters/<string:name>'
+)
 
-api.add_resource(resources.InstanceDataset,
-                 '/v0/instances/<instance_name>/last_datasets')
+api.add_resource(resources.InstanceDataset, '/v0/instances/<instance_name>/last_datasets')
 
-api.add_resource(resources.AutocompleteDataset,
-                 '/v0/autocomplete_parameters/<ac_instance_name>/last_datasets')
+api.add_resource(resources.AutocompleteDataset, '/v0/autocomplete_parameters/<ac_instance_name>/last_datasets')
 
-api.add_resource(resources.AutocompleteUpdateData,
-                 '/v0/autocomplete_parameters/<ac_instance_name>/update_data')
+api.add_resource(resources.AutocompleteUpdateData, '/v0/autocomplete_parameters/<ac_instance_name>/update_data')
 
-api.add_resource(resources.MigrateFromPoiToOsm,
-                 '/v0/instances/<string:instance_name>/actions/migrate_from_poi_to_osm')
+api.add_resource(
+    resources.MigrateFromPoiToOsm, '/v0/instances/<string:instance_name>/actions/migrate_from_poi_to_osm'
+)
 
-api.add_resource(resources.DeleteDataset,
-                 '/v0/instances/<string:instance_name>/actions/delete_dataset/<string:type>')
+api.add_resource(
+    resources.DeleteDataset, '/v0/instances/<string:instance_name>/actions/delete_dataset/<string:type>'
+)
 
 
 @app.errorhandler(Exception)

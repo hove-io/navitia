@@ -15,13 +15,13 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table('poi_type_json',
-                    sa.Column('poi_types_json', sa.Text(), nullable=False),
-                    sa.Column('instance_id', sa.Integer(), primary_key=True, nullable=False),
-                    sa.ForeignKeyConstraint(['instance_id'], ['instance.id'], )
-                    )
+    op.create_table(
+        'poi_type_json',
+        sa.Column('poi_types_json', sa.Text(), nullable=False),
+        sa.Column('instance_id', sa.Integer(), primary_key=True, nullable=False),
+        sa.ForeignKeyConstraint(['instance_id'], ['instance.id']),
+    )
 
 
 def downgrade():
     op.drop_table('poi_type_json')
-

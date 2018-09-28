@@ -15,9 +15,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_index('administrative_regions_boundary_idx', 'administrative_regions', ['boundary'], postgresql_using='gist')
+    op.create_index(
+        'administrative_regions_boundary_idx', 'administrative_regions', ['boundary'], postgresql_using='gist'
+    )
 
 
 def downgrade():
     op.drop_index('administrative_regions_boundary_idx')
-

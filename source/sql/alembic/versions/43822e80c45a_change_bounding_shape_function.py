@@ -20,23 +20,27 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
     CREATE OR REPLACE FUNCTION georef.update_bounding_shape() RETURNS VOID AS $$
     INSERT INTO navitia.parameters (shape) SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters);
 
     UPDATE navitia.parameters SET shape = (SELECT georef.compute_bounding_shape()) WHERE shape_computed;
     $$
     LANGUAGE SQL;
-    """)
+    """
+    )
 
 
 def downgrade():
     # we put back the old function
 
-    op.execute("""
+    op.execute(
+        """
     CREATE OR REPLACE FUNCTION georef.update_bounding_shape() RETURNS VOID AS $$
     WITH upsert as (UPDATE navitia.parameters SET shape = (SELECT georef.compute_bounding_shape()) WHERE shape_computed RETURNING *)
     INSERT INTO navitia.parameters (shape) SELECT (SELECT georef.compute_bounding_shape()) WHERE NOT EXISTS (SELECT * FROM upsert);
     $$
     LANGUAGE SQL;
-    """)
+    """
+    )

@@ -40,7 +40,6 @@ from abc import abstractmethod
 
 
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
-
     def __init__(self, url, operators, dataset, timeout, **kwargs):
 
         self.ws_service_template = url + '?dataset={}'
@@ -48,7 +47,9 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         self.timeout = timeout
         self.dataset = dataset
         self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL'])
-        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S'])
+        self.reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S']
+        )
         self.breaker = pybreaker.CircuitBreaker(fail_max=self.fail_max, reset_timeout=self.reset_timeout)
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
 

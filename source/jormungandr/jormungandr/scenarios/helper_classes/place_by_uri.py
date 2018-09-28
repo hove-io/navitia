@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from . import helper_future
+from jormungandr import new_relic
 
 
 class PlaceByUri:
@@ -38,8 +39,12 @@ class PlaceByUri:
         self._value = None
         self._async_request()
 
-    def _do_request(self):
+    @new_relic.distributedEvent("place_by_uri", "places")
+    def _place(self):
         return self._instance.georef.place(self._uri)
+
+    def _do_request(self):
+        return self._place(self._instance.georef)
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

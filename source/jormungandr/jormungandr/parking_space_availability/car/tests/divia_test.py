@@ -33,21 +33,15 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 from mock import MagicMock
 
-from jormungandr.parking_space_availability.car.divia import \
-    SearchPattern, DiviaProvider, DiviaPRParkProvider
+from jormungandr.parking_space_availability.car.divia import SearchPattern, DiviaProvider, DiviaPRParkProvider
 
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 
 poi = {
-    'properties': {
-        'operator': 'divia',
-        'ref': '42'
-    },
-    'poi_type': {
-        'name': 'Parking',
-        'id': 'poi_type:public_parking'
-    }
+    'properties': {'operator': 'divia', 'ref': '42'},
+    'poi_type': {'name': 'Parking', 'id': 'poi_type:public_parking'},
 }
+
 
 def car_park_space_availability_support_poi_test():
     """
@@ -61,11 +55,9 @@ def car_park_space_availability_support_poi_test():
 
 
 def car_park_maker(divia_class, search_pattern):
-
     def _test():
 
-        parking_places = ParkingPlaces(available=4,
-                                       occupied=3)
+        parking_places = ParkingPlaces(available=4, occupied=3)
 
         provider = divia_class("fake.url", {'Divia'}, 'toto', 42)
         divia_response = """
@@ -80,11 +72,14 @@ def car_park_maker(divia_class, search_pattern):
                 }
             ]
         }
-        """ % (search_pattern.id_park,
-               search_pattern.available,
-               search_pattern.total)
+        """ % (
+            search_pattern.id_park,
+            search_pattern.available,
+            search_pattern.total,
+        )
 
         import json
+
         provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
         info = provider.get_informations(poi)
         assert info == parking_places
@@ -117,7 +112,8 @@ def car_park_maker(divia_class, search_pattern):
         provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
         assert provider.get_informations(poi) is None
 
-        divia_response = """
+        divia_response = (
+            """
         {
             "records":[
                 {
@@ -127,23 +123,23 @@ def car_park_maker(divia_class, search_pattern):
                 }
             ]
         }
-        """ % search_pattern.id_park
-        empty_parking = ParkingPlaces(available=None,
-                                      occupied=None,
-                                      available_PRM=None,
-                                      occupied_PRM=None)
+        """
+            % search_pattern.id_park
+        )
+        empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
         provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
         assert provider.get_informations(poi) == empty_parking
+
     return _test
 
 
-divia_pr_park_test = car_park_maker(DiviaPRParkProvider,
-                                    SearchPattern(id_park='numero_parc',
-                                                  available='nb_places_libres',
-                                                  total='nombre_places'))
+divia_pr_park_test = car_park_maker(
+    DiviaPRParkProvider,
+    SearchPattern(id_park='numero_parc', available='nb_places_libres', total='nombre_places'),
+)
 
 
-divia_pr_others_test = car_park_maker(DiviaProvider,
-                                      SearchPattern(id_park='numero_parking',
-                                                    available='nombre_places_libres',
-                                                    total='nombre_places'))
+divia_pr_others_test = car_park_maker(
+    DiviaProvider,
+    SearchPattern(id_park='numero_parking', available='nombre_places_libres', total='nombre_places'),
+)

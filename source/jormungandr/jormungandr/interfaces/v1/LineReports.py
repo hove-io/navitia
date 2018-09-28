@@ -31,29 +31,35 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from navitiacommon.parser_args_type import BooleanType
+from navitiacommon.parser_args_type import BooleanType, DateTimeFormat
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullList, NonNullNested,\
-    pagination, disruption_marshaller, error, ListLit, beta_endpoint
+from jormungandr.interfaces.v1.fields import (
+    PbField,
+    line,
+    pt_object,
+    NonNullList,
+    NonNullNested,
+    pagination,
+    disruption_marshaller,
+    error,
+    ListLit,
+    beta_endpoint,
+)
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
-
 from flask_restful import fields, reqparse
 from flask.globals import g
 from datetime import datetime
 import six
 
 
-line_report = {
-    "line": PbField(line),
-    "pt_objects": NonNullList(NonNullNested(pt_object)),
-}
+line_report = {"line": PbField(line), "pt_objects": NonNullList(NonNullNested(pt_object))}
 
 line_reports = {
     "line_reports": NonNullList(NonNullNested(line_report)),
@@ -70,30 +76,40 @@ class LineReports(ResourceUri, ResourceUtc):
         ResourceUtc.__init__(self)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
-        parser_get.add_argument("count", type=default_count_arg_type, default=25,
-                                help="Number of objects per page")
-        parser_get.add_argument("start_page", type=int, default=0,
-                                help="The current page")
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
-                                schema_metadata={'default': 'now'}, hidden=True,
-                                default=datetime.utcnow(),
-                                help='The datetime considered as "now". Used for debug, default is '
-                                     'the moment of the request. It will mainly change the output '
-                                     'of the disruptions.')
-        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                help="forbidden uris",
-                                dest="forbidden_uris[]",
-                                default=[],
-                                action="append",
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
-                                help="remove geojson from the response")
-        parser_get.add_argument("since", type=DateTimeFormat(),
-                                help="use disruptions valid after this date")
-        parser_get.add_argument("until", type=DateTimeFormat(),
-                                help="use disruptions valid before this date")
-        parser_get.add_argument("tags[]", type=six.text_type, action="append",
-                                help="If filled, will restrain the search within the given disruption tags")
+        parser_get.add_argument(
+            "count", type=default_count_arg_type, default=25, help="Number of objects per page"
+        )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
+        parser_get.add_argument(
+            "_current_datetime",
+            type=DateTimeFormat(),
+            schema_metadata={'default': 'now'},
+            hidden=True,
+            default=datetime.utcnow(),
+            help='The datetime considered as "now". Used for debug, default is '
+            'the moment of the request. It will mainly change the output '
+            'of the disruptions.',
+        )
+        parser_get.add_argument(
+            "forbidden_uris[]",
+            type=six.text_type,
+            help="forbidden uris",
+            dest="forbidden_uris[]",
+            default=[],
+            action="append",
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
+        )
+        parser_get.add_argument("since", type=DateTimeFormat(), help="use disruptions valid after this date")
+        parser_get.add_argument("until", type=DateTimeFormat(), help="use disruptions valid before this date")
+        parser_get.add_argument(
+            "tags[]",
+            type=six.text_type,
+            action="append",
+            help="If filled, will restrain the search within the given disruption tags",
+        )
 
         self.collection = 'line_reports'
         self.collections = line_reports

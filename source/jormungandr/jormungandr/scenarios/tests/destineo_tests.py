@@ -37,61 +37,65 @@ from jormungandr.utils import str_to_time_stamp
 def get_next_vj_name():
     get_next_vj_name.section_counter += 1
     return 'vj_{}'.format(get_next_vj_name.section_counter)
+
+
 get_next_vj_name.section_counter = 0  # to generate different section names
 
 
 def is_pure_tc_simple_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}])
     assert destineo.is_pure_tc(resp_builder.response.journeys[0])
 
 
 def is_pure_tc_bss_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Walking'}, {'type': 'BSS_RENT'}, {'mode': 'Bike'}, {'type': 'BSS_PUT_BACK'},
-        {'type': 'PT'},
-        {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(
+        sections=[
+            {'mode': 'Walking'},
+            {'type': 'BSS_RENT'},
+            {'mode': 'Bike'},
+            {'type': 'BSS_PUT_BACK'},
+            {'type': 'PT'},
+            {'mode': 'Walking'},
+        ]
+    )
     assert not destineo.is_pure_tc(resp_builder.response.journeys[0])
 
 
 def is_pure_tc_crowfly_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'type': 'CROW_FLY', 'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(
+        sections=[{'type': 'CROW_FLY', 'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}]
+    )
     assert destineo.is_pure_tc(resp_builder.response.journeys[0])
 
 
 def has_bike_and_tc_simple_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}])
     assert not destineo.has_bike_and_tc(resp_builder.response.journeys[0])
 
 
 def has_bike_and_tc_bss_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Walking'}, {'type': 'BSS_RENT'}, {'mode': 'Bike'}, {'type': 'BSS_PUT_BACK'},
-        {'type': 'PT'},
-        {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(
+        sections=[
+            {'mode': 'Walking'},
+            {'type': 'BSS_RENT'},
+            {'mode': 'Bike'},
+            {'type': 'BSS_PUT_BACK'},
+            {'type': 'PT'},
+            {'mode': 'Walking'},
+        ]
+    )
     assert not destineo.has_bike_and_tc(resp_builder.response.journeys[0])
 
 
 def has_bike_and_tc_crowfly_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Bike', 'type': 'CROW_FLY'},
-        {'type': 'PT'},
-        {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(
+        sections=[{'mode': 'Bike', 'type': 'CROW_FLY'}, {'type': 'PT'}, {'mode': 'Walking'}]
+    )
     assert destineo.has_bike_and_tc(resp_builder.response.journeys[0])
 
 
 def has_bss_and_tc_simple_test():
-    resp_builder = ResponseBuilder().journey(sections=[
-        {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-    ])
+    resp_builder = ResponseBuilder().journey(sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}])
     assert not destineo.has_bss_and_tc(resp_builder.response.journeys[0])
 
 
@@ -135,6 +139,7 @@ def has_bss_and_tc_crowfly_test():
 
     assert not destineo.has_bss_and_tc(journey)
 
+
 def has_bss_and_tc_crowfly_bss_test():
     response = response_pb2.Response()
     journey = response.journeys.add()
@@ -151,6 +156,7 @@ def has_bss_and_tc_crowfly_bss_test():
 
     assert not destineo.has_bss_and_tc(journey)
 
+
 def has_car_and_tc_simple_test():
     response = response_pb2.Response()
     journey = response.journeys.add()
@@ -166,6 +172,7 @@ def has_car_and_tc_simple_test():
     section.street_network.mode = response_pb2.Walking
 
     assert not destineo.has_car_and_tc(journey)
+
 
 def has_car_and_tc_bss_test():
     response = response_pb2.Response()
@@ -207,6 +214,7 @@ def has_car_and_tc_crowfly_test():
 
     assert destineo.has_car_and_tc(journey)
 
+
 def has_car_and_tc_crowfly_bss_test():
     response = response_pb2.Response()
     journey = response.journeys.add()
@@ -223,56 +231,88 @@ def has_car_and_tc_crowfly_bss_test():
 
     assert not destineo.has_car_and_tc(journey)
 
-def sort_destineo_test():
-    resp_builder = ResponseBuilder()\
-        .journey(uri='journey_tc3', sections=[
-            {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-        ], departure='T1230')\
-        .journey(uri='journey_tc1', sections=[
-            {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-        ], departure='T1100')\
-        .journey(uri='journey_bike', sections=[
-            #{'mode': 'Bike'}
-        ], type='non_pt_bike', departure='T1100')\
-        .journey(uri='journey_bss', sections=[
-            {'mode': 'Walking'},
-            {'type': 'BSS_RENT'}, {'mode': 'Bike'}, {'type': 'BSS_PUT_BACK'},
-            {'mode': 'Walking'}
-        ], type='non_pt_bss', departure='T1100')\
-        .journey(uri='journey_walk', sections=[
-            #{'mode': 'Walking'},
-        ], type='non_pt_walk', departure='T1100')\
-        .journey(uri='journey_tc2', sections=[
-            {'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'},
-        ], departure='T1200')\
-        .journey(uri='journey_bss_and_tc', sections=[
-            {'mode': 'Walking'}, {'type': 'BSS_RENT'}, {'mode': 'Bike'}, {'type': 'BSS_PUT_BACK'},
-            {'type': 'PT'},
-            {'mode': 'Walking'},
-        ], departure='T1200')\
-        .journey(uri='journey_bike_and_tc', sections=[
-            {'mode': 'Bike'},
-            {'type': 'PT'},
-            {'mode': 'Walking'},
-        ], departure='T1200')\
-        .journey(uri='journey_car_and_tc', sections=[
-            {'mode': 'Car'},
-            {'type': 'PT'},
-            {'mode': 'Walking'},
-        ], departure='T1200')\
 
+def sort_destineo_test():
+    resp_builder = (
+        ResponseBuilder()
+        .journey(
+            uri='journey_tc3',
+            sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}],
+            departure='T1230',
+        )
+        .journey(
+            uri='journey_tc1',
+            sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}],
+            departure='T1100',
+        )
+        .journey(
+            uri='journey_bike',
+            sections=[
+                # {'mode': 'Bike'}
+            ],
+            type='non_pt_bike',
+            departure='T1100',
+        )
+        .journey(
+            uri='journey_bss',
+            sections=[
+                {'mode': 'Walking'},
+                {'type': 'BSS_RENT'},
+                {'mode': 'Bike'},
+                {'type': 'BSS_PUT_BACK'},
+                {'mode': 'Walking'},
+            ],
+            type='non_pt_bss',
+            departure='T1100',
+        )
+        .journey(
+            uri='journey_walk',
+            sections=[
+                # {'mode': 'Walking'},
+            ],
+            type='non_pt_walk',
+            departure='T1100',
+        )
+        .journey(
+            uri='journey_tc2',
+            sections=[{'mode': 'Walking'}, {'type': 'PT'}, {'mode': 'Walking'}],
+            departure='T1200',
+        )
+        .journey(
+            uri='journey_bss_and_tc',
+            sections=[
+                {'mode': 'Walking'},
+                {'type': 'BSS_RENT'},
+                {'mode': 'Bike'},
+                {'type': 'BSS_PUT_BACK'},
+                {'type': 'PT'},
+                {'mode': 'Walking'},
+            ],
+            departure='T1200',
+        )
+        .journey(
+            uri='journey_bike_and_tc',
+            sections=[{'mode': 'Bike'}, {'type': 'PT'}, {'mode': 'Walking'}],
+            departure='T1200',
+        )
+        .journey(
+            uri='journey_car_and_tc',
+            sections=[{'mode': 'Car'}, {'type': 'PT'}, {'mode': 'Walking'}],
+            departure='T1200',
+        )
+    )
     response = resp_builder.response
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
-    assert response.journeys[0] ==  resp_builder.get_journey('journey_tc1')
-    assert response.journeys[1] ==  resp_builder.get_journey('journey_tc2')
-    assert response.journeys[2] ==  resp_builder.get_journey('journey_tc3')
-    assert response.journeys[3] ==  resp_builder.get_journey('journey_bss')
-    assert response.journeys[4] ==  resp_builder.get_journey('journey_bss_and_tc')
-    assert response.journeys[5] ==  resp_builder.get_journey('journey_bike_and_tc')
-    assert response.journeys[6] ==  resp_builder.get_journey('journey_car_and_tc')
-    assert response.journeys[7] ==  resp_builder.get_journey('journey_walk')
-    assert response.journeys[8] ==  resp_builder.get_journey('journey_bike')
+    assert response.journeys[0] == resp_builder.get_journey('journey_tc1')
+    assert response.journeys[1] == resp_builder.get_journey('journey_tc2')
+    assert response.journeys[2] == resp_builder.get_journey('journey_tc3')
+    assert response.journeys[3] == resp_builder.get_journey('journey_bss')
+    assert response.journeys[4] == resp_builder.get_journey('journey_bss_and_tc')
+    assert response.journeys[5] == resp_builder.get_journey('journey_bike_and_tc')
+    assert response.journeys[6] == resp_builder.get_journey('journey_car_and_tc')
+    assert response.journeys[7] == resp_builder.get_journey('journey_walk')
+    assert response.journeys[8] == resp_builder.get_journey('journey_bike')
 
 
 def sort_destineo_date_test():
@@ -305,7 +345,6 @@ def sort_destineo_date_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-
     journey_bss_and_tc = response.journeys.add()
     journey_bss_and_tc.departure_date_time = str_to_time_stamp('20141102T120000')
     journey_bss_and_tc.type = "rapid"
@@ -325,12 +364,11 @@ def sort_destineo_date_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Africa/Abidjan')
-    assert response.journeys[0] ==  journey_bss_and_tc
-    assert response.journeys[1] ==  journey_tc1
-    assert response.journeys[2] ==  journey_tc3
+    assert response.journeys[0] == journey_bss_and_tc
+    assert response.journeys[1] == journey_tc1
+    assert response.journeys[2] == journey_tc3
 
 
 def sort_destineo_date_timezone_test():
@@ -360,7 +398,7 @@ def sort_destineo_date_timezone_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-    #at paris it's 20141104T003000 so it's the same day
+    # at paris it's 20141104T003000 so it's the same day
     journey_bss_and_tc = response.journeys.add()
     journey_bss_and_tc.departure_date_time = str_to_time_stamp('20141103T233000')
     journey_bss_and_tc.type = "rapid"
@@ -380,12 +418,11 @@ def sort_destineo_date_timezone_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-
     scenario = destineo.Scenario()
     scenario._custom_sort_journeys(response, clockwise=True, timezone='Europe/Paris')
-    assert response.journeys[0] ==  journey_tc1
-    assert response.journeys[1] ==  journey_tc3
-    assert response.journeys[2] ==  journey_bss_and_tc
+    assert response.journeys[0] == journey_tc1
+    assert response.journeys[1] == journey_tc3
+    assert response.journeys[2] == journey_bss_and_tc
 
 
 class Instance(object):
@@ -396,6 +433,7 @@ class Instance(object):
         self.min_tc_with_bike = 40
         self.min_tc_with_bss = 35
         self.min_tc_with_car = 50
+
 
 def remove_not_long_enough_no_removal_test():
     response = response_pb2.Response()
@@ -438,9 +476,10 @@ def remove_not_long_enough_no_removal_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    assert len(response.journeys) ==  2
+    assert len(response.journeys) == 2
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    assert len(response.journeys) ==  2
+    assert len(response.journeys) == 2
+
 
 def remove_not_long_enough_bss_test():
     response = response_pb2.Response()
@@ -529,14 +568,14 @@ def remove_not_long_enough_bss_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    assert len(response.journeys) ==  3
-    assert response.journeys[0] ==  journey1
-    assert response.journeys[1] ==  journey3
-    assert response.journeys[2] ==  journey4
+    assert len(response.journeys) == 3
+    assert response.journeys[0] == journey1
+    assert response.journeys[1] == journey3
+    assert response.journeys[2] == journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    assert len(response.journeys) ==  2
-    assert response.journeys[0] ==  journey1
-    assert response.journeys[1] ==  journey4
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == journey1
+    assert response.journeys[1] == journey4
 
 
 def remove_not_long_enough_bike_test():
@@ -596,14 +635,14 @@ def remove_not_long_enough_bike_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    assert len(response.journeys) ==  3
-    assert response.journeys[0] ==  journey
-    assert response.journeys[1] ==  journey3
-    assert response.journeys[2] ==  journey4
+    assert len(response.journeys) == 3
+    assert response.journeys[0] == journey
+    assert response.journeys[1] == journey3
+    assert response.journeys[2] == journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    assert len(response.journeys) ==  2
-    assert response.journeys[0] ==  journey
-    assert response.journeys[1] ==  journey4
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == journey
+    assert response.journeys[1] == journey4
 
 
 def remove_not_long_enough_car_test():
@@ -663,14 +702,14 @@ def remove_not_long_enough_car_test():
 
     scenario = destineo.Scenario()
     scenario._remove_not_long_enough_fallback(response, Instance())
-    assert len(response.journeys) ==  3
-    assert response.journeys[0] ==  journey
-    assert response.journeys[1] ==  journey3
-    assert response.journeys[2] ==  journey4
+    assert len(response.journeys) == 3
+    assert response.journeys[0] == journey
+    assert response.journeys[1] == journey3
+    assert response.journeys[2] == journey4
     scenario._remove_not_long_enough_tc_with_fallback(response, Instance())
-    assert len(response.journeys) ==  2
-    assert response.journeys[0] ==  journey
-    assert response.journeys[1] ==  journey4
+    assert len(response.journeys) == 2
+    assert response.journeys[0] == journey
+    assert response.journeys[1] == journey4
 
 
 def get_walking_walking_journey():
@@ -721,6 +760,7 @@ def get_walking_bike_journey():
 
     return journey
 
+
 def get_walking_bss_journey():
     journey = response_pb2.Journey()
 
@@ -745,6 +785,7 @@ def get_walking_bss_journey():
 
     return journey
 
+
 def get_walking_car_journey():
     journey = response_pb2.Journey()
 
@@ -767,6 +808,7 @@ def get_walking_car_journey():
 
     return journey
 
+
 def get_bike_walking_journey():
     journey = response_pb2.Journey()
 
@@ -781,6 +823,7 @@ def get_bike_walking_journey():
 
     return journey
 
+
 def get_bike_bike_journey():
     journey = response_pb2.Journey()
 
@@ -794,6 +837,7 @@ def get_bike_bike_journey():
     section.street_network.mode = response_pb2.Bike
 
     return journey
+
 
 def get_bike_bss_journey():
     journey = response_pb2.Journey()
@@ -819,6 +863,7 @@ def get_bike_bss_journey():
 
     return journey
 
+
 def get_bike_car_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
@@ -842,6 +887,7 @@ def get_bike_car_journey(random_vjs=True):
     section = journey.sections.add()
 
     return journey
+
 
 def get_bss_walking_journey(random_vjs=True):
     journey = response_pb2.Journey()
@@ -869,6 +915,7 @@ def get_bss_walking_journey(random_vjs=True):
 
     return journey
 
+
 def get_bss_bike_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
@@ -894,6 +941,7 @@ def get_bss_bike_journey(random_vjs=True):
     section.street_network.mode = response_pb2.Bike
 
     return journey
+
 
 def get_bss_bss_journey(random_vjs=True):
     journey = response_pb2.Journey()
@@ -931,6 +979,7 @@ def get_bss_bss_journey(random_vjs=True):
 
     return journey
 
+
 def get_bss_car_journey(random_vjs=True):
     journey = response_pb2.Journey()
 
@@ -965,29 +1014,33 @@ def get_bss_car_journey(random_vjs=True):
 
     return journey
 
+
 def choose_best_alternatives_simple_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    assert len(journeys) ==  1
-    assert journeys[0] ==  saved_journeys[2]
+    assert len(journeys) == 1
+    assert journeys[0] == saved_journeys[2]
+
 
 def choose_best_alternatives__bike_bss_test():
     journeys = [get_bike_bss_journey(), get_bike_car_journey()]
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    assert len(journeys) ==  1
-    assert journeys[0] ==  saved_journeys[0]
+    assert len(journeys) == 1
+    assert journeys[0] == saved_journeys[0]
+
 
 def choose_best_alternatives__car_test():
     journeys = [get_bike_car_journey()]
     saved_journeys = deepcopy(journeys)
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    assert len(journeys) ==  1
-    assert journeys[0] ==  saved_journeys[0]
+    assert len(journeys) == 1
+    assert journeys[0] == saved_journeys[0]
+
 
 def choose_best_alternatives_non_pt_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_walking_journey()]
@@ -1003,24 +1056,27 @@ def choose_best_alternatives_non_pt_test():
 
     scenario = destineo.Scenario()
     scenario._choose_best_alternatives(journeys)
-    assert len(journeys) ==  3
-    assert journeys[0] ==  saved_journeys[2]
-    assert journeys[1] ==  j1
-    assert journeys[2] ==  j2
+    assert len(journeys) == 3
+    assert journeys[0] == saved_journeys[2]
+    assert journeys[1] == j1
+    assert journeys[2] == j2
+
 
 def remove_extra_journeys_less_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 3, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  2
+    assert len(journeys) == 2
+
 
 def remove_extra_journeys_enougth_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey()]
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  2
+    assert len(journeys) == 2
+
 
 def remove_extra_journeys_more_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
@@ -1028,13 +1084,14 @@ def remove_extra_journeys_more_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  3
+    assert len(journeys) == 3
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    assert len(journeys) ==  2
-    assert journeys[0] ==  saved_journeys[0]
-    assert journeys[1] ==  saved_journeys[1]
+    assert len(journeys) == 2
+    assert journeys[0] == saved_journeys[0]
+    assert journeys[1] == saved_journeys[1]
+
 
 def remove_extra_journeys_more_with_walking_last_test():
     journeys = [get_bss_bss_journey(), get_bike_car_journey(), get_bss_bike_journey()]
@@ -1045,14 +1102,15 @@ def remove_extra_journeys_more_with_walking_last_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  4
+    assert len(journeys) == 4
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    assert len(journeys) ==  3
-    assert journeys[0] ==  saved_journeys[0]
-    assert journeys[1] ==  saved_journeys[1]
-    assert journeys[2] ==  j1
+    assert len(journeys) == 3
+    assert journeys[0] == saved_journeys[0]
+    assert journeys[1] == saved_journeys[1]
+    assert journeys[2] == j1
+
 
 def remove_extra_journeys_more_with_walking_first_test():
     j1 = response_pb2.Journey()
@@ -1062,14 +1120,14 @@ def remove_extra_journeys_more_with_walking_first_test():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  4
+    assert len(journeys) == 4
 
     scenario._remove_extra_journeys(journeys, 2, clockwise=True, timezone='UTC')
 
-    assert len(journeys) ==  3
-    assert journeys[0] ==  j1
-    assert journeys[1] ==  saved_journeys[1]
-    assert journeys[2] ==  saved_journeys[2]
+    assert len(journeys) == 3
+    assert journeys[0] == j1
+    assert journeys[1] == saved_journeys[1]
+    assert journeys[2] == saved_journeys[2]
 
 
 def remove_extra_journeys_similar_journey_latest_dep():
@@ -1078,7 +1136,7 @@ def remove_extra_journeys_similar_journey_latest_dep():
 
     j_eq1 = generate_journey(['bob'])
     j_eq1.type = 'bob'  # used as an id in the test
-    j_eq1.departure_date_time = 1425989999 # leave after, it's better
+    j_eq1.departure_date_time = 1425989999  # leave after, it's better
     j_eq1.arrival_date_time = 1425990000
 
     j_eq2 = generate_journey(['bob'])
@@ -1090,8 +1148,8 @@ def remove_extra_journeys_similar_journey_latest_dep():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  2
-    assert journeys[1].type ==  'bob'
+    assert len(journeys) == 2
+    assert journeys[1].type == 'bob'
 
 
 def remove_extra_journeys_not_similar_journeys():
@@ -1106,9 +1164,9 @@ def remove_extra_journeys_not_similar_journeys():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, None, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  2 #nothing filtered, they are not equivalent
-    assert journeys[0].type ==  'bobitto'
-    assert journeys[1].type ==  'babitta'
+    assert len(journeys) == 2  # nothing filtered, they are not equivalent
+    assert journeys[0].type == 'bobitto'
+    assert journeys[1].type == 'babitta'
 
 
 def remove_extra_journeys_max_and_similar():
@@ -1137,6 +1195,6 @@ def remove_extra_journeys_max_and_similar():
 
     scenario = destineo.Scenario()
     scenario._remove_extra_journeys(journeys, 1, clockwise=True, timezone='UTC')
-    assert len(journeys) ==  2
-    assert journeys[0].type ==  'bobitto1'
-    assert journeys[1].type ==  'non_pt_walk'
+    assert len(journeys) == 2
+    assert journeys[0].type == 'bobitto1'
+    assert journeys[1].type == 'non_pt_walk'

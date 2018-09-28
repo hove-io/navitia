@@ -31,6 +31,7 @@ import sys
 
 from clingon import clingon
 import logging
+
 """
 Nav generator
 

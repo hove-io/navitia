@@ -30,14 +30,32 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import app, cache
 from navitiacommon import models
-from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
+from navitiacommon.default_traveler_profile_params import (
+    default_traveler_profile_params,
+    acceptable_traveler_types,
+)
 from six.moves import map
 
+
 class TravelerProfile(object):
-    def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
-                 first_section_mode=[], last_section_mode=[], wheelchair=False, first_and_last_section_mode=[],
-                 max_walking_duration_to_pt=15*60, max_bike_duration_to_pt=15*60, max_bss_duration_to_pt=15*60,
-                 max_car_duration_to_pt=15*60, traveler_type='', is_from_db=False):
+    def __init__(
+        self,
+        walking_speed=1.12,
+        bike_speed=3.33,
+        bss_speed=3.33,
+        car_speed=11.11,
+        max_duration_to_pt=None,
+        first_section_mode=[],
+        last_section_mode=[],
+        wheelchair=False,
+        first_and_last_section_mode=[],
+        max_walking_duration_to_pt=15 * 60,
+        max_bike_duration_to_pt=15 * 60,
+        max_bss_duration_to_pt=15 * 60,
+        max_car_duration_to_pt=15 * 60,
+        traveler_type='',
+        is_from_db=False,
+    ):
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
         self.bss_speed = bss_speed
@@ -67,17 +85,19 @@ class TravelerProfile(object):
         self.wheelchair = wheelchair
 
     def override_params(self, args):
-        arg_2_profile_attr = (('walking_speed',              self.walking_speed),
-                              ('bike_speed',                 self.bike_speed),
-                              ('bss_speed',                  self.bss_speed),
-                              ('car_speed',                  self.car_speed),
-                              ('max_walking_duration_to_pt', self.max_walking_duration_to_pt),
-                              ('max_bike_duration_to_pt',    self.max_bike_duration_to_pt),
-                              ('max_bss_duration_to_pt',     self.max_bss_duration_to_pt),
-                              ('max_car_duration_to_pt',     self.max_car_duration_to_pt),
-                              ('origin_mode',                self.first_section_mode),
-                              ('destination_mode',           self.last_section_mode),
-                              ('wheelchair',                 self.wheelchair))
+        arg_2_profile_attr = (
+            ('walking_speed', self.walking_speed),
+            ('bike_speed', self.bike_speed),
+            ('bss_speed', self.bss_speed),
+            ('car_speed', self.car_speed),
+            ('max_walking_duration_to_pt', self.max_walking_duration_to_pt),
+            ('max_bike_duration_to_pt', self.max_bike_duration_to_pt),
+            ('max_bss_duration_to_pt', self.max_bss_duration_to_pt),
+            ('max_car_duration_to_pt', self.max_car_duration_to_pt),
+            ('origin_mode', self.first_section_mode),
+            ('destination_mode', self.last_section_mode),
+            ('wheelchair', self.wheelchair),
+        )
 
         def override(pair):
             arg, profile_attr = pair
@@ -103,20 +123,21 @@ class TravelerProfile(object):
         if model is None:
             return default_traveler_profiles[traveler_type]
 
-        return cls(traveler_type=traveler_type,
-                   walking_speed=model.walking_speed,
-                   bike_speed=model.bike_speed,
-                   car_speed=model.car_speed,
-                   bss_speed=model.bss_speed,
-                   wheelchair=model.wheelchair,
-                   max_walking_duration_to_pt=model.max_walking_duration_to_pt,
-                   max_bss_duration_to_pt=model.max_bss_duration_to_pt,
-                   max_bike_duration_to_pt=model.max_bike_duration_to_pt,
-                   max_car_duration_to_pt=model.max_car_duration_to_pt,
-                   first_section_mode=model.first_section_mode,
-                   last_section_mode=model. last_section_mode,
-                   is_from_db=True,
-                   )
+        return cls(
+            traveler_type=traveler_type,
+            walking_speed=model.walking_speed,
+            bike_speed=model.bike_speed,
+            car_speed=model.car_speed,
+            bss_speed=model.bss_speed,
+            wheelchair=model.wheelchair,
+            max_walking_duration_to_pt=model.max_walking_duration_to_pt,
+            max_bss_duration_to_pt=model.max_bss_duration_to_pt,
+            max_bike_duration_to_pt=model.max_bike_duration_to_pt,
+            max_car_duration_to_pt=model.max_car_duration_to_pt,
+            first_section_mode=model.first_section_mode,
+            last_section_mode=model.last_section_mode,
+            is_from_db=True,
+        )
 
     @classmethod
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
@@ -127,8 +148,8 @@ class TravelerProfile(object):
             traveler_profiles.append(profile)
         return traveler_profiles
 
+
 default_traveler_profiles = {}
 
 for (traveler_type, params) in default_traveler_profile_params.items():
     default_traveler_profiles[traveler_type] = TravelerProfile(is_from_db=False, **params)
-

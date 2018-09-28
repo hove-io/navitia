@@ -34,20 +34,15 @@ import logging
 from jormungandr.new_relic import record_exception
 
 
-__all__ = ["RegionNotFound", "DeadSocketException", "ApiNotFound",
-           "InvalidArguments"]
+__all__ = ["RegionNotFound", "DeadSocketException", "ApiNotFound", "InvalidArguments"]
 
 
 def format_error(code, message):
-    error = {"error":
-             {"id": code,
-              "message": message
-              }, "message": message}
+    error = {"error": {"id": code, "message": message}, "message": message}
     return error
 
 
 class RegionNotFound(HTTPException):
-
     def __init__(self, region=None, lon=None, lat=None, object_id=None, custom_msg=None):
         super(RegionNotFound, self).__init__()
         self.code = 404
@@ -62,28 +57,24 @@ class RegionNotFound(HTTPException):
                 lon, lat = object_id[6:].split(":")
                 object_id = None
         if region == lon == lat is None == object_id:
-            self.data = format_error("unknown_object", "No region nor "
-                                     "coordinates given")
+            self.data = format_error("unknown_object", "No region nor " "coordinates given")
         elif region and lon == lat == object_id is None:
-            self.data = format_error("unknown_object", "The region {0} "
-                                     "doesn't exists".format(region))
+            self.data = format_error("unknown_object", "The region {0} " "doesn't exists".format(region))
         elif region == object_id is None and lon and lat:
-            self.data = format_error("unknown_object",
-                                     "No region available for the coordinates:"
-                                     "{lon}, {lat}".format(lon=lon, lat=lat))
+            self.data = format_error(
+                "unknown_object",
+                "No region available for the coordinates:" "{lon}, {lat}".format(lon=lon, lat=lat),
+            )
         elif region == lon == lat is None and object_id:
-            self.data = format_error("unknown_object",
-                                     "Invalid id : {id}".format(id=object_id))
+            self.data = format_error("unknown_object", "Invalid id : {id}".format(id=object_id))
         else:
-            self.data = format_error("unknown_object",
-                                     "Unable to parse region")
+            self.data = format_error("unknown_object", "Unable to parse region")
 
     def __str__(self):
         return repr(self.data['message'])
 
 
 class DeadSocketException(HTTPException):
-
     def __init__(self, region, path):
         super(DeadSocketException, self).__init__()
         error = 'The region {} is dead'.format(region)
@@ -92,7 +83,6 @@ class DeadSocketException(HTTPException):
 
 
 class ApiNotFound(HTTPException):
-
     def __init__(self, api):
         super(ApiNotFound, self).__init__()
         error = 'The api {} doesn\'t exist'.format(api)
@@ -101,7 +91,6 @@ class ApiNotFound(HTTPException):
 
 
 class UnknownObject(HTTPException):
-
     def __init__(self, msg):
         super(UnknownObject, self).__init__()
         error = 'The object {} doesn\'t exist'.format(msg)
@@ -110,7 +99,6 @@ class UnknownObject(HTTPException):
 
 
 class InvalidArguments(HTTPException):
-
     def __init__(self, arg):
         super(InvalidArguments, self).__init__()
         self.data = format_error("unknown_object", "Invalid arguments " + arg)
@@ -118,7 +106,6 @@ class InvalidArguments(HTTPException):
 
 
 class UnableToParse(HTTPException):
-
     def __init__(self, msg):
         super(UnableToParse, self).__init__()
         self.data = format_error("unable_to_parse", msg)
@@ -126,7 +113,6 @@ class UnableToParse(HTTPException):
 
 
 class TechnicalError(HTTPException):
-
     def __init__(self, msg):
         super(TechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
@@ -154,4 +140,3 @@ def log_exception(sender, exception, **extra):
     else:
         logger.exception(error)
         record_exception()
-

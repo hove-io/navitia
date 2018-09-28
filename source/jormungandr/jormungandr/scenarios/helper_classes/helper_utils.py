@@ -37,12 +37,13 @@ import copy
 import logging
 import six
 
-MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
-                   'bike': response_pb2.Bike,
-                   'bss': response_pb2.Bss,
-                   'car': response_pb2.Car,
-                   'ridesharing': response_pb2.Ridesharing}
-
+MODE_TO_PB_MODE = {
+    'walking': response_pb2.Walking,
+    'bike': response_pb2.Bike,
+    'bss': response_pb2.Bss,
+    'car': response_pb2.Car,
+    'ridesharing': response_pb2.Ridesharing,
+}
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -55,7 +56,11 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     pt_journey.duration += section.duration
     section.begin_date_time = begin
     section.end_date_time = end
-    section.street_network.mode = response_pb2.Walking # mode is always walking for a crow_fly
+    if section.duration > 0:
+        section.street_network.mode = MODE_TO_PB_MODE.get(mode)
+    # mode is always walking for a teleportation crow_fly
+    else:
+        section.street_network.mode = response_pb2.Walking
 
     # Calculate section length
     from_coord = get_pt_object_coord(section.origin)
@@ -75,14 +80,14 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
 def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_path):
     # Unable to project
     f = fallback_durations.get(uri, None)
-    is_unknown_projection = (f.status == response_pb2.unknown if f else False)
+    is_unknown_projection = f.status == response_pb2.unknown if f else False
 
-    is_crowfly_sp = (uri in crowfly_sps)
+    is_crowfly_sp = uri in crowfly_sps
 
     # At this point, theoretically, fallback_dp should be found since the isochrone has already given a
     # valid value BUT, in some cases(due to the bad projection, etc), fallback_dp may not exist even
     # though the isochrone said "OK". In these cases, we create a crowfly section
-    is_empty_fallback_dp = (not fallback_direct_path or not fallback_direct_path.journeys)
+    is_empty_fallback_dp = not fallback_direct_path or not fallback_direct_path.journeys
     return is_unknown_projection or is_crowfly_sp or is_empty_fallback_dp
 
 
@@ -150,8 +155,15 @@ def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
     _extend_pt_sections_with_fallback_sections(pt_journey, aligned_fallback)
 
 
-def _build_from(requested_orig_obj, pt_journeys, dep_mode, streetnetwork_path_pool, orig_accessible_by_crowfly,
-                orig_fallback_durations_pool, request):
+def _build_from(
+    requested_orig_obj,
+    pt_journeys,
+    dep_mode,
+    streetnetwork_path_pool,
+    orig_accessible_by_crowfly,
+    orig_fallback_durations_pool,
+    request,
+):
 
     accessibles_by_crowfly = orig_accessible_by_crowfly.wait_and_get()
     fallback_durations = orig_fallback_durations_pool.wait_and_get(dep_mode)
@@ -162,18 +174,31 @@ def _build_from(requested_orig_obj, pt_journeys, dep_mode, streetnetwork_path_po
         fallback_period_extremity = PeriodExtremity(pt_journey.departure_date_time, False)
         # extend the journey with the fallback routing path
         direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
-        fallback_dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj, pt_origin,
-                                                           dep_mode, fallback_period_extremity, direct_path_type,
-                                                           request=request)
+        fallback_dp = streetnetwork_path_pool.wait_and_get(
+            requested_orig_obj, pt_origin, dep_mode, fallback_period_extremity, direct_path_type, request=request
+        )
 
         if requested_orig_obj.uri != pt_origin.uri:
             if pt_origin.uri in accessibles_by_crowfly.odt:
                 pt_journey.sections[0].origin.CopyFrom(requested_orig_obj)
-            elif _is_crowfly_needed(pt_origin.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp):
-                crowfly_departure_dt = pt_journey.departure_date_time - fallback_durations[pt_origin.uri].duration
-                pt_journey.sections.extend([_create_crowfly(pt_journey, requested_orig_obj, pt_origin,
-                                                            crowfly_departure_dt,
-                                                            pt_journey.sections[0].begin_date_time, dep_mode)])
+            elif _is_crowfly_needed(
+                pt_origin.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
+            ):
+                crowfly_departure_dt = (
+                    pt_journey.departure_date_time - fallback_durations[pt_origin.uri].duration
+                )
+                pt_journey.sections.extend(
+                    [
+                        _create_crowfly(
+                            pt_journey,
+                            requested_orig_obj,
+                            pt_origin,
+                            crowfly_departure_dt,
+                            pt_journey.sections[0].begin_date_time,
+                            dep_mode,
+                        )
+                    ]
+                )
             else:
                 # extend the journey with the fallback routing path
                 _extend_journey(pt_journey, fallback_dp, fallback_period_extremity)
@@ -184,8 +209,15 @@ def _build_from(requested_orig_obj, pt_journeys, dep_mode, streetnetwork_path_po
     return pt_journeys
 
 
-def _build_to(requested_dest_obj, pt_journeys, arr_mode, streetnetwork_path_pool, dest_accessible_by_crowfly,
-              dest_fallback_durations_pool, request):
+def _build_to(
+    requested_dest_obj,
+    pt_journeys,
+    arr_mode,
+    streetnetwork_path_pool,
+    dest_accessible_by_crowfly,
+    dest_fallback_durations_pool,
+    request,
+):
 
     accessibles_by_crowfly = dest_accessible_by_crowfly.wait_and_get()
     fallback_durations = dest_fallback_durations_pool.wait_and_get(arr_mode)
@@ -198,16 +230,34 @@ def _build_to(requested_dest_obj, pt_journeys, arr_mode, streetnetwork_path_pool
             fallback_period_extremity = PeriodExtremity(pt_journey.arrival_date_time, True)
             # extend the journey with the fallback routing path
             direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
-            fallback_dp = streetnetwork_path_pool.wait_and_get(pt_destination, requested_dest_obj,
-                                                               arr_mode, fallback_period_extremity,
-                                                               direct_path_type, request=request)
+            fallback_dp = streetnetwork_path_pool.wait_and_get(
+                pt_destination,
+                requested_dest_obj,
+                arr_mode,
+                fallback_period_extremity,
+                direct_path_type,
+                request=request,
+            )
             if pt_destination.uri in accessibles_by_crowfly.odt:
                 pt_journey.sections[-1].destination.CopyFrom(requested_dest_obj)
-            elif _is_crowfly_needed(pt_destination.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp):
-                crowfly_arrival_dt = pt_journey.arrival_date_time + fallback_durations[pt_destination.uri].duration
-                pt_journey.sections.extend([_create_crowfly(pt_journey, pt_destination, requested_dest_obj,
-                                                            last_section_end,
-                                                            crowfly_arrival_dt, arr_mode)])
+            elif _is_crowfly_needed(
+                pt_destination.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
+            ):
+                crowfly_arrival_dt = (
+                    pt_journey.arrival_date_time + fallback_durations[pt_destination.uri].duration
+                )
+                pt_journey.sections.extend(
+                    [
+                        _create_crowfly(
+                            pt_journey,
+                            pt_destination,
+                            requested_dest_obj,
+                            last_section_end,
+                            crowfly_arrival_dt,
+                            arr_mode,
+                        )
+                    ]
+                )
             else:
                 _extend_journey(pt_journey, fallback_dp, fallback_period_extremity)
 
@@ -218,7 +268,10 @@ def _build_to(requested_dest_obj, pt_journeys, arr_mode, streetnetwork_path_pool
 
 def _clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt):
     if pt_journeys and pt_journeys.HasField(b"error"):
-        if pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution') and has_valid_direct_path_no_pt:
+        if (
+            pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution')
+            and has_valid_direct_path_no_pt
+        ):
             pt_journeys.ClearField(b"error")
         else:
             raise PtException(pt_journeys)
@@ -240,13 +293,15 @@ def get_max_fallback_duration(request, mode, dp_future):
     return min(max_duration, dp_duration)
 
 
-def compute_fallback(from_obj,
-                     to_obj,
-                     pt_journey_pool,
-                     streetnetwork_path_pool,
-                     orig_places_free_access,
-                     dest_places_free_access,
-                     request):
+def compute_fallback(
+    from_obj,
+    to_obj,
+    pt_journey_pool,
+    streetnetwork_path_pool,
+    orig_places_free_access,
+    dest_places_free_access,
+    request,
+):
     """
     Launching fallback computation asynchronously once the pt_journey is finished
     """
@@ -264,9 +319,13 @@ def compute_fallback(from_obj,
             continue
 
         places_free_access = orig_places_free_access.wait_and_get()
-        orig_all_free_access = places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
+        orig_all_free_access = (
+            places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
+        )
         places_free_access = dest_places_free_access.wait_and_get()
-        dest_all_free_access = places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
+        dest_all_free_access = (
+            places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
+        )
 
         for journey in pt_journeys.journeys:
             # from
@@ -274,27 +333,31 @@ def compute_fallback(from_obj,
             direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
             fallback_extremity_dep = PeriodExtremity(journey.departure_date_time, False)
             if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
-                streetnetwork_path_pool.add_async_request(from_obj, pt_orig, dep_mode, fallback_extremity_dep,
-                                                          request, direct_path_type)
+                streetnetwork_path_pool.add_async_request(
+                    from_obj, pt_orig, dep_mode, fallback_extremity_dep, request, direct_path_type
+                )
 
             # to
             pt_dest = journey.sections[-1].destination
             direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
             fallback_extremity_arr = PeriodExtremity(journey.arrival_date_time, True)
             if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
-                streetnetwork_path_pool.add_async_request(pt_dest, to_obj, arr_mode, fallback_extremity_arr,
-                                                          request, direct_path_type)
+                streetnetwork_path_pool.add_async_request(
+                    pt_dest, to_obj, arr_mode, fallback_extremity_arr, request, direct_path_type
+                )
 
 
-def complete_pt_journey(requested_orig_obj,
-                        requested_dest_obj,
-                        pt_journey_pool_elem,
-                        streetnetwork_path_pool,
-                        orig_places_free_access,
-                        dest_places_free_access,
-                        orig_fallback_durations_pool,
-                        dest_fallback_durations_pool,
-                        request):
+def complete_pt_journey(
+    requested_orig_obj,
+    requested_dest_obj,
+    pt_journey_pool_elem,
+    streetnetwork_path_pool,
+    orig_places_free_access,
+    dest_places_free_access,
+    orig_fallback_durations_pool,
+    dest_fallback_durations_pool,
+    request,
+):
     """
     We complete the pt journey by adding the beginning fallback and the ending fallback
 
@@ -310,21 +373,25 @@ def complete_pt_journey(requested_orig_obj,
 
     logger.debug("building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
 
-    pt_journeys = _build_from(requested_orig_obj,
-                              pt_journeys,
-                              dep_mode,
-                              streetnetwork_path_pool,
-                              orig_places_free_access,
-                              orig_fallback_durations_pool,
-                              request=request)
+    pt_journeys = _build_from(
+        requested_orig_obj,
+        pt_journeys,
+        dep_mode,
+        streetnetwork_path_pool,
+        orig_places_free_access,
+        orig_fallback_durations_pool,
+        request=request,
+    )
 
-    pt_journeys = _build_to(requested_dest_obj,
-                            pt_journeys,
-                            arr_mode,
-                            streetnetwork_path_pool,
-                            dest_places_free_access,
-                            dest_fallback_durations_pool,
-                            request=request)
+    pt_journeys = _build_to(
+        requested_dest_obj,
+        pt_journeys,
+        arr_mode,
+        streetnetwork_path_pool,
+        dest_places_free_access,
+        dest_fallback_durations_pool,
+        request=request,
+    )
 
     logger.debug("finish building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
 
@@ -334,8 +401,9 @@ def complete_pt_journey(requested_orig_obj,
 def get_entry_point_or_raise(entry_point_obj_future, requested_uri):
     entry_point_obj = entry_point_obj_future.wait_and_get()
     if not entry_point_obj:
-        raise EntryPointException("The entry point: {} is not valid".format(requested_uri),
-                                  response_pb2.Error.unknown_object)
+        raise EntryPointException(
+            "The entry point: {} is not valid".format(requested_uri), response_pb2.Error.unknown_object
+        )
     return entry_point_obj
 
 
@@ -345,8 +413,9 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
     orig_fallback_durations_is_empty = orig_fallback_durations_pool.is_empty()
     dest_fallback_durations_is_empty = dest_fallback_durations_pool.is_empty()
     if orig_fallback_durations_is_empty and dest_fallback_durations_is_empty:
-        raise EntryPointException("no origin point nor destination point",
-                                  response_pb2.Error.no_origin_nor_destination)
+        raise EntryPointException(
+            "no origin point nor destination point", response_pb2.Error.no_origin_nor_destination
+        )
     if orig_fallback_durations_is_empty:
         raise EntryPointException("no origin point", response_pb2.Error.no_origin)
     if dest_fallback_durations_is_empty:
@@ -355,6 +424,7 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
 
 N_DEG_TO_RAD = 0.01745329238
 EARTH_RADIUS_IN_METERS = 6372797.560856
+
 
 def crowfly_distance_between(start_coord, end_coord):
     lon_arc = (start_coord.lon - end_coord.lon) * N_DEG_TO_RAD

@@ -33,23 +33,22 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType, \
-    StreetNetworkPathKey
+from jormungandr.street_network.street_network import (
+    AbstractStreetNetworkService,
+    StreetNetworkPathType,
+    StreetNetworkPathKey,
+)
 from jormungandr import utils
 
 
 class Kraken(AbstractStreetNetworkService):
-
     def __init__(self, instance, service_url, modes=[], id='kraken', timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.modes = modes
         self.sn_system_id = id
 
     def status(self):
-        return {'id': unicode(self.sn_system_id),
-                'class': self.__class__.__name__,
-                'modes': self.modes,
-            }
+        return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _reverse_journeys(self, response):
         if not getattr(response, "journeys"):
@@ -68,12 +67,14 @@ class Kraken(AbstractStreetNetworkService):
             j.sections.sort(utils.SectionSorter())
         return response
 
-    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
         """
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
                                  it's returned by kraken. In other case, it's ignored
         """
-        should_invert_journey = (mode == 'car' and direct_path_type == StreetNetworkPathType.ENDING_FALLBACK)
+        should_invert_journey = mode == 'car' and direct_path_type == StreetNetworkPathType.ENDING_FALLBACK
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
@@ -96,7 +97,9 @@ class Kraken(AbstractStreetNetworkService):
         req.direct_path.streetnetwork_params.car_speed = request['car_speed']
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
         req.direct_path.streetnetwork_params.car_no_park_speed = request['car_no_park_speed']
-        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request['max_car_no_park_duration_to_pt']
+        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
+            'max_car_no_park_duration_to_pt'
+        ]
 
         response = self.instance.send_and_receive(req)
 
@@ -104,8 +107,9 @@ class Kraken(AbstractStreetNetworkService):
             return self._reverse_journeys(response)
         return response
 
-
-    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+    ):
         # TODO: reverse is not handled as so far
         speed_switcher = {
             "walking": request['walking_speed'],
@@ -117,7 +121,7 @@ class Kraken(AbstractStreetNetworkService):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        #kraken can only manage 1-n request, so we reverse request if needed
+        # kraken can only manage 1-n request, so we reverse request if needed
         if len(origins) > 1:
             if len(destinations) > 1:
                 logging.getLogger(__name__).error('routing matrix error, no unique center point')

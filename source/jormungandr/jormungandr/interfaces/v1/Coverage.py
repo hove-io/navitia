@@ -45,31 +45,37 @@ from jormungandr.interfaces.v1.fields import context_utc
 collections = list(collections_to_resource_type.keys())
 
 coverage_marshall_fields = [
-    ("regions", fields.List(NonNullNested({
-        "id": fields.String(attribute="region_id"),
-        "start_production_date": fields.String,
-        "end_production_date": fields.String,
-        "last_load_at": FieldDateTime(),
-        "name": fields.String,
-        "status": fields.String,
-        "shape": fields.String,
-        "error": NonNullNested({
-            "code": fields.String,
-            "value": fields.String
-        }),
-        "dataset_created_at": fields.String(),
-    }))),
-    ('context', context_utc)
+    (
+        "regions",
+        fields.List(
+            NonNullNested(
+                {
+                    "id": fields.String(attribute="region_id"),
+                    "start_production_date": fields.String,
+                    "end_production_date": fields.String,
+                    "last_load_at": FieldDateTime(),
+                    "name": fields.String,
+                    "status": fields.String,
+                    "shape": fields.String,
+                    "error": NonNullNested({"code": fields.String, "value": fields.String}),
+                    "dataset_created_at": fields.String(),
+                }
+            )
+        ),
+    ),
+    ('context', context_utc),
 ]
 
 
 class Coverage(StatedResource):
     def __init__(self, quota=True, *args, **kwargs):
-        super(Coverage, self).__init__(quota=quota,
-                                       output_type_serializer=CoveragesSerializer,
-                                       *args, **kwargs)
-        self.parsers["get"].add_argument("disable_geojson", type=BooleanType(), default=False,
-                                         help='hide the coverage geojson to reduce response size')
+        super(Coverage, self).__init__(quota=quota, output_type_serializer=CoveragesSerializer, *args, **kwargs)
+        self.parsers["get"].add_argument(
+            "disable_geojson",
+            type=BooleanType(),
+            default=False,
+            help='hide the coverage geojson to reduce response size',
+        )
 
     @clean_links()
     @add_coverage_link()

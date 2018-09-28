@@ -41,11 +41,7 @@ MOCKED_PROXY_CONF = [
         "object_id_tag": "Kisio数字",
         "id": "Kisio数字",
         "class": "jormungandr.realtime_schedule.synthese.Synthese",
-        "args": {
-            "timezone": "UTC",
-            "service_url": "http://bob.com",
-            "timeout": 15
-        }
+        "args": {"timezone": "UTC", "service_url": "http://bob.com", "timeout": 15},
     }
 ]
 
@@ -54,10 +50,11 @@ def _get_schedule(sched, sp_uri, route_uri):
     """ small helper that extract the information from a route point stop schedule """
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
-        for r in next(rp_sched['date_times']
-                      for rp_sched in sched['stop_schedules']
-                      if rp_sched['stop_point']['id'] == sp_uri
-                      and rp_sched['route']['id'] == route_uri)
+        for r in next(
+            rp_sched['date_times']
+            for rp_sched in sched['stop_schedules']
+            if rp_sched['stop_point']['id'] == sp_uri and rp_sched['route']['id'] == route_uri
+        )
     ]
 
 
@@ -69,6 +66,7 @@ class TestSyntheseSchedules(AbstractTestFixture):
     Note: for readability, in the dataset, base schedule is always on hours (8:00, 9:00),
     and realtime schedule is always at 17min (8:17, 9:17)
     """
+
     query_template = 'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
 
     def test_stop_schedule_good_id(self):
@@ -76,9 +74,10 @@ class TestSyntheseSchedules(AbstractTestFixture):
         test for a route point with good codes (but with multiple codes on the route)
         we should be able to find all the synthese passages and aggregate them
         """
-        mock_requests = MockRequests({
-            'http://bob.com?SERVICE=tdg&roid=syn_stoppoint1&rn=10000&date=2016-01-02 08:00':
-            ("""<?xml version="1.0" encoding="UTF-8"?>
+        mock_requests = MockRequests(
+            {
+                'http://bob.com?SERVICE=tdg&roid=syn_stoppoint1&rn=10000&date=2016-01-02 08:00': (
+                    """<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="syn_cute_routeA1" dateTime="2016-Jan-02 09:17:17" blink="0" realTime="yes"
                   waiting_time="00:07:10">
@@ -111,8 +110,11 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
                 </timeTable>
-            """, 200)
-        })
+            """,
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template.format(sp='SP_1')
             response = self.query_region(query)
@@ -131,9 +133,10 @@ class TestSyntheseSchedules(AbstractTestFixture):
         since there is only one route in navitia and 1 response in synthese (with the good line),
         we get some realtime
         """
-        mock_requests = MockRequests({
-            'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00':
-            ("""<?xml version="1.0" encoding="UTF-8"?>
+        mock_requests = MockRequests(
+            {
+                'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00': (
+                    """<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="unknown_route_code" dateTime="2016-Jan-02 09:17:17" realTime="yes"
                   waiting_time="00:07:10">
@@ -150,8 +153,11 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
                 </timeTable>
-             """, 200),
-        })
+             """,
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template.format(sp='SP_11')
             response = self.query_region(query)
@@ -168,9 +174,10 @@ class TestSyntheseSchedules(AbstractTestFixture):
         since there is only one route in navitia and 1 response in synthese but not on the same line
         we don't get some realtime
         """
-        mock_requests = MockRequests({
-            'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00':
-            ("""<?xml version="1.0" encoding="UTF-8"?>
+        mock_requests = MockRequests(
+            {
+                'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00': (
+                    """<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="unknown_route_code" dateTime="2016-Jan-02 09:17:17" realTime="yes"
                   waiting_time="00:07:10">
@@ -180,16 +187,17 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
                 </timeTable>
-             """, 200),
-        })
+             """,
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template.format(sp='SP_11')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            assert _get_schedule(response, 'SP_11', 'B1') == [{
-                'rt': False, 'dt': '20160102T090000'
-            }]
+            assert _get_schedule(response, 'SP_11', 'B1') == [{'rt': False, 'dt': '20160102T090000'}]
 
     def test_stop_schedule_bad_id_multiple_response(self):
         """
@@ -197,9 +205,10 @@ class TestSyntheseSchedules(AbstractTestFixture):
         since there is only one route in navitia but multiple routes in synthese, we get all the synthese
         passage on this route
         """
-        mock_requests = MockRequests({
-            'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00':
-            ("""<?xml version="1.0" encoding="UTF-8"?>
+        mock_requests = MockRequests(
+            {
+                'http://bob.com?SERVICE=tdg&roid=syn_stoppoint11&rn=10000&date=2016-01-02 08:00': (
+                    """<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="unknown_route_code1" dateTime="2016-Jan-02 09:17:17" realTime="yes"
                   waiting_time="00:07:10">
@@ -225,27 +234,28 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
                 </timeTable>
-             """, 200),
-        })
+             """,
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template.format(sp='SP_11')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
             sched = _get_schedule(response, 'SP_11', 'B1')
-            assert sched == [
-                {'rt': True, 'dt': '20160102T091717'},
-                {'rt': True, 'dt': '20160102T101717'},
-            ]
+            assert sched == [{'rt': True, 'dt': '20160102T091717'}, {'rt': True, 'dt': '20160102T101717'}]
 
     def test_stop_schedule_bad_id_multiple_routes(self):
         """
         test for a route point when the route code is not in synthese
         since there are multiple routes in navitia, we can't sort them out, and we don't get some realtime
         """
-        mock_requests = MockRequests({
-            'http://bob.com?SERVICE=tdg&roid=syn_stoppoint21&rn=10000&date=2016-01-02 08:00':
-            ("""<?xml version="1.0" encoding="UTF-8"?>
+        mock_requests = MockRequests(
+            {
+                'http://bob.com?SERVICE=tdg&roid=syn_stoppoint21&rn=10000&date=2016-01-02 08:00': (
+                    """<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="unknown_route" dateTime="2016-Jan-02 09:17:17" blink="0" realTime="yes"
                   waiting_time="00:07:10">
@@ -255,24 +265,24 @@ class TestSyntheseSchedules(AbstractTestFixture):
                     </line>
                   </journey>
                 </timeTable>
-            """, 200)
-        })
+            """,
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template.format(sp='SP_21')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 3
-            assert _get_schedule(response, 'SP_21', 'C1') == [{
-                'rt': False, 'dt': '20160102T090000'
-            }]
-            assert _get_schedule(response, 'SP_21', 'C2') == [{
-                'rt': False, 'dt': '20160102T100000'
-            }]
+            assert _get_schedule(response, 'SP_21', 'C1') == [{'rt': False, 'dt': '20160102T090000'}]
+            assert _get_schedule(response, 'SP_21', 'C2') == [{'rt': False, 'dt': '20160102T100000'}]
 
     def test_pt_ref(self):
         """there are 50 stopareas in the dataset to test the pagination handling"""
         from jormungandr import i_manager
         from navitiacommon import type_pb2
+
         i = i_manager.instances['multiple_schedules']
 
         assert len([r for r in i.ptref.get_objs(type_pb2.STOP_AREA)]) == 50

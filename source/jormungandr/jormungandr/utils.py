@@ -35,6 +35,7 @@ from google.protobuf.descriptor import FieldDescriptor
 import pytz
 from jormungandr.timezone import get_timezone
 from navitiacommon import response_pb2, type_pb2
+from navitiacommon.parser_args_type import DateTimeFormat
 from builtins import range, zip
 from importlib import import_module
 import logging
@@ -50,6 +51,7 @@ import flask
 from contextlib import contextmanager
 import functools
 import sys
+
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
@@ -62,12 +64,15 @@ def get_uri_pt_object(pt_object):
         return "coord:{}:{}".format(coords[0], coords[1])
     return pt_object.uri
 
+
 def kilometers_to_meters(distance):
     return distance * 1000.0
+
 
 def is_coord(uri):
     # for the moment we do a simple check
     return get_lon_lat(uri) != (None, None)
+
 
 def get_lon_lat(uri):
     """
@@ -130,7 +135,6 @@ def date_to_timestamp(date):
 
 
 def str_datetime_utc_to_local(dt, timezone):
-    from jormungandr.interfaces.parsers import DateTimeFormat
     if dt:
         utc_dt = DateTimeFormat()(dt)
     else:
@@ -231,12 +235,12 @@ def walk_dict(tree, visitor):
     add_elt("main", tree, first=True)
     while queue:
         elem = queue.pop()
-        #we don't want to visit the list, we'll visit each node separately
+        # we don't want to visit the list, we'll visit each node separately
         if not isinstance(elem[1], (list, tuple)):
             if visitor(elem[0], elem[1]) is True:
-                #we stop the search if the visitor returns True
+                # we stop the search if the visitor returns True
                 break
-        #for list and tuple, the name is the parent's name
+        # for list and tuple, the name is the parent's name
         add_elt(elem[0], elem[1])
 
 
@@ -308,10 +312,10 @@ def realtime_level_to_pbf(level):
         raise ValueError('Impossible to convert in pbf')
 
 
-#we can't use reverse(enumerate(list)) without creating a temporary
-#list, so we define our own reverse enumerate
+# we can't use reverse(enumerate(list)) without creating a temporary
+# list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return zip(xrange(len(l)-1, -1, -1), reversed(l))
+    return zip(xrange(len(l) - 1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):
@@ -363,6 +367,7 @@ def create_object(configuration):
 
 def generate_id():
     import shortuuid
+
     return shortuuid.uuid()
 
 
@@ -391,11 +396,9 @@ def get_pt_object_coord(pt_object):
         type_pb2.STOP_AREA: "stop_area",
         type_pb2.ADDRESS: "address",
         type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
-        type_pb2.POI: "poi"
+        type_pb2.POI: "poi",
     }
-    attr = getattr(pt_object,
-                   map_coord.get(pt_object.embedded_type, ""),
-                   None)
+    attr = getattr(pt_object, map_coord.get(pt_object.embedded_type, ""), None)
     coord = getattr(attr, "coord", None)
 
     if not coord:
@@ -416,30 +419,30 @@ def decode_polyline(encoded, precision=6):
     See: https://mapzen.com/documentation/mobility/decoding/#python (valhalla)
          http://developers.geovelo.fr/#/documentation/compute (geovelo)
     '''
-    inv = 10**-precision
+    inv = 10 ** -precision
     decoded = []
     previous = [0, 0]
     i = 0
-    #for each byte
+    # for each byte
     while i < len(encoded):
-        #for each coord (lat, lon)
+        # for each coord (lat, lon)
         ll = [0, 0]
         for j in [0, 1]:
             shift = 0
             byte = 0x20
-            #keep decoding bytes until you have this coord
+            # keep decoding bytes until you have this coord
             while byte >= 0x20:
                 byte = ord(encoded[i]) - 63
                 i += 1
                 ll[j] |= (byte & 0x1f) << shift
                 shift += 5
-            #get the final value adding the previous offset and remember it for the next
+            # get the final value adding the previous offset and remember it for the next
             ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))
             previous[j] = ll[j]
-        #scale by the precision and chop off long coords also flip the positions so
+        # scale by the precision and chop off long coords also flip the positions so
         # #its the far more standard lon,lat instead of lat,lon
         decoded.append([float('%.6f' % (ll[1] * inv)), float('%.6f' % (ll[0] * inv))])
-        #hand back the list of coordinates
+        # hand back the list of coordinates
     return decoded
 
 
@@ -481,6 +484,7 @@ def make_namedtuple(typename, *fields, **fields_with_default):
     TypeError: __new__() takes at least 3 arguments (1 given)
     """
     import collections
+
     field_names = list(fields) + list(fields_with_default.keys())
     T = collections.namedtuple(typename, field_names)
     T.__new__.__defaults__ = tuple(fields_with_default.values())
@@ -519,6 +523,7 @@ def make_timestamp_from_str(strftime):
     """
     from dateutil import parser
     import calendar
+
     return calendar.timegm(parser.parse(strftime).utctimetuple())
 
 
@@ -533,6 +538,7 @@ def get_house_number(housenumber):
 # The two following functions allow to use flask request context in greenlet
 # The decorator provided by flask (@copy_current_request_context) will generate an assertion error with multiple greenlets
 
+
 def copy_flask_request_context():
     """
     Make a copy of the 'main' flask request conquest to be used with the context manager below
@@ -541,10 +547,13 @@ def copy_flask_request_context():
     # Copy flask request context to be used in greenlet
     top = flask._request_ctx_stack.top
     if top is None:
-        raise RuntimeError('This function can only be used at local scopes '
-                            'when a request context is on the stack.  For instance within '
-                            'view functions.')
+        raise RuntimeError(
+            'This function can only be used at local scopes '
+            'when a request context is on the stack.  For instance within '
+            'view functions.'
+        )
     return top.copy()
+
 
 @contextmanager
 def copy_context_in_greenlet_stack(request_context):
@@ -599,6 +608,7 @@ def compose(*funs):
     """
     return lambda obj: functools.reduce(lambda prev, f: f(prev), funs, obj)
 
+
 class ComposedFilter(object):
     """
     Compose several filters with convenient interfaces
@@ -614,6 +624,7 @@ class ComposedFilter(object):
     >>> list(f(range(40)))
     [0, 30]
     """
+
     def __init__(self):
         self.filters = []
 

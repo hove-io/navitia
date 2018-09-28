@@ -69,8 +69,7 @@ def import_last_stop_dataset(instance_name, wait=True):
 
     files = [d.name for d in instance.last_datasets(nb_dataset=1, family_type='pt')]
     logger = logging.getLogger(__name__)
-    logger.info('we reimport to mimir the last dataset of %s, composed of: %s',
-                instance.name, files)
+    logger.info('we reimport to mimir the last dataset of %s, composed of: %s', instance.name, files)
     if len(files) == 1:
         _file = files[0]
         future = tasks.import_in_mimir(_file, instance)

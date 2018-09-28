@@ -29,9 +29,24 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone, \
-    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars, \
-    converters_collection_type, Status, GeoStatus, JSONSchema, LineReports
+from jormungandr.interfaces.v1 import (
+    Uri,
+    Coverage,
+    Journeys,
+    GraphicalIsochrone,
+    HeatMap,
+    Schedules,
+    Places,
+    Ptobjects,
+    Coord,
+    Disruptions,
+    Calendars,
+    converters_collection_type,
+    Status,
+    GeoStatus,
+    JSONSchema,
+    LineReports,
+)
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app
@@ -41,6 +56,7 @@ from jormungandr.modules.v1_routing.resources import Index
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
+
     type_ = str
     regex = '[^(/;)]+'
 
@@ -50,6 +66,7 @@ class RegionConverter(BaseConverter):
 
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
+
     type_ = float
     regex = '-?\\d+(\\.\\d+)?'
 
@@ -59,6 +76,7 @@ class LonConverter(FloatConverter):
 
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
+
     type_ = float
     regex = '-?\\d+(\\.\\d+)?'
 
@@ -68,6 +86,7 @@ class LatConverter(FloatConverter):
 
 class UriConverter(PathConverter):
     """First part of the uri"""
+
     type_ = str
 
     def __init__(self, *args, **kwargs):
@@ -76,6 +95,7 @@ class UriConverter(PathConverter):
 
 class IdConverter(BaseConverter):
     """Id of the object you want to query"""
+
     type_ = str
 
     def __init__(self, *args, **kwargs):
@@ -84,10 +104,9 @@ class IdConverter(BaseConverter):
 
 class V1Routing(AModule):
     def __init__(self, api, name):
-        super(V1Routing, self).__init__(api, name,
-                                        description='Current version of navitia API',
-                                        status='current',
-                                        index_endpoint='index')
+        super(V1Routing, self).__init__(
+            api, name, description='Current version of navitia API', status='current', index_endpoint='index'
+        )
 
     def setup(self):
         self.api.app.url_map.converters['region'] = RegionConverter
@@ -98,163 +117,164 @@ class V1Routing(AModule):
         self.api.app.url_map.strict_slashes = False
 
         self.module_resources_manager.register_resource(Index.Index())
-        self.add_resource(Index.Index,
-                          '/',
-                          '',
-                          endpoint='index')
+        self.add_resource(Index.Index, '/', '', endpoint='index')
         self.module_resources_manager.register_resource(Index.TechnicalStatus())
-        self.add_resource(Index.TechnicalStatus,
-                          '/status',
-                          endpoint='technical_status')
+        self.add_resource(Index.TechnicalStatus, '/status', endpoint='technical_status')
         lon_lat = '<lon:lon>;<lat:lat>/'
         coverage = '/coverage/'
         region = coverage + '<region:region>/'
         coord = coverage + lon_lat
 
-        self.add_resource(Coverage.Coverage,
-                          coverage,
-                          region,
-                          coord,
-                          endpoint='coverage')
+        self.add_resource(Coverage.Coverage, coverage, region, coord, endpoint='coverage')
 
-        self.add_resource(Coord.Coord,
-                          '/coord/' + lon_lat,
-                          '/coords/' + lon_lat,
-                          endpoint='coord')
+        self.add_resource(Coord.Coord, '/coord/' + lon_lat, '/coords/' + lon_lat, endpoint='coord')
 
         collecs = list(converters_collection_type.collections_to_resource_type.keys())
         for collection in collecs:
             # we want to hide the connections apis, as they are only for debug
             hide = collection == 'connections'
-            self.add_resource(getattr(Uri, collection)(True),
-                              region + collection,
-                              coord + collection,
-                              region + '<uri:uri>/' + collection,
-                              coord + '<uri:uri>/' + collection,
-                              endpoint=collection + '.collection', hide=hide)
+            self.add_resource(
+                getattr(Uri, collection)(True),
+                region + collection,
+                coord + collection,
+                region + '<uri:uri>/' + collection,
+                coord + '<uri:uri>/' + collection,
+                endpoint=collection + '.collection',
+                hide=hide,
+            )
 
             if collection == 'connections':
                 # connections api cannot be query by id
                 continue
-            self.add_resource(getattr(Uri, collection)(False),
-                              region + collection + '/<id:id>',
-                              coord + collection + '/<id:id>',
-                              region + '<uri:uri>/' + collection + '/<id:id>',
-                              coord + '<uri:uri>/' + collection + '/<id:id>',
-                              endpoint=collection + '.id', hide=hide)
+            self.add_resource(
+                getattr(Uri, collection)(False),
+                region + collection + '/<id:id>',
+                coord + collection + '/<id:id>',
+                region + '<uri:uri>/' + collection + '/<id:id>',
+                coord + '<uri:uri>/' + collection + '/<id:id>',
+                endpoint=collection + '.id',
+                hide=hide,
+            )
 
-        collecs = ["routes", "lines", "line_groups", "networks", "stop_areas", "stop_points",
-                   "vehicle_journeys"]
+        collecs = ["routes", "lines", "line_groups", "networks", "stop_areas", "stop_points", "vehicle_journeys"]
         for collection in collecs:
-            self.add_resource(getattr(Uri, collection)(True),
-                              '/' + collection,
-                              endpoint=collection + '.external_codes')
+            self.add_resource(
+                getattr(Uri, collection)(True), '/' + collection, endpoint=collection + '.external_codes'
+            )
 
-        self.add_resource(Places.Places,
-                          region + 'places',
-                          coord + 'places',
-                          '/places',
-                          endpoint='places')
-        self.add_resource(Ptobjects.Ptobjects,
-                          region + 'pt_objects',
-                          coord + 'pt_objects',
-                          endpoint='pt_objects')
+        self.add_resource(Places.Places, region + 'places', coord + 'places', '/places', endpoint='places')
+        self.add_resource(
+            Ptobjects.Ptobjects, region + 'pt_objects', coord + 'pt_objects', endpoint='pt_objects'
+        )
 
-        self.add_resource(Places.PlaceUri,
-                          '/places/<id:id>',
-                          region + 'places/<id:id>',
-                          coord + 'places/<id:id>',
-                          endpoint='place_uri')
+        self.add_resource(
+            Places.PlaceUri,
+            '/places/<id:id>',
+            region + 'places/<id:id>',
+            coord + 'places/<id:id>',
+            endpoint='place_uri',
+        )
 
-        self.add_resource(Places.PlacesNearby,
-                          region + 'places_nearby',
-                          coord + 'places_nearby',
-                          region + '<uri:uri>/places_nearby',
-                          coord + '<uri:uri>/places_nearby',
-                          '/coord/' + lon_lat + 'places_nearby',
-                          '/coords/' + lon_lat + 'places_nearby',
-                          endpoint='places_nearby')
+        self.add_resource(
+            Places.PlacesNearby,
+            region + 'places_nearby',
+            coord + 'places_nearby',
+            region + '<uri:uri>/places_nearby',
+            coord + '<uri:uri>/places_nearby',
+            '/coord/' + lon_lat + 'places_nearby',
+            '/coords/' + lon_lat + 'places_nearby',
+            endpoint='places_nearby',
+        )
 
-        self.add_resource(Journeys.Journeys,
-                          region + '<uri:uri>/journeys',
-                          coord + '<uri:uri>/journeys',
-                          region + 'journeys',
-                          coord + 'journeys',
-                          '/journeys',
-                          endpoint='journeys',
-                          # we don't want to document those routes as we consider them deprecated
-                          hide_routes=(region + '<uri:uri>/journeys', coord + '<uri:uri>/journeys'))
+        self.add_resource(
+            Journeys.Journeys,
+            region + '<uri:uri>/journeys',
+            coord + '<uri:uri>/journeys',
+            region + 'journeys',
+            coord + 'journeys',
+            '/journeys',
+            endpoint='journeys',
+            # we don't want to document those routes as we consider them deprecated
+            hide_routes=(region + '<uri:uri>/journeys', coord + '<uri:uri>/journeys'),
+        )
 
         if app.config['GRAPHICAL_ISOCHRONE']:
-            self.add_resource(GraphicalIsochrone.GraphicalIsochrone,
-                            region + 'isochrones',
-                            coord + 'isochrones',
-                            endpoint='isochrones')
+            self.add_resource(
+                GraphicalIsochrone.GraphicalIsochrone,
+                region + 'isochrones',
+                coord + 'isochrones',
+                endpoint='isochrones',
+            )
 
         if app.config.get('HEAT_MAP'):
-            self.add_resource(HeatMap.HeatMap,
-                              region + 'heat_maps',
-                              coord + 'heat_maps',
-                              endpoint='heat_maps')
+            self.add_resource(HeatMap.HeatMap, region + 'heat_maps', coord + 'heat_maps', endpoint='heat_maps')
 
-        self.add_resource(Schedules.RouteSchedules,
-                          region + '<uri:uri>/route_schedules',
-                          coord + '<uri:uri>/route_schedules',
-                          '/route_schedules',
-                          endpoint='route_schedules')
+        self.add_resource(
+            Schedules.RouteSchedules,
+            region + '<uri:uri>/route_schedules',
+            coord + '<uri:uri>/route_schedules',
+            '/route_schedules',
+            endpoint='route_schedules',
+        )
 
-        self.add_resource(Schedules.NextArrivals,
-                          region + '<uri:uri>/arrivals',
-                          coord + '<uri:uri>/arrivals',
-                          region + 'arrivals',
-                          coord + 'arrivals',
-                          endpoint='arrivals')
+        self.add_resource(
+            Schedules.NextArrivals,
+            region + '<uri:uri>/arrivals',
+            coord + '<uri:uri>/arrivals',
+            region + 'arrivals',
+            coord + 'arrivals',
+            endpoint='arrivals',
+        )
 
-        self.add_resource(Schedules.NextDepartures,
-                          region + '<uri:uri>/departures',
-                          coord + '<uri:uri>/departures',
-                          region + 'departures',
-                          coord + 'departures',
-                          endpoint='departures')
+        self.add_resource(
+            Schedules.NextDepartures,
+            region + '<uri:uri>/departures',
+            coord + '<uri:uri>/departures',
+            region + 'departures',
+            coord + 'departures',
+            endpoint='departures',
+        )
 
-        self.add_resource(Schedules.StopSchedules,
-                          region + '<uri:uri>/stop_schedules',
-                          coord + '<uri:uri>/stop_schedules',
-                          '/stop_schedules',
-                          endpoint='stop_schedules')
+        self.add_resource(
+            Schedules.StopSchedules,
+            region + '<uri:uri>/stop_schedules',
+            coord + '<uri:uri>/stop_schedules',
+            '/stop_schedules',
+            endpoint='stop_schedules',
+        )
 
-        self.add_resource(Disruptions.TrafficReport,
-                          region + 'traffic_reports',
-                          coord + 'traffic_reports',
-                          region + '<uri:uri>/traffic_reports',
-                          coord + '<uri:uri>/traffic_reports',
-                          endpoint='traffic_reports')
+        self.add_resource(
+            Disruptions.TrafficReport,
+            region + 'traffic_reports',
+            coord + 'traffic_reports',
+            region + '<uri:uri>/traffic_reports',
+            coord + '<uri:uri>/traffic_reports',
+            endpoint='traffic_reports',
+        )
 
-        self.add_resource(LineReports.LineReports,
-                          region + 'line_reports',
-                          coord + 'line_reports',
-                          region + '<uri:uri>/line_reports',
-                          coord + '<uri:uri>/line_reports',
-                          endpoint='line_reports')
+        self.add_resource(
+            LineReports.LineReports,
+            region + 'line_reports',
+            coord + 'line_reports',
+            region + '<uri:uri>/line_reports',
+            coord + '<uri:uri>/line_reports',
+            endpoint='line_reports',
+        )
 
-        self.add_resource(Status.Status,
-                          region + 'status',
-                          coord + 'status',
-                          endpoint='status')
-        self.add_resource(GeoStatus.GeoStatus,
-                          region + '_geo_status',
-                          coord + '_geo_status',
-                          endpoint='geo_status')
+        self.add_resource(Status.Status, region + 'status', coord + 'status', endpoint='status')
+        self.add_resource(
+            GeoStatus.GeoStatus, region + '_geo_status', coord + '_geo_status', endpoint='geo_status'
+        )
 
-        self.add_resource(Calendars.Calendars,
-                          region + 'calendars',
-                          coord + 'calendars',
-                          region + '<uri:uri>/calendars',
-                          coord + '<uri:uri>/calendars',
-                          region + "calendars/<id:id>",
-                          coord + "calendars/<id:id>",
-                          endpoint="calendars")
+        self.add_resource(
+            Calendars.Calendars,
+            region + 'calendars',
+            coord + 'calendars',
+            region + '<uri:uri>/calendars',
+            coord + '<uri:uri>/calendars',
+            region + "calendars/<id:id>",
+            coord + "calendars/<id:id>",
+            endpoint="calendars",
+        )
 
-        self.add_resource(JSONSchema.Schema,
-                          '/schema',
-                          endpoint="schema")
+        self.add_resource(JSONSchema.Schema, '/schema', endpoint="schema")

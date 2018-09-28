@@ -46,7 +46,6 @@ def api_get(url, display=False, check=True, *args, **kwargs):
         return _to_json(resp.data, display), resp.status_code
 
 
-
 def api_post(url, display=False, check=True, *args, **kwargs):
     """
     call api, check response status code, and return json as dict
@@ -60,6 +59,7 @@ def api_post(url, display=False, check=True, *args, **kwargs):
     else:
         return _to_json(resp.data, display), resp.status_code
 
+
 def api_put(url, display=False, check=True, *args, **kwargs):
     """
     call api, check response status code, and return json as dict
@@ -72,6 +72,7 @@ def api_put(url, display=False, check=True, *args, **kwargs):
         return _to_json(resp.data, display)
     else:
         return _to_json(resp.data, display), resp.status_code
+
 
 def api_delete(url, display=False, check=True, no_json=False, *args, **kwargs):
     """

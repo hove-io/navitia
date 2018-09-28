@@ -30,7 +30,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 
 class ParkingPlaces(object):
-
     def __init__(self, available=None, occupied=None, available_PRM=None, occupied_PRM=None):
         if available is not None:
             self.available = available

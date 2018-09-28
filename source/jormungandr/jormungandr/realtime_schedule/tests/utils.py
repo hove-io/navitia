@@ -55,6 +55,7 @@ class MockRoutePoint(object):
     def fetch_all_route_id(self, rt_proxy_id):
         return [self._hardcoded_route_id]
 
+
 def _dt(dt_to_parse="00:00", year=2016, month=2, day=7):
     """
     small helper to ease the reading of the tests

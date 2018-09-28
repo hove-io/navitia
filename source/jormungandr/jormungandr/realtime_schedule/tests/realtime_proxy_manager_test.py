@@ -36,19 +36,17 @@ def realtime_proxy_creation_test():
     """
     simple timeo proxy creation
     """
-    config = [{
-                  'id': 'proxy_id',
-                  'class': 'jormungandr.realtime_schedule.timeo.Timeo',
-                  'args': {
-                      'timezone': 'Europe/Paris',
-                      'service_url': 'http://custom_url.com',
-                      'service_args': {
-                          'serviceID': 'custom_id',
-                          'EntityID': 'custom_entity',
-                          'Media': 'custom_media'
-                      }
-                  }
-              }]
+    config = [
+        {
+            'id': 'proxy_id',
+            'class': 'jormungandr.realtime_schedule.timeo.Timeo',
+            'args': {
+                'timezone': 'Europe/Paris',
+                'service_url': 'http://custom_url.com',
+                'service_args': {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'},
+            },
+        }
+    ]
 
     manager = RealtimeProxyManager(config)
 
@@ -56,11 +54,7 @@ def realtime_proxy_creation_test():
 
     assert timeo
     timeo.service_url = 'http://custom_url.com'
-    timeo.service_args = {
-        'serviceID': 'custom_id',
-        'EntityID': 'custom_entity',
-        'Media': 'custom_media'
-    }
+    timeo.service_args = {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'}
 
 
 def wrong_realtime_proxy_class_test():
@@ -68,18 +62,16 @@ def wrong_realtime_proxy_class_test():
     test with a unknown class
     No error is returned, but the proxy is not created
     """
-    config = [{
-                  'id': 'proxy_id',
-                  'class': 'wrong_class.bob',
-                  'args': {
-                      'service_url': 'http://custom_url.com',
-                      'service_args': {
-                          'serviceID': 'custom_id',
-                          'EntityID': 'custom_entity',
-                          'Media': 'custom_media'
-                      }
-                  }
-              }]
+    config = [
+        {
+            'id': 'proxy_id',
+            'class': 'wrong_class.bob',
+            'args': {
+                'service_url': 'http://custom_url.com',
+                'service_args': {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'},
+            },
+        }
+    ]
 
     manager = RealtimeProxyManager(config)
     assert manager.get('proxy_id') is None
@@ -90,18 +82,16 @@ def wrong_argument_test():
     test with a timeo proxy, but without the mandatory param 'service_url'
     No error is returned, but the proxy is not created
     """
-    config = [{
-                  'id': 'proxy_id',
-                  'class': 'jormungandr.realtime_schedule.timeo.Timeo',
-                  'args': {
-                      'timezone': 'Europe/Paris',
-                      'service_args': {
-                          'serviceID': 'custom_id',
-                          'EntityID': 'custom_entity',
-                          'Media': 'custom_media'
-                      }
-                  }
-              }]
+    config = [
+        {
+            'id': 'proxy_id',
+            'class': 'jormungandr.realtime_schedule.timeo.Timeo',
+            'args': {
+                'timezone': 'Europe/Paris',
+                'service_args': {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'},
+            },
+        }
+    ]
 
     manager = RealtimeProxyManager(config)
     assert manager.get('proxy_id') is None
@@ -112,19 +102,17 @@ def wrong_timezone_test():
     test with a timeo proxy, but with a wrong timezone
     an error should be raised
     """
-    config = [{
-                  'id': 'proxy_id',
-                  'class': 'jormungandr.realtime_schedule.timeo.Timeo',
-                  'args': {
-                      'timezone': 'bobette',
-                      'service_url': 'http://custom_url.com',
-                      'service_args': {
-                          'serviceID': 'custom_id',
-                          'EntityID': 'custom_entity',
-                          'Media': 'custom_media'
-                      }
-                  }
-              }]
+    config = [
+        {
+            'id': 'proxy_id',
+            'class': 'jormungandr.realtime_schedule.timeo.Timeo',
+            'args': {
+                'timezone': 'bobette',
+                'service_url': 'http://custom_url.com',
+                'service_args': {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'},
+            },
+        }
+    ]
 
     with pytest.raises(pytz.UnknownTimeZoneError):
         RealtimeProxyManager(config)  # should raise an Exception
@@ -141,23 +129,15 @@ def multi_proxy_creation_test():
             'args': {
                 'service_url': 'http://custom_url.com',
                 'timezone': 'Europe/Paris',
-                'service_args': {
-                    'serviceID': 'custom_id',
-                    'EntityID': 'custom_entity',
-                    'Media': 'custom_media'
-                }
-            }
+                'service_args': {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'},
+            },
         },
-        {
-            'id': 'wrong',
-            'class': 'wrong_class',
-            'args': {}
-        },
+        {'id': 'wrong', 'class': 'wrong_class', 'args': {}},
         {
             # one with no id, shouldn't be created
             'class': 'wrong_class',
-            'args': {}
-        }
+            'args': {},
+        },
     ]
     manager = RealtimeProxyManager(config)
     assert manager.get('proxy_id') is not None

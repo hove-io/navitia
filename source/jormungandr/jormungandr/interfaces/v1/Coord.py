@@ -42,20 +42,18 @@ import jormungandr
 from flask_restful.fields import Raw
 
 
-
-address_marshall_fields = {
-    "regions": Raw,
-    "address": Raw,
-    "message": Raw,
-    "context": context
-}
+address_marshall_fields = {"regions": Raw, "address": Raw, "message": Raw, "context": context}
 
 
 class Coord(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=api.DictAddressesSerializer, *args, **kwargs)
-        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, hidden=True,
-                                         help="name of the autocomplete service, used under the hood")
+        self.parsers['get'].add_argument(
+            "_autocomplete",
+            type=six.text_type,
+            hidden=True,
+            help="name of the autocomplete service, used under the hood",
+        )
 
     def _get_regions(self, region=None, lon=None, lat=None):
         return [region] if region else i_manager.get_regions("", lon, lat)
@@ -73,6 +71,7 @@ class Coord(ResourceUri):
             if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
                 if jormungandr.USE_SERPY:
                     from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
+
                     new_address = PlacesNearbySerializer(response).data
                     return {"address": new_address["places_nearby"][0]["address"]}
                 else:
@@ -80,21 +79,20 @@ class Coord(ResourceUri):
         return None
 
     def _get_args(self, lon=None, lat=None, id=None):
-        args = {
-            "uri": "{};{}".format(lon, lat),
-            "_current_datetime": datetime.datetime.utcnow()
-        }
+        args = {"uri": "{};{}".format(lon, lat), "_current_datetime": datetime.datetime.utcnow()}
         if all([lon, lat, is_coord(id)]):
             return args
-        args.update({
-            "count": 1,
-            "distance": 200,
-            "type[]": ["address"],
-            "depth": 1,
-            "start_page": 0,
-            "filter": "",
-            "count": 1
-        })
+        args.update(
+            {
+                "count": 1,
+                "distance": 200,
+                "type[]": ["address"],
+                "depth": 1,
+                "start_page": 0,
+                "filter": "",
+                "count": 1,
+            }
+        )
         return args
 
     @get_serializer(serpy=api.DictAddressesSerializer, marshall=address_marshall_fields)

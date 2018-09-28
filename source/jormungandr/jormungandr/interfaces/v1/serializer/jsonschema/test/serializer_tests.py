@@ -34,8 +34,14 @@ import pytest
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import LambdaField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, FloatField, IntField, \
-    Field, MethodField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import (
+    StrField,
+    BoolField,
+    FloatField,
+    IntField,
+    Field,
+    MethodField,
+)
 from jormungandr.interfaces.v1.swagger_schema import get_schema, SwaggerParam
 
 
@@ -65,6 +71,7 @@ def serpy_unsupported_serialization_test():
     """
     Unsupported serpy fields
     """
+
     class SerpyUnsupportedMethodFieldType(serpy.Serializer):
         serpyMethodField = MethodField()
 
@@ -79,6 +86,7 @@ def serpy_extended_supported_serialization_test():
     """
     Supported custom serpy children fields
     """
+
     class Custom(serpy.Serializer):
         bob = jsonschema.IntField()
 
@@ -90,8 +98,7 @@ def serpy_extended_supported_serialization_test():
         jsonschemaField = Field(schema_type=int)
         jsonschemaMethodField = MethodField(schema_type=str)
         lambda_schema = LambdaField(method=lambda **kw: None, schema_type=Custom())
-        list_lambda_schema = LambdaField(method=lambda **kw: None,
-                                         schema_type=Custom(many=True))
+        list_lambda_schema = LambdaField(method=lambda **kw: None, schema_type=Custom(many=True))
 
         def get_jsonschemaMethodField(self, obj):
             pass
@@ -112,7 +119,7 @@ def serpy_extended_supported_serialization_test():
     assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/Custom'
 
     # we must find the 'CustomSerializer' in the definitions
-    assert(next(iter(d for d in external_definitions if d.__class__ == Custom), None))
+    assert next(iter(d for d in external_definitions if d.__class__ == Custom), None)
 
 
 def schema_type_test():
@@ -121,10 +128,7 @@ def schema_type_test():
     """
 
     class JsonchemaMetadata(serpy.Serializer):
-        metadata = jsonschema.Field(schema_metadata={
-            "type": "string",
-            "description": "meta"
-        })
+        metadata = jsonschema.Field(schema_metadata={"type": "string", "description": "meta"})
 
     class JsonchemaType(serpy.Serializer):
         primitive = jsonschema.Field(schema_type=str)
@@ -154,6 +158,7 @@ def nested_test():
     """
     Nested Serialization
     """
+
     class NestedType(serpy.Serializer):
         id = jsonschema.StrField()
 
@@ -184,23 +189,24 @@ def nested_test():
 
 def param_test():
     from navitiacommon.parser_args_type import OptionValue
-    flask_arg = ArgumentDoc("kind", type=OptionValue(['bob', 'bobette', 'bobitto']),
-                            default=['bob', 'bobette'],
-                            help="kind of bob")
+
+    flask_arg = ArgumentDoc(
+        "kind", type=OptionValue(['bob', 'bobette', 'bobitto']), default=['bob', 'bobette'], help="kind of bob"
+    )
 
     swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
 
-    assert(len(swagger_args) == 1)
+    assert len(swagger_args) == 1
     swagger_arg = swagger_args[0]
-    assert(swagger_arg.name == 'kind')
-    assert(swagger_arg.type == 'string')
-    assert(swagger_arg.required is False)
-    assert(swagger_arg.location == 'query')
-    assert(swagger_arg.enum == ['bob', 'bobette', 'bobitto'])
-    assert(swagger_arg.description == 'kind of bob')
-    assert(swagger_arg.default == ['bob', 'bobette'])
-    assert(swagger_arg.format is None)  # no additional format provided
-    assert(swagger_arg.collection_format is None)
+    assert swagger_arg.name == 'kind'
+    assert swagger_arg.type == 'string'
+    assert swagger_arg.required is False
+    assert swagger_arg.location == 'query'
+    assert swagger_arg.enum == ['bob', 'bobette', 'bobitto']
+    assert swagger_arg.description == 'kind of bob'
+    assert swagger_arg.default == ['bob', 'bobette']
+    assert swagger_arg.format is None  # no additional format provided
+    assert swagger_arg.collection_format is None
 
 
 def param_list_test():
@@ -208,10 +214,10 @@ def param_list_test():
 
     swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
 
-    assert(len(swagger_args) == 1)
+    assert len(swagger_args) == 1
     swagger_arg = swagger_args[0]
-    assert(swagger_arg.name == 'pouet')
-    assert(swagger_arg.type == 'array')
-    assert(swagger_arg.items is not None)
-    assert(swagger_arg.items.type == 'string')
-    assert(swagger_arg.collection_format == 'multi')
+    assert swagger_arg.name == 'pouet'
+    assert swagger_arg.type == 'array'
+    assert swagger_arg.items is not None
+    assert swagger_arg.items.type == 'string'
+    assert swagger_arg.collection_format == 'multi'

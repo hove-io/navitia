@@ -53,18 +53,17 @@ def check_valid_calendar(cal):
     end = get_not_null(active_periods[0], "end")
     assert is_valid_date(end)
 
-    #check links
+    # check links
 
 
 @dataset({"main_ptref_test": {}})
 class TestCalendar(AbstractTestFixture):
-
     def test_calendars(self):
         json_response = self.query_region("calendars/")
 
         calendars = get_not_null(json_response, "calendars")
 
-        #we need at least one calendar
+        # we need at least one calendar
         assert calendars
 
         cal = calendars[0]
@@ -92,7 +91,7 @@ class TestCalendar(AbstractTestFixture):
 
         messages = get_not_null(disruptions[0], 'messages')
 
-        assert(messages[0]['text']) == 'Disruption on Line line:A'
+        assert (messages[0]['text']) == 'Disruption on Line line:A'
 
     def test_lines_calendars(self):
         json_response = self.query_region("calendars/monday/lines/line:A/calendars")
@@ -111,17 +110,20 @@ class TestCalendar(AbstractTestFixture):
 
         assert calendars[0]['id'] == 'monday'
 
-        #there is only one calendar, so when we forbid it's id, we find nothing
-        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
-                                              "?forbidden_uris[]=monday")
+        # there is only one calendar, so when we forbid it's id, we find nothing
+        response, code = self.query_no_assert(
+            "v1/coverage/main_ptref_test/calendars/monday" "?forbidden_uris[]=monday"
+        )
         assert code == 404
 
         # for retrocompatibility purpose forbidden_id[] is the same
-        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
-                                              "?forbidden_id[]=monday")
+        response, code = self.query_no_assert(
+            "v1/coverage/main_ptref_test/calendars/monday" "?forbidden_id[]=monday"
+        )
         assert code == 404
 
         # when we forbid another id, we find again our calendar
-        response, code = self.query_no_assert("v1/coverage/main_ptref_test/calendars/monday"
-                                              "?forbidden_uris[]=tuesday")
+        response, code = self.query_no_assert(
+            "v1/coverage/main_ptref_test/calendars/monday" "?forbidden_uris[]=tuesday"
+        )
         assert code == 200

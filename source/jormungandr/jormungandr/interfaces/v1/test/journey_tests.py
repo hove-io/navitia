@@ -42,16 +42,13 @@ class MockInstance:
 
 
 class TestMultiCoverage:
-    #TODO change that with real mock
+    # TODO change that with real mock
     def setup_method(self, method):
-        #we mock a query
-        self.args = {
-            'origin': 'paris',
-            'destination': 'lima'
-        }
-        #for each test, we mock the instance filtering
+        # we mock a query
+        self.args = {'origin': 'paris', 'destination': 'lima'}
+        # for each test, we mock the instance filtering
 
-        #and we will use a list of instances
+        # and we will use a list of instances
         self.regions = {
             'equador': MockInstance(True, 'equador', 0),
             'france': MockInstance(False, 'france', 0),
@@ -78,7 +75,7 @@ class TestMultiCoverage:
                 return [self.regions[r] for r in lima_region]
 
         i_manager.get_instances = mock_get_instances
-        #we also need to mock the ptmodel cache
+        # we also need to mock the ptmodel cache
         class weNeedMock:
             @classmethod
             def get_by_name(cls, i):
@@ -151,8 +148,7 @@ class TestMultiCoverage:
         all regions are overlaping,
         we have to have the non free first then the free (but we don't know which one)
         """
-        self._mock_function(['france', 'equador', 'peru', 'bolivia'],
-                            ['france', 'equador', 'peru', 'bolivia'])
+        self._mock_function(['france', 'equador', 'peru', 'bolivia'], ['france', 'equador', 'peru', 'bolivia'])
 
         regions = compute_regions(self.args)
 
@@ -160,8 +156,7 @@ class TestMultiCoverage:
         print("regions ==> {}".format(regions))
 
         assert set([regions[0], regions[1]]) == set([self.regions['france'].name, self.regions['peru'].name])
-        assert set([regions[2], regions[3]]) == set(
-            [self.regions['equador'].name, self.regions['bolivia'].name])
+        assert set([regions[2], regions[3]]) == set([self.regions['equador'].name, self.regions['bolivia'].name])
 
     def test_multi_coverage_overlap_chose_with_non_free_and_priority(self):
         """
@@ -184,8 +179,10 @@ class TestMultiCoverage:
         4 regions are overlaping,
         regions are sorted by priority desc
         """
-        self._mock_function(['france', 'netherlands', 'brazil', 'bolivia', 'germany'],
-                            ['france', 'netherlands', 'brazil', 'bolivia'])
+        self._mock_function(
+            ['france', 'netherlands', 'brazil', 'bolivia', 'germany'],
+            ['france', 'netherlands', 'brazil', 'bolivia'],
+        )
 
         regions = compute_regions(self.args)
 

@@ -73,16 +73,16 @@ def test_basic_datasets(create_basic_job_with_data_sets):
     assert synonym['family_type'] == 'synonym'
     assert synonym['name'] == '/path/to/dataset_1'
 
-    #There is only one job
+    # There is only one job
     resp = api_get('/v0/jobs/fr')
     assert len(resp['jobs']) == 1
 
-    #Here we add a new job with mimir as data_set
+    # Here we add a new job with mimir as data_set
     add_job_with_data_set_mimir(create_basic_job_with_data_sets)
 
     resp = api_get('/v0/instances/fr/last_datasets')
 
-    #we have two jobs: one with 1 data_set and another with 2 data_sets
+    # we have two jobs: one with 1 data_set and another with 2 data_sets
     resp = api_get('/v0/jobs/fr')
     assert len(resp['jobs']) == 2
     job_with_pt = resp['jobs'][1]['data_sets']

@@ -46,10 +46,9 @@ class DbParams(object):
         self.password = password
 
     def cnx_string(self):
-        return 'postgresql://{u}:{pwd}@{h}/{dbname}'.format(h=self.host,
-                                                            u=self.user,
-                                                            dbname=self.dbname,
-                                                            pwd=self.password)
+        return 'postgresql://{u}:{pwd}@{h}/{dbname}'.format(
+            h=self.host, u=self.user, dbname=self.dbname, pwd=self.password
+        )
 
     def old_school_cnx_string(self):
         """
@@ -57,17 +56,16 @@ class DbParams(object):
 
          refactor when moving to debian 8 as the classic cnx string will be recognized
         """
-        return "host={h} user={u} dbname={dbname} password={pwd}".\
-            format(h=self.host,
-                   u=self.user,
-                   dbname=self.dbname,
-                   pwd=self.password)
+        return "host={h} user={u} dbname={dbname} password={pwd}".format(
+            h=self.host, u=self.user, dbname=self.dbname, pwd=self.password
+        )
 
 
 class PostgresDocker(object):
     """
     launch a temporary docker with a postgresql-postgis db
     """
+
     def __init__(self):
         log = logging.getLogger(__name__)
         base_url = 'unix://var/run/docker.sock'
@@ -76,18 +74,23 @@ class PostgresDocker(object):
 
         log.info("Trying to build/update the docker image")
         try:
-            for build_output in self.docker_client.images.build(path=POSTGIS_IMAGE, tag=POSTGIS_IMAGE_NAME, rm=True):
+            for build_output in self.docker_client.images.build(
+                path=POSTGIS_IMAGE, tag=POSTGIS_IMAGE_NAME, rm=True
+            ):
                 log.debug(build_output)
         except docker.errors.APIError as e:
             if e.is_server_error():
-                log.warn("[docker server error] A server error occcured, maybe "
-                                               "missing internet connection?")
+                log.warn("[docker server error] A server error occcured, maybe " "missing internet connection?")
                 log.warn("[docker server error] Details: {}".format(e))
-                log.warn("[docker server error] Checking if '{}' docker image "
-                                               "is already built".format(POSTGIS_IMAGE_NAME))
+                log.warn(
+                    "[docker server error] Checking if '{}' docker image "
+                    "is already built".format(POSTGIS_IMAGE_NAME)
+                )
                 self.docker_client.images.get(POSTGIS_IMAGE_NAME)
-                log.warn("[docker server error] Going on, as '{}' docker image "
-                                               "is already built".format(POSTGIS_IMAGE_NAME))
+                log.warn(
+                    "[docker server error] Going on, as '{}' docker image "
+                    "is already built".format(POSTGIS_IMAGE_NAME)
+                )
             else:
                 raise
 
@@ -97,7 +100,11 @@ class PostgresDocker(object):
 
         log.info("starting the temporary docker")
         self.container.start()
-        self.ip_addr = self.docker_api_client.inspect_container(self.container.id).get('NetworkSettings', {}).get('IPAddress')
+        self.ip_addr = (
+            self.docker_api_client.inspect_container(self.container.id)
+            .get('NetworkSettings', {})
+            .get('IPAddress')
+        )
 
         if not self.ip_addr:
             log.error("temporary docker {} not started".format(self.container.id))
@@ -134,12 +141,11 @@ class PostgresDocker(object):
         """
         return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
 
-    @retry(stop_max_delay=10000, wait_fixed=100,
-           retry_on_exception=lambda e: isinstance(e, Exception))
+    @retry(stop_max_delay=10000, wait_fixed=100, retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
         psycopg2.connect(
             database=self.get_db_params().dbname,
             user=self.get_db_params().user,
             password=self.get_db_params().password,
-            host=self.get_db_params().host
+            host=self.get_db_params().host,
         )

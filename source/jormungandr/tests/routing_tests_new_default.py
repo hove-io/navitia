@@ -38,7 +38,9 @@ unit for scenario new_default
 
 
 @config({"scenario": "new_default"})
-class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysNewDefault(
+    JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -48,6 +50,7 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
 
     the new default scenario override the way the prev/next link are created
     """
+
     def test_best_filtering(self):
         """
         This feature is no longer supported
@@ -73,9 +76,10 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         pass
 
     def test_first_bss_last_bss_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}"\
-                .format(first='bss', last='bss')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='bss', last='bss')
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -87,9 +91,10 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert 'co2_emission' in context['car_direct_path']
 
     def test_first_walking_last_walking_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}"\
-                .format(first='walking', last='walking')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='walking', last='walking')
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -98,9 +103,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert "walking" in response["journeys"][0]["tags"]
 
     def test_first_bike_last_walking_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"\
-                .format(first='bike', last='walking')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50".format(
+                first='bike', last='walking'
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -109,9 +117,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert "bike" in response["journeys"][0]["tags"]
 
     def test_first_car_last_walking_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"\
-                .format(first='car', last='walking')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10".format(
+                first='car', last='walking'
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -120,9 +131,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert "car" in response["journeys"][0]["tags"]
 
     def test_first_bike_last_bss_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"\
-                .format(first='bike', last='bss')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50".format(
+                first='bike', last='bss'
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -131,9 +145,10 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert "bike" in response["journeys"][0]["tags"]
 
     def test_first_car_last_bss_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"\
-                .format(first='car', last='bss')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10".format(first='car', last='bss')
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -145,9 +160,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         """test that the tag ecologic is present when the journey doesn't
         produce too much CO2 compared to the car journey.
         """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -159,10 +177,13 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         """test that the tag ecologic is present when the journey doesn't
         produce too much CO2 compared to the car journey.
         """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=car&first_section_mode[]=walking&"\
-                "last_section_mode[]=walking&_min_car=0"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=car&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&_min_car=0".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -177,10 +198,13 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         """
         Test if car_co2_emission in context is the value in car journey
         """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=car&first_section_mode[]=walking&"\
-                "last_section_mode[]=walking&_min_car=0"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=car&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&_min_car=0".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -189,19 +213,26 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert 'co2_emission' in response['context']['car_direct_path']
         assert len(response["journeys"]) == 3
 
-        assert response['context']['car_direct_path']['co2_emission']['value'] == \
-               response['journeys'][0]['co2_emission']['value'] # car co2 emission
+        assert (
+            response['context']['car_direct_path']['co2_emission']['value']
+            == response['journeys'][0]['co2_emission']['value']
+        )  # car co2 emission
 
-        assert response['context']['car_direct_path']['co2_emission']['unit'] == \
-               response['journeys'][0]['co2_emission']['unit']
+        assert (
+            response['context']['car_direct_path']['co2_emission']['unit']
+            == response['journeys'][0]['co2_emission']['unit']
+        )
 
     def test_context_car_co2_emission_without_car(self):
         """
         Test if car_co2_emission in context is the value in car journey
         """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=walking&last_section_mode[]=walking"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=walking&last_section_mode[]=walking".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -217,12 +248,13 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
             assert "ecologic" in j["tags"]
 
     def test_mode_tag(self):
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "first_section_mode[]=car&first_section_mode[]=walking&"\
-                "first_section_mode[]=bike&first_section_mode[]=bss&"\
-                "last_section_mode[]=walking&last_section_mode[]=bss&"\
-                "_min_car=0"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=car&first_section_mode[]=walking&"
+            "first_section_mode[]=bike&first_section_mode[]=bss&"
+            "last_section_mode[]=walking&last_section_mode[]=bss&"
+            "_min_car=0".format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -235,9 +267,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert 'walking' in response["journeys"][3]["tags"]
 
     def test_first_ridesharing_no_config(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&debug=true"\
-                .format(first='ridesharing', last='walking')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&debug=true".format(
+                first='ridesharing', last='walking'
+            )
+        )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -254,37 +289,51 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
             assert "message" in response
             assert "ridesharing" in response['message']
 
-        query = "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}"\
-                .format(first='ridesharing', last='walking')
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='ridesharing', last='walking')
+        )
         exec_and_check(query)
 
-        query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
-                .format(first='ridesharing', last='walking')
+        query = (
+            "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2".format(
+                first='ridesharing', last='walking'
+            )
+        )
         exec_and_check(query)
 
-        query = "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
-                .format(first='ridesharing', last='walking')
+        query = (
+            "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2".format(
+                first='ridesharing', last='walking'
+            )
+        )
         exec_and_check(query)
 
-@config({"scenario": "new_default",
-         'instance_config': {
-             "ridesharing": [
-             {
-                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
-                 "args": {
-                     "service_url": "http://wtf",
-                     "api_key": "key",
-                     "network": "Super Covoit",
-                     "rating_scale_min": 0,
-                     "rating_scale_max": 5
-                 }
-             }
-         ]}})
-class TestJourneysRidesharingNewDefault(JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar,
-                                        NewDefaultScenarioAbstractTestFixture):
+
+@config(
+    {
+        "scenario": "new_default",
+        'instance_config': {
+            "ridesharing": [
+                {
+                    "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
+                    "args": {
+                        "service_url": "http://wtf",
+                        "api_key": "key",
+                        "network": "Super Covoit",
+                        "rating_scale_min": 0,
+                        "rating_scale_max": 5,
+                    },
+                }
+            ]
+        },
+    }
+)
+class TestJourneysRidesharingNewDefault(
+    JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+):
     def test_best_filtering(self):
         """
         This feature is no longer supported
@@ -308,7 +357,7 @@ class TestJourneysRidesharingNewDefault(JourneysRidesharing, JourneyCommon, Dire
         This feature is no longer supported
         """
         pass
-    
+
 
 @config({"scenario": "new_default"})
 class TestNewDefaultJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
@@ -319,6 +368,7 @@ class TestNewDefaultJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstr
 class TestNewDefaultJourneysNoRegion(JourneysNoRegion, NewDefaultScenarioAbstractTestFixture):
     pass
 
+
 @config({"scenario": "new_default"})
 class TestErrorFieldInJormun(AddErrorFieldInJormun, NewDefaultScenarioAbstractTestFixture):
     pass
@@ -327,6 +377,7 @@ class TestErrorFieldInJormun(AddErrorFieldInJormun, NewDefaultScenarioAbstractTe
 @config({"scenario": "new_default"})
 class TestNewDefaultOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
     pass
+
 
 @config({"scenario": "new_default"})
 class TestNewDefaultOneDeadRegion(OneDeadRegion, NewDefaultScenarioAbstractTestFixture):
@@ -337,13 +388,16 @@ class TestNewDefaultOneDeadRegion(OneDeadRegion, NewDefaultScenarioAbstractTestF
 class TestNewDefaultWithoutPt(WithoutPt, NewDefaultScenarioAbstractTestFixture):
     pass
 
+
 @config({"scenario": "new_default"})
 class TestNewDefaultMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
     pass
 
+
 @config({"scenario": "new_default"})
 class TestNewDefaultWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
     pass
+
 
 @config({"scenario": "new_default"})
 class TestNewDefaultTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):

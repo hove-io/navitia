@@ -31,6 +31,7 @@ from navitiacommon import models
 from tyr import tasks
 from tyr import manager
 
+
 @manager.command
 def purge_instance(instance_name, nb_to_keep, background=False):
     """

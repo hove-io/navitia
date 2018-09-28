@@ -87,6 +87,7 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.origin_mode = isochrone.origin_modes[0]
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
+
 class Scenario(object):
     """
     the most basic scenario, it's so simple it don't implements journeys!
@@ -169,9 +170,9 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        return autocomplete.get_by_uri(uri=request["uri"],
-                                       instances=[instance],
-                                       current_datetime=request['_current_datetime'])
+        return autocomplete.get_by_uri(
+            uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+        )
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()
@@ -192,8 +193,8 @@ class Scenario(object):
         req.disable_disruption = request["disable_disruption"]
 
         resp = instance.send_and_receive(req)
-        #The result contains places but not pt_objects,
-        #object place is transformed to pt_object afterwards.
+        # The result contains places but not pt_objects,
+        # object place is transformed to pt_object afterwards.
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.pt_objects(request, instance)
@@ -295,7 +296,7 @@ class Scenario(object):
         return resp
 
     def stop_areas(self, request, instance):
-        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,instance)
+        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request, instance)
 
     def stop_points(self, request, instance):
         return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request, instance)
@@ -400,4 +401,3 @@ class Scenario(object):
         self._add_prev_link(resp, cloned_params, clockwise)
         # we also compute first/last journey link
         self._add_first_last_links(resp, cloned_params)
-

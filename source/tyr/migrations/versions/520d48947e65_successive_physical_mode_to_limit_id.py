@@ -15,7 +15,12 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('successive_physical_mode_to_limit_id', sa.Text(), server_default='physical_mode:Bus', nullable=False))
+    op.add_column(
+        'instance',
+        sa.Column(
+            'successive_physical_mode_to_limit_id', sa.Text(), server_default='physical_mode:Bus', nullable=False
+        ),
+    )
 
 
 def downgrade():

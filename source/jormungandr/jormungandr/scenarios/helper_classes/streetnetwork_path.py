@@ -28,16 +28,28 @@
 # www.navitia.io
 from __future__ import absolute_import
 from . import helper_future
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
+
 
 class StreetNetworkPath:
     """
     A StreetNetworkPath is a journey from orig_obj to dest_obj purely in street network(without any pt)
     """
-    def __init__(self, future_manager, instance, orig_obj, dest_obj, mode, fallback_extremity, request, streetnetwork_path_type):
+
+    def __init__(
+        self,
+        future_manager,
+        instance,
+        orig_obj,
+        dest_obj,
+        mode,
+        fallback_extremity,
+        request,
+        streetnetwork_path_type,
+    ):
         """
         :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
@@ -61,21 +73,36 @@ class StreetNetworkPath:
 
         self._async_request()
 
+    @new_relic.distributedEvent("direct_path", "street_network")
+    def _direct_path_with_fp(self):
+        return self._instance.direct_path_with_fp(
+            self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
-        logger.debug("requesting %s direct path from %s to %s by %s", self._path_type,
-                     self._orig_obj.uri, self._dest_obj.uri, self._mode)
+        logger.debug(
+            "requesting %s direct path from %s to %s by %s",
+            self._path_type,
+            self._orig_obj.uri,
+            self._dest_obj.uri,
+            self._mode,
+        )
 
-        dp = self._instance.direct_path_with_fp(self._mode, self._orig_obj, self._dest_obj,
-                                                self._fallback_extremity, self._request,
-                                                self._path_type)
+        dp = self._direct_path_with_fp(self._instance)
+
         if getattr(dp, "journeys", None):
             if self._mode == "ridesharing":
                 switch_back_to_ridesharing(dp, True)
             dp.journeys[0].internal_id = str(utils.generate_id())
 
-        logger.debug("finish %s direct path from %s to %s by %s", self._path_type,
-                     self._orig_obj.uri, self._dest_obj.uri, self._mode)
+        logger.debug(
+            "finish %s direct path from %s to %s by %s",
+            self._path_type,
+            self._orig_obj.uri,
+            self._dest_obj.uri,
+            self._mode,
+        )
         return dp
 
     def _async_request(self):
@@ -92,29 +119,36 @@ class StreetNetworkPathPool:
     A direct path pool is a set of pure street network journeys which are computed by the given street network service.
     According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
+
     def __init__(self, future_manager, instance):
         self._future_manager = future_manager
         self._instance = instance
         self._value = {}
 
-    def add_async_request(self,
-                          requested_orig_obj,
-                          requested_dest_obj,
-                          mode,
-                          period_extremity,
-                          request,
-                          streetnetwork_path_type):
+    def add_async_request(
+        self, requested_orig_obj, requested_dest_obj, mode, period_extremity, request, streetnetwork_path_type
+    ):
 
         streetnetwork_service = self._instance.get_street_network(mode, request)
-        key = streetnetwork_service.make_path_key(mode,
-                                                  requested_orig_obj.uri,
-                                                  requested_dest_obj.uri,
-                                                  streetnetwork_path_type,
-                                                  period_extremity) if streetnetwork_service else None
+        key = (
+            streetnetwork_service.make_path_key(
+                mode, requested_orig_obj.uri, requested_dest_obj.uri, streetnetwork_path_type, period_extremity
+            )
+            if streetnetwork_service
+            else None
+        )
         if key in self._value:
             return
-        self._value[key] = StreetNetworkPath(self._future_manager, streetnetwork_service, requested_orig_obj, requested_dest_obj, mode,
-                                             period_extremity, request, streetnetwork_path_type)
+        self._value[key] = StreetNetworkPath(
+            self._future_manager,
+            streetnetwork_service,
+            requested_orig_obj,
+            requested_dest_obj,
+            mode,
+            period_extremity,
+            request,
+            streetnetwork_path_type,
+        )
 
     def get_all_direct_paths(self):
         """
@@ -122,7 +156,9 @@ class StreetNetworkPathPool:
         :return: a dictionary of mode vs dp_future
         """
         streetnetwork_path_type = StreetNetworkPathType.DIRECT
-        return {k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type}
+        return {
+            k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type
+        }
 
     def has_valid_direct_paths(self):
         for k in self._value:
@@ -133,13 +169,16 @@ class StreetNetworkPathPool:
                 return True
         return False
 
-    def wait_and_get(self, requested_orig_obj, requested_dest_obj, mode, period_extremity,
-                     streetnetwork_path_type, request):
+    def wait_and_get(
+        self, requested_orig_obj, requested_dest_obj, mode, period_extremity, streetnetwork_path_type, request
+    ):
         streetnetwork_service = self._instance.get_street_network(mode, request)
-        key = streetnetwork_service.make_path_key(mode,
-                                                  requested_orig_obj.uri,
-                                                  requested_dest_obj.uri,
-                                                  streetnetwork_path_type,
-                                                  period_extremity) if streetnetwork_service else None
+        key = (
+            streetnetwork_service.make_path_key(
+                mode, requested_orig_obj.uri, requested_dest_obj.uri, streetnetwork_path_type, period_extremity
+            )
+            if streetnetwork_service
+            else None
+        )
         dp = self._value.get(key)
         return dp.wait_and_get() if dp else None

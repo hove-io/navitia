@@ -33,16 +33,25 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
-    NonNullList, NonNullNested, pagination, stop_area, disruption_marshaller, feed_publisher
+from jormungandr.interfaces.v1.fields import (
+    PbField,
+    error,
+    network,
+    line,
+    NonNullList,
+    NonNullNested,
+    pagination,
+    stop_area,
+    disruption_marshaller,
+    feed_publisher,
+)
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
-from navitiacommon.parser_args_type import BooleanType
-
+from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
 from flask_restful import fields
 from flask.globals import g
 from datetime import datetime
@@ -52,7 +61,7 @@ disruption = {
     "network": PbField(network, attribute='network'),
     "lines": NonNullList(NonNullNested(line)),
     "stop_areas": NonNullList(NonNullNested(stop_area)),
-    "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey))
+    "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey)),
 }
 
 traffic_reports = {
@@ -60,7 +69,7 @@ traffic_reports = {
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher))
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
 }
 
 
@@ -68,36 +77,55 @@ class TrafficReport(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.TrafficReportsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=depth_argument, default=1,
-                                help="The depth of your object")
-        parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                help="Number of objects per page")
-        parser_get.add_argument("start_page", type=int, default=0,
-                                help="The current page")
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
-                                schema_metadata={'default': 'now'}, hidden=True,
-                                default=datetime.utcnow(),
-                                help='The datetime considered as "now". Used for debug, default is '
-                                     'the moment of the request. It will mainly change the output '
-                                     'of the disruptions.')
-        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
-                                help="DEPRECATED, replaced by `forbidden_uris[]`",
-                                dest="__temporary_forbidden_id[]",
-                                default=[],
-                                action='append',
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                help="forbidden uris",
-                                dest="forbidden_uris[]",
-                                default=[],
-                                action='append',
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("distance", type=int, default=200,
-                                help="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
-                                help="remove geojson from the response")
-        parser_get.add_argument("tags[]", type=six.text_type, action="append",
-                                help="If filled, will restrain the search within the given disruption tags")
+        parser_get.add_argument("depth", type=DepthArgument(), default=1, help="The depth of your object")
+        parser_get.add_argument(
+            "count", type=default_count_arg_type, default=10, help="Number of objects per page"
+        )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
+        parser_get.add_argument(
+            "_current_datetime",
+            type=DateTimeFormat(),
+            schema_metadata={'default': 'now'},
+            hidden=True,
+            default=datetime.utcnow(),
+            help='The datetime considered as "now". Used for debug, default is '
+            'the moment of the request. It will mainly change the output '
+            'of the disruptions.',
+        )
+        parser_get.add_argument(
+            "forbidden_id[]",
+            type=six.text_type,
+            deprecated=True,
+            help="DEPRECATED, replaced by `forbidden_uris[]`",
+            dest="__temporary_forbidden_id[]",
+            default=[],
+            action='append',
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "forbidden_uris[]",
+            type=six.text_type,
+            help="forbidden uris",
+            dest="forbidden_uris[]",
+            default=[],
+            action='append',
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "distance",
+            type=int,
+            default=200,
+            help="Distance range of the query. Used only if a coord is in the query",
+        )
+        parser_get.add_argument(
+            "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
+        )
+        parser_get.add_argument(
+            "tags[]",
+            type=six.text_type,
+            action="append",
+            help="If filled, will restrain the search within the given disruption tags",
+        )
         self.collection = 'traffic_reports'
         self.collections = traffic_reports
         self.get_decorators.insert(0, ManageError())

@@ -31,24 +31,32 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import error,\
-    PbField, NonNullList, NonNullNested,\
-    Links, JsonString, place,\
-    ListLit, beta_endpoint, feed_publisher
+from jormungandr.interfaces.v1.fields import (
+    error,
+    PbField,
+    NonNullList,
+    NonNullNested,
+    Links,
+    JsonString,
+    place,
+    ListLit,
+    beta_endpoint,
+    feed_publisher,
+)
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime, context
 from jormungandr.interfaces.v1.serializer.api import HeatMapSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+from navitiacommon.parser_args_type import UnsignedInteger
 
 heat_map = {
     "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination"),
-    'requested_date_time': DateTime()
+    'requested_date_time': DateTime(),
 }
 
 
@@ -58,12 +66,11 @@ heat_maps = {
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-    "context": context
+    "context": context,
 }
 
 
 class HeatMap(JourneyCommon):
-
     def __init__(self):
         super(HeatMap, self).__init__(output_type_serializer=HeatMapSerializer)
         parser_get = self.parsers["get"]

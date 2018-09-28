@@ -39,7 +39,6 @@ DEFAULT_STAR_FEED_PUBLISHER = None
 
 
 class StarProvider(CommonCarParkProvider):
-
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
 
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None

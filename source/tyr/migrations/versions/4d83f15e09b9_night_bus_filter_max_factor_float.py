@@ -15,10 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('instance', 'night_bus_filter_max_factor',
-               existing_type=sa.Integer(), type_=sa.Float())
+    op.alter_column('instance', 'night_bus_filter_max_factor', existing_type=sa.Integer(), type_=sa.Float())
 
 
 def downgrade():
-    op.alter_column('instance', 'night_bus_filter_max_factor',
-               existing_type=sa.Float(), type_=sa.Integer())
+    op.alter_column('instance', 'night_bus_filter_max_factor', existing_type=sa.Float(), type_=sa.Integer())

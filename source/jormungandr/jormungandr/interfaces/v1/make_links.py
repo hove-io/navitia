@@ -31,8 +31,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import url_for, request
 from collections import OrderedDict
 from functools import wraps
-from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection,\
-    collections_to_resource_type
+from jormungandr.interfaces.v1.converters_collection_type import (
+    resource_type_to_collection,
+    collections_to_resource_type,
+)
 from flask_restful.utils import unpack
 from jormungandr import app
 
@@ -47,16 +49,11 @@ def create_external_link(url, rel, _type=None, templated=False, description=None
     :param kwargs: args forwarded to url_for
     :return: a dict representing a link
     """
-    #if no type, type is rel
+    # if no type, type is rel
     if not _type:
         _type = rel
 
-    d = {
-        "href": url_for(url, _external=True, **kwargs),
-        "templated": templated,
-        "rel": rel,
-        "type": _type
-    }
+    d = {"href": url_for(url, _external=True, **kwargs), "templated": templated, "rel": rel, "type": _type}
     if description:
         d['title'] = description
 
@@ -71,16 +68,11 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
     :param templated: if the link is templated ({} is the url)
     :return: a dict representing a link
     """
-    #if no type, type is rel
+    # if no type, type is rel
     if not _type:
         _type = rel
 
-    d = {
-        "templated": templated,
-        "rel": rel,
-        "internal": True,
-        "type": _type
-    }
+    d = {"templated": templated, "rel": rel, "internal": True, "type": _type}
     if description:
         d['title'] = description
     if id:
@@ -90,7 +82,6 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
 
 
 class generate_links(object):
-
     def prepare_objetcs(self, objects, hasCollections=False):
         if isinstance(objects, tuple):
             objects = objects[0]
@@ -103,8 +94,7 @@ class generate_links(object):
         return objects
 
     def prepare_kwargs(self, kwargs, objects):
-        if "region" not in kwargs and "lon" not in kwargs\
-           and "regions" in objects:
+        if "region" not in kwargs and "lon" not in kwargs and "regions" in objects:
             kwargs["region"] = "{regions.id}"
 
         if "uri" in kwargs:
@@ -113,7 +103,6 @@ class generate_links(object):
 
 
 class add_pagination_links(object):
-
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -128,10 +117,12 @@ class add_pagination_links(object):
             endpoint = request.endpoint
             kwargs.update(request.args)
             if pagination and endpoint and "region" in kwargs:
-                if "start_page" in pagination and \
-                        "items_on_page" in pagination and \
-                        "items_per_page" in pagination and \
-                        "total_result" in pagination:
+                if (
+                    "start_page" in pagination
+                    and "items_on_page" in pagination
+                    and "items_per_page" in pagination
+                    and "total_result" in pagination
+                ):
                     if "links" not in data:
                         data["links"] = []
                     start_page = int(pagination["start_page"])
@@ -142,59 +133,52 @@ class add_pagination_links(object):
 
                     if start_page > 0:
                         kwargs["start_page"] = start_page - 1
-                        data["links"].append({
-                            "href": url_for(endpoint, **kwargs),
-                            "type": "previous",
-                            "templated": False
-                        })
+                        data["links"].append(
+                            {"href": url_for(endpoint, **kwargs), "type": "previous", "templated": False}
+                        )
                     nb_next_page = items_per_page * start_page
                     nb_next_page += items_on_page
                     if total_result > nb_next_page:
                         kwargs["start_page"] = start_page + 1
-                        data["links"].append({
-                            "href": url_for(endpoint, **kwargs),
-                            "type": "next",
-                            "templated": False
-                        })
+                        data["links"].append(
+                            {"href": url_for(endpoint, **kwargs), "type": "next", "templated": False}
+                        )
                         if items_per_page == 0 or total_result == 0:
                             kwargs["start_page"] = 0
                         else:
                             nb_last_page = total_result - 1
                             nb_last_page = int(nb_last_page / items_per_page)
                             kwargs["start_page"] = nb_last_page
-                            data["links"].append({
-                                "href": url_for(endpoint, **kwargs),
-                                "type": "last",
-                                "templated": False
-                            })
+                            data["links"].append(
+                                {"href": url_for(endpoint, **kwargs), "type": "last", "templated": False}
+                            )
 
                         del kwargs["start_page"]
-                    data["links"].append({
-                        "href": url_for(endpoint, **kwargs),
-                        "type": "first",
-                        "templated": False
-                    })
+                    data["links"].append(
+                        {"href": url_for(endpoint, **kwargs), "type": "first", "templated": False}
+                    )
             if isinstance(objects, tuple):
                 return data, code, header
             else:
                 return data
+
         return wrapper
 
 
 class add_coverage_link(generate_links):
     def __init__(self):
-        self.links = ["coverage",
-                      "places", "pt_objects",
-                      "journeys", "traffic_reports", "line_reports"]
+        self.links = ["coverage", "places", "pt_objects", "journeys", "traffic_reports", "line_reports"]
 
         if app.config['GRAPHICAL_ISOCHRONE']:
             self.links.append("isochrones")
 
-        self.links_uri = {"places_nearby": "coord/{lon;lat}",
-                          "departures": "stop_areas/{stop_areas.id}",
-                          "arrivals": "stop_areas/{stop_areas.id}",
-                          "stop_schedules": "stop_areas/{stop_areas.id}",
-                          "route_schedules": "lines/{lines.id}"}
+        self.links_uri = {
+            "places_nearby": "coord/{lon;lat}",
+            "departures": "stop_areas/{stop_areas.id}",
+            "arrivals": "stop_areas/{stop_areas.id}",
+            "stop_schedules": "stop_areas/{stop_areas.id}",
+            "route_schedules": "lines/{lines.id}",
+        }
 
     def __call__(self, f):
         @wraps(f)
@@ -222,11 +206,11 @@ class add_coverage_link(generate_links):
                 return data, code, header
             else:
                 return data
+
         return wrapper
 
 
 class add_collection_links(generate_links):
-
     def __init__(self, collections):
         self.collections = collections
 
@@ -246,16 +230,18 @@ class add_collection_links(generate_links):
                 kwargs["templated"] = True
                 for collection in self.collections:
                     kwargs["rel"] = collection
-                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection), **kwargs))
+                    data["links"].append(
+                        create_external_link("v1.{c}.collection".format(c=collection), **kwargs)
+                    )
             if isinstance(objects, tuple):
                 return data, code, header
             else:
                 return data
+
         return wrapper
 
 
 class add_id_links(generate_links):
-
     def __init__(self, *args, **kwargs):
         self.data = set()
 
@@ -297,6 +283,7 @@ class add_id_links(generate_links):
                 return data, code, header
             else:
                 return data
+
         return wrapper
 
     def get_objets(self, data, collection_name=None):
@@ -313,7 +300,6 @@ class add_id_links(generate_links):
 
 
 class clean_links(object):
-
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -326,11 +312,10 @@ class clean_links(object):
                 data = response
             if (isinstance(data, dict) or isinstance(data, OrderedDict)) and "links" in data:
                 for link in data['links']:
-                    link['href'] = link['href'].replace("%7B", "{")\
-                                               .replace("%7D", "}")\
-                                               .replace("%3B", ";")
+                    link['href'] = link['href'].replace("%7B", "{").replace("%7D", "}").replace("%3B", ";")
             if isinstance(response, tuple):
                 return data, code, header
             else:
                 return data
+
         return wrapper

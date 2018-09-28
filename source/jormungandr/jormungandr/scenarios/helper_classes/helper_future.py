@@ -31,9 +31,11 @@ import gevent
 import gevent.pool
 from jormungandr import app
 from contextlib import contextmanager
+
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
 # http://stackoverflow.com/a/38668373/1614576
 import abc
+
 ABC = abc.ABCMeta(str("ABC"), (object,), {})
 """
 This file encapsulates the implementation of future, one can easily change the implementation of future (ex.

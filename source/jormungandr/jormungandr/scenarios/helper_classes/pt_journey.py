@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from . import helper_future
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2
 from collections import namedtuple
@@ -43,8 +43,20 @@ class PtJourney:
     Given a set of stop_points and their access time from origin and destination respectively, now we can compute the
     public transport journey
     """
-    def __init__(self, future_manager, instance, orig_fallback_durtaions_pool, dest_fallback_durations_pool,
-                 dep_mode, arr_mode, periode_extremity, journey_params, bike_in_pt, request):
+
+    def __init__(
+        self,
+        future_manager,
+        instance,
+        orig_fallback_durtaions_pool,
+        dest_fallback_durations_pool,
+        dep_mode,
+        arr_mode,
+        periode_extremity,
+        journey_params,
+        bike_in_pt,
+        request,
+    ):
         self._future_manager = future_manager
         self._instance = instance
         self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
@@ -59,6 +71,17 @@ class PtJourney:
 
         self._async_request()
 
+    @new_relic.distributedEvent("journeys", "journeys")
+    def _journeys(self, orig_fallback_durations, dest_fallback_durations):
+        return self._instance.planner.journeys(
+            orig_fallback_durations,
+            dest_fallback_durations,
+            self._periode_extremity.datetime,
+            self._periode_extremity.represents_start,
+            self._journey_params,
+            self._bike_in_pt,
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
@@ -66,26 +89,30 @@ class PtJourney:
         logger.debug("waiting for dest fallback durations with %s", self._arr_mode)
         dest_fallback_duration_status = self._dest_fallback_durations_pool.wait_and_get(self._arr_mode)
 
-        logger.debug("requesting public transport journey with dep_mode: %s and arr_mode: %s",
-                     self._dep_mode,
-                     self._arr_mode)
+        logger.debug(
+            "requesting public transport journey with dep_mode: %s and arr_mode: %s",
+            self._dep_mode,
+            self._arr_mode,
+        )
 
         orig_fallback_durations = {k: v.duration for k, v in orig_fallback_duration_status.items()}
         dest_fallback_durations = {k: v.duration for k, v in dest_fallback_duration_status.items()}
 
-        if not orig_fallback_durations or not dest_fallback_durations or not self._request.get('max_duration', 0):
+        if (
+            not orig_fallback_durations
+            or not dest_fallback_durations
+            or not self._request.get('max_duration', 0)
+        ):
             return None
-        resp = self._instance.planner.journeys(orig_fallback_durations,
-                                               dest_fallback_durations,
-                                               self._periode_extremity.datetime,
-                                               self._periode_extremity.represents_start,
-                                               self._journey_params, self._bike_in_pt)
+
+        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
+
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
 
         if resp.HasField(b"error"):
             logger.debug("pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode)
-            #Here needs to modify error message of no_solution
+            # Here needs to modify error message of no_solution
             if not orig_fallback_durations:
                 resp.error.id = response_pb2.Error.no_origin
                 resp.error.message = "no origin point"
@@ -93,9 +120,9 @@ class PtJourney:
                 resp.error.id = response_pb2.Error.no_destination
                 resp.error.message = "no destination point"
 
-        logger.debug("finish public transport journey with dep_mode: %s and arr_mode: %s",
-                     self._dep_mode,
-                     self._arr_mode)
+        logger.debug(
+            "finish public transport journey with dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
+        )
         return resp
 
     def _async_request(self):
@@ -120,6 +147,7 @@ class _PtJourneySorter(object):
     we don't need to wait for the slowest pt_journey(ex. "car-car") to launch the fallback of a quick pt_journey
     ("walking-walking").
     """
+
     mode_weight = {"walking": 1, "bike": 100, "bss": 500, "car": 1000}
 
     def __call__(self, a, b):
@@ -129,8 +157,18 @@ class _PtJourneySorter(object):
 
 
 class PtJourneyPool:
-    def __init__(self, future_manager, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, krakens_call,
-                 orig_fallback_durations_pool, dest_fallback_durations_pool, request):
+    def __init__(
+        self,
+        future_manager,
+        instance,
+        requested_orig_obj,
+        requested_dest_obj,
+        streetnetwork_path_pool,
+        krakens_call,
+        orig_fallback_durations_pool,
+        dest_fallback_durations_pool,
+        request,
+    ):
         self._future_manager = future_manager
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
@@ -148,45 +186,52 @@ class PtJourneyPool:
     @staticmethod
     def _create_parameters(request):
         from jormungandr.planner import JourneyParameters
-        return JourneyParameters(max_duration=request['max_duration'],
-                                 max_transfers=request['max_transfers'],
-                                 wheelchair=request['wheelchair'] or False,
-                                 realtime_level=request['data_freshness'],
-                                 max_extra_second_pass=request['max_extra_second_pass'],
-                                 walking_transfer_penalty=request['_walking_transfer_penalty'],
-                                 forbidden_uris=request['forbidden_uris[]'],
-                                 allowed_id=request['allowed_id[]'],
-                                 night_bus_filter_max_factor=request['_night_bus_filter_max_factor'],
-                                 night_bus_filter_base_factor=request['_night_bus_filter_base_factor'],
-                                 min_nb_journeys=request['min_nb_journeys'],
-                                 timeframe=request['timeframe_duration'])
+
+        return JourneyParameters(
+            max_duration=request['max_duration'],
+            max_transfers=request['max_transfers'],
+            wheelchair=request['wheelchair'] or False,
+            realtime_level=request['data_freshness'],
+            max_extra_second_pass=request['max_extra_second_pass'],
+            walking_transfer_penalty=request['_walking_transfer_penalty'],
+            forbidden_uris=request['forbidden_uris[]'],
+            allowed_id=request['allowed_id[]'],
+            night_bus_filter_max_factor=request['_night_bus_filter_max_factor'],
+            night_bus_filter_base_factor=request['_night_bus_filter_base_factor'],
+            min_nb_journeys=request['min_nb_journeys'],
+            timeframe=request['timeframe_duration'],
+        )
 
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
         for dep_mode, arr_mode in self._krakens_call:
-            dp = self._streetnetwork_path_pool.wait_and_get(self._requested_orig_obj,
-                                                            self._requested_dest_obj,
-                                                            dep_mode,
-                                                            periode_extremity,
-                                                            direct_path_type,
-                                                            request=self._request)
+            dp = self._streetnetwork_path_pool.wait_and_get(
+                self._requested_orig_obj,
+                self._requested_dest_obj,
+                dep_mode,
+                periode_extremity,
+                direct_path_type,
+                request=self._request,
+            )
             if dp.journeys:
                 self._journey_params.direct_path_duration = dp.journeys[0].durations.total
             else:
                 self._journey_params.direct_path_duration = None
 
-            bike_in_pt = (dep_mode == 'bike' and arr_mode == 'bike')
-            pt_journey = PtJourney(future_manager=self._future_manager,
-                                   instance=self._instance,
-                                   orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
-                                   dest_fallback_durations_pool=self._dest_fallback_durations_pool,
-                                   dep_mode=dep_mode,
-                                   arr_mode=arr_mode,
-                                   periode_extremity=periode_extremity,
-                                   journey_params=self._journey_params,
-                                   bike_in_pt=bike_in_pt,
-                                   request=self._request)
+            bike_in_pt = dep_mode == 'bike' and arr_mode == 'bike'
+            pt_journey = PtJourney(
+                future_manager=self._future_manager,
+                instance=self._instance,
+                orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
+                dest_fallback_durations_pool=self._dest_fallback_durations_pool,
+                dep_mode=dep_mode,
+                arr_mode=arr_mode,
+                periode_extremity=periode_extremity,
+                journey_params=self._journey_params,
+                bike_in_pt=bike_in_pt,
+                request=self._request,
+            )
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
 

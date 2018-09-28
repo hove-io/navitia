@@ -38,7 +38,7 @@ places_type = {
     'stop_point': type_pb2.STOP_POINT,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
-    'administrative_region': type_pb2.ADMINISTRATIVE_REGION
+    'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
 }
 
 
@@ -48,12 +48,13 @@ pt_object_type = {
     'line': type_pb2.LINE,
     'route': type_pb2.ROUTE,
     'stop_area': type_pb2.STOP_AREA,
-    'line_group': type_pb2.LINE_GROUP
+    'line_group': type_pb2.LINE_GROUP,
 }
 
 PSEUDO_DURATION_FACTORS = ((1, -1, 'departure_date_time'), (-1, 1, 'arrival_date_time'))
 
 mode_weight = {'ridesharing': 5, 'car': 4, 'bike': 3, 'bss': 2, 'walking': 1}
+
 
 def compare(obj1, obj2, compare_generator):
     """
@@ -65,9 +66,9 @@ def compare(obj1, obj2, compare_generator):
     by setting it to object(), we ensure that it will be !=
     from any values returned by the other generator
     """
-    return all(a == b for a, b in zip_longest(compare_generator(obj1),
-                                              compare_generator(obj2),
-                                              fillvalue=object()))
+    return all(
+        a == b for a, b in zip_longest(compare_generator(obj1), compare_generator(obj2), fillvalue=object())
+    )
 
 
 def are_equals(journey1, journey2):
@@ -98,19 +99,20 @@ def compare_journey_generator(journey):
         yield s.begin_date_time
         yield s.end_date_time
         yield s.uris.vehicle_journey
-        #NOTE: we want to ensure that we always yield the same number of elt
+        # NOTE: we want to ensure that we always yield the same number of elt
         yield s.origin.uri if s.origin else 'no_origin'
         yield s.destination.uri if s.destination else 'no_destination'
 
 
 def count_typed_journeys(journeys):
-        return sum(1 for journey in journeys if journey.type)
+    return sum(1 for journey in journeys if journey.type)
 
 
 class JourneySorter(object):
     """
     abstract class for journey sorter
     """
+
     def __init__(self, clockwise):
         self.clockwise = clockwise
 
@@ -128,7 +130,7 @@ class JourneySorter(object):
         if j1.nb_transfers != j2.nb_transfers:
             return j1.nb_transfers - j2.nb_transfers
 
-        #afterward we compare the non pt duration
+        # afterward we compare the non pt duration
         non_pt_duration_j1 = non_pt_duration_j2 = None
         for journey in [j1, j2]:
             non_pt_duration = 0
@@ -148,16 +150,17 @@ class ArrivalJourneySorter(JourneySorter):
 
     the comparison is different if the query is for clockwise search or not
     """
+
     def __init__(self, clockwise):
         super(ArrivalJourneySorter, self).__init__(clockwise)
 
     def __call__(self, j1, j2):
         if self.clockwise:
-            #for clockwise query, we want to sort first on the arrival time
+            # for clockwise query, we want to sort first on the arrival time
             if j1.arrival_date_time != j2.arrival_date_time:
                 return -1 if j1.arrival_date_time < j2.arrival_date_time else 1
         else:
-            #for non clockwise the first sort is done on departure
+            # for non clockwise the first sort is done on departure
             if j1.departure_date_time != j2.departure_date_time:
                 return -1 if j1.departure_date_time > j2.departure_date_time else 1
 
@@ -170,17 +173,18 @@ class DepartureJourneySorter(JourneySorter):
 
     the comparison is different if the query is for clockwise search or not
     """
+
     def __init__(self, clockwise):
         super(DepartureJourneySorter, self).__init__(clockwise)
 
     def __call__(self, j1, j2):
 
         if self.clockwise:
-            #for clockwise query, we want to sort first on the departure time
+            # for clockwise query, we want to sort first on the departure time
             if j1.departure_date_time != j2.departure_date_time:
                 return -1 if j1.departure_date_time < j2.departure_date_time else 1
         else:
-            #for non clockwise the first sort is done on arrival
+            # for non clockwise the first sort is done on arrival
             if j1.arrival_date_time != j2.arrival_date_time:
                 return -1 if j1.arrival_date_time > j2.arrival_date_time else 1
 
@@ -207,10 +211,8 @@ def build_pagination(request, resp):
             page = pagination.startPage + 1
             pagination.nextPage = query_args + "start_page=%i" % page
 
-journey_sorter = {
-    'arrival_time': ArrivalJourneySorter,
-    'departure_time': DepartureJourneySorter
-}
+
+journey_sorter = {'arrival_time': ArrivalJourneySorter, 'departure_time': DepartureJourneySorter}
 
 
 def get_or_default(request, val, default):
@@ -345,6 +347,7 @@ def gen_all_combin(n, t):
 
     """
     import numpy as np
+
     if n <= t:
         """
         nothing to do when n <= t, there is only one possible combination
@@ -352,17 +355,17 @@ def gen_all_combin(n, t):
         yield range(n)
         return
     # c is an array of choices
-    c = np.ones(t+2, dtype=int).tolist()
+    c = np.ones(t + 2, dtype=int).tolist()
     # init
-    for i in range(1, t+1):
-        c[i-1] = i - 1
+    for i in range(1, t + 1):
+        c[i - 1] = i - 1
     c[t] = n
-    c[t+1] = 0
+    c[t + 1] = 0
     j = 0
     while j < t:
         yield c[0:-2]
         j = 0
-        while (c[j] + 1) == c[j+1]:
+        while (c[j] + 1) == c[j + 1]:
             c[j] = j
             j += 1
         c[j] += 1
@@ -385,8 +388,9 @@ def _is_fake_car_section(section):
     """
     This function tests if the section is a fake car section
     """
-    return (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and \
-            section.street_network.mode == response_pb2.Car
+    return (
+        section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
+    ) and section.street_network.mode == response_pb2.Car
 
 
 def switch_back_to_ridesharing(response, is_first_section):
@@ -425,5 +429,6 @@ def nCr(n, r):
         """
         return 1
     import math
+
     f = math.factorial
-    return int(f(n) / f(r) / f(n-r))
+    return int(f(n) / f(r) / f(n - r))

@@ -34,7 +34,6 @@ POI_TYPE_ID = 'poi_type:amenity:parking'
 
 
 class CarParkingProviderManager(AbstractProviderManager):
-
     def __init__(self, car_park_providers_configurations):
         super(CarParkingProviderManager, self).__init__()
         self.car_park_providers = []

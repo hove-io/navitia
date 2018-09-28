@@ -32,10 +32,11 @@
 from distutils.core import setup
 from setuptools import find_packages
 
-setup(name='navitiacommon',
-      description='module shared between jormungandr and tyr',
-      author='CanalTP',
-      author_email='alexandre.jacquin@canaltp.fr',
-      url='www.navitia.io',
-      packages=find_packages()
-      )
+setup(
+    name='navitiacommon',
+    description='module shared between jormungandr and tyr',
+    author='CanalTP',
+    author_email='alexandre.jacquin@canaltp.fr',
+    url='www.navitia.io',
+    packages=find_packages(),
+)

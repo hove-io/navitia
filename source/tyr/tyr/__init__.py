@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -43,33 +43,40 @@ app.config.from_envvar('TYR_CONFIG_FILE', silent=True)
 configure_logger(app)
 manager = Manager(app)
 
-#we don't want celery to mess with our logging configuration
+# we don't want celery to mess with our logging configuration
 @setup_logging.connect
 def celery_setup_logging(*args, **kwargs):
     pass
 
+
 if app.config['REDIS_PASSWORD']:
-    app.config['CELERY_RESULT_BACKEND'] = \
-        'redis://:%s@%s:%s/%s'% (app.config['REDIS_PASSWORD'],
-                                app.config['REDIS_HOST'],
-                                app.config['REDIS_PORT'],
-                                app.config['REDIS_DB'])
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://:%s@%s:%s/%s' % (
+        app.config['REDIS_PASSWORD'],
+        app.config['REDIS_HOST'],
+        app.config['REDIS_PORT'],
+        app.config['REDIS_DB'],
+    )
 else:
-    app.config['CELERY_RESULT_BACKEND'] = \
-        'redis://@%s:%s/%s'% (app.config['REDIS_HOST'],
-                              app.config['REDIS_PORT'],
-                              app.config['REDIS_DB'])
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://@%s:%s/%s' % (
+        app.config['REDIS_HOST'],
+        app.config['REDIS_PORT'],
+        app.config['REDIS_DB'],
+    )
 
 
 from navitiacommon.models import db
+
 db.init_app(app)
 
 api = flask_restful.Api(app, catch_all_404s=True)
 celery = make_celery(app)
 
-redis = Redis(host=app.config['REDIS_HOST'],
-        port=app.config['REDIS_PORT'], db=app.config['REDIS_DB'],
-        password=app.config['REDIS_PASSWORD'])
+redis = Redis(
+    host=app.config['REDIS_HOST'],
+    port=app.config['REDIS_PORT'],
+    db=app.config['REDIS_DB'],
+    password=app.config['REDIS_PASSWORD'],
+)
 
 tyr_rabbit_mq_handler = RabbitMqHandler(app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
 

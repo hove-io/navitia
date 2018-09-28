@@ -32,15 +32,16 @@ import six
 from importlib import import_module
 import logging
 
+
 def get_from_to_pois_of_journeys(journeys):
     # utility that returns 'from' and 'to' pois for each section for the given journeys
-    from_to_places = (s.get(from_to, {}) for j in journeys for s in j.get('sections', [])
-                      for from_to in ('from', 'to'))
+    from_to_places = (
+        s.get(from_to, {}) for j in journeys for s in j.get('sections', []) for from_to in ('from', 'to')
+    )
     return (place['poi'] for place in from_to_places if 'poi' in place)
 
 
 class AbstractProviderManager(six.with_metaclass(ABCMeta, object)):
-
     def __init__(self):
         self.log = logging.getLogger(__name__)
 

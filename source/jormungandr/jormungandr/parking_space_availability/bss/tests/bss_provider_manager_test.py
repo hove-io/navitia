@@ -32,11 +32,8 @@ import pytest
 from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 from jormungandr import app
 
-CONFIG = ([
-    {
-        'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
-    }
-])
+CONFIG = [{'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'}]
+
 
 def realtime_place_creation_test():
     """
@@ -45,20 +42,20 @@ def realtime_place_creation_test():
     manager = BssProviderManager(CONFIG)
     assert len(manager.bss_providers) == 1
 
+
 def realtime_place_bad_creation_test():
     """
     simple bss provider bad creation
     """
 
     with pytest.raises(Exception):
-        manager = BssProviderManager((
-            {
-                'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
-            },
-            {
-                'class': 'jormungandr.parking_space_availability.bss.BadProvider'
-            }
-        ))
+        manager = BssProviderManager(
+            (
+                {'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'},
+                {'class': 'jormungandr.parking_space_availability.bss.BadProvider'},
+            )
+        )
+
 
 def realtime_places_handle_test():
     """
@@ -70,14 +67,11 @@ def realtime_places_handle_test():
             'distance': '0',
             'name': 'Cit\u00e9 Universitaire (Laval)',
             'poi': {
-                'poi_type': {
-                    'name': 'station vls',
-                    'id': 'poi_type:amenity:bicycle_rental'
-                },
-                'id': 'station_1'
+                'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'},
+                'id': 'station_1',
             },
             'quality': 0,
-            'id': 'poi:n3762373698'
+            'id': 'poi:n3762373698',
         }
     ]
     manager = BssProviderManager(CONFIG)
@@ -98,15 +92,7 @@ def realtime_pois_handle_test():
     """
     test correct handle pois include bss stands
     """
-    pois = [
-        {
-            'poi_type': {
-                'name': 'station vls',
-                'id': 'poi_type:amenity:bicycle_rental'
-            },
-            'id': 'station_1'
-        }
-    ]
+    pois = [{'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'}, 'id': 'station_1'}]
     manager = BssProviderManager(CONFIG)
     manager.handle_places(pois)
     assert 'stands' in pois[0]
@@ -121,13 +107,7 @@ def realtime_poi_supported_handle_test():
     """
     test correct handle pois include bss stands
     """
-    poi = {
-        'poi_type': {
-            'name': 'station vls',
-            'id': 'poi_type:amenity:bicycle_rental'
-        },
-        'id': 'station_1'
-    }
+    poi = {'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'}, 'id': 'station_1'}
     manager = BssProviderManager(CONFIG)
     manager._handle_poi(poi)
     assert 'stands' in poi
@@ -142,13 +122,7 @@ def realtime_poi_not_supported_handle_test():
     """
     test correct handle pois include bss stands
     """
-    poi = {
-        'poi_type': {
-            'name': 'station vls',
-            'id': 'poi_type:amenity:bicycle_rental'
-        },
-        'id': 'station_2'
-    }
+    poi = {'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'}, 'id': 'station_2'}
     manager = BssProviderManager(CONFIG)
     manager._handle_poi(poi)
     assert 'stands' not in poi
@@ -158,13 +132,7 @@ def realtime_place_find_provider_test():
     """
     test manager return provider
     """
-    poi = {
-        'poi_type': {
-            'name': 'station vls',
-            'id': 'poi_type:amenity:bicycle_rental'
-        },
-        'id': 'station_1'
-    }
+    poi = {'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'}, 'id': 'station_1'}
     manager = BssProviderManager(CONFIG)
     provider = manager._find_provider(poi)
     assert provider == manager.bss_providers[0]
@@ -180,24 +148,14 @@ def realtime_journey_handle_test():
                 {
                     'from': {
                         'embedded_type': 'poi',
-                        'poi': {
-                            'id': 'station_1',
-                            'poi_type': {
-                                'id': 'poi_type:amenity:bicycle_rental'
-                            }
-                        },
-                        'id': 'station_1'
+                        'poi': {'id': 'station_1', 'poi_type': {'id': 'poi_type:amenity:bicycle_rental'}},
+                        'id': 'station_1',
                     },
                     'to': {
                         'embedded_type': 'poi',
-                        'poi': {
-                            'id': 'station_1',
-                            'poi_type': {
-                                'id': 'poi_type:amenity:bicycle_rental'
-                            }
-                        },
-                        'id': 'station_1'
-                    }
+                        'poi': {'id': 'station_1', 'poi_type': {'id': 'poi_type:amenity:bicycle_rental'}},
+                        'id': 'station_1',
+                    },
                 }
             ]
         }

@@ -61,7 +61,6 @@ class ListLit(fields.Raw):
 
 
 class PbField(fields.Nested):
-
     def __init__(self, nested, allow_null=True, **kwargs):
         super(PbField, self).__init__(nested, **kwargs)
         self.display_null = False
@@ -79,7 +78,6 @@ class PbField(fields.Nested):
 
 
 class NonNullNested(fields.Nested):
-
     def __init__(self, *args, **kwargs):
         super(NonNullNested, self).__init__(*args, **kwargs)
         self.display_null = False
@@ -91,6 +89,7 @@ class NonNullProtobufNested(NonNullNested):
     this class is for nested protobuff field
     we don't want to display null or non defined values
     """
+
     def __init__(self, *args, **kwargs):
         super(NonNullProtobufNested, self).__init__(*args, **kwargs)
         self.display_null = False
@@ -110,6 +109,7 @@ class DateTime(fields.Raw):
     """
     custom date format from timestamp
     """
+
     def __init__(self, *args, **kwargs):
         super(DateTime, self).__init__(*args, **kwargs)
 
@@ -152,7 +152,7 @@ class Links(fields.Raw):
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
 # WARNING! be careful to change that value if the time type change (from uint64 to uint32 for example)
-__date_time_null_value__ = 2**64 - 1
+__date_time_null_value__ = 2 ** 64 - 1
 
 
 class SplitDateTime(DateTime):
@@ -169,6 +169,7 @@ class SplitDateTime(DateTime):
             Thus the given date HAS to be previously converted to local
             if that is what is wanted
     """
+
     def __init__(self, date, time, *args, **kwargs):
         super(DateTime, self).__init__(*args, **kwargs)
         self.date = date
@@ -201,11 +202,13 @@ def _get_pb_value(obj, fields):
         cur_obj = getattr(cur_obj, f)
     return cur_obj
 
+
 class Time(DateTime):
     """
     output a time from protobuf
     handle not setted field
     """
+
     def __init__(self, time, *args, **kwargs):
         super(Time, self).__init__(*args, **kwargs)
         self.time = time
@@ -223,7 +226,6 @@ class Time(DateTime):
 
 
 class enum_type(fields.Raw):
-
     def __init__(self, lower_case=True, *args, **kwargs):
         self.lower_case = lower_case
         super(enum_type, self).__init__(*args, **kwargs)
@@ -235,8 +237,7 @@ class enum_type(fields.Raw):
         if len(keys) > 1:
             try:
                 if obj.HasField(keys[0]):
-                    return enum_type().output(".".join(keys[1:]),
-                                              getattr(obj, keys[0]))
+                    return enum_type().output(".".join(keys[1:]), getattr(obj, keys[0]))
                 return None
             except ValueError:
                 return None
@@ -266,7 +267,6 @@ class PbEnum(fields.Raw):
 
 
 class NonNullList(fields.List):
-
     def __init__(self, *args, **kwargs):
         super(NonNullList, self).__init__(*args, **kwargs)
         self.display_empty = False
@@ -276,6 +276,7 @@ class NonNullString(fields.Raw):
     """
     Print a string if it is not null
     """
+
     def __init__(self, *args, **kwargs):
         super(NonNullString, self).__init__(*args, **kwargs)
 
@@ -288,13 +289,11 @@ class NonNullString(fields.Raw):
 
 
 class additional_informations(fields.Raw):
-
     def output(self, key, obj):
         properties = obj.properties
         descriptor = properties.DESCRIPTOR
         enum = descriptor.enum_types_by_name["AdditionalInformation"]
-        return [enum.values_by_number[v].name.lower() for v
-                in properties.additional_informations]
+        return [enum.values_by_number[v].name.lower() for v in properties.additional_informations]
 
 
 class equipments(fields.Raw):
@@ -302,8 +301,7 @@ class equipments(fields.Raw):
         equipments = obj.has_equipments
         descriptor = equipments.DESCRIPTOR
         enum = descriptor.enum_types_by_name["Equipment"]
-        return [enum.values_by_number[v].name.lower() for v
-                in equipments.has_equipments]
+        return [enum.values_by_number[v].name.lower() for v in equipments.has_equipments]
 
 
 class disruption_status(fields.Raw):
@@ -312,17 +310,16 @@ class disruption_status(fields.Raw):
         enum = type_pb2._ACTIVESTATUS
         return enum.values_by_number[status].name.lower()
 
+
 class channel_types(fields.Raw):
     def output(self, key, obj):
         channel = obj
         descriptor = channel.DESCRIPTOR
         enum = descriptor.enum_types_by_name["ChannelType"]
-        return [enum.values_by_number[v].name.lower() for v
-                in channel.channel_types]
+        return [enum.values_by_number[v].name.lower() for v in channel.channel_types]
 
 
 class notes(fields.Raw):
-
     def output(self, key, obj):
         properties = obj.has_properties
         r = []
@@ -332,13 +329,11 @@ class notes(fields.Raw):
 
 
 class stop_time_properties_links(fields.Raw):
-
     def output(self, key, obj):
         return pt.make_properties_links(obj.properties)
 
 
 class get_label(fields.Raw):
-
     def output(self, key, obj):
         if obj.code != '':
             return obj.code
@@ -346,8 +341,8 @@ class get_label(fields.Raw):
             if obj.name != '':
                 return obj.name
 
-class get_key_value(fields.Raw):
 
+class get_key_value(fields.Raw):
     def output(self, key, obj):
         res = {}
         for code in obj.properties:
@@ -369,10 +364,7 @@ class MultiLineString(fields.Raw):
         for l in val.lines:
             lines.append([[c.lon, c.lat] for c in l.coordinates])
 
-        response = {
-            "type": "MultiLineString",
-            "coordinates": lines,
-        }
+        response = {"type": "MultiLineString", "coordinates": lines}
         return response
 
 
@@ -381,6 +373,7 @@ class FirstComment(fields.Raw):
     for compatibility issue we want to continue to output a 'comment' field
     even if now we have a list of comments, so we take the first one
     """
+
     def output(self, key, obj):
         for c in obj.comments:
             return c.value
@@ -391,6 +384,7 @@ class SectionGeoJson(fields.Raw):
     """
     format a journey section as geojson
     """
+
     def __init__(self, **kwargs):
         super(SectionGeoJson, self).__init__(**kwargs)
 
@@ -417,9 +411,7 @@ class SectionGeoJson(fields.Raw):
         response = {
             "type": "LineString",
             "coordinates": [],
-            "properties": [{
-                "length": 0 if not obj.HasField(str("length")) else obj.length
-            }]
+            "properties": [{"length": 0 if not obj.HasField(str("length")) else obj.length}],
         }
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
@@ -447,7 +439,7 @@ class Durations(fields.Raw):
             'walking': obj.durations.walking,
             'bike': obj.durations.bike,
             'car': obj.durations.car,
-            'ridesharing' : obj.durations.ridesharing
+            'ridesharing': obj.durations.ridesharing,
         }
 
 
@@ -459,7 +451,7 @@ class Distances(fields.Raw):
             'walking': obj.distances.walking,
             'bike': obj.distances.bike,
             'car': obj.distances.car,
-            'ridesharing' : obj.distances.ridesharing
+            'ridesharing': obj.distances.ridesharing,
         }
 
 
@@ -467,15 +459,16 @@ class DisruptionLinks(fields.Raw):
     """
     Add link to disruptions on a pt object
     """
+
     def output(self, key, obj):
-        return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
-                for uri in obj.impact_uris]
+        return [create_internal_link(_type="disruption", rel="disruptions", id=uri) for uri in obj.impact_uris]
 
 
 class FieldDateTime(fields.Raw):
     """
     DateTime in timezone of region
     """
+
     def output(self, key, region):
         if 'timezone' in region and key in region:
             dt = datetime.datetime.utcfromtimestamp(region[key])
@@ -496,6 +489,7 @@ class Integer(fields.Raw):
     2.3 -> 2
     2.6 -> 3
     """
+
     def __init__(self, default=0, **kwargs):
         super(Integer, self).__init__(default=default, **kwargs)
 
@@ -505,42 +499,25 @@ class Integer(fields.Raw):
 
         return int(round(value))
 
-validity_pattern = {
-    'beginning_date': fields.String(),
-    'days': fields.String(),
-}
 
-trip = {
-    'id': fields.String(attribute="uri"),
-    'name': fields.String(),
-}
+validity_pattern = {'beginning_date': fields.String(), 'days': fields.String()}
 
-code = {
-    "type": fields.String(),
-    "value": fields.String()
-}
+trip = {'id': fields.String(attribute="uri"), 'name': fields.String()}
 
-prop = {
-    "name": fields.String(),
-    "value": fields.String()
-}
+code = {"type": fields.String(), "value": fields.String()}
 
-period = {
-    "begin": DateTime(),
-    "end": DateTime(),
-}
+prop = {"name": fields.String(), "value": fields.String()}
+
+period = {"begin": DateTime(), "end": DateTime()}
 
 channel = {
     "content_type": fields.String(),
     "id": fields.String(),
     "name": fields.String(),
-    "types": channel_types()
+    "types": channel_types(),
 }
 
-disruption_message = {
-    "text": fields.String(),
-    "channel": NonNullNested(channel)
-}
+disruption_message = {"text": fields.String(), "channel": NonNullNested(channel)}
 
 disruption_severity = {
     "name": fields.String(),
@@ -585,33 +562,29 @@ class DoubleToStringField(fields.Raw):
         # we don't want to loose precision while converting a double to string
         return "{:.16g}".format(value)
 
-coord = {
-    "lon": DoubleToStringField(),
-    "lat": DoubleToStringField()
-}
+
+coord = {"lon": DoubleToStringField(), "lat": DoubleToStringField()}
 
 generic_type = {
     "name": fields.String(),
     "id": fields.String(attribute="uri"),
-    "coord": NonNullNested(coord, True)
+    "coord": NonNullNested(coord, True),
 }
 
-comment = {
-    'value': fields.String(),
-    'type': fields.String()
-}
+comment = {'value': fields.String(), 'type': fields.String()}
 
 feed_publisher = {
     "id": fields.String(),
     "name": fields.String(),
     "url": fields.String(),
-    "license": fields.String()
+    "license": fields.String(),
 }
 
 
 class CurrentDateTime(fields.Raw):
     def output(self, key, value):
         return get_current_datetime_str()
+
 
 class TimeZone(fields.Raw):
     def output(self, key, value):
@@ -620,10 +593,7 @@ class TimeZone(fields.Raw):
 
 context = {
     'car_direct_path': {
-        'co2_emission': NonNullNested({
-            'value': fields.Raw,
-            'unit': fields.String
-        }, attribute="car_co2_emission")
+        'co2_emission': NonNullNested({'value': fields.Raw, 'unit': fields.String}, attribute="car_co2_emission")
     },
     'current_datetime': CurrentDateTime(),
     'timezone': TimeZone(),
@@ -634,14 +604,13 @@ class CurrentDateTimeUTC(fields.Raw):
     def output(self, key, value):
         return get_current_datetime_str(is_utc=True)
 
+
 class TimeZoneUTC(fields.Raw):
     def output(self, key, value):
         return 'Africa/Abidjan'
 
-context_utc = {
-    'current_datetime': CurrentDateTimeUTC(),
-    'timezone': TimeZoneUTC(),
-}
+
+context_utc = {'current_datetime': CurrentDateTimeUTC(), 'timezone': TimeZoneUTC()}
 
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
@@ -670,9 +639,7 @@ stop_area["codes"] = NonNullList(NonNullNested(code))
 stop_area["timezone"] = fields.String()
 stop_area["label"] = fields.String()
 
-journey_pattern_point = {
-    "id": fields.String(attribute="uri"),
-}
+journey_pattern_point = {"id": fields.String(attribute="uri")}
 
 journey_pattern = deepcopy(generic_type)
 jpps = NonNullList(NonNullNested(journey_pattern_point))
@@ -684,7 +651,7 @@ stop_time = {
     "utc_departure_time": SplitDateTime(date=None, time='utc_departure_time'),
     "headsign": fields.String(attribute="headsign"),
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point),
-    "stop_point": NonNullProtobufNested(stop_point)
+    "stop_point": NonNullProtobufNested(stop_point),
 }
 
 line = deepcopy(generic_type)
@@ -759,7 +726,7 @@ contributor = {
     "id": fields.String(attribute='uri'),
     "name": fields.String(),
     "website": fields.String(),
-    "license": fields.String()
+    "license": fields.String(),
 }
 
 dataset = {
@@ -769,7 +736,7 @@ dataset = {
     "start_validation_date": DateTime(),
     "end_validation_date": DateTime(),
     "realtime_level": enum_type(),
-    "contributor": PbField(contributor)
+    "contributor": PbField(contributor),
 }
 
 connection = {
@@ -788,7 +755,7 @@ stop_date_time = {
     "stop_point": PbField(stop_point),
     "additional_informations": additional_informations,
     "links": stop_time_properties_links,
-    "data_freshness": enum_type()
+    "data_freshness": enum_type(),
 }
 
 place = {
@@ -800,7 +767,7 @@ place = {
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),
-    "id": fields.String(attribute='uri')
+    "id": fields.String(attribute='uri'),
 }
 
 pt_object = {
@@ -814,7 +781,7 @@ pt_object = {
     "embedded_type": enum_type(),
     "name": fields.String(),
     "quality": fields.Integer(),
-    "id": fields.String(attribute='uri')
+    "id": fields.String(attribute='uri'),
 }
 
 route["direction"] = PbField(place)
@@ -826,10 +793,7 @@ pagination = {
     "items_on_page": fields.Integer(attribute="itemsOnPage"),
 }
 
-error = {
-    'id': enum_type(),
-    'message': fields.String()
-}
+error = {'id': enum_type(), 'message': fields.String()}
 
 beta_endpoint = {
     'id': Lit("beta_endpoint"),
@@ -840,22 +804,22 @@ raw_feed_publisher_bano = {
     "id": "bano",
     "name": "Base d'Adresses Nationale Ouverte",
     "license": "ODbL",
-    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt",
 }
 
 raw_feed_publisher_osm = {
     "id": "osm",
     "license": "ODbL",
     "name": "openstreetmap",
-    "url": "https://www.openstreetmap.org/copyright"
+    "url": "https://www.openstreetmap.org/copyright",
 }
 
 feed_publisher_bano = {k: Lit(v) for k, v in raw_feed_publisher_bano.items()}
 
 feed_publisher_osm = {k: Lit(v) for k, v in raw_feed_publisher_osm.items()}
 
-class UrisToLinks():
 
+class UrisToLinks:
     def output(self, key, obj):
         display_info = obj.pt_display_informations
         uris = display_info.uris
@@ -865,16 +829,13 @@ class UrisToLinks():
         if uris.company != '':
             response.append({"type": "company", "id": uris.company})
         if uris.vehicle_journey != '':
-            response.append({"type": "vehicle_journey",
-                             "id": uris.vehicle_journey})
+            response.append({"type": "vehicle_journey", "id": uris.vehicle_journey})
         if uris.route != '':
             response.append({"type": "route", "id": uris.route})
         if uris.commercial_mode != '':
-            response.append({"type": "commercial_mode",
-                             "id": uris.commercial_mode})
+            response.append({"type": "commercial_mode", "id": uris.commercial_mode})
         if uris.physical_mode != '':
-            response.append({"type": "physical_mode",
-                             "id": uris.physical_mode})
+            response.append({"type": "physical_mode", "id": uris.physical_mode})
         if uris.network != '':
             response.append({"type": "network", "id": uris.network})
 
@@ -901,7 +862,7 @@ instance_status = {
     "dataset_created_at": fields.String(),
     "autocomplete": fields.Raw(),
     "street_networks": fields.Raw(),
-    "ridesharing_services": fields.Raw()
+    "ridesharing_services": fields.Raw(),
 }
 
 instance_parameters = {
@@ -941,14 +902,14 @@ instance_parameters = {
     'min_journeys_calls': fields.Raw,
     'max_successive_physical_mode': fields.Raw,
     'final_line_filter': fields.Boolean,
-    'max_extra_second_pass': fields.Raw
+    'max_extra_second_pass': fields.Raw,
 }
 
 instance_status_with_parameters = deepcopy(instance_status)
 instance_status_with_parameters['parameters'] = fields.Nested(instance_parameters, allow_null=True)
-instance_status_with_parameters['realtime_contributors'] = fields.List(fields.String(),
-                                                                       attribute='rt_contributors',
-                                                                       default=[])
+instance_status_with_parameters['realtime_contributors'] = fields.List(
+    fields.String(), attribute='rt_contributors', default=[]
+)
 
 instance_traveler_types = {
     'traveler_type': fields.String,
@@ -966,8 +927,9 @@ instance_traveler_types = {
     'is_from_db': fields.Boolean(),
 }
 
-instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
-                                                                                 allow_null=True))
+instance_status_with_parameters['traveler_profiles'] = fields.List(
+    fields.Nested(instance_traveler_types, allow_null=True)
+)
 
 impacted_section = {
     'from': NonNullNested(pt_object),
@@ -984,20 +946,16 @@ impacted_stop = {
     "cause": fields.String(),
     "stop_time_effect": enum_type(attribute='effect'),
     "departure_status": enum_type(),
-    "arrival_status": enum_type()
+    "arrival_status": enum_type(),
 }
 
 impacted_object = {
     'pt_object': NonNullNested(pt_object),
     'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
-    'impacted_section': NonNullProtobufNested(impacted_section)
+    'impacted_section': NonNullProtobufNested(impacted_section),
 }
 
-disruption_property = {
-    'key': fields.String(),
-    'type': fields.String(),
-    'value': fields.String()
-}
+disruption_property = {'key': fields.String(), 'type': fields.String(), 'value': fields.String()}
 
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
@@ -1016,7 +974,7 @@ disruption_marshaller = {
     "properties": NonNullList(NonNullNested(disruption_property)),
     "uri": fields.String(),
     "disruption_uri": fields.String(),
-    "contributor": fields.String()
+    "contributor": fields.String(),
 }
 
 common_collection = (
@@ -1024,12 +982,13 @@ common_collection = (
     ("error", PbField(error)),
     ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
     ("context", context),
-    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
+    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
 )
 
 
 def get_collections(collection_name):
     from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+
     map_collection = {
         "journey_pattern_points": journey_pattern_point,
         "commercial_modes": commercial_mode,
@@ -1054,7 +1013,9 @@ def get_collections(collection_name):
 
     collection = map_collection.get(collection_name)
     if collection:
-        return [(collection_name, NonNullList(fields.Nested(collection, display_null=False)))] + list(common_collection)
+        return [(collection_name, NonNullList(fields.Nested(collection, display_null=False)))] + list(
+            common_collection
+        )
 
     if collection_name == 'disruptions':
         return list(common_collection)

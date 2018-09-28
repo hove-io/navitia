@@ -36,15 +36,10 @@ from jormungandr.parking_space_availability.car.star import StarProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 
 poi = {
-    'properties': {
-        'operator': 'Keolis Rennes',
-        'ref': '42'
-    },
-    'poi_type': {
-        'name': 'parking relais',
-        'id': 'poi_type:amenity:parking'
-    }
+    'properties': {'operator': 'Keolis Rennes', 'ref': '42'},
+    'poi_type': {'name': 'parking relais', 'id': 'poi_type:amenity:parking'},
 }
+
 
 def car_park_space_availability_start_support_poi_test():
     """
@@ -53,11 +48,9 @@ def car_park_space_availability_start_support_poi_test():
     provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
     assert provider.support_poi(poi)
 
+
 def car_park_space_get_information_test():
-    parking_places = ParkingPlaces(available=4,
-                                   occupied=3,
-                                   available_PRM=2,
-                                   occupied_PRM=0)
+    parking_places = ParkingPlaces(available=4, occupied=3, available_PRM=2, occupied_PRM=0)
     provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
     star_response = """
     {
@@ -75,6 +68,7 @@ def car_park_space_get_information_test():
     }
     """
     import json
+
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     assert provider.get_informations(poi) == parking_places
 
@@ -95,10 +89,7 @@ def car_park_space_get_information_test():
         ]
     }
     """
-    empty_parking = ParkingPlaces(available=None,
-                                  occupied=None,
-                                  available_PRM=None,
-                                  occupied_PRM=None)
+    empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     assert provider.get_informations(poi) == empty_parking
 
@@ -112,8 +103,7 @@ def car_park_space_get_information_test():
     assert provider.get_informations(poi) is None
 
     # Information of PRM is not provided
-    parking_places = ParkingPlaces(available=4,
-                                   occupied=3)
+    parking_places = ParkingPlaces(available=4, occupied=3)
     provider = StarProvider('Keolis Rennes', 'toto', 42)
     star_response = """
     {

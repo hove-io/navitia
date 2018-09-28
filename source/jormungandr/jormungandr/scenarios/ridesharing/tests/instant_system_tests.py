@@ -41,7 +41,7 @@ from jormungandr import utils
 import json
 
 
-fake_response ="""
+fake_response = """
 {
   "total": 2,
   "journeys": [
@@ -165,21 +165,18 @@ fake_response ="""
 
 # https://stackoverflow.com/a/9312242/1614576
 import re
+
 regex = re.compile(r'\\(?![/u"])')
 fixed = regex.sub(r"\\\\", fake_response)
 
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
-DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {
-    'id': '42',
-    'name': '42',
-    'license': 'I dunno',
-    'url': 'http://w.tf'
-}
+DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 # A hack class
 class DummyInstance:
     name = ''
+
 
 def get_ridesharing_service_test():
     configs = [
@@ -191,8 +188,8 @@ def get_ridesharing_service_test():
                 "network": "N",
                 "rating_scale_min": 0,
                 "rating_scale_max": 10,
-                "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER
-            }
+                "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
+            },
         },
         {
             "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
@@ -201,9 +198,9 @@ def get_ridesharing_service_test():
                 "api_key": "tata key",
                 "network": "M",
                 "rating_scale_min": 1,
-                "rating_scale_max": 5
-            }
-        }
+                "rating_scale_max": 5,
+            },
+        },
     ]
 
     services = Ridesharing.get_ridesharing_services(DummyInstance(), configs)
@@ -229,37 +226,47 @@ def get_ridesharing_service_test():
 def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
-        instant_system = InstantSystem(DummyInstance(), service_url='dummyUrl', api_key='dummyApiKey',
-                                       network='dummyNetwork', feed_publisher=DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
-                                       rating_scale_min=0, rating_scale_max=10)
+        instant_system = InstantSystem(
+            DummyInstance(),
+            service_url='dummyUrl',
+            api_key='dummyApiKey',
+            network='dummyNetwork',
+            feed_publisher=DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
+            rating_scale_min=0,
+            rating_scale_max=10,
+        )
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
-        period_extremity = utils.PeriodExtremity(datetime=utils.str_to_time_stamp("20171225T060000"),
-                                                 represents_start=True)
-        ridesharing_journeys, feed_publisher = \
-            instant_system.request_journeys_with_feed_publisher(from_coord=from_coord, to_coord=to_coord,
-                                                                period_extremity=period_extremity)
+        period_extremity = utils.PeriodExtremity(
+            datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+        )
+        ridesharing_journeys, feed_publisher = instant_system.request_journeys_with_feed_publisher(
+            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity
+        )
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
         assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
         assert ridesharing_journeys[0].metadata.rating_scale_min == 0
         assert ridesharing_journeys[0].metadata.rating_scale_max == 10
-        assert ridesharing_journeys[0].ridesharing_ad == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
+        assert (
+            ridesharing_journeys[0].ridesharing_ad
+            == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
+        )
 
-        assert ridesharing_journeys[0].pickup_place.addr == "" # address is not provided in mock
+        assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
         assert ridesharing_journeys[0].pickup_place.lat == 48.1102
         assert ridesharing_journeys[0].pickup_place.lon == -1.68623
 
-        assert ridesharing_journeys[0].dropoff_place.addr == "" # address is not provided in mock
+        assert ridesharing_journeys[0].dropoff_place.addr == ""  # address is not provided in mock
         assert ridesharing_journeys[0].dropoff_place.lat == 48.02479
         assert ridesharing_journeys[0].dropoff_place.lon == -1.74673
 
         assert len(ridesharing_journeys[0].shape) > 3
         assert ridesharing_journeys[0].shape[0].lat == ridesharing_journeys[0].pickup_place.lat
         assert ridesharing_journeys[0].shape[0].lon == ridesharing_journeys[0].pickup_place.lon
-        assert ridesharing_journeys[0].shape[1].lat == 48.1101 # test that we really load a shape
+        assert ridesharing_journeys[0].shape[1].lat == 48.1101  # test that we really load a shape
         assert ridesharing_journeys[0].shape[1].lon == -1.68635
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
@@ -285,7 +292,10 @@ def instant_system_test():
         assert ridesharing_journeys[1].metadata.rating_scale_max == 10
         # the shape should not be none, but we don't test the whole string
         assert ridesharing_journeys[1].shape
-        assert ridesharing_journeys[1].ridesharing_ad == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
+        assert (
+            ridesharing_journeys[1].ridesharing_ad
+            == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
+        )
 
         assert ridesharing_journeys[1].pickup_place.addr == ""
         assert ridesharing_journeys[1].pickup_place.lat == 48.1102

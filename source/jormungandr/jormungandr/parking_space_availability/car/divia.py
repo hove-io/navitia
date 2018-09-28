@@ -42,14 +42,15 @@ SearchPattern = namedtuple('SearchPattern', ['id_park', 'available', 'total'])
 
 
 def divia_maker(search_patterns):
-
     class _DiviaProvider(CommonCarParkProvider):
         # search patterns that are different depending on divia's dataset
         id_park = None
         available = None
         total = None
 
-        def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
+        def __init__(
+            self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs
+        ):
 
             self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
             self.provider_name = 'DIVIA'
@@ -57,8 +58,9 @@ def divia_maker(search_patterns):
             super(_DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
         def process_data(self, data, poi):
-            park = jmespath.search('records[?to_number(fields.{})==`{}`]|[0]'
-                                   .format(self.id_park, poi['properties']['ref']), data)
+            park = jmespath.search(
+                'records[?to_number(fields.{})==`{}`]|[0]'.format(self.id_park, poi['properties']['ref']), data
+            )
             if park:
                 available = jmespath.search('fields.{}'.format(self.available), park)
                 nb_places = jmespath.search('fields.{}'.format(self.total), park)
@@ -75,11 +77,11 @@ def divia_maker(search_patterns):
     return _DiviaProvider
 
 
-DiviaProvider = divia_maker(SearchPattern(id_park='numero_parking',
-                                          available='nombre_places_libres',
-                                          total='nombre_places'))
+DiviaProvider = divia_maker(
+    SearchPattern(id_park='numero_parking', available='nombre_places_libres', total='nombre_places')
+)
 
 
-DiviaPRParkProvider = divia_maker(SearchPattern(id_park='numero_parc',
-                                                available='nb_places_libres',
-                                                total='nombre_places'))
+DiviaPRParkProvider = divia_maker(
+    SearchPattern(id_park='numero_parc', available='nb_places_libres', total='nombre_places')
+)

@@ -33,7 +33,6 @@ POI_TYPE_ID = 'poi_type:amenity:bicycle_rental'
 
 
 class BssProviderManager(AbstractProviderManager):
-
     def __init__(self, bss_providers_configuration):
         super(BssProviderManager, self).__init__()
         self.bss_providers = []
@@ -51,7 +50,3 @@ class BssProviderManager(AbstractProviderManager):
 
     def _get_providers(self):
         return self.bss_providers
-
-
-
-

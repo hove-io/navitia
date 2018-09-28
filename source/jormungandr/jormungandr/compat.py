@@ -39,6 +39,7 @@ from flask_restful import reqparse
 from werkzeug.exceptions import BadRequest
 import logging
 
+
 def replace_parse_arg(func):
     @wraps(func)
     def _exec(*args, **kw):
@@ -50,6 +51,7 @@ def replace_parse_arg(func):
             raise e
 
     return _exec
+
 
 def patch_reqparse():
     """

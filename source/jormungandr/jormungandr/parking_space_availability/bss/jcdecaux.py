@@ -41,7 +41,7 @@ DEFAULT_JCDECAUX_FEED_PUBLISHER = {
     'id': 'jcdecaux',
     'name': 'jcdecaux',
     'license': 'Licence Ouverte / Open License',
-    'url': 'https://developer.jcdecaux.com/#/opendata/license'
+    'url': 'https://developer.jcdecaux.com/#/opendata/license',
 }
 
 
@@ -49,27 +49,41 @@ class JcdecauxProvider(CommonBssProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/?contract={}&apiKey={}'
 
-    def __init__(self, network, contract, api_key, operators={'jcdecaux'}, timeout=10,
-                 feed_publisher=DEFAULT_JCDECAUX_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self,
+        network,
+        contract,
+        api_key,
+        operators={'jcdecaux'},
+        timeout=10,
+        feed_publisher=DEFAULT_JCDECAUX_FEED_PUBLISHER,
+        **kwargs
+    ):
         self.network = network.lower()
         self.contract = contract
         self.api_key = api_key
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'])
-        reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S']
+        )
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '').lower() in self.operators and \
-               properties.get('network', '').lower() == self.network
+        return (
+            properties.get('operator', '').lower() in self.operators
+            and properties.get('network', '').lower() == self.network
+        )
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
     def _call_webservice(self):
         try:
-            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(self.contract, self.api_key), timeout=self.timeout)
+            data = self.breaker.call(
+                requests.get, self.WS_URL_TEMPLATE.format(self.contract, self.api_key), timeout=self.timeout
+            )
             stands = {}
             for s in data.json():
                 stands[str(s['number'])] = s
@@ -90,8 +104,11 @@ class JcdecauxProvider(CommonBssProvider):
         data = self._call_webservice()
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
-                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0),
-                              StandsStatus.open)
+                return Stands(
+                    data[ref].get('available_bike_stands', 0),
+                    data[ref].get('available_bikes', 0),
+                    StandsStatus.open,
+                )
             elif data[ref]['status'] == 'CLOSED':
                 return Stands(0, 0, StandsStatus.closed)
         return Stands(0, 0, StandsStatus.unavailable)
@@ -103,5 +120,5 @@ class JcdecauxProvider(CommonBssProvider):
         return self._feed_publisher
 
     def __repr__(self):
-        #TODO: make this shit python 3 compatible
+        # TODO: make this shit python 3 compatible
         return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')

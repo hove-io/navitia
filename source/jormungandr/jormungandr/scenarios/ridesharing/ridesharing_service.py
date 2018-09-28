@@ -35,14 +35,16 @@ import logging
 from jormungandr import utils, new_relic
 from collections import namedtuple
 
+
 class RidesharingServiceError(RuntimeError):
     pass
 
+
 RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
-
     @abc.abstractmethod
     def status(self):
         """
@@ -85,16 +87,14 @@ class AbstractRidesharingService(object):
         return '{}_{}'.format(unicode(self.system_id), unicode(self.network))
 
     def record_internal_failure(self, message):
-        params = {'ridesharing_service_id': self._get_rs_id(),
-                  'message': message}
+        params = {'ridesharing_service_id': self._get_rs_id(), 'message': message}
         new_relic.record_custom_event('ridesharing_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'ridesharing_service_id': self._get_rs_id(),
-                  'status': status}
+        params = {'ridesharing_service_id': self._get_rs_id(), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_status', params)
 
@@ -102,16 +102,13 @@ class AbstractRidesharingService(object):
         """
         status can be in: ok, failure
         """
-        params = {'ridesharing_service_id': self._get_rs_id(),
-                  'status': status}
+        params = {'ridesharing_service_id': self._get_rs_id(), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
 
 
-
 # read the configurations and return the wanted service instance
 class Ridesharing(object):
-
     @staticmethod
     def get_ridesharing_services(instance, ridesharing_configurations):
         logger = logging.getLogger(__name__)
@@ -128,11 +125,13 @@ class Ridesharing(object):
             try:
                 service = utils.create_object(config)
             except KeyError as e:
-                raise KeyError('impossible to build a ridesharing service for {}, '
-                               'missing mandatory field in configuration: {}'
-                               .format(instance.name, e.message))
+                raise KeyError(
+                    'impossible to build a ridesharing service for {}, '
+                    'missing mandatory field in configuration: {}'.format(instance.name, e.message)
+                )
 
             ridesharing_services.append(service)
-            logger.info('** Ridesharing: {} used for instance: {} **'
-                        .format(type(service).__name__, instance.name))
+            logger.info(
+                '** Ridesharing: {} used for instance: {} **'.format(type(service).__name__, instance.name)
+            )
         return ridesharing_services

@@ -34,17 +34,31 @@ from flask_restful import fields, marshal_with, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
-from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
-    additional_informations, stop_time_properties_links, display_informations_vj, \
-    display_informations_route, UrisToLinks, error, \
-    enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher, DateTime
+from jormungandr.interfaces.v1.fields import (
+    stop_point,
+    route,
+    pagination,
+    PbField,
+    stop_date_time,
+    additional_informations,
+    stop_time_properties_links,
+    display_informations_vj,
+    display_informations_route,
+    UrisToLinks,
+    error,
+    enum_type,
+    SplitDateTime,
+    MultiLineString,
+    PbEnum,
+    feed_publisher,
+    DateTime,
+)
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api, pt
 from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
-    UnsignedInteger
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
@@ -53,13 +67,18 @@ from jormungandr.interfaces.v1.make_links import create_external_link, create_in
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
+from navitiacommon.parser_args_type import (
+    BooleanType,
+    OptionValue,
+    UnsignedInteger,
+    DateTimeFormat,
+    DepthArgument,
+)
 from jormungandr.exceptions import InvalidArguments
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Schedules(ResourceUri, ResourceUtc):
-
     def __init__(self, endpoint, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
@@ -67,55 +86,93 @@ class Schedules(ResourceUri, ResourceUtc):
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=six.text_type)
-        parser_get.add_argument("from_datetime", type=DateTimeFormat(), default=None,
-                                help="The datetime from which you want the schedules")
-        parser_get.add_argument("until_datetime", type=DateTimeFormat(), default=None,
-                                help="The datetime until which you want the schedules")
-        parser_get.add_argument("duration", type=int, default=3600 * 24,
-                                help="Maximum duration between datetime and the retrieved stop time")
-        parser_get.add_argument("depth", type=depth_argument, default=2)
-        parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                help="Number of schedules per page")
-        parser_get.add_argument("start_page", type=int, default=0,
-                                help="The current page")
-        parser_get.add_argument("max_date_times", type=UnsignedInteger(), deprecated=True,
-                                help="DEPRECATED, replaced by `items_per_schedule`")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
-                                help="DEPRECATED, replaced by `forbidden_uris[]`",
-                                dest="__temporary_forbidden_id[]",
-                                default=[],
-                                action='append',
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                help="forbidden uris",
-                                dest="forbidden_uris[]",
-                                default=[],
-                                action='append',
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("calendar", type=six.text_type,
-                                help="Id of the calendar")
-        parser_get.add_argument("distance", type=int, default=200,
-                                help="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("show_codes", type=BooleanType(), default=False,
-                                help="show more identification codes")
-        #Note: no default param for data freshness, the default depends on the API
-        parser_get.add_argument("data_freshness",
-                                help='freshness of the data. '
-                                     'base_schedule is the long term planned schedule. '
-                                     'adapted_schedule is for planned ahead disruptions (strikes, '
-                                     'maintenances, ...). '
-                                     'realtime is to have the freshest possible data',
-                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
-                                schema_metadata={'default': 'now'}, hidden=True,
-                                default=datetime.utcnow(),
-                                help='The datetime considered as "now". Used for debug, default is '
-                                     'the moment of the request. It will mainly change the output '
-                                     'of the disruptions.')
-        parser_get.add_argument("items_per_schedule", type=UnsignedInteger(), default=10000,
-                                help="maximum number of date_times per schedule")
-        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
-                                help="remove geojson from the response")
+        parser_get.add_argument(
+            "from_datetime",
+            type=DateTimeFormat(),
+            default=None,
+            help="The datetime from which you want the schedules",
+        )
+        parser_get.add_argument(
+            "until_datetime",
+            type=DateTimeFormat(),
+            default=None,
+            help="The datetime until which you want the schedules",
+        )
+        parser_get.add_argument(
+            "duration",
+            type=int,
+            default=3600 * 24,
+            help="Maximum duration between datetime and the retrieved stop time",
+        )
+        parser_get.add_argument("depth", type=DepthArgument(), default=2)
+        parser_get.add_argument(
+            "count", type=default_count_arg_type, default=10, help="Number of schedules per page"
+        )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
+        parser_get.add_argument(
+            "max_date_times",
+            type=UnsignedInteger(),
+            deprecated=True,
+            help="DEPRECATED, replaced by `items_per_schedule`",
+        )
+        parser_get.add_argument(
+            "forbidden_id[]",
+            type=six.text_type,
+            deprecated=True,
+            help="DEPRECATED, replaced by `forbidden_uris[]`",
+            dest="__temporary_forbidden_id[]",
+            default=[],
+            action='append',
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "forbidden_uris[]",
+            type=six.text_type,
+            help="forbidden uris",
+            dest="forbidden_uris[]",
+            default=[],
+            action='append',
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument("calendar", type=six.text_type, help="Id of the calendar")
+        parser_get.add_argument(
+            "distance",
+            type=int,
+            default=200,
+            help="Distance range of the query. Used only if a coord is in the query",
+        )
+        parser_get.add_argument(
+            "show_codes", type=BooleanType(), default=False, help="show more identification codes"
+        )
+        # Note: no default param for data freshness, the default depends on the API
+        parser_get.add_argument(
+            "data_freshness",
+            help='freshness of the data. '
+            'base_schedule is the long term planned schedule. '
+            'adapted_schedule is for planned ahead disruptions (strikes, '
+            'maintenances, ...). '
+            'realtime is to have the freshest possible data',
+            type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']),
+        )
+        parser_get.add_argument(
+            "_current_datetime",
+            type=DateTimeFormat(),
+            schema_metadata={'default': 'now'},
+            hidden=True,
+            default=datetime.utcnow(),
+            help='The datetime considered as "now". Used for debug, default is '
+            'the moment of the request. It will mainly change the output '
+            'of the disruptions.',
+        )
+        parser_get.add_argument(
+            "items_per_schedule",
+            type=UnsignedInteger(),
+            default=10000,
+            help="maximum number of date_times per schedule",
+        )
+        parser_get.add_argument(
+            "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
+        )
 
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
@@ -165,7 +222,7 @@ class Schedules(ResourceUri, ResourceUtc):
             if not args['data_freshness']:
                 args['data_freshness'] = 'realtime'
         elif not args.get('calendar'):
-            #if a calendar is given all times will be given in local (because the calendar might span over dst)
+            # if a calendar is given all times will be given in local (because the calendar might span over dst)
             if args['from_datetime']:
                 args['from_datetime'] = self.convert_to_utc(args['from_datetime'])
             if args['until_datetime']:
@@ -187,23 +244,21 @@ class Schedules(ResourceUri, ResourceUtc):
             else:
                 args['data_freshness'] = 'realtime'
 
-        if not args["from_datetime"] and args["until_datetime"]\
-                and self.endpoint[:4] == "next":
+        if not args["from_datetime"] and args["until_datetime"] and self.endpoint[:4] == "next":
             self.endpoint = "previous" + self.endpoint[4:]
 
         # Add timezone in request for availability in greenlet
         args['timezone'] = timezone.get_timezone()
 
         self._register_interpreted_parameters(args)
-        return i_manager.dispatch(args, self.endpoint,
-                                  instance_name=self.region)
+        return i_manager.dispatch(args, self.endpoint, instance_name=self.region)
 
 
 class date_time_links(fields.Raw):
-
     def output(self, key, obj):
-        disruption_links = [create_internal_link(_type="disruption", rel="disruptions", id=uri)
-                            for uri in obj.impact_uris]
+        disruption_links = [
+            create_internal_link(_type="disruption", rel="disruptions", id=uri) for uri in obj.impact_uris
+        ]
         properties_links = pt.make_properties_links(obj.properties)
         return properties_links + disruption_links
 
@@ -216,29 +271,21 @@ date_time = {
     'data_freshness': enum_type(attribute='realtime_level'),
 }
 
-row = {
-    "stop_point": PbField(stop_point),
-    "date_times": fields.List(fields.Nested(date_time))
-}
+row = {"stop_point": PbField(stop_point), "date_times": fields.List(fields.Nested(date_time))}
 
 header = {
-    "display_informations": PbField(display_informations_vj,
-                                    attribute='pt_display_informations'),
+    "display_informations": PbField(display_informations_vj, attribute='pt_display_informations'),
     "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
-    "links": UrisToLinks()
+    "links": UrisToLinks(),
 }
-table_field = {
-    "rows": fields.List(fields.Nested(row)),
-    "headers": fields.List(fields.Nested(header))
-}
+table_field = {"rows": fields.List(fields.Nested(row)), "headers": fields.List(fields.Nested(header))}
 
 route_schedule_fields = {
     "table": PbField(table_field),
-    "display_informations": PbField(display_informations_route,
-                                    attribute='pt_display_informations'),
+    "display_informations": PbField(display_informations_route, attribute='pt_display_informations'),
     "links": UrisToLinks(),
     "geojson": MultiLineString(),
-    "additional_informations": enum_type(attribute="response_status")
+    "additional_informations": enum_type(attribute="response_status"),
 }
 
 route_schedules = {
@@ -246,60 +293,57 @@ route_schedules = {
     "route_schedules": fields.List(fields.Nested(route_schedule_fields)),
     "pagination": fields.Nested(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(fields.Nested(feed_publisher))
+    "feed_publishers": fields.List(fields.Nested(feed_publisher)),
 }
 
 
 class RouteSchedules(Schedules):
-
     def __init__(self):
         self.collections = route_schedules
-        super(RouteSchedules, self).__init__("route_schedules",
-                                             output_type_serializer=api.RouteSchedulesSerializer)
+        super(RouteSchedules, self).__init__(
+            "route_schedules", output_type_serializer=api.RouteSchedulesSerializer
+        )
 
 
 stop_schedule = {
     "stop_point": PbField(stop_point),
     "route": PbField(route, attribute="route"),
     "additional_informations": enum_type(attribute="response_status"),
-    "display_informations": PbField(display_informations_route,
-                                    attribute='pt_display_informations'),
+    "display_informations": PbField(display_informations_route, attribute='pt_display_informations'),
     "date_times": fields.List(fields.Nested(date_time)),
-    "links": UrisToLinks()
+    "links": UrisToLinks(),
 }
 stop_schedules = {
     "stop_schedules": fields.List(fields.Nested(stop_schedule)),
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(fields.Nested(feed_publisher))
+    "feed_publishers": fields.List(fields.Nested(feed_publisher)),
 }
 
 
 class StopSchedules(Schedules):
-
     def __init__(self):
         self.collections = stop_schedules
-        super(StopSchedules, self).__init__("departure_boards",
-                                            output_type_serializer=api.StopSchedulesSerializer)
+        super(StopSchedules, self).__init__(
+            "departure_boards", output_type_serializer=api.StopSchedulesSerializer
+        )
 
 
 passage = {
     "route": PbField(route),
     "stop_point": PbField(stop_point),
     "stop_date_time": PbField(stop_date_time),
-    "display_informations": PbField(display_informations_vj,
-                                    attribute='pt_display_informations'),
-    "links": UrisToLinks()
+    "display_informations": PbField(display_informations_vj, attribute='pt_display_informations'),
+    "links": UrisToLinks(),
 }
 
 departures = {
-    "departures": fields.List(fields.Nested(passage),
-                              attribute="next_departures"),
+    "departures": fields.List(fields.Nested(passage), attribute="next_departures"),
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(fields.Nested(feed_publisher))
+    "feed_publishers": fields.List(fields.Nested(feed_publisher)),
 }
 
 arrivals = {
@@ -307,8 +351,9 @@ arrivals = {
     "pagination": fields.Nested(pagination),
     "error": PbField(error, attribute='error'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(fields.Nested(feed_publisher))
+    "feed_publishers": fields.List(fields.Nested(feed_publisher)),
 }
+
 
 class add_passages_links:
     """
@@ -316,6 +361,7 @@ class add_passages_links:
 
     TEMPORARY: delete this as soon as the front end has the new disruptions integrated
     """
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -350,28 +396,27 @@ class add_passages_links:
                 kwargs_links["templated"] = False
                 kwargs_links["rel"] = "prev"
                 kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
-                response["links"].append(create_external_link("v1."+api, **kwargs_links))
+                response["links"].append(create_external_link("v1." + api, **kwargs_links))
                 kwargs_links.pop('until_datetime')
-                kwargs_links['from_datetime'] = (datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
+                kwargs_links['from_datetime'] = (datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime(
+                    "%Y%m%dT%H%M%S"
+                )
                 kwargs_links["rel"] = "next"
-                response["links"].append(create_external_link("v1."+api, **kwargs_links))
+                response["links"].append(create_external_link("v1." + api, **kwargs_links))
             return response, status, other
+
         return wrapper
 
 
 class NextDepartures(Schedules):
-
     def __init__(self):
         self.collections = departures
-        super(NextDepartures, self).__init__("next_departures",
-                                             output_type_serializer=api.DeparturesSerializer)
+        super(NextDepartures, self).__init__("next_departures", output_type_serializer=api.DeparturesSerializer)
         self.get_decorators.append(add_passages_links())
 
 
 class NextArrivals(Schedules):
-
     def __init__(self):
         self.collections = arrivals
-        super(NextArrivals, self).__init__("next_arrivals",
-                                           output_type_serializer=api.ArrivalsSerializer)
+        super(NextArrivals, self).__init__("next_arrivals", output_type_serializer=api.ArrivalsSerializer)
         self.get_decorators.append(add_passages_links())

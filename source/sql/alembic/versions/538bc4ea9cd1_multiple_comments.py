@@ -19,20 +19,24 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.create_table('comments',
-    sa.Column('id', sa.BIGINT(), nullable=False),
-    sa.Column('comment', sa.TEXT(), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    schema='navitia'
+    op.create_table(
+        'comments',
+        sa.Column('id', sa.BIGINT(), nullable=False),
+        sa.Column('comment', sa.TEXT(), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+        schema='navitia',
     )
-    op.create_table('ptobject_comments',
-    sa.Column('id', sa.BIGINT(), nullable=False),
-    sa.Column('object_type', sa.TEXT(), nullable=False),
-    sa.Column('object_id', sa.BIGINT(), nullable=False),
-    sa.Column('comment_id', sa.BIGINT(), nullable=False),
-    sa.ForeignKeyConstraint(['comment_id'], [u'navitia.comments.id'], name=u'ptobject_comments_comment_id_fkey'),
-    sa.PrimaryKeyConstraint('id'),
-    schema='navitia'
+    op.create_table(
+        'ptobject_comments',
+        sa.Column('id', sa.BIGINT(), nullable=False),
+        sa.Column('object_type', sa.TEXT(), nullable=False),
+        sa.Column('object_id', sa.BIGINT(), nullable=False),
+        sa.Column('comment_id', sa.BIGINT(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ['comment_id'], [u'navitia.comments.id'], name=u'ptobject_comments_comment_id_fkey'
+        ),
+        sa.PrimaryKeyConstraint('id'),
+        schema='navitia',
     )
     op.drop_column('company', 'comment', schema='navitia')
     op.drop_column('journey_pattern', 'comment', schema='navitia')

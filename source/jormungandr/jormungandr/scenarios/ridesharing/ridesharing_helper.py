@@ -48,8 +48,9 @@ def _make_pb_fp(fp):
     pb_fp.license = fp.license
     return pb_fp
 
+
 def decorate_journeys(response, instance, request):
-    #TODO: disable same journey schedule link for ridesharing journey?
+    # TODO: disable same journey schedule link for ridesharing journey?
     for journey in response.journeys:
         if 'ridesharing' not in journey.tags or to_be_deleted(journey):
             continue
@@ -57,15 +58,16 @@ def decorate_journeys(response, instance, request):
             if section.street_network.mode == response_pb2.Ridesharing:
                 section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
                 period_extremity = None
-                if len(journey.sections) == 1:#direct path, we use the user input
+                if len(journey.sections) == 1:  # direct path, we use the user input
                     period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
-                elif i == 0: #ridesharing on first section we want to arrive before the start of the pt
+                elif i == 0:  # ridesharing on first section we want to arrive before the start of the pt
                     period_extremity = PeriodExtremity(section.end_date_time, False)
-                else: #ridesharing at the end, we search for solution starting after the end of the pt sections
+                else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
                     period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                pb_rsjs, pb_tickets, pb_fps = build_ridesharing_journeys(section.origin, section.destination,
-                                                                         period_extremity, instance)
+                pb_rsjs, pb_tickets, pb_fps = build_ridesharing_journeys(
+                    section.origin, section.destination, period_extremity, instance
+                )
                 if not pb_rsjs:
                     journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
                 else:
@@ -75,17 +77,17 @@ def decorate_journeys(response, instance, request):
                 response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
 
-
 def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instance):
     from_coord = get_pt_object_coord(from_pt_obj)
     to_coord = get_pt_object_coord(to_pt_obj)
-    from_str="{},{}".format(from_coord.lat, from_coord.lon)
-    to_str="{},{}".format(to_coord.lat, to_coord.lon)
+    from_str = "{},{}".format(from_coord.lat, from_coord.lon)
+    to_str = "{},{}".format(to_coord.lat, to_coord.lon)
     try:
         rsjs, fps = instance.get_ridesharing_journeys_with_feed_publishers(from_str, to_str, period_extremity)
     except Exception as e:
-        logging.exception('Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}',
-                          from_str, to_str)
+        logging.exception(
+            'Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}', from_str, to_str
+        )
         new_relic.record_custom_event('ridesharing_internal_failure', {'message': str(e)})
         rsjs = []
         fps = []

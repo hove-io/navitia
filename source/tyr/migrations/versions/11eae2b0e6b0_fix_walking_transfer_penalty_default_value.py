@@ -16,16 +16,14 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('instance', 'walking_transfer_penalty',
-               existing_type=sa.INTEGER(),
-               server_default='120')
-    op.execute('''
+    op.alter_column('instance', 'walking_transfer_penalty', existing_type=sa.INTEGER(), server_default='120')
+    op.execute(
+        '''
                update instance set max_duration='86400';
                update instance set walking_transfer_penalty='120';
-               ''')
+               '''
+    )
+
 
 def downgrade():
-    op.alter_column('instance', 'walking_transfer_penalty',
-               existing_type=sa.INTEGER(),
-               server_default='2')
-
+    op.alter_column('instance', 'walking_transfer_penalty', existing_type=sa.INTEGER(), server_default='2')

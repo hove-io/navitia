@@ -44,8 +44,9 @@ DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
     'name': 'here',
     'license': 'Private',
-    'url': 'https://developer.here.com/terms-and-conditions'
+    'url': 'https://developer.here.com/terms-and-conditions',
 }
+
 
 def _get_coord(pt_object):
     coord = get_pt_object_coord(pt_object)
@@ -69,37 +70,53 @@ def _str_to_dt(timestamp):
 
 
 class Here(AbstractStreetNetworkService):
-
-    def __init__(self, instance, service_base_url, modes=[], id='here', timeout=10, api_id=None, api_code=None,
-                 feed_publisher=DEFAULT_HERE_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self,
+        instance,
+        service_base_url,
+        modes=[],
+        id='here',
+        timeout=10,
+        api_id=None,
+        api_code=None,
+        feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
+        **kwargs
+    ):
         self.instance = instance
         self.sn_system_id = id
         if not service_base_url:
             raise ValueError('service_url {} is not a valid HERE url'.format(service_base_url))
         service_base_url = service_base_url.rstrip('/')
         self.routing_service_url = 'https://{base_url}/calculateroute.json'.format(base_url=service_base_url)
-        self.matrix_service_url = 'https://matrix.{base_url}/calculatematrix.json'.format(base_url=service_base_url)
+        self.matrix_service_url = 'https://matrix.{base_url}/calculatematrix.json'.format(
+            base_url=service_base_url
+        )
         self.api_id = api_id
         self.api_code = api_code
         self.modes = modes
         self.timeout = timeout
         self.max_points = 100  # max number of point asked in the routing matrix
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
+        )
 
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': unicode(id)})
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
-        return {'id': unicode(self.sn_system_id),
-                'class': self.__class__.__name__,
-                'modes': self.modes,
-                'timeout': self.timeout,
-                'max_points': self.max_points,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-            }
+        return {
+            'id': unicode(self.sn_system_id),
+            'class': self.__class__.__name__,
+            'modes': self.modes,
+            'timeout': self.timeout,
+            'max_points': self.max_points,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }
 
     def _call_here(self, url, params):
         self.log.debug('Here routing service, url: {}'.format(url))
@@ -175,11 +192,7 @@ class Here(AbstractStreetNetworkService):
 
         section.street_network.length = section.length
         section.street_network.duration = section.duration
-        map_mode = {
-            "walking": response_pb2.Walking,
-            "car": response_pb2.Car,
-            "bike": response_pb2.Bike
-        }
+        map_mode = {"walking": response_pb2.Walking, "car": response_pb2.Car, "bike": response_pb2.Bike}
         section.street_network.mode = map_mode[mode]
         for maneuver in leg.get('maneuver', []):
             path_item = section.street_network.path_items.add()
@@ -214,18 +227,22 @@ class Here(AbstractStreetNetworkService):
             # used to get the fasted journeys using the given mode and with traffic data
             'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
             # in HERE it's only possible to constraint the departure
-            'departure': _str_to_dt(datetime)
+            'departure': _str_to_dt(datetime),
         }
 
         return params
 
-    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode,
-                                             fallback_extremity)
+    def _direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
+        params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode, fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
-            self.log.debug('impossible to find a path between {o} and {d}, response ({code}) {r}'
-                           .format(o=pt_object_origin, d=pt_object_destination, code=r.status_code, r=r.text))
+            self.log.debug(
+                'impossible to find a path between {o} and {d}, response ({code}) {r}'.format(
+                    o=pt_object_origin, d=pt_object_destination, code=r.status_code, r=r.text
+                )
+            )
             resp = response_pb2.Response()
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
@@ -235,8 +252,9 @@ class Here(AbstractStreetNetworkService):
 
         self.log.debug('here response = {}'.format(json))
 
-        return self._read_response(json, pt_object_origin, pt_object_destination, mode,
-                                   fallback_extremity, request)
+        return self._read_response(
+            json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request
+        )
 
     @classmethod
     def _get_matrix(cls, json_response, origins, destinations):
@@ -282,10 +300,10 @@ class Here(AbstractStreetNetworkService):
         params['departure'] = _str_to_dt(datetime)
 
         # Note: for the moment we limit to self.max_points the number of n:m asked
-        for i, o in enumerate(origins[:self.max_points]):
+        for i, o in enumerate(origins[: self.max_points]):
             params['start{}'.format(i)] = _get_coord(o)
 
-        for i, o in enumerate(destinations[:self.max_points]):
+        for i, o in enumerate(destinations[: self.max_points]):
             params['destination{}'.format(i)] = _get_coord(o)
 
         # TODO handle max_duration (but the API can only handle a max distance (searchRange)
@@ -297,8 +315,9 @@ class Here(AbstractStreetNetworkService):
         r = self._call_here(self.matrix_service_url, params=params)
 
         if r.status_code != 200:
-            self.log.error('impossible to query HERE: {} with {} response: {}'
-                           .format(r.url, r.status_code, r.text))
+            self.log.error(
+                'impossible to query HERE: {} with {} response: {}'.format(r.url, r.status_code, r.text)
+            )
             raise TechnicalError('invalid HERE call, impossible to query: {}'.format(r.url))
 
         resp_json = r.json()

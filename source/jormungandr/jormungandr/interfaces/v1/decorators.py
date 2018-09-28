@@ -38,5 +38,6 @@ def get_serializer(serpy, marshall):
     else:
         return marshal_with(OrderedDict(marshall), display_null=False)
 
+
 def get_obj_serializer(obj):
     return get_serializer(serpy=obj.output_type_serializer, marshall=obj.collections)

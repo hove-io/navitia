@@ -28,19 +28,32 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 collections_to_resource_type = {
-    "stop_points": "stop_point", "routes": "route",
-    "networks": "network", "commercial_modes": "commercial_mode",
-    "physical_modes": "physical_mode", "companies": "company",
-    "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
-    "addresses": "address", "coords": "coord", "coord": "coord",
+    "stop_points": "stop_point",
+    "routes": "route",
+    "networks": "network",
+    "commercial_modes": "commercial_mode",
+    "physical_modes": "physical_mode",
+    "companies": "company",
+    "stop_areas": "stop_area",
+    "lines": "line",
+    "line_groups": "line_group",
+    "addresses": "address",
+    "coords": "coord",
+    "coord": "coord",
     "journey_pattern_points": "journey_pattern_point",
     "journey_patterns": "journey_pattern",
-    "pois": "poi", "poi_types": "poi_type",
-    "connections": "connection", "vehicle_journeys": "vehicle_journey",
-    "disruptions": "disruption", "trips": "trip", "contributors": "contributor",
-    "datasets": "dataset"}
+    "pois": "poi",
+    "poi_types": "poi_type",
+    "connections": "connection",
+    "vehicle_journeys": "vehicle_journey",
+    "disruptions": "disruption",
+    "trips": "trip",
+    "contributors": "contributor",
+    "datasets": "dataset",
+}
 
-resource_type_to_collection = dict((resource_type, collection)
-                                   for (collection, resource_type)
-                                   in collections_to_resource_type.items())
+resource_type_to_collection = dict(
+    (resource_type, collection) for (collection, resource_type) in collections_to_resource_type.items()
+)

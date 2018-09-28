@@ -39,12 +39,11 @@ class LoadDataCommand(Command):
     def get_options(self):
         return [
             Option(dest='instance_name', help="name of the instance"),
-            Option(dest='data_dir', help="coma separated list of the path of the data to load")
+            Option(dest='data_dir', help="coma separated list of the path of the data to load"),
         ]
 
     def run(self, instance_name, data_dir):
-        logging.info("Run command load data, a tyr_worker has to be "
-                     "previously started")
+        logging.info("Run command load data, a tyr_worker has to be " "previously started")
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
 
         if not instance:
@@ -59,4 +58,3 @@ class LoadDataCommand(Command):
         # task is finished, so the easiest way for the moment is to wait for
         # the answer
         futur_res.get()
-

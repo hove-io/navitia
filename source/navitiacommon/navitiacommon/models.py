@@ -40,8 +40,7 @@ from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
-from navitiacommon.utils import street_source_types, address_source_types, \
-    poi_source_types, admin_source_types
+from navitiacommon.utils import street_source_types, address_source_types, poi_source_types, admin_source_types
 
 from navitiacommon import default_values
 import os
@@ -70,6 +69,7 @@ class ArrayOfEnum(ARRAY):
 
         def process(value):
             return super_rp(handle_raw_string(value))
+
         return process
 
 
@@ -77,9 +77,12 @@ class EndPoint(db.Model):
     """
     define a DNS name exposed by navitia, each useris associated wich one
     """
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
-    hosts = db.relationship('Host', backref='end_point', lazy='joined', cascade='save-update, merge, delete, delete-orphan')
+    hosts = db.relationship(
+        'Host', backref='end_point', lazy='joined', cascade='save-update, merge, delete, delete-orphan'
+    )
     default = db.Column(db.Boolean, nullable=False, default=False)
     users = db.relationship('User', lazy='dynamic', cascade='save-update, merge, delete, delete-orphan')
 
@@ -105,8 +108,10 @@ class Host(db.Model):
 
 
 class User(db.Model):
-    __table_args__ = (UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
-                      UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'))
+    __table_args__ = (
+        UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
+        UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     login = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False)
@@ -120,11 +125,15 @@ class User(db.Model):
 
     keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
 
-    authorizations = db.relationship('Authorization', backref='user',
-                                     lazy='joined', cascade='save-update, merge, delete')
+    authorizations = db.relationship(
+        'Authorization', backref='user', lazy='joined', cascade='save-update, merge, delete'
+    )
 
-    type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
-                             default='with_free_instances', nullable=False)
+    type = db.Column(
+        db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
+        default='with_free_instances',
+        nullable=False,
+    )
 
     # Note: we don't store postgis object for the shape and the default_coord
     # because we don't want postgis dependency for the tyr database
@@ -167,19 +176,18 @@ class User(db.Model):
 
     @classmethod
     def get_from_token(cls, token, valid_until):
-        query = cls.query.join(Key).filter(Key.token == token,
-                                          (Key.valid_until > valid_until)
-                                          | (Key.valid_until == None))
+        query = cls.query.join(Key).filter(
+            Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
+        )
         res = query.first()
         return res
 
     def has_access(self, instance_id, api_name):
         if self.is_super_user:
             return True
-        query = Instance.query.join(Authorization, Api)\
-            .filter(Instance.id == instance_id,
-                    Api.name == api_name,
-                    Authorization.user_id == self.id)
+        query = Instance.query.join(Authorization, Api).filter(
+            Instance.id == instance_id, Api.name == api_name, Authorization.user_id == self.id
+        )
 
         return query.count() > 0
 
@@ -217,8 +225,7 @@ class User(db.Model):
 
 class Key(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-                        nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
     app_name = db.Column(db.Text, nullable=True)
     valid_until = db.Column(db.Date)
@@ -238,10 +245,7 @@ class Key(db.Model):
 
 class PoiTypeJson(db.Model):
     poi_types_json = db.Column(db.Text, nullable=True)
-    instance_id = db.Column(db.Integer,
-                            db.ForeignKey('instance.id'),
-                            primary_key=True,
-                            nullable=False)
+    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), primary_key=True, nullable=False)
 
     __tablename__ = 'poi_type_json'
 
@@ -254,20 +258,28 @@ class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     discarded = db.Column(db.Boolean, default=False, nullable=False)
-    #aka is_open_service in jormun
+    # aka is_open_service in jormun
     is_free = db.Column(db.Boolean, default=False, nullable=False)
 
-    #this doesn't impact anything but is_free was used this,
-    #but an instance can be freely accessible but not using open data
+    # this doesn't impact anything but is_free was used this,
+    # but an instance can be freely accessible but not using open data
     is_open_data = db.Column(db.Boolean, default=False, nullable=False)
 
-    authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
-            lazy='dynamic', cascade='save-update, merge, delete')
+    authorizations = db.relationship(
+        'Authorization',
+        backref=backref('instance', lazy='joined'),
+        lazy='dynamic',
+        cascade='save-update, merge, delete',
+    )
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic', cascade='save-update, merge, delete')
 
-    poi_type_json = db.relationship('PoiTypeJson', uselist=False, backref=backref('instance'),
-                                 cascade='save-update, merge, delete, delete-orphan')
+    poi_type_json = db.relationship(
+        'PoiTypeJson',
+        uselist=False,
+        backref=backref('instance'),
+        cascade='save-update, merge, delete, delete-orphan',
+    )
 
     import_stops_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -280,18 +292,27 @@ class Instance(db.Model):
     scenario = db.Column(db.Text, nullable=False, default='new_default')
 
     # order of the journey, this order is for clockwise request, else it is reversed
-    journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'),
-                              default=default_values.journey_order, nullable=False)
+    journey_order = db.Column(
+        db.Enum('arrival_time', 'departure_time', name='journey_order'),
+        default=default_values.journey_order,
+        nullable=False,
+    )
 
-    max_walking_duration_to_pt = db.Column(db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False)
+    max_walking_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False
+    )
 
-    max_bike_duration_to_pt = db.Column(db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False)
+    max_bike_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False
+    )
 
     max_bss_duration_to_pt = db.Column(db.Integer, default=default_values.max_bss_duration_to_pt, nullable=False)
 
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
-    max_car_no_park_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_no_park_duration_to_pt, nullable=False)
+    max_car_no_park_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_car_no_park_duration_to_pt, nullable=False
+    )
 
     walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
 
@@ -319,71 +340,93 @@ class Instance(db.Model):
 
     factor_too_long_journey = db.Column(db.Float, default=default_values.factor_too_long_journey, nullable=False)
 
-    min_duration_too_long_journey = db.Column(db.Integer, default=default_values.min_duration_too_long_journey, \
-            nullable=False)
+    min_duration_too_long_journey = db.Column(
+        db.Integer, default=default_values.min_duration_too_long_journey, nullable=False
+    )
 
-    max_duration_criteria = db.Column(db.Enum('time', 'duration', name='max_duration_criteria'),
-            default=default_values.max_duration_criteria, nullable=False)
+    max_duration_criteria = db.Column(
+        db.Enum('time', 'duration', name='max_duration_criteria'),
+        default=default_values.max_duration_criteria,
+        nullable=False,
+    )
 
-    max_duration_fallback_mode = db.Column(db.Enum('walking', 'bss', 'bike', 'car', name='max_duration_fallback_mode'),
-            default=default_values.max_duration_fallback_mode, nullable=False)
+    max_duration_fallback_mode = db.Column(
+        db.Enum('walking', 'bss', 'bike', 'car', name='max_duration_fallback_mode'),
+        default=default_values.max_duration_fallback_mode,
+        nullable=False,
+    )
 
-    max_duration = db.Column(db.Integer, default=default_values.max_duration, nullable=False, server_default='86400')
+    max_duration = db.Column(
+        db.Integer, default=default_values.max_duration, nullable=False, server_default='86400'
+    )
 
-    walking_transfer_penalty = db.Column(db.Integer, default=default_values.walking_transfer_penalty, nullable=False,
-                                         server_default='2')
+    walking_transfer_penalty = db.Column(
+        db.Integer, default=default_values.walking_transfer_penalty, nullable=False, server_default='2'
+    )
 
-    night_bus_filter_max_factor = db.Column(db.Float, default=default_values.night_bus_filter_max_factor,
-                                            nullable=False)
+    night_bus_filter_max_factor = db.Column(
+        db.Float, default=default_values.night_bus_filter_max_factor, nullable=False
+    )
 
-    night_bus_filter_base_factor = db.Column(db.Integer, default=default_values.night_bus_filter_base_factor,
-                                             nullable=False, server_default='3600')
+    night_bus_filter_base_factor = db.Column(
+        db.Integer, default=default_values.night_bus_filter_base_factor, nullable=False, server_default='3600'
+    )
 
-    priority = db.Column(db.Integer, default=default_values.priority,
-                                  nullable=False, server_default='0')
+    priority = db.Column(db.Integer, default=default_values.priority, nullable=False, server_default='0')
 
-    bss_provider = db.Column(db.Boolean, default=default_values.bss_provider,
-                                  nullable=False, server_default=true())
+    bss_provider = db.Column(
+        db.Boolean, default=default_values.bss_provider, nullable=False, server_default=true()
+    )
 
-    car_park_provider = db.Column(db.Boolean, default=default_values.car_park_provider,
-                                     nullable=False, server_default=true())
+    car_park_provider = db.Column(
+        db.Boolean, default=default_values.car_park_provider, nullable=False, server_default=true()
+    )
 
-    max_additional_connections = db.Column(db.Integer, default=default_values.max_additional_connections,
-                                  nullable=False, server_default='2')
+    max_additional_connections = db.Column(
+        db.Integer, default=default_values.max_additional_connections, nullable=False, server_default='2'
+    )
 
-    successive_physical_mode_to_limit_id = db.Column(db.Text,
-                                                     default=default_values.successive_physical_mode_to_limit_id,
-                                                     nullable=False,
-                                                     server_default=default_values.successive_physical_mode_to_limit_id)
+    successive_physical_mode_to_limit_id = db.Column(
+        db.Text,
+        default=default_values.successive_physical_mode_to_limit_id,
+        nullable=False,
+        server_default=default_values.successive_physical_mode_to_limit_id,
+    )
 
     full_sn_geometries = db.Column(db.Boolean, default=False, nullable=False, server_default=false())
 
     realtime_pool_size = db.Column(db.Integer, default=default_values.realtime_pool_size)
 
     # parameters migrated from scenario STIF
-    min_nb_journeys = db.Column(db.Integer, default=default_values.min_nb_journeys,
-                                nullable=False, server_default='0')
-    min_journeys_calls = db.Column(db.Integer, default=default_values.min_journeys_calls,
-                                   nullable=False, server_default='1')
+    min_nb_journeys = db.Column(
+        db.Integer, default=default_values.min_nb_journeys, nullable=False, server_default='0'
+    )
+    min_journeys_calls = db.Column(
+        db.Integer, default=default_values.min_journeys_calls, nullable=False, server_default='1'
+    )
     max_successive_physical_mode = db.Column(db.Integer, nullable=True)
-    final_line_filter = db.Column(db.Boolean, default=default_values.final_line_filter,
-                                  nullable=False, server_default=false())
-    max_extra_second_pass = db.Column(db.Integer, default=default_values.max_extra_second_pass,
-                                      nullable=False, server_default='0')
+    final_line_filter = db.Column(
+        db.Boolean, default=default_values.final_line_filter, nullable=False, server_default=false()
+    )
+    max_extra_second_pass = db.Column(
+        db.Integer, default=default_values.max_extra_second_pass, nullable=False, server_default='0'
+    )
     max_nb_journeys = db.Column(db.Integer, nullable=True)
 
     # param only used by distributed scenario
     import json
+
     # default value is read when there is no record in db
     # server_default(dumped json) is the actual value stored in db, postgres will convert it to a dict when it's read
-    max_nb_crowfly_by_mode = db.Column(JSONB,
-                                       default=default_values.max_nb_crowfly_by_mode,
-                                       server_default=json.dumps(default_values.max_nb_crowfly_by_mode))
+    max_nb_crowfly_by_mode = db.Column(
+        JSONB,
+        default=default_values.max_nb_crowfly_by_mode,
+        server_default=json.dumps(default_values.max_nb_crowfly_by_mode),
+    )
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
 
-    def __init__(self, name=None, is_free=False, authorizations=None,
-                 jobs=None):
+    def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
         if authorizations:
@@ -395,8 +438,9 @@ class Instance(db.Model):
         """
         return the n last dataset of each family type loaded for this instance
         """
-        query = db.session.query(func.distinct(DataSet.family_type)) \
-            .filter(Instance.id == self.id, DataSet.family_type != 'mimir')
+        query = db.session.query(func.distinct(DataSet.family_type)).filter(
+            Instance.id == self.id, DataSet.family_type != 'mimir'
+        )
         if family_type:
             query = query.filter(DataSet.family_type == family_type)
 
@@ -404,13 +448,15 @@ class Instance(db.Model):
 
         result = []
         for family_type in family_types:
-            data_sets = db.session.query(DataSet) \
-                .join(Job) \
-                .join(Instance) \
-                .filter(Instance.id == self.id, DataSet.family_type == family_type, Job.state == 'done') \
-                .order_by(Job.created_at.desc()) \
-                .limit(nb_dataset) \
+            data_sets = (
+                db.session.query(DataSet)
+                .join(Job)
+                .join(Instance)
+                .filter(Instance.id == self.id, DataSet.family_type == family_type, Job.state == 'done')
+                .order_by(Job.created_at.desc())
+                .limit(nb_dataset)
                 .all()
+            )
             result += data_sets
         return result
 
@@ -437,10 +483,12 @@ class Instance(db.Model):
             raise Exception({'error': 'instance is required'}, 400)
 
     def delete_dataset(self, _type):
-        result = db.session.query(DataSet, Job) \
-            .join(Job) \
-            .filter(DataSet.type == _type, Job.instance_id == self.id)\
+        result = (
+            db.session.query(DataSet, Job)
+            .join(Job)
+            .filter(DataSet.type == _type, Job.instance_id == self.id)
             .all()
+        )
 
         if not result:
             return 0
@@ -502,14 +550,24 @@ class TravelerProfile(db.Model):
     # http://stackoverflow.com/questions/24872541/could-not-assemble-any-primary-key-columns-for-mapped-table
     __tablename__ = 'traveler_profile'
     coverage_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
-    traveler_type = db.Column('traveler_type',
-                              db.Enum('standard', 'slow_walker', 'fast_walker', 'luggage', 'wheelchair',
-                                      # Temporary Profiles
-                                      'cyclist', 'motorist',
-                                      name='traveler_type'),
-                              default='standard', nullable=False)
+    traveler_type = db.Column(
+        'traveler_type',
+        db.Enum(
+            'standard',
+            'slow_walker',
+            'fast_walker',
+            'luggage',
+            'wheelchair',
+            # Temporary Profiles
+            'cyclist',
+            'motorist',
+            name='traveler_type',
+        ),
+        default='standard',
+        nullable=False,
+    )
 
-    __table_args__ = (db.PrimaryKeyConstraint('coverage_id', 'traveler_type'), )
+    __table_args__ = (db.PrimaryKeyConstraint('coverage_id', 'traveler_type'),)
 
     walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
 
@@ -521,15 +579,21 @@ class TravelerProfile(db.Model):
 
     wheelchair = db.Column(db.Boolean, default=False, nullable=False)
 
-    max_walking_duration_to_pt = db.Column(db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False)
+    max_walking_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_walking_duration_to_pt, nullable=False
+    )
 
-    max_bike_duration_to_pt = db.Column(db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False)
+    max_bike_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_bike_duration_to_pt, nullable=False
+    )
 
     max_bss_duration_to_pt = db.Column(db.Integer, default=default_values.max_bss_duration_to_pt, nullable=False)
 
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
-    fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', 'ridesharing', name='fallback_mode') # TODO alembic migration
+    fallback_mode = db.Enum(
+        'walking', 'car', 'bss', 'bike', 'ridesharing', name='fallback_mode'
+    )  # TODO alembic migration
 
     first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
 
@@ -537,16 +601,16 @@ class TravelerProfile(db.Model):
 
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):
-        model = cls.query.join(Instance).filter(
-            and_(Instance.name == coverage,
-                 cls.traveler_type == traveler_type)
-        ).first()
+        model = (
+            cls.query.join(Instance)
+            .filter(and_(Instance.name == coverage, cls.traveler_type == traveler_type))
+            .first()
+        )
         return model
 
     @classmethod
     def get_all_by_coverage(cls, coverage):
-        models = cls.query.join(Instance).filter(
-            and_(Instance.name == coverage))
+        models = cls.query.join(Instance).filter(and_(Instance.name == coverage))
         return models
 
 
@@ -554,8 +618,7 @@ class Api(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
-    authorizations = db.relationship('Authorization', backref=backref('api', lazy='joined'),
-                                     lazy='dynamic')
+    authorizations = db.relationship('Authorization', backref=backref('api', lazy='joined'), lazy='dynamic')
 
     def __init__(self, name=None):
         self.name = name
@@ -565,14 +628,9 @@ class Api(db.Model):
 
 
 class Authorization(db.Model):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-                        primary_key=True, nullable=False)
-    instance_id = db.Column(db.Integer,
-                            db.ForeignKey('instance.id'),
-                            primary_key=True, nullable=False)
-    api_id = db.Column(db.Integer,
-                       db.ForeignKey('api.id'), primary_key=True,
-                       nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
+    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), primary_key=True, nullable=False)
+    api_id = db.Column(db.Integer, db.ForeignKey('api.id'), primary_key=True, nullable=False)
 
     def __init__(self, user_id=None, instance_id=None, api_id=None):
         self.user_id = user_id
@@ -580,26 +638,20 @@ class Authorization(db.Model):
         self.api_id = api_id
 
     def __repr__(self):
-        return '<Authorization %r-%r-%r>' \
-                % (self.user_id, self.instance_id, self.api_id)
+        return '<Authorization %r-%r-%r>' % (self.user_id, self.instance_id, self.api_id)
 
 
 class Job(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     task_uuid = db.Column(db.Text)
-    instance_id = db.Column(db.Integer,
-                            db.ForeignKey('instance.id'))
-    autocomplete_params_id = db.Column(db.Integer,
-                                       db.ForeignKey('autocomplete_parameter.id'))
+    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'))
+    autocomplete_params_id = db.Column(db.Integer, db.ForeignKey('autocomplete_parameter.id'))
     # name is used for the ENUM name in postgreSQL
-    state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
-                              name='job_state'))
+    state = db.Column(db.Enum('pending', 'running', 'done', 'failed', name='job_state'))
 
-    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic',
-                                cascade='delete')
+    data_sets = db.relationship('DataSet', backref='job', lazy='dynamic', cascade='delete')
 
-    metrics = db.relationship('Metric', backref='job', lazy='dynamic',
-                                cascade='delete')
+    metrics = db.relationship('Metric', backref='job', lazy='dynamic', cascade='delete')
 
     def __repr__(self):
         return '<Job %r>' % self.id
@@ -615,13 +667,16 @@ class Metric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
 
-    type = db.Column(db.Enum('ed2nav', 'fusio2ed', 'gtfs2ed', 'osm2ed', 'geopal2ed', 'synonym2ed', 'poi2ed',
-                             name='metric_type'), nullable=False)
+    type = db.Column(
+        db.Enum(
+            'ed2nav', 'fusio2ed', 'gtfs2ed', 'osm2ed', 'geopal2ed', 'synonym2ed', 'poi2ed', name='metric_type'
+        ),
+        nullable=False,
+    )
     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=True)
     duration = db.Column(INTERVAL)
 
     dataset = db.relationship('DataSet', lazy='joined')
-
 
     def __repr__(self):
         return '<Metric {}>'.format(self.id)
@@ -675,8 +730,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=False)
 
-    def __init__(self, name=None, street=None, address=None,
-                 poi=None, admin=None, admin_level=None):
+    def __init__(self, name=None, street=None, address=None, poi=None, admin=None, admin_level=None):
         self.name = name
         self.street = street
         self.address = address
@@ -697,23 +751,27 @@ class AutocompleteParameter(db.Model, TimestampMixin):
         """
         return the n last dataset of each family type loaded for this instance
         """
-        family_types = db.session.query(func.distinct(DataSet.family_type)) \
-            .filter(AutocompleteParameter.id == self.id) \
+        family_types = (
+            db.session.query(func.distinct(DataSet.family_type))
+            .filter(AutocompleteParameter.id == self.id)
             .all()
+        )
 
         result = []
         for family_type in family_types:
-            data_sets = db.session.query(DataSet)\
-                .join(Job) \
-                .join(AutocompleteParameter) \
-                .filter(AutocompleteParameter.id == self.id, DataSet.family_type == family_type, Job.state == 'done') \
-                .order_by(Job.created_at.desc()) \
-                .limit(nb_dataset) \
+            data_sets = (
+                db.session.query(DataSet)
+                .join(Job)
+                .join(AutocompleteParameter)
+                .filter(
+                    AutocompleteParameter.id == self.id, DataSet.family_type == family_type, Job.state == 'done'
+                )
+                .order_by(Job.created_at.desc())
+                .limit(nb_dataset)
                 .all()
+            )
             result += data_sets
         return result
 
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name
-
-

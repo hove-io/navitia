@@ -18,7 +18,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('import_ntfs_in_mimir', sa.Boolean(), nullable=False, server_default='False'))
+    op.add_column(
+        'instance', sa.Column('import_ntfs_in_mimir', sa.Boolean(), nullable=False, server_default='False')
+    )
 
 
 def downgrade():

@@ -33,7 +33,9 @@ from collections import namedtuple
 import ujson
 import geojson
 import flask
+from dateutil import parser
 from flask_restful.inputs import boolean
+
 
 class TypeSchema(object):
     def __init__(self, type=None, metadata=None):
@@ -51,19 +53,18 @@ class DepthArgument(CustomSchemaType):
     def __call__(self, value, name):
         conv_value = int(value)
         if conv_value > 3:
-            raise ValueError("The {} argument has to be <= 3, you gave : {}"
-                             .format(name, value))
+            raise ValueError("The {} argument has to be <= 3, you gave : {}".format(name, value))
         return conv_value
 
     def schema(self):
         return TypeSchema(type=int, metadata={'minimum': 0, 'maximum': 3})
 
+
 class PositiveFloat(CustomSchemaType):
     def __call__(self, value, name):
         conv_value = float(value)
         if conv_value <= 0:
-            raise ValueError("The {} argument has to be > 0, you gave : {}"
-                             .format(name, value))
+            raise ValueError("The {} argument has to be > 0, you gave : {}".format(name, value))
         return conv_value
 
     def schema(self):
@@ -73,7 +74,7 @@ class PositiveFloat(CustomSchemaType):
 class BooleanType(CustomSchemaType):
     def __call__(self, value):
         if isinstance(value, bool):
-             return value
+            return value
         return boolean(value)
 
     def schema(self):
@@ -81,7 +82,6 @@ class BooleanType(CustomSchemaType):
 
 
 class OptionValue(CustomSchemaType):
-
     def __init__(self, optional_values):
         self.optional_values = optional_values
 
@@ -89,12 +89,14 @@ class OptionValue(CustomSchemaType):
         # if input value is iterable
         if hasattr(value, '__iter__'):
             if not all((v in self.optional_values for v in value)):
-                error = "The {} argument must be in list {}, you gave {}".\
-                    format(name, str(self.optional_values), value)
+                error = "The {} argument must be in list {}, you gave {}".format(
+                    name, str(self.optional_values), value
+                )
                 raise ValueError(error)
         elif not (value in self.optional_values):
-            error = "The {} argument must be in list {}, you gave {}".\
-                format(name, str(self.optional_values), value)
+            error = "The {} argument must be in list {}, you gave {}".format(
+                name, str(self.optional_values), value
+            )
             raise ValueError(error)
         return value
 
@@ -105,7 +107,7 @@ class OptionValue(CustomSchemaType):
 class DescribedOptionValue(OptionValue):
     def __init__(self, optional_values):
         self.description = "Possible values:\n"
-        self.description += '\n'.join([" * '{}' - {}".format(k, v) for k,v in optional_values.iteritems()])
+        self.description += '\n'.join([" * '{}' - {}".format(k, v) for k, v in optional_values.iteritems()])
         super(DescribedOptionValue, self).__init__(optional_values.keys())
 
     def schema(self):
@@ -115,7 +117,6 @@ class DescribedOptionValue(OptionValue):
 
 
 class IntervalValue(CustomSchemaType):
-
     def __init__(self, type=int, min_value=None, max_value=None):
         self.type = type
         self.min_value = min_value
@@ -148,7 +149,7 @@ def geojson_argument(value):
         if not isinstance(value, dict):
             raise ValueError('invalid json')
 
-        if not is_geometry_valid(value) :
+        if not is_geometry_valid(value):
             raise ValueError('invalid geojson')
 
         geometry = value.get('geometry', {}).get('type')
@@ -186,3 +187,60 @@ class CoordFormat(CustomSchemaType):
     def schema(self):
         return TypeSchema(type=str, metadata={'pattern': '.*;.*'})
 
+
+class UnsignedInteger(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            d = int(value)
+            if d < 0:
+                raise ValueError('invalid unsigned int')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 0})
+
+
+class PositiveInteger(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            d = int(value)
+            if d <= 0:
+                raise ValueError('invalid positive int')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 1})
+
+
+def _parse_input_date(date):
+    """
+    datetime parse date seems broken, '155' with format '%H%M%S' is not
+    rejected but parsed as 1h, 5mn, 5s...
+    so use use for the input date parse dateutil even if the 'guess'
+    mechanism seems a bit dangerous
+    """
+    return parser.parse(date, dayfirst=False, yearfirst=True)
+
+
+class DateTimeFormat(CustomSchemaType):
+    def __call__(self, value):
+        """
+        we want to valid the date format
+        """
+        try:
+            d = _parse_input_date(value)
+            if d.year <= 1970:
+                raise ValueError('date is too early!')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to parse datetime, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=str, metadata={'format': 'date-time'})

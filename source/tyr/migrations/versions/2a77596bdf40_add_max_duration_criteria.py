@@ -25,8 +25,12 @@ def upgrade():
     impl_mode = enum_mode.dialect_impl(bind.dialect)
     impl_mode.create(bind, checkfirst=True)
 
-    op.add_column('instance', sa.Column('max_duration_criteria', enum_criteria, nullable=False, server_default='time'))
-    op.add_column('instance', sa.Column('max_duration_fallback_mode', enum_mode, nullable=False, server_default='walking'))
+    op.add_column(
+        'instance', sa.Column('max_duration_criteria', enum_criteria, nullable=False, server_default='time')
+    )
+    op.add_column(
+        'instance', sa.Column('max_duration_fallback_mode', enum_mode, nullable=False, server_default='walking')
+    )
     ### end Alembic commands ###
 
 

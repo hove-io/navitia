@@ -31,28 +31,35 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import i_manager
 
 collections_to_resource_type = {
-    "stop_points": "stop_point", "routes": "route",
-    "networks": "network", "commercial_modes": "commercial_mode",
-    "physical_modes": "physical_mode", "companies": "company",
-    "stop_areas": "stop_area", "lines": "line", "line_groups": "line_group",
-    "addresses": "address", "coords": "coord", "trips": "trip", "contributors": "contributor",
-    "datasets": "dataset"}
+    "stop_points": "stop_point",
+    "routes": "route",
+    "networks": "network",
+    "commercial_modes": "commercial_mode",
+    "physical_modes": "physical_mode",
+    "companies": "company",
+    "stop_areas": "stop_area",
+    "lines": "line",
+    "line_groups": "line_group",
+    "addresses": "address",
+    "coords": "coord",
+    "trips": "trip",
+    "contributors": "contributor",
+    "datasets": "dataset",
+}
 
-resource_type_to_collection = dict((resource_type, collection)
-                                   for (collection, resource_type)
-                                   in collections_to_resource_type.items())
+resource_type_to_collection = dict(
+    (resource_type, collection) for (collection, resource_type) in collections_to_resource_type.items()
+)
 
 types_not_ptrefable = ["addresses", "administrative_regions"]
 
 
 class InvalidUriException(Exception):
-
     def __init__(self, message):
         Exception.__init__(self, message)
 
 
 class Uri:
-
     def __init__(self, string):
         self.uri = string
         self.params = None
@@ -67,8 +74,7 @@ class Uri:
     def region(self):
         if not self.region_ and self.lon and self.lat:
             # On va chercher la region associee
-            self.region_ = i_manager.get_region(lon=self.lon, lat=self.lat,
-                    api='ALL')
+            self.region_ = i_manager.get_region(lon=self.lon, lat=self.lat, api='ALL')
             if not self.region_:
                 error = "No region is covering these coordinates"
                 raise InvalidUriException(error)
@@ -118,10 +124,25 @@ class Uri:
             self.objects.append((resource_type, uid))
 
     def valid_resource_type(self, resource_type):
-        resource_types = ["connections", "stop_points", "networks",
-                          "commercial_modes", "physical_modes", "companies",
-                          "stop_areas", "routes", "lines", "line_groups", "addresses",
-                          "administrative_regions", "coords", "pois", "trips", "contributors", "datasets"]
+        resource_types = [
+            "connections",
+            "stop_points",
+            "networks",
+            "commercial_modes",
+            "physical_modes",
+            "companies",
+            "stop_areas",
+            "routes",
+            "lines",
+            "line_groups",
+            "addresses",
+            "administrative_regions",
+            "coords",
+            "pois",
+            "trips",
+            "contributors",
+            "datasets",
+        ]
 
         return resource_type in resource_types
 
@@ -130,7 +151,6 @@ import unittest
 
 
 class Tests(unittest.TestCase):
-
     def testOnlyRegionWithoutBeginningSlash(self):
         string = "paris"
         uri = Uri(string)

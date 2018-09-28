@@ -65,8 +65,8 @@ def different_arrival_times_test():
     journey2.sections[0].duration = 2 * 60
 
     scenario.sort_journeys(response, 'arrival_time')
-    assert response.journeys[0].arrival_date_time ==  str_to_time_stamp("20140422T0758")
-    assert response.journeys[1].arrival_date_time ==  str_to_time_stamp("20140422T0800")
+    assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0758")
+    assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
 
 
 def different_departure_times_test():
@@ -89,8 +89,8 @@ def different_departure_times_test():
     journey2.sections[0].duration = 2 * 60
 
     scenario.sort_journeys(response, 'departure_time')
-    assert response.journeys[0].departure_date_time ==  str_to_time_stamp("20140422T0758")
-    assert response.journeys[1].departure_date_time ==  str_to_time_stamp("20140422T0800")
+    assert response.journeys[0].departure_date_time == str_to_time_stamp("20140422T0758")
+    assert response.journeys[1].departure_date_time == str_to_time_stamp("20140422T0800")
 
 
 def different_duration_test():
@@ -115,8 +115,8 @@ def different_duration_test():
     scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
-    assert response.journeys[0].duration == 3*60
-    assert response.journeys[1].duration == 5*60
+    assert response.journeys[0].duration == 3 * 60
+    assert response.journeys[1].duration == 5 * 60
 
 
 def different_nb_transfers_test():
@@ -150,8 +150,8 @@ def different_nb_transfers_test():
     scenario.sort_journeys(response, 'arrival_time')
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
-    assert response.journeys[0].duration == 25*60
-    assert response.journeys[1].duration == 25*60
+    assert response.journeys[0].duration == 25 * 60
+    assert response.journeys[1].duration == 25 * 60
     assert response.journeys[0].nb_transfers == 0
     assert response.journeys[1].nb_transfers == 1
 
@@ -204,7 +204,7 @@ def different_duration_non_pt_test():
     assert response.journeys[0].nb_transfers == 1
     assert response.journeys[1].nb_transfers == 1
 
-    #We want to have journey2 in first, this is the one with 4 sections
+    # We want to have journey2 in first, this is the one with 4 sections
     assert len(response.journeys[0].sections) == 4
     assert len(response.journeys[1].sections) == 5
 
@@ -279,13 +279,14 @@ def test_journeys_equality_test_same_journeys():
 
     assert are_equals(journey1, journey1)
 
-    #and likewise if not the same memory address
+    # and likewise if not the same memory address
     journey2 = create_dummy_journey()
     assert are_equals(journey1, journey2)
 
 
 def journey_pairs_gen(list_responses):
     return itertools.combinations(jf.get_qualified_journeys(list_responses), 2)
+
 
 def test_journeys_equality_test_almost_same_journeys():
     """
@@ -653,11 +654,12 @@ def test_departure_sort():
 
     compartor = DepartureJourneySorter(True)
     result.sort(compartor)
-    assert result[0] ==  j1
-    assert result[1] ==  j2
-    assert result[2] ==  j5
-    assert result[3] ==  j4
-    assert result[4] ==  j3
+    assert result[0] == j1
+    assert result[1] == j2
+    assert result[2] == j5
+    assert result[3] == j4
+    assert result[4] == j3
+
 
 def test_arrival_sort():
     """
@@ -698,11 +700,12 @@ def test_arrival_sort():
 
     comparator = ArrivalJourneySorter(True)
     result.sort(comparator)
-    assert result[0] ==  j1
-    assert result[1] ==  j2
-    assert result[2] ==  j5
-    assert result[3] ==  j4
-    assert result[4] ==  j3
+    assert result[0] == j1
+    assert result[1] == j2
+    assert result[2] == j5
+    assert result[3] == j4
+    assert result[4] == j3
+
 
 def test_heavy_journey_walking():
     """
@@ -716,6 +719,7 @@ def test_heavy_journey_walking():
 
     f = jf.FilterTooShortHeavyJourneys(min_bike=10, min_car=20)
     assert f.filter_func(journey)
+
 
 def test_heavy_journey_bike():
     """
@@ -736,10 +740,12 @@ def test_heavy_journey_bike():
     f = jf.FilterTooShortHeavyJourneys(min_bike=10, min_car=20, orig_modes=['bike', 'walking'])
     assert not f.filter_func(journey)
 
+
 def test_filter_wrapper():
     """
     Testing that filter_wrapper is fine (see filter_wrapper doc)
     """
+
     class LoveHateFilter(jf.SingleJourneyFilter):
         message = 'i_dont_like_you'
 
@@ -809,6 +815,7 @@ def test_heavy_journey_car():
 
     f = jf.FilterTooShortHeavyJourneys(min_bike=10, min_car=20, orig_modes=['bike', 'walking'])
     assert not f.filter_func(journey)
+
 
 def test_heavy_journey_bss():
     """
@@ -942,6 +949,7 @@ def test_activate_deactivate_min_bike():
 
     f = jf.FilterTooShortHeavyJourneys(min_bike=8, orig_modes=['bike'], dest_modes=['bike', 'walking'])
     assert not f.filter_func(journey)
+
 
 def test_activate_deactivate_min_car():
     """

@@ -44,8 +44,10 @@ class PbField(Field):
     When a field is not present protobuf return a default object, but we want a None.
     If the object is always initialised it's recommended to use serpy.Field as it will be faster
     """
+
     def as_getter(self, serializer_field_name, serializer_cls):
         op = operator.attrgetter(self.attr or serializer_field_name)
+
         def getter(obj):
             if obj is None:
                 return None
@@ -55,8 +57,9 @@ class PbField(Field):
                 else:
                     return None
             except ValueError:
-                #HasField throw an exception if the field is repeated...
+                # HasField throw an exception if the field is repeated...
                 return op(obj)
+
         return getter
 
 
@@ -65,6 +68,7 @@ class PbStrField(PbField):
         super(PbStrField, self).__init__(schema_type=str, *args, **kwargs)
 
     to_value = staticmethod(six.text_type)
+
 
 class PbIntField(PbField):
     def __init__(self, *args, **kwargs):
@@ -81,6 +85,7 @@ class NestedPbField(PbField):
     
     it will get the departure_time field of the base_stop_time field
     """
+
     def as_getter(self, serializer_field_name, serializer_cls):
         attr = self.attr or serializer_field_name
 
@@ -91,6 +96,7 @@ class NestedPbField(PbField):
                     return None
                 cur_obj = getattr(cur_obj, f)
             return cur_obj
+
         return getter
 
 
@@ -123,6 +129,7 @@ class EnumField(jsonschema.Field):
                 return None
             enum = val.DESCRIPTOR.fields_by_name[attr].enum_type.values_by_number
             return enum[getattr(val, attr)].name
+
         return getter
 
     def to_value(self, value):
@@ -141,7 +148,6 @@ class EnumField(jsonschema.Field):
             return [v.name for v in pb_type.DESCRIPTOR.values]
 
 
-
 class NestedEnumField(EnumField):
     """
     handle nested Enum field.
@@ -150,6 +156,7 @@ class NestedEnumField(EnumField):
 
     it will get the mode of the street_network field
     """
+
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name
@@ -168,6 +175,7 @@ class NestedEnumField(EnumField):
             enum = cur_obj.DESCRIPTOR.fields_by_name[enum_field].enum_type.values_by_number
             ret_value = enum[getattr(cur_obj, enum_field)].name
             return ret_value
+
         return getter
 
 
@@ -198,8 +206,7 @@ class DictCodeSerializer(serpy.DictSerializer):
 
 
 class PbGenericSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
-                          description='Identifier of the object')
+    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri', description='Identifier of the object')
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
 
 
@@ -207,13 +214,10 @@ class AmountSerializer(PbNestedSerializer):
     value = jsonschema.Field(schema_type=float)
     unit = jsonschema.Field(schema_type=str)
 
-    #TODO check that retro compatibility is really useful
+    # TODO check that retro compatibility is really useful
     def to_value(self, value):
         if value is None:
-            return {
-                'value': 0.0,
-                'unit': ''
-            }
+            return {'value': 0.0, 'unit': ''}
         return super(AmountSerializer, self).to_value(value)
 
 
@@ -221,6 +225,7 @@ class LiteralField(jsonschema.Field):
     """
     :return literal value
     """
+
     def __init__(self, value, *args, **kwargs):
         if 'display_none' not in kwargs:
             kwargs['display_none'] = True
@@ -265,6 +270,7 @@ def value_by_path(obj, path, default=None):
 
     def pred(x, y):
         return x.get(y) if isinstance(x, dict) else None
+
     res = functools.reduce(pred, splited_path, obj)
     return res if res is not None else default
 
@@ -290,7 +296,6 @@ class LambdaField(Field):
 
 
 class DoubleToStringField(Field):
-
     def __init__(self, **kwargs):
         super(DoubleToStringField, self).__init__(schema_type=str, **kwargs)
 
@@ -304,6 +309,7 @@ class DescribedField(LambdaField):
     This class does not output anything, it's here only for description purpose
     (for field added outside of serpy, but that we want to describe in swagger)
     """
+
     def __init__(self, **kwargs):
         # the field returns always None and None are not displayed, so nothing is displayed
         super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)
@@ -317,24 +323,34 @@ class BetaEndpointsSerializer(serpy.Serializer):
         return lambda _obj: [None]
 
     id = LiteralField("beta_endpoint", schema_type=str, display_none=True)
-    message = LiteralField('This service is under construction. You can help through github.com/CanalTP/navitia',
-                           schema_type=str, display_none=True)
+    message = LiteralField(
+        'This service is under construction. You can help through github.com/CanalTP/navitia',
+        schema_type=str,
+        display_none=True,
+    )
+
 
 def make_notes(notes):
-    return [{"type": "notes",
-             "rel": "notes",
-             "category": "comment",
-             "id": value.uri,
-             "value": value.note,
-             "internal": True}
-            for value in notes]
+    return [
+        {
+            "type": "notes",
+            "rel": "notes",
+            "category": "comment",
+            "id": value.uri,
+            "value": value.note,
+            "internal": True,
+        }
+        for value in notes
+    ]
 
 
 class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):
     pass
 
+
 class NestedDictCommentField(DictCommentSerializer, NestedPropertyField):
     pass
+
 
 class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
     def to_value(self, value):
