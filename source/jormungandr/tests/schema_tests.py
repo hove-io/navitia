@@ -30,11 +30,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import json
 import logging
-
-from flex.exceptions import ValidationError
-
-from tests.tests_mechanism import dataset, AbstractTestFixture
 import flex
+from flex.exceptions import ValidationError
+from tests.tests_mechanism import dataset, AbstractTestFixture
+from itertools import chain, ifilter
 
 
 def get_params(schema):
@@ -340,8 +339,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             other_param = any(elem in path for elem in ['{id}', '{uri}'])
             return '{region}' in path and not other_param
 
-        urls = list(filter(endpoints_with_no_param, paths))
-        urls.extend(list(filter(endpoints_with_only_region_param, paths)))
+        urls = chain(ifilter(endpoints_with_no_param, paths), ifilter(endpoints_with_only_region_param, paths))
 
         for u in urls:
             url = '/v1' + u.format(region='main_routing_test') + '?schema=true'
