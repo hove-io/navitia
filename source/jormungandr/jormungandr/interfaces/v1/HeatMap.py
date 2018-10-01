@@ -74,7 +74,7 @@ class HeatMap(JourneyCommon):
     def __init__(self):
         super(HeatMap, self).__init__(output_type_serializer=HeatMapSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("resolution", type=UnsignedInteger(), default=500)
+        parser_get.add_argument("resolution", type=UnsignedInteger(), default=500, help="Sampling resolution")
 
     @get_serializer(serpy=HeatMapSerializer, marshall=heat_maps)
     @ManageError()
