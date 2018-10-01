@@ -78,7 +78,7 @@ api.add_resource(
     resources.DeleteDataset, '/v0/instances/<string:instance_name>/actions/delete_dataset/<string:type>'
 )
 
-api.add_resource(resources.Cities, '/v0/cities/')
+api.add_resource(resources.Cities, '/v0/cities/', '/v0/cities/status')
 
 
 @app.errorhandler(Exception)

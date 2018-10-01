@@ -1640,18 +1640,26 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
 
 class Cities(flask_restful.Resource):
     def check_db(self):
-	# TODO: check db is available
-        logging.info("DB is already up-to-date")
-        return True
+        cities_db = sqlalchemy.create_engine(current_app.config['CITIES_DATABASE_URI'])
+        try:
+            cities_db.connect()
+            result = cities_db.execute("SELECT version_num FROM alembic_version")
+            for row in result:
+                return row['version_num']
+        except Exception as e:
+            logging.exception("cities db not created : {}".format(e.message))
 
     def get(self):
-        return {'message': 'Test OK'}, 200
+        msg = self.check_db()
+        if msg:
+            return {'message': 'cities db alembic version = {}'.format(msg)}, 200
+        else:
+            return {'message': 'cities db not reachable'}, 404
 
     def post(self):
         if not self.check_db():
-            print('Perform db upgrade')
+            return {'message': 'cities db not reachable'}, 404
         else:
-
             parser = reqparse.RequestParser()
             parser.add_argument('file', type=werkzeug.FileStorage, location='files')
             args = parser.parse_args()
@@ -1661,7 +1669,7 @@ class Cities(flask_restful.Resource):
                 return {'message': 'No file provided'}, 400
 
             osm_file = args['file']
-            osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), osm_file.filename))
+            osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), "file"))
             osm_file.save(osm_file_path)
 
             if cities.delay(osm_file_path) != 0:
