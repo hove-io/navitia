@@ -221,7 +221,9 @@ call_raptor(navitia::PbCreator& pb_creator,
                             max_transfers));
 
         // create date time for next
-        pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
+        if (request_date_secs != to_datetime(datetime, raptor.data)) {
+            pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
+        }
 
         auto tmp_pathes = raptor.from_journeys_to_path(journeys);
         LOG4CPLUS_DEBUG(logger, "raptor made " << tmp_pathes.size() << " Path(es)");

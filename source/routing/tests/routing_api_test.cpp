@@ -185,6 +185,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), ntest::to_posix_timestamp("20120614T082000"));
+    BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), true);
 }
 
 /*
@@ -1115,7 +1116,8 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
-
+    //For a directpath we don't have next_request_date_time
+    BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), false);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(section.origin().address().name(), "rue bs");
     BOOST_CHECK_EQUAL(section.destination().address().name(), "rue ag");
@@ -1247,6 +1249,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 path, just the PT one, we do not compute the direct path for car
+
 
     // co2_emission Tests
     // First Journey
@@ -2202,6 +2205,8 @@ BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<te
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
+    //For a directpath we don't have next_request_date_time
+    BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), false);
 }
 
 // bus + car using parking
@@ -3753,6 +3758,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     resp = pb_creator_case6.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_GE(resp.journeys_size(), 4);
+    //We should have next_request_date_time in the response
+    BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), true);
 
     //-----------------------------------
     // Case 7 :
@@ -3797,6 +3804,9 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     resp = pb_creator_case7.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
+    //We should have next_request_date_time in the response
+    BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), true);
 
     //-----------------------------------
     // Case 8 :

@@ -1100,12 +1100,8 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
 
-        # We always calculate the next_request_datetime from current journeys
-        vjs = journey_filter.get_qualified_journeys(responses)
-        if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
-        else:
-            request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+        # We always calculate the 'next_request_date_time' from current journeys in the response of kraken
+        request['datetime'] = self.get_next_datetime(responses)
 
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
@@ -1164,3 +1160,10 @@ class Scenario(simple.Scenario):
                 return bragi.get_object_by_uri(entrypoint, instances=[instance])
 
         return None
+
+    def get_next_datetime(self, responses):
+        request_datetime_list = []
+        for r in responses:
+            if r.HasField('next_request_date_time'):
+                request_datetime_list.append(r.next_request_date_time)
+        return min(request_datetime_list) if request_datetime_list else None
