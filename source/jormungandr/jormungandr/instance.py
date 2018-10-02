@@ -105,7 +105,7 @@ class Instance(object):
         autocomplete_type,
     ):
         self.geom = None
-        self._sockets = queue.Queue()
+        self._sockets = queue.LifoQueue()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
