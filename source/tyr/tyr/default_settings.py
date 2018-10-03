@@ -9,7 +9,7 @@ import os
 # amqp://<user>:<password>@<host>:<port>/<vhost>
 # the default vhost is "/" so the URL end with *two* slash
 # http://docs.celeryproject.org/en/latest/configuration.html#std:setting-BROKER_URL
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+CELERY_BROKER_URL = os.getenv('TYR_CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
 
 # URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>

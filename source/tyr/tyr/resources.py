@@ -1638,41 +1638,46 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
         return {'action': return_msg}, return_status
 
 
-class Cities(flask_restful.Resource):
-    def check_db(self):
-        cities_db = sqlalchemy.create_engine(current_app.config['CITIES_DATABASE_URI'])
-        try:
-            cities_db.connect()
-            result = cities_db.execute("SELECT version_num FROM alembic_version")
-            for row in result:
-                return row['version_num']
-        except Exception as e:
-            logging.exception("cities db not created : {}".format(e.message))
+def check_db():
+    cities_db = sqlalchemy.create_engine(current_app.config['CITIES_DATABASE_URI'])
+    try:
+        cities_db.connect()
+        result = cities_db.execute("SELECT version_num FROM alembic_version")
+        for row in result:
+            return row['version_num']
+    except Exception as e:
+        logging.exception("cities db not created : {}".format(e.message))
+        return None
 
+
+class CitiesGET(flask_restful.Resource):
     def get(self):
-        msg = self.check_db()
+        if not current_app.config['CITIES_DATABASE_URI']:
+            return {'message': 'cities db not configured'}, 404
+        msg = check_db()
         if msg:
             return {'message': 'cities db alembic version = {}'.format(msg)}, 200
         else:
             return {'message': 'cities db not reachable'}, 404
 
+
+class CitiesPOST(flask_restful.Resource):
     def post(self):
-        if not self.check_db():
+        if not check_db():
             return {'message': 'cities db not reachable'}, 404
-        else:
-            parser = reqparse.RequestParser()
-            parser.add_argument('file', type=werkzeug.FileStorage, location='files')
-            args = parser.parse_args()
 
-            if not args['file']:
-                logging.info("No file provided")
-                return {'message': 'No file provided'}, 400
+        parser = reqparse.RequestParser()
+        parser.add_argument('file', type=werkzeug.FileStorage, location='files')
+        args = parser.parse_args()
 
-            osm_file = args['file']
-            osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), "file"))
-            osm_file.save(osm_file_path)
+        if not args['file']:
+            logging.info("No file provided")
+            return {'message': 'No file provided'}, 400
 
-            if cities.delay(osm_file_path) != 0:
-                return {'message': 'cities failed!'}, 400
+        osm_file = args['file']
+        osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), "file"))
+        osm_file.save(osm_file_path)
 
-            return {'message': 'OK'}, 200
+        cities.delay(osm_file_path)
+
+        return {'message': 'OK'}, 200
