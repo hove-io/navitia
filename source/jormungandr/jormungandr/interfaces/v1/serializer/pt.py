@@ -298,6 +298,14 @@ class StandsSerializer(PbNestedSerializer):
     )
 
 
+class CarParkSerializer(PbNestedSerializer):
+    available = jsonschema.IntField()
+    occupied = jsonschema.IntField()
+    available_PRM = jsonschema.IntField()
+    occupied_PRM = jsonschema.IntField()
+    total_places = jsonschema.IntField()
+
+
 class AdminSerializer(PbGenericSerializer):
     level = jsonschema.Field(schema_type=int)
     zip_code = jsonschema.Field(schema_type=str, display_none=True)
@@ -323,6 +331,7 @@ class PoiSerializer(PbGenericSerializer):
     )
     address = AddressSerializer()
     stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
+    car_park = LiteralField(None, schema_type=CarParkSerializer, display_none=False)
 
     def get_properties(self, obj):
         return {p.type: p.value for p in obj.properties}
