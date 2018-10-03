@@ -45,7 +45,7 @@ import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, app, global_autocomplete
+from jormungandr import cache, memory_cache, app, global_autocomplete
 from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry
@@ -169,6 +169,7 @@ class Instance(object):
     def __repr__(self):
         return 'instance.{}'.format(self.name)
 
+    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def _get_models(self):
         if app.config['DISABLE_DATABASE']:

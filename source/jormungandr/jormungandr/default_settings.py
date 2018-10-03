@@ -89,7 +89,7 @@ STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_
 # the circuit breaker retries after this timeout (in seconds)
 STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60))
 
-# Cache configuration, see https://pythonhosted.org/Flask-Cache/ for more information
+# Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
 default_cache = {
     'CACHE_TYPE': 'null',  # by default cache is not activated
     'TIMEOUT_PTOBJECTS': 600,
@@ -100,6 +100,17 @@ default_cache = {
 }
 
 CACHE_CONFIGURATION = json.loads(os.getenv('JORMUNGANDR_CACHE_CONFIGURATION', '{}')) or default_cache
+
+
+default_memory_cache = {
+    'CACHE_TYPE': 'null',  # by default cache is not activated
+    'TIMEOUT_AUTHENTICATION': 30,
+    'TIMEOUT_PARAMS': 30,
+}
+
+MEMORY_CACHE_CONFIGURATION = (
+    json.loads(os.getenv('JORMUNGANDR_MEMORY_CACHE_CONFIGURATION', '{}')) or default_memory_cache
+)
 
 # List of enabled modules
 MODULES = {
