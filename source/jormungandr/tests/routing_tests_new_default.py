@@ -194,6 +194,24 @@ class TestJourneysNewDefault(
             else:
                 assert "ecologic" in j["tags"]
 
+    def test_first_and_last_section_multi_modes(self):
+        """Test to verify optimization of direct path calls
+        """
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike&debug=true".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 23
+
+        assert get_directpath_count_by_mode(response, 'walking') == 5
+        assert get_directpath_count_by_mode(response, 'bike') == 10
+
     def test_context_car_co2_emission_with_car(self):
         """
         Test if car_co2_emission in context is the value in car journey

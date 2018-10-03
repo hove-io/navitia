@@ -196,6 +196,24 @@ class TestJourneysDistributed(
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
         assert r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from']
 
+    def test_first_and_last_section_multi_modes(self):
+        """Test to verify optimization of direct path calls
+        """
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike&debug=true".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 10
+
+        assert get_directpath_count_by_mode(response, 'walking') == 1
+        assert get_directpath_count_by_mode(response, 'bike') == 1
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
