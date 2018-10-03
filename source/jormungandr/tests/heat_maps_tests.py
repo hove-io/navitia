@@ -174,7 +174,10 @@ class TestHeatMap(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert 'Unable to evaluate, invalid positive int' in normal_response['message']
+        assert (
+            'Unable to evaluate, invalid unsigned int\nmax_duration description: Maximum duration of journeys in secondes.\nReally useful when computing an isochrone.'
+            in normal_response['message']
+        )
 
         p = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         p = p.format('20120614T080000', s_coord, 'toto')

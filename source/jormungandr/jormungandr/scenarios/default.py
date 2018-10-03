@@ -55,6 +55,7 @@ from jormungandr.scenarios.helpers import (
 )
 from jormungandr.scenarios.helpers import fallback_mode_comparator
 from jormungandr.utils import pb_del_if, date_to_timestamp
+from jormungandr.new_relic import record_custom_parameter
 import flask
 import gevent, gevent.pool
 from six.moves import map
@@ -167,6 +168,7 @@ class Scenario(simple.Scenario):
         return req
 
     def call_kraken(self, req, instance, tag=None):
+        record_custom_parameter('scenario', 'default')
         resp = None
 
         """

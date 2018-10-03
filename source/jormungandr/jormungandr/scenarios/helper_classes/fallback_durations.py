@@ -34,6 +34,7 @@ from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from jormungandr import new_relic
 import logging
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
@@ -100,6 +101,12 @@ class FallbackDurations:
         }
         return map_response[resp.routing_status]
 
+    @new_relic.distributedEvent("routing_matrix", "street_network")
+    def _get_street_network_routing_matrix(self, origins, destinations):
+        return self._instance.get_street_network_routing_matrix(
+            origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
+        )
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
@@ -152,9 +159,9 @@ class FallbackDurations:
         else:
             origins = places_isochrone
             destinations = [center_isochrone]
-        sn_routing_matrix = self._instance.get_street_network_routing_matrix(
-            origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
-        )
+
+        streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
+        sn_routing_matrix = self._get_street_network_routing_matrix(streetnetwork_service, origins, destinations)
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
@@ -175,6 +182,7 @@ class FallbackDurations:
             result[center_isochrone.uri] = DurationElement(0, response_pb2.reached)
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+
         return result
 
     def _async_request(self):

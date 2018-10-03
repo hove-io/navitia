@@ -31,6 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import flask
 import os
+import timeit
+import functools
 
 try:
     from newrelic import agent
@@ -78,7 +80,7 @@ def record_custom_event(event_type, params):
         except RuntimeError:
             pass  # we are outside of a flask context :(
         try:
-            agent.record_custom_event(event_type, params)
+            agent.record_custom_event(event_type, params, agent.application())
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while reporting to newrelic')
@@ -94,3 +96,40 @@ def ignore():
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while ignoring transaction')
+
+
+def distributedEvent(call_name, group_name):
+    """
+    Custom event that we publish to New Relic for distributed scenario
+    """
+
+    def wrap(func):
+        @functools.wraps(func)
+        def wrapper(obj, service, *args, **kwargs):
+            event_params = {
+                "service": type(service).__name__,
+                "call": call_name,
+                "group": group_name,
+                "status": "ok",
+            }
+
+            start_time = timeit.default_timer()
+            result = None
+            try:
+                result = func(obj, *args, **kwargs)
+            except Exception as e:
+                event_params["status"] = "failed"
+                event_params.update({"exception": e})
+                raise
+
+            duration = timeit.default_timer() - start_time
+            event_params.update({"duration": duration})
+
+            # Send the custom event to newrelic !
+            record_custom_event("distributed", event_params)
+
+            return result
+
+        return wrapper
+
+    return wrap

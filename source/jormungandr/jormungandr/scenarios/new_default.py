@@ -77,6 +77,7 @@ import flask
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
+from jormungandr.new_relic import record_custom_parameter
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
@@ -489,13 +490,13 @@ def culling_journeys(resp, request):
 
     """
     Why aggregating journeys before culling journeys?
-    We have encountered severe slowness when combining max_nb_journeys(ex: 20) and a big timeframe_duration(ex: 86400s). 
-    It turned out that, with this configuration, kraken will return a lot of journeys(ex: 100 journeys) and the 
+    We have encountered severe slowness when combining max_nb_journeys(ex: 20) and a big timeframe_duration(ex: 86400s).
+    It turned out that, with this configuration, kraken will return a lot of journeys(ex: 100 journeys) and the
     algorithm was trying to figure out the best solution over 5.35E+20 possible combinations
     ( 5.35E+20=Combination(100,20) )!!
-     
+
     aggregated_journeys will group journeys that are similar('similar' is defined by 'Journeys that have the same sequence
-    of sections are similar'), which reduces the number of possible combinations considerably 
+    of sections are similar'), which reduces the number of possible combinations considerably
     """
     aggregated_journeys, remaining_journeys = aggregate_journeys(resp.journeys)
     logger.debug(
@@ -1020,6 +1021,7 @@ class Scenario(simple.Scenario):
         """
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
+        record_custom_parameter('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)
         futures = []

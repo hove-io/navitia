@@ -30,11 +30,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import json
 import logging
-
-from flex.exceptions import ValidationError
-
-from tests.tests_mechanism import dataset, AbstractTestFixture
 import flex
+from flex.exceptions import ValidationError
+from tests.tests_mechanism import dataset, AbstractTestFixture
+from itertools import chain, ifilter
 
 
 def get_params(schema):
@@ -99,6 +98,29 @@ class SchemaChecker:
             if hard_check:
                 raise
             return obj, collect_all_errors(e)
+
+    def check_schema_parameters_structure(self, url):
+        """
+        Test the schema's parameters types
+        """
+        response = self.get_api_schema(url)
+
+        params = get_params(response)
+
+        for name, param in params.iteritems():
+            assert param.has_key('name')
+            assert param.has_key('description'), (
+                "API parameter '" + param['name'] + "' should have a description in the schema!"
+            )
+            assert param.has_key('type')
+
+            assert type(param['name']) is unicode
+            assert type(param['description']) is unicode
+
+            assert any(
+                param['type'] == t
+                for t in ['integer', 'number', 'float', 'string', 'unicode', 'boolean', 'array']
+            )
 
 
 @dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
@@ -299,6 +321,29 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
         self._check_schema(query)
+
+    def test_schema_parameters_sctructure(self):
+        """
+        Get the main schema, extract all path with no parameter, or only {region}
+        and check for each endpoint the schema's structure
+        """
+        schema = self.get_schema()
+        paths = schema['paths']
+
+        # Filter endpoints with a parameter (ie. /v1/coverage/{lon}:{lat}/...)
+        def endpoints_with_no_param(path):
+            return '{' not in path
+
+        # Filter endpoints with only a {region} parameter (ie. /v1/coverage/{region}/journeys)
+        def endpoints_with_only_region_param(path):
+            other_param = any(elem in path for elem in ['{id}', '{uri}'])
+            return '{region}' in path and not other_param
+
+        urls = chain(ifilter(endpoints_with_no_param, paths), ifilter(endpoints_with_only_region_param, paths))
+
+        for u in urls:
+            url = '/v1' + u.format(region='main_routing_test') + '?schema=true'
+            self.check_schema_parameters_structure(url)
 
 
 @dataset({"main_ptref_test": {}})

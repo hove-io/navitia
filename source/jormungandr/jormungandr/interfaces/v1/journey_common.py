@@ -30,13 +30,11 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import DateTimeFormat
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.interfaces.parsers import float_gt_0, UnsignedInteger
 from flask_restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
@@ -52,6 +50,9 @@ from navitiacommon.parser_args_type import (
     BooleanType,
     OptionValue,
     DescribedOptionValue,
+    UnsignedInteger,
+    DateTimeFormat,
+    PositiveFloat,
 )
 
 
@@ -258,29 +259,29 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "walking_speed",
-            type=float_gt_0,
+            type=PositiveFloat(),
             help='Walking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bike_speed",
-            type=float_gt_0,
+            type=PositiveFloat(),
             help='Biking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bss_speed",
-            type=float_gt_0,
+            type=PositiveFloat(),
             help='Speed while using a bike from a bike sharing system for the '
             'fallback sections.\n'
             'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "car_speed",
-            type=float_gt_0,
+            type=PositiveFloat(),
             help='Driving speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "ridesharing_speed",
-            type=float_gt_0,
+            type=PositiveFloat(),
             dest="car_no_park_speed",
             help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )

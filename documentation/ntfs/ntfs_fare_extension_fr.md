@@ -18,7 +18,7 @@ Les fichiers sont formatés de la manière suivante :
 * Encodage des fichiers : tous les fichiers sont encodés en **UTF-8**
 * Le séparateur de champ est le **";"**
 * Les colonnes sont toutes obligatoires et leur ordre doit etre respecté
-* Attention, 2 fichiers sont **sans** entête et un autre **avec** entête
+* Attention, 2 fichiers sont **avec** entête et un autre **sans** entête
 
 # Liste des fichiers de tarification
 Fichier | Contrainte | Commentaire

@@ -47,11 +47,11 @@ from jormungandr.interfaces.v1.fields import (
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+from navitiacommon.parser_args_type import UnsignedInteger
 
 graphical_isochrone = {
     "geojson": JsonString(),
@@ -79,8 +79,15 @@ class GraphicalIsochrone(JourneyCommon):
     def __init__(self):
         super(GraphicalIsochrone, self).__init__(output_type_serializer=GraphicalIsrochoneSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("min_duration", type=UnsignedInteger(), default=0)
-        parser_get.add_argument("boundary_duration[]", type=UnsignedInteger(), action="append")
+        parser_get.add_argument(
+            "min_duration", type=UnsignedInteger(), default=0, help="Minimum travel duration"
+        )
+        parser_get.add_argument(
+            "boundary_duration[]",
+            type=UnsignedInteger(),
+            action="append",
+            help="To provide multiple duration parameters",
+        )
 
     @get_serializer(serpy=GraphicalIsrochoneSerializer, marshall=graphical_isochrones)
     @ManageError()

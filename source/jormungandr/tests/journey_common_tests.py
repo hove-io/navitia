@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -66,7 +67,7 @@ class JourneyCommon(object):
 
         self.check_context(response)
 
-    def test_error_on_journeys(self):
+    def test_error_on_journeys_out_of_bounds(self):
         """ if we got an error with kraken, an error should be returned"""
 
         query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
@@ -81,6 +82,25 @@ class JourneyCommon(object):
         check_best(response)
         assert response['error']['id'] == "date_out_of_bounds"
         assert response['error']['message'] == "date is not in data production period"
+
+        # and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_error_on_journeys_too_early(self):
+        """ datetime is > 1970y """
+
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
+            from_coord="0.0000898312;0.0000898312", to_coord="0.00188646;0.00071865", datetime="19700101T000000"
+        )
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_best(response)
+        assert (
+            response['message']
+            == 'parameter \"datetime\" invalid: Unable to parse datetime, date is too early!\ndatetime description: Date and time to go/arrive (see `datetime_represents`).\nNote: the datetime must be in the coverage’s publication period.'
+        )
 
         # and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
@@ -661,12 +681,14 @@ class JourneyCommon(object):
         section_0 = jrnys[0]['sections'][0]
         assert section_0['type'] == 'crow_fly'
         assert section_0['mode'] == 'walking'
+        assert section_0['duration'] == 0
         assert section_0['from']['id'] == 'stopA'
         assert section_0['to']['id'] == 'stop_point:stopA'
 
         section_2 = jrnys[0]['sections'][2]
         assert section_2['type'] == 'crow_fly'
-        assert section_0['mode'] == 'walking'
+        assert section_2['mode'] == 'walking'
+        assert section_2['duration'] == 0
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
 
@@ -1011,7 +1033,10 @@ class JourneyCommon(object):
 
             response = self.query_region(query, check=False)
             assert response[1] == 400
-            assert "max_nb_journeys must be a positive integer" in response[0]['message']
+            assert (
+                'parameter "max_nb_journeys" invalid: Unable to evaluate, invalid positive int\nmax_nb_journeys description: Maximum number of different suggested journeys, must be > 0'
+                in response[0]['message']
+            )
 
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}".format(
             from_sa="stopA", to_sa="stopB", datetime="20120614T223000", min_nb_journeys=int(-42)
@@ -1019,7 +1044,10 @@ class JourneyCommon(object):
 
         response = self.query_region(query, check=False)
         assert response[1] == 400
-        assert "min_nb_journeys must be a non-negative integer" in response[0]['message']
+        assert (
+            'parameter "min_nb_journeys" invalid: Unable to evaluate, invalid unsigned int\nmin_nb_journeys description: Minimum number of different suggested journeys, must be >= 0'
+            in response[0]['message']
+        )
 
 
 @dataset({"main_stif_test": {}})

@@ -26,62 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from dateutil import parser
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
+from __future__ import absolute_import, print_function, unicode_literals, division
+
 from jormungandr import app
 from navitiacommon import parser_args_type
 
-# TODO: to be moved completely into navitiacommon
-from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
-
-depth_argument = parser_args_type.DepthArgument()
-
-float_gt_0 = parser_args_type.PositiveFloat()
-
 parser_max_count = app.config['PARSER_MAX_COUNT']
-
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
-
-
-def parse_input_date(date):
-    """
-    datetime parse date seems broken, '155' with format '%H%M%S' is not
-    rejected but parsed as 1h, 5mn, 5s...
-    so use use for the input date parse dateutil even if the 'guess'
-    mechanism seems a bit dangerous
-    """
-    return parser.parse(date, dayfirst=False, yearfirst=True)
-
-
-class DateTimeFormat(CustomSchemaType):
-    def __call__(self, value):
-        """
-        we want to valid the date format
-        """
-        try:
-            d = parse_input_date(value)
-            if d.year < 1970:
-                raise ValueError('date is too early!')
-
-            return d
-        except ValueError as e:
-            raise ValueError("Unable to parse datetime, {}".format(e))
-
-    def schema(self):
-        return TypeSchema(type=str, metadata={'format': 'date-time'})
-
-
-class UnsignedInteger(CustomSchemaType):
-    def __call__(self, value):
-        try:
-            d = int(value)
-            if d < 0:
-                raise ValueError('invalid positive int')
-
-            return d
-        except ValueError as e:
-            raise ValueError("Unable to evaluate, {}".format(e))
-
-    def schema(self):
-        return TypeSchema(type=int, metadata={'minimum': 0})

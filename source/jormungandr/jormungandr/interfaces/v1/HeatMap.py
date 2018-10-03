@@ -46,11 +46,11 @@ from jormungandr.interfaces.v1.fields import (
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime, context
 from jormungandr.interfaces.v1.serializer.api import HeatMapSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+from navitiacommon.parser_args_type import UnsignedInteger
 
 heat_map = {
     "heat_matrix": JsonString(),
@@ -74,7 +74,7 @@ class HeatMap(JourneyCommon):
     def __init__(self):
         super(HeatMap, self).__init__(output_type_serializer=HeatMapSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("resolution", type=UnsignedInteger(), default=500)
+        parser_get.add_argument("resolution", type=UnsignedInteger(), default=500, help="Sampling resolution")
 
     @get_serializer(serpy=HeatMapSerializer, marshall=heat_maps)
     @ManageError()
