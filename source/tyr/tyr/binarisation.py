@@ -252,9 +252,10 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         if poi_types_json:
             args.append('-p')
             args.append(u'{}'.format(poi_types_json))
-            args.append("--local_syslog")
-            args.append("--log_comment")
-            args.append(instance_config.name)
+
+        args.append("--local_syslog")
+        args.append("--log_comment")
+        args.append(instance_config.name)
 
         with collect_metric('osm2ed', job, dataset_uid):
             res = launch_exec('osm2ed', args, logger)
@@ -506,8 +507,9 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
         if instance.full_sn_geometries:
             argv.extend(['--full_street_network_geometries'])
-            argv.extend(['--local_syslog'])
-            argv.extend(["--log_comment", instance_config.name])
+
+        argv.extend(['--local_syslog'])
+        argv.extend(["--log_comment", instance_config.name])
 
         res = None
         with collect_metric('ed2nav', job, None):
