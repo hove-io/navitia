@@ -55,10 +55,12 @@ from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
 from tyr.validations import datetime_format
-from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete
+from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete, cities
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
+
+import werkzeug
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -1635,6 +1637,51 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
             return_status = 404
 
         return {'action': return_msg}, return_status
+
+
+def check_db():
+    cities_db = sqlalchemy.create_engine(current_app.config['CITIES_DATABASE_URI'])
+    try:
+        cities_db.connect()
+        result = cities_db.execute("SELECT version_num FROM alembic_version")
+        for row in result:
+            return row['version_num']
+    except Exception as e:
+        logging.exception("cities db not created : {}".format(e.message))
+        return None
+
+
+class CitiesStatus(flask_restful.Resource):
+    def get(self):
+        if not current_app.config['CITIES_DATABASE_URI']:
+            return {'message': 'cities db not configured'}, 404
+        msg = check_db()
+        if msg:
+            return {'message': 'cities db alembic version = {}'.format(msg)}, 200
+        else:
+            return {'message': 'cities db not reachable'}, 404
+
+
+class Cities(flask_restful.Resource):
+    def post(self):
+        if not check_db():
+            return {'message': 'cities db not reachable'}, 404
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('file', type=werkzeug.FileStorage, location='files')
+        args = parser.parse_args()
+
+        if not args['file']:
+            logging.info("No file provided")
+            return {'message': 'No file provided'}, 400
+
+        osm_file = args['file']
+        osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), "file"))
+        osm_file.save(osm_file_path)
+
+        cities.delay(osm_file_path)
+
+        return {'message': 'OK'}, 200
 
 
 class BssProvider(flask_restful.Resource):

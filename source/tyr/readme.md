@@ -130,7 +130,7 @@ With the authentication we can associate a user account to
 
 For the authentication webservice to work, tyr_beat and tyr_worker need to be run.
 
-### Subcription
+## Subcription
 
 Subscription is done via calls to Tyr webservice. Tyr handles:
 
@@ -144,9 +144,9 @@ The api returns 4XX response on failure, with a json message containing the attr
 
 For a simple user account creation see the [example section](#simple-example)
 
-### Tyr API
+## Tyr API
 
-#### Instances
+### Instances
 
 Returns the list of instances
 
@@ -227,7 +227,7 @@ For instance, if you have many instances on the same geographical area, you may 
     curl 'http://localhost:5000/v0/instances/<INSTANCE>?priority=1' -X PUT
 ```
 
-#### Api
+### Api
 
 Returns the list of available API. For the moment there is only one, the "ALL" API.
 
@@ -242,7 +242,7 @@ Returns the list of available API. For the moment there is only one, the "ALL" A
 ]
 ```
 
-#### Users
+### Users
 
 Delete, add or update a user
 
@@ -386,7 +386,7 @@ Get all a user information:
 }
 ```
 
-#### GET Parameters
+###### GET Parameters
 
 name             | description                                                                          | required | default        |
 -----------------|--------------------------------------------------------------------------------------|----------|----------------|
@@ -463,7 +463,7 @@ To create a user, parameters need to given in the query's string or in json send
 
 Note: email addresses are validated via api not only on the format but on it's existence. However no email are send.
 
-#### POST Parameters
+###### POST Parameters
 
 name         | description                                                                          | required | default                            |
 -------------|--------------------------------------------------------------------------------------|----------|------------------------------------|
@@ -492,13 +492,13 @@ If you use the json format as input, boolean need to be passed as string.
 }
 ```
 
-#### PUT Parameters
+###### PUT Parameters
 
 They are the same as POST.
 When a parameter is missing, it is not changed.
 When PUTing the exact result of a GET (using disable_geojson or not), nothing is changed.
 
-##### Shape modification
+###### Shape modification
 `has_shape` is not a parameter (no effect whatsoever).
 To modify a shape, PUT the new shape (so far, simple feature only):
 ```json
@@ -520,7 +520,7 @@ To modify a shape, PUT the new shape (so far, simple feature only):
 ```
 To remove a shape, PUT `{"shape":null}`.
 
-#### Keys
+###### Keys
 
 The API handles the user's token
 
@@ -561,7 +561,7 @@ To delete a token:
 }
 ```
 
-#### Authorizations
+###### Authorizations
 
 This API handles access policy for a given user and a given kraken instance.
 
@@ -590,8 +590,8 @@ This is useful only is the instance is not "free"
     "login": "alex"
 }
 ```
-#### Other APIs
-##### EndPoints
+### Other APIs
+#### EndPoints
 
 Endpoints are used for handling multiple user base with the same plateform. Each user is associated with only one
 endpoint. it's possible for a user to have an account in two separate endpoint with the same email used.
@@ -628,14 +628,14 @@ For creating a new one the POST verb must be use and the request must contain a 
 }
 ```
 
-The hostnames are facultavies, it's only have to be set if we want to enforce the host used for accessing the API.
+The hostnames are optional, it's only have to be set if we want to enforce the host used for accessing the API.
 Update can be done with the PUT verb with the same kind of json.
 
-##### Billing plans
+#### Billing plans
 
 The API handles the users's billing plan.
 
-#### Parameters
+ - Parameters:
 
 name               | description                                                                          | required | default                                                      
 -------------------|--------------------------------------------------------------------------------------|----------|-----------------------------------------
@@ -645,6 +645,22 @@ default            | if this plan is the default one for the end_point          
 max_request_count  | max request count for this billing plan                                              | nope     |                                    
 max_object_count   | max object count for this billing plan                                               | nope     | 
 
+
+#### Cities
+
+This endpoint allows to manage the cities database.
+
+###### GET
+
+    GET $HOST/v0/cities/status/
+
+Returns the alembic version of the database if it's reachable.
+
+###### POST
+
+    POST $HOST/v0/cities/ -F file=@<path to OSM boundaries file>
+
+Provided with the OSM boundaries file, the 'cities' binary will be called in order to populate the cities database.
 
 
 ### Simple example

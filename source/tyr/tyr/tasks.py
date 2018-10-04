@@ -455,8 +455,9 @@ def cities(osm_path):
         )
         if res != 0:
             logging.error('cities failed')
-    except:
-        logging.exception('')
+    except Exception as e:
+        logging.exception('cities exception : {}'.format(e.message))
+
     logging.info('Import of cities finished')
     return res
 
