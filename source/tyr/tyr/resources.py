@@ -1651,7 +1651,7 @@ def check_db():
         return None
 
 
-class CitiesGET(flask_restful.Resource):
+class CitiesStatus(flask_restful.Resource):
     def get(self):
         if not current_app.config['CITIES_DATABASE_URI']:
             return {'message': 'cities db not configured'}, 404
@@ -1662,7 +1662,7 @@ class CitiesGET(flask_restful.Resource):
             return {'message': 'cities db not reachable'}, 404
 
 
-class CitiesPOST(flask_restful.Resource):
+class Cities(flask_restful.Resource):
     def post(self):
         if not check_db():
             return {'message': 'cities db not reachable'}, 404
