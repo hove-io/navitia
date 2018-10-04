@@ -75,10 +75,9 @@ class SchemaChecker:
 
     def _check_schema(self, url, hard_check=True, additional_properties=False):
         schema = self.get_schema()
-        # 'additional_properties=False' won't allow fields that are not specifeid in schema to appear 
-        if not additional_properties:
-            for key in schema['definitions']:
-                schema['definitions'][key]['additionalProperties'] = additional_properties
+        # 'additional_properties=False' won't allow fields that are not specifeid in schema to appear
+        for key in schema['definitions']:
+            schema['definitions'][key]['additionalProperties'] = additional_properties
 
         raw_response = self.tester.get(url)
 
