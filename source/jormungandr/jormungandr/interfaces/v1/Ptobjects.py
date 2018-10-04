@@ -63,7 +63,8 @@ pt_objects = {
     "context": context,
 }
 
-pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]
+pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area", "stop_point"]
+pt_object_type_default_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]
 
 
 class Ptobjects(ResourceUri):
@@ -74,7 +75,7 @@ class Ptobjects(ResourceUri):
             "type[]",
             type=OptionValue(pt_object_type_values),
             action="append",
-            default=pt_object_type_values,
+            default=pt_object_type_default_values,
             help="The type of data to search",
         )
         self.parsers["get"].add_argument(
