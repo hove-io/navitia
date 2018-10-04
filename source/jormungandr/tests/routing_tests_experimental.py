@@ -38,6 +38,55 @@ This unit runs all the common tests in journey_common_tests.py along with locals
 unit for scenario experimental
 """
 
+@config(
+    {
+        "scenario": "distributed",
+        "instance_config": {
+            "street_network": [
+                {
+                    "modes": [
+                        "bike",
+                        "bss",
+                        "car",
+                        "walking"
+                    ],
+                    "class": "jormungandr.street_network.tests.MockKraken"
+                }
+            ]
+        },
+    }
+)
+class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
+    def test_first_and_last_section_multi_modes(self):
+        """Test to verify optimization of direct path calls
+        """
+        # Initialize counter value in the object MockKraken
+        sn_service = i_manager.instances['main_routing_test'].street_network_services[0]
+        sn_service.direct_path_call_count = 0
+        sn_service.routing_matrix_call_count = 0
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike&debug=true".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
+        assert sn_service.direct_path_call_count == 0
+        assert sn_service.routing_matrix_call_count == 0
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        # Without optimization (context.partial_response_is_empty = True in distributed._compute_all()
+        # journey count = 18 / direct_path_call_count = 88 / routing_matrix_call_count = 76
+        # get_directpath_count_by_mode(response, 'walking') == 5
+        # get_directpath_count_by_mode(response, 'bike') == 5
+        assert len(response["journeys"]) == 10
+        assert sn_service.direct_path_call_count == 24
+        assert sn_service.routing_matrix_call_count == 20
+        assert get_directpath_count_by_mode(response, 'walking') == 1
+        assert get_directpath_count_by_mode(response, 'bike') == 1
+
 
 @config({'scenario': 'distributed'})
 class TestJourneysDistributed(
@@ -195,24 +244,6 @@ class TestJourneysDistributed(
         # destination of pt section and origin of next street_network section should be the same object.
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
         assert r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from']
-
-    def test_first_and_last_section_multi_modes(self):
-        """Test to verify optimization of direct path calls
-        """
-        query = (
-            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
-            "first_section_mode[]=bike&first_section_mode[]=walking&"
-            "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike&debug=true".format(
-                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
-            )
-        )
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) == 10
-
-        assert get_directpath_count_by_mode(response, 'walking') == 1
-        assert get_directpath_count_by_mode(response, 'bike') == 1
 
 
 @config({"scenario": "distributed"})
