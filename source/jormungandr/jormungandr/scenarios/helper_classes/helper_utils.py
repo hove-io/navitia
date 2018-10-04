@@ -129,6 +129,34 @@ def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
+def _update_journey(pt_journey, aligned_fallback):
+    pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
+    pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
+    pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
+
+    pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
+    pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
+    pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
+
+
+def _replace_crowfly_with_streetnetwork(pt_journey, fallback_dp, fallback_period_extremity):
+    aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_period_extremity)
+
+    _update_journey(pt_journey, aligned_fallback)
+
+    if fallback_period_extremity.represents_start:
+        section_to_update = pt_journey.sections[-1]
+    else:
+        section_to_update = pt_journey.sections[0]
+
+    assert section_to_update.type == response_pb2.CROW_FLY
+    section_to_update.CopyFrom(aligned_fallback.journeys[0].sections[0])
+    assert section_to_update.type == response_pb2.STREET_NETWORK
+
+    ## update the 'id' wich isn't set
+    _rename_fallback_sections_ids([section_to_update])
+
+
 def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
     """
     :param fallback_period_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
@@ -168,11 +196,24 @@ def _get_fallback_logic(fallback_type):
 
 
 class BeginningFallback:
+    def get_section(self, pt_journey):
+        for s in pt_journey.sections:
+            if s.type == response_pb2.CROW_FLY:
+                continue
+            return s
+        return None
+
     def get_pt_boundaries(self, pt_journey):
-        return pt_journey.sections[0].origin, pt_journey.departure_date_time, False
+        return self.get_section(pt_journey).origin
+
+    def get_pt_bound_datetime(self, pt_journey):
+        return pt_journey.departure_date_time
+
+    def represent_start(self):
+        return False
 
     def get_section_datetime(self, pt_journey):
-        return pt_journey.sections[0].begin_date_time
+        return self.get_section(pt_journey).begin_date_time
 
     def get_crowfly_datetime(self, pt_datetime, fallback_duration):
         return pt_datetime - fallback_duration
@@ -185,11 +226,24 @@ class BeginningFallback:
 
 
 class EndingFallback:
+    def get_section(self, pt_journey):
+        for s in reversed(pt_journey.sections):
+            if s.type == response_pb2.CROW_FLY:
+                continue
+            return s
+        return None
+
     def get_pt_boundaries(self, pt_journey):
-        return pt_journey.sections[-1].destination, pt_journey.arrival_date_time, True
+        return self.get_section(pt_journey).destination
+
+    def get_pt_bound_datetime(self, pt_journey):
+        return pt_journey.arrival_date_time
+
+    def represent_start(self):
+        return True
 
     def get_section_datetime(self, pt_journey):
-        return pt_journey.sections[-1].end_date_time
+        return self.get_section(pt_journey).end_date_time
 
     def get_crowfly_datetime(self, pt_datetime, fallback_duration):
         return pt_datetime + fallback_duration
@@ -199,6 +253,38 @@ class EndingFallback:
 
     def set_fallback_datetime(self, pt_journey):
         pt_journey.arrival_date_time = self.get_section_datetime(pt_journey)
+
+
+def _build_crowflies(pt_journeys, orig, dest):
+    for pt_journey in pt_journeys.journeys:
+
+        crowflies = [_build_crowfly(pt_journey, **orig), _build_crowfly(pt_journey, **dest)]
+
+        # Filter out empty crowflies
+        crowflies = [c for c in crowflies if c]
+
+        pt_journey.sections.extend(crowflies)
+        pt_journey.sections.sort(SectionSorter())
+
+
+def _build_crowfly(pt_journey, requested_obj, mode, places_free_access, fallback_durations, fallback_type):
+    fallback_logic = _get_fallback_logic(fallback_type)
+    pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
+
+    if pt_obj.uri in places_free_access.odt:
+        pt_obj.CopyFrom(requested_obj)
+        return None
+
+    section_datetime = fallback_logic.get_section_datetime(pt_journey)
+    pt_datetime = fallback_logic.get_pt_bound_datetime(pt_journey)
+    fallback_duration = fallback_durations[pt_obj.uri].duration
+
+    crowfly_dt = fallback_logic.get_crowfly_datetime(pt_datetime, fallback_duration)
+
+    crowfly_origin, crowfly_destination = fallback_logic.route_params(requested_obj, pt_obj)
+    begin, end = fallback_logic.route_params(crowfly_dt, section_datetime)
+
+    return _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode)
 
 
 def _build_fallback(
@@ -216,8 +302,7 @@ def _build_fallback(
     fallback_logic = _get_fallback_logic(fallback_type)
 
     for pt_journey in pt_journeys.journeys:
-        pt_obj, pt_datetime, represent_start = fallback_logic.get_pt_boundaries(pt_journey)
-        section_datetime = fallback_logic.get_section_datetime(pt_journey)
+        pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
 
         if requested_obj.uri != pt_obj.uri:
 
@@ -225,30 +310,19 @@ def _build_fallback(
                 pt_obj.CopyFrom(requested_obj)
             else:
                 # extend the journey with the fallback routing path
+                represent_start = fallback_logic.represent_start()
+                pt_datetime = fallback_logic.get_pt_bound_datetime(pt_journey)
                 fallback_period_extremity = PeriodExtremity(pt_datetime, represent_start)
-                crowfly_origin, crowfly_destination = fallback_logic.route_params(requested_obj, pt_obj)
+                orig, dest = fallback_logic.route_params(requested_obj, pt_obj)
 
                 fallback_dp = streetnetwork_path_pool.wait_and_get(
-                    crowfly_origin,
-                    crowfly_destination,
-                    mode,
-                    fallback_period_extremity,
-                    fallback_type,
-                    request=request,
+                    orig, dest, mode, fallback_period_extremity, fallback_type, request=request
                 )
 
-                if _is_crowfly_needed(
+                if not _is_crowfly_needed(
                     pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
                 ):
-                    fallback_duration = fallback_durations[pt_obj.uri].duration
-                    crowfly_dt = fallback_logic.get_crowfly_datetime(pt_datetime, fallback_duration)
-                    begin, end = fallback_logic.route_params(crowfly_dt, section_datetime)
-
-                    pt_journey.sections.extend(
-                        [_create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode)]
-                    )
-                else:
-                    _extend_journey(pt_journey, fallback_dp, fallback_period_extremity)
+                    _replace_crowfly_with_streetnetwork(pt_journey, fallback_dp, fallback_period_extremity)
 
         pt_journey.sections.sort(SectionSorter())
         fallback_logic.set_fallback_datetime(pt_journey)
@@ -286,7 +360,6 @@ def get_max_fallback_duration(request, mode, dp_future):
 def compute_fallback(
     from_obj,
     to_obj,
-    pt_journey_pool,
     streetnetwork_path_pool,
     orig_places_free_access,
     dest_places_free_access,
@@ -315,8 +388,9 @@ def compute_fallback(
 
         for journey in pt_journey.journeys:
             # from
-            pt_orig = journey.sections[0].origin
             direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
+            fallback = _get_fallback_logic(direct_path_type)
+            pt_orig = fallback.get_pt_boundaries(journey)
             fallback_extremity_dep = PeriodExtremity(journey.departure_date_time, False)
             if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
                 streetnetwork_path_pool.add_async_request(
@@ -324,8 +398,9 @@ def compute_fallback(
                 )
 
             # to
-            pt_dest = journey.sections[-1].destination
             direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
+            fallback = _get_fallback_logic(direct_path_type)
+            pt_dest = fallback.get_pt_boundaries(journey)
             fallback_extremity_arr = PeriodExtremity(journey.arrival_date_time, True)
             if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
                 streetnetwork_path_pool.add_async_request(
@@ -336,7 +411,9 @@ def compute_fallback(
 def complete_pt_journey(
     requested_orig_obj,
     requested_dest_obj,
-    pt_journey_pool_elem,
+    dep_mode,
+    arr_mode,
+    pt_journeys_,
     streetnetwork_path_pool,
     orig_places_free_access,
     dest_places_free_access,
@@ -351,11 +428,9 @@ def complete_pt_journey(
     """
     logger = logging.getLogger(__name__)
 
-    pt_journeys = copy.deepcopy(pt_journey_pool_elem.pt_journey.wait_and_get())
+    pt_journeys = copy.deepcopy(pt_journeys_)
     if not getattr(pt_journeys, "journeys", None):
         return pt_journeys
-    dep_mode = pt_journey_pool_elem.dep_mode
-    arr_mode = pt_journey_pool_elem.arr_mode
 
     logger.debug("building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
 

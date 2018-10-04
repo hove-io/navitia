@@ -33,7 +33,7 @@ from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
-from jormungandr.scenarios.helper_classes.complete_pt_journey import wait_and_get_pt_journeys
+from jormungandr.scenarios.helper_classes.complete_pt_journey import wait_and_build_crowflies
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from jormungandr.new_relic import record_custom_parameter
 
@@ -174,8 +174,15 @@ class Distributed:
             request=self.request,
         )
 
-        self.pt_journeys = wait_and_get_pt_journeys(
-            self.pt_journey_pool, self.streetnetwork_path_pool.has_valid_direct_paths()
+        self.pt_journeys = wait_and_build_crowflies(
+            self.requested_orig_obj,
+            self.requested_dest_obj,
+            self.pt_journey_pool,
+            self.streetnetwork_path_pool.has_valid_direct_paths(),
+            self.orig_places_free_access,
+            self.dest_places_free_access,
+            self.orig_fallback_durations_pool,
+            self.dest_fallback_durations_pool,
         )
 
         completed_pt_journeys = self.finalise_journeys()
@@ -200,12 +207,10 @@ class Distributed:
         return res
 
     def finalise_journeys(self):
-
         completed_pt_journeys = wait_and_complete_pt_journey(
             future_manager=self.future_manager,
             requested_orig_obj=self.requested_orig_obj,
             requested_dest_obj=self.requested_dest_obj,
-            pt_journey_pool=self.pt_journey_pool,
             streetnetwork_path_pool=self.streetnetwork_path_pool,
             orig_places_free_access=self.orig_places_free_access,
             dest_places_free_access=self.dest_places_free_access,

@@ -29,17 +29,54 @@
 from __future__ import absolute_import
 import logging
 from . import helper_future
-from .helper_utils import complete_pt_journey, compute_fallback, clean_pt_journey_error_or_raise
+from .helper_utils import (
+    complete_pt_journey,
+    compute_fallback,
+    clean_pt_journey_error_or_raise,
+    _build_crowflies,
+)
+from jormungandr.street_network.street_network import StreetNetworkPathType
 
 
-def wait_and_get_pt_journeys(pt_journey_pool, has_valid_direct_paths):
+def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
+    pt_journeys = future_pt_journey.wait_and_get()
+    clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
+    return pt_journeys
+
+
+def wait_and_build_crowflies(
+    requested_orig_obj,
+    requested_dest_obj,
+    pt_journey_pool,
+    has_valid_direct_paths,
+    orig_places_free_access,
+    dest_places_free_acces,
+    orig_fallback_durations_pool,
+    dest_fallback_durations_pool,
+):
     logger = logging.getLogger(__name__)
     res = []
-    for (dep_mode, arr_mode, pt_journey_f) in pt_journey_pool:
+    for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
+        pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
-        pt_journeys = pt_journey_f.wait_and_get()
-        clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
+        origin_crowfly = {
+            "requested_obj": requested_orig_obj,
+            "mode": dep_mode,
+            "places_free_access": orig_places_free_access.wait_and_get(),
+            "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
+            "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
+        }
+
+        dest_crowfly = {
+            "requested_obj": requested_dest_obj,
+            "mode": arr_mode,
+            "places_free_access": dest_places_free_acces.wait_and_get(),
+            "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
+            "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
+        }
+
+        _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
 
         res.append((dep_mode, arr_mode, pt_journeys))
 
@@ -50,7 +87,6 @@ def wait_and_complete_pt_journey(
     future_manager,
     requested_orig_obj,
     requested_dest_obj,
-    pt_journey_pool,
     streetnetwork_path_pool,
     orig_places_free_access,
     dest_places_free_access,
@@ -67,7 +103,6 @@ def wait_and_complete_pt_journey(
     compute_fallback(
         from_obj=requested_orig_obj,
         to_obj=requested_dest_obj,
-        pt_journey_pool=pt_journey_pool,
         streetnetwork_path_pool=streetnetwork_path_pool,
         orig_places_free_access=orig_places_free_access,
         dest_places_free_access=dest_places_free_access,
@@ -76,13 +111,15 @@ def wait_and_complete_pt_journey(
     )
 
     futures = []
-    for elem in pt_journey_pool:
+    for elem in pt_journeys:
 
         f = future_manager.create_future(
             complete_pt_journey,
             requested_orig_obj=requested_orig_obj,
             requested_dest_obj=requested_dest_obj,
-            pt_journey_pool_elem=elem,
+            dep_mode=elem[0],
+            arr_mode=elem[1],
+            pt_journeys_=elem[2],
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,
