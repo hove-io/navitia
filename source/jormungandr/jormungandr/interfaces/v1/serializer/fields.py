@@ -141,6 +141,8 @@ class LinkSchema(serpy.Serializer):
     internal = BoolField()
     type = StrField()
     href = StrField()
+    value = StrField()
+    category = StrField()
 
 
 class DisruptionLinkSerializer(jsonschema.Field):
