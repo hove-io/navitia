@@ -36,6 +36,7 @@ from .helper_utils import (
     _build_crowflies,
 )
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from collections import namedtuple
 
 
 def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
@@ -56,29 +57,31 @@ def wait_and_build_crowflies(
 ):
     logger = logging.getLogger(__name__)
     res = []
+    Pt_element = namedtuple("Pt_element", "dep_mode, arr_mode, pt_journeys")
     for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
-        origin_crowfly = {
-            "requested_obj": requested_orig_obj,
-            "mode": dep_mode,
-            "places_free_access": orig_places_free_access.wait_and_get(),
-            "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
-            "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
-        }
+        if pt_journeys:
+            origin_crowfly = {
+                "requested_obj": requested_orig_obj,
+                "mode": dep_mode,
+                "places_free_access": orig_places_free_access.wait_and_get(),
+                "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
+                "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
+            }
 
-        dest_crowfly = {
-            "requested_obj": requested_dest_obj,
-            "mode": arr_mode,
-            "places_free_access": dest_places_free_acces.wait_and_get(),
-            "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
-            "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
-        }
+            dest_crowfly = {
+                "requested_obj": requested_dest_obj,
+                "mode": arr_mode,
+                "places_free_access": dest_places_free_acces.wait_and_get(),
+                "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
+                "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
+            }
 
-        _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
+            _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
 
-        res.append((dep_mode, arr_mode, pt_journeys))
+            res.append(Pt_element(dep_mode, arr_mode, pt_journeys))
 
     return res
 
@@ -93,7 +96,7 @@ def wait_and_complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     request,
-    pt_journeys,
+    pt_journey_elements,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -107,19 +110,18 @@ def wait_and_complete_pt_journey(
         orig_places_free_access=orig_places_free_access,
         dest_places_free_access=dest_places_free_access,
         request=request,
-        pt_journeys=pt_journeys,
+        pt_journeys=pt_journey_elements,
     )
 
     futures = []
-    for elem in pt_journeys:
-
+    for pt_element in pt_journey_elements:
         f = future_manager.create_future(
             complete_pt_journey,
             requested_orig_obj=requested_orig_obj,
             requested_dest_obj=requested_dest_obj,
-            dep_mode=elem[0],
-            arr_mode=elem[1],
-            pt_journeys_=elem[2],
+            dep_mode=pt_element.dep_mode,
+            arr_mode=pt_element.arr_mode,
+            pt_journeys_=pt_element.pt_journeys,
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,

@@ -70,8 +70,11 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     # The section "distances" and "durations" in the response needs to be updated according to the mode.
     # only if it isn't a 'free' crow_fly
     if section.duration > 0:
-        setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
-        setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
+        if hasattr(pt_journey.distances, mode):
+            setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
+
+        if hasattr(pt_journey.durations, mode):
+            setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
 
     section.id = six.text_type(generate_id())
     return section
@@ -129,32 +132,20 @@ def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
-def _update_journey(pt_journey, aligned_fallback):
-    pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
-    pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
-    pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
-
-    pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
-    pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
-    pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
-
-
 def _replace_crowfly_with_streetnetwork(pt_journey, fallback_dp, fallback_period_extremity):
     aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_period_extremity)
 
-    _update_journey(pt_journey, aligned_fallback)
+    ## update the 'id' wich isn't set
+    _rename_fallback_sections_ids(aligned_fallback.journeys[0].sections)
 
     if fallback_period_extremity.represents_start:
         section_to_update = pt_journey.sections[-1]
     else:
         section_to_update = pt_journey.sections[0]
 
-    assert section_to_update.type == response_pb2.CROW_FLY
-    section_to_update.CopyFrom(aligned_fallback.journeys[0].sections[0])
-    assert section_to_update.type == response_pb2.STREET_NETWORK
-
-    ## update the 'id' wich isn't set
-    _rename_fallback_sections_ids([section_to_update])
+    pt_journey.sections.remove(section_to_update)
+    pt_journey.sections.extend(aligned_fallback.journeys[0].sections)
+    pt_journey.sections.sort(SectionSorter())
 
 
 def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
@@ -222,7 +213,7 @@ class BeginningFallback:
         return origin, dest
 
     def set_fallback_datetime(self, pt_journey):
-        pt_journey.departure_date_time = self.get_section_datetime(pt_journey)
+        pt_journey.departure_date_time = pt_journey.sections[0].begin_date_time
 
 
 class EndingFallback:
@@ -252,10 +243,14 @@ class EndingFallback:
         return dest, origin
 
     def set_fallback_datetime(self, pt_journey):
-        pt_journey.arrival_date_time = self.get_section_datetime(pt_journey)
+        pt_journey.arrival_date_time = pt_journey.sections[-1].end_date_time
 
 
 def _build_crowflies(pt_journeys, orig, dest):
+
+    if pt_journeys is None:
+        return
+
     for pt_journey in pt_journeys.journeys:
 
         crowflies = [_build_crowfly(pt_journey, **orig), _build_crowfly(pt_journey, **dest)]
@@ -270,6 +265,10 @@ def _build_crowflies(pt_journeys, orig, dest):
 def _build_crowfly(pt_journey, requested_obj, mode, places_free_access, fallback_durations, fallback_type):
     fallback_logic = _get_fallback_logic(fallback_type)
     pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
+
+    if pt_obj.uri == requested_obj.uri:
+        # No need for a crowfly if the pt section starts from the requested object
+        return None
 
     if pt_obj.uri in places_free_access.odt:
         pt_obj.CopyFrom(requested_obj)
