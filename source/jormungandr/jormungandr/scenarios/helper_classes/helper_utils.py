@@ -412,7 +412,7 @@ def complete_pt_journey(
     requested_dest_obj,
     dep_mode,
     arr_mode,
-    pt_journeys_,
+    pt_journeys,
     streetnetwork_path_pool,
     orig_places_free_access,
     dest_places_free_access,
@@ -427,7 +427,7 @@ def complete_pt_journey(
     """
     logger = logging.getLogger(__name__)
 
-    pt_journeys = copy.deepcopy(pt_journeys_)
+    pt_journeys = copy.deepcopy(pt_journeys)
     if not getattr(pt_journeys, "journeys", None):
         return pt_journeys
 

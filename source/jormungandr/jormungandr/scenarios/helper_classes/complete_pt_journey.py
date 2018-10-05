@@ -121,7 +121,7 @@ def wait_and_complete_pt_journey(
             requested_dest_obj=requested_dest_obj,
             dep_mode=pt_element.dep_mode,
             arr_mode=pt_element.arr_mode,
-            pt_journeys_=pt_element.pt_journeys,
+            pt_journeys=pt_element.pt_journeys,
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,
