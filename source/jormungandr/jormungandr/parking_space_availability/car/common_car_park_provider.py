@@ -34,7 +34,7 @@ import logging
 import pybreaker
 import requests as requests
 
-from jormungandr import cache, app, utils, new_relic
+from jormungandr import cache, app, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from abc import abstractmethod
 
