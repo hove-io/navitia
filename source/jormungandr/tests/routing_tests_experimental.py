@@ -38,19 +38,15 @@ This unit runs all the common tests in journey_common_tests.py along with locals
 unit for scenario experimental
 """
 
+
 @config(
     {
         "scenario": "distributed",
         "instance_config": {
             "street_network": [
                 {
-                    "modes": [
-                        "bike",
-                        "bss",
-                        "car",
-                        "walking"
-                    ],
-                    "class": "jormungandr.street_network.tests.MockKraken"
+                    "modes": ["bike", "bss", "car", "walking"],
+                    "class": "jormungandr.street_network.tests.MockKraken",
                 }
             ]
         },
@@ -75,17 +71,19 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         assert sn_service.routing_matrix_call_count == 0
         response = self.query_region(query)
         check_best(response)
-        self.is_valid_journey_response(response, query)
 
         # Without optimization (context.partial_response_is_empty = True in distributed._compute_all()
-        # journey count = 18 / direct_path_call_count = 88 / routing_matrix_call_count = 76
+        # journey count = 18 / direct_path_call_count = 26 / routing_matrix_call_count = 20
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
         assert len(response["journeys"]) == 10
-        assert sn_service.direct_path_call_count == 24
-        assert sn_service.routing_matrix_call_count == 20
+        assert sn_service.direct_path_call_count == 6
+        assert sn_service.routing_matrix_call_count == 4
         assert get_directpath_count_by_mode(response, 'walking') == 1
         assert get_directpath_count_by_mode(response, 'bike') == 1
+
+        # This will call jormun so we check our counter before
+        self.is_valid_journey_response(response, query)
 
 
 @config({'scenario': 'distributed'})
