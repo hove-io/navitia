@@ -55,7 +55,7 @@ def make_pt_object(embedded_type, lon, lat, uri=None):
 
 
 class MockKraken(Kraken):
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(MockKraken, self).__init__(*args, **kwargs)
         self.direct_path_call_count = 0
         self.routing_matrix_call_count = 0

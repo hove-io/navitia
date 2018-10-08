@@ -356,20 +356,11 @@ class TestLineSections(AbstractTestFixture):
             specific cases for lines where the actual behavior is undesirable
         """
 
-        assert not self.has_tf_disruption(
-            'lines/line:3/traffic_reports',
-            'line_section_on_line_1'
-        )
+        assert not self.has_tf_disruption('lines/line:3/traffic_reports', 'line_section_on_line_1')
 
-        assert not self.has_tf_disruption(
-            'lines/line:2/traffic_reports',
-            'line_section_on_line_1_other_effect'
-        )
+        assert not self.has_tf_disruption('lines/line:2/traffic_reports', 'line_section_on_line_1_other_effect')
 
-        assert not self.has_tf_disruption(
-            'lines/line:3/traffic_reports',
-            'line_section_on_line_2'
-        )
+        assert not self.has_tf_disruption('lines/line:3/traffic_reports', 'line_section_on_line_2')
 
     def test_traffic_reports_on_routes(self):
         """
@@ -428,25 +419,13 @@ class TestLineSections(AbstractTestFixture):
             specific cases for routes where the actual behavior is undesirable
         """
 
-        assert not self.has_dis(
-            'routes/route:line:3:1/traffic_reports',
-            'line_section_on_line_1'
-        )
+        assert not self.has_dis('routes/route:line:3:1/traffic_reports', 'line_section_on_line_1')
 
-        assert not self.has_dis(
-            'routes/route:line:2:1/traffic_reports',
-            'line_section_on_line_1_other_effect'
-        )
+        assert not self.has_dis('routes/route:line:2:1/traffic_reports', 'line_section_on_line_1_other_effect')
 
-        assert not self.has_dis(
-            'routes/route:line:1:1/traffic_reports',
-            'line_section_on_line_2'
-        )
+        assert not self.has_dis('routes/route:line:1:1/traffic_reports', 'line_section_on_line_2')
 
-        assert not self.has_dis(
-            'routes/route:line:1:3/traffic_reports',
-            'line_section_on_line_2'
-        )
+        assert not self.has_dis('routes/route:line:1:3/traffic_reports', 'line_section_on_line_2')
 
     def test_traffic_reports_on_vjs(self):
         """
@@ -508,22 +487,10 @@ class TestLineSections(AbstractTestFixture):
             specific cases for vjs where the actual behavior is undesirable
         """
 
-        assert not self.has_dis(
-            'vehicle_journeys/vj:3/traffic_reports',
-            'line_section_on_line_1'
-        )
-        assert not self.has_dis(
-            'vehicle_journeys/vj:2/traffic_reports',
-            'line_section_on_line_1_other_effect'
-        )
-        assert not self.has_dis(
-            'vehicle_journeys/vj:1:1/traffic_reports',
-            'line_section_on_line_2'
-        )
-        assert not self.has_dis(
-            'vehicle_journeys/vj:1:3/traffic_reports',
-            'line_section_on_line_2'
-        )
+        assert not self.has_dis('vehicle_journeys/vj:3/traffic_reports', 'line_section_on_line_1')
+        assert not self.has_dis('vehicle_journeys/vj:2/traffic_reports', 'line_section_on_line_1_other_effect')
+        assert not self.has_dis('vehicle_journeys/vj:1:1/traffic_reports', 'line_section_on_line_2')
+        assert not self.has_dis('vehicle_journeys/vj:1:3/traffic_reports', 'line_section_on_line_2')
 
     def test_traffic_reports_on_stop_points(self):
         """

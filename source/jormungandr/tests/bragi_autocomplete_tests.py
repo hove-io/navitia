@@ -54,7 +54,10 @@ class FakeUserBragi(FakeUser):
 
 
 def geojson():
-    return '{"type": "Feature", "geometry": ' '{"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}'
+    return (
+        '{"type": "Feature", "geometry": '
+        '{"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}'
+    )
 
 
 user_in_db_bragi = {
@@ -1292,7 +1295,7 @@ class AbstractAutocompleteAndRouting:
         And then use the autocomplete's response to query for a journey
 
         For this test we have 2 item in our autocomplete:
-         - the poi 'bobette' 
+         - the poi 'bobette'
          - an adresse in bob's street that is not in the dataset
         """
         args = {
