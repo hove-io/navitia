@@ -397,3 +397,4 @@ class TestSwaggerSchemaCarPark(AbstractTestFixture, SchemaChecker):
             self._check_schema(
                 '/v1/coverage/main_routing_test/pois/poi:station_1'
 )
+            
