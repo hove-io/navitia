@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
