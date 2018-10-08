@@ -1,3 +1,17 @@
+navitia2 (2.64.0) unstable; urgency=low
+
+  * Jormungandr: Fix min bound datetime  <https://github.com/CanalTP/navitia/pull/2548>
+  * Jormungandr: Refactor of parser_arg_types  <https://github.com/CanalTP/navitia/pull/2544>
+  * Jormungandr: Fix min/max nb journey schema's type  <https://github.com/CanalTP/navitia/pull/2543>
+  * Jormungandr: Newrelic improve monitoring for distributed scenario  <https://github.com/CanalTP/navitia/pull/2540>
+  * Jormungandr: Teleportation crowfly is walking  <https://github.com/CanalTP/navitia/pull/2541>
+  * Jormungandr: Refacto initialization to add newrelic and gevent  <https://github.com/CanalTP/navitia/pull/2532>
+  * Tests: Rewrite line section tests in order to check all disruptions  <https://github.com/CanalTP/navitia/pull/2537>
+  * Format: Python code formatting with black  <https://github.com/CanalTP/navitia/pull/2508>
+  * CMake: Clean for cmake prefix install  <https://github.com/CanalTP/navitia/pull/2539>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 28 Sep 2018 15:09:23 +0100
+
 navitia2 (2.63.0) unstable; urgency=low
 
   * Kraken & Tyr: Syslog for Ed binaries within Tyr  <https://github.com/CanalTP/navitia/pull/2533>

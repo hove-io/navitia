@@ -48,6 +48,7 @@ pt_object_type = {
     'line': type_pb2.LINE,
     'route': type_pb2.ROUTE,
     'stop_area': type_pb2.STOP_AREA,
+    'stop_point': type_pb2.STOP_POINT,
     'line_group': type_pb2.LINE_GROUP,
 }
 
@@ -425,7 +426,7 @@ def nCr(n, r):
     """
     if n <= r:
         """
-        We assume that it's valid when n <= r 
+        We assume that it's valid when n <= r
         """
         return 1
     import math

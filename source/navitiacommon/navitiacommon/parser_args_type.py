@@ -235,7 +235,7 @@ class DateTimeFormat(CustomSchemaType):
         """
         try:
             d = _parse_input_date(value)
-            if d.year < 1970:
+            if d.year <= 1970:
                 raise ValueError('date is too early!')
 
             return d

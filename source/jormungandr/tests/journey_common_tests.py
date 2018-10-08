@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -42,6 +43,14 @@ def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
 
+def get_directpath_count_by_mode(resp, mode):
+    directpath_count = 0
+    for journey in resp["journeys"]:
+        if len(journey['sections']) == 1 and (mode in journey['tags'] and 'non_pt' in journey['tags']):
+            directpath_count += 1
+    return directpath_count
+
+
 @dataset({"main_routing_test": {}})
 class JourneyCommon(object):
 
@@ -66,7 +75,7 @@ class JourneyCommon(object):
 
         self.check_context(response)
 
-    def test_error_on_journeys(self):
+    def test_error_on_journeys_out_of_bounds(self):
         """ if we got an error with kraken, an error should be returned"""
 
         query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
@@ -81,6 +90,25 @@ class JourneyCommon(object):
         check_best(response)
         assert response['error']['id'] == "date_out_of_bounds"
         assert response['error']['message'] == "date is not in data production period"
+
+        # and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_error_on_journeys_too_early(self):
+        """ datetime is > 1970y """
+
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
+            from_coord="0.0000898312;0.0000898312", to_coord="0.00188646;0.00071865", datetime="19700101T000000"
+        )
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_best(response)
+        assert (
+            response['message']
+            == 'parameter \"datetime\" invalid: Unable to parse datetime, date is too early!\ndatetime description: Date and time to go/arrive (see `datetime_represents`).\nNote: the datetime must be in the coverage’s publication period.'
+        )
 
         # and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
@@ -1587,7 +1615,8 @@ class JourneyMinBikeMinCar(object):
         )
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 4
+        #Among two direct_path with same duration and path, one is eliminated.
+        assert len(response['journeys']) >= 3
         assert all("deleted_because_not_enough_connections" in j['tags'] for j in response['journeys'])
 
 
