@@ -1,5 +1,8 @@
 
-language: cpp
+language: python
+python:
+  - "2.7"
+  - "3.6"
 sudo: required
 
 services:
@@ -10,13 +13,15 @@ git:
   submodules: false
 
 before_install:
-  - sudo apt update && sudo apt install -y python-pip python-dev protobuf-compiler
+  - sudo apt update && sudo apt install -y protobuf-compiler
   - sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
   - git submodule update --init --recursive
-  - sudo pip install -r source/tyr/requirements_dev.txt
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pip install -r source/tyr/requirements_dev.txt; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then python3.6 -m pip install black==18.9b0; fi
   - bash source/scripts/build_protobuf.sh
 
 script:
   # Make sure submodules references are merged in !
   - bash source/scripts/check_submodules.sh
-  - pushd source/tyr && PYTHONPATH=.:../navitiacommon/ py.test && popd
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then pushd source/tyr && PYTHONPATH=.:../navitiacommon/ py.test && popd; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then black --check --diff .; fi
