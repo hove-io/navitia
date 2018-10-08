@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
+from contextlib import closing
 from tyr import app, db
 import os
 import pytest
@@ -47,7 +48,7 @@ def docker():
     """
     a docker providing a database is started once for all tests
     """
-    with PostgresDocker() as database:
+    with closing(PostgresDocker()) as database:
         yield database
 
 

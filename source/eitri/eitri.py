@@ -27,6 +27,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from contextlib import closing
 import sys
 
 from clingon import clingon
@@ -58,5 +59,5 @@ def eitri(data_dir, output_file='./data.nav.lz4', ed_component_path='', add_pyth
     from ed_handler import generate_nav
     from docker_wrapper import PostgresDocker
 
-    with PostgresDocker() as docker:
+    with closing(PostgresDocker()) as docker:
         generate_nav(data_dir, docker.get_db_params(), output_file, ed_component_path=ed_component_path)
