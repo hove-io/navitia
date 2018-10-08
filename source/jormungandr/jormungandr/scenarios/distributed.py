@@ -37,18 +37,31 @@ from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from jormungandr.new_relic import record_custom_parameter
 
 
+class PartialResponseContext(object):
+    requested_orig = None
+    requested_dest = None
+    requested_orig_obj = None
+    requested_dest_obj = None
+    streetnetwork_path_pool = None
+    orig_fallback_durations_pool = None
+    dest_fallback_durations_pool = None
+    partial_response_is_empty = True
+
+
 class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
+    def get_context(self):
+        return PartialResponseContext()
+
     @staticmethod
-    def _compute_all(future_manager, request, instance, krakens_call):
+    def _compute_all(future_manager, request, instance, krakens_call, context):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
         return the list of all responses
         """
-
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
@@ -57,142 +70,145 @@ class Scenario(new_default.Scenario):
 
         logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
-        requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
-        requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
-
-        requested_orig_obj = get_entry_point_or_raise(requested_orig, request['origin'])
-        requested_dest_obj = get_entry_point_or_raise(requested_dest, request['destination'])
-
-        streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-        # we launch direct path asynchronously
-        for mode in requested_dep_modes:
-            streetnetwork_path_pool.add_async_request(
-                requested_orig_obj=requested_orig_obj,
-                requested_dest_obj=requested_dest_obj,
-                mode=mode,
-                period_extremity=period_extremity,
+        if context.partial_response_is_empty:
+            context.requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
+            context.requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
+
+            context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
+            context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
+            context.streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
+
+            for mode in requested_dep_modes:
+                context.streetnetwork_path_pool.add_async_request(
+                    requested_orig_obj=context.requested_orig_obj,
+                    requested_dest_obj=context.requested_dest_obj,
+                    mode=mode,
+                    period_extremity=period_extremity,
+                    request=request,
+                    streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+                    )
+
+            # if max_duration(time to pass in pt) is zero, there is no need to continue,
+            # we return all direct path without pt
+            if request['max_duration'] == 0:
+                return [
+                    context.streetnetwork_path_pool.wait_and_get(
+                        requested_orig_obj=context.requested_orig_obj,
+                        requested_dest_obj=context.requested_dest_obj,
+                        mode=mode,
+                        request=request,
+                        period_extremity=period_extremity,
+                        streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+                        )
+                    for mode in requested_dep_modes
+                ]
+
+            # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
+            # FallbackDurationsPool.
+            # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
+            context.direct_paths_by_mode = context.streetnetwork_path_pool.get_all_direct_paths()
+
+            context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                modes=requested_dep_modes,
                 request=request,
-                streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+                )
+
+            context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_dest_obj,
+                modes=requested_arr_modes,
+                request=request,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+                )
+
+            context.orig_places_free_access = PlacesFreeAccess(
+                future_manager=future_manager, instance=instance, requested_place_obj=context.requested_orig_obj
+            )
+            context.dest_places_free_access = PlacesFreeAccess(
+                future_manager=future_manager, instance=instance, requested_place_obj=context.requested_dest_obj
             )
 
-        # if max_duration(time to pass in pt) is zero, there is no need to continue,
-        # we return all direct path without pt
-        if request['max_duration'] == 0:
-            return [
-                streetnetwork_path_pool.wait_and_get(
-                    requested_orig_obj=requested_orig_obj,
-                    requested_dest_obj=requested_dest_obj,
-                    mode=mode,
-                    request=request,
-                    period_extremity=period_extremity,
-                    streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+            context.orig_fallback_durations_pool = FallbackDurationsPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                modes=requested_dep_modes,
+                proximities_by_crowfly_pool=context.orig_proximities_by_crowfly,
+                places_free_access=context.orig_places_free_access,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                request=request,
+                direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
                 )
-                for mode in requested_dep_modes
-            ]
 
-        # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
-        # FallbackDurationsPool.
-        # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
-        direct_paths_by_mode = streetnetwork_path_pool.get_all_direct_paths()
-
-        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
-            future_manager=future_manager,
-            instance=instance,
-            requested_place_obj=requested_orig_obj,
-            modes=requested_dep_modes,
-            request=request,
-            direct_paths_by_mode=direct_paths_by_mode,
-            max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
-        )
-
-        dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
-            future_manager=future_manager,
-            instance=instance,
-            requested_place_obj=requested_dest_obj,
-            modes=requested_arr_modes,
-            request=request,
-            direct_paths_by_mode=direct_paths_by_mode,
-            max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
-        )
-
-        orig_places_free_access = PlacesFreeAccess(
-            future_manager=future_manager, instance=instance, requested_place_obj=requested_orig_obj
-        )
-        dest_places_free_access = PlacesFreeAccess(
-            future_manager=future_manager, instance=instance, requested_place_obj=requested_dest_obj
-        )
-
-        orig_fallback_durations_pool = FallbackDurationsPool(
-            future_manager=future_manager,
-            instance=instance,
-            requested_place_obj=requested_orig_obj,
-            modes=requested_dep_modes,
-            proximities_by_crowfly_pool=orig_proximities_by_crowfly,
-            places_free_access=orig_places_free_access,
-            direct_paths_by_mode=direct_paths_by_mode,
-            request=request,
-            direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
-        )
-
-        dest_fallback_durations_pool = FallbackDurationsPool(
-            future_manager=future_manager,
-            instance=instance,
-            requested_place_obj=requested_dest_obj,
-            modes=requested_arr_modes,
-            proximities_by_crowfly_pool=dest_proximities_by_crowfly,
-            places_free_access=dest_places_free_access,
-            direct_paths_by_mode=direct_paths_by_mode,
-            request=request,
-            direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
-        )
+            context.dest_fallback_durations_pool = FallbackDurationsPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_dest_obj,
+                modes=requested_arr_modes,
+                proximities_by_crowfly_pool=context.dest_proximities_by_crowfly,
+                places_free_access=context.dest_places_free_access,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                request=request,
+                direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
+                )
 
         pt_journey_pool = PtJourneyPool(
             future_manager=future_manager,
             instance=instance,
-            requested_orig_obj=requested_orig_obj,
-            requested_dest_obj=requested_dest_obj,
-            streetnetwork_path_pool=streetnetwork_path_pool,
+            requested_orig_obj=context.requested_orig_obj,
+            requested_dest_obj=context.requested_dest_obj,
+            streetnetwork_path_pool=context.streetnetwork_path_pool,
             krakens_call=krakens_call,
-            orig_fallback_durations_pool=orig_fallback_durations_pool,
-            dest_fallback_durations_pool=dest_fallback_durations_pool,
+            orig_fallback_durations_pool=context.orig_fallback_durations_pool,
+            dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
-        )
+            )
 
         completed_pt_journeys = wait_and_complete_pt_journey(
             future_manager=future_manager,
-            requested_orig_obj=requested_orig_obj,
-            requested_dest_obj=requested_dest_obj,
+            requested_orig_obj=context.requested_orig_obj,
+            requested_dest_obj=context.requested_dest_obj,
             pt_journey_pool=pt_journey_pool,
-            streetnetwork_path_pool=streetnetwork_path_pool,
-            orig_places_free_access=orig_places_free_access,
-            dest_places_free_access=dest_places_free_access,
-            orig_fallback_durations_pool=orig_fallback_durations_pool,
-            dest_fallback_durations_pool=dest_fallback_durations_pool,
+            streetnetwork_path_pool=context.streetnetwork_path_pool,
+            orig_places_free_access=context.orig_places_free_access,
+            dest_places_free_access=context.dest_places_free_access,
+            orig_fallback_durations_pool=context.orig_fallback_durations_pool,
+            dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
-        )
+            )
 
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
-
-        for mode in requested_dep_modes:
-            dp = direct_paths_by_mode.get(mode).wait_and_get()
-            if getattr(dp, "journeys", None):
-                if mode == "ridesharing":
-                    switch_back_to_ridesharing(dp, True)
-                res.append(dp)
+        if context.partial_response_is_empty:
+            for mode in requested_dep_modes:
+                dp = context.direct_paths_by_mode.get(mode).wait_and_get()
+                if getattr(dp, "journeys", None):
+                    if mode == "ridesharing":
+                        switch_back_to_ridesharing(dp, True)
+                    res.append(dp)
 
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
         res.extend((j for j in completed_pt_journeys if j))
 
-        check_final_results_or_raise(res, orig_fallback_durations_pool, dest_fallback_durations_pool)
+        check_final_results_or_raise(res, context.orig_fallback_durations_pool,
+                                     context.dest_fallback_durations_pool)
 
         for r in res:
             fill_uris(r)
+
+        context.partial_response_is_empty = False
         return res
 
-    def call_kraken(self, request_type, request, instance, krakens_call):
+    def call_kraken(self, request_type, request, instance, krakens_call, context):
         record_custom_parameter('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         logger.warning("using experimental scenario!!")
@@ -206,7 +222,7 @@ class Scenario(new_default.Scenario):
         """
         try:
             with FutureManager() as future_manager:
-                res = self._compute_all(future_manager, request, instance, krakens_call)
+                res = self._compute_all(future_manager, request, instance, krakens_call, context)
                 return res
         except PtException as e:
             return [e.get()]
