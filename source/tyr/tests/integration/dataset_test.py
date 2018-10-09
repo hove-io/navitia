@@ -55,6 +55,24 @@ def add_job_with_data_set_mimir(create_basic_job_with_data_sets):
         models.db.session.commit()
 
 
+def add_job_and_data_set_with_jobstate_running(create_basic_job_with_data_sets):
+    with app.app_context():
+        # we add a new job with a dataset for mimir
+        instance = get_instance_from_db(name='fr')
+        job = models.Job()
+        job.instance = instance
+        dataset = models.DataSet()
+        dataset.family_type = 'osm'
+        dataset.type = 'osm'
+        dataset.name = '/path/to/dataset_osm'
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
+        job.state = 'running'
+        models.db.session.add(job)
+
+        models.db.session.commit()
+
+
 def test_basic_datasets(create_basic_job_with_data_sets):
     """
     we query the loaded datasets of fr
@@ -79,8 +97,12 @@ def test_basic_datasets(create_basic_job_with_data_sets):
 
     # Here we add a new job with mimir as data_set
     add_job_with_data_set_mimir(create_basic_job_with_data_sets)
-
     resp = api_get('/v0/instances/fr/last_datasets')
+    assert len(resp) == 2
+    assert resp[0]['family_type'] == 'pt'
+    assert resp[0]['name'] == '/path/to/dataset_0'
+    assert resp[1]['family_type'] == 'synonym'
+    assert resp[1]['name'] == '/path/to/dataset_1'
 
     # we have two jobs: one with 1 data_set and another with 2 data_sets
     resp = api_get('/v0/jobs/fr')
@@ -97,3 +119,19 @@ def test_basic_datasets(create_basic_job_with_data_sets):
     assert job_with_mimir[0]['family_type'] == 'mimir'
     assert job_with_mimir[0]['name'] == '/path/to/dataset_3'
     assert job_with_mimir[0]['type'] == 'stop2mimir'
+
+
+    # We add one job and a data_set with job state = 'running'.
+    add_job_and_data_set_with_jobstate_running(create_basic_job_with_data_sets)
+
+    # Here we should have the same data_sets as before since the new job added has state 'running'
+    resp = api_get('/v0/instances/fr/last_datasets')
+    assert len(resp) == 2
+    assert resp[0]['family_type'] == 'pt'
+    assert resp[0]['name'] == '/path/to/dataset_0'
+    assert resp[1]['family_type'] == 'synonym'
+    assert resp[1]['name'] == '/path/to/dataset_1'
+
+    # Here we should have the same data_sets as before since the new job added has state 'running'
+    resp = api_get('/v0/jobs/fr')
+    assert len(resp['jobs']) == 3

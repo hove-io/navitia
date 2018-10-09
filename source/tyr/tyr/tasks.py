@@ -95,7 +95,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
     job = models.Job()
     instance_config = load_instance_config(instance.name)
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     task = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
@@ -174,7 +174,7 @@ def send_to_mimir(instance, filename):
     job = models.Job()
     instance_config = load_instance_config(instance.name)
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
 
     dataset = models.DataSet()
     dataset.family_type = 'mimir'
@@ -412,7 +412,7 @@ def reload_kraken(instance_id):
     instance = models.Instance.query.get(instance_id)
     job = models.Job()
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
@@ -430,7 +430,7 @@ def build_all_data():
 def build_data(instance):
     job = models.Job()
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
