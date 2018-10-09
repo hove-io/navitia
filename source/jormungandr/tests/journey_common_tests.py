@@ -1021,19 +1021,20 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
-    if getenv('JORMUNGANDR_USE_SERPY'):
-
-        def test_section_fare_zone(self):
-            """
-            In a 'stop_point', the section 'fare_zone' should be present if the info is available
-            (only the Serpy serializer has this feature, as Marshall will be deprecated soon)
-            """
-            r = self.query('/v1/coverage/main_routing_test/stop_points')
-            # Only stop point 'stopA' has fare zone info
-            assert r['stop_points'][0]['name'] == 'stop_point:stopA'
-            assert r['stop_points'][0]['fare_zone']['name'] == "2"
-            # Other stop points don't have the fare zone info
-            assert not 'fare_zone' in r['stop_points'][1]
+    def test_section_fare_zone(self):
+        from jormungandr import app
+        if not app.config['USE_SERPY']:
+            return
+        """
+        In a 'stop_point', the section 'fare_zone' should be present if the info is available
+        (only the Serpy serializer has this feature, as Marshall will be deprecated soon)
+        """
+        r = self.query('/v1/coverage/main_routing_test/stop_points')
+        # Only stop point 'stopA' has fare zone info
+        assert r['stop_points'][0]['name'] == 'stop_point:stopA'
+        assert r['stop_points'][0]['fare_zone']['name'] == "2"
+        # Other stop points don't have the fare zone info
+        assert not 'fare_zone' in r['stop_points'][1]
 
     def test_when_min_max_nb_journeys_equal_0(self):
         """

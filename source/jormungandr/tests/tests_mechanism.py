@@ -52,6 +52,12 @@ from jormungandr import app, i_manager, utils
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
 from jormungandr.instance import Instance
+from jormungandr.parking_space_availability import (
+    AbstractParkingPlacesProvider,
+    Stands,
+    StandsStatus,
+    ParkingPlaces,
+)
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -495,3 +501,70 @@ def config(configs=None):
         return cls
 
     return deco
+
+from mock import PropertyMock
+from jormungandr.parking_space_availability import (
+    AbstractParkingPlacesProvider,
+    Stands,
+    StandsStatus,
+)
+from jormungandr.ptref import FeedPublisher
+
+
+class MockBssProvider(AbstractParkingPlacesProvider):
+    def __init__(self, pois_supported, name='mock bss provider'):
+        self.pois_supported = pois_supported
+        self.name = name
+
+    def support_poi(self, poi):
+        return not self.pois_supported or poi['id'] in self.pois_supported
+
+    def get_informations(self, poi):
+        available_places = 13 if poi['id'] == 'poi:station_1' else 99
+        available_bikes = 3 if poi['id'] == 'poi:station_1' else 98
+        return Stands(
+            available_places=available_places, available_bikes=available_bikes, status=StandsStatus.open
+        )
+
+    def status(self):
+        return {}
+
+    def feed_publisher(self):
+        return FeedPublisher(id='mock_bss', name=self.name, license='the death license', url='bob.com')
+
+
+def mock_bss_providers(pois_supported):
+    providers = [MockBssProvider(pois_supported=pois_supported)]
+    return mock.patch(
+        'jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
+        new_callable=PropertyMock,
+        return_value=lambda: providers,
+    )
+
+
+class MockCarParkProvider(AbstractParkingPlacesProvider):
+    def __init__(self, pois_supported, name='mock car park provider'):
+        self.pois_supported = pois_supported
+        self.name = name
+
+    def support_poi(self, poi):
+        return not self.pois_supported or poi['id'] in self.pois_supported
+
+    def get_informations(self, poi):
+        return ParkingPlaces(available=41, occupied=42, available_PRM=43, occupied_PRM=44)
+
+    def status(self):
+        return {}
+
+    def feed_publisher(self):
+        return FeedPublisher(id='mock_car_park', name=self.name, license='license to kill', url='MI.6')
+
+
+def mock_car_park_providers(pois_supported):
+    providers = [MockCarParkProvider(pois_supported=pois_supported)]
+    return mock.patch(
+        'jormungandr.parking_space_availability.car.CarParkingProviderManager._get_providers',
+        new_callable=mock.PropertyMock,
+        return_value=lambda: providers,
+    )
+
