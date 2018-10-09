@@ -35,7 +35,7 @@ import logging.config
 import os
 from flask import Flask, got_request_exception
 from flask_restful import Api
-from flask_cache import Cache
+from flask_caching import Cache
 from flask_cors import CORS
 import sys
 import six
@@ -86,6 +86,7 @@ from navitiacommon.models import db
 
 db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
+memory_cache = Cache(app, config=app.config['MEMORY_CACHE_CONFIGURATION'])
 
 if app.config['AUTOCOMPLETE_SYSTEMS'] is not None:
     global_autocomplete = {k: utils.create_object(v) for k, v in app.config['AUTOCOMPLETE_SYSTEMS'].items()}
