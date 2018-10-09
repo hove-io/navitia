@@ -133,7 +133,7 @@ How to contribute
 =================
 Fork the github repo, create a new branch from dev, and submit your pull request!
 
-Make sure to run the tests before submiting the pull request (`make test` in the build directory, you may also run `make docker_test` for important contributions)
+Make sure to run the tests before submiting the pull request (`make test` in the build directory, you may also run `make docker_test` for important contributions), and have a wee look at `CONTRIBUTING.md <https://github.com/CanalTP/navitia/blob/dev/CONTRIBUTING.md>`_
 
 Are there many people contributing? Yes: https://www.youtube.com/watch?v=GOLfMTMGVFI
 
