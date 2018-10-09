@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
