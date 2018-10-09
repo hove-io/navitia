@@ -169,12 +169,12 @@ class Tests(unittest.TestCase):
 
         string = "coord/.1;2."
         uri = Uri(string)
-        self.assertEqual(uri.lon, .1)
+        self.assertEqual(uri.lon, 0.1)
         self.assertEqual(uri.lat, 2)
 
         string = "coord/.111111;22.3"
         uri = Uri(string)
-        self.assertEqual(uri.lon, .111111)
+        self.assertEqual(uri.lon, 0.111111)
         self.assertEqual(uri.lat, 22.3)
 
     def testOnlyCoordPosWithSlash(self):
@@ -185,12 +185,12 @@ class Tests(unittest.TestCase):
 
         string = "/coord/.1;2."
         uri = Uri(string)
-        self.assertEqual(uri.lon, .1)
+        self.assertEqual(uri.lon, 0.1)
         self.assertEqual(uri.lat, 2)
 
         string = "/coord/.111111;22.3"
         uri = Uri(string)
-        self.assertEqual(uri.lon, .111111)
+        self.assertEqual(uri.lon, 0.111111)
         self.assertEqual(uri.lat, 22.3)
 
     def testResourceListWithslash(self):

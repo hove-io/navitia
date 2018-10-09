@@ -909,7 +909,7 @@ class Scenario(simple.Scenario):
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
-        #Initialize a context for distributed
+        # Initialize a context for distributed
         distributed_context = self.get_context()
 
         while request is not None and (

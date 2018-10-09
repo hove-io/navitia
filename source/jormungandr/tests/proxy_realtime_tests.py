@@ -157,7 +157,10 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
-        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7' '&_current_datetime=20160102T1000'
+        query = (
+            'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
+            '&_current_datetime=20160102T1000'
+        )
         response = self.query_region(query)
 
         assert "departures" in response
@@ -275,7 +278,11 @@ class TestDepartures(AbstractTestFixture):
         # expected output, 2 realtime ->
         # "pagination" { "items_on_page": 2, "items_per_page": 100,
         #                "start_page": 0,"total_result": 2}
-        query = 'stop_areas/S42/lines/J/departures?' 'from_datetime=20160102T1000&show_codes=true&count=100' '&data_freshness=realtime'
+        query = (
+            'stop_areas/S42/lines/J/departures?'
+            'from_datetime=20160102T1000&show_codes=true&count=100'
+            '&data_freshness=realtime'
+        )
         response = self.query_region(query)
         assert "departures" in response
         assert len(response["departures"]) == 2
@@ -290,7 +297,11 @@ class TestDepartures(AbstractTestFixture):
         # expected output, 1 base_schedule ->
         # "pagination" { "items_on_page": 1, "items_per_page": 100,
         #                "start_page": 0,"total_result": 1}
-        query = 'stop_areas/S42/lines/J/departures?' 'from_datetime=20160102T1000&show_codes=true&count=100' '&data_freshness=base_schedule'
+        query = (
+            'stop_areas/S42/lines/J/departures?'
+            'from_datetime=20160102T1000&show_codes=true&count=100'
+            '&data_freshness=base_schedule'
+        )
         response = self.query_region(query)
         assert "departures" in response
         assert len(response["departures"]) == 1

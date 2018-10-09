@@ -73,12 +73,18 @@ class Scenario(new_default.Scenario):
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
         if context.partial_response_is_empty:
-            context.requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
-            context.requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
+            context.requested_orig = PlaceByUri(
+                future_manager=future_manager, instance=instance, uri=request['origin']
+            )
+            context.requested_dest = PlaceByUri(
+                future_manager=future_manager, instance=instance, uri=request['destination']
+            )
 
             context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
             context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
-            context.streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
+            context.streetnetwork_path_pool = StreetNetworkPathPool(
+                future_manager=future_manager, instance=instance
+            )
 
             for mode in requested_dep_modes:
                 context.streetnetwork_path_pool.add_async_request(
@@ -88,7 +94,7 @@ class Scenario(new_default.Scenario):
                     period_extremity=period_extremity,
                     request=request,
                     streetnetwork_path_type=StreetNetworkPathType.DIRECT,
-                    )
+                )
 
             # if max_duration(time to pass in pt) is zero, there is no need to continue,
             # we return all direct path without pt
@@ -101,7 +107,7 @@ class Scenario(new_default.Scenario):
                         request=request,
                         period_extremity=period_extremity,
                         streetnetwork_path_type=StreetNetworkPathType.DIRECT,
-                        )
+                    )
                     for mode in requested_dep_modes
                 ]
 
@@ -118,7 +124,7 @@ class Scenario(new_default.Scenario):
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
-                )
+            )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
@@ -128,7 +134,7 @@ class Scenario(new_default.Scenario):
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
-                )
+            )
 
             context.orig_places_free_access = PlacesFreeAccess(
                 future_manager=future_manager, instance=instance, requested_place_obj=context.requested_orig_obj
@@ -147,7 +153,7 @@ class Scenario(new_default.Scenario):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
-                )
+            )
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
                 future_manager=future_manager,
@@ -159,7 +165,7 @@ class Scenario(new_default.Scenario):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
-                )
+            )
 
         pt_journey_pool = PtJourneyPool(
             future_manager=future_manager,
@@ -171,7 +177,7 @@ class Scenario(new_default.Scenario):
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
-            )
+        )
 
         completed_pt_journeys = wait_and_complete_pt_journey(
             future_manager=future_manager,
@@ -184,7 +190,7 @@ class Scenario(new_default.Scenario):
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
-            )
+        )
 
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
@@ -199,8 +205,9 @@ class Scenario(new_default.Scenario):
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
         res.extend((j for j in completed_pt_journeys if j))
 
-        check_final_results_or_raise(res, context.orig_fallback_durations_pool,
-                                     context.dest_fallback_durations_pool)
+        check_final_results_or_raise(
+            res, context.orig_fallback_durations_pool, context.dest_fallback_durations_pool
+        )
 
         for r in res:
             fill_uris(r)

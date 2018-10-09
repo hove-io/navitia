@@ -189,7 +189,13 @@ class JourneyCommon(object):
 
         assert status == 400, "the response should not be valid"
 
-        m = "parameter \"type\" invalid: The type argument must be in list [u'all', u'non_pt_bss', " "u'non_pt_bike', u'fastest', u'less_fallback_bss', u'best', u'less_fallback_bike', " "u'rapid', u'car', u'comfort', u'no_train', u'less_fallback_walk', u'non_pt_walk'], " "you gave sponge_bob\n" "type description: DEPRECATED, desired type of journey."
+        m = (
+            "parameter \"type\" invalid: The type argument must be in list [u'all', u'non_pt_bss', "
+            "u'non_pt_bike', u'fastest', u'less_fallback_bss', u'best', u'less_fallback_bike', "
+            "u'rapid', u'car', u'comfort', u'no_train', u'less_fallback_walk', u'non_pt_walk'], "
+            "you gave sponge_bob\n"
+            "type description: DEPRECATED, desired type of journey."
+        )
         assert response['message'] == m
 
     def test_journeys_no_bss_and_walking(self):
@@ -1615,7 +1621,7 @@ class JourneyMinBikeMinCar(object):
         )
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
-        #Among two direct_path with same duration and path, one is eliminated.
+        # Among two direct_path with same duration and path, one is eliminated.
         assert len(response['journeys']) >= 3
         assert all("deleted_because_not_enough_connections" in j['tags'] for j in response['journeys'])
 

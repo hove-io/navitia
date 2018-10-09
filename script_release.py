@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, division
 import os
 
 os.environ['LC_ALL'] = 'en_US'
-os.environ['GIT_PYTHON_TRACE'] = '1' #can be 0 (no trace), 1 (git commands) or full (git commands + git output)
+os.environ['GIT_PYTHON_TRACE'] = '1'  # can be 0 (no trace), 1 (git commands) or full (git commands + git output)
 
 from git import *
 from datetime import datetime
@@ -44,28 +44,28 @@ import codecs
 import requests
 import logging
 
+
 def get_tag_name(version):
-        return "v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
+    return "v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
 
 
 class ReleaseManager:
-
     def __init__(self, release_type, remote_name="canalTP"):
         self.directory = "."
         self.release_type = release_type
         self.repo = Repo(self.directory)
         self.git = self.repo.git
 
-        #we fetch latest version from remote
+        # we fetch latest version from remote
         self.remote_name = remote_name
 
         print("fetching from {}...".format(remote_name))
         self.repo.remote(remote_name).fetch("--tags")
 
-        #and we update dev and release branches
+        # and we update dev and release branches
         print("rebasing dev and release...")
 
-        #TODO quit on error
+        # TODO quit on error
         self.git.rebase(remote_name + "/dev", "dev")
         try:
             self.git.checkout("release")
@@ -127,15 +127,15 @@ class ReleaseManager:
         else:
             exit(5)
 
-        self.str_version = "{maj}.{min}.{hf}".format(maj=self.version[0],
-                                                     min=self.version[1],
-                                                     hf=self.version[2])
+        self.str_version = "{maj}.{min}.{hf}".format(
+            maj=self.version[0], min=self.version[1], hf=self.version[2]
+        )
 
         print("current version is {}".format(self.str_version))
         return self.str_version
 
     def checkout_parent_branch(self):
-        parent=""
+        parent = ""
         if self.release_type == "major" or self.release_type == "minor":
             parent = "dev"
         else:
@@ -151,9 +151,12 @@ class ReleaseManager:
         closed_pr = []
         page = 1
         while True:
-            query = "https://api.github.com/repos/CanalTP/navitia/" \
-                    "pulls?state=closed&base=dev&sort=updated&direction=desc&page={page}"\
-                    .format(latest_tag=self.latest_tag, page=page)
+            query = (
+                "https://api.github.com/repos/CanalTP/navitia/"
+                "pulls?state=closed&base=dev&sort=updated&direction=desc&page={page}".format(
+                    latest_tag=self.latest_tag, page=page
+                )
+            )
             print("query github api: " + query)
             github_response = requests.get(query, auth=self.auth)
 
@@ -187,8 +190,10 @@ class ReleaseManager:
                 try:
                     branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
                 except:
-                    print("ERROR while searching for commit in release branch: " \
-                          "Following PR added to changelog, remove it if needed.\n")
+                    print(
+                        "ERROR while searching for commit in release branch: "
+                        "Following PR added to changelog, remove it if needed.\n"
+                    )
 
                 # adding separators before and after to match only branch name
                 release_branch_name = '  ' + self.remote_name + '/release\n'
@@ -211,10 +216,7 @@ class ReleaseManager:
         return lines
 
     def create_changelog(self):
-        write_lines = [
-            u'navitia2 (%s) unstable; urgency=low\n' % self.str_version,
-            u'\n',
-        ]
+        write_lines = [u'navitia2 (%s) unstable; urgency=low\n' % self.str_version, u'\n']
 
         if self.release_type != "hotfix":
             pullrequests = self.get_merged_pullrequest()
@@ -224,12 +226,15 @@ class ReleaseManager:
 
         author_name = self.git.config('user.name')
         author_mail = self.git.config('user.email')
-        write_lines.extend([
-            u'\n',
-            u' -- {name} <{mail}>  {now} +0100\n'.format(name=author_name, mail=author_mail,
-                                                         now=datetime.now().strftime("%a, %d %b %Y %H:%m:%S")),
-            u'\n',
-        ])
+        write_lines.extend(
+            [
+                u'\n',
+                u' -- {name} <{mail}>  {now} +0100\n'.format(
+                    name=author_name, mail=author_mail, now=datetime.now().strftime("%a, %d %b %Y %H:%m:%S")
+                ),
+                u'\n',
+            ]
+        )
 
         return write_lines
 
@@ -255,8 +260,9 @@ class ReleaseManager:
         f_changelog.close()
         f_changelogback.close()
         last_modified = stat(back_filename)
-        (stdout, stderr) = subprocess.Popen(["vim", back_filename, "--nofork"],
-                                            stderr=subprocess.PIPE).communicate()
+        (stdout, stderr) = subprocess.Popen(
+            ["vim", back_filename, "--nofork"], stderr=subprocess.PIPE
+        ).communicate()
         after = stat(back_filename)
         if last_modified == after:
             print("No changes made, we stop")
@@ -268,7 +274,7 @@ class ReleaseManager:
         self.git.add(changelog_filename)
 
     def get_modified_changelog(self):
-        #the changelog might have been modified by the user, so we have to read it again
+        # the changelog might have been modified by the user, so we have to read it again
         changelog_filename = "debian/changelog"
 
         f_changelog = codecs.open(changelog_filename, 'r', 'utf-8')
@@ -276,8 +282,8 @@ class ReleaseManager:
         lines = []
         nb_version = 0
         for line in f_changelog:
-            #each version are separated by a line like
-            #navitia2 (0.94.1) unstable; urgency=low
+            # each version are separated by a line like
+            # navitia2 (0.94.1) unstable; urgency=low
             if line.startswith("navitia2 "):
                 nb_version += 1
                 continue
@@ -294,11 +300,11 @@ class ReleaseManager:
     def publish_release(self, temp_branch):
         self.git.checkout("release")
         self.git.submodule('update', '--recursive')
-        #merge with the release branch
+        # merge with the release branch
         self.git.merge(temp_branch, "release", '--no-ff')
 
         print("current branch {}".format(self.repo.active_branch))
-        #we tag the release
+        # we tag the release
         tag_message = u'Version {}\n'.format(self.str_version)
 
         changelog = self.get_modified_changelog()
@@ -309,7 +315,7 @@ class ReleaseManager:
 
         self.repo.create_tag(get_tag_name(self.version), message=tag_message)
 
-        #and we merge back the release branch to dev (at least for the tag in release)
+        # and we merge back the release branch to dev (at least for the tag in release)
         self.git.merge("release", "dev", '--no-ff')
 
         print("publishing the release")
@@ -319,7 +325,7 @@ class ReleaseManager:
         print("  git merge release")
         print("And when you're happy do:")
         print("  git push {} release dev --tags".format(self.remote_name))
-        #TODO: when we'll be confident, we will do that automaticaly
+        # TODO: when we'll be confident, we will do that automaticaly
 
     def release_the_kraken(self):
         new_version = self.get_new_version_number()
@@ -328,7 +334,7 @@ class ReleaseManager:
 
         self.checkout_parent_branch()
 
-        #we then create a new temporary branch
+        # we then create a new temporary branch
         print("creating temporary release branch {}".format(tmp_name))
         self.git.checkout(b=tmp_name)
         print("current branch {}".format(self.repo.active_branch))
@@ -343,12 +349,16 @@ class ReleaseManager:
             print("Note: you'll have to merge/tag/push manually after your fix:")
             print("  git checkout release")
             print("  git merge --no-ff {tmp_branch}".format(tmp_branch=tmp_name))
-            print("  git tag -a {} #then add message on Version and mention concerned PRs".format(get_tag_name(self.version)))
+            print(
+                "  git tag -a {} #then add message on Version and mention concerned PRs".format(
+                    get_tag_name(self.version)
+                )
+            )
             print("  git checkout dev")
             print("  git merge release")
             print("  git push {} release dev --tags".format(self.remote_name))
 
-            #TODO2 try to script that (put 2 hotfix param, like hotfix init and hotfix publish ?)
+            # TODO2 try to script that (put 2 hotfix param, like hotfix init and hotfix publish ?)
             exit(0)
 
         self.publish_release(tmp_name)
@@ -361,7 +371,7 @@ if __name__ == '__main__':
         print("possible additional argument: remote (default is canalTP)")
         exit(5)
 
-    #the git lib used bug when not in english
+    # the git lib used bug when not in english
 
     logging.basicConfig(level=logging.INFO)
 

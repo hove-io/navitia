@@ -66,8 +66,8 @@ class Index(ModuleResource):
                     rel='coord',
                     templated=True,
                     description='Inverted geocoding for a given coordinate',
-                    lon=.0,
-                    lat=.0,
+                    lon=0.0,
+                    lat=0.0,
                 ),
                 create_external_link(
                     self.module_name + '.journeys', rel='journeys', description='Compute journeys'
