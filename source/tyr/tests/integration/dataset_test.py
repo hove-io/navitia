@@ -120,7 +120,6 @@ def test_basic_datasets(create_basic_job_with_data_sets):
     assert job_with_mimir[0]['name'] == '/path/to/dataset_3'
     assert job_with_mimir[0]['type'] == 'stop2mimir'
 
-
     # We add one job and a data_set with job state = 'running'.
     add_job_and_data_set_with_jobstate_running(create_basic_job_with_data_sets)
 
