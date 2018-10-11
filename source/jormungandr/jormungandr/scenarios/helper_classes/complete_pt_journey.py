@@ -38,8 +38,15 @@ from .helper_utils import (
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
 
+Pt_element = namedtuple("Pt_element", "dep_mode, arr_mode, pt_journeys")
+
 
 def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
+    """
+    block until the pt_journeys are computed
+
+    :return: The list of journeys computed by the planner
+    """
     pt_journeys = future_pt_journey.wait_and_get()
     clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
     return pt_journeys
@@ -55,9 +62,13 @@ def wait_and_build_crowflies(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
 ):
+    """
+    block until pt_journeys are computed and attach crow-flies as fallback to all the journeys
+
+    :return: A list of pt journeys with crowfly as a fallback
+    """
     logger = logging.getLogger(__name__)
     res = []
-    Pt_element = namedtuple("Pt_element", "dep_mode, arr_mode, pt_journeys")
     for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
@@ -86,6 +97,28 @@ def wait_and_build_crowflies(
     return res
 
 
+def get_journeys_to_complete(responses, context):
+    """
+    Prepare a list of journeys from the response that will be use to compute street-network as a fallback.
+    In order to compute the street network, we retrieve the fallback modes from the 'context'.
+
+    If a journey is tagged as 'to_delete' we ignore it, thus leaving its fallback as crow fly
+
+    :return: A list of Pt_element (journey+modes) that requires street-network
+    """
+    journeys_to_complete = []
+    for r in responses:
+        for j in r.journeys:
+            if "to_delete" in j.tags:
+                continue
+            if j.internal_id in context.journeys_to_modes:
+                journey_modes = context.journeys_to_modes[j.internal_id]
+                pt_elem = Pt_element(journey_modes[0], journey_modes[1], j)
+                journeys_to_complete.append(pt_elem)
+
+    return journeys_to_complete
+
+
 def wait_and_complete_pt_journey(
     future_manager,
     requested_orig_obj,
@@ -96,12 +129,17 @@ def wait_and_complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     request,
-    pt_journey_elements,
+    journeys,
+    context,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
     whole pt journey by adding the fallback path to the beginning and the ending section of pt journey
     """
+    if len(journeys) == 0:
+        # Early return if no journey has to be finished
+        return
+
     # launch fallback direct path asynchronously
     compute_fallback(
         from_obj=requested_orig_obj,
@@ -110,18 +148,16 @@ def wait_and_complete_pt_journey(
         orig_places_free_access=orig_places_free_access,
         dest_places_free_access=dest_places_free_access,
         request=request,
-        pt_journeys=pt_journey_elements,
+        pt_journeys=journeys,
     )
 
-    futures = []
-    for pt_element in pt_journey_elements:
-        f = future_manager.create_future(
-            complete_pt_journey,
+    for pt_element in journeys:
+        complete_pt_journey(
             requested_orig_obj=requested_orig_obj,
             requested_dest_obj=requested_dest_obj,
             dep_mode=pt_element.dep_mode,
             arr_mode=pt_element.arr_mode,
-            pt_journeys=pt_element.pt_journeys,
+            pt_journey=pt_element.pt_journeys,
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,
@@ -129,6 +165,3 @@ def wait_and_complete_pt_journey(
             dest_fallback_durations_pool=dest_fallback_durations_pool,
             request=request,
         )
-        futures.append(f)
-    # return a generator, so we block the main thread later when they are evaluated
-    return (f.wait_and_get() for f in futures)

@@ -889,6 +889,9 @@ class Scenario(simple.Scenario):
     def get_context(self):
         return None
 
+    def finalise_journeys(self, request, pt_journey_elements, context):
+        return
+
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
@@ -955,6 +958,7 @@ class Scenario(simple.Scenario):
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
             new_resp = self.call_kraken(request_type, request, instance, krakens_call, distributed_context)
+
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
@@ -991,6 +995,9 @@ class Scenario(simple.Scenario):
         logger.debug('nb of call kraken: %i', nb_try)
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
+
+        self.finalise_journeys(request, responses, distributed_context)
+
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])

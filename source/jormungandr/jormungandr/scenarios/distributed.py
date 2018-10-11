@@ -33,7 +33,10 @@ from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
-from jormungandr.scenarios.helper_classes.complete_pt_journey import wait_and_build_crowflies
+from jormungandr.scenarios.helper_classes.complete_pt_journey import (
+    wait_and_build_crowflies,
+    get_journeys_to_complete,
+)
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from jormungandr.new_relic import record_custom_parameter
 
@@ -48,12 +51,33 @@ class PartialResponseContext(object):
     dest_fallback_durations_pool = None
     partial_response_is_empty = True
     future_manager = None
+    orig_places_free_access = None
+    dest_places_free_access = None
+    journeys_to_modes = dict()  # Map of journeys's internal id to fallback modes.
 
 
 class Distributed:
+    @staticmethod
+    def _map_journeys_to_modes(journeys_to_modes, pt_journey_elements):
+        """
+        Map the journeys's internal id (for each pt_journey_elements) with its fallback modes
+
+        :param journeys_to_modes: a map: ID -> (departure mode, arrival mode)
+        :param pt_journey_elements: the journeys to map
+        :return: and updated version of the map
+        """
+        for e in pt_journey_elements:
+            for pt_j in e.pt_journeys.journeys:
+                journeys_to_modes[pt_j.internal_id] = (e.dep_mode, e.arr_mode)
+
+        return journeys_to_modes
+
     def _compute_all(self, future_manager, request, instance, krakens_call, context):
         """
         For all krakens_call, call the kraken and aggregate the responses
+
+        Note: the responses will only attach a crowfly section as a fallback. Street network will be
+        done when calling finalise_journeys
 
         return the list of all responses
         """
@@ -188,7 +212,7 @@ class Distributed:
             context.dest_fallback_durations_pool,
         )
 
-        finalised_journeys = self.finalise_journeys(request, pt_journey_elements, context)
+        context.journeys_to_modes = self._map_journeys_to_modes(context.journeys_to_modes, pt_journey_elements)
 
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
@@ -201,7 +225,7 @@ class Distributed:
                     res.append(dp)
 
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
-        res.extend((j for j in finalised_journeys if j))
+        res.extend((j.pt_journeys for j in pt_journey_elements if j.pt_journeys))
 
         check_final_results_or_raise(
             res, context.orig_fallback_durations_pool, context.dest_fallback_durations_pool
@@ -211,10 +235,16 @@ class Distributed:
             fill_uris(r)
 
         context.partial_response_is_empty = False
+
         return res
 
-    def finalise_journeys(self, request, pt_journey_elements, context):
-        return wait_and_complete_pt_journey(
+    def finalise_journeys(self, request, responses, context):
+        """
+        Update responses that contains filtered journeys with their proper streetnetwork fallback sections.
+        Fallbacks will only be computed for journeys not tagged as 'to_delete'
+        """
+        journeys_to_complete = get_journeys_to_complete(responses, context)
+        wait_and_complete_pt_journey(
             future_manager=context.future_manager,
             requested_orig_obj=context.requested_orig_obj,
             requested_dest_obj=context.requested_dest_obj,
@@ -224,7 +254,8 @@ class Distributed:
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
-            pt_journey_elements=pt_journey_elements,
+            journeys=journeys_to_complete,
+            context=context,
         )
 
 
@@ -256,8 +287,8 @@ class Scenario(new_default.Scenario):
         except EntryPointException as e:
             return [e.get()]
 
-    def finalise_journeys(self, request, pt_journey_elements):
-        return self._scenario.finalise_journeys(request, pt_journey_elements)
+    def finalise_journeys(self, request, responses, context):
+        self._scenario.finalise_journeys(request, responses, context)
 
     def isochrone(self, request, instance):
         return new_default.Scenario().isochrone(request, instance)
