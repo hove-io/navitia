@@ -502,12 +502,9 @@ def config(configs=None):
 
     return deco
 
+
 from mock import PropertyMock
-from jormungandr.parking_space_availability import (
-    AbstractParkingPlacesProvider,
-    Stands,
-    StandsStatus,
-)
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider, Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 
 
@@ -567,4 +564,3 @@ def mock_car_park_providers(pois_supported):
         new_callable=mock.PropertyMock,
         return_value=lambda: providers,
     )
-

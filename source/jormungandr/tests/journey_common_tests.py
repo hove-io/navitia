@@ -1023,6 +1023,7 @@ class JourneyCommon(object):
 
     def test_section_fare_zone(self):
         from jormungandr import app
+
         if not app.config['USE_SERPY']:
             return
         """
