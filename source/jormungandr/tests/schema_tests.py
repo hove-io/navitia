@@ -382,19 +382,13 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
 
 @dataset({"main_routing_test": {}})
 class TestSwaggerSchemaBssStands(AbstractTestFixture, SchemaChecker):
-
     def test_pois_with_stands_on_first_poi(self):
         with mock_bss_providers(pois_supported=[]):
-            self._check_schema(
-                '/v1/coverage/main_routing_test/pois/poi:station_1'
-            )
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')
 
 
 @dataset({"main_routing_test": {}})
 class TestSwaggerSchemaCarPark(AbstractTestFixture, SchemaChecker):
     def test_pois_with_car_park_on_first_poi(self):
         with mock_car_park_providers(pois_supported=[]):
-            self._check_schema(
-                '/v1/coverage/main_routing_test/pois/poi:station_1'
-)
-            
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')
