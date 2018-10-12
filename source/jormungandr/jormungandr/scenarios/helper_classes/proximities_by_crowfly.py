@@ -39,7 +39,9 @@ class ProximitiesByCrowfly:
     A ProximitiesByCrowfly is a set of stop_points that are accessible by crowfly within a time of 'max_duration'.
     """
 
-    def __init__(self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly):
+    def __init__(
+        self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly, request
+    ):
         self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
@@ -47,11 +49,11 @@ class ProximitiesByCrowfly:
         self._max_duration = max_duration
         self._max_nb_crowfly = max_nb_crowfly
         self._speed_switcher = {
-            "walking": instance.walking_speed,
-            "bike": instance.bike_speed,
-            "car": instance.car_speed,
-            "bss": instance.bss_speed,
-            "ridesharing": instance.car_no_park_speed,
+            "walking": request["walking_speed"],
+            "bike": request["bike_speed"],
+            "car": request["car_speed"],
+            "bss": request["bss_speed"],
+            "ridesharing": request["car_no_park_speed"],
         }
         self._value = None
         self._async_request()
@@ -154,6 +156,7 @@ class ProximitiesByCrowflyPool:
                 mode=mode,
                 max_duration=max_fallback_duration,
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
+                request=self._request,
             )
 
             self._value[mode] = p
