@@ -539,6 +539,28 @@ class TestPtRef(AbstractTestFixture):
 
         assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
 
+    def test_simple_pt_objects_stop_point(self):
+        response = self.query_region('pt_objects?q=stop2&type[]=stop_point')
+
+        is_valid_pt_objects_response(response)
+
+        pt_objs = get_not_null(response, 'pt_objects')
+        assert len(pt_objs) == 1
+
+        assert get_not_null(pt_objs[0], 'embedded_type') == 'stop_point'
+
+    def test_simple_pt_objects_stop_point_and_stop_area(self):
+        response = self.query_region('pt_objects?q=stop2&type[]=stop_point&type[]=stop_area')
+
+        is_valid_pt_objects_response(response)
+
+        pt_objs = get_not_null(response, 'pt_objects')
+        assert len(pt_objs) == 2
+
+        types = [get_not_null(obj, 'embedded_type') for obj in pt_objs]
+        assert 'stop_point' in types
+        assert 'stop_area' in types
+
     def test_line_label_pt_objects(self):
         response = self.query_region('pt_objects?q=line:A&type[]=line')
         is_valid_pt_objects_response(response)

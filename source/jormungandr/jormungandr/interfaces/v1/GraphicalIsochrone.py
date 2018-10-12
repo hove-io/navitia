@@ -79,8 +79,15 @@ class GraphicalIsochrone(JourneyCommon):
     def __init__(self):
         super(GraphicalIsochrone, self).__init__(output_type_serializer=GraphicalIsrochoneSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("min_duration", type=UnsignedInteger(), default=0)
-        parser_get.add_argument("boundary_duration[]", type=UnsignedInteger(), action="append")
+        parser_get.add_argument(
+            "min_duration", type=UnsignedInteger(), default=0, help="Minimum travel duration"
+        )
+        parser_get.add_argument(
+            "boundary_duration[]",
+            type=UnsignedInteger(),
+            action="append",
+            help="To provide multiple duration parameters",
+        )
 
     @get_serializer(serpy=GraphicalIsrochoneSerializer, marshall=graphical_isochrones)
     @ManageError()

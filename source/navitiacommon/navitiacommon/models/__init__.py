@@ -775,3 +775,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):
 
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name
+
+
+# import at the end to prevent circular dependencies
+from navitiacommon.models.bss_provider import BssProvider

@@ -290,7 +290,7 @@ def qualifier_one(journeys, request_type):
             trip_carac(
                 [
                     partial(has_no_car),
-                    partial(journey_length_constraint, max_evolution=.40),
+                    partial(journey_length_constraint, max_evolution=0.40),
                     partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
                     partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
                 ],
@@ -316,7 +316,7 @@ def qualifier_one(journeys, request_type):
                 [
                     partial(has_no_car),
                     partial(has_no_bike),
-                    partial(journey_length_constraint, max_evolution=.40),
+                    partial(journey_length_constraint, max_evolution=0.40),
                     partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
                     partial(nb_transfers_constraint, delta_transfers=1),
                     partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
@@ -332,7 +332,7 @@ def qualifier_one(journeys, request_type):
                     partial(has_no_car),
                     partial(has_bike),
                     partial(has_no_bss),
-                    partial(journey_length_constraint, max_evolution=.40),
+                    partial(journey_length_constraint, max_evolution=0.40),
                     partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
                     partial(nb_transfers_constraint, delta_transfers=1),
                     partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
@@ -347,7 +347,7 @@ def qualifier_one(journeys, request_type):
                 [
                     partial(has_no_car),
                     partial(has_bss),
-                    partial(journey_length_constraint, max_evolution=.40),
+                    partial(journey_length_constraint, max_evolution=0.40),
                     partial(journey_goal_constraint, max_mn_shift=40, r_type=request_type),
                     partial(nb_transfers_constraint, delta_transfers=1),
                     partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
@@ -375,7 +375,7 @@ def qualifier_one(journeys, request_type):
                 [
                     partial(has_no_car),
                     partial(has_pt),
-                    partial(journey_length_constraint, max_evolution=.10),
+                    partial(journey_length_constraint, max_evolution=0.10),
                     partial(journey_goal_constraint, max_mn_shift=10, r_type=request_type),
                     partial(nonTC_abs_constraint, max_allow_duration=max_waiting_duration),
                 ],

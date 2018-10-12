@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from navitiacommon import type_pb2
+from jormungandr.street_network.kraken import Kraken
 
 
 def make_pt_object(embedded_type, lon, lat, uri=None):
@@ -51,3 +52,18 @@ def make_pt_object(embedded_type, lon, lat, uri=None):
         pt_object.poi.coord.lat = lat
         pt_object.poi.coord.lon = lon
     return pt_object
+
+
+class MockKraken(Kraken):
+    def __init__(self, *args, **kwargs):
+        super(MockKraken, self).__init__(*args, **kwargs)
+        self.direct_path_call_count = 0
+        self.routing_matrix_call_count = 0
+
+    def _direct_path(self, *args, **kwargs):
+        self.direct_path_call_count += 1
+        return Kraken._direct_path(self, *args, **kwargs)
+
+    def get_street_network_routing_matrix(self, *args, **kwargs):
+        self.routing_matrix_call_count += 1
+        return Kraken.get_street_network_routing_matrix(self, *args, **kwargs)

@@ -113,10 +113,7 @@ class PostgresDocker(object):
         # we poll to ensure that the db is ready
         self.test_db_cnx()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
+    def close(self):
         logging.getLogger(__name__).info("stopping the temporary docker")
         self.container.stop()
 
@@ -124,13 +121,11 @@ class PostgresDocker(object):
         self.container.remove(v=True)
 
         # test to be sure the docker is removed at the end
-        still_exists = True
         try:
             self.docker_client.containers.get(self.container.id)
         except docker.errors.NotFound:
-            still_exists = False
-
-        if still_exists:
+            logging.getLogger(__name__).info("the container is properly removed")
+        else:
             logging.getLogger(__name__).error("something is strange, the container is still there ...")
             exit(1)
 

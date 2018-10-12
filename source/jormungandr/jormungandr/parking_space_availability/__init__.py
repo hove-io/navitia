@@ -31,3 +31,4 @@ from jormungandr.parking_space_availability.abstract_parking_places_provider imp
 from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 from jormungandr.parking_space_availability.abstract_provider_manager import get_from_to_pois_of_journeys
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
+from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces

@@ -1,13 +1,35 @@
 
-language: cpp
+language: python
+python:
+  - "2.7"
+  - "3.6"
+sudo: required
+
+services:
+  - docker
+  - rabbitmq
 
 git:
   submodules: false
 
 before_install:
+  - sudo apt update && sudo apt install -y protobuf-compiler
   - sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
   - git submodule update --init --recursive
+
+before_script:
+  - pip install -r source/tyr/requirements_dev.txt
+  - bash source/scripts/build_protobuf.sh
 
 script:
   # Make sure submodules references are merged in !
   - bash source/scripts/check_submodules.sh
+  - pushd source/tyr && PYTHONPATH=.:../navitiacommon/ py.test && popd
+
+matrix:
+  include:
+    - python: "3.6"
+      before_script: python3.6 -m pip install black==18.9b0;
+      script:  black --check --diff .
+  exclude:
+    - python: "3.6"

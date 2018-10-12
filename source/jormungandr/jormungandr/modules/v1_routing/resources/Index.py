@@ -66,8 +66,8 @@ class Index(ModuleResource):
                     rel='coord',
                     templated=True,
                     description='Inverted geocoding for a given coordinate',
-                    lon=.0,
-                    lat=.0,
+                    lon=0.0,
+                    lat=0.0,
                 ),
                 create_external_link(
                     self.module_name + '.journeys', rel='journeys', description='Compute journeys'
@@ -99,7 +99,7 @@ class TechnicalStatus(ModuleResource):
         response = {
             "jormungandr_version": __version__,
             "regions": [],
-            "bss_providers": [provider.status() for provider in bss_provider_manager.bss_providers],
+            "bss_providers": [provider.status() for provider in bss_provider_manager.get_providers()],
         }
         regions = i_manager.get_regions()
         for key_region in regions:

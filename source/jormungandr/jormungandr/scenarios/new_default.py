@@ -859,6 +859,9 @@ class Scenario(simple.Scenario):
         super(Scenario, self).__init__()
         self.nb_kraken_calls = 0
 
+    def get_context(self):
+        return None
+
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
@@ -906,6 +909,9 @@ class Scenario(simple.Scenario):
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
+        # Initialize a context for distributed
+        distributed_context = self.get_context()
+
         while request is not None and (
             (nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls) or nb_try < min_journeys_calls
         ):
@@ -921,7 +927,7 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            new_resp = self.call_kraken(request_type, request, instance, krakens_call, distributed_context)
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
@@ -1013,7 +1019,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call):
+    def call_kraken(self, request_type, request, instance, krakens_call, context=None):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1094,20 +1100,12 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
 
-        # If Kraken send a new request date time, we use it
-        # for the next call to skip current Journeys
-        if responses and responses[0].HasField('next_request_date_time'):
-            request['datetime'] = responses[0].next_request_date_time
-        else:
-            vjs = journey_filter.get_qualified_journeys(responses)
-            if request["clockwise"]:
-                request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
-            else:
-                request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+        # We always calculate the 'next_request_date_time' from current journeys in the response of kraken
+        request['datetime'] = self.get_next_datetime(responses)
 
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
-            logger.error("In response next_request_date_time does not exist")
+            logger.warning("Impossible to calculate new date_time from journeys in response for next call")
             return None
 
         # TODO forbid ODTs
@@ -1162,3 +1160,10 @@ class Scenario(simple.Scenario):
                 return bragi.get_object_by_uri(entrypoint, instances=[instance])
 
         return None
+
+    def get_next_datetime(self, responses):
+        request_datetime_list = []
+        for r in responses:
+            if r.HasField('next_request_date_time'):
+                request_datetime_list.append(r.next_request_date_time)
+        return min(request_datetime_list) if request_datetime_list else None

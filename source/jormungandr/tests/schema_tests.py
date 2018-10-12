@@ -30,11 +30,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import json
 import logging
-
-from flex.exceptions import ValidationError
-
-from tests.tests_mechanism import dataset, AbstractTestFixture
 import flex
+from flex.exceptions import ValidationError
+from tests.tests_mechanism import dataset, AbstractTestFixture, mock_bss_providers, mock_car_park_providers
+from itertools import chain, ifilter
 
 
 def get_params(schema):
@@ -75,8 +74,12 @@ class SchemaChecker:
             self._schema = self.query('v1/schema')
         return self._schema
 
-    def _check_schema(self, url, hard_check=True):
+    def _check_schema(self, url, hard_check=True, additional_properties=False):
         schema = self.get_schema()
+
+        # 'additional_properties=False' won't allow fields that are not specifeid in schema to appear
+        for key in schema['definitions']:
+            schema['definitions'][key]['additionalProperties'] = additional_properties
 
         raw_response = self.tester.get(url)
 
@@ -108,11 +111,11 @@ class SchemaChecker:
 
         params = get_params(response)
 
-        assert len(params) > 1
-
         for name, param in params.iteritems():
             assert param.has_key('name')
-            assert param.has_key('description')
+            assert param.has_key('description'), (
+                "API parameter '" + param['name'] + "' should have a description in the schema!"
+            )
             assert param.has_key('type')
 
             assert type(param['name']) is unicode
@@ -323,8 +326,28 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         query = '/v1/coverage/main_routing_test/_geo_status'
         self._check_schema(query)
 
-    def test_journeys_schema_parameters(self):
-        self.check_schema_parameters_structure('v1/coverage/main_routing_test/journeys?schema=true')
+    def test_schema_parameters_sctructure(self):
+        """
+        Get the main schema, extract all path with no parameter, or only {region}
+        and check for each endpoint the schema's structure
+        """
+        schema = self.get_schema()
+        paths = schema['paths']
+
+        # Filter endpoints with a parameter (ie. /v1/coverage/{lon}:{lat}/...)
+        def endpoints_with_no_param(path):
+            return '{' not in path
+
+        # Filter endpoints with only a {region} parameter (ie. /v1/coverage/{region}/journeys)
+        def endpoints_with_only_region_param(path):
+            other_param = any(elem in path for elem in ['{id}', '{uri}'])
+            return '{region}' in path and not other_param
+
+        urls = chain(ifilter(endpoints_with_no_param, paths), ifilter(endpoints_with_only_region_param, paths))
+
+        for u in urls:
+            url = '/v1' + u.format(region='main_routing_test') + '?schema=true'
+            self.check_schema_parameters_structure(url)
 
 
 @dataset({"main_ptref_test": {}})
@@ -355,3 +378,17 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
+
+
+@dataset({"main_routing_test": {}})
+class TestSwaggerSchemaBssStands(AbstractTestFixture, SchemaChecker):
+    def test_pois_with_stands_on_first_poi(self):
+        with mock_bss_providers(pois_supported=[]):
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')
+
+
+@dataset({"main_routing_test": {}})
+class TestSwaggerSchemaCarPark(AbstractTestFixture, SchemaChecker):
+    def test_pois_with_car_park_on_first_poi(self):
+        with mock_car_park_providers(pois_supported=[]):
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')

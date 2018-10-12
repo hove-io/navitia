@@ -141,14 +141,15 @@ autocomplete_backend = 'kraken'
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
-        logger = logging.getLogger(__name__)
         value = getattr(sys.modules[__name__], attr)
-        logger.warn(
-            'instance %s not found in db, we use the default value (%s) for the param %s',
-            instance_name,
-            value,
-            attr,
-        )
+        if not instance:
+            logger = logging.getLogger(__name__)
+            logger.warn(
+                'instance %s not found in db, we use the default value (%s) for the param %s',
+                instance_name,
+                value,
+                attr,
+            )
         return value
     else:
         return getattr(instance, attr)
