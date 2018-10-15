@@ -312,25 +312,15 @@ def merge_responses_feed_publishers_test():
     merged_response = new_default.merge_responses(r, False)
     assert len(merged_response.feed_publishers) == 2
 
-    # The 2nd journey is to be deleted so its feed publisher won't be exposed
+    # The 2nd journey is to be deleted, the feed publisher should still be exposed
     resp2.journeys.add().tags.extend(['to_delete'])
     merged_response = new_default.merge_responses(r, False)
-    assert len(merged_response.feed_publishers) == 1
+    assert len(merged_response.feed_publishers) == 2
     assert merged_response.feed_publishers[0].id == 'Bobby'
 
     # With 'debug=True', the journey to delete is exposed and so is its feed publisher
     merged_response = new_default.merge_responses(r, True)
     assert len(merged_response.feed_publishers) == 2
-
-    resp3 = response_pb2.Response()
-    fp3 = resp3.feed_publishers.add()
-    fp3.id = "Bobbybette"
-    resp3.journeys.add()
-    resp3.journeys.add().tags.extend(['to_delete'])
-    r = [resp3]
-    merged_response = new_default.merge_responses(r, False)
-    assert len(merged_response.feed_publishers) == 1
-    assert merged_response.feed_publishers[0].id == 'Bobbybette'
 
 
 def add_pt_sections(journey):
