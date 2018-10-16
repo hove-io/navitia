@@ -301,11 +301,11 @@ def merge_responses_feed_publishers_test():
     resp1 = response_pb2.Response()
     fp1 = resp1.feed_publishers.add()
     fp1.id = "Bobby"
-    resp1.journeys.add()
+    j1 = resp1.journeys.add()
     resp2 = response_pb2.Response()
     fp2 = resp2.feed_publishers.add()
     fp2.id = "Bobbette"
-    resp2.journeys.add()
+    j2 = resp2.journeys.add()
     r = [resp1, resp2]
 
     # The feed publishers of both journeys are exposed
@@ -317,6 +317,12 @@ def merge_responses_feed_publishers_test():
     merged_response = new_default.merge_responses(r, False)
     assert len(merged_response.feed_publishers) == 2
     assert merged_response.feed_publishers[0].id == 'Bobby'
+
+    # All journeys are tagged as 'to_delete', no feed publishers should be exposed
+    j1.tags.extend(['to_delete'])
+    j2.tags.extend(['to_delete'])
+    merged_response = new_default.merge_responses([resp1, resp2], False)
+    assert len(merged_response.feed_publishers) == 0
 
     # With 'debug=True', the journey to delete is exposed and so is its feed publisher
     merged_response = new_default.merge_responses(r, True)
