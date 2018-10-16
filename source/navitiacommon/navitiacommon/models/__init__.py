@@ -460,6 +460,20 @@ class Instance(db.Model):
             result += data_sets
         return result
 
+    def running_datasets(self):
+        """
+        return all datasets with job state = 'running' for this instance
+        """
+        data_sets = (
+            db.session.query(DataSet)
+            .join(Job)
+            .join(Instance)
+            .filter(Instance.id == self.id, Job.state == 'running')
+            .order_by(Job.created_at.desc())
+            .all()
+        )
+        return data_sets
+
     @classmethod
     def query_existing(cls):
         return cls.query.filter_by(discarded=False)

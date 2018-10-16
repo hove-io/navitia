@@ -104,6 +104,22 @@ def create_instance_with_same_type_datasets(name, backup_dir):
         create_instance(name, job_list)
 
 
+def create_instance_with_different_dataset_types_and_job_state(name, backup_dir):
+    with app.app_context():
+        job_list = []
+
+        # Add jobs with type = 'poi', state = 'done' and 'running'
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=1), 'poi', backup_dir))
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=2), 'poi', backup_dir))
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=3), 'poi', backup_dir, state='running'))
+
+        # Add jobs with type = 'fusio', state = 'done' and 'running'
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=4), 'fusio', backup_dir))
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=5), 'fusio', backup_dir))
+        job_list.append(create_job(datetime.utcnow() - timedelta(days=6), 'fusio', backup_dir, state='running'))
+        create_instance(name, job_list)
+
+
 def create_instance_with_one_type_dataset(name, backup_dir):
     with app.app_context():
         job_list = []
@@ -274,3 +290,32 @@ def test_purge_old_jobs_with_diff_job_states():
     tasks.purge_jobs()
     jobs_resp = api_get('/v0/jobs')
     assert len(jobs_resp['jobs']) == 4
+
+
+@pytest.mark.usefixtures("init_instances_dir")
+def test_purge_instance_jobs():
+    """
+    Delete old jobs created before the time limit
+    Do not delete jobs with state = 'running'
+    """
+    app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
+
+    instance_name, backup_dir = init_test()
+    create_instance_with_different_dataset_types_and_job_state(instance_name, backup_dir)
+
+    instances_resp = api_get('/v0/instances')
+    assert len(instances_resp) == 1
+
+    jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
+    assert len(jobs_resp['jobs']) == 6
+
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 6
+
+    last_datasets = api_get('/v0/instances/{}/last_datasets'.format(instances_resp[0]['name']))
+    assert len(last_datasets) == 2
+
+    tasks.purge_instance(instances_resp[0]['id'], 1)
+
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 4

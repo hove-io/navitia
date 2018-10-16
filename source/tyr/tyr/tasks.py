@@ -344,7 +344,12 @@ def purge_instance(instance_id, nb_to_keep):
         os.path.realpath(os.path.dirname(dataset.name)) for dataset in instance.last_datasets(nb_to_keep)
     )
     logger.info('loaded  data are: %s', loaded)
-    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
+
+    running = set(
+        os.path.realpath(os.path.dirname(dataset.name)) for dataset in instance.running_datasets()
+    )
+    logger.info('running  data are: %s', running)
+    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded - running]
 
     missing = [l for l in loaded if l not in backups]
     if missing:
