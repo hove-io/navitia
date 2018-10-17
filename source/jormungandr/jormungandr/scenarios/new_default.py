@@ -889,8 +889,8 @@ class Scenario(simple.Scenario):
     def get_context(self):
         return None
 
-    def finalise_journeys(self, request, pt_journey_elements, context):
-        return
+    def finalise_journeys(self, request, pt_journey_elements, context, instance, is_debug):
+        pass
 
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
@@ -963,7 +963,7 @@ class Scenario(simple.Scenario):
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
 
-            if journey_filter.num_qualifed_journeys(new_resp) == 0:
+            if journey_filter.nb_qualifed_journeys(new_resp) == 0:
                 # no new journeys found, we stop
                 # we still append the new_resp because there are journeys that a tagged as dead probably
                 responses.extend(new_resp)
@@ -980,7 +980,7 @@ class Scenario(simple.Scenario):
                 # it has already sent back what he could
                 break
 
-            nb_qualified_journeys = journey_filter.num_qualifed_journeys(responses)
+            nb_qualified_journeys = journey_filter.nb_qualifed_journeys(responses)
             if nb_previously_qualified_journeys == nb_qualified_journeys:
                 # If there is no additional qualified journey in the kraken response,
                 # another request is sent to try to find more journeys, just in case...
@@ -996,7 +996,7 @@ class Scenario(simple.Scenario):
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
-        self.finalise_journeys(request, responses, distributed_context)
+        self.finalise_journeys(request, responses, distributed_context, instance, api_request['debug'])
 
         pb_resp = merge_responses(responses, api_request['debug'])
 

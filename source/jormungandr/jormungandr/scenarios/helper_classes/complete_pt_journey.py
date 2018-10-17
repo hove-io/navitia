@@ -29,14 +29,11 @@
 from __future__ import absolute_import
 import logging
 from . import helper_future
-from .helper_utils import (
-    complete_pt_journey,
-    compute_fallback,
-    clean_pt_journey_error_or_raise,
-    _build_crowflies,
-)
+from .helper_utils import complete_pt_journey, compute_fallback, _build_crowflies
+from .helper_exceptions import PtException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
+from navitiacommon import response_pb2
 
 Pt_element = namedtuple("Pt_element", "dep_mode, arr_mode, pt_journeys")
 
@@ -48,7 +45,13 @@ def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
     :return: The list of journeys computed by the planner
     """
     pt_journeys = future_pt_journey.wait_and_get()
-    clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_paths)
+
+    if pt_journeys and pt_journeys.HasField(b"error"):
+        if pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution') and has_valid_direct_paths:
+            pt_journeys.ClearField(b"error")
+        else:
+            raise PtException(pt_journeys)
+
     return pt_journeys
 
 
@@ -97,7 +100,7 @@ def wait_and_build_crowflies(
     return res
 
 
-def get_journeys_to_complete(responses, context):
+def get_journeys_to_complete(responses, context, is_debug):
     """
     Prepare a list of journeys from the response that will be use to compute street-network as a fallback.
     In order to compute the street network, we retrieve the fallback modes from the 'context'.
@@ -109,7 +112,7 @@ def get_journeys_to_complete(responses, context):
     journeys_to_complete = []
     for r in responses:
         for j in r.journeys:
-            if "to_delete" in j.tags:
+            if is_debug == False and "to_delete" in j.tags:
                 continue
             if j.internal_id in context.journeys_to_modes:
                 journey_modes = context.journeys_to_modes[j.internal_id]
@@ -120,7 +123,6 @@ def get_journeys_to_complete(responses, context):
 
 
 def wait_and_complete_pt_journey(
-    future_manager,
     requested_orig_obj,
     requested_dest_obj,
     streetnetwork_path_pool,
@@ -130,7 +132,6 @@ def wait_and_complete_pt_journey(
     dest_fallback_durations_pool,
     request,
     journeys,
-    context,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the

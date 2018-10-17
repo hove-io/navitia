@@ -474,7 +474,7 @@ def get_qualified_journeys(responses):
     return (j for r in responses for j in r.journeys if not to_be_deleted(j))
 
 
-def num_qualifed_journeys(responses):
+def nb_qualifed_journeys(responses):
     return sum(1 for j in get_qualified_journeys(responses))
 
 

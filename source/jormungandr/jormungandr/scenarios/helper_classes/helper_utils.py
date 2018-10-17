@@ -193,15 +193,11 @@ def _get_fallback_logic(fallback_type):
 
 
 class BeginningFallback:
-    def get_pt_section(self, pt_journey):
-        for s in pt_journey.sections:
-            if s.type == response_pb2.CROW_FLY:
-                continue
-            return s
-        return None
+    def get_first_non_crowfly_section(self, pt_journey):
+        return next(s for s in pt_journey.sections if s.type != response_pb2.CROW_FLY)
 
     def get_pt_boundaries(self, pt_journey):
-        return self.get_pt_section(pt_journey).origin
+        return self.get_first_non_crowfly_section(pt_journey).origin
 
     def get_journey_bound_datetime(self, pt_journey):
         return pt_journey.departure_date_time
@@ -210,7 +206,7 @@ class BeginningFallback:
         return False
 
     def get_pt_section_datetime(self, pt_journey):
-        return self.get_pt_section(pt_journey).begin_date_time
+        return self.get_first_non_crowfly_section(pt_journey).begin_date_time
 
     def get_fallback_datetime(self, pt_datetime, fallback_duration):
         return pt_datetime - fallback_duration
@@ -223,15 +219,11 @@ class BeginningFallback:
 
 
 class EndingFallback:
-    def get_pt_section(self, pt_journey):
-        for s in reversed(pt_journey.sections):
-            if s.type == response_pb2.CROW_FLY:
-                continue
-            return s
-        return None
+    def get_first_non_crowfly_section(self, pt_journey):
+        return next(s for s in reversed(pt_journey.sections) if s.type != response_pb2.CROW_FLY)
 
     def get_pt_boundaries(self, pt_journey):
-        return self.get_pt_section(pt_journey).destination
+        return self.get_first_non_crowfly_section(pt_journey).destination
 
     def get_journey_bound_datetime(self, pt_journey):
         return pt_journey.arrival_date_time
@@ -240,7 +232,7 @@ class EndingFallback:
         return True
 
     def get_pt_section_datetime(self, pt_journey):
-        return self.get_pt_section(pt_journey).end_date_time
+        return self.get_first_non_crowfly_section(pt_journey).end_date_time
 
     def get_fallback_datetime(self, pt_datetime, fallback_duration):
         return pt_datetime + fallback_duration
@@ -340,17 +332,6 @@ def _build_fallback(
     return pt_journey
 
 
-def clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt):
-    if pt_journeys and pt_journeys.HasField(b"error"):
-        if (
-            pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution')
-            and has_valid_direct_path_no_pt
-        ):
-            pt_journeys.ClearField(b"error")
-        else:
-            raise PtException(pt_journeys)
-
-
 def get_max_fallback_duration(request, mode, dp_future):
     """
     By knowing the duration of direct path, we can limit the max duration for proximities by crowfly and fallback
@@ -444,7 +425,7 @@ def complete_pt_journey(
         fallback_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     )
 
-    pt_journeys = _build_fallback(
+    pt_journey = _build_fallback(
         requested_dest_obj,
         pt_journey,
         arr_mode,
@@ -457,7 +438,7 @@ def complete_pt_journey(
 
     logger.debug("finish building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
 
-    return pt_journeys
+    return pt_journey
 
 
 def get_entry_point_or_raise(entry_point_obj_future, requested_uri):

@@ -315,7 +315,7 @@ def test_num_qualifed_journeys():
     journey3 = responses[0].journeys.add()
     journey3.tags.append("another_tag")
 
-    assert jf.num_qualifed_journeys(responses) == 2
+    assert jf.nb_qualifed_journeys(responses) == 2
 
 
 def test_journeys_equality_test_almost_same_journeys():
