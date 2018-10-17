@@ -1,3 +1,20 @@
+navitia2 (2.65.0) unstable; urgency=low
+
+  * Jormungandr: Avoid unnecessary call for street_networks  <https://github.com/CanalTP/navitia/pull/2542>
+  * Jormungandr: Add a memory cache layer and migration to flask_caching  <https://github.com/CanalTP/navitia/pull/2556>
+  * Jormungandr: Use a stack in place of a queue to store opened sockets  <https://github.com/CanalTP/navitia/pull/2551>
+  * Jormungandr: Allow pt_objects search for stop_points  <https://github.com/CanalTP/navitia/pull/2558>
+  * Jormungandr: Schema structure testing  <https://github.com/CanalTP/navitia/pull/2545>
+  * Navitia: Manage bss configuration with Tyr  <https://github.com/CanalTP/navitia/pull/2538>
+  * Tyr: Add /cities endpoint  <https://github.com/CanalTP/navitia/pull/2549>
+  * Tyr: Always log to syslog  <https://github.com/CanalTP/navitia/pull/2552>
+  * Swagger: Fix car_park swagger  <https://github.com/CanalTP/navitia/pull/2554>
+  * Swagger: Add tests for schema consistency  <https://github.com/CanalTP/navitia/pull/2559>
+  * Doc: Update ntfs_fare_extension_fr.md  <https://github.com/CanalTP/navitia/pull/2550>
+  * CI: Run black on each commit with travis  <https://github.com/CanalTP/navitia/pull/2561>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 12 Oct 2018 11:10:16 +0100
+
 navitia2 (2.64.0) unstable; urgency=low
 
   * Jormungandr: Fix min bound datetime  <https://github.com/CanalTP/navitia/pull/2548>

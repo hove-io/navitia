@@ -385,11 +385,12 @@ Examples :
 
 #### disable_disruption
 
-By default disruptions are also present in navitia's responses on apis "PtRef", "pt_objects" and "places_nearby". This parameter allows you to
-remove them reducing the response size.
+By default disruptions are also present in navitia's responses on apis "PtRef", "pt_objects" and "places_nearby".
+This parameter allows you to remove them, reducing the response size.
 
 <aside class="notice">
-    Disruptions can be large and not necessary while searching objects. This parameter is mostly here to be able to search objects without disruptions in the response.
+    Disruptions can be large and not necessary while searching objects.
+    This parameter is mostly here to be able to search objects without disruptions in the response.
 </aside>
 
 Examples :

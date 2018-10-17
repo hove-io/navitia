@@ -42,8 +42,8 @@ class TestPlaces(AbstractTestFixture):
     def test_places_by_id(self):
         """can we get the complete address from coords"""
         # we transform x,y to lon,lat using N_M_TO_DEG constant
-        lon = 10. / 111319.9
-        lat = 100. / 111319.9
+        lon = 10.0 / 111319.9
+        lat = 100.0 / 111319.9
         response = self.query_region("places/{};{}".format(lon, lat))
 
         assert len(response['places']) == 1
@@ -149,8 +149,8 @@ class TestPlaces(AbstractTestFixture):
     def test_wrong_places_nearby(self):
         """test that a wrongly formated query do not work on places_neaby"""
 
-        lon = 10. / 111319.9
-        lat = 100. / 111319.9
+        lon = 10.0 / 111319.9
+        lat = 100.0 / 111319.9
         response, status = self.query_region("bob/{};{}/places_nearby".format(lon, lat), check=False)
 
         assert status == 404

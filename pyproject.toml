@@ -11,5 +11,6 @@ exclude = '''
   | debug
   | debian
   | source/third_party
-)/
+  | .*_pb2\.py
+)
 '''

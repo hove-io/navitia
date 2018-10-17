@@ -69,7 +69,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
             >> "coord"
             >> qi::lit("DWITHIN")[phx::at_c<1>(_val) = "within"]
             >> '('
-            >> str[phx::push_back(phx::at_c<2>(_val), ""),
+            >> str[phx::push_back(phx::at_c<2>(_val), phx::construct<std::string>()),
                    phx::push_back(phx::at_c<2>(_val), _1)]
             >> ','
             >> str[phx::back(phx::at_c<2>(_val)) += ";",

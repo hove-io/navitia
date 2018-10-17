@@ -32,7 +32,7 @@ import json
 import logging
 import flex
 from flex.exceptions import ValidationError
-from tests.tests_mechanism import dataset, AbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture, mock_bss_providers, mock_car_park_providers
 from itertools import chain, ifilter
 
 
@@ -74,8 +74,12 @@ class SchemaChecker:
             self._schema = self.query('v1/schema')
         return self._schema
 
-    def _check_schema(self, url, hard_check=True):
+    def _check_schema(self, url, hard_check=True, additional_properties=False):
         schema = self.get_schema()
+
+        # 'additional_properties=False' won't allow fields that are not specifeid in schema to appear
+        for key in schema['definitions']:
+            schema['definitions'][key]['additionalProperties'] = additional_properties
 
         raw_response = self.tester.get(url)
 
@@ -374,3 +378,17 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
+
+
+@dataset({"main_routing_test": {}})
+class TestSwaggerSchemaBssStands(AbstractTestFixture, SchemaChecker):
+    def test_pois_with_stands_on_first_poi(self):
+        with mock_bss_providers(pois_supported=[]):
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')
+
+
+@dataset({"main_routing_test": {}})
+class TestSwaggerSchemaCarPark(AbstractTestFixture, SchemaChecker):
+    def test_pois_with_car_park_on_first_poi(self):
+        with mock_car_park_providers(pois_supported=[]):
+            self._check_schema('/v1/coverage/main_routing_test/pois/poi:station_1')

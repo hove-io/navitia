@@ -434,7 +434,7 @@ def decode_polyline(encoded, precision=6):
             while byte >= 0x20:
                 byte = ord(encoded[i]) - 63
                 i += 1
-                ll[j] |= (byte & 0x1f) << shift
+                ll[j] |= (byte & 0x1F) << shift
                 shift += 5
             # get the final value adding the previous offset and remember it for the next
             ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))

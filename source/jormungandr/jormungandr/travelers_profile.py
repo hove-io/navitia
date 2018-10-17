@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import app, cache
+from jormungandr import app, cache, memory_cache
 from navitiacommon import models
 from navitiacommon.default_traveler_profile_params import (
     default_traveler_profile_params,
@@ -108,6 +108,7 @@ class TravelerProfile(object):
         list(map(override, arg_2_profile_attr))
 
     @classmethod
+    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def make_traveler_profile(cls, coverage, traveler_type):
         """
@@ -140,6 +141,7 @@ class TravelerProfile(object):
         )
 
     @classmethod
+    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def get_profiles_by_coverage(cls, coverage):
         traveler_profiles = []

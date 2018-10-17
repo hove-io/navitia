@@ -39,38 +39,7 @@ from jormungandr.parking_space_availability import (
 )
 from jormungandr.ptref import FeedPublisher
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
-from tests.tests_mechanism import AbstractTestFixture, dataset
-
-
-class MockBssProvider(AbstractParkingPlacesProvider):
-    def __init__(self, pois_supported, name='mock bss provider'):
-        self.pois_supported = pois_supported
-        self.name = name
-
-    def support_poi(self, poi):
-        return not self.pois_supported or poi['id'] in self.pois_supported
-
-    def get_informations(self, poi):
-        available_places = 13 if poi['id'] == 'poi:station_1' else 99
-        available_bikes = 3 if poi['id'] == 'poi:station_1' else 98
-        return Stands(
-            available_places=available_places, available_bikes=available_bikes, status=StandsStatus.open
-        )
-
-    def status(self):
-        return {}
-
-    def feed_publisher(self):
-        return FeedPublisher(id='mock_bss', name=self.name, license='the death license', url='bob.com')
-
-
-def mock_bss_providers(pois_supported):
-    providers = [MockBssProvider(pois_supported=pois_supported)]
-    return mock.patch(
-        'jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
-        new_callable=PropertyMock,
-        return_value=lambda: providers,
-    )
+from tests.tests_mechanism import AbstractTestFixture, dataset, mock_bss_providers, MockBssProvider
 
 
 @dataset({"main_routing_test": {}})
