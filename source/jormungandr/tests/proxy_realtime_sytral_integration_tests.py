@@ -1,0 +1,184 @@
+# coding=utf-8
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
+
+from __future__ import absolute_import, print_function, unicode_literals, division
+
+import mock
+
+from jormungandr.tests.utils_test import MockRequests
+from tests.check_utils import get_not_null
+from .tests_mechanism import AbstractTestFixture, dataset
+
+MOCKED_PROXY_CONF = [
+    {
+        "object_id_tag": "Kisio数字",
+        "id": "Kisio数字",
+        "class": "jormungandr.realtime_schedule.sytral.Sytral",
+        "args": {
+            "destination_id_tag": "Kisio数字",
+            "timezone": "UTC",
+            "service_url": "http://XXXX",
+            "timeout": 15,
+        },
+    }
+]
+
+
+def _get_departure(dep, sp_uri, line_code):
+    """ small helper that extract the information from a route point departures """
+    return [
+        {
+            'rt': r['stop_date_time']['data_freshness'] == 'realtime',
+            'dt': r['stop_date_time']['departure_date_time'],
+        }
+        for r in dep
+        if r['stop_point']['id'] == sp_uri and r['route']['line']['code'] == line_code
+    ]
+
+
+def _get_schedule(scs, sp_uri, line_code):
+    """ small helper that extract the information from a route point stop schedule """
+    return [
+        {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
+        for r in next(
+            rp_sched['date_times']
+            for rp_sched in scs
+            if rp_sched['stop_point']['id'] == sp_uri and rp_sched['route']['line']['code'] == line_code
+        )
+    ]
+
+
+@dataset({'multiple_schedules': {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
+class TestSytralSchedules(AbstractTestFixture):
+    """
+    integration tests for sytral
+
+    """
+
+    query_template_scs = (
+        'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+    )
+    query_template_dep = 'stop_points/{sp}/departures?data_freshness=realtime&_current_datetime=20160102T0800'
+
+    def test_stop_schedule_with_realtime_only(self):
+        mock_requests = MockRequests(
+            {
+                'http://XXXX?stop_id=syn_stoppoint1': (
+                    {
+                        "departures": [
+                            {
+                                "line": "Kisio数字 A",
+                                "stop": "syn_stoppoint1",
+                                "direction_id": "3341",
+                                "direction_name": "Piscine Chambéry",
+                                "datetime": "2016-01-02T10:17:17+02:00",
+                                "type": "E",
+                            },
+                            {
+                                "line": "Kisio数字 A",
+                                "stop": "syn_stoppoint1",
+                                "direction_id": "3341",
+                                "direction_name": "Piscine Chambéry",
+                                "type": "E",
+                                "datetime": "2016-01-02T11:17:17+02:00",
+                            },
+                        ]
+                    },
+                    200,
+                )
+            }
+        )
+        with mock.patch('requests.get', mock_requests.get):
+            query = self.query_template_scs.format(sp='SP_1')
+            response = self.query_region(query)
+            scs = get_not_null(response, 'stop_schedules')
+            assert len(scs) == 1
+            # 2016-01-02 08:17:00
+            assert _get_schedule(scs, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': True, 'dt': '20160102T091717'},
+            ]
+
+            query = self.query_template_dep.format(sp='SP_1')
+            response = self.query_region(query)
+            dep = get_not_null(response, 'departures')
+            assert len(dep) == 2
+            assert _get_departure(dep, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': True, 'dt': '20160102T091717'},
+            ]
+
+    def test_stop_schedule_with_theoric_and_realtime(self):
+        mock_requests = MockRequests(
+            {
+                'http://XXXX?stop_id=syn_stoppoint1': (
+                    {
+                        "departures": [
+                            {
+                                "line": "Kisio数字 A",
+                                "stop": "syn_stoppoint1",
+                                "direction_id": "3341",
+                                "direction_name": "Piscine Chambéry",
+                                "datetime": "2016-01-02T09:17:17+01:00",
+                                "type": "E",
+                            },
+                            {
+                                "line": "Kisio数字 A",
+                                "stop": "syn_stoppoint1",
+                                "direction_id": "3341",
+                                "direction_name": "Piscine Chambéry",
+                                "datetime": "2016-01-02T10:17:17+01:00",
+                                "type": "T",
+                            },
+                        ]
+                    },
+                    200,
+                )
+            }
+        )
+        with mock.patch('requests.get', mock_requests.get):
+            query = self.query_template_scs.format(sp='SP_1')
+            response = self.query_region(query)
+            scs = get_not_null(response, 'stop_schedules')
+            assert len(scs) == 1
+            # 2016-01-02 08:17:00
+            assert _get_schedule(scs, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': False, 'dt': '20160102T091717'},
+            ]
+
+            query = self.query_template_dep.format(sp='SP_1')
+            response = self.query_region(query)
+            dep = get_not_null(response, 'departures')
+            assert len(dep) == 2
+            assert _get_departure(dep, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': False, 'dt': '20160102T091717'},
+            ]

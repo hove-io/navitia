@@ -144,6 +144,9 @@ CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S = 60  # the circuit breaker retries after thi
 CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
+CIRCUIT_BREAKER_MAX_SYTRAL_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
 CIRCUIT_BREAKER_MAX_VALHALLA_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
