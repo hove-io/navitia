@@ -20,6 +20,7 @@ SET_PROPERTY(TEST jormungandr_serpy PROPERTY
 #we do it the weak way.
 set(JORMUN_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 add_test(jormungandr_integration_tests py.test
+        --doctest-modules
         --junit-xml=${CMAKE_BINARY_DIR}/nosetest_jormungandr_integration_tests.xml
         ${JORMUN_TEST_PATH}
         --cov=jormungandr
@@ -30,6 +31,7 @@ SET_PROPERTY(TEST jormungandr_integration_tests APPEND PROPERTY
     ENVIRONMENT "KRAKEN_BUILD_DIR=${CMAKE_BINARY_DIR}")
 
 add_test(jormungandr_serpy_integration_tests py.test
+        --doctest-modules
         --junit-xml=${CMAKE_BINARY_DIR}/nosetest_jormungandr_serpy_integration_tests.xml
         ${JORMUN_TEST_PATH}
         --cov=jormungandr
