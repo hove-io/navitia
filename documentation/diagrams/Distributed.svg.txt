@@ -1,6 +1,6 @@
 Image generated with Sequence Diagram.
 Please, edit the following link to re-generate the diagram:
-https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwDmhQTmQAuAPQArMhmSDIATwKCy2aKmEALYNDIAzaL2QCRYiZJoIy4AG4xIglCugAHMiFcIipEAdCLTMLUXFKAGJhZEI1cB9IQmQ8UKFwiQAeLgBpWIBrF0kABXASSAAhFQBVVGgAbQoQYR8AGmgcNh9gkDJBAF08PMJCwWzOYdHJDzLiSAB9RRA8BOVkwyMjPAQPcrxOklAgkP50qxS8DS0dfQ3TU8sIyXhkSFJPYN1oIwpoSCdkO4+GROv4jsEYGlHhJoNFYmooRlkNlcgUigB1QjgfI+YSpB5IlGcABqWN0WLKkgAwsl8eYzhEiQBxSBkJzgMiSCogQrbXZzfZJALHSEE87qTQwG4GYz3enQqQAQWIcwQCHQUGgAGVyB5PN5fGDAhC5WFzrCYnE6WbGaiRkVisgyAAPEB8MAgRjQNDuYhOgDu33A7kaOjaHS6gh6fUGqySKUR53Gkwdsy9ADFXjBlaqEA0mi1BO1OkhuqAYytEutjFsDsKTYmIgQdntLpLtM1brLG9YqWQ+B4sDAjBS0CR8h1FNHBH5DsaTvKkRb4ZW1gmxba7VNMdjcdB06Px3Ap+WZ0M0WN2Fuikgs8B5spgP6KPl5k6sLj5nxgqhndaGVkV4kmSFKENS6wHuA4BjsQE6wCevRnqS4DklBhBEshqGUrekCQPej7Psgr7vqAIhfj+IB-j2yJASybKQByXI8jAkHQUe8GxKefh0eyZDMqyvGSDheEPnhhHEQopHCORKCUau8YbLWQrgguNoSBK1ydjKJjUdS-aDloxQYGgCTENAAAqsQzl4yAGPIijKCos71qpAFRJa8RVuui5JtegglMAvAOao572peEwXtM94zGIygpHG1abIKc4iqabkaVKWl3LpFQYCA4A4N83TgNojBeDOjBGql1HLlaCXeWpNF+ZIO44iI+6HrBcB4YQ+V+Cml7NTgICvKQ8y7MAujzP6YBTUYHj-gqGEgWh4GUKxMFwT1fV4JhoHLShoGSMNo3RZ802zfM82LYStECQxnLcoUHVQZt3XAL14DcfdHL8fRjEnW8Z2TRdIPXdR4y6f6vX3lY8zEPpUDYON972UoIX1YpyUuaKPlNngLAMEg2S6WjjkIEAA
+https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwDmhQTmQAuAPQArMhmSDIATzy9kAkWIld4SVJmw5JxQuHAB9ANbJC1yIIKCy2aKmEALYNDIAzOEQUdCxcSRoEMnAANxhHFBVoAAcyEEFgBCJSEGjCN31go1xoAGJhOzVwNMhCZDwCw1CcAB4uAGk7B0FJAAVwEkgAIRUAVVRoAG0KEGE0gBpoHDY0vJAyQQBdPA77R1bOHa7JJP7iSEtFEDwq5VrfPz88BCSBvCWSUFz8oMbjZ1cYB5vPdAgYQsZJPBkJBSMk8p5oH4KNBILFkIk+GQlllPnkYA1wcUyhV6j9CS12O1Oo5JAB1czWNLCUlgooUrgANXMnnM-UkAGFaizCk1WlwAOKQMixcBkSSDEAOJ4vM5vGrZL74sls-5uIE+fygkUQgCCxDOCAQ6Cg0AAyuQkslUulMh8cnijb8ieVCGoCWz9ocaT1kGQAB4gPhgECMaBoRLEUMAd0R4ESUw880Wy0Eq3WWxuNTq-tFVN23T6AwQ0AAYtCYGaLdWMzMs0skCtQPnrtU7v5Hu8NR6S39la88C49TNgYaR2F+WQ+ElQojeWgSNZFoo84JXUPvqymqUfZVe8XtaWy0d6eBGSJa2uN3Bt13d9tqYIxQcP5IDJBIMAljKMASYUNYlihlgTKWHweSoGGwpeuynBcuAPIWIQAp3DWj7EJusAvmsb6oeh-RfiRvKYX+AFAQBoHIOBkGgCIMFwSACFzshkrSpAsryoqMA4RY654c+divpk3EymQX5SbxcrUYBwH0YxCjMcIrHBAhhZ9g8apupqnrkrqgLTgaAScQKi7Lm4PQYGgVTENAAAqdi7ikyA+PIijKCoe64gexreiSOnnoexiBj+PTALwPmqO+5aReWxyAScYjKHUoX3AO6oBVq4W4CZ7hmSCln8tCHrYEu0CJmQSbsH4VSxn4uHWJkGhaKI4jIK0llJF5ChKKo1YABTANVLXCRuCAAJTqPwQhdRI+wdYtOhSLFQ1+bWIDgNgqAiPNmhrd1egXhCNYrFUCAwN5W2ZBOALFV45lGWy8oYLtOCrlNolLMAhC7f57qBUhx4hWeiHkl+QbdDed7CA+v34QBgPgJksMwz+OAgNCpCWC8wCeJYSZgMTfhJFDAaUih3KUVhlBCeAIkowDQN4BRGHkXTGGSDjeOpfCJNk5YFNU5enByXxCoOEjzNPrAqPs1LMk0yrfO4zCgtE8LOti1l-b6fu+VBfgnH7JZNBpWc0BVR5tQJsmDVptAN3ZOs1ak0T2Zs1A32TfLeEEKt2jdb151hJdubgNAd2+ZkLAMEgrQh0tUgALKQMgwjFBEKS7pAQA
 
 Please also update here for safety:
 ```
@@ -9,66 +9,73 @@ title Distributed
 actor Request
 
 Request->Jormungandr:/journey
+Jormungandr->Distributed:call_kraken
 
-note right of Jormungandr:Resolve entry points
-activate Jormungandr #gray
+note right of Distributed:Resolve entry points
+activate Distributed #gray
 linear
-Jormungandr<->Kraken:PlaceByUri [origin, destination]
+Distributed<->Kraken:PlaceByUri [origin, destination]
 Kraken<->Kraken:place_uri
 linear off
 space
-deactivate Jormungandr
+deactivate Distributed
 
-note right of Jormungandr:Direct path for every mode
-activate Jormungandr #gray
-Jormungandr<-->Kraken:Walking
-Jormungandr<-->Valhalla:Car
-Jormungandr<-->Geovelo:Bike
+note right of Distributed:Direct path for every mode
+activate Distributed #gray
+Distributed<-->Kraken:Walking
+Distributed<-->Valhalla:Car
+Distributed<-->Geovelo:Bike
 space
-deactivate Jormungandr
+deactivate Distributed
 
-note right of Jormungandr:Accessible Stop points
-activate Jormungandr #gray
-Jormungandr<->Kraken:Proximities by crow fly [origin, destination]
+note right of Distributed:Accessible Stop points
+activate Distributed #gray
+Distributed<->Kraken:Proximities by crow fly [origin, destination]
 linear
-Jormungandr<->Kraken:Places Free Access [origin, destination]
+Distributed<->Kraken:Places Free Access [origin, destination]
 linear off
-deactivate Jormungandr
+deactivate Distributed
 
 space
 
-note right of Jormungandr:Compute fallback durations
-activate Jormungandr #gray
+note right of Distributed:Compute fallback durations
+activate Distributed #gray
 linear
-Jormungandr<-->Kraken:Walking Fallback Durations
+Distributed<-->Kraken:Walking Fallback Durations
 Kraken<-->Kraken:street_network_routing_matrix
-Jormungandr<-->Valhalla:Car Fallback Durations
+Distributed<-->Valhalla:Car Fallback Durations
 Valhalla<-->Valhalla:street_network_routing_matrix
-Jormungandr<-->Geovelo:Bike Fallback Durations
+Distributed<-->Geovelo:Bike Fallback Durations
 Geovelo<-->Geovelo:street_network_routing_matrix
 linear off
-deactivate Jormungandr
+deactivate Distributed
 
-note right of Jormungandr:Compute Public Transport journeys
-activate Jormungandr #gray
+note right of Distributed:Compute Public Transport journeys
+activate Distributed #gray
 linear
-Jormungandr<->Kraken:PtJourney
+Distributed<->Kraken:PtJourney
 Kraken<->Kraken:pt_planner
 linear off
-deactivate Jormungandr
+deactivate Distributed
 
-note right of Jormungandr:Build final responses
-activate Jormungandr #gray
+note right of Distributed:Create temp crow-flies fallbacks
+Jormungandr<-Distributed:pt journeys (tmp fallbacks)
+Jormungandr<->Jormungandr:Journeys Filtering
+Jormungandr->Distributed:Finalise journeys
+
+note right of Distributed:Build fallback details
+activate Distributed #gray
 linear
-Jormungandr<-->Kraken:Walking Fallback Details
+Distributed<-->Kraken:Walking Fallback Details
 Kraken<-->Kraken:direct_path_with_fp
-Jormungandr<-->Valhalla:Car Fallback Details
+Distributed<-->Valhalla:Car Fallback Details
 Valhalla<-->Valhalla:direct_path_with_fp
-Jormungandr<-->Geovelo:Bike Fallback Details
+Distributed<-->Geovelo:Bike Fallback Details
 Geovelo<-->Geovelo:direct_path_with_fp
-Jormungandr<->Jormungandr:wait_and_complete_pt_journey
 linear off
-deactivate Jormungandr
+deactivate Distributed
+Distributed<->Distributed:Replace temporary crow-fly sections with detailed fallback
 
-Request<-Jormungandr:journeys
+Jormungandr<-Distributed:Final journeys
+Request<-Jormungandr:Merged Response
 ```
