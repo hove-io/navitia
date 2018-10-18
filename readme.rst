@@ -85,33 +85,22 @@ If you don't want to use the prebuilt docker images you can use the `fabric scri
 
 Use this only if the docker does not suit your needs and if you are an experienced user :wink:
 
-Want to dev in navitia ?
-------------------------
-if you want to build navitia, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
+Want to dev and contribute to navitia ?
+---------------------------------------
 
-You can also check the `automated build script <https://github.com/canaltp/navitia/blob/dev/build_navitia.sh>`_ which is meant as a step by step tutorial for compiling and using navitia with ubuntu 16.04
+If you want to build navitia, develop in it, read more about technical details please refer to the `contributing documentation <https://github.com/canaltp/navitia/blob/dev/CONTRIBUTING.md>`
 
-Code Organisation
-=================
-At the root of the repository, several directories can be found:
-
-#. source: contains the navitia source code (c++ and python)
-
-#. third_party: third party developped modules
-
-#. documentation: all the navitia documentation
-
-#. (debug|release): by convention, the build repositories
+Curious of who's contributing? https://www.youtube.com/watch?v=GOLfMTMGVFI
 
 Architecture overview
 =====================
 Navitia is made of 3 main modules:
 
-#. *Kraken* is the c++ core
+#. *Kraken* is the c++ core (Heavy computation)
 
-#. *Jörmungandr* is the python frontend
+#. *Jörmungandr* is the python frontend (Webservice and lighter computation)
 
-#. *Ed* is the postgres database
+#. *Ed* is the postgres database (Used for preliminary binarization)
 
 *Kraken* and *Jörmungandr* communicate with each other through protocol buffer messages send by ZMQ.
 
@@ -120,22 +109,6 @@ Transportation data (in the `GTFS <https://developers.google.com/transit/gtfs/>`
 .. image:: documentation/diagrams/Navitia_simple_architecture.png
 
 More information here: https://github.com/CanalTP/navitia/wiki/Architecture
-
-Tools
-======
-#. Gcc (or clang) as the C++ compiler (g++)
-
-#. Cmake for the build system
-
-#. Python for the api
-
-How to contribute
-=================
-Fork the github repo, create a new branch from dev, and submit your pull request!
-
-Make sure to run the tests before submiting the pull request (`make test` in the build directory, you may also run `make docker_test` for important contributions), and have a wee look at `CONTRIBUTING.md <https://github.com/CanalTP/navitia/blob/dev/CONTRIBUTING.md>`_
-
-Are there many people contributing? Yes: https://www.youtube.com/watch?v=GOLfMTMGVFI
 
 Alternatives?
 =============
