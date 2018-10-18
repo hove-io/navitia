@@ -55,7 +55,7 @@ class PartialResponseContext(object):
     journeys_to_modes = dict()  # Map of journeys's internal id to fallback modes.
 
 
-class Distributed:
+class Distributed(object):
     @staticmethod
     def _map_journeys_to_modes(pt_journey_elements):
         """
