@@ -263,7 +263,7 @@ def test_purge_old_jobs_of_multi_instance():
 def test_purge_old_jobs_with_diff_job_states():
     """
     we shouldn't delete jobs with status 'running'. This is to avoid
-    deletinng jobs and theirs files on running state.
+    deleting jobs and their files on running state.
     """
     app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
 
