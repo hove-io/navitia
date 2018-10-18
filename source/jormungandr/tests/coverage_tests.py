@@ -49,7 +49,8 @@ class TestNullStatus(AbstractTestFixture):
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'main_routing_test'
         assert 'last_load_at' in response['regions'][0]
-        assert get_valid_datetime(response['regions'][0]["last_load_at"])
+        assert response['regions'][0]['dataset_created_at'] == 'not-a-date-time'
+        assert response['regions'][0]['last_load_at'] == 'not-a-date-time'
         assert 'name' in response['regions'][0]
         assert response['regions'][0]['name'] == 'routing api data'
         self.check_context(response)

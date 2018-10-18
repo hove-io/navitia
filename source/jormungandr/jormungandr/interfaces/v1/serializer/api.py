@@ -239,7 +239,10 @@ class CoverageDateTimeField(DateTimeDictField):
         field_value = coverage.get(self.field_name)
         if not tz_name or not field_value:
             return None
-        dt = datetime.datetime.utcfromtimestamp(field_value)
+        try:
+            dt = datetime.datetime.utcfromtimestamp(field_value)
+        except ValueError:
+            return 'not-a-date-time'
         tz = pytz.timezone(tz_name)
         if not tz:
             return None

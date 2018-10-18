@@ -155,7 +155,10 @@ def timestamp_to_datetime(timestamp, tz=None):
     if timestamp >= maxint:
         return None
 
-    dt = datetime.utcfromtimestamp(timestamp)
+    try:
+        dt = datetime.utcfromtimestamp(timestamp)
+    except ValueError:
+        return None
 
     timezone = tz or get_timezone()
     if timezone:

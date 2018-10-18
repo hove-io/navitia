@@ -471,7 +471,10 @@ class FieldDateTime(fields.Raw):
 
     def output(self, key, region):
         if 'timezone' in region and key in region:
-            dt = datetime.datetime.utcfromtimestamp(region[key])
+            try:
+                dt = datetime.datetime.utcfromtimestamp(region[key])
+            except ValueError:
+                return 'not-a-date-time'
             tz = pytz.timezone(region["timezone"])
             if tz:
                 dt = pytz.utc.localize(dt)
