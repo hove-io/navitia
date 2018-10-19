@@ -1002,7 +1002,7 @@ These disruptions won't be on the `display_informations` of the sections or used
 
 | Required | Name            | Type    | Description                   | Default value |
 |----------|-----------------|---------|-------------------------------|---------------|
-| nop     | max_duration_to_pt   | int     | Maximum allowed duration to reach the public transport.<br>Use this to limit the walking/biking part.<br>Unit is seconds | 15*60 s    |
+| nop     | max_duration_to_pt   | int     | Maximum allowed duration to reach the public transport (same limit used before and after public transport).<br>Use this to limit the walking/biking part.<br>Unit is seconds | 30*60 s    |
 | nop     | walking_speed        | float   | Walking speed for the fallback sections<br>Speed unit must be in meter/seconds         | 1.12 m/s<br>(4 km/h)<br>*Yes, man, they got the metric system* |
 | nop     | bike_speed           | float   | Biking speed for the fallback<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)   |
 | nop     | bss_speed            | float   | Speed while using a bike from a bike sharing system for the fallback sections<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)    |
@@ -1012,7 +1012,7 @@ These disruptions won't be on the `display_informations` of the sections or used
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
 | nop     | max_nb_tranfers      | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
-| nop     | max_duration         | int     | Maximum duration of journeys in secondes. Really useful when computing an isochrone   | 86400       |
+| nop     | max_duration         | int     | Maximum duration of journeys in seconds (from `datetime` parameter).<br>More usefull when computing an isochrone (only `from` or `to` is provided).<br>On a classic journey (from-to), it will mostly speedup Navitia: You may have journeys a bit longer than that value (you would have to filter them).    | 86400       |
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
