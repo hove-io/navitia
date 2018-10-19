@@ -193,10 +193,17 @@ static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime:
         return st.schedule_relationship();
     };
 
-    if (get_relationship(event, st) ==
-            transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
+    auto transit_reltime_status = get_relationship(event, st);
+    switch (transit_reltime_status) {
+    case  transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
         return nt::disruption::StopTimeUpdate::Status::DELETED;
-    } else if (! event.has_delay() // for retrocompatibility since the old kirin version
+    case  transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
+        return nt::disruption::StopTimeUpdate::Status::ADDED;
+    default:
+        break;
+    }
+
+    if (! event.has_delay() // for retrocompatibility since the old kirin version
                                    // was not giving delays
                || event.delay() != 0) {
         return nt::disruption::StopTimeUpdate::Status::DELAYED;
@@ -332,14 +339,16 @@ create_disruption(const std::string& id,
                 }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = std::max(most_important_stoptime_status, departure_status);
-                most_important_stoptime_status = std::max(most_important_stoptime_status, arrival_status);
+                most_important_stoptime_status = std::max({most_important_stoptime_status,
+                    departure_status ,arrival_status});
 
                 StopTimeUpdate st_update{std::move(stop_time), message, departure_status, arrival_status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
             switch (most_important_stoptime_status) {
+            case StopTimeUpdate::Status::ADDED:
+                trip_effect = nt::disruption::Effect::MODIFIED_SERVICE; break;
             case StopTimeUpdate::Status::DELAYED:
             case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
                 trip_effect = nt::disruption::Effect::SIGNIFICANT_DELAYS; break;
@@ -354,7 +363,8 @@ create_disruption(const std::string& id,
         if (wording.empty()) {
             if ( trip_effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
                 wording = "trip delayed";
-            } else if (trip_effect == nt::disruption::Effect::DETOUR) {
+            } else if (trip_effect == nt::disruption::Effect::DETOUR ||
+                    trip_effect == nt::disruption::Effect::MODIFIED_SERVICE) {
                 wording = "trip modified";
             }
         }

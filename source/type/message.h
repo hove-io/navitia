@@ -249,8 +249,8 @@ struct StopTimeUpdate {
         DELETED,
         DELAYED
     };
-    Status departure_status;
-    Status arrival_status;
+    Status departure_status{Status::UNCHANGED};
+    Status arrival_status{Status::UNCHANGED};
     StopTimeUpdate() {}
     StopTimeUpdate(const StopTime& st, const std::string& c, Status dep_status, Status arr_status):
         stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
