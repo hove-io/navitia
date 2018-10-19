@@ -17,7 +17,7 @@ you may also run `make docker_test` for important contributions), and have a wee
  [installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
 
  You can also check the [automated build script](https://github.com/canaltp/navitia/blob/dev/build_navitia.sh)
- which is meant as a step by step tutorial for compiling and using navitia with ubuntu 16.04.
+ which is meant to be a step by step tutorial for compiling and using navitia with ubuntu 16.04.
 
 
 ## Code Organisation
