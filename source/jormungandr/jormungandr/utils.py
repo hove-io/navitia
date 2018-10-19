@@ -56,6 +56,7 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
+NOT_A_DATE_TIME = "not-a-date-time"
 
 
 def get_uri_pt_object(pt_object):
@@ -176,6 +177,16 @@ def timestamp_to_str(timestamp):
     if dt:
         return dt_to_str(dt)
     return None
+
+
+def navitia_utcfromtimestamp(timestamp):
+    try:
+        if timestamp == 0:
+            return NOT_A_DATE_TIME
+        dt = datetime.datetime.utcfromtimestamp(timestamp)
+    except ValueError:
+        return NOT_A_DATE_TIME
+    return dt
 
 
 def walk_dict(tree, visitor):

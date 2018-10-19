@@ -35,7 +35,8 @@ from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
-from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
+from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str, \
+    NOT_A_DATE_TIME, navitia_utcfromtimestamp
 from navitiacommon import response_pb2, type_pb2
 import ujson
 
@@ -471,10 +472,9 @@ class FieldDateTime(fields.Raw):
 
     def output(self, key, region):
         if 'timezone' in region and key in region:
-            try:
-                dt = datetime.datetime.utcfromtimestamp(region[key])
-            except ValueError:
-                return 'not-a-date-time'
+            dt = navitia_utcfromtimestamp(region[key])
+            if dt == NOT_A_DATE_TIME:
+                return dt
             tz = pytz.timezone(region["timezone"])
             if tz:
                 dt = pytz.utc.localize(dt)
