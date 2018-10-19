@@ -1,28 +1,28 @@
 /* Copyright © 2001-2018, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -37,6 +37,18 @@ www.navitia.io
 #include "utils/logger.h"
 
 namespace navitia {
+
+InFlightGuard::InFlightGuard(prometheus::Gauge* gauge): gauge(gauge){
+    if(gauge != nullptr){
+        gauge->Increment();
+    }
+}
+
+InFlightGuard::~InFlightGuard() {
+    if(gauge != nullptr){
+        gauge->Decrement();
+    }
+}
 
 
 static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double start, double factor, int count) {
@@ -72,6 +84,20 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
         auto& histo = histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 1.5, 25));
         this->request_histogram[static_cast<pbnavitia::API>(value->number())] = &histo;
     }
+    auto& in_flight_family = prometheus::BuildGauge()
+                        .Name("kraken_request_in_flight")
+                        .Help("Number of requests currently beeing processed")
+                        .Labels({{"coverage", coverage}})
+                        .Register(*registry);
+    this->in_flight = &in_flight_family.Add({});
+}
+
+std::unique_ptr<InFlightGuard> Metrics::start_in_flight() const{
+    if(!registry) {
+        return std::make_unique<InFlightGuard>(nullptr);
+    }
+    return std::make_unique<InFlightGuard>(this->in_flight);
+
 }
 
 void Metrics::observe_api(pbnavitia::API api, double duration) const{

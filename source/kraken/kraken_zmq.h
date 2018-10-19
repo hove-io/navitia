@@ -91,6 +91,7 @@ inline void doWork(zmq::context_t& context,
             continue;
         }
 
+        auto in_flight_guard = metrics.start_in_flight();
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
