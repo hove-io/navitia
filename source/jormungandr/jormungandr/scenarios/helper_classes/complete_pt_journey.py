@@ -78,7 +78,7 @@ def wait_and_build_crowflies(
 
         if pt_journeys:
             origin_crowfly = {
-                "requested_obj": requested_orig_obj,
+                "entry_point": requested_orig_obj,
                 "mode": dep_mode,
                 "places_free_access": orig_places_free_access.wait_and_get(),
                 "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
@@ -86,7 +86,7 @@ def wait_and_build_crowflies(
             }
 
             dest_crowfly = {
-                "requested_obj": requested_dest_obj,
+                "entry_point": requested_dest_obj,
                 "mode": arr_mode,
                 "places_free_access": dest_places_free_acces.wait_and_get(),
                 "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),

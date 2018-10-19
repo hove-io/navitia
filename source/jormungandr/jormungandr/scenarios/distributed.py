@@ -289,10 +289,9 @@ class Scenario(new_default.Scenario):
         try:
             with FutureManager() as future_manager:
                 self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug)
-        except PtException as e:
-            return [e.get()]
-        except EntryPointException as e:
-            return [e.get()]
+        except Exception as e:
+            final_e = FinaliseException(e)
+            return [final_e.get()]
 
     def isochrone(self, request, instance):
         return new_default.Scenario().isochrone(request, instance)

@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 import copy
+from navitiacommon import response_pb2
 
 
 class PtException(Exception):
@@ -40,7 +41,6 @@ class PtException(Exception):
 
 
 def _make_error_response(message, error_id):
-    from navitiacommon import response_pb2
 
     r = response_pb2.Response()
     r.error.message = message
@@ -51,7 +51,14 @@ def _make_error_response(message, error_id):
 class EntryPointException(Exception):
     def __init__(self, error_id, error_message):
         super(EntryPointException, self).__init__()
-        self._response = _make_error_response(error_id, error_message)
+        self._response = _make_error_response(error_id=error_id, message=error_message)
 
     def get(self):
         return self._response
+
+
+class FinaliseException(EntryPointException):
+    def __init__(self, exception):
+        super(FinaliseException, self).__init__(
+            error_id=response_pb2.Error.internal_error, error_message=str(exception)
+        )

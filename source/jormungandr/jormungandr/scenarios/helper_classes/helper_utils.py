@@ -263,21 +263,21 @@ def _build_crowflies(pt_journeys, orig, dest):
         pt_journey.arrival_date_time = pt_journey.sections[-1].end_date_time
 
 
-def _build_crowfly(pt_journey, requested_obj, mode, places_free_access, fallback_durations, fallback_type):
+def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_durations, fallback_type):
     """
     Return a new crowfly section for the current pt_journey.
 
-    If the pt section's boundary is the same as the requested_obj or within places_free_access, we won't do anything
+    If the pt section's boundary is the same as the entry_point or within places_free_access, we won't do anything
     """
     fallback_logic = _get_fallback_logic(fallback_type)
     pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
 
-    if pt_obj.uri == requested_obj.uri:
+    if pt_obj.uri == entry_point.uri:
         # No need for a crowfly if the pt section starts from the requested object
         return None
 
     if pt_obj.uri in places_free_access.odt:
-        pt_obj.CopyFrom(requested_obj)
+        pt_obj.CopyFrom(entry_point)
         return None
 
     section_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
@@ -286,7 +286,7 @@ def _build_crowfly(pt_journey, requested_obj, mode, places_free_access, fallback
 
     crowfly_dt = fallback_logic.get_fallback_datetime(pt_datetime, fallback_duration)
 
-    crowfly_origin, crowfly_destination = fallback_logic.route_params(requested_obj, pt_obj)
+    crowfly_origin, crowfly_destination = fallback_logic.route_params(entry_point, pt_obj)
     begin, end = fallback_logic.route_params(crowfly_dt, section_datetime)
 
     return _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode)
@@ -445,7 +445,8 @@ def get_entry_point_or_raise(entry_point_obj_future, requested_uri):
     entry_point_obj = entry_point_obj_future.wait_and_get()
     if not entry_point_obj:
         raise EntryPointException(
-            "The entry point: {} is not valid".format(requested_uri), response_pb2.Error.unknown_object
+            error_message="The entry point: {} is not valid".format(requested_uri),
+            error_id=response_pb2.Error.unknown_object,
         )
     return entry_point_obj
 
@@ -457,12 +458,15 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
     dest_fallback_durations_is_empty = dest_fallback_durations_pool.is_empty()
     if orig_fallback_durations_is_empty and dest_fallback_durations_is_empty:
         raise EntryPointException(
-            "no origin point nor destination point", response_pb2.Error.no_origin_nor_destination
+            error_message="no origin point nor destination point",
+            error_id=response_pb2.Error.no_origin_nor_destination,
         )
     if orig_fallback_durations_is_empty:
-        raise EntryPointException("no origin point", response_pb2.Error.no_origin)
+        raise EntryPointException(error_message="no origin point", error_id=response_pb2.Error.no_origin)
     if dest_fallback_durations_is_empty:
-        raise EntryPointException("no destination point", response_pb2.Error.no_destination)
+        raise EntryPointException(
+            error_message="no destination point", error_id=response_pb2.Error.no_destination
+        )
 
 
 N_DEG_TO_RAD = 0.01745329238
