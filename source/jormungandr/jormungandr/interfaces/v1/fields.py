@@ -478,8 +478,8 @@ class FieldDateTime(fields.Raw):
     def output(self, key, region):
         if 'timezone' in region and key in region:
             dt = navitia_utcfromtimestamp(region[key])
-            if dt == NOT_A_DATE_TIME:
-                return dt
+            if not dt:
+                return NOT_A_DATE_TIME
             tz = pytz.timezone(region["timezone"])
             if tz:
                 dt = pytz.utc.localize(dt)

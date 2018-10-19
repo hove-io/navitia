@@ -245,8 +245,8 @@ class CoverageDateTimeField(DateTimeDictField):
         if not tz_name or field_value is None:
             return None
         dt = navitia_utcfromtimestamp(field_value)
-        if dt == NOT_A_DATE_TIME:
-            return dt
+        if not dt:
+            return NOT_A_DATE_TIME
         tz = pytz.timezone(tz_name)
         if not tz:
             return None

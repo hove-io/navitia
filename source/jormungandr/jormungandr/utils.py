@@ -111,11 +111,10 @@ def is_url(url):
 def navitia_utcfromtimestamp(timestamp):
     try:
         if timestamp == 0:
-            return NOT_A_DATE_TIME
-        dt = datetime.utcfromtimestamp(timestamp)
+            return None
+        return datetime.utcfromtimestamp(timestamp)
     except ValueError:
-        return NOT_A_DATE_TIME
-    return dt
+        return None
 
 
 def str_to_time_stamp(str):
@@ -167,7 +166,7 @@ def timestamp_to_datetime(timestamp, tz=None):
         return None
 
     dt = navitia_utcfromtimestamp(timestamp)
-    if dt == NOT_A_DATE_TIME:
+    if not dt:
         return None
 
     timezone = tz or get_timezone()
