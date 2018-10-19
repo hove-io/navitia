@@ -108,6 +108,16 @@ def is_url(url):
     return url_parsed.scheme.strip() != '' and url_parsed.netloc.strip() != ''
 
 
+def navitia_utcfromtimestamp(timestamp):
+    try:
+        if timestamp == 0:
+            return NOT_A_DATE_TIME
+        dt = datetime.utcfromtimestamp(timestamp)
+    except ValueError:
+        return NOT_A_DATE_TIME
+    return dt
+
+
 def str_to_time_stamp(str):
     """
     convert a string to a posix timestamp
@@ -156,9 +166,8 @@ def timestamp_to_datetime(timestamp, tz=None):
     if timestamp >= maxint:
         return None
 
-    try:
-        dt = datetime.utcfromtimestamp(timestamp)
-    except ValueError:
+    dt = navitia_utcfromtimestamp(timestamp)
+    if dt == NOT_A_DATE_TIME:
         return None
 
     timezone = tz or get_timezone()
@@ -177,16 +186,6 @@ def timestamp_to_str(timestamp):
     if dt:
         return dt_to_str(dt)
     return None
-
-
-def navitia_utcfromtimestamp(timestamp):
-    try:
-        if timestamp == 0:
-            return NOT_A_DATE_TIME
-        dt = datetime.datetime.utcfromtimestamp(timestamp)
-    except ValueError:
-        return NOT_A_DATE_TIME
-    return dt
 
 
 def walk_dict(tree, visitor):
