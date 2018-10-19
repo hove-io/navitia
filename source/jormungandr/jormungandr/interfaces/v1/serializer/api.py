@@ -63,7 +63,12 @@ import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
 from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
-from jormungandr.utils import get_current_datetime_str, get_timezone_str, NOT_A_DATE_TIME, navitia_utcfromtimestamp
+from jormungandr.utils import (
+    get_current_datetime_str,
+    get_timezone_str,
+    NOT_A_DATE_TIME,
+    navitia_utcfromtimestamp,
+)
 from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer

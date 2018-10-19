@@ -35,8 +35,13 @@ from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
-from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str, \
-    NOT_A_DATE_TIME, navitia_utcfromtimestamp
+from jormungandr.utils import (
+    timestamp_to_str,
+    get_current_datetime_str,
+    get_timezone_str,
+    NOT_A_DATE_TIME,
+    navitia_utcfromtimestamp,
+)
 from navitiacommon import response_pb2, type_pb2
 import ujson
 
