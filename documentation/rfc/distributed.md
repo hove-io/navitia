@@ -61,8 +61,8 @@ For instance, a request like—https://api.navitia.io/v1/coverage/fr-idf/journey
 
 Dependency graph:
 
-![graph](../diagrams/distributed.png)
+![graph](../diagrams/distributed_diagram.svg)
 
 Sequence diagram:
 
-![sequence](../diagrams/Distributed.svg)
+![sequence](../diagrams/distributed_flow.svg)

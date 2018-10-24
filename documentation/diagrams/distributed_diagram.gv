@@ -37,10 +37,10 @@ digraph distributed {
     }
 
     subgraph cluster_pt_calculation {
-        walking_pt_walking [label = "compute\nwalking>PT>walking", shape = box, color = lightblue, style = filled]
-        bike_pt_walking [label = "compute\nbike>PT>walking", shape = box, color = lightblue, style = filled]
+        walking_pt_walking [label = "compute:\nwalking_crowfly>PT>walking_crowfly", shape = box, color = lightblue, style = filled]
+        bike_pt_walking [label = "compute:\nbike_crowfly>PT>walking_crowfly", shape = box, color = lightblue, style = filled]
 
-        label = "PT calculation"
+        label = "PT calculation fallbacks as crowfly (no details)"
         labeljust = "l"
         color = red
         fontcolor = red
@@ -50,11 +50,20 @@ digraph distributed {
         orig_walk_fallback [label = "walking origin\nfallback details"]
         orig_bike_fallback [label = "bike origin\nfallback details"]
         dest_walk_fallback [label = "walking destination\nfallback details"]
-        assemble_walk_pt_walk [label = "assemble responses\nwalking>PT>walking", shape = "box", color = lightyellow, style = filled]
-        assemble_bike_pt_walk [label = "assemble responses\nbike>PT>walking", shape = "box", color = lightyellow, style = filled]
+        assemble_walk_pt_walk [label = "replace crowflies & assemble responses\nwalking>PT>walking", shape = "box", color = lightyellow, style = filled]
+        assemble_bike_pt_walk [label = "replace crowflies & assemble responses\nbike>PT>walking", shape = "box", color = lightyellow, style = filled]
         collect [label= "collect all journeys", shape = box, color = lightyellow, style = filled]
 
         label = "Journeys assembly"
+        labeljust = "l"
+        color = red
+        fontcolor = red
+    }
+
+    subgraph cluster_journey_fiflters {
+        Journey_Filters [label = "journey_filter", shape = "box", color = lightyellow, style = filled]
+
+        label = "Filtering common to all scenarios"
         labeljust = "l"
         color = red
         fontcolor = red
@@ -94,11 +103,13 @@ digraph distributed {
     dest_free -> bike_pt_walking
 
     //Journey assembly
-    walking_pt_walking -> dest_walk_fallback -> assemble_walk_pt_walk
-    walking_pt_walking -> orig_walk_fallback -> assemble_walk_pt_walk -> collect
+    walking_pt_walking -> Journey_Filters
+    Journey_Filters -> dest_walk_fallback -> assemble_walk_pt_walk
+    Journey_Filters -> orig_walk_fallback -> assemble_walk_pt_walk -> collect
 
-    bike_pt_walking -> dest_walk_fallback -> assemble_bike_pt_walk
-    bike_pt_walking -> orig_bike_fallback  -> assemble_bike_pt_walk -> collect
+    bike_pt_walking -> Journey_Filters
+    Journey_Filters -> dest_walk_fallback -> assemble_bike_pt_walk
+    Journey_Filters -> orig_bike_fallback  -> assemble_bike_pt_walk -> collect
 
     collect -> resp
 }
