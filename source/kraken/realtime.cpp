@@ -182,17 +182,19 @@ static type::disruption::Message create_message(const std::string& str_msg) {
     return msg;
 }
 
-static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
-        const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-    auto get_relationship = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
-            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-        // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
-        if (event.HasExtension(kirin::stop_time_event_relationship)) {
-            return event.GetExtension(kirin::stop_time_event_relationship);
-        }
-        return st.schedule_relationship();
-    };
+static transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship
+get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
+                 const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+    // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
+    if (event.HasExtension(kirin::stop_time_event_relationship)) {
+        return event.GetExtension(kirin::stop_time_event_relationship);
+    }
+    return st.schedule_relationship();
+}
 
+static nt::disruption::StopTimeUpdate::Status
+get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
+           const transit_realtime::TripUpdate_StopTimeUpdate& st) {
     if (get_relationship(event, st) ==
             transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
         return nt::disruption::StopTimeUpdate::Status::DELETED;
@@ -205,14 +207,44 @@ static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime:
     }
 }
 
+static bool is_realtime_add(const transit_realtime::TripUpdate& trip_update) {
+    namespace trt = transit_realtime;
+    auto log = log4cplus::Logger::getInstance("realtime");
+
+    if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
+        LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
+        return true;
+    }
+    else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
+                && trip_update.stop_time_update_size()) {
+        for (const auto& st: trip_update.stop_time_update()) {
+            if (get_relationship(st.departure(), st) ==
+                        trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED
+                    || get_relationship(st.arrival(), st) ==
+                            trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED) {
+                LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
-                  const type::Data& data) {
+                  const type::Data& data,
+                  const bool is_realtime_add_enabled) {
     namespace bpt = boost::posix_time;
-
+    namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
+
+    if (! is_realtime_add_enabled && is_realtime_add(trip_update)) {
+        LOG4CPLUS_TRACE(log, "Disruption is ADDING service and realtime-adding is disabled: ignoring it");
+        return nullptr;
+    }
+
     LOG4CPLUS_DEBUG(log, "Creating disruption");
 
     nt::disruption::DisruptionHolder& holder = data.pt_data->disruption_holder;
@@ -255,13 +287,13 @@ create_disruption(const std::string& id,
         }
         std::string wording;
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
-        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+        if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
-            // Yeah, that's quite hardcodded...
+            // Yeah, that's quite hardcoded...
             wording = "trip canceled";
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
-        else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+        else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
             LOG4CPLUS_TRACE(log, "a trip has been changed");
             using nt::disruption::StopTimeUpdate;
@@ -377,7 +409,8 @@ create_disruption(const std::string& id,
 void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate& trip_update,
-                     const type::Data& data) {
+                     const type::Data& data,
+                     const bool is_realtime_add_enabled) {
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
@@ -394,7 +427,7 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    const auto* disruption = create_disruption(id, timestamp, trip_update, data);
+    const auto* disruption = create_disruption(id, timestamp, trip_update, data, is_realtime_add_enabled);
 
     if (! disruption || ! check_disruption(*disruption)) {
         LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");

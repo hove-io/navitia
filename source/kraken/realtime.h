@@ -38,5 +38,6 @@ namespace navitia {
 void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate&,
-                     const type::Data&);
+                     const type::Data&,
+                     const bool is_realtime_add_enabled = false);
 }
