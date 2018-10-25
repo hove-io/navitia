@@ -50,8 +50,8 @@ digraph distributed {
         orig_walk_fallback [label = "walking origin\nfallback details"]
         orig_bike_fallback [label = "bike origin\nfallback details"]
         dest_walk_fallback [label = "walking destination\nfallback details"]
-        assemble_walk_pt_walk [label = "replace crowflies & assemble responses\nwalking>PT>walking", shape = "box", color = lightyellow, style = filled]
-        assemble_bike_pt_walk [label = "replace crowflies & assemble responses\nbike>PT>walking", shape = "box", color = lightyellow, style = filled]
+        assemble_walk_pt_walk [label = "- replace tmp crowflies\n- assemble responses\nwalking>PT>walking", shape = "box", color = lightyellow, style = filled]
+        assemble_bike_pt_walk [label = "- replace tmp crowflies\n- assemble responses\nbike>PT>walking", shape = "box", color = lightyellow, style = filled]
         collect [label= "collect all journeys", shape = box, color = lightyellow, style = filled]
 
         label = "Journeys assembly"
@@ -63,7 +63,7 @@ digraph distributed {
     subgraph cluster_journey_fiflters {
         Journey_Filters [label = "journey_filter", shape = "box", color = lightyellow, style = filled]
 
-        label = "Filtering common to all scenarios"
+        label = "(Common) Journey filtering"
         labeljust = "l"
         color = red
         fontcolor = red
