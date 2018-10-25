@@ -21,7 +21,7 @@ inline void handle_realtime_test(const std::string& id,
                                  const transit_realtime::TripUpdate& trip_update,
                                  const type::Data& data,
                                  std::unique_ptr<navitia::routing::RAPTOR>& raptor) {
-    navitia::handle_realtime(id, timestamp, trip_update, data);
+    navitia::handle_realtime(id, timestamp, trip_update, data,true);
     data.dataRaptor->load(*data.pt_data);
     raptor = std::make_unique<navitia::routing::RAPTOR>(data);
 }
