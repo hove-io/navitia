@@ -460,6 +460,20 @@ class Instance(db.Model):
             result += data_sets
         return result
 
+    def running_datasets(self):
+        """
+        return all datasets with job state = 'running' for this instance
+        """
+        data_sets = (
+            db.session.query(DataSet)
+            .join(Job)
+            .join(Instance)
+            .filter(Instance.id == self.id, Job.state == 'running')
+            .order_by(Job.created_at.desc())
+            .all()
+        )
+        return data_sets
+
     @classmethod
     def query_existing(cls):
         return cls.query.filter_by(discarded=False)
@@ -527,7 +541,11 @@ class Instance(db.Model):
             jobs_to_keep.add(job_associated)
 
         # Retrieve all jobs created before the time limit
-        old_jobs = db.session.query(Job).filter(Job.instance_id == self.id, Job.created_at < time_limit).all()
+        old_jobs = (
+            db.session.query(Job)
+            .filter(Job.instance_id == self.id, Job.created_at < time_limit, Job.state != 'running')
+            .all()
+        )
 
         # List all jobs that can be deleted
         to_delete = list(set(old_jobs) - jobs_to_keep)

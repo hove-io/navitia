@@ -63,7 +63,12 @@ import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
 from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
-from jormungandr.utils import get_current_datetime_str, get_timezone_str
+from jormungandr.utils import (
+    get_current_datetime_str,
+    get_timezone_str,
+    NOT_A_DATE_TIME,
+    navitia_utcfromtimestamp,
+)
 from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
@@ -237,9 +242,11 @@ class CoverageDateTimeField(DateTimeDictField):
     def to_value(self, coverage):
         tz_name = coverage.get('timezone')
         field_value = coverage.get(self.field_name)
-        if not tz_name or not field_value:
+        if not tz_name or field_value is None:
             return None
-        dt = datetime.datetime.utcfromtimestamp(field_value)
+        dt = navitia_utcfromtimestamp(field_value)
+        if not dt:
+            return NOT_A_DATE_TIME
         tz = pytz.timezone(tz_name)
         if not tz:
             return None

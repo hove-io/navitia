@@ -140,6 +140,9 @@ inline std::string to_iso_string_no_fractional(Time t) {
 static const boost::posix_time::ptime posix_epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
 
 inline uint64_t to_posix_timestamp(boost::posix_time::ptime ptime) {
+    if (ptime.is_not_a_date_time()){
+        return 0;
+    }
     return (ptime - posix_epoch).total_seconds();
 }
 

@@ -771,7 +771,7 @@ def merge_responses(responses, debug):
             fp
             for fp in r.feed_publishers
             if fp.id not in initial_feed_publishers
-            and (debug or all('to_delete' not in j.tags for j in r.journeys))
+            and (debug or any('to_delete' not in j.tags for j in r.journeys))
         )
 
         # handle impacts

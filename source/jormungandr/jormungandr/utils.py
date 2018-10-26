@@ -56,6 +56,7 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
+NOT_A_DATE_TIME = "not-a-date-time"
 
 
 def get_uri_pt_object(pt_object):
@@ -107,6 +108,15 @@ def is_url(url):
     return url_parsed.scheme.strip() != '' and url_parsed.netloc.strip() != ''
 
 
+def navitia_utcfromtimestamp(timestamp):
+    try:
+        if timestamp == 0:
+            return None
+        return datetime.utcfromtimestamp(timestamp)
+    except ValueError:
+        return None
+
+
 def str_to_time_stamp(str):
     """
     convert a string to a posix timestamp
@@ -155,7 +165,9 @@ def timestamp_to_datetime(timestamp, tz=None):
     if timestamp >= maxint:
         return None
 
-    dt = datetime.utcfromtimestamp(timestamp)
+    dt = navitia_utcfromtimestamp(timestamp)
+    if not dt:
+        return None
 
     timezone = tz or get_timezone()
     if timezone:

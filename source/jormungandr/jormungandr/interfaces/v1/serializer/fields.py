@@ -38,7 +38,10 @@ from navitiacommon import response_pb2
 
 point_2D_schema = {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'number', 'format': 'float'}}}
 
-properties_schema = {'type': 'array', 'items': {'length': 'integer'}}
+properties_schema = {
+    'type': 'array',
+    'items': {'properties': {'length': {'type': 'number', 'format': 'integer'}}},
+}
 
 
 class MultiLineStringField(jsonschema.Field):

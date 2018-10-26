@@ -95,7 +95,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
     job = models.Job()
     instance_config = load_instance_config(instance.name)
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     task = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
@@ -174,7 +174,7 @@ def send_to_mimir(instance, filename):
     job = models.Job()
     instance_config = load_instance_config(instance.name)
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
 
     dataset = models.DataSet()
     dataset.family_type = 'mimir'
@@ -344,7 +344,10 @@ def purge_instance(instance_id, nb_to_keep):
         os.path.realpath(os.path.dirname(dataset.name)) for dataset in instance.last_datasets(nb_to_keep)
     )
     logger.info('loaded  data are: %s', loaded)
-    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
+
+    running = set(os.path.realpath(os.path.dirname(dataset.name)) for dataset in instance.running_datasets())
+    logger.info('running  bina are: %s', running)
+    to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded - running]
 
     missing = [l for l in loaded if l not in backups]
     if missing:
@@ -412,7 +415,7 @@ def reload_kraken(instance_id):
     instance = models.Instance.query.get(instance_id)
     job = models.Job()
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
@@ -430,7 +433,7 @@ def build_all_data():
 def build_data(instance):
     job = models.Job()
     job.instance = instance
-    job.state = 'pending'
+    job.state = 'running'
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()

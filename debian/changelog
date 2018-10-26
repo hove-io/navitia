@@ -1,3 +1,15 @@
+navitia2 (2.66.0) unstable; urgency=low
+
+  * Jormungandr: Timestamp to datetime conversion for ubuntu1804  <https://github.com/CanalTP/navitia/pull/2572>
+  * Doc: move all technical and contributing doc to CONTRIBUTING.md   <https://github.com/CanalTP/navitia/pull/2578>
+  * Swagger: fix properties schema  <https://github.com/CanalTP/navitia/pull/2570>
+  * Tyr: current jobs(state='running') with data_sets should not be deleted  <https://github.com/CanalTP/navitia/pull/2563>
+  * Jormungandr: fix missing feed publisher  <https://github.com/CanalTP/navitia/pull/2568>
+  * Kraken: fix for ubuntu18 compat  <https://github.com/CanalTP/navitia/pull/2569>
+  * Jormungandr: Distributed - use request speed in place of the instance speed  <https://github.com/CanalTP/navitia/pull/2565>
+
+ -- Nonifier <olivier.georget@kisio.org>  Fri, 26 Oct 2018 15:10:05 +0100
+
 navitia2 (2.65.0) unstable; urgency=low
 
   * Jormungandr: Avoid unnecessary call for street_networks  <https://github.com/CanalTP/navitia/pull/2542>
