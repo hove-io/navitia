@@ -207,10 +207,11 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
     }
 }
 
-static bool is_realtime_add(const transit_realtime::TripUpdate& trip_update) {
+static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
 
+    // adding a trip is adding service
     if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
         LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
         return true;
@@ -218,6 +219,7 @@ static bool is_realtime_add(const transit_realtime::TripUpdate& trip_update) {
     else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
+            // adding a stop_time event (adding departure or/and arrival) is adding service
             if (get_relationship(st.departure(), st) ==
                         trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED
                     || get_relationship(st.arrival(), st) ==
@@ -240,7 +242,7 @@ create_disruption(const std::string& id,
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
 
-    if (! is_realtime_add_enabled && is_realtime_add(trip_update)) {
+    if (! is_realtime_add_enabled && is_added_service(trip_update)) {
         LOG4CPLUS_TRACE(log, "Disruption is ADDING service and realtime-adding is disabled: ignoring it");
         return nullptr;
     }
