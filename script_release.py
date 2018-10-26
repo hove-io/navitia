@@ -75,7 +75,7 @@ class ReleaseManager:
         self.git.rebase(remote_name + "/release", "release")
 
         print("checking that release was merged into dev...")
-        unmerged = self.git.branch("--no-merged", "dev")
+        unmerged = self.git.branch("--no-merged", "dev", '--no-color')
         is_release_unmerged = re.search("  release(\n|$)", unmerged)
         if is_release_unmerged:
             print(is_release_unmerged.group(0))
@@ -188,7 +188,7 @@ class ReleaseManager:
             if pr['merged_at']:
                 branches = []
                 try:
-                    branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
+                    branches = self.git.branch('-r', '--contains', pr_head_sha, '--no-color') + '\n'
                 except:
                     print(
                         "ERROR while searching for commit in release branch: "
