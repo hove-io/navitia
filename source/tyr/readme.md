@@ -95,11 +95,11 @@ make protobuf_files
 
 then run the test:
 ```
-PYTHONPATH=../navitiacommon py.test tests
+PYTHONPATH=../navitiacommon py.test --doctest-modules --ignore=migrations/
 ```
 Or if you use honcho:
 ```
-honcho run py.test tests
+honcho run py.test --doctest-modules --ignore=migrations/
 ```
 
 
