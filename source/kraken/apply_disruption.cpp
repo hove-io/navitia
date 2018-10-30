@@ -476,7 +476,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 };
 
 static bool is_modifying_effect(nt::disruption::Effect e) {
-    // check is the effect needs to modify the model
+    // check if the effect needs to modify the model
     return in(e, {nt::disruption::Effect::NO_SERVICE,
                   nt::disruption::Effect::SIGNIFICANT_DELAYS,
                   nt::disruption::Effect::MODIFIED_SERVICE,

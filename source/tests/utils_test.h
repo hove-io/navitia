@@ -30,7 +30,7 @@ inline uint64_t to_posix_timestamp(const std::string& str) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(str));
 }
 
-struct DelayedTimeStop {
+struct RTStopTime {
     std::string _stop_name;
     int _arrival_time = 0;
     int _departure_time = 0;
@@ -40,24 +40,24 @@ struct DelayedTimeStop {
     bool _departure_skipped = false;
     bool _arrival_skipped = false;
     bool _is_added = false;
-    DelayedTimeStop(const std::string& n, int arrival_time, int departure_time):
+    RTStopTime(const std::string& n, int arrival_time, int departure_time):
         _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
-    DelayedTimeStop(const std::string& n, int time):
+    RTStopTime(const std::string& n, int time):
         _stop_name(n), _arrival_time(time), _departure_time(time) {}
 
-    DelayedTimeStop& arrival_delay(navitia::time_duration delay) { _arrival_delay = delay; return *this; }
-    DelayedTimeStop& departure_delay(navitia::time_duration delay) { _departure_delay = delay; return *this; }
-    DelayedTimeStop& delay(navitia::time_duration delay) { return arrival_delay(delay).departure_delay(delay); }
-    DelayedTimeStop& arrival_skipped() { _arrival_skipped = true; return *this; }
-    DelayedTimeStop& departure_skipped() { _departure_skipped = true; return *this; }
-    DelayedTimeStop& skipped() { return arrival_skipped().departure_skipped(); }
-    DelayedTimeStop& added() { _is_added = true; return *this; }
+    RTStopTime& arrival_delay(navitia::time_duration delay) { _arrival_delay = delay; return *this; }
+    RTStopTime& departure_delay(navitia::time_duration delay) { _departure_delay = delay; return *this; }
+    RTStopTime& delay(navitia::time_duration delay) { return arrival_delay(delay).departure_delay(delay); }
+    RTStopTime& arrival_skipped() { _arrival_skipped = true; return *this; }
+    RTStopTime& departure_skipped() { _departure_skipped = true; return *this; }
+    RTStopTime& skipped() { return arrival_skipped().departure_skipped(); }
+    RTStopTime& added() { _is_added = true; return *this; }
 };
 
 inline transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& start_date,
-        const std::vector<DelayedTimeStop>& delayed_time_stops) {
+        const std::vector<RTStopTime>& delayed_time_stops) {
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);

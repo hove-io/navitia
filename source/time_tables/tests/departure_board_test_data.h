@@ -103,29 +103,29 @@ struct departure_board_fixture {
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S43");
 
-        using ntest::DelayedTimeStop;
+        using ntest::RTStopTime;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_delay_message("A:vj1", "20160101", {
-                DelayedTimeStop("A:s", "20160101T0807"_pts).delay(7_min),
-                DelayedTimeStop("S1", "20160101T0907"_pts).delay(7_min),
-                DelayedTimeStop("S2", "20160101T1007"_pts).delay(7_min),
-                DelayedTimeStop("A:e", "20160101T1107"_pts).delay(7_min),
+                RTStopTime("A:s", "20160101T0807"_pts).delay(7_min),
+                RTStopTime("S1", "20160101T0907"_pts).delay(7_min),
+                RTStopTime("S2", "20160101T1007"_pts).delay(7_min),
+                RTStopTime("A:e", "20160101T1107"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj1", "20160101T1337"_dt, trip_update1, *b.data, true);
 
         auto trip_update2 = ntest::make_delay_message("A:vj2", "20160101", {
-                DelayedTimeStop("A:s", "20160101T0907"_pts).delay(7_min),
-                DelayedTimeStop("S1", "20160101T1007"_pts).delay(7_min),
-                DelayedTimeStop("S2", "20160101T1107"_pts).delay(7_min),
-                DelayedTimeStop("A:e", "20160101T1207"_pts).delay(7_min),
+                RTStopTime("A:s", "20160101T0907"_pts).delay(7_min),
+                RTStopTime("S1", "20160101T1007"_pts).delay(7_min),
+                RTStopTime("S2", "20160101T1107"_pts).delay(7_min),
+                RTStopTime("A:e", "20160101T1207"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj2", "20160101T1337"_dt, trip_update2, *b.data, true);
 
         auto trip_update3 = ntest::make_delay_message("A:vj3", "20160101", {
-                DelayedTimeStop("A:s", "20160101T1007"_pts).delay(7_min),
-                DelayedTimeStop("S1", "20160101T1107"_pts).delay(7_min),
-                DelayedTimeStop("S2", "20160101T1207"_pts).delay(7_min),
-                DelayedTimeStop("A:e", "20160101T1307"_pts).delay(7_min),
+                RTStopTime("A:s", "20160101T1007"_pts).delay(7_min),
+                RTStopTime("S1", "20160101T1107"_pts).delay(7_min),
+                RTStopTime("S2", "20160101T1207"_pts).delay(7_min),
+                RTStopTime("A:e", "20160101T1307"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data, true);
 
@@ -147,9 +147,9 @@ struct departure_board_fixture {
         //
         //
         auto trip_update = ntest::make_delay_message("vjP:1", "20160103", {
-                DelayedTimeStop("stopP1", "20160103T2340"_pts),
-                DelayedTimeStop("stopP2", "20160104T0008"_pts, "20160104T0010"_pts).delay(4_min),
-                DelayedTimeStop("stopP3", "20160104T0017"_pts).delay(4_min),
+                RTStopTime("stopP1", "20160103T2340"_pts),
+                RTStopTime("stopP2", "20160104T0008"_pts, "20160104T0010"_pts).delay(4_min),
+                RTStopTime("stopP3", "20160104T0017"_pts).delay(4_min),
             });
         navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true);
 
@@ -171,9 +171,9 @@ struct departure_board_fixture {
         //
         // 21m
         auto trip_update_q = ntest::make_delay_message("vjQ:1", "20160103", {
-                DelayedTimeStop("stopQ1", "20160104T0001"_pts).delay(21_min),
-                DelayedTimeStop("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts).delay(21_min),
-                DelayedTimeStop("stopQ3", "20160104T0016"_pts).delay(21_min),
+                RTStopTime("stopQ1", "20160104T0001"_pts).delay(21_min),
+                RTStopTime("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts).delay(21_min),
+                RTStopTime("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true);
         b.data->build_raptor();
