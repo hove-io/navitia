@@ -160,3 +160,12 @@ def extend_journey_for_build_to_test():
     # We should have the same object used for the last pt_section.destination and crowfly_section.origin
     assert crowfly_section.origin == pt_section.destination
     assert crowfly_section.origin.uri == "stop_point_4"
+
+
+def test_finalise_journey_exception():
+    from jormungandr.scenarios.helper_classes import helper_exceptions
+
+    e = Exception("a", "b")
+    fe = helper_exceptions.FinaliseException(e)
+    assert fe.get().error.message == str(("a", "b"))
+    assert type(fe.get().error.id) is int

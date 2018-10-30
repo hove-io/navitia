@@ -80,8 +80,12 @@ class _GeventFuture(_AbstractFuture):
 class _GeventPoolManager(_AbstractPoolManager):
     def __init__(self):
         self._pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
+        self.is_within_context = False
 
     def create_future(self, fun, *args, **kwargs):
+        assert (
+            self.is_within_context
+        ), "You are trying to create a Greenlet outside of it's context. Your FutureManager is already out of scope"
         return _GeventFuture(self._pool, fun, *args, **kwargs)
 
     def clean_futures(self):
@@ -92,11 +96,13 @@ class _GeventPoolManager(_AbstractPoolManager):
         locks. If we leave the scope without starting these futures, they may hold locks forever.
         """
         self._pool.join()
+        self.is_within_context = False
 
 
 @contextmanager
 def FutureManager():
     m = _GeventPoolManager()
+    m.is_within_context = True
     try:
         yield m
     finally:
