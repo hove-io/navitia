@@ -195,10 +195,16 @@ get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
 static nt::disruption::StopTimeUpdate::Status
 get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-    if (get_relationship(event, st) ==
-            transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
+    auto transit_realtime_status = get_relationship(event, st);
+    switch (transit_realtime_status) {
+    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
         return nt::disruption::StopTimeUpdate::Status::DELETED;
-    } else if (! event.has_delay() // for retrocompatibility since the old kirin version
+    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
+        return nt::disruption::StopTimeUpdate::Status::ADDED;
+    default: break;
+    }
+
+    if (! event.has_delay() // for retrocompatibility since the old kirin version
                                    // was not giving delays
                || event.delay() != 0) {
         return nt::disruption::StopTimeUpdate::Status::DELAYED;
@@ -231,6 +237,25 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     }
     return false;
 }
+
+
+static nt::disruption::Effect get_trip_effect(nt::disruption::StopTimeUpdate::Status status){
+    using nt::disruption::StopTimeUpdate;
+    using nt::disruption::Effect;
+
+    switch (status) {
+    case StopTimeUpdate::Status::DELAYED:
+    case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
+        return Effect::SIGNIFICANT_DELAYS;
+    case StopTimeUpdate::Status::ADDED:
+        return Effect::MODIFIED_SERVICE;
+    case StopTimeUpdate::Status::DELETED:
+        return Effect::DETOUR;
+    default:
+        return Effect::UNKNOWN_EFFECT;
+    }
+}
+
 
 static const type::disruption::Disruption*
 create_disruption(const std::string& id,
@@ -366,29 +391,22 @@ create_disruption(const std::string& id,
                 }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = std::max(most_important_stoptime_status, departure_status);
-                most_important_stoptime_status = std::max(most_important_stoptime_status, arrival_status);
+                most_important_stoptime_status = std::max({most_important_stoptime_status,
+                    departure_status, arrival_status});
 
                 StopTimeUpdate st_update{std::move(stop_time), message, departure_status, arrival_status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
-            switch (most_important_stoptime_status) {
-            case StopTimeUpdate::Status::DELAYED:
-            case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
-                trip_effect = nt::disruption::Effect::SIGNIFICANT_DELAYS; break;
-            case StopTimeUpdate::Status::DELETED:
-                trip_effect = nt::disruption::Effect::DETOUR; break;
-            default:
-                trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT; break;
-            }
+            trip_effect = get_trip_effect(most_important_stoptime_status);
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
         if (wording.empty()) {
             if ( trip_effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
                 wording = "trip delayed";
-            } else if (trip_effect == nt::disruption::Effect::DETOUR) {
+            } else if (in(trip_effect, {nt::disruption::Effect::DETOUR,
+                                        nt::disruption::Effect::MODIFIED_SERVICE})) {
                 wording = "trip modified";
             }
         }

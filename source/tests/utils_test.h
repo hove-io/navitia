@@ -39,6 +39,7 @@ struct DelayedTimeStop {
     std::string _msg = "birds on the tracks";
     bool _departure_skipped = false;
     bool _arrival_skipped = false;
+    bool _is_added = false;
     DelayedTimeStop(const std::string& n, int arrival_time, int departure_time):
         _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
     DelayedTimeStop(const std::string& n, int time):
@@ -50,6 +51,7 @@ struct DelayedTimeStop {
     DelayedTimeStop& arrival_skipped() { _arrival_skipped = true; return *this; }
     DelayedTimeStop& departure_skipped() { _departure_skipped = true; return *this; }
     DelayedTimeStop& skipped() { return arrival_skipped().departure_skipped(); }
+    DelayedTimeStop& added() { _is_added = true; return *this; }
 };
 
 inline transit_realtime::TripUpdate
@@ -76,11 +78,15 @@ make_delay_message(const std::string& vj_uri,
         departure->set_time(delayed_st._departure_time);
         departure->set_delay(delayed_st._departure_delay.total_seconds());
         auto skipped = transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED;
+        auto added = transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED;
         if (delayed_st._departure_skipped) {
             departure->SetExtension(kirin::stop_time_event_relationship, skipped);
         }
         if (delayed_st._arrival_skipped) {
             arrival->SetExtension(kirin::stop_time_event_relationship, skipped);
+        }
+        if(delayed_st._is_added) {
+            arrival->SetExtension(kirin::stop_time_event_relationship, added);
         }
     }
 
