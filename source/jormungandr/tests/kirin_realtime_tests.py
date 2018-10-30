@@ -64,6 +64,7 @@ UpdatedStopTime = make_namedtuple(
     message=None,
     departure_skipped=False,
     arrival_skipped=False,
+    is_added=False,
 )
 
 
@@ -737,6 +738,83 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         # no realtime flags on route_schedules yet
 
 
+MAIN_ROUTING_TEST_SETTING = {
+    'main_routing_test': {
+        'kraken_args': [
+            '--BROKER.rt_topics=' + rt_topic,
+            'spawn_maintenance_worker',
+            '--GENERAL.is_realtime_add_enabled=1',
+        ]
+    }
+}
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinOnNewStopTime(MockKirinDisruptionsFixture):
+    def test_add_one_stop_time_at_the_end(self):
+        """
+        bla bla bla new_stop_time bla bla bla
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption same as base schedule
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080104"),
+                    departure=tstamp("20120614T080104"),
+                ),
+            ],
+            disruption_id='new_stop_time',
+        )
+
+        def has_the_disruption(response):
+            return len([d['id'] for d in response['disruptions'] if d['id'] == 'new_stop_time']) != 0
+
+        # We have a new diruption
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+        assert has_the_disruption(disruptions_after)
+
+        journey_query = journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
+        response = self.query_region(journey_query)
+        assert has_the_disruption(response)
+        self.is_valid_journey_response(response, journey_query)
+        assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
+
+        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
+            from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
+        )
+        journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
+        response = self.query_region(journey_query)
+        assert has_the_disruption(response)
+        self.is_valid_journey_response(response, journey_query)
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+
+
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
@@ -764,16 +842,18 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
             stop_time_update.departure.time = st.departure
             stop_time_update.departure.delay = st.departure_delay
 
-            def get_relationship(is_skipped):
+            def get_relationship(is_skipped=False, is_added=False):
                 if is_skipped:
                     return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED
+                if is_added:
+                    return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.ADDED
                 return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
 
             stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_relationship] = get_relationship(
-                st.arrival_skipped
+                st.arrival_skipped, st.is_added
             )
             stop_time_update.departure.Extensions[kirin_pb2.stop_time_event_relationship] = get_relationship(
-                st.departure_skipped
+                st.departure_skipped, st.is_added
             )
             if st.message:
                 stop_time_update.Extensions[kirin_pb2.stoptime_message] = st.message

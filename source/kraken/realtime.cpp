@@ -268,7 +268,7 @@ create_disruption(const std::string& id,
     auto log = log4cplus::Logger::getInstance("realtime");
 
     if (! is_realtime_add_enabled && is_added_service(trip_update)) {
-        LOG4CPLUS_TRACE(log, "Disruption is ADDING service and realtime-adding is disabled: ignoring it");
+        LOG4CPLUS_DEBUG(log, "Disruption is ADDING service and realtime-adding is disabled: ignoring it");
         return nullptr;
     }
 
