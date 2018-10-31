@@ -59,3 +59,5 @@
     * les fichiers contributors.txt et datasets.txt sont obligatoires, ainsi que le lien entre "trip" et "dataset_id"
     * le champ "comment_value" est renommé "comment_name" (conformité avec le code)
     * les valeurs de comment_type changent
+* Version 0.7.2 du 30/10/2018
+    * dans le fichier stops.txt, suppresion du "location_type = 3" qui n'est pas utilisé
