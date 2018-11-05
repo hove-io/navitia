@@ -51,13 +51,16 @@ class Histogram;
 
 namespace navitia {
 
-class InFlightGuard: boost::noncopyable {
+class InFlightGuard {
     prometheus::Gauge* gauge;
 public:
-    InFlightGuard(prometheus::Gauge* gauge);
+    explicit InFlightGuard(prometheus::Gauge* gauge);
+    InFlightGuard(InFlightGuard& other) = delete;
+    InFlightGuard(InFlightGuard&& other);
+    void operator=(InFlightGuard& other) = delete;
+    void operator=(InFlightGuard&& other);
     ~InFlightGuard();
 };
-
 
 
 class Metrics: boost::noncopyable {
@@ -69,8 +72,7 @@ protected:
 public:
     Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
     void observe_api(pbnavitia::API api, double duration) const;
-    std::unique_ptr<InFlightGuard> start_in_flight() const;
+    InFlightGuard start_in_flight() const;
 };
-
 
 }

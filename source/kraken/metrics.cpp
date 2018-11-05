@@ -50,6 +50,16 @@ InFlightGuard::~InFlightGuard() {
     }
 }
 
+InFlightGuard::InFlightGuard(InFlightGuard&& other){
+    this->gauge = other.gauge;
+    other.gauge = nullptr;
+}
+
+void InFlightGuard::operator=(InFlightGuard&& other){
+    this->gauge = other.gauge;
+    other.gauge = nullptr;
+}
+
 
 static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double start, double factor, int count) {
     //boundaries need to be sorted!
@@ -92,12 +102,11 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     this->in_flight = &in_flight_family.Add({});
 }
 
-std::unique_ptr<InFlightGuard> Metrics::start_in_flight() const{
+InFlightGuard Metrics::start_in_flight() const{
     if(!registry) {
-        return std::make_unique<InFlightGuard>(nullptr);
+        return InFlightGuard(nullptr);
     }
-    return std::make_unique<InFlightGuard>(this->in_flight);
-
+    return InFlightGuard(this->in_flight);
 }
 
 void Metrics::observe_api(pbnavitia::API api, double duration) const{
