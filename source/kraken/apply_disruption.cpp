@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -155,8 +155,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
             mvj->push_unique_impact(impact);
-        } else if ((impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS ||
-                   impact->severity->effect == nt::disruption::Effect::DETOUR) &&
+        } else if (in(impact->severity->effect, {nt::disruption::Effect::SIGNIFICANT_DELAYS,
+                                                 nt::disruption::Effect::MODIFIED_SERVICE,
+                                                 nt::disruption::Effect::DETOUR}) &&
                    // we don't want to apply delay or detour without stoptime's information
                    // if there is no stoptimes it should be modeled as a NO_SERVICE
                    // else it is something else, like for example a SIGNIFICANT_DELAYS on a line
@@ -192,7 +193,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                vj->name = mvj->get_base_vj().at(0)->name; 
+                vj->name = mvj->get_base_vj().at(0)->name;
             } else {
                 // If we set nothing for physical_mode, it'll crash when building raptor
                 vj->physical_mode = pt_data.physical_modes[0];
@@ -440,7 +441,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     vj->route,
                     std::move(new_stop_times),
                     pt_data);
-            
+
             LOG4CPLUS_TRACE(log,  "new_vj: "<< new_vj->uri << " is created");
 
             if (! mvj->get_base_vj().empty()) {
@@ -475,14 +476,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 };
 
 static bool is_modifying_effect(nt::disruption::Effect e) {
-    // check is the effect needs to modify the model
+    // check if the effect needs to modify the model
     return in(e, {nt::disruption::Effect::NO_SERVICE,
                   nt::disruption::Effect::SIGNIFICANT_DELAYS,
+                  nt::disruption::Effect::MODIFIED_SERVICE,
                   nt::disruption::Effect::DETOUR});
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
-                         nt::PT_Data& pt_data, const nt::MetaData& meta) {
+                  nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
         return;
     }
@@ -553,7 +555,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         // it with an empty vector.
         decltype(mvj->modified_by) modified_by_moved;
         boost::swap(modified_by_moved, mvj->modified_by);
-        
+
         for(const auto& wptr: modified_by_moved) {
             if (auto share_ptr = wptr.lock()){
                 disruptions_collection.insert(share_ptr);
@@ -647,8 +649,9 @@ void delete_disruption(const std::string& disruption_id,
     LOG4CPLUS_DEBUG(log, "disruption " << disruption_id << " deleted");
 }
 
-void apply_disruption(const type::disruption::Disruption& disruption, nt::PT_Data& pt_data,
-                    const navitia::type::MetaData &meta) {
+void apply_disruption(const type::disruption::Disruption& disruption,
+                      nt::PT_Data& pt_data,
+                      const navitia::type::MetaData &meta) {
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption.uri);
     for (const auto& impact: disruption.get_impacts()) {
         apply_impact(impact, pt_data, meta);
