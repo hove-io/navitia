@@ -151,7 +151,7 @@ def test_route_point_get_code():
 
     assert RoutePoint._get_all_codes(r, "source") == ["foo"]
     assert RoutePoint._get_all_codes(r, "extcode") == ["bar"]
-    # add a duplicate, this happen in real life...
+    # add a duplicate, this happens in real life...
     c = r.codes.add()
     c.value = "foo"
     c.type = "source"

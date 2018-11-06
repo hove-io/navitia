@@ -159,10 +159,8 @@ class Sytral(RealtimeProxy):
         if not url:
             return None
         r = self._call(url)
-        if not r:
-            return None
 
-        if r.status_code != 200:
+        if r.status_code != requests.codes.ok:
             logging.getLogger(__name__).error(
                 'sytralrt RT service unavailable, impossible to query : {}'.format(r.url),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
