@@ -238,9 +238,9 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "max_duration_to_pt",
             type=int,
             help="Maximum allowed duration to reach the public transport (same limit used before and "
-                 "after public transport).\n"
-                 "Use this to limit the walking/biking part.\n"
-                 "Unit is seconds"
+            "after public transport).\n"
+            "Use this to limit the walking/biking part.\n"
+            "Unit is seconds",
         )
         parser_get.add_argument(
             "max_walking_duration_to_pt",
@@ -345,9 +345,9 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "max_duration",
             type=UnsignedInteger(),
             help='Maximum duration of journeys in seconds (from `datetime` parameter).\n'
-                 'More usefull when computing an isochrone (only `from` or `to` is provided).\n'
-                 'On a classic journey (from-to), it will mostly speedup Navitia: You may have journeys a bit '
-                 'longer than that value (you would have to filter them).',
+            'More usefull when computing an isochrone (only `from` or `to` is provided).\n'
+            'On a classic journey (from-to), it will mostly speedup Navitia: You may have journeys a bit '
+            'longer than that value (you would have to filter them).',
         )
         parser_get.add_argument(
             "wheelchair",
