@@ -175,8 +175,8 @@ class TestHeatMap(AbstractTestFixture):
 
         assert error_code == 400
         assert (
-            'Unable to evaluate, invalid unsigned int\nmax_duration description: Maximum duration of journeys in secondes.\nReally useful when computing an isochrone.'
-            in normal_response['message']
+            'Unable to evaluate, invalid unsigned int\n'
+            'max_duration description: Maximum duration of journeys in seconds' in normal_response['message']
         )
 
         p = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"

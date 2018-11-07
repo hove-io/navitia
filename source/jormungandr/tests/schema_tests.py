@@ -30,8 +30,12 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import json
 import logging
+import os
+import jsonschema
+
 import flex
 from flex.exceptions import ValidationError
+
 from tests.tests_mechanism import dataset, AbstractTestFixture, mock_bss_providers, mock_car_park_providers
 from itertools import chain, ifilter
 
@@ -67,19 +71,30 @@ def collect_all_errors(validation_error):
     return _collect(validation_error.messages, key='.')
 
 
+def additional_properties_false_adder(dict_var):
+    # 'additional_properties=False' will forbid fields that are not specified in schema
+    if dict_var.get('type') == 'object' and 'additionalProperties' not in dict_var:
+        dict_var['additionalProperties'] = False
+
+    for v in dict_var.values():
+        if isinstance(v, dict):
+            additional_properties_false_adder(v)
+        if isinstance(v, list):
+            for list_v in v:
+                if isinstance(list_v, dict):
+                    additional_properties_false_adder(list_v)
+
+
 class SchemaChecker:
     def get_schema(self):
         """Since the schema is quite long to get we cache it"""
         if not hasattr(self, '_schema'):
             self._schema = self.query('v1/schema')
+            additional_properties_false_adder(self._schema)
         return self._schema
 
-    def _check_schema(self, url, hard_check=True, additional_properties=False):
+    def _check_schema(self, url, hard_check=True):
         schema = self.get_schema()
-
-        # 'additional_properties=False' won't allow fields that are not specifeid in schema to appear
-        for key in schema['definitions']:
-            schema['definitions'][key]['additionalProperties'] = additional_properties
 
         raw_response = self.tester.get(url)
 
@@ -132,6 +147,19 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     """
     Test swagger schema
     """
+
+    def test_swagger_schema_itself(self):
+        """
+        Test that the swagger schema is compliant with OpenAPI v2.0 (Swagger 2.0)
+        """
+        spec_file = os.path.join(os.path.dirname(__file__), 'swagger_schema', 'open_api_2.0.json')
+        swagger_spec = json.loads(open(spec_file, "r").read())
+
+        navitia_schema = self.query('v1/schema')  # original schema
+        jsonschema.validate(navitia_schema, swagger_spec)
+
+        navitia_hard_schema = self.get_schema()  # schema with forbidden additionalProperties
+        jsonschema.validate(navitia_hard_schema, swagger_spec)
 
     def test_swagger(self):
         """
