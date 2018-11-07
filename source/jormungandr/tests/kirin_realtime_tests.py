@@ -1017,8 +1017,8 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080400'
         assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 3
         assert (
-                response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']['name']
-                == 'stop_point:stopC'
+            response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']['name']
+            == 'stop_point:stopC'
         )
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
 
@@ -1132,12 +1132,11 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert len(disrupts['disruptions']) == 11
         assert has_the_disruption(disrupts, 'new_stop_time')
         assert (
-                disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
-                == 'added'
+            disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['arrival_status'] == 'added'
         )
         assert (
-                disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
-                == 'added'
+            disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+            == 'added'
         )
         assert disrupts['disruptions'][10]['severity']['effect'] == 'MODIFIED_SERVICE'
         assert disrupts['disruptions'][10]['severity']['name'] == 'trip modified'
@@ -1176,12 +1175,12 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert len(disrupts['disruptions']) == 12
         assert has_the_disruption(disrupts, 'deleted_stop_time')
         assert (
-                disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
-                == 'deleted'
+            disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
+            == 'deleted'
         )
         assert (
-                disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
-                == 'unchanged'  # Why ?
+            disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+            == 'unchanged'  # Why ?
         )
         assert disrupts['disruptions'][11]['severity']['effect'] == 'DETOUR'
         assert disrupts['disruptions'][11]['severity']['name'] == 'trip modified'
