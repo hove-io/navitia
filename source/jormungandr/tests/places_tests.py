@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -59,7 +61,7 @@ class TestPlaces(AbstractTestFixture):
         assert response['places'][0]['name'] == "Condom (03430)"
 
     def test_places_invalid_encoding(self):
-        _, status = self.query_no_assert(b'/v1/coverage/main_routing_test/places/?q=ch\xe2teau')
+        _, status = self.query_no_assert(u'/v1/coverage/main_routing_test/places/?q=ch\xe2teau'.encode('utf-8'))
         assert status != 500
 
     def test_places_do_not_loose_precision(self):

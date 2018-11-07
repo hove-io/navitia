@@ -577,7 +577,7 @@ class TestPtRef(AbstractTestFixture):
         assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
 
     def test_query_with_strange_char(self):
-        q = b'stop_points/stop_point:stop_with name bob \" , é'
+        q = u'stop_points/stop_point:stop_with name bob \" , é'.encode('utf-8')
         encoded_q = quote(q)
         response = self.query_region(encoded_q)
 
@@ -609,7 +609,8 @@ class TestPtRef(AbstractTestFixture):
     def test_journey_with_strange_char(self):
         # we use an encoded url to be able to check the links
         query = 'journeys?from={}&to={}&datetime=20140105T070000'.format(
-            quote_plus(b'stop_with name bob \" , é'), quote_plus(b'stop_area:stop1')
+            quote_plus(u'stop_with name bob \" , é'.encode('utf-8')),
+            quote_plus(u'stop_area:stop1'.encode('utf-8')),
         )
         response = self.query_region(query, display=True)
 
@@ -675,7 +676,8 @@ class TestPtRef(AbstractTestFixture):
         params['since'] = '20140105T111500+0000'
         params['until'] = '20140105T121000-0000'
         response, code = self.query_no_assert(
-            'v1/coverage/main_ptref_test/vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
+            'v1/coverage/main_ptref_test/vehicle_journeys?{}'.format(urlencode(params, doseq=True))
+        )
         assert code == 404
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
