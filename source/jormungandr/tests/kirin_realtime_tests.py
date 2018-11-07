@@ -53,7 +53,7 @@ from tests.check_utils import (
     SectionStopDT,
     is_valid_graphical_isochrone,
     sub_query,
-    has_the_disruption
+    has_the_disruption,
 )
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 from shapely.geometry import asShape
@@ -832,6 +832,7 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert response['journeys'][0]['sections'][0]['to']['id'] == 'stop_point:stopC'
         assert response['journeys'][0]['sections'][0]['duration'] == 4
+        assert response['journeys'][0]['status'] == 'MODIFIED_SERVICE'
         assert 'data_freshness' not in response['journeys'][1]['sections'][0]  # means it's base_schedule
         assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
 
@@ -849,7 +850,7 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
                     departure=tstamp("20120614T080104"),
                     message='stop_time deleted',
                     arrival_skipped=True,
-                ),
+                )
             ],
             disruption_id='deleted_stop_time',
         )
@@ -884,7 +885,7 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
                     departure=tstamp("20120614T080104"),
                     message='stop_time deleted',
                     arrival_skipped=True,
-                ),
+                )
             ],
             disruption_id='re_deleted_stop_time',
         )
@@ -912,7 +913,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         3. Verify the journey for a query from S to C: S-> walk-> B -> public_transport -> C
         4. Delete the added stop_time and verify the journey  for a query in 3.
         """
-        # New disruption with a delay of JC = vjA
+        # New disruption with a delay of VJ = vjA
         self.send_mock(
             "vjA",
             "20120614",
@@ -1015,7 +1016,10 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080225'
         assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080400'
         assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 3
-        assert response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']['name'] == 'stop_point:stopC'
+        assert (
+                response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']['name']
+                == 'stop_point:stopC'
+        )
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
 
         # Query from S to C: Uses a public_transport from B to C
@@ -1032,7 +1036,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080225'
         assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080330'
 
-        # New disruption with a deleted stop_time at stop_point:stopC
+        # New disruption with a deleted stop_time recently added at stop_point:stopC
         self.send_mock(
             "vjA",
             "20120614",
@@ -1046,7 +1050,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
                     departure=tstamp("20120614T080330"),
                     message='stop_time deleted',
                     arrival_skipped=True,
-                ),
+                )
             ],
             disruption_id='deleted_stop_time',
         )
@@ -1127,6 +1131,16 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert len(disrupts['disruptions']) == 11
         assert has_the_disruption(disrupts, 'new_stop_time')
+        assert (
+                disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
+                == 'added'
+        )
+        assert (
+                disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+                == 'added'
+        )
+        assert disrupts['disruptions'][10]['severity']['effect'] == 'MODIFIED_SERVICE'
+        assert disrupts['disruptions'][10]['severity']['name'] == 'trip modified'
 
         # Query from C to R: the journey should have a public_transport from C to A
         response = self.query_region(base_journey_query)
@@ -1138,7 +1152,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080222'
         assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
 
-        # New disruption with a deleted stop_time already deleted at stop_point:stopC
+        # New disruption with a deleted stop_time recently added at stop_point:stopC
         self.send_mock(
             "vjA",
             "20120614",
@@ -1152,15 +1166,25 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
                     departure=tstamp("20120614T080104"),
                     message='stop_time deleted',
                     arrival_skipped=True,
-                ),
+                )
             ],
-            disruption_id='re_deleted_stop_time',
+            disruption_id='deleted_stop_time',
         )
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert len(disrupts['disruptions']) == 12
-        assert has_the_disruption(disrupts, 're_deleted_stop_time')
+        assert has_the_disruption(disrupts, 'deleted_stop_time')
+        assert (
+                disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
+                == 'deleted'
+        )
+        assert (
+                disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+                == 'unchanged'  # Why ?
+        )
+        assert disrupts['disruptions'][11]['severity']['effect'] == 'DETOUR'
+        assert disrupts['disruptions'][11]['severity']['name'] == 'trip modified'
 
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
@@ -1168,6 +1192,9 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]
         assert response['journeys'][0]['durations']['walking'] == 159
+
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T080000')
+        assert len(pt_response['disruptions']) == 2
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
