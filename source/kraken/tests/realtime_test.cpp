@@ -2275,3 +2275,117 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T1000"_pts);
 
 }
+
+BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
+
+    //Init data for a vj = vj:1 -> A -> B -> C
+    ed::builder b("20171101");
+
+    b.sa("A", 0, 0, true, true);
+    b.sa("B", 0, 0, true, true);
+    b.sa("B_bis", 0, 0, true, true);
+    b.sa("C", 0, 0, true, true);
+    b.sa("D", 0, 0, true, true);
+
+    b.vj("1").uri("vj:1")
+                   ("stop_point:A", "08:00"_t)
+                   ("stop_point:B", "08:30"_t)
+                   ("stop_point:C", "09:00"_t);
+
+    b.data->build_uri();
+
+    const auto& pt_data = b.data->pt_data;
+    pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20171101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                {ntest::to_posix_timestamp(datetime)},
+                true, navitia::type::AccessibiliteParams(), {}, {},
+                sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+
+    // We should not have any journey in public_transport from B_bis to C
+    res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+
+    // Add a new stop_time in vj = vj:1 betwen stops B and C with B and C unchanged
+    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts),
+                    RTStopTime("stop_point:B_bis", "20171101T0845"_pts).added(),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+
+    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true);
+
+    b.data->build_uri();
+    pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+
+    // The new stop_time added should be in stop_date_times
+    res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0900"_pts);
+
+    // We should have A journey in public_transport from B_bis to C
+    res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 2);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
+
+    // Delete the recently added stop_time in vj = vj:1 B_bis
+    transit_realtime::TripUpdate delete_new_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts),
+                    RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+
+    navitia::handle_realtime("delete_new_stop_time_in_the_trip", timestamp, delete_new_stop, *b.data, true);
+
+    b.data->build_uri();
+    pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+
+    // The new stop_time added should be in stop_date_times
+    res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+
+    // We should not have any journey in public_transport from B_bis to C
+    res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+}
