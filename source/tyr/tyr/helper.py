@@ -89,25 +89,32 @@ class InstanceConfig(object):
 
 
 def load_instance_config(instance_name):
+    def b(unicode):
+        """
+        convert unicode to bytestring
+        """
+        return unicode.encode('utf-8')
+
     confspec = []
-    confspec.append(b'[instance]')
-    confspec.append(b'source-directory = string()')
-    confspec.append(b'backup-directory = string()')
-    confspec.append(b'target-file = string()')
-    confspec.append(b'exchange = string(default="navitia")')
-    confspec.append(b'synonyms_file = string(default="")')
-    confspec.append(b'aliases_file = string(default="")')
-    confspec.append(b'name = string()')
-    confspec.append(b'is-free = boolean(default=False)')
 
-    confspec.append(b'[database]')
-    confspec.append(b'host = string()')
-    confspec.append(b'dbname = string()')
-    confspec.append(b'username = string()')
-    confspec.append(b'password = string()')
-    confspec.append(b'port = string(default="5432")')
+    confspec.append(b(u'[instance]'))
+    confspec.append(b(u'source-directory = string()'))
+    confspec.append(b(u'backup-directory = string()'))
+    confspec.append(b(u'target-file = string()'))
+    confspec.append(b(u'exchange = string(default="navitia")'))
+    confspec.append(b(u'synonyms_file = string(default="")'))
+    confspec.append(b(u'aliases_file = string(default="")'))
+    confspec.append(b(u'name = string()'))
+    confspec.append(b(u'is-free = boolean(default=False)'))
 
-    ini_file = b'%s/%s.ini' % (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
+    confspec.append(b(u'[database]'))
+    confspec.append(b(u'host = string()'))
+    confspec.append(b(u'dbname = string()'))
+    confspec.append(b(u'username = string()'))
+    confspec.append(b(u'password = string()'))
+    confspec.append(b(u'port = string(default="5432")'))
+
+    ini_file = b(u'%s/%s.ini') % (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
     if not os.path.isfile(ini_file):
         raise ValueError("File doesn't exists or is not a file %s" % ini_file)
 

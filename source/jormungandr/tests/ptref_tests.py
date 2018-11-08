@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from six.moves.urllib.parse import quote, quote_plus
 from .check_utils import journey_basic_query
+from six.moves.urllib.parse import urlencode
 from .tests_mechanism import dataset, AbstractTestFixture
 from .check_utils import *
 from six.moves import range
@@ -576,7 +577,7 @@ class TestPtRef(AbstractTestFixture):
         assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
 
     def test_query_with_strange_char(self):
-        q = b'stop_points/stop_point:stop_with name bob \" , é'
+        q = u'stop_points/stop_point:stop_with name bob \" , é'.encode('utf-8')
         encoded_q = quote(q)
         response = self.query_region(encoded_q)
 
@@ -608,7 +609,8 @@ class TestPtRef(AbstractTestFixture):
     def test_journey_with_strange_char(self):
         # we use an encoded url to be able to check the links
         query = 'journeys?from={}&to={}&datetime=20140105T070000'.format(
-            quote_plus(b'stop_with name bob \" , é'), quote_plus(b'stop_area:stop1')
+            quote_plus(u'stop_with name bob \" , é'.encode('utf-8')),
+            quote_plus(u'stop_area:stop1'.encode('utf-8')),
         )
         response = self.query_region(query, display=True)
 
@@ -634,6 +636,48 @@ class TestPtRef(AbstractTestFixture):
             "v1/coverage/main_ptref_test/vehicle_journeys?since=20140109T070000"
         )
 
+        assert code == 404
+        assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
+
+    def test_vj_period_filter_with_tz(self):
+        '''
+        testing that using TZ is OK (+0130 means TZ +1h30min)
+        Note: This is especially usefull as Kirin now uses it
+        '''
+
+        # first check it's OK with no TZ
+        params = {'since': '20140105T111500', 'until': '20140105T121000', 'headsign': 'vj1'}
+        response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
+        vjs = get_not_null(response, 'vehicle_journeys')
+        assert 'vj1' in (vj['id'] for vj in vjs)
+
+        # check using the actual TZ (Europe/Paris so UTC+1)
+        params['since'] = '20140105T111500+0100'
+        params['until'] = '20140105T121000+0100'
+        response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
+        vjs = get_not_null(response, 'vehicle_journeys')
+        assert 'vj1' in (vj['id'] for vj in vjs)
+
+        # check converting time correctly to UTC
+        params['since'] = '20140105T101500+0000'
+        params['until'] = '20140105T111000+0000'
+        response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
+        vjs = get_not_null(response, 'vehicle_journeys')
+        assert 'vj1' in (vj['id'] for vj in vjs)
+
+        # check converting time correctly to 2 random TZ
+        params['since'] = '20140105T034500-0630'
+        params['until'] = '20140105T192500+0815'
+        response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
+        vjs = get_not_null(response, 'vehicle_journeys')
+        assert 'vj1' in (vj['id'] for vj in vjs)
+
+        # check putting time in UTC with a mistake returns no VJ as it's then out of VJ's period
+        params['since'] = '20140105T111500+0000'
+        params['until'] = '20140105T121000-0000'
+        response, code = self.query_no_assert(
+            'v1/coverage/main_ptref_test/vehicle_journeys?{}'.format(urlencode(params, doseq=True))
+        )
         assert code == 404
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 

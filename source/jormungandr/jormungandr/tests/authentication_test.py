@@ -57,7 +57,7 @@ def get_token_basic_auth_unicode_test():
     base64 doesn't seems to like unicode, it doesn't matter since our token are always in ascii (uuid).
     But we want a clean error, not a 500
     """
-    key = base64.encodestring(b'maclé:').strip()
+    key = base64.encodestring(u'maclé:'.encode('utf-8')).strip()
     with app.test_request_context('/', headers={'Authorization': 'BASIC {}'.format(key)}):
         with pytest.raises(Unauthorized):
             get_token()
