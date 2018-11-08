@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -118,6 +118,28 @@ struct data_set {
         for (auto r: b.lines["line:Ça roule"]->route_list) {
             r->destination = b.sas.find("stop_area:stop1")->second;
         }
+
+        // Company added
+        navitia::type::Company* cmp1 = new navitia::type::Company();
+        cmp1->line_list.push_back(b.lines["line:A"]);
+        b.data->pt_data->companies.push_back(cmp1);
+        cmp1->idx = b.data->pt_data->companies.size();
+        cmp1->name = "CMP1";
+        cmp1->uri = "CMP1";
+        b.lines["line:A"]->company_list.push_back(cmp1);
+        navitia::type::Company* cmp2 = new navitia::type::Company();
+        cmp2->line_list.push_back(b.lines["line:A"]);
+        b.data->pt_data->companies.push_back(cmp2);
+        cmp2->idx = b.data->pt_data->companies.size();
+        cmp2->name = "CMP2";
+        cmp2->uri = "CMP2";
+        b.lines["line:A"]->company_list.push_back(cmp2);
+        b.lines["line:A"]->text_color = "FFD700";
+
+        b.data->pt_data->codes.add(b.data->pt_data->companies[0], "cmp1_code_key_0", "cmp1_code_value_0");
+        b.data->pt_data->codes.add(b.data->pt_data->companies[0], "cmp1_code_key_1", "cmp1_code_value_1");
+        b.data->pt_data->codes.add(b.data->pt_data->companies[0], "cmp1_code_key_2", "cmp1_code_value_2");
+        b.data->pt_data->codes.add(b.data->pt_data->companies[1], "cmp2_code_key_0", "cmp2_code_value_0");
         b.data->pt_data->codes.add(b.lines["line:A"], "external_code", "A");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "B");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "Bise");
@@ -129,6 +151,7 @@ struct data_set {
         navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
         vj->base_validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
                                   boost::gregorian::from_undelimited_string("20140111"), monday_cal->week_pattern);
+        vj->company = cmp1;
 
         //we add some comments
         auto& comments = b.data->pt_data->comments;
@@ -148,17 +171,6 @@ struct data_set {
                 .on(nt::Type_e::StopArea, "stop_area:stop1")
                 .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
                 .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
-       // Company added
-        navitia::type::Company* cmp = new navitia::type::Company();
-        cmp->line_list.push_back(b.lines["line:A"]);
-        vj->company = cmp;
-        b.data->pt_data->companies.push_back(cmp);
-        cmp->idx = b.data->pt_data->companies.size();
-        cmp->name = "CMP1";
-        cmp->uri = "CMP1";
-        b.lines["line:A"]->company_list.push_back(cmp);
-
-        b.lines["line:A"]->text_color = "FFD700";
         // LineGroup added
         navitia::type::LineGroup* lg = new navitia::type::LineGroup();
         lg->name = "A group";

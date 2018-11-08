@@ -173,6 +173,30 @@ class TestEndPoint(AbstractTestFixture):
         assert response['geo_status']['street_network_sources'] == []
         assert response['geo_status']['poi_sources'] == []
 
+    def test_companies(self):
+        response = self.query('/v1/coverage/main_ptref_test/companies', display=True)
+        self.check_context(response)
+        assert len(response['companies']) == 2
+
+        # Company 1
+        assert response['companies'][0]['name'] == 'CMP1'
+        assert response['companies'][0]['id'] == 'CMP1'
+
+        # Codes for Company 1
+        assert len(response['companies'][0]['codes']) == 3
+        for idx, code in enumerate(response['companies'][0]['codes']):
+            assert code['type'] == 'cmp1_code_key_' + str(idx)
+            assert code['value'] == 'cmp1_code_value_' + str(idx)
+
+        # company 2
+        assert response['companies'][1]['name'] == 'CMP2'
+        assert response['companies'][1]['id'] == 'CMP2'
+
+        # Codes for Company 2
+        assert len(response['companies'][1]['codes']) == 1
+        assert response['companies'][1]['codes'][0]['type'] == 'cmp2_code_key_0'
+        assert response['companies'][1]['codes'][0]['value'] == 'cmp2_code_value_0'
+
     def test_lines_context(self):
         response = self.query('/v1/coverage/main_routing_test/lines', display=True)
         self.check_context(response)
