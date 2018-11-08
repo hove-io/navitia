@@ -1351,4 +1351,4 @@ def new_default_pagination_journey_comparator(clockwise):
 
 
 def has_the_disruption(response, disrupt_id):
-    return len([d['id'] for d in response['disruptions'] if d['id'] == disrupt_id]) != 0
+    return any([d['id'] for d in response['disruptions'] if d['id'] == disrupt_id])

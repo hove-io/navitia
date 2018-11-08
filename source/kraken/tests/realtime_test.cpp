@@ -147,10 +147,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
@@ -185,10 +182,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
@@ -285,9 +279,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 2);
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -366,9 +358,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -396,9 +386,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -470,9 +458,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -542,9 +528,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     BOOST_CHECK_NE(vj_B->base_validity_pattern(), vj_B->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -619,9 +603,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
     navitia::apply_disruption(disrup, *b.data->pt_data, *b.data->meta);
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -648,9 +630,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -774,9 +754,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -841,9 +819,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -921,9 +897,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1001,9 +975,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1081,9 +1053,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1154,9 +1124,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1223,9 +1191,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1287,9 +1253,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1359,9 +1323,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1539,9 +1501,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1614,9 +1574,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1637,9 +1595,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     // Now we remove the first disruption
     navitia::delete_disruption("feed_42", *pt_data, *b.data->meta);
 
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1965,10 +1921,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
 
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true);
 
-    const auto& pt_data = b.data->pt_data;
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2064,10 +2017,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
 
     navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true);
 
-    const auto& pt_data = b.data->pt_data;
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2119,10 +2069,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
 
     navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true);
 
-    const auto& pt_data = b.data->pt_data;
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2174,12 +2121,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
                    ("stop_point:B", "08:30"_t)
                    ("stop_point:C", "09:00"_t);
 
-    b.data->build_uri();
-
-    const auto& pt_data = b.data->pt_data;
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2215,10 +2157,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true);
 
-    b.data->build_uri();
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2238,10 +2177,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true);
 
-    b.data->build_uri();
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2261,10 +2197,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true);
 
-    b.data->build_uri();
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:D");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2292,12 +2225,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                    ("stop_point:B", "08:30"_t)
                    ("stop_point:C", "09:00"_t);
 
-    b.data->build_uri();
-
-    const auto& pt_data = b.data->pt_data;
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2340,10 +2268,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true);
 
-    b.data->build_uri();
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2373,10 +2298,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("delete_new_stop_time_in_the_trip", timestamp, delete_new_stop, *b.data, true);
 
-    b.data->build_uri();
-    pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
