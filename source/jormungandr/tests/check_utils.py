@@ -500,9 +500,8 @@ def is_valid_journey(journey, tester, query):
     for s in journey['sections']:
         is_valid_section(s, query)
         section_departure = get_valid_datetime(s['departure_date_time'])
-        assert (
-            section_departure - last_arrival
-        ).seconds <= 1  # there cannot be more than one second between the 2
+        delta = section_departure - last_arrival
+        assert delta.seconds <= 1  # there cannot be more than one second between the 2
 
         last_arrival = get_valid_datetime(s['arrival_date_time'])
 

@@ -288,6 +288,36 @@ def journey_pairs_gen(list_responses):
     return itertools.combinations(jf.get_qualified_journeys(list_responses), 2)
 
 
+def test_get_qualified_journeys():
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.tags.append("a_tag")
+
+    journey2 = responses[0].journeys.add()
+    journey2.tags.append("to_delete")
+
+    journey3 = responses[0].journeys.add()
+    journey3.tags.append("another_tag")
+    journey3.tags.append("to_delete")
+
+    for qualified in jf.get_qualified_journeys(responses):
+        assert qualified.tags[0] == 'a_tag'
+
+
+def test_num_qualifed_journeys():
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.tags.append("a_tag")
+
+    journey2 = responses[0].journeys.add()
+    journey2.tags.append("to_delete")
+
+    journey3 = responses[0].journeys.add()
+    journey3.tags.append("another_tag")
+
+    assert jf.nb_qualifed_journeys(responses) == 2
+
+
 def test_journeys_equality_test_almost_same_journeys():
     """
     test the are_equals method, applied to different journeys, but with meaningless differences

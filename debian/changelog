@@ -1,3 +1,17 @@
+navitia2 (2.67.0) unstable; urgency=low
+
+  * Jormun: add tests on endpoint /vj with timezones  <https://github.com/CanalTP/navitia/pull/2573>
+  * Swagger: spread schema consistency tests  <https://github.com/CanalTP/navitia/pull/2564>
+  * kraken: add metric for request currently handled  <https://github.com/CanalTP/navitia/pull/2576>
+  * Kraken: Manage adding of StopTime in realtime  <https://github.com/CanalTP/navitia/pull/2581>
+  * Jormungandr: update request for https://nvd.nist.gov/vuln/detail/CVE-2018-18074  <https://github.com/CanalTP/navitia/pull/2584>
+  * Doc: removing unused stop location_type=3  <https://github.com/CanalTP/navitia/pull/2585>
+  * Doc: Update documentation with new distributed behavior  <https://github.com/CanalTP/navitia/pull/2575>
+  * Jormun: Filter journeys before streetnetwork fallback [Distributed]  <https://github.com/CanalTP/navitia/pull/2567>
+  * Tyr & Jormun: update tests so they run doctests  <https://github.com/CanalTP/navitia/pull/2577>
+
+ -- krishna Adhikari <krishna.adhikari@kisio.com>  Fri, 09 Nov 2018 11:11:50 +0100
+
 navitia2 (2.66.0) unstable; urgency=low
 
   * Jormungandr: Timestamp to datetime conversion for ubuntu1804  <https://github.com/CanalTP/navitia/pull/2572>

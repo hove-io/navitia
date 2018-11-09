@@ -113,6 +113,7 @@ class PTReferentialSerializerNoContext(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
+    links = DescribedField(schema_type=LinkSchema(many=True))
 
 
 class PTReferentialSerializer(PTReferentialSerializerNoContext):
@@ -210,6 +211,7 @@ class PlacesSerializer(serpy.Serializer):
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    links = DescribedField(schema_type=LinkSchema(many=True))
 
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
@@ -220,6 +222,7 @@ class PtObjectsSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     pt_objects = pt.PtObjectSerializer(many=True, attr='places')
+    links = DescribedField(schema_type=LinkSchema(many=True))
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
@@ -279,6 +282,7 @@ class CoverageSerializer(NullableDictSerializer):
 
 class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
+    links = DescribedField(schema_type=LinkSchema(many=True))
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
@@ -322,19 +326,23 @@ class JourneysSerializer(JourneysCommon):
         return ContextSerializer(obj, display_none=False).data
 
 
-class DeparturesSerializer(PTReferentialSerializer):
+class SchedulesSerializer(PTReferentialSerializer):
+    exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
+
+
+class DeparturesSerializer(SchedulesSerializer):
     departures = schedule.PassageSerializer(many=True, attr='next_departures', display_none=True)
 
 
-class ArrivalsSerializer(PTReferentialSerializer):
+class ArrivalsSerializer(SchedulesSerializer):
     arrivals = schedule.PassageSerializer(many=True, attr='next_arrivals', display_none=True)
 
 
-class StopSchedulesSerializer(PTReferentialSerializer):
+class StopSchedulesSerializer(SchedulesSerializer):
     stop_schedules = schedule.StopScheduleSerializer(many=True, display_none=True)
 
 
-class RouteSchedulesSerializer(PTReferentialSerializer):
+class RouteSchedulesSerializer(SchedulesSerializer):
     route_schedules = schedule.RouteScheduleSerializer(many=True, display_none=True)
 
 

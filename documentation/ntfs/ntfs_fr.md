@@ -333,7 +333,6 @@ equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
         0 ou non spécifié - Arrêt physique (objet stop_point)
         1 - Zone d'arrêt (objet stop_area)
         2 - Zone géographique (pour le TAD zonal de type "adressse à adresse", objet stop_zone)
-        3 - Commune
 
 ### stop_times.txt (requis)
 Colonne | Type | Contrainte | Commentaire
