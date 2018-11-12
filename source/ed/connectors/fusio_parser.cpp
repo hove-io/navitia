@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -295,7 +295,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Route orphan " + row[route_id_c]);
         return;
     }
-    ed::types::Route* ed_route = new ed::types::Route();    
+    ed::types::Route* ed_route = new ed::types::Route();
     ed_route->line = ed_line;
     ed_route->uri = row[route_id_c];
 
@@ -768,7 +768,7 @@ void DatasetFusioHandler::init(Data&){
     end_date_c = csv.get_pos_col("dataset_end_date");
     type_c = csv.get_pos_col("dataset_type");
     desc_c = csv.get_pos_col("dataset_desc");
-    system_c = csv.get_pos_col("dataset_system");    
+    system_c = csv.get_pos_col("dataset_system");
 }
 
 void DatasetFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line){
@@ -1188,7 +1188,7 @@ void StopPropertiesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 }
 
 void ObjectPropertiesFusioHandler::init(Data &){
-    object_id_c = csv.get_pos_col("object_id"); 
+    object_id_c = csv.get_pos_col("object_id");
     object_type_c = csv.get_pos_col("object_type");
     property_name_c = csv.get_pos_col("object_property_name");
     property_value_c = csv.get_pos_col("object_property_value");
@@ -1693,6 +1693,11 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
     } else if (object_type == "stop_point"){
         const auto& it_object = gtfs_data.stop_map.find(row[object_uri_c]);
         if(it_object != gtfs_data.stop_map.end()){
+            data.add_object_code(it_object->second, row[code_c], key);
+        }
+    } else if (object_type == "company"){
+        const auto& it_object = gtfs_data.company_map.find(row[object_uri_c]);
+        if(it_object != gtfs_data.company_map.end()){
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else {

@@ -115,7 +115,30 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.lines.size(), 4);
     BOOST_REQUIRE_EQUAL(data.routes.size(), 4);
 
-    //chekc comments
+    // object_codes
+    BOOST_REQUIRE_EQUAL(data.object_codes.size(), 21);
+    // routes
+    for (uint i = 0; i < data.routes.size(); ++i) {
+        auto obj_codes_routes_map = data.object_codes[ed::types::make_pt_object(data.routes[i])];
+        BOOST_REQUIRE_EQUAL(obj_codes_routes_map.size(), 1);
+        for (const auto obj_codes : obj_codes_routes_map) {
+            BOOST_CHECK_EQUAL(obj_codes.second[0], "route_" + std::to_string(i + 1));
+        }
+    }
+    // companies
+    auto obj_codes_map = data.object_codes[ed::types::make_pt_object(data.companies[0])];
+    BOOST_REQUIRE_EQUAL(obj_codes_map.size(), 1);
+    for (const auto obj_codes : obj_codes_map) {
+        BOOST_CHECK_EQUAL(obj_codes.second[0], "A");
+        BOOST_CHECK_EQUAL(obj_codes.second[1], "B");
+    }
+    obj_codes_map = data.object_codes[ed::types::make_pt_object(data.companies[1])];
+    BOOST_REQUIRE_EQUAL(obj_codes_map.size(), 1);
+    for (const auto obj_codes : obj_codes_map) {
+        BOOST_CHECK_EQUAL(obj_codes.second[0], "A");
+    }
+
+    // check comments
     BOOST_REQUIRE_EQUAL(data.comment_by_id.size(), 2);
     BOOST_CHECK_EQUAL(data.comment_by_id["bob"], "bob is in the kitchen");
     BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], "test comment");
