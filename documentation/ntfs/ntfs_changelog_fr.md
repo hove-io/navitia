@@ -61,3 +61,5 @@
     * les valeurs de comment_type changent
 * Version 0.7.2 du 30/10/2018
     * dans le fichier stops.txt, suppresion du "location_type = 3" qui n'est pas utilisé
+* Version 0.7.3 du 12/11/2018
+    * ajout du mode physique SuspendedCableCar pour les Téléphérique / télécabine
