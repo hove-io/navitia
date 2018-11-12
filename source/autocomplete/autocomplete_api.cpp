@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -176,6 +176,16 @@ static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_
     }
 }
 
+static std::set<std::string> get_main_stop_area(const navitia::type::Data& d){
+    std::set<std::string> result;
+    for(const auto& admin: d.geo_ref->admins){
+        for(const auto& sa: admin->main_stop_areas){
+            result.insert(sa->uri);
+        }
+    }
+    return result;
+}
+
 
 void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
@@ -315,15 +325,28 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
     }
 
 
+    auto main_stop_areas = get_main_stop_area(d);
+
     //Sort the list of objects (sort by object type , score, quality and name)
     //delete unwanted objects at the end of the list
-    auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
+    auto compare_attributs = [&main_stop_areas](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
         //Sort by object type
         if (a.embedded_type() != b.embedded_type()){
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order < b_order;
         }
+        //prioritize main stop_area over the others stop_area
+        if((a.embedded_type() == pbnavitia::STOP_AREA) && (b.embedded_type() == pbnavitia::STOP_AREA)){
+            bool a_is_main_sa = main_stop_areas.find(a.stop_area().uri()) != main_stop_areas.end();
+            bool b_is_main_sa = main_stop_areas.find(b.stop_area().uri()) != main_stop_areas.end();
+            if(a_is_main_sa && !b_is_main_sa){
+                return true;
+            }else if (!a_is_main_sa && b_is_main_sa){
+                return false;
+            }
+        }
+
         if ((a.quality() != b.quality()) && (a.quality() == 100  || b.quality() == 100)) {
             return a.quality() > b.quality();
         }
