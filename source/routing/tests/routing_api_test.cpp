@@ -1071,7 +1071,7 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().value(), 0.);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().unit(), "gEC");
     // Tram mode
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tram");
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tramway");
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
@@ -1264,7 +1264,7 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), false);
     // Tram mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).pt_display_informations().physical_mode(), "Tram");
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).pt_display_informations().physical_mode(), "Tramway");
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().value(), 0.58);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(3).co2_emission().unit(), "gEC");
     // Walk mode

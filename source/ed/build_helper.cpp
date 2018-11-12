@@ -665,7 +665,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Tram";
+    commercial_mode->name = "Tramway";
     commercial_mode->uri = "0x0";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
     this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;

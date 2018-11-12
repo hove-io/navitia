@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
     objects = get_objects<nt::Line>(indexes, *b.data);
     BOOST_REQUIRE_EQUAL(objects.size(), 1);
     BOOST_REQUIRE_EQUAL((*objects.begin())->physical_mode_list.size(), 1);
-    BOOST_CHECK_EQUAL((*objects.begin())->physical_mode_list.at(0)->name, "Tram");
+    BOOST_CHECK_EQUAL((*objects.begin())->physical_mode_list.at(0)->name, "Tramway");
 
     indexes = make_query(nt::Type_e::Dataset, "stop_point.uri=stop1", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Dataset>(indexes, *b.data), std::set<std::string>({"default:dataset"}));
