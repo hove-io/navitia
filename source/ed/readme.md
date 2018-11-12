@@ -31,19 +31,22 @@ Component that aggregates all data from `ed` and build the kraken input file.
 To run this component, some public transport data *must* be loaded in the database (but other data are not mandatory)
 
 ## osm2ed
-Component that loads a osm .pbf file into `ed`
+Component that loads a OSM .pbf file into `ed`
 
 ## gtfs2ed
-Component that loads a gtfs data set into `ed`.
+Component that loads a GTFS data set into `ed`.
 
 The directory containing all gtfs text files is given with the `-i` option
 
 ## fusio2ed
-Component that loads a fusio data set into `ed`.
+Component that loads a NTFS fusio data set into `ed`.
 
-Fusio is a CanalTP custom file format derived from gtfs but with additional files.
+NTFS is a CanalTP custom file format derived from GTFS but with additional files.
 
-The directory containing all fusio text files is given with the `-i` option
+The directory containing all NTFS text files is given with the `-i` option
+
+Warning: This component will soon be deprecated and replaced by our gtfs2ntfs converter.
+You can check it in [navitia_model](https://github.com/CanalTP/navitia_model).
 
 ## nav2rt
 Component that takes a kraken input file in input and loads real time data into it.
