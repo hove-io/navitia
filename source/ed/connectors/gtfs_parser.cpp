@@ -1183,8 +1183,8 @@ void GenericGtfsParser::fill_default_modes(Data& data){
         //NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
         gtfs_data.physical_mode_map[mode->uri] = mode;
     }
-    //for physical mode, CableCar is Tramway
-    gtfs_data.physical_mode_map["CableCar"] = gtfs_data.physical_mode_map.at("Tramway");
+    //for physical mode, CableCar is Funicular
+    gtfs_data.physical_mode_map["CableCar"] = gtfs_data.physical_mode_map.at("Funicular");
 }
 
 void normalize_extcodes(Data & data) {
