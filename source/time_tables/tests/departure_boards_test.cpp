@@ -1596,3 +1596,130 @@ BOOST_AUTO_TEST_CASE(stop_schedules_order_by_line_route_stop_point) {
     test(6, "route:13rl", "JennerRL");
     test(7, "route:13rl", "RubensRL");
 }
+
+//  Check stop_schedules on loop lines.
+//  We want to display departures on a stop even if it is the terminus too.
+BOOST_AUTO_TEST_CASE(stop_schedule_on_loop) {
+    ed::builder b("20181101");
+
+    b.vj("A", "01").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t)
+        ("stop2", "8:05"_t, "8:05"_t)
+        ("stop1", "8:10"_t, "8:10"_t);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto * data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_dep, "stop_point.uri=stop1", {}, {}, d("20181101T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    auto stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), "08:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::none);
+
+    navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_no_dep, "stop_point.uri=stop1", {}, {}, d("20181102T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator_no_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+}
+
+//  Check stop_schedules on terminuses.
+//  We check that no departure has priority over terminus
+BOOST_AUTO_TEST_CASE(stop_schedule_on_terminus) {
+    ed::builder b("20181101");
+
+    b.vj("A", "01").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t)
+        ("stop2", "8:05"_t, "8:05"_t)
+        ("stop3", "8:10"_t, "8:10"_t);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto * data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    auto stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
+
+    navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator_no_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+}
+
+//  Check stop_schedules on partial terminuses.
+//  We check that no departure has priority over partial terminus
+BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
+    ed::builder b("20181101");
+
+    b.vj("A", "01").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t)
+        ("stop2", "8:05"_t, "8:05"_t)
+        ("stop3", "8:10"_t, "8:10"_t);
+    b.sa("real terminus");
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto * data_ptr = b.data.get();
+    // hacky way to set another terminus to have partial terminuses
+    data_ptr->pt_data->routes[0]->destination = data_ptr->pt_data->stop_areas[1];
+
+    navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    auto stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::partial_terminus);
+
+    navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator_no_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+}
