@@ -38,15 +38,16 @@ Component that loads a GTFS data set into `ed`.
 
 The directory containing all gtfs text files is given with the `-i` option
 
+Warning: This component will soon be deprecated and replaced by our gtfs2ntfs converter.  
+You can check it in [navitia_model](https://github.com/CanalTP/navitia_model).
+The output NTFS will then be provided to fusio2ed.
+
 ## fusio2ed
 Component that loads a NTFS fusio data set into `ed`.
 
 NTFS is a CanalTP custom file format derived from GTFS but with additional files.
 
 The directory containing all NTFS text files is given with the `-i` option
-
-Warning: This component will soon be deprecated and replaced by our gtfs2ntfs converter.
-You can check it in [navitia_model](https://github.com/CanalTP/navitia_model).
 
 ## nav2rt
 Component that takes a kraken input file in input and loads real time data into it.
