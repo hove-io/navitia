@@ -174,6 +174,7 @@ struct routing_api_data {
         way->name = "rue ab"; // A->B
         way->idx = 0;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -181,6 +182,7 @@ struct routing_api_data {
         way->name = "rue ae"; // A->E
         way->idx = 1;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -188,6 +190,7 @@ struct routing_api_data {
         way->name = "rue ef"; // E->F
         way->idx = 2;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         way->add_house_number(navitia::georef::HouseNumber(E.lon(), E.lat(), 2));
         way->add_house_number(navitia::georef::HouseNumber(F.lon(), F.lat(), 5));
@@ -197,6 +200,7 @@ struct routing_api_data {
         way->name = "rue fc"; // F->C
         way->idx = 3;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -204,6 +208,7 @@ struct routing_api_data {
         way->name = "rue cb"; // C->B
         way->idx = 4;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -211,6 +216,7 @@ struct routing_api_data {
         way->name = "rue ag"; // A->G
         way->idx = 5;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         way->add_house_number(navitia::georef::HouseNumber(R.lon(), R.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
@@ -219,6 +225,7 @@ struct routing_api_data {
         way->name = "rue gh"; // G->H
         way->idx = 6;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -226,6 +233,7 @@ struct routing_api_data {
         way->name = "rue hi"; // H->I
         way->idx = 7;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -233,6 +241,7 @@ struct routing_api_data {
         way->name = "rue ij"; // I->J
         way->idx = 8;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -240,6 +249,7 @@ struct routing_api_data {
         way->name = "rue jk"; // J->K
         way->idx = 9;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -247,6 +257,7 @@ struct routing_api_data {
         way->name = "rue kb"; // K->B
         way->idx = 10;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         way->add_house_number(navitia::georef::HouseNumber(HouseNmber42.lon(), HouseNmber42.lat(), 42));
         b.data->geo_ref->ways.push_back(way);
@@ -255,6 +266,7 @@ struct routing_api_data {
         way->name = "rue ar"; // A->R
         way->idx = 11;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -262,6 +274,7 @@ struct routing_api_data {
         way->name = "rue bs"; // B->S
         way->idx = 12;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         b.data->geo_ref->ways.push_back(way);
 
@@ -269,6 +282,7 @@ struct routing_api_data {
         way->name = "rue bd"; // B->D
         way->idx = 13;
         way->way_type = "rue";
+        way->visible = true;
         way->admin_list.push_back(admin);
         way->add_house_number(navitia::georef::HouseNumber(D.lon(), D.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
