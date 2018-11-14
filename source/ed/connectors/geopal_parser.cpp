@@ -383,7 +383,11 @@ void GeopalParser::fill_ways_edges(){
                     }
                     wy->type ="";
                     wy->uri = wayd_uri;
-                    wy->visible = visible;
+                    if (row[visible] == "0") {
+                        wy->visible = false;
+                    } else {
+                        wy->visible = true;
+                    }
                     this->data.ways[wayd_uri] = wy;
                     current_way = wy;
                 }else{

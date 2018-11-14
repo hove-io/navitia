@@ -1274,7 +1274,7 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
         way->idx = data.geo_ref->ways.size();
 
         const_it["type"].to(way->way_type);
-        const_it["visible"].to(way->visible);
+        way->visible = const_it["visible"].as<bool>();
         data.geo_ref->ways.push_back(way);
         this->way_map[const_it["id"].as<idx_t>()] = way;
     }
