@@ -31,7 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from contextlib import contextmanager
-import queue
 from threading import Lock
 from flask_restful import abort
 from zmq import green as zmq
@@ -42,13 +41,12 @@ from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
 from jormungandr.timezone import set_request_instance_timezone
 import logging
-from .exceptions import DeadSocketException
+from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, memory_cache, app, global_autocomplete
-from shapely import wkt
+from shapely import wkt, geometry
 from shapely.geos import ReadingError
-from shapely import geometry
 from flask import g
 import flask
 import pybreaker
@@ -56,6 +54,9 @@ from jormungandr import georef, planner, schedule, realtime_schedule, ptref, str
 from jormungandr.scenarios.ridesharing import ridesharing_service
 import itertools
 import six
+import gevent
+import time
+from collections import deque
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -105,7 +106,7 @@ class Instance(object):
         autocomplete_type,
     ):
         self.geom = None
-        self._sockets = queue.LifoQueue()
+        self._sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -147,6 +148,11 @@ class Instance(object):
             )
 
         self.zmq_socket_type = zmq_socket_type
+        self.socket_ttl = app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10)
+        self.reaper_interval = app.config.get("ZMQ_SOCKET_REAPER_INTERVAL", 10)
+        if self.zmq_socket_type == "transient":
+            logger = logging.getLogger(__name__).debug("spawning a socket reaper greenlet")
+            gevent.spawn_later(self.reaper_interval, self.socket_reaper)
 
     @property
     def autocomplete(self):
@@ -432,28 +438,37 @@ class Instance(object):
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
+    def socket_reaper(self):
+        logger = logging.getLogger(__name__)
+        now = time.time()
+        while True:
+            try:
+                socket, t = self._sockets.popleft()
+                if now - t > self.socket_ttl:
+                    logger.debug("closing one socket for %s", self.name)
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                else:
+                    self._sockets.appendleft((socket, t))
+                    break  # remaining socket are still in "keep alive" state
+            except IndexError:
+                break
+
+        gevent.spawn_later(self.reaper_interval, self.socket_reaper)
+
     @contextmanager
     def socket(self, context):
         socket = None
-        if self.zmq_socket_type == 'transient':
+        try:
+            socket, _ = self._sockets.pop()
+        except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
             socket.connect(self.socket_path)
-            try:
-                yield socket
-            finally:
-                if not socket.closed:
-                    socket.close()
-        else:
-            try:
-                socket = self._sockets.get(block=False)
-            except queue.Empty:
-                socket = context.socket(zmq.REQ)
-                socket.connect(self.socket_path)
-            try:
-                yield socket
-            finally:
-                if not socket.closed:
-                    self._sockets.put(socket)
+        try:
+            yield socket
+        finally:
+            if not socket.closed:
+                self._sockets.append((socket, time.time()))
 
     def send_and_receive(self, *args, **kwargs):
         """
