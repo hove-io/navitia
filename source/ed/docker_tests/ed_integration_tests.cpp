@@ -245,7 +245,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(physical_tram->name, "Tramway");
     BOOST_REQUIRE_EQUAL(physical_tram->uri, "physical_mode:Tramway");
     const auto* physical_suspended = pt_data.physical_modes_map.at("physical_mode:SuspendedCableCar");
-    BOOST_REQUIRE_EQUAL(physical_suspended->name, "Téléphérique / télécabine"); // French names so far
+    BOOST_REQUIRE_EQUAL(physical_suspended->name, "Suspended Cable Car");
     BOOST_REQUIRE_EQUAL(physical_suspended->uri, "physical_mode:SuspendedCableCar");
     const auto* commercial_bus = pt_data.commercial_modes_map.at("commercial_mode:Bus");
     BOOST_REQUIRE_EQUAL(commercial_bus->name, "Bus");
