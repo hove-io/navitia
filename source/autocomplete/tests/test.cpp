@@ -603,6 +603,71 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 }
 
 /*
+ * This is the same test than autocomplete_functional_test_admin_and_SA_test
+ * but some main_stop_area have be defined
+1. We have 1 administrative_region and 11  stop_area
+2. All the stop_areas are attached to the same administrative_region.
+3. Call with "quimer" and count = 10
+4. In the result the administrative_region is the first one
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare", 0, 0);
+    b.sa("Resistance", 0, 0)("bob");
+    b.sa("Becharles", 0, 0);
+    b.sa("Yoyo", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+    b.sa("Marcel Paul", 0, 0);
+    b.sa("chaptal", 0, 0);
+    b.sa("Zebre", 0, 0);
+
+    b.data->pt_data->sort_and_index();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(7).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(8).quality(), 80);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Becharles"); // longuest stop name
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King"); // 2 words, so the quality is lower
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
+
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "qui", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
+}
+
+/*
 1. We have 1 administrative_region and 11  stop_area
 2. All the stop_areas are attached to the same administrative_region.
 3. Call with "quimer" and count = 10
