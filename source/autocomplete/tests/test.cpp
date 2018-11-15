@@ -741,9 +741,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     b.data->pt_data->sort_and_index();
 
 
-    auto w = b.add_way("rue DU TREGOR", "");
-    w = b.add_way("rue VIS", "");
-    w = b.add_way("quai NEUF", "");
+    b.add_way("rue DU TREGOR", "");
+    b.add_way("rue VIS", "");
+    b.add_way("quai NEUF", "");
 
     Admin* ad = new Admin;
     ad->name = "Quimper";
@@ -1330,12 +1330,12 @@ BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
 BOOST_AUTO_TEST_CASE(autocomplete_way_without_edges) {
     ed::builder b("20140614");
 
-    auto w = b.add_way("rue DU TREGOR", "");
-    w = b.add_way("rue VIS", "");
-    w = b.add_way("quai NEUF", "");
+    b.add_way("rue DU TREGOR", "");
+    b.add_way("rue VIS", "");
+    b.add_way("quai NEUF", "");
 
     //we add a way without any edges, it must not be in the result
-    w = new navitia::georef::Way;
+    auto w = new navitia::georef::Way;
     w->idx = b.data->geo_ref->ways.size();
     w->name = "rue DU BAC";
     w->uri = w->name;
