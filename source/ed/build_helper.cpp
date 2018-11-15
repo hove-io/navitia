@@ -862,7 +862,7 @@ static navitia::georef::vertex_t init_vertex(navitia::georef::GeoRef& georef){
     return boost::add_vertex(v, georef.graph);
 }
 
-navitia::georef::Way* builder::add_way(const std::string& name, const std::string& way_type){
+navitia::georef::Way* builder::add_way(const std::string& name, const std::string& way_type, const bool visible){
     if (vertex_a == boost::none) {
         vertex_a = init_vertex(*this->data->geo_ref);
     }
@@ -872,6 +872,7 @@ navitia::georef::Way* builder::add_way(const std::string& name, const std::strin
     navitia::georef::Way* w = new navitia::georef::Way;
     w->idx = this->data->geo_ref->ways.size();
     w->name = name;
+    w->visible = visible;
     w->way_type = way_type;
     w->uri = name;
     //associate the way to an edge to make them "searchable" in the autocomplete

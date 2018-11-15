@@ -742,11 +742,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 
 
     auto w = b.add_way("rue DU TREGOR", "");
-    w->visible = true;
     w = b.add_way("rue VIS", "");
-    w->visible = true;
     w = b.add_way("quai NEUF", "");
-    w->visible = true;
 
     Admin* ad = new Admin;
     ad->name = "Quimper";
@@ -1334,17 +1331,13 @@ BOOST_AUTO_TEST_CASE(autocomplete_way_without_edges) {
     ed::builder b("20140614");
 
     auto w = b.add_way("rue DU TREGOR", "");
-    w->visible = true;
     w = b.add_way("rue VIS", "");
-    w->visible = true;
     w = b.add_way("quai NEUF", "");
-    w->visible = true;
 
     //we add a way without any edges, it must not be in the result
     w = new navitia::georef::Way;
     w->idx = b.data->geo_ref->ways.size();
     w->name = "rue DU BAC";
-    w->visible = true;
     w->uri = w->name;
     b.data->geo_ref->ways.push_back(w);
 
@@ -1390,7 +1383,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     b.data->geo_ref->admins.push_back(ad);
 
     auto w = b.add_way("Sante", "");
-    w->visible = true;
     w->admin_list.push_back(ad);
 
     ad = new Admin();
@@ -1404,7 +1396,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     b.data->geo_ref->admins.push_back(ad);
 
     w = b.add_way("Sante", "");
-    w->visible = true;
     w->admin_list.push_back(ad);
 
     b.build_autocomplete();
@@ -1537,11 +1528,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     b.data->geo_ref->admins.push_back(ad);
 
     auto w = b.add_way("place de la Gare", "");
-    w->visible = true;
     w->admin_list.push_back(ad);
 
     w = b.add_way("rue de la Garenne", "");
-    w->visible = true;
     w->admin_list.push_back(ad);
 
     //Create a new StopArea

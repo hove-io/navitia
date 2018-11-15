@@ -383,7 +383,7 @@ void GeopalParser::fill_ways_edges(){
                     }
                     wy->type ="";
                     wy->uri = wayd_uri;
-                    if (row[visible] == "0") {
+                    if (reader.has_col(visible, row) && row[visible] == "0") {
                         wy->visible = false;
                     } else {
                         wy->visible = true;
