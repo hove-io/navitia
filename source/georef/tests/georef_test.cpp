@@ -1043,19 +1043,19 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     int nbmax = 10;
     std::set<std::string> ghostwords;
 
-    auto way = b.add_way("jeanne d'arc", "rue");
-    way = b.add_way("jean jaures", "place");
-    way = b.add_way("jean paul gaultier paris", "rue");
-    way = b.add_way("jean jaures", "avenue");
-    way = b.add_way("poniatowski", "boulevard");
-    way = b.add_way("pente de Bray", "");
+    b.add_way("jeanne d'arc", "rue");
+    b.add_way("jean jaures", "place");
+    b.add_way("jean paul gaultier paris", "rue");
+    b.add_way("jean jaures", "avenue");
+    b.add_way("poniatowski", "boulevard");
+    b.add_way("pente de Bray", "");
 
     /*
    (2,4)       (2,4)       (2,18)       (2,54)
      4           4           18           54
    */
 
-    way = new navitia::georef::Way;
+    auto way = new navitia::georef::Way;
     way->idx = 6;
     way->name = "jean jaures";
     way->way_type = "rue";
