@@ -66,7 +66,7 @@ class InstantSystem(AbstractRidesharingService):
         rating_scale_max=None,
         timeout=2,
         crowfly_radius=200,
-        timeframe_duration=30,
+        timeframe_duration=1800,
     ):
         self.instance = instance
         self.service_url = service_url
@@ -247,9 +247,9 @@ class InstantSystem(AbstractRidesharingService):
             '%Y-%m-%dT%H:%M:%SZ'
         )
         if period_extremity.represents_start:
-            datetime_str = '{}/PT{}M'.format(datetime_str, self.timeframe_duration)
+            datetime_str = '{}/PT{}S'.format(datetime_str, self.timeframe_duration)
         else:
-            datetime_str = 'PT{}M/{}'.format(self.timeframe_duration, datetime_str)
+            datetime_str = 'PT{}S/{}'.format(self.timeframe_duration, datetime_str)
 
         params = {
             'from': from_coord,

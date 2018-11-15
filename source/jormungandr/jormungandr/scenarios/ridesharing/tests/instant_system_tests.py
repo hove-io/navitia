@@ -188,6 +188,8 @@ def get_ridesharing_service_test():
                 "network": "N",
                 "rating_scale_min": 0,
                 "rating_scale_max": 10,
+                "crowfly_radius": 200,
+                "timeframe_duration": 1800,
                 "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
             },
         },
@@ -199,6 +201,8 @@ def get_ridesharing_service_test():
                 "network": "M",
                 "rating_scale_min": 1,
                 "rating_scale_max": 5,
+                "crowfly_radius": 200,
+                "timeframe_duration": 1800,
             },
         },
     ]
