@@ -398,7 +398,7 @@ struct Way{
     std::string type;
     bool visible;
     std::vector<Edge*> edges;
-    Way():id(0), uri(""), is_used(true), admin(nullptr), name(""), type(""){}
+    Way():id(0), uri(""), is_used(true), admin(nullptr), name(""), type(""), visible(true){}
 };
 
 struct Edge{
