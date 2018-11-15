@@ -1348,3 +1348,7 @@ def new_default_pagination_journey_comparator(clockwise):
         make_crit(lambda j: get_valid_int(j['duration'])),
         make_crit(lambda j: len(j.get('sections', []))),
     ]
+
+
+def has_the_disruption(response, disrupt_id):
+    return any([d['id'] for d in response['disruptions'] if d['id'] == disrupt_id])

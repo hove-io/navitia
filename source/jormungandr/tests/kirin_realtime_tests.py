@@ -52,6 +52,8 @@ from tests.check_utils import (
     Section,
     SectionStopDT,
     is_valid_graphical_isochrone,
+    sub_query,
+    has_the_disruption,
 )
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 from shapely.geometry import asShape
@@ -623,18 +625,15 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             disruption_id='vjA_on_time',
         )
 
-        def has_the_disruption(response):
-            return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_on_time']) != 0
-
         # We have a new diruption
         disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
-        assert has_the_disruption(disruptions_after)
+        assert has_the_disruption(disruptions_after, 'vjA_on_time')
 
         # it's not in journeys
         journey_query = journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(journey_query)
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'vjA_on_time')
         self.is_valid_journey_response(response, journey_query)
         assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
 
@@ -642,21 +641,21 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopB/departures?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'vjA_on_time')
         assert response['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
         # it's not in arrivals
         response = self.query_region(
             "stop_points/stop_point:stopA/arrivals?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'vjA_on_time')
         assert response['arrivals'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
         # it's not in stop_schedules
         response = self.query_region(
             "stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'vjA_on_time')
         assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
@@ -665,7 +664,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'vjA_on_time')
         # no realtime flags on route_schedules yet
 
         # New disruption one second late
@@ -693,17 +692,14 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             disruption_id='vjA_late',
         )
 
-        def has_the_disruption(response):
-            return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_late']) != 0
-
         # We have a new diruption
         disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 2 == len(disruptions_after['disruptions'])
-        assert has_the_disruption(disruptions_after)
+        assert has_the_disruption(disruptions_after, 'vjA_late')
 
         # it's in journeys
         response = self.query_region(journey_query)
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'vjA_late')
         self.is_valid_journey_response(response, journey_query)
         assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
 
@@ -711,7 +707,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopB/departures?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'vjA_late')
         assert response['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080101'
         assert response['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
@@ -719,7 +715,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopA/arrivals?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'vjA_late')
         assert response['arrivals'][0]['stop_date_time']['arrival_date_time'] == '20120614T080103'
         assert response['arrivals'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
@@ -727,7 +723,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'vjA_late')
         assert response['stop_schedules'][0]['date_times'][0]['links'][1]['type'] == 'disruption'
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
@@ -737,7 +733,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         response = self.query_region(
             "stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'vjA_late')
         # no realtime flags on route_schedules yet
 
 
@@ -756,16 +752,19 @@ MAIN_ROUTING_TEST_SETTING['main_routing_test']['kraken_args'].append('--GENERAL.
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
-class TestKirinOnNewStopTime(MockKirinDisruptionsFixture):
-    def test_add_one_stop_time_at_the_end(self):
+class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
+    def test_add_and_delete_one_stop_time_at_the_end(self):
         """
-        creating a new_stop_time to add a final stop in C
-        test that a new journey is possible from B to C
+        1. create a new_stop_time to add a final stop in C
+        test that a new journey is possible with section type = public_transport from B to C
+        2. delete the added stop_time and verify that the public_transport section is absent
+        3. delete again stop_time and verify that the public_transport section is absent
         """
         disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])
 
-        # New disruption same as base schedule
+        # New disruption with two stop_times same as base schedule and
+        # a new stop_time on stop_point:stopC added at the end
         self.send_mock(
             "vjA",
             "20120614",
@@ -798,40 +797,403 @@ class TestKirinOnNewStopTime(MockKirinDisruptionsFixture):
             disruption_id='new_stop_time',
         )
 
-        def has_the_disruption(response):
-            return len([d['id'] for d in response['disruptions'] if d['id'] == 'new_stop_time']) != 0
-
-        # We have a new disruption
+        # We have a new disruption to add a new stop_time at stop_point:stopC in vehicle_journey 'VJA'
         disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
-        assert has_the_disruption(disruptions_after)
+        assert has_the_disruption(disruptions_after, 'new_stop_time')
 
         journey_query = journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(journey_query)
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, journey_query)
         assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
 
         B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
         )
+
+        # The result with base_schedule should not have a journey with public_transport from B to C
         base_journey_query = B_C_query + "&data_freshness=base_schedule&_current_datetime=20120614T080000"
         response = self.query_region(base_journey_query)
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, base_journey_query)
         assert len(response['journeys']) == 1  # check we only have one journey
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
 
-        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
-            from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
-        )
+        # The result with realtime should have a journey with public_transport from B to C
         rt_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(rt_journey_query)
-        assert has_the_disruption(response)
+        assert has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, rt_journey_query)
         assert len(response['journeys']) == 2  # check there's a new journey possible
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][0]['to']['id'] == 'stop_point:stopC'
+        assert response['journeys'][0]['sections'][0]['duration'] == 4
+        assert response['journeys'][0]['status'] == 'MODIFIED_SERVICE'
         assert 'data_freshness' not in response['journeys'][1]['sections'][0]  # means it's base_schedule
+        assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
+
+        # New disruption with a deleted stop_time recently added at stop_point:stopC
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080104"),
+                    departure=tstamp("20120614T080104"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                )
+            ],
+            disruption_id='deleted_stop_time',
+        )
+
+        # We have a new disruption with a deleted stop_time at stop_point:stopC in vehicle_journey 'VJA'
+        disruptions_with_deleted = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disruptions_after['disruptions']) + 1 == len(disruptions_with_deleted['disruptions'])
+        assert has_the_disruption(disruptions_with_deleted, 'deleted_stop_time')
+
+        # The result with realtime should not have a journey with public_transport from B to C
+        # since the added stop_time has been deleted by the last disruption
+        rt_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
+        response = self.query_region(rt_journey_query)
+        assert not has_the_disruption(response, 'added_stop_time')
+        self.is_valid_journey_response(response, rt_journey_query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+        assert 'data_freshness' not in response['journeys'][0]['sections'][0]
+
+        # New disruption with a deleted stop_time already deleted at stop_point:stopC
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080104"),
+                    departure=tstamp("20120614T080104"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                )
+            ],
+            disruption_id='re_deleted_stop_time',
+        )
+
+        # We have a new disruption with a deleted stop_time at stop_point:stopC in vehicle_journey 'VJA'
+        disruptions_with_deleted = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disruptions_after['disruptions']) + 2 == len(disruptions_with_deleted['disruptions'])
+        assert has_the_disruption(disruptions_with_deleted, 're_deleted_stop_time')
+
+        # The result with realtime should not have a journey with public_transport from B to C
+        rt_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
+        response = self.query_region(rt_journey_query)
+        assert not has_the_disruption(response, 'added_stop_time')
+        self.is_valid_journey_response(response, rt_journey_query)
+        assert len(response['journeys']) == 1
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
+    def test_add_modify_and_delete_one_stop_time(self):
+        """
+        1. Create a disruption with delay on VJ = vjA (with stop_time B and A) and verify the journey
+        for a query from S to R: S-> walk-> B -> public_transport -> A -> walk -> R
+        2. Add a new stop_time (stop_point C) in between B and A in the VJ = vjA and verify the journey as above
+        3. Verify the journey for a query from S to C: S-> walk-> B -> public_transport -> C
+        4. Delete the added stop_time and verify the journey  for a query in 3.
+        """
+        # New disruption with a delay of VJ = vjA
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120614T080224"),
+                    departure=tstamp("20120614T080225"),
+                    arrival_delay=60 + 24,
+                    departure_delay=60 + 25,
+                    message='cow on tracks',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120614T080400"),
+                    departure=tstamp("20120614T080400"),
+                    arrival_delay=3 * 60 + 58,
+                    departure_delay=3 * 60 + 58,
+                ),
+            ],
+            disruption_id='vjA_delayed',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 11
+        assert has_the_disruption(disrupts, 'vjA_delayed')
+
+        # query from S to R: Journey without delay with departure from B at 20120614T080100
+        # and arrival to A  at 20120614T080102 returned
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert len(response['journeys'][1]['sections']) == 1
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][1]['data_freshness'] == 'base_schedule'
+        assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080101'
+        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080103'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+
+        # A new request with departure after 2 minutes gives us journey with delay
+        response = self.query_region(sub_query + "&data_freshness=realtime&datetime=20120614T080200")
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert len(response['journeys'][1]['sections']) == 1
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080225'
+        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080400'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+
+        # New disruption with a new stop_time in between B and A of the VJ = vjA
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120614T080224"),
+                    departure=tstamp("20120614T080225"),
+                    arrival_delay=60 + 24,
+                    departure_delay=60 + 25,
+                    message='cow on tracks',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080330"),
+                    departure=tstamp("20120614T080330"),
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120614T080400"),
+                    departure=tstamp("20120614T080400"),
+                    arrival_delay=3 * 60 + 58,
+                    departure_delay=3 * 60 + 58,
+                ),
+            ],
+            disruption_id='vjA_delayed_with_new_stop_time',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 12
+        assert has_the_disruption(disrupts, 'vjA_delayed_with_new_stop_time')
+
+        # the journey has the new stop_time in its section of public_transport
+        response = self.query_region(sub_query + "&data_freshness=realtime&datetime=20120614T080200")
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert len(response['journeys'][1]['sections']) == 1
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080225'
+        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080400'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 3
+        assert (
+            response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']['name']
+            == 'stop_point:stopC'
+        )
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+
+        # Query from S to C: Uses a public_transport from B to C
+        S_to_C_query = "journeys?from={from_coord}&to={to_coord}".format(
+            from_coord='0.0000898312;0.0000898312', to_coord='stop_point:stopC'
+        )
+        base_journey_query = S_to_C_query + "&data_freshness=realtime&datetime=20120614T080200"
+        response = self.query_region(base_journey_query)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 2
+        assert len(response['journeys'][1]['sections']) == 1
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][1]['departure_date_time'] == '20120614T080225'
+        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080330'
+
+        # New disruption with a deleted stop_time recently added at stop_point:stopC
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080330"),
+                    departure=tstamp("20120614T080330"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                )
+            ],
+            disruption_id='deleted_stop_time',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 13
+        assert has_the_disruption(disrupts, 'deleted_stop_time')
+
+        # the journey doesn't have public_transport
+        response = self.query_region(base_journey_query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['type'] == 'non_pt_walk'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
+    def test_add_modify_and_delete_one_stop_time(self):
+        """
+        1. create a new_stop_time to add a final stop in C
+        test that a new journey is possible with section type = public_transport from B to C
+        2. delete the added stop_time and verify that the public_transport section is absent
+        3. delete again stop_time and verify that the public_transport section is absent
+        """
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 10
+
+        C_to_R_query = "journeys?from={from_coord}&to={to_coord}".format(
+            from_coord='stop_point:stopC', to_coord='0.00188646;0.00071865'
+        )
+
+        # Query from C to R: the journey doesn't have any public_transport
+        base_journey_query = C_to_R_query + "&data_freshness=realtime&datetime=20120614T080000"
+        response = self.query_region(base_journey_query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+        assert 'data_freshness' not in response['journeys'][0]['sections'][0]
+        assert response['journeys'][0]['durations']['walking'] == 159
+
+        # New disruption with two stop_times same as base schedule and
+        # a new stop_time on stop_point:stopC added at the beginning
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080055"),
+                    departure=tstamp("20120614T080055"),
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id='new_stop_time',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 11
+        assert has_the_disruption(disrupts, 'new_stop_time')
+        assert (
+            disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['arrival_status'] == 'added'
+        )
+        assert (
+            disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+            == 'added'
+        )
+        assert disrupts['disruptions'][10]['severity']['effect'] == 'MODIFIED_SERVICE'
+        assert disrupts['disruptions'][10]['severity']['name'] == 'trip modified'
+
+        # Query from C to R: the journey should have a public_transport from C to A
+        response = self.query_region(base_journey_query)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 2
+        assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120614T080055'
+        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080222'
+        assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
+
+        # New disruption with a deleted stop_time recently added at stop_point:stopC
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080104"),
+                    departure=tstamp("20120614T080104"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                )
+            ],
+            disruption_id='deleted_stop_time',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 12
+        assert has_the_disruption(disrupts, 'deleted_stop_time')
+        assert (
+            disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['arrival_status']
+            == 'deleted'
+        )
+        assert (
+            disrupts['disruptions'][11]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
+            == 'unchanged'  # Why ?
+        )
+        assert disrupts['disruptions'][11]['severity']['effect'] == 'DETOUR'
+        assert disrupts['disruptions'][11]['severity']['name'] == 'trip modified'
+
+        response = self.query_region(base_journey_query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+        assert 'data_freshness' not in response['journeys'][0]['sections'][0]
+        assert response['journeys'][0]['durations']['walking'] == 159
+
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T080000')
+        assert len(pt_response['disruptions']) == 2
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
@@ -878,17 +1240,14 @@ class TestKrakenNoAdd(MockKirinDisruptionsFixture):
             disruption_id='new_stop_time',
         )
 
-        def has_the_disruption(response):
-            return len([d['id'] for d in response['disruptions'] if d['id'] == 'new_stop_time']) != 0
-
         # No new disruption
         disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before == len(disruptions_after['disruptions'])
-        assert not has_the_disruption(disruptions_after)
+        assert not has_the_disruption(disruptions_after, 'new_stop_time')
 
         journey_query = journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(journey_query)
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, journey_query)
         assert response['journeys'][0]['sections'][1]['data_freshness'] == 'base_schedule'
 
@@ -897,7 +1256,7 @@ class TestKrakenNoAdd(MockKirinDisruptionsFixture):
         )
         base_journey_query = B_C_query + "&data_freshness=base_schedule&_current_datetime=20120614T080000"
         response = self.query_region(base_journey_query)
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, base_journey_query)
         assert len(response['journeys']) == 1  # check we only have one journey
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
@@ -907,7 +1266,7 @@ class TestKrakenNoAdd(MockKirinDisruptionsFixture):
         )
         rt_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(rt_journey_query)
-        assert not has_the_disruption(response)
+        assert not has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, rt_journey_query)
         assert len(response['journeys']) == 1  # check there's no new journey possible
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
