@@ -139,7 +139,6 @@ struct HouseNumber{
 struct Way :public nt::Nameable, nt::Header{
 public:
     std::string way_type;
-    bool visible;
     std::string comment;
     // liste des admins
     std::vector<Admin*> admin_list;
@@ -156,7 +155,7 @@ public:
     nt::GeographicalCoord projected_centroid(const Graph&) const;
     nt::MultiLineString make_multiline(const Graph&) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & uri & way_type & visible & admin_list & house_number_left & house_number_right & edges & geoms;
+      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges & geoms;
     }
     std::string get_label() const;
 
