@@ -1043,21 +1043,28 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     int nbmax = 10;
     std::set<std::string> ghostwords;
 
-    b.add_way("jeanne d'arc", "rue");
-    b.add_way("jean jaures", "place");
-    b.add_way("jean paul gaultier paris", "rue");
-    b.add_way("jean jaures", "avenue");
-    b.add_way("poniatowski", "boulevard");
-    b.add_way("pente de Bray", "");
+    auto way = b.add_way("jeanne d'arc", "rue");
+    way->visible = true;
+    way = b.add_way("jean jaures", "place");
+    way->visible = true;
+    way = b.add_way("jean paul gaultier paris", "rue");
+    way->visible = true;
+    way = b.add_way("jean jaures", "avenue");
+    way->visible = true;
+    way = b.add_way("poniatowski", "boulevard");
+    way->visible = true;
+    way = b.add_way("pente de Bray", "");
+    way->visible = true;
 
     /*
    (2,4)       (2,4)       (2,18)       (2,54)
      4           4           18           54
    */
 
-    auto way = new navitia::georef::Way;
+    way = new navitia::georef::Way;
     way->idx = 6;
     way->name = "jean jaures";
+    way->visible = true;
     way->way_type = "rue";
     // Ajout des numéros et les noeuds
     nt::GeographicalCoord upper(2.0,54.0);
