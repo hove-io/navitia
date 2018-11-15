@@ -154,4 +154,3 @@ class TestAutocomplete(AbstractTestFixture):
         places = get_not_null(response, 'places')
         assert len(places) == 1
         assert places[0]['name'] == 'quai NEUF (Quimper)'
-

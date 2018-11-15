@@ -15,6 +15,7 @@ import sqlalchemy as sa
 import geoalchemy2 as ga
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
     ### Add new flag for input/ouput visibility
     op.add_column('way', sa.Column('visible', sa.BOOLEAN(), nullable=False), schema='georef')
