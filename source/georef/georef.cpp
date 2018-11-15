@@ -417,9 +417,10 @@ void GeoRef::build_autocomplete_list(){
             // Same way for all address in the admin.
             // After this modification the result found with postal code in search string
             // should contain only this postal code but not others of the admin found.
-            std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
-            fl_way.add_string(key, pos, this->ghostwords, this->synonyms);
-
+            if (way->visible == true) {
+                std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
+                fl_way.add_string(key, pos, this->ghostwords, this->synonyms);
+            }
         }
     }
     fl_way.build();
@@ -484,7 +485,7 @@ void GeoRef::build_admin_map(){
     * Sinon le barycentre de la rue
 */
 std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax, const int search_type, std::function<bool(nt::idx_t)> keep_element, const std::set<std::string>& ghostwords) const{
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return, results;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
 
     int search_number = str_to_int(*tokens.begin());
@@ -504,17 +505,9 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
         search_str = str;
     }
     if (search_type == 0){
-        results = fl_way.find_complete(search_str, nbmax, keep_element, ghostwords);
+        to_return = fl_way.find_complete(search_str, nbmax, keep_element, ghostwords);
     }else{
-        results = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element, ghostwords);
-    }
-
-    // filter with visible parameter
-    for(auto& item: results){
-       Way* way = this->ways[item.idx];
-       if (way->visible == true) {
-            to_return.push_back(item);
-       }
+        to_return = fl_way.find_partial_with_pattern(search_str, word_weight, nbmax, keep_element, ghostwords);
     }
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
