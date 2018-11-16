@@ -1696,8 +1696,8 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
-    // hacky way to set another terminus to have partial terminuses
-    data_ptr->pt_data->routes[0]->destination = data_ptr->pt_data->stop_areas[1];
+    // Set a different terminus on the route to have partial terminuses
+    data_ptr->pt_data->routes[0]->destination = b.sas.find("real terminus")->second;
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
     departure_board(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3,
@@ -1708,6 +1708,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     auto stop_schedule = resp.stop_schedules(0);
     BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
     BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_CHECK_EQUAL(stop_schedule.route().direction().uri(), "real terminus");
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
     BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::partial_terminus);
 
@@ -1720,6 +1721,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     stop_schedule = resp.stop_schedules(0);
     BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop3");
     BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "A:0");
+    BOOST_CHECK_EQUAL(stop_schedule.route().direction().uri(), "real terminus");
     BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
     BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
 }
