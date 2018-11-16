@@ -409,7 +409,7 @@ void GeoRef::build_autocomplete_list(){
         if (way->name.empty()) { continue; }
         //skip way without edges as we don't kwow where they are (no coordinate)
         if (way->edges.empty()) { continue; }
-        if (way->visible = false) { continue; }
+        if (way->visible == false) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
             // @TODO:
             // For each object admin we have one element in the dictionnary of admins.
