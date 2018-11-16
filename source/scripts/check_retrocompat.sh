@@ -22,8 +22,8 @@ model_files=(
     "source/type/validity_pattern.h"
 )
 
-diff_filenames=`git diff --name-only $branch_to` # List the updated files
 
+diff_filenames=`git diff --name-only origin/$branch_to` # List the updated files
 num_model_files=${#model_files[@]}
 modified_model_files=()
 
