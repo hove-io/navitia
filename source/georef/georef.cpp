@@ -409,6 +409,7 @@ void GeoRef::build_autocomplete_list(){
         if (way->name.empty()) { continue; }
         //skip way without edges as we don't kwow where they are (no coordinate)
         if (way->edges.empty()) { continue; }
+        if (way->visible = false) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
             // @TODO:
             // For each object admin we have one element in the dictionnary of admins.
@@ -417,10 +418,8 @@ void GeoRef::build_autocomplete_list(){
             // Same way for all address in the admin.
             // After this modification the result found with postal code in search string
             // should contain only this postal code but not others of the admin found.
-            if (way->visible == true) {
-                std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
-                fl_way.add_string(key, pos, this->ghostwords, this->synonyms);
-            }
+            std::string key = way->way_type + " " + way->name + " " + admin->name + " " + admin->postal_codes_to_string();
+            fl_way.add_string(key, pos, this->ghostwords, this->synonyms);
         }
     }
     fl_way.build();
