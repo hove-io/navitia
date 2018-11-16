@@ -43,6 +43,12 @@ class Sytral(RealtimeProxy):
     """
     class managing calls to sytral-rt service providing real-time next passages
 
+    curl example to check/test that external service is working:
+    curl -X GET '{server}/departures?stop_id={stop_code}'
+    {stop_code} is the code of type "source" for a stop_point
+    So in practice it will look like:
+    curl -X GET 'http://sytralrt/departures?stop_id=472'
+
     """
 
     def __init__(
@@ -62,14 +68,13 @@ class Sytral(RealtimeProxy):
         self.destination_id_tag = destination_id_tag
         self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S'],
+            fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SYTRAL_FAIL', 5),
+            reset_timeout=app.config.get('CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S', 60),
         )
-        # TODO create a logger (with rt_system_id) and use it everywhere
 
     def __repr__(self):
         """
-         used as the cache key. we use the rt_system_id to share the cache between servers in production
+         used as the cache key. We use the rt_system_id to share the cache between servers in production
         """
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
@@ -89,13 +94,13 @@ class Sytral(RealtimeProxy):
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
-                'systralRT RT service dead, using base ' 'schedule (error: {}'.format(e),
+                'systralRT service dead, using base ' 'schedule (error: {}'.format(e),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
             )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error(
-                'systralRT RT service timeout, using base ' 'schedule (error: {}'.format(t),
+                'systralRT service timeout, using base ' 'schedule (error: {}'.format(t),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
             )
             raise RealtimeProxyError('timeout')
@@ -113,7 +118,6 @@ class Sytral(RealtimeProxy):
         stop_id = route_point.fetch_stop_id(self.object_id_tag)
 
         if not stop_id:
-            # one a the id is missing, we'll not find any realtime
             logging.getLogger(__name__).debug(
                 'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
@@ -162,7 +166,7 @@ class Sytral(RealtimeProxy):
 
         if r.status_code != requests.codes.ok:
             logging.getLogger(__name__).error(
-                'sytralrt RT service unavailable, impossible to query : {}'.format(r.url),
+                'sytralrt service unavailable, impossible to query : {}'.format(r.url),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
             )
             raise RealtimeProxyError('non 200 response')
