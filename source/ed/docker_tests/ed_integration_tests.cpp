@@ -250,6 +250,12 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     const auto* commercial_bus = pt_data.commercial_modes_map.at("commercial_mode:Bus");
     BOOST_REQUIRE_EQUAL(commercial_bus->name, "Bus");
     BOOST_REQUIRE_EQUAL(commercial_bus->uri, "commercial_mode:Bus");
+    const auto* commercial_tram = pt_data.commercial_modes_map.at("commercial_mode:Tramway");
+    BOOST_REQUIRE_EQUAL(commercial_tram->name, "Tram, Streetcar, Light rail");
+    BOOST_REQUIRE_EQUAL(commercial_tram->uri, "commercial_mode:Tramway");
+    const auto* commercial_metro = pt_data.commercial_modes_map.at("commercial_mode:Metro");
+    BOOST_REQUIRE_EQUAL(commercial_metro->name, "Subway, Metro");
+    BOOST_REQUIRE_EQUAL(commercial_metro->uri, "commercial_mode:Metro");
 
 
     BOOST_REQUIRE_EQUAL(pt_data.stop_areas.size(), 9);
