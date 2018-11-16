@@ -54,7 +54,6 @@ from jormungandr import georef, planner, schedule, realtime_schedule, ptref, str
 from jormungandr.scenarios.ridesharing import ridesharing_service
 import itertools
 import six
-import gevent
 import time
 from collections import deque
 
@@ -148,11 +147,6 @@ class Instance(object):
             )
 
         self.zmq_socket_type = zmq_socket_type
-        self.socket_ttl = app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10)
-        self.reaper_interval = app.config.get("ZMQ_SOCKET_REAPER_INTERVAL", 10)
-        if self.zmq_socket_type == "transient":
-            logger = logging.getLogger(__name__).debug("spawning a socket reaper greenlet")
-            gevent.spawn_later(self.reaper_interval, self.socket_reaper)
 
     @property
     def autocomplete(self):
@@ -438,13 +432,15 @@ class Instance(object):
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
-    def socket_reaper(self):
+    def reap_socket(self, ttl):
+        if self.zmq_socket_type != 'transient':
+            return
         logger = logging.getLogger(__name__)
         now = time.time()
         while True:
             try:
                 socket, t = self._sockets.popleft()
-                if now - t > self.socket_ttl:
+                if now - t > ttl:
                     logger.debug("closing one socket for %s", self.name)
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
@@ -453,8 +449,6 @@ class Instance(object):
                     break  # remaining socket are still in "keep alive" state
             except IndexError:
                 break
-
-        gevent.spawn_later(self.reaper_interval, self.socket_reaper)
 
     @contextmanager
     def socket(self, context):

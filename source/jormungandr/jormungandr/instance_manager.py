@@ -89,6 +89,9 @@ class InstanceManager(object):
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
+        self.socket_ttl = app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10)
+        self.reaper_interval = app.config.get("ZMQ_SOCKET_REAPER_INTERVAL", 10)
+        self.init_socket_reaper()
 
     def __repr__(self):
         return '<InstanceManager>'
@@ -178,6 +181,29 @@ class InstanceManager(object):
             if future.get():
                 self._clear_cache()
                 break
+
+    def init_socket_reaper(self):
+        try:
+            from uwsgidecorators import timer
+
+            logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
+
+            @timer(self.reaper_interval, target='active-workers')
+            def reaper_timer(signal):
+                self.socket_reaper_thread(disable_gevent=True)
+
+        except ImportError:
+            logging.getLogger(__name__).info(
+                "uwsgi timers not available, falling back to gevent for socket reaper"
+            )
+            gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
+
+    def socket_reaper_thread(self, disable_gevent=False):
+        for instance in self.instances.values():
+            instance.reap_socket(self.socket_ttl)
+
+        if not disable_gevent:
+            gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
 
     def thread_ping(self, timer=10):
         """
