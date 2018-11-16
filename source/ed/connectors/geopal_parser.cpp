@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -326,7 +326,7 @@ void GeopalParser::fill_ways_edges(){
             throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"id", "x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
-        "inseecom_d"};
+        "inseecom_d", "visible"};
         if(!reader.validate(mandatory_headers)) {
             throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
         }
@@ -337,6 +337,7 @@ void GeopalParser::fill_ways_edges(){
         int x2 = reader.get_pos_col("x_fin");
         int y2 = reader.get_pos_col("y_fin");
         int l = reader.get_pos_col("longueur");
+        int visible = reader.get_pos_col("visible");
         int inseecom_d = reader.get_pos_col("inseecom_d");
         int id = reader.get_pos_col("id");
         while(!reader.eof()){
@@ -382,6 +383,11 @@ void GeopalParser::fill_ways_edges(){
                     }
                     wy->type ="";
                     wy->uri = wayd_uri;
+                    if (reader.has_col(visible, row) && row[visible] == "0") {
+                        wy->visible = false;
+                    } else {
+                        wy->visible = true;
+                    }
                     this->data.ways[wayd_uri] = wy;
                     current_way = wy;
                 }else{

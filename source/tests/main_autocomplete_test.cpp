@@ -102,6 +102,13 @@ int main(int argc, const char* const argv[]) {
     w->uri = w->name;
     w->edges.push_back(std::make_pair(2, 3));
     b.data->geo_ref->ways.push_back(w);
+    w = new Way;
+    w->idx = 3;
+    w->name = "input/output quai NEUF";
+    w->uri = w->name;
+    w->visible = false;
+    w->edges.push_back(std::make_pair(3, 4));
+    b.data->geo_ref->ways.push_back(w);
 
     Admin* ad = new Admin;
     ad->name = "Quimper";

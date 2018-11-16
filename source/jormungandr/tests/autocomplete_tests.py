@@ -140,3 +140,17 @@ class TestAutocomplete(AbstractTestFixture):
             '/v1/coverage/main_autocomplete_test/places?q=Gare&shape={}'.format(multipolygon)
         )
         assert status == 400
+
+    def test_visibility(self):
+        """
+        Test if visible parameters (way struct) is taken into account
+
+        data :
+            quai NEUF (Quimper) with visible=true
+            input/output quai NEUF (Quimper) with visible=false
+        """
+        response = self.query_region("places?q=quai NEUF", display=False)
+        is_valid_autocomplete(response, 2)
+        places = get_not_null(response, 'places')
+        assert len(places) == 1
+        assert places[0]['name'] == 'quai NEUF (Quimper)'
