@@ -1122,70 +1122,91 @@ void GenericGtfsParser::fill_default_modes(Data& data){
     // default commercial_mode and physical_modes
     // all modes are represented by a number in GTFS
     // see route_type in https://developers.google.com/transit/gtfs/reference?hl=fr-FR#routestxt
+    ed::types::PhysicalMode* physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Tramway";
+    physical_mode->name = "Tramway";
+    data.physical_modes.push_back(physical_mode);
+    //NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "Tram";
-    commercial_mode->uri = commercial_mode->name;
+    commercial_mode->uri = physical_mode->uri;
+    commercial_mode->name = "Tram, Streetcar, Light rail";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["0"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Metro";
+    physical_mode->name = "Metro";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "Metro";
-    commercial_mode->uri = commercial_mode->name;
+    commercial_mode->uri = physical_mode->uri;
+    commercial_mode->name = "Subway, Metro";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["1"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Train";
+    physical_mode->name = "Train";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Rail";
-    commercial_mode->uri = commercial_mode->name;
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["2"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Bus";
+    physical_mode->name = "Bus";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Bus";
-    commercial_mode->uri = commercial_mode->name;
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["3"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Ferry";
+    physical_mode->name = "Ferry";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Ferry";
-    commercial_mode->uri = commercial_mode->name;
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["4"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "SuspendedCableCar";
+    physical_mode->name = "Suspended Cable Car";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "Cable car";
-    commercial_mode->uri = "Cable_car";
-    data.commercial_modes.push_back(commercial_mode);
-    gtfs_data.commercial_mode_map["5"] = commercial_mode;
-
-    commercial_mode = new ed::types::CommercialMode();
-    commercial_mode->name = "Gondola";
-    commercial_mode->uri = commercial_mode->name;
+    commercial_mode->uri = physical_mode->uri;
+    commercial_mode->name = "Gondola, Suspended cable car";
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["6"] = commercial_mode;
 
+    physical_mode = new ed::types::PhysicalMode();
+    physical_mode->uri = "Funicular";
+    physical_mode->name = "Funicular";
+    data.physical_modes.push_back(physical_mode);
+    gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
     commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Funicular";
-    commercial_mode->uri = commercial_mode->name;
     data.commercial_modes.push_back(commercial_mode);
     gtfs_data.commercial_mode_map["7"] = commercial_mode;
 
-    for (ed::types::CommercialMode* mt : data.commercial_modes) {
-        // we aggregate some GTFS modes
-        if (in(mt->uri, {"Cable_car", "Gondola"})) {
-            continue;
-        }
-
-        ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
-        mode->name = mt->name;
-        mode->uri = mt->uri;
-        data.physical_modes.push_back(mode);
-        //NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
-        gtfs_data.physical_mode_map[mode->uri] = mode;
-    }
-    //for physical mode, cable car is tramway, gondola is funicular
-    gtfs_data.physical_mode_map["Cable_car"] = gtfs_data.physical_mode_map.at("Tram");
-    gtfs_data.physical_mode_map["Gondola"] = gtfs_data.physical_mode_map.at("Funicular");
+    commercial_mode = new ed::types::CommercialMode();
+    commercial_mode->uri = "CableCar";
+    commercial_mode->name = "Cable car";
+    data.commercial_modes.push_back(commercial_mode);
+    gtfs_data.commercial_mode_map["5"] = commercial_mode;
+    //for physical mode, CableCar is Funicular
+    gtfs_data.physical_mode_map[commercial_mode->uri] = physical_mode;
 }
 
 void normalize_extcodes(Data & data) {

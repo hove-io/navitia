@@ -59,7 +59,7 @@ int main(int argc, const char* const argv[]) {
     b.connection("stopS", "stopS", 0);
 
     b.connection("stopT", "stopT", 0);
-    b.vj("U", "11111111", "", true, "", "", "physical_mode:Tram")("stopT", "19:00"_t)("stopU", "19:30"_t); //Tram
+    b.vj("U", "11111111", "", true, "", "", "physical_mode:Tramway")("stopT", "19:00"_t)("stopU", "19:30"_t); //Tram
     b.vj("V", "11111111", "", true, "", "", "physical_mode:Bus")("stopU", "19:30"_t)("stopV", "20:00"_t); //Bus
     b.vj("W", "11111111", "", true, "", "", "physical_mode:Bus")("stopV", "20:00"_t)("stopW", "20:30"_t); //Bus
 

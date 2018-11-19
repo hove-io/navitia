@@ -237,6 +237,7 @@ Here is the valid id list:
 -   physical_mode:RailShuttle
 -   physical_mode:RapidTransit
 -   physical_mode:Shuttle
+-   physical_mode:SuspendedCableCar
 -   physical_mode:Taxi
 -   physical_mode:Train
 -   physical_mode:Tramway

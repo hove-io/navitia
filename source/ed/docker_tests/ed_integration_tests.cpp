@@ -235,15 +235,27 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     // check physical/commercial modes
     // for GTFS we got all the default ones
-    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 6); // less physical mode, some are aggregated
+    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 7); // less physical mode, some are aggregated
     BOOST_REQUIRE_EQUAL(pt_data.commercial_modes.size(), 8);
     // we check one of each
     const auto* physical_bus = pt_data.physical_modes_map.at("physical_mode:Bus");
     BOOST_REQUIRE_EQUAL(physical_bus->name, "Bus");
     BOOST_REQUIRE_EQUAL(physical_bus->uri, "physical_mode:Bus");
+    const auto* physical_tram = pt_data.physical_modes_map.at("physical_mode:Tramway");
+    BOOST_REQUIRE_EQUAL(physical_tram->name, "Tramway");
+    BOOST_REQUIRE_EQUAL(physical_tram->uri, "physical_mode:Tramway");
+    const auto* physical_suspended = pt_data.physical_modes_map.at("physical_mode:SuspendedCableCar");
+    BOOST_REQUIRE_EQUAL(physical_suspended->name, "Suspended Cable Car");
+    BOOST_REQUIRE_EQUAL(physical_suspended->uri, "physical_mode:SuspendedCableCar");
     const auto* commercial_bus = pt_data.commercial_modes_map.at("commercial_mode:Bus");
     BOOST_REQUIRE_EQUAL(commercial_bus->name, "Bus");
     BOOST_REQUIRE_EQUAL(commercial_bus->uri, "commercial_mode:Bus");
+    const auto* commercial_tram = pt_data.commercial_modes_map.at("commercial_mode:Tramway");
+    BOOST_REQUIRE_EQUAL(commercial_tram->name, "Tram, Streetcar, Light rail");
+    BOOST_REQUIRE_EQUAL(commercial_tram->uri, "commercial_mode:Tramway");
+    const auto* commercial_metro = pt_data.commercial_modes_map.at("commercial_mode:Metro");
+    BOOST_REQUIRE_EQUAL(commercial_metro->name, "Subway, Metro");
+    BOOST_REQUIRE_EQUAL(commercial_metro->uri, "commercial_mode:Metro");
 
 
     BOOST_REQUIRE_EQUAL(pt_data.stop_areas.size(), 9);

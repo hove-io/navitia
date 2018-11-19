@@ -781,8 +781,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 }
 
 /*
-1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
-2. 1 line for mode "Tram" and and 2 routes
+1. We have 1 Network (name="base_network"), 2 mode (name="Tramway" and name="Metro")
+2. 1 line for mode "Tramway" and 2 routes
 */
 BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     std::vector<std::string> admins;
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     ed::builder b("201409011T1739");
     b.generate_dummy_basis();
 
-    //Create a new line and affect it to mode "Tram"
+    //Create a new line and affect it to mode "Tramway"
     navitia::type::Line* line = new navitia::type::Line();
     line->idx = b.data->pt_data->lines.size();
     line->uri = "line 1";
@@ -827,9 +827,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
 
-    // Call with "Tram" and &type[]=network&type[]=mode&type[]=line&type[]=route
+    // Call with "Tramway" and &type[]=network&type[]=mode&type[]=line&type[]=route
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    navitia::autocomplete::autocomplete(pb_creator, "Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    navitia::autocomplete::autocomplete(pb_creator, "Tramway", type_filter , 1, 10, admins, 0, *(b.data));
     resp = pb_creator.get_response();
     //In the result the first line is Mode and the second is line
     BOOST_REQUIRE_EQUAL(resp.places_size(), 4);
@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
 }
 
 /*
-1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+1. We have 1 Network (name="base_network"), 2 mode (name="Tramway" et name="Metro")
 2. 1 line for mode Metro and and 2 routes
 3. 4 stop_areas
 */

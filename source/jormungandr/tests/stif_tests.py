@@ -145,7 +145,7 @@ class TestStif(AbstractTestFixture):
         Test of request with parameter "_max_successive_physical_mode":
         * we want to make at least 2 journey calls (not only the best journey, but also try next)
         * we don't want the journey using more than 3 Buses successive
-        * we have "Bus" and "Tram" as means of transport
+        * we have "Bus" and "Tramway" as means of transport
         """
 
         # As there are 4 buses successive to be used from stopP to stopW and _max_successive_physical_mode = 3

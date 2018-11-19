@@ -280,6 +280,7 @@ Metro | Métro | 4
 RapidTransit | Train de banlieue / RER | 3
 RailShuttle | Navette ferrée (VAL) | 3
 Shuttle | Navette | 7
+SuspendedCableCar | Téléphérique / télécabine | 6
 Taxi | Taxi | 7
 Train | Train | 3
 Tramway | Tramway | 5
