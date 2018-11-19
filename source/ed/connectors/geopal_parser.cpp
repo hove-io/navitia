@@ -326,9 +326,9 @@ void GeopalParser::fill_ways_edges(){
             throw GeopalParserException("Error on open file " + reader.filename);
         }
         std::vector<std::string> mandatory_headers = {"id", "x_debut" , "y_debut", "x_fin", "y_fin", "longueur", "inseecom_g",
-        "inseecom_d", "visible"};
+        "inseecom_d"};
         if(!reader.validate(mandatory_headers)) {
-            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Not find column : " + reader.missing_headers(mandatory_headers));
+            throw GeopalParserException("Impossible to parse file " + reader.filename +" . Column(s) not found: " + reader.missing_headers(mandatory_headers));
         }
         auto house_number_filler = HouseNumberFromEdgesFiller(reader, *this);
         int nom_voie_d = reader.get_pos_col("nom_voie_d");
