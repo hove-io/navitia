@@ -25,7 +25,7 @@ protobuf
 psycopg2
 pydns==2.3.6
 pytz==2013.9
-redis==3.0.0.post1
+redis==3.0.1
 six==1.10.0
 validate-email==1.1
 wsgiref==0.1.2
