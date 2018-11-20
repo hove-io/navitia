@@ -55,6 +55,7 @@ using ntest::RTStopTime;
 
 static const std::string feed_id = "42";
 static const std::string feed_id_1 = "44";
+static const std::string comp_id_1 = "Comp_id_1";
 static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
@@ -216,12 +217,22 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
+    // to test company
+    navitia::type::Company* cmp1 = new navitia::type::Company();
+    cmp1->line_list.push_back(b.lines["A"]);
+    cmp1->idx = b.data->pt_data->companies.size();
+    cmp1->name = "Comp1";
+    cmp1->uri = comp_id_1;
+    b.data->pt_data->companies.push_back(cmp1);
+    b.lines["A"]->company_list.push_back(cmp1);
+
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
                     RTStopTime("stop2", "20150928T0910"_pts).delay(9_min)
-            });
+            },
+            comp_id_1);
     b.data->build_uri();
 
 
@@ -237,6 +248,8 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[1]->company->uri, comp_id_1);
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys[1]->company->name, "Comp1");
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     // We should have two vp
