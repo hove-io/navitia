@@ -176,8 +176,8 @@ static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_
     }
 }
 
-static std::set<std::string> get_main_stop_area(const navitia::type::Data& d){
-    std::set<std::string> result;
+static std::unordered_set<std::string> get_main_stop_areas(const navitia::type::Data& d){
+    std::unordered_set<std::string> result;
     for(const auto& admin: d.geo_ref->admins){
         for(const auto& sa: admin->main_stop_areas){
             result.insert(sa->uri);
@@ -193,7 +193,8 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
                                  int search_type,
-                                 const navitia::type::Data &d) {
+                                 const navitia::type::Data &d,
+                                 float main_sa_weight_factor) {
 
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
@@ -221,6 +222,15 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                 result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
                         nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
+            }
+            if(main_sa_weight_factor != 1.0){
+                std::cout << "boosting main SA" << std::endl;
+                auto main_stop_areas = get_main_stop_areas(d);
+                for(auto& r: result){
+                    if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
+                        std::get<0>(r.scores) = std::get<0>(r.scores) * main_sa_weight_factor;
+                    }
+                }
             }
             break;
         case nt::Type_e::StopPoint:
@@ -325,26 +335,15 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
     }
 
 
-    auto main_stop_areas = get_main_stop_area(d);
 
     //Sort the list of objects (sort by object type , score, quality and name)
     //delete unwanted objects at the end of the list
-    auto compare_attributs = [&main_stop_areas](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
+    auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
         //Sort by object type
         if (a.embedded_type() != b.embedded_type()){
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order < b_order;
-        }
-        //prioritize main stop_area over the others stop_area
-        if((a.embedded_type() == pbnavitia::STOP_AREA) && (b.embedded_type() == pbnavitia::STOP_AREA)){
-            bool a_is_main_sa = main_stop_areas.find(a.stop_area().uri()) != main_stop_areas.end();
-            bool b_is_main_sa = main_stop_areas.find(b.stop_area().uri()) != main_stop_areas.end();
-            if(a_is_main_sa && !b_is_main_sa){
-                return true;
-            }else if (!a_is_main_sa && b_is_main_sa){
-                return false;
-            }
         }
 
         if ((a.quality() != b.quality()) && (a.quality() == 100  || b.quality() == 100)) {
