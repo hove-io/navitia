@@ -309,6 +309,9 @@ create_disruption(const std::string& id,
         impact->uri = disruption.uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
+        if (trip_update.trip().HasExtension(kirin::company_id)) {
+            impact->company_id = trip_update.trip().GetExtension(kirin::company_id);
+        }
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }

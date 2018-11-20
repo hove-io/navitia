@@ -182,6 +182,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 r,
                 std::move(stoptimes),
                 pt_data);
+            if (!impact->company_id.empty()) {
+                auto company = pt_data.companies_map[impact->company_id];
+                if (company) {
+                    vj->company = company;
+                }
+            }
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             // Use the corresponding base stop_time for boarding and alighting duration
             for(auto& st: vj->stop_time_list) {
