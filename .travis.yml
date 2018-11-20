@@ -5,9 +5,12 @@ python:
   - "3.6"
 sudo: required
 
+dist: xenial
+
 services:
   - docker
   - rabbitmq
+  - redis
 
 git:
   submodules: false
