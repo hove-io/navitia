@@ -1,1 +1,2 @@
 USE_SERPY = True
+ZMQ_DEFAULT_SOCKET_TYPE = 'transient'
