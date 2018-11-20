@@ -604,11 +604,14 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 
 /*
  * This is the same test than autocomplete_functional_test_admin_and_SA_test
- * but some main_stop_area have be defined
-1. We have 1 administrative_region and 11  stop_area
-2. All the stop_areas are attached to the same administrative_region.
-3. Call with "quimer" and count = 10
-4. In the result the administrative_region is the first one
+ * but with Luther King defined as a main_stop_area
+ * We have 1 administrative_region and 11  stop_area
+ * All the stop_areas are attached to the same administrative_region.
+ *
+ * 1. first test with the default main_stop_area_weight, we get the same result than
+ * autocomplete_functional_test_admin_and_SA_test
+ * 2. 30% boost for main stop areas, Luther King is now in second position just after Resistance
+ * 3. 200% boost on main stop areas: Luther King is finally in first position: houra!
 */
 BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
     std::vector<std::string> admins;
@@ -626,7 +629,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
     b.sa("chaptal", 0, 0);
     b.sa("Zebre", 0, 0);
 
-    b.data->pt_data->sort_and_index();
+    b.make();
     Admin* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
@@ -634,6 +637,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
     ad->postal_codes.push_back("29000");
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
+    ad->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["Luther King"]);
     b.manage_admin();
     b.build_autocomplete();
 
@@ -642,29 +646,40 @@ BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
 
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data), 1.0);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
-    BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
-    BOOST_CHECK_EQUAL(resp.places(7).quality(), 90);
-    BOOST_CHECK_EQUAL(resp.places(8).quality(), 80);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
     BOOST_CHECK_EQUAL(resp.places(7).uri(), "Becharles"); // longuest stop name
     BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King"); // 2 words, so the quality is lower
     BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 
+    //boost the main stop_areas by 30%
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    navitia::autocomplete::autocomplete(pb_creator, "qui", type_filter , 1, 10, admins, 0, *(b.data));
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data), 1.3);
     resp = pb_creator.get_response();
+
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "Luther King"); // main stop_area
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Becharles");
     BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
+
+    //boost the main stop_areas by 200% to have luther king as first SA
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 3, admins, 0, *(b.data), 3);
+    resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Luther King");
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "Resistance");
 }
 
 /*

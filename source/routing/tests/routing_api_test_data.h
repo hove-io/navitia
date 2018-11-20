@@ -469,6 +469,9 @@ struct routing_api_data {
         b.data->pt_data->sort_and_index();
         b.data->build_raptor();
 
+        //add a main stop area to our admin
+        admin->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["stopC"]);
+
         //Add a fare_zone in stop point A
         b.sps.begin()->second->fare_zone = "2";
 
