@@ -52,6 +52,6 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector <std::string> &admins,
                                  int search_type,
                                  const type::Data &d,
-                                 float main_sa_weight_factor=1.0);
+                                 float main_stop_area_weight_factor=1.0);
 }
 }

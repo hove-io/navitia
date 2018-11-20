@@ -194,7 +194,7 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<std::string> &admins,
                                  int search_type,
                                  const navitia::type::Data &d,
-                                 float main_sa_weight_factor) {
+                                 float main_stop_area_weight_factor) {
 
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
@@ -223,12 +223,12 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                         d.geo_ref->word_weight,
                         nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             }
-            if(main_sa_weight_factor != 1.0){
+            if(main_stop_area_weight_factor != 1.0){
                 std::cout << "boosting main SA" << std::endl;
                 auto main_stop_areas = get_main_stop_areas(d);
                 for(auto& r: result){
                     if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
-                        std::get<0>(r.scores) = std::get<0>(r.scores) * main_sa_weight_factor;
+                        std::get<0>(r.scores) = std::get<0>(r.scores) * main_stop_area_weight_factor;
                     }
                 }
             }
