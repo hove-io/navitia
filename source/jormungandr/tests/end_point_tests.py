@@ -89,7 +89,12 @@ class TestHttps(AbstractTestFixture):
         assert versions[0]['links'][0]['href'].startswith('http://')
 
 
-@dataset({'main_routing_test': {}, 'main_ptref_test': {}})
+@dataset(
+    {
+        'main_routing_test': {'instance_config': {'zmq_socket_type': 'transient'}},
+        'main_ptref_test': {'instance_config': {'zmq_socket_type': 'transient'}},
+    }
+)
 class TestEndPoint(AbstractTestFixture):
     """
     Test the end point with 2 regions loaded
