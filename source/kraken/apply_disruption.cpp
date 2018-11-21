@@ -186,6 +186,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 auto company = pt_data.companies_map[impact->company_id];
                 if (company) {
                     vj->company = company;
+                } else {
+                    LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id);
                 }
             }
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
