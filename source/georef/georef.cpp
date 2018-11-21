@@ -197,7 +197,7 @@ nt::MultiLineString Way::make_multiline(const Graph& graph) const {
 
 
 // returns the centroid projected on the way
-nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
+void Way::compute_projected_centroid(const Graph& graph) {
     const auto multiline = make_multiline(graph);
 
     nt::GeographicalCoord centroid;
@@ -208,7 +208,7 @@ nt::GeographicalCoord Way::projected_centroid(const Graph& graph) const {
                         "Can't find the centroid of the way: " << this->name);
     }
 
-    return nt::project(multiline, centroid);
+    this->_projected_centroid = nt::project(multiline, centroid);
 }
 
 /** Recherche du némuro le plus proche à des coordonnées
@@ -373,6 +373,12 @@ void GeoRef::init() {
         }
     }
     offsets[nt::Mode_e::CarNoPark] = offsets[nt::Mode_e::Car];
+}
+
+void GeoRef::build_centroid(){
+    for(auto way: this->ways){
+        way->compute_projected_centroid(this->graph);
+    }
 }
 
 void GeoRef::build_proximity_list(){

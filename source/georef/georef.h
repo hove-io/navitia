@@ -147,15 +147,17 @@ public:
     std::vector< HouseNumber > house_number_right;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
     std::vector<nt::LineString> geoms;
+    nt::GeographicalCoord _projected_centroid;
 
     void add_house_number(const HouseNumber&);
     nt::GeographicalCoord nearest_coord(const int, const Graph&) const;
     // returns {house_number, distance}, return {-1, x} if not found
     std::pair<int, double> nearest_number(const nt::GeographicalCoord&) const;
-    nt::GeographicalCoord projected_centroid(const Graph&) const;
+    nt::GeographicalCoord projected_centroid(const Graph&) const {return this->_projected_centroid;};
+    void compute_projected_centroid(const Graph&);
     nt::MultiLineString make_multiline(const Graph&) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges & geoms;
+      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges & geoms & _projected_centroid;
     }
     std::string get_label() const;
 
@@ -297,6 +299,7 @@ struct GeoRef {
     /// Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes_map();
     void build_pois_map();
+    void build_centroid();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element, const std::set<std::string>& ghostwords) const;

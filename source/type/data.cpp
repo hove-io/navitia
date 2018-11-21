@@ -61,7 +61,7 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
-const unsigned int Data::data_version = 68; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 69; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -353,7 +353,7 @@ find_matching_calendar(const Data&, const std::string& name, const ValidityPatte
 void Data::complete(){
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    int admin, sort, autocomplete;
+    int admin, sort, autocomplete, centroid;
 
     build_grid_validity_pattern();
     //build_associated_calendar(); read from database
@@ -373,6 +373,11 @@ void Data::complete(){
     pt_data->sort_and_index();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    LOG4CPLUS_INFO(logger, "Building centroid");
+    start = pt::microsec_clock::local_time();
+    geo_ref->build_centroid();
+    centroid = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building proximity list");
     build_proximity_list();
@@ -384,6 +389,7 @@ void Data::complete(){
 
     LOG4CPLUS_INFO(logger, "\t Building admins: " << admin << "ms");
     LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t Building  centroid of ways: " << centroid << "ms");
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
 }
 
