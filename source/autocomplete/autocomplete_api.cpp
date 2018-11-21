@@ -334,7 +334,6 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
     }
 
 
-
     //Sort the list of objects (sort by object type , score, quality and name)
     //delete unwanted objects at the end of the list
     auto compare_attributs = [](pbnavitia::PtObject a, pbnavitia::PtObject b)->bool {
