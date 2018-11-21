@@ -1010,7 +1010,7 @@ These disruptions won't be on the `display_informations` of the sections or used
 | nop     | min_nb_journeys      | non-negative int | Minimum number of different suggested journeys<br>More in multiple_journeys  |             |
 | nop     | max_nb_journeys      | positive int | Maximum number of different suggested journeys<br>More in multiple_journeys  |             |
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
-| nop     | max_nb_tranfers      | int     | Maximum number of transfers in each journey  | 10          |
+| nop     | max_nb_transfers      | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
 | nop     | max_duration         | int     | Maximum duration of journeys in seconds (from `datetime` parameter).<br>More usefull when computing an isochrone (only `from` or `to` is provided).<br>On a classic journey (from-to), it will mostly speedup Navitia: You may have journeys a bit longer than that value (you would have to filter them).    | 86400       |
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
