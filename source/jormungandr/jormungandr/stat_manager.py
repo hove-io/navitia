@@ -142,8 +142,8 @@ class StatManager(object):
         connection to rabbitmq and initialize queues
         """
         self.connection = kombu.Connection(self.broker_url, connect_timeout=self.connection_timeout)
-        exchange = kombu.Exchange(self.exchange_name, type="topic")
-        self.producer = self.connection.Producer(exchange=exchange)
+        self.exchange = kombu.Exchange(self.exchange_name, type="topic")
+        self.producer = self.connection.Producer(exchange=self.exchange)
 
     def manage_stat(self, start_time, call_result):
         """
