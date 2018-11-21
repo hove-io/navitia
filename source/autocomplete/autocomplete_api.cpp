@@ -227,7 +227,7 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                 auto main_stop_areas = get_main_stop_areas(d);
                 for(auto& r: result){
                     if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
-                        std::get<0>(r.scores) = std::get<0>(r.scores) * main_stop_area_weight_factor;
+                        std::get<0>(r.scores) *= main_stop_area_weight_factor;
                     }
                 }
             }
