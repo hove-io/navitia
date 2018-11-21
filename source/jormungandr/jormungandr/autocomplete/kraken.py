@@ -69,6 +69,7 @@ class Kraken(AbstractAutocomplete):
         req.places.depth = request['depth']
         req.places.count = request['count']
         req.places.search_type = request['search_type']
+        req.places.main_stop_area_weight_factor = request.get('_main_stop_area_weight_factor', 1.0)
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
         req.disable_disruption = True
         if request["type[]"]:

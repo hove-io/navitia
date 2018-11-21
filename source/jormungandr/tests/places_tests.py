@@ -210,6 +210,21 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(response['places_nearby'])
         assert len(response['disruptions']) == 1
 
+    def test_main_stop_area_weight_factor(self):
+        response = self.query_region("places?type[]=stop_area&q=stop")
+        places = response['places']
+        assert len(places) == 3
+        assert places[0]['id'] == 'stopA'
+        assert places[1]['id'] == 'stopB'
+        assert places[2]['id'] == 'stopC'
+
+        response = self.query_region("places?type[]=stop_area&q=stop&_main_stop_area_weight_factor=5")
+        places = response['places']
+        assert len(places) == 3
+        assert places[0]['id'] == 'stopC'
+        assert places[1]['id'] == 'stopA'
+        assert places[2]['id'] == 'stopB'
+
     def test_disruptions_in_places(self):
         """check disruptions in places"""
 
