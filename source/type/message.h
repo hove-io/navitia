@@ -303,7 +303,7 @@ struct Impact {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & created_at & updated_at & application_periods
+        ar & uri & company_id & created_at & updated_at & application_periods
            & severity & _informed_entities & messages & disruption
            & aux_info;
     }
