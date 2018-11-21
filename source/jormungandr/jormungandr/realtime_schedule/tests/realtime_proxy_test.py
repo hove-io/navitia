@@ -32,9 +32,10 @@ from __future__ import absolute_import
 from datetime import datetime
 import pytz
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
-from jormungandr.schedule import RealTimePassage
+from jormungandr.schedule import RealTimePassage, RoutePoint
 from jormungandr.utils import date_to_timestamp as d2t
 from six.moves import map
+from navitiacommon.type_pb2 import Route
 
 
 class CustomProxy(RealtimeProxy):
@@ -136,3 +137,28 @@ def filter_filter_dt_duration_test(mocker):
 
     r = proxy.next_passage_for_route_point(None, from_dt=d2t(dt("10:00")), duration=3600)
     assert list(map(get_dt, r)) == [dt("10:00"), dt("11:00")]
+
+
+def test_route_point_get_code():
+    r = Route()
+    c = r.codes.add()
+    c.value = "foo"
+    c.type = "source"
+
+    c = r.codes.add()
+    c.value = "bar"
+    c.type = "extcode"
+
+    assert RoutePoint._get_all_codes(r, "source") == ["foo"]
+    assert RoutePoint._get_all_codes(r, "extcode") == ["bar"]
+    # add a duplicate, this happens in real life...
+    c = r.codes.add()
+    c.value = "foo"
+    c.type = "source"
+    assert RoutePoint._get_all_codes(r, "source") == ["foo"]
+
+    # source has two different values(think fusion)
+    c = r.codes.add()
+    c.value = "foo3"
+    c.type = "source"
+    assert RoutePoint._get_all_codes(r, "source") == ["foo", "foo3"]
