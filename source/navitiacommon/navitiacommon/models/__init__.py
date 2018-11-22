@@ -747,14 +747,18 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     poi = db.Column(db.Enum(*poi_source_types, name='source_poi'), nullable=True)
     admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=False)
+    poi_types_json = db.Column(db.Text, nullable=True)
 
-    def __init__(self, name=None, street=None, address=None, poi=None, admin=None, admin_level=None):
+    def __init__(
+        self, name=None, street=None, address=None, poi=None, admin=None, admin_level=None, poi_types_json=None
+    ):
         self.name = name
         self.street = street
         self.address = address
         self.poi = poi
         self.admin = admin
         self.admin_level = admin_level
+        self.poi_types_json = poi_types_json
 
     def main_dir(self, root_path):
         return os.path.join(root_path, self.name)
