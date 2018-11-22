@@ -801,6 +801,8 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
         disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
         assert has_the_disruption(disruptions_after, 'new_stop_time')
+        last_disrupt = disruptions_after['disruptions'][-1]
+        assert last_disrupt['severity']['effect'] == 'MODIFIED_SERVICE'
 
         journey_query = journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
         response = self.query_region(journey_query)
@@ -999,12 +1001,15 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='vjA_delayed_with_new_stop_time',
+            effect='detour',
         )
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert len(disrupts['disruptions']) == 12
         assert has_the_disruption(disrupts, 'vjA_delayed_with_new_stop_time')
+        last_disrupt = disrupts['disruptions'][-1]
+        assert last_disrupt['severity']['effect'] == 'DETOUR'
 
         # the journey has the new stop_time in its section of public_transport
         response = self.query_region(sub_query + "&data_freshness=realtime&datetime=20120614T080200")
@@ -1125,6 +1130,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='new_stop_time',
+            effect='delayed'
         )
 
         # Verify disruptions
@@ -1138,8 +1144,8 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
             disrupts['disruptions'][10]['impacted_objects'][0]['impacted_stops'][0]['departure_status']
             == 'added'
         )
-        assert disrupts['disruptions'][10]['severity']['effect'] == 'MODIFIED_SERVICE'
-        assert disrupts['disruptions'][10]['severity']['name'] == 'trip modified'
+        assert disrupts['disruptions'][10]['severity']['effect'] == 'SIGNIFICANT_DELAYS'
+        assert disrupts['disruptions'][10]['severity']['name'] == 'trip delayed'
 
         # Query from C to R: the journey should have a public_transport from C to A
         response = self.query_region(base_journey_query)
@@ -1272,7 +1278,7 @@ class TestKrakenNoAdd(MockKirinDisruptionsFixture):
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
 
 
-def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):
+def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -1286,6 +1292,13 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
     trip.trip_id = vj_id
     trip.start_date = date
     trip.Extensions[kirin_pb2.contributor] = rt_topic
+
+    if effect == 'modified':
+        trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.MODIFIED_SERVICE
+    elif effect == 'delayed':
+        trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.SIGNIFICANT_DELAYS
+    elif effect == 'detour':
+        trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.DETOUR
 
     if status == 'canceled':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED
