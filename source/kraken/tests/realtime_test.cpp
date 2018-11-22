@@ -2188,6 +2188,8 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0905"_pts).delay(5_min),
             });
 
+    //Use trip_update effect (MODIFIED_SERVICE)
+    delay_and_new_stop.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true);
 
     b.make();
@@ -2196,7 +2198,8 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_SIGNIFICANT_DELAYS);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().name(), "trip modified");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0905"_pts);
 
     transit_realtime::TripUpdate new_stop_at_the_end = ntest::make_delay_message("vj:1",
@@ -2208,6 +2211,8 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:D", "20171101T1000"_pts).added()
             });
 
+    //Use trip_update effect = SIGNIFICANT_DELAYS just for the test
+    new_stop_at_the_end.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true);
 
     b.make();
@@ -2217,7 +2222,8 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(res.impacts_size(), 1);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_SIGNIFICANT_DELAYS);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().name(), "trip delayed");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T1000"_pts);
 
 }
