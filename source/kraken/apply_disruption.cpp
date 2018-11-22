@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "apply_disruption.h"
 #include "utils/logger.h"
+#include "utils/map_find.h"
 #include "type/datetime.h"
 #include "type/type_utils.h"
 
@@ -46,6 +47,7 @@ www.navitia.io
 namespace navitia {
 
 namespace nt = navitia::type;
+namespace nu = navitia::utils;
 namespace ndtu = navitia::DateTimeUtils;
 namespace bt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -183,12 +185,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 std::move(stoptimes),
                 pt_data);
             if (!impact->company_id.empty()) {
-                auto company = pt_data.companies_map[impact->company_id];
-                if (company) {
-                    vj->company = company;
-                } else {
-                    LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id);
-                }
+                nu::make_map_find(pt_data.companies_map, impact->company_id)
+                    .if_found([&vj](navitia::type::Company* c){ vj->company = c; })
+                    .if_not_found([&](){ LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id); });
             }
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             // Use the corresponding base stop_time for boarding and alighting duration
