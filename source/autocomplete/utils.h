@@ -30,28 +30,18 @@ www.navitia.io
 
 #pragma once
 #include "type/type.pb.h"
-#include "type/response.pb.h"
-#include "type/request.pb.h"
-#include "type/pt_data.h"
-#include "type/pb_converter.h"
 
 namespace navitia {
 
 namespace type {
-    class Data;
     enum class Type_e;
 }
 
 namespace autocomplete {
 
-/** Trouve tous les objets définis par filter dont le nom contient q */
-void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
-                                 const std::vector<navitia::type::Type_e>& filter,
-                                 uint32_t depth,
-                                 int nbmax,
-                                 const std::vector <std::string> &admins,
-                                 int search_type,
-                                 const type::Data &d,
-                                 float main_stop_area_weight_factor=1.0);
-}
-}
+int get_type_e_order(const type::Type_e& type);
+bool compare_type_e(const type::Type_e& a, const type::Type_e& b);
+std::vector<std::vector<type::Type_e>> build_type_groups(std::vector<type::Type_e> filter);
+
+
+}}//namespace navitia::autocomplete
