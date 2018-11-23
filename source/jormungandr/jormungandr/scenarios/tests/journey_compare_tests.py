@@ -645,6 +645,24 @@ def test_similar_journeys_bss_park():
     assert jf.compare(journey1, journey2, jf.similar_journeys_vj_generator)
 
 
+def test_similar_journeys_crowfly_rs():
+    """
+    We have to consider a journey with
+    CROWFLY WALK to be different than CROWFLY Ridesharing
+    """
+    journey1 = response_pb2.Journey()
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.CROW_FLY
+    journey1.sections[-1].street_network.mode = response_pb2.Walking
+
+    journey2 = response_pb2.Journey()
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.CROW_FLY
+    journey2.sections[-1].street_network.mode = response_pb2.Ridesharing
+
+    assert not jf.compare(journey1, journey2, jf.similar_journeys_vj_generator)
+
+
 def test_departure_sort():
     """
     we want to sort by departure hour, then by duration

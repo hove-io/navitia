@@ -665,7 +665,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
     commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Tram";
+    commercial_mode->name = "Tramway";
     commercial_mode->uri = "0x0";
     this->data->pt_data->commercial_modes.push_back(commercial_mode);
     this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
@@ -862,7 +862,7 @@ static navitia::georef::vertex_t init_vertex(navitia::georef::GeoRef& georef){
     return boost::add_vertex(v, georef.graph);
 }
 
-navitia::georef::Way* builder::add_way(const std::string& name, const std::string& way_type){
+navitia::georef::Way* builder::add_way(const std::string& name, const std::string& way_type, const bool visible){
     if (vertex_a == boost::none) {
         vertex_a = init_vertex(*this->data->geo_ref);
     }
@@ -872,6 +872,7 @@ navitia::georef::Way* builder::add_way(const std::string& name, const std::strin
     navitia::georef::Way* w = new navitia::georef::Way;
     w->idx = this->data->geo_ref->ways.size();
     w->name = name;
+    w->visible = visible;
     w->way_type = way_type;
     w->uri = name;
     //associate the way to an edge to make them "searchable" in the autocomplete

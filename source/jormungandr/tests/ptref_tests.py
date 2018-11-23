@@ -478,23 +478,6 @@ class TestPtRef(AbstractTestFixture):
 
         self._test_links(response, 'stop_points')
 
-    def test_company_default_depth(self):
-        """default depth is 1"""
-        response = self.query_region("companies")
-
-        companies = get_not_null(response, 'companies')
-
-        for company in companies:
-            is_valid_company(company, depth_check=1)
-
-        # we check afterward that we have the right data
-        # we know there is only one vj in the dataset
-        assert len(companies) == 1
-        company = companies[0]
-        assert company['id'] == 'CMP1'
-
-        self._test_links(response, 'companies')
-
     def test_simple_crow_fly(self):
         journey_basic_query = "journeys?from=9;9.001&to=stop_area%3Astop2&datetime=20140105T000000"
         response = self.query_region(journey_basic_query)

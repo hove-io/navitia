@@ -110,6 +110,13 @@ class Places(ResourceUri):
             "search_type", type=int, default=0, hidden=True, help="Type of search: firstletter or type error"
         )
         self.parsers["get"].add_argument(
+            "_main_stop_area_weight_factor",
+            type=float,
+            default=1.0,
+            hidden=True,
+            help="multiplicator for the weight of main stop area",
+        )
+        self.parsers["get"].add_argument(
             "admin_uri[]",
             type=six.text_type,
             action="append",

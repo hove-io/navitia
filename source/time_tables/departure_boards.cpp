@@ -50,24 +50,19 @@ namespace timetables {
 
 using RoutePointIdx = std::pair<routing::RouteIdx, routing::SpIdx>;
 
-static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint* stp){
+static bool is_last_stoptime(const nt::StopTime* stop_time){
     return stop_time->vehicle_journey
             && ! stop_time->vehicle_journey->stop_time_list.empty()
-            && stop_time->vehicle_journey->stop_time_list.back().stop_point == stp;
+            && stop_time->vehicle_journey->stop_time_list.back().order() == stop_time->order();
 }
 
-static bool is_flagged_partial_terminus(const PbCreator& pb_creator,
-                                const std::vector<routing::datetime_stop_time>& stop_times,
-                                const RoutePointIdx& route_point) {
+static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_stop_time>& stop_times) {
     for (const auto& st : stop_times) {
-        const auto& vj_idx = navitia::routing::VjIdx(*st.second->vehicle_journey);
-        const auto& jp_idx = pb_creator.data->dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
-        const auto& pair_jp = pb_creator.data->dataRaptor->jp_container.get_jps()[jp_idx.val];
-        const auto& last_jpp = pb_creator.data->dataRaptor->jp_container.get(pair_jp.second.jpps.back());
-
-        if (last_jpp.sp_idx != route_point.second) { return false; }
+        if (!is_last_stoptime(st.second)) {
+            return false;
+        }
     }
-    return ! stop_times.empty();
+    return !stop_times.empty();
 }
 
 static void
@@ -106,7 +101,7 @@ render(PbCreator& pb_creator,
         for(auto dt_st : id_vec.second) {
             const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
             // terminus or partial terminus
-            if (is_last_stoptime(st_calendar.stop_time, stop_point)) {
+            if (is_last_stoptime(st_calendar.stop_time)) {
                 continue;
             }
             auto date_time = schedule->add_date_times();
@@ -296,12 +291,18 @@ void departure_board(PbCreator& pb_creator,
             }
         }
 
-        //we compute the route status
-        if (stop_point->stop_area == route->destination) {
-            response_status[route_point] = pbnavitia::ResponseStatus::terminus;
-        } else {
-            if (is_flagged_partial_terminus(pb_creator, stop_times, route_point)) {
-                response_status[route_point] = pbnavitia::ResponseStatus::partial_terminus;
+        // If we have a calendar_id we have stop_times at the terminus and can use them to check
+        // if the current stop is a terminus or a partial terminus
+        if(calendar_id) {
+            // If all stop_times are on the terminus of their vj
+            // (stop_time order is equal to the order of the last stop_time of the vj)
+            if(is_terminus_for_all_stop_times(stop_times)) {
+                if (stop_point->stop_area == route->destination) {
+                    response_status[route_point] = pbnavitia::ResponseStatus::terminus;
+                } else {
+                    // Otherwise it's a partial_terminus
+                    response_status[route_point] = pbnavitia::ResponseStatus::partial_terminus;
+                }
             }
         }
 
@@ -318,6 +319,24 @@ void departure_board(PbCreator& pb_creator,
                                                               handler.max_datetime, 1, *pb_creator.data,
                                                               navitia::type::RTLevel::Base);
                 if (!tmp_stop_times.empty()) { resp_status = pbnavitia::ResponseStatus::active_disruption; }
+            }
+
+            // If we have no calendar terminuses have no pick_up stop_time, we try to get drop_off time
+            // to see if it's just a terminus
+            if (!calendar_id) {
+                auto tmp_stop_times = routing::get_stop_times(routing::StopEvent::drop_off, routepoint_jpps,
+                                                             handler.date_time, handler.max_datetime,
+                                                             items_per_route_point, *pb_creator.data, rt_level);
+                // If there is stop_times and everyone of them is a terminus
+                if (!tmp_stop_times.empty() && is_terminus_for_all_stop_times(tmp_stop_times)) {
+                    // If we are on the main destination
+                    if (stop_point->stop_area == route->destination) {
+                        resp_status = pbnavitia::ResponseStatus::terminus;
+                    } else {
+                        // Otherwise it's a partial_terminus
+                        resp_status = pbnavitia::ResponseStatus::partial_terminus;
+                    }
+                }
             }
             response_status[route_point] = resp_status;
         }

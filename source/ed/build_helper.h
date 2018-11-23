@@ -313,7 +313,7 @@ struct builder {
 
     void make(); // Build the all thing !
 
-    navitia::georef::Way* add_way(const std::string& name, const std::string& way_type);
+    navitia::georef::Way* add_way(const std::string& name, const std::string& way_type, const bool visible = true);
 };
 
 }

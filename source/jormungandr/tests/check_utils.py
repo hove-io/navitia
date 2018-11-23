@@ -1348,3 +1348,31 @@ def new_default_pagination_journey_comparator(clockwise):
         make_crit(lambda j: get_valid_int(j['duration'])),
         make_crit(lambda j: len(j.get('sections', []))),
     ]
+
+
+def has_the_disruption(response, disrupt_id):
+    return any([d['id'] for d in response['disruptions'] if d['id'] == disrupt_id])
+
+
+def get_departure(dep, sp_uri, line_code):
+    """ small helper that extract the information from a route point departures """
+    return [
+        {
+            'rt': r['stop_date_time']['data_freshness'] == 'realtime',
+            'dt': r['stop_date_time']['departure_date_time'],
+        }
+        for r in dep
+        if r['stop_point']['id'] == sp_uri and r['route']['line']['code'] == line_code
+    ]
+
+
+def get_schedule(scs, sp_uri, line_code):
+    """ small helper that extract the information from a route point stop schedule """
+    return [
+        {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
+        for r in next(
+            rp_sched['date_times']
+            for rp_sched in scs
+            if rp_sched['stop_point']['id'] == sp_uri and rp_sched['route']['line']['code'] == line_code
+        )
+    ]

@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -176,6 +176,16 @@ static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_
     }
 }
 
+static std::unordered_set<std::string> get_main_stop_areas(const navitia::type::Data& d){
+    std::unordered_set<std::string> result;
+    for(const auto& admin: d.geo_ref->admins){
+        for(const auto& sa: admin->main_stop_areas){
+            result.insert(sa->uri);
+        }
+    }
+    return result;
+}
+
 
 void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
@@ -183,7 +193,8 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
                                  int search_type,
-                                 const navitia::type::Data &d) {
+                                 const navitia::type::Data &d,
+                                 float main_stop_area_weight_factor) {
 
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
@@ -211,6 +222,14 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                 result = d.pt_data->stop_area_autocomplete.find_partial_with_pattern(q,
                         d.geo_ref->word_weight,
                         nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
+            }
+            if(main_stop_area_weight_factor != 1.0){
+                auto main_stop_areas = get_main_stop_areas(d);
+                for(auto& r: result){
+                    if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
+                        std::get<0>(r.scores) *= main_stop_area_weight_factor;
+                    }
+                }
             }
             break;
         case nt::Type_e::StopPoint:
@@ -324,6 +343,7 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
             const auto b_order = get_embedded_type_order(b.embedded_type());
             return  a_order < b_order;
         }
+
         if ((a.quality() != b.quality()) && (a.quality() == 100  || b.quality() == 100)) {
             return a.quality() > b.quality();
         }

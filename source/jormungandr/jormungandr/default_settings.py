@@ -144,6 +144,9 @@ CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S = 60  # the circuit breaker retries after thi
 CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
+CIRCUIT_BREAKER_MAX_SYTRAL_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
 CIRCUIT_BREAKER_MAX_VALHALLA_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
@@ -184,3 +187,7 @@ if boolean(os.getenv('JORMUNGANDR_DISABLE_SQLPOOLING', False)):
     SQLALCHEMY_POOLCLASS = NullPool
 
 MAX_JOURNEYS_CALLS = int(os.getenv('JORMUNGANDR_MAX_JOURNEYS_CALLS', 20))
+
+ZMQ_SOCKET_TTL_SECONDS = int(os.getenv('JORMUNGANDR_ZMQ_SOCKET_TTL_SECONDS', 10))
+ZMQ_SOCKET_REAPER_INTERVAL = int(os.getenv('JORMUNGANDR_ZMQ_SOCKET_REAPER_INTERVAL', 10))
+ZMQ_DEFAULT_SOCKET_TYPE = os.getenv('JORMUNGANDR_ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')

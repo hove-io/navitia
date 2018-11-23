@@ -1,3 +1,18 @@
+navitia2 (2.68.0) unstable; urgency=low
+
+  * Jormungandr: Sytral realtime based on sytral-rt  <https://github.com/CanalTP/navitia/pull/2571>
+  * Jormungandr: Ridesharing crowfly is never equivalent to another crowfly  <https://github.com/CanalTP/navitia/pull/2583>
+  * Jormungandr: Implement transient zmq socket type like http keepalive  <https://github.com/CanalTP/navitia/pull/2594>
+  * Jormungandr: Add somes unit and integration test for disruption with a stop_time  <https://github.com/CanalTP/navitia/pull/2586>
+  * Ed: Add codes in companies  <https://github.com/CanalTP/navitia/pull/2587>
+  * Ed: Fix GTFS parse and use SuspendedCableCar  <https://github.com/CanalTP/navitia/pull/2591>
+  * Kraken: Realtime,Take into account companies into new VJ  <https://github.com/CanalTP/navitia/pull/2597>
+  * Kraken & Ed: Add visible parameters to hide inputs/ouputs  <https://github.com/CanalTP/navitia/pull/2592>
+  * Kraken: Display departures on stop_point used multiple times in lines  <https://github.com/CanalTP/navitia/pull/2589>
+  * Kraken: Prioritize main stop_area over the others stop_area  <https://github.com/CanalTP/navitia/pull/2588>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 23 Nov 2018 11:11:07 +0100
+
 navitia2 (2.67.0) unstable; urgency=low
 
   * Jormun: add tests on endpoint /vj with timezones  <https://github.com/CanalTP/navitia/pull/2573>

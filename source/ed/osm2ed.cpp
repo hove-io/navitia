@@ -287,7 +287,7 @@ void OSMCache::insert_nodes() {
  */
 void OSMCache::insert_ways(){
     auto logger = log4cplus::Logger::getInstance("log");
-    this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
+    this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
@@ -298,12 +298,14 @@ void OSMCache::insert_ways(){
         values.push_back(std::to_string(way.osm_id));
         values.push_back(way.name);
         values.push_back("way:"+std::to_string(way.osm_id));
+        values.push_back("");
+        values.push_back("true");
         this->lotus.insert(values);
         ++n_inserted;
         if ((n_inserted % max_n_inserted) == 0) {
             this->lotus.finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << "/" << ways.size() << " ways inserted" );
-            this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri"});
+            this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
         }
      }
     this->lotus.finish_bulk_insert();

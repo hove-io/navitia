@@ -603,6 +603,86 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 }
 
 /*
+ * This is the same test than autocomplete_functional_test_admin_and_SA_test
+ * but with Luther King defined as a main_stop_area
+ * We have 1 administrative_region and 11  stop_area
+ * All the stop_areas are attached to the same administrative_region.
+ *
+ * 1. first test with the default main_stop_area_weight, we get the same result than
+ * autocomplete_functional_test_admin_and_SA_test
+ * 2. 30% boost for main stop areas, Luther King is now in second position just after Resistance
+ * 3. 200% boost on main stop areas: Luther King is finally in first position: houra!
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20140614");
+    b.sa("IUT", 0, 0);
+    b.sa("Gare", 0, 0);
+    b.sa("Resistance", 0, 0)("bob");
+    b.sa("Becharles", 0, 0);
+    b.sa("Yoyo", 0, 0);
+    b.sa("Luther King", 0, 0);
+    b.sa("Napoleon III", 0, 0);
+    b.sa("MPT kerfeunteun", 0, 0);
+    b.sa("Marcel Paul", 0, 0);
+    b.sa("chaptal", 0, 0);
+    b.sa("Zebre", 0, 0);
+
+    b.make();
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    ad->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["Luther King"]);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    type_filter.push_back(navitia::type::Type_e::Admin);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data), 1.0);
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Becharles"); // longuest stop name
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King"); // 2 words, so the quality is lower
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
+
+    //boost the main stop_areas by 30%
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data), 1.3);
+    resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "Luther King"); // main stop_area
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Becharles");
+    BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
+
+    //boost the main stop_areas by 200% to have luther king as first SA
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 3, admins, 0, *(b.data), 3);
+    resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
+    BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Luther King");
+    BOOST_CHECK_EQUAL(resp.places(2).uri(), "Resistance");
+}
+
+/*
 1. We have 1 administrative_region and 11  stop_area
 2. All the stop_areas are attached to the same administrative_region.
 3. Call with "quimer" and count = 10
@@ -781,8 +861,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 }
 
 /*
-1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
-2. 1 line for mode "Tram" and and 2 routes
+1. We have 1 Network (name="base_network"), 2 mode (name="Tramway" and name="Metro")
+2. 1 line for mode "Tramway" and 2 routes
 */
 BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     std::vector<std::string> admins;
@@ -790,7 +870,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     ed::builder b("201409011T1739");
     b.generate_dummy_basis();
 
-    //Create a new line and affect it to mode "Tram"
+    //Create a new line and affect it to mode "Tramway"
     navitia::type::Line* line = new navitia::type::Line();
     line->idx = b.data->pt_data->lines.size();
     line->uri = "line 1";
@@ -827,9 +907,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
 
-    // Call with "Tram" and &type[]=network&type[]=mode&type[]=line&type[]=route
+    // Call with "Tramway" and &type[]=network&type[]=mode&type[]=line&type[]=route
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    navitia::autocomplete::autocomplete(pb_creator, "Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    navitia::autocomplete::autocomplete(pb_creator, "Tramway", type_filter , 1, 10, admins, 0, *(b.data));
     resp = pb_creator.get_response();
     //In the result the first line is Mode and the second is line
     BOOST_REQUIRE_EQUAL(resp.places_size(), 4);
@@ -850,7 +930,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
 }
 
 /*
-1. We have 1 Network (name="base_network"), 2 mode (name="Tram" et name="Metro")
+1. We have 1 Network (name="base_network"), 2 mode (name="Tramway" et name="Metro")
 2. 1 line for mode Metro and and 2 routes
 3. 4 stop_areas
 */

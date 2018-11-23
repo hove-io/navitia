@@ -105,6 +105,7 @@ way = Table(
         Column('name', TEXT(), primary_key=False, nullable=False),
         Column('uri', TEXT(), primary_key=False, nullable=False),
         Column('type', TEXT(), primary_key=False),
+        Column('visible', BOOLEAN(), primary_key=False, nullable=False, default=text(u'true')),
     ],
     schema='georef'
 )

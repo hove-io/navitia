@@ -353,7 +353,7 @@ void Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     navitia::autocomplete::autocomplete(this->pb_creator, request.q(),
                                         vector_of_pb_types(request), request.depth(),
                                         request.count(), vector_of_admins(request),
-                                        request.search_type(), *data);
+                                        request.search_type(), *data, request.main_stop_area_weight_factor());
 }
 
 void Worker::pt_object(const pbnavitia::PtobjectRequest & request) {

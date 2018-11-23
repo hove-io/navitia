@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -152,7 +152,7 @@ void EdPersistor::insert_postal_codes(const ed::Georef& data){
 
 
 void EdPersistor::insert_ways(const ed::Georef& data){
-    this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type"});
+    this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
     for(const auto& itm : data.ways){
         if(itm.second->is_used){
             std::vector<std::string> values;
@@ -160,6 +160,7 @@ void EdPersistor::insert_ways(const ed::Georef& data){
             values.push_back(itm.second->name);
             values.push_back(itm.first);
             values.push_back(itm.second->type);
+            values.push_back(itm.second->visible ? "true" : "false");
             this->lotus.insert(values);
         }
      }
@@ -255,11 +256,11 @@ void EdPersistor::insert_pois(const Georef &data) {
                 std::to_string(itm.second.id), // id
                 std::to_string(itm.second.weight), // weight
                 this->to_geographic_point(itm.second.coord), // coord
-                itm.second.name, // name 
+                itm.second.name, // name
                 itm.second.uri, // uri
-                poi_type,  // poi_type_id 
-                std::to_string(itm.second.visible), // visible 
-                itm.second.address_number, // address_number 
+                poi_type,  // poi_type_id
+                std::to_string(itm.second.visible), // visible
+                itm.second.address_number, // address_number
                 itm.second.address_name // /address_name
         });
     }
@@ -884,7 +885,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
             shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
         values.push_back(shape.str());
 
-        values.push_back(route->direction_type);        
+        values.push_back(route->direction_type);
         this->lotus.insert(values);
     }
 
@@ -1061,7 +1062,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
         bool is_frequency = vj->start_time != std::numeric_limits<int>::max();
         values.push_back(std::to_string(is_frequency));
-        
+
         // meta_vj's name is the same as the one of vj
         values.push_back(vj->meta_vj_name);
         // vj_class

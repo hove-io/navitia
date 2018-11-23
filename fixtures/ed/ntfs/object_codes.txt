@@ -20,4 +20,8 @@ stop_point,SP:J,navitia1,J
 route,route_1,navitia1,route_1
 route,route_2,navitia1,route_2
 route,route_3,navitia1,route_3
+route,route_4,navitia1,route_4
 line,11,navitia1,11
+company,COMP:A,navitia1,A
+company,COMP:A,navitia1,B
+company,COMP:B,navitia1,A

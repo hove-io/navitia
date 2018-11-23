@@ -119,7 +119,7 @@ class RoutePoint(object):
 
     @staticmethod
     def _get_all_codes(obj, object_id_tag):
-        return [c.value for c in obj.codes if c.type == object_id_tag]
+        return list({c.value for c in obj.codes if c.type == object_id_tag})
 
     def _get_code(self, obj, object_id_tag):
         tags = self._get_all_codes(obj, object_id_tag)
