@@ -1130,7 +1130,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='new_stop_time',
-            effect='delayed'
+            effect='delayed',
         )
 
         # Verify disruptions
