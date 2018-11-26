@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -196,7 +196,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
-                                LOG4CPLUS_WARN(logger, "Unable to get the OD ticket SA=" << next.stop_area
+                                LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA=" << next.stop_area
                                                << ", zone=" << next.zone
                                                << ", section start_zone=" << section_key.start_zone
                                                << ", dest_zone=" << section_key.dest_zone
@@ -301,11 +301,11 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
 DateTicket DateTicket::operator +(const DateTicket& other) const{
     DateTicket new_ticket = *this;
     if(this->tickets.size() != other.tickets.size())
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets don't have the same number of dates");
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("fare"), "Tickets don't have the same number of dates");
 
     for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
         if(this->tickets[i].validity_period != other.tickets[i].validity_period)
-            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("fare"),
                             "Ticket n° " << i << " doesn't have the same dates; " << this->tickets[i].validity_period << " as " << other.tickets[i].validity_period);
         new_ticket.tickets[i].ticket.value = this->tickets[i].ticket.value + other.tickets[i].ticket.value;
     }
@@ -338,7 +338,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
             int nb_changes = boost::lexical_cast<int>(cond.value);
             if (!compare(label.nb_changes, nb_changes, cond.comparaison)) { return false; }
         } else if (cond.key == "ticket" && label.tickets.size() > 0) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), label.tickets.back().key << " " << cond.value);
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("fare"), label.tickets.back().key << " " << cond.value);
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) { return false; }
         }
     }
