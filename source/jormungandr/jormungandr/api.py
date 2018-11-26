@@ -72,6 +72,7 @@ def access_log(response, *args, **kwargs):
         'path': request.path,
         'query_string': query_string,
         'status': response.status_code,
+        'external_request_id': request.headers.get('x-request-id'),
     }
     logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
     return response
