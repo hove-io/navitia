@@ -27,8 +27,22 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
 from __future__ import absolute_import, print_function, division
+
+try:
+    import uwsgi
+
+    # if we are in web context we monkey patch for gevent
+    # We don't want to enable gevent in celery workers
+    from gevent import monkey
+
+    monkey.patch_all()
+    import psycogreen.gevent
+
+    psycogreen.gevent.patch_psycopg()
+except ImportError:
+    pass
+
 from flask import Flask
 import flask_restful
 from tyr.helper import configure_logger, make_celery

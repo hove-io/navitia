@@ -33,3 +33,5 @@ retrying==1.3.3
 ujson==1.35
 jsonschema==2.5.1
 python-dateutil==2.5.3
+gevent==1.3.7
+psycogreen==1.0
