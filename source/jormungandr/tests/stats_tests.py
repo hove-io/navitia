@@ -43,6 +43,12 @@ import unittest
 from navitiacommon import stat_pb2
 
 
+class MockStatManager(AbstractTestFixture):
+    @mock.patch('jormungandr.stat_manager.StatManager')
+    def setUp(self):
+        pass
+
+
 class MockWrapper:
     def __init__(self):
         self.called = False  # TODO: use mock!
@@ -163,40 +169,37 @@ class MockWrapper:
 
 
 class TestRabbitMqPublication(unittest.TestCase):
-    def _on_message(self, body, message):
-        self.has_message = True
-        message.ack()
-
     def test_StatManager_can_publish(self):
         self.has_message = False
 
         app.config['SAVE_STAT'] = True
         app.config['EXCHANGE_NAME'] = 'test_rabbitmq'
 
-        stat_mngr = StatManager()
-
-        queue = kombu.Queue(name="test_queue", exchange=stat_mngr.exchange, routing_key="bla")
-
-        bounded_queue = queue(stat_mngr.connection)
-        bounded_queue.declare()
-        bounded_queue.purge()
+        stat_mngr = StatManager(auto_delete=True)
+        queue = kombu.Queue(
+            name="test_queue",
+            exchange=stat_mngr.exchange,
+            routing_key="bla",
+            channel=stat_mngr.connection,
+            auto_delete=True,
+        )
+        queue.declare()
 
         stat_mngr.publish_request("bla", "test")
 
-        with stat_mngr.connection.Consumer([bounded_queue], callbacks=[self._on_message]):
+        on_message_mock = mock.Mock()
+
+        with stat_mngr.connection.Consumer([queue], callbacks=[on_message_mock], no_ack=True):
             time_to_live = 100
-            while self.has_message == False and time_to_live > 0:
-                stat_mngr.connection.drain_events()
+            while on_message_mock.called == False and time_to_live > 0:
+                stat_mngr.connection.drain_events(timeout=1)
                 time_to_live -= 1
 
-        bounded_queue.delete()
-        stat_mngr.exchange(stat_mngr.connection).delete()
-
-        assert self.has_message == True
+        on_message_mock.assert_called_once_with("test", mock.ANY)
 
 
 @dataset({"main_routing_test": {}})
-class TestStatJourneys(AbstractTestFixture):
+class TestStatJourneys(MockStatManager):
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
@@ -238,7 +241,7 @@ class TestStatJourneys(AbstractTestFixture):
 
 
 @dataset({"main_ptref_test": {}})
-class TestStatPlaces(AbstractTestFixture):
+class TestStatPlaces(MockStatManager):
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests

@@ -49,7 +49,6 @@ import subprocess
 from .check_utils import *
 import jormungandr
 from jormungandr import app, i_manager, utils
-from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
 from jormungandr.instance import Instance
 from jormungandr.parking_space_availability import (
@@ -198,17 +197,6 @@ class AbstractTestFixture(unittest.TestCase):
             except RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))
                 assert False, 'impossible to start a kraken'
-
-        # we block the stat manager not to send anything to rabbit mq
-        def mock_publish(self, stat, pbf):
-            pass
-
-        # we don't want to initialize rabbit for test.
-        def mock_init():
-            pass
-
-        StatManager.publish_request = mock_publish
-        StatManager._init_rabbitmq = mock_init
 
         # we don't want to have anything to do with the jormun database either
         class bob:
