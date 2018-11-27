@@ -92,7 +92,7 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 SET_SOURCE_FILES_PROPERTIES(${PROTO_SRCS} PROPERTIES COMPILE_FLAGS ${PROTO_CMAKE_CXX_FLAGS})
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
-target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY})
+target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY} tcmalloc)
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp validity_pattern.cpp type_utils.cpp)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
