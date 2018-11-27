@@ -23,7 +23,7 @@ model_files=(
 )
 
 
-diff_filenames=`git diff --name-only origin/$branch_to` # List the updated files
+diff_filenames=`git diff --name-only $(git merge-base HEAD origin/$branch_to)` # List the updated files
 num_model_files=${#model_files[@]}
 modified_model_files=()
 
