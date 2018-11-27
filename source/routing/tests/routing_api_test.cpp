@@ -3303,8 +3303,8 @@ namespace {
             ("B1", "22:00"_t, "22:00"_t)("C1", "23:00"_t, "23:00"_t);
 
         nt::PT_Data & d = *b.data->pt_data;
-        auto stl1 = d.vehicle_journeys[0]->stop_time_list;
-        auto stl2 = d.vehicle_journeys[1]->stop_time_list;
+        const auto& stl1 = d.vehicle_journeys[0]->stop_time_list;
+        const auto& stl2 = d.vehicle_journeys[1]->stop_time_list;
 
         nr::Journey j1;
         j1.sections.push_back(nr::Journey::Section(
