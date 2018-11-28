@@ -237,7 +237,6 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     return false;
 }
 
-
 static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTimeUpdate::Status status){
     using nt::disruption::StopTimeUpdate;
     using nt::disruption::Effect;
@@ -254,7 +253,6 @@ static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTim
         return Effect::UNKNOWN_EFFECT;
     }
 }
-
 
 static nt::disruption::Effect get_trip_effect(transit_realtime::Alert_Effect effect) {
     using transit_realtime::Alert_Effect;
