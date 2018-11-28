@@ -8,6 +8,7 @@ sudo: required
 services:
   - docker
   - rabbitmq
+  - redis
 
 git:
   submodules: false
