@@ -335,7 +335,6 @@ create_disruption(const std::string& id,
     if (trip_update.trip().HasExtension(kirin::contributor)) {
         disruption.contributor = trip_update.trip().GetExtension(kirin::contributor);
     }
-    bool has_effect = trip_update.HasExtension(kirin::effect);
 
     disruption.publication_period = data.meta->production_period();
     disruption.created_at = timestamp;
@@ -363,14 +362,12 @@ create_disruption(const std::string& id,
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }
-        std::string wording;
-        // TODO: to be removed later when effect completely implemented in trip_update
-        // Effect calculated from stoptime_status
+        // TODO: Effect calculated from stoptime_status -> to be removed later
+        // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcoded...
-            wording = "trip canceled";
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
@@ -456,18 +453,10 @@ create_disruption(const std::string& id,
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
 
-        if (wording.empty()) {
-            if ( trip_effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
-                wording = "trip delayed";
-            } else if (in(trip_effect, {nt::disruption::Effect::DETOUR,
-                                        nt::disruption::Effect::MODIFIED_SERVICE})) {
-                wording = "trip modified";
-            }
-        }
-        if (has_effect){
+        if (trip_update.HasExtension(kirin::effect)){
             trip_effect = get_trip_effect(trip_update.GetExtension(kirin::effect));
-            wording = get_wordings(trip_effect);
         }
+        std::string wording = get_wordings(trip_effect);
 
         impact->application_periods.push_back({begin_app_period, end_app_period});
         impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
