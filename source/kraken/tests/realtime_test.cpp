@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
-    const auto& vj = pt_data->vehicle_journeys_map.at("vj:1");
+    const auto* vj = pt_data->vehicle_journeys_map.at("vj:1");
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     navitia::apply_disruption(disrup, *b.data->pt_data, *b.data->meta);
