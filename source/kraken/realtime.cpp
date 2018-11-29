@@ -335,6 +335,7 @@ create_disruption(const std::string& id,
     if (trip_update.trip().HasExtension(kirin::contributor)) {
         disruption.contributor = trip_update.trip().GetExtension(kirin::contributor);
     }
+    // This parameter is to be deleted later
     bool has_effect = trip_update.HasExtension(kirin::effect);
 
     disruption.publication_period = data.meta->production_period();
