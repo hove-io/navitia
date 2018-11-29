@@ -300,7 +300,6 @@ static const std::string get_wordings(nt::disruption::Effect effect) {
     }
 }
 
-
 static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
