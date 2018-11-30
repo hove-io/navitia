@@ -383,7 +383,7 @@ void autocomplete(navitia::PbCreator& pb_creator,
 
 
     std::vector<AutocompleteResult> results;
-    for(const auto group: build_type_groups(filter)){
+    for(const auto& group: build_type_groups(filter)){
         for(nt::Type_e type : group) {
             //search for candidate
             auto found = complete(d, type, q, admin_ptr, nb_items_to_search, search_type, main_stop_area_weight_factor);

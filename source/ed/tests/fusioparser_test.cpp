@@ -121,20 +121,20 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     for (uint i = 0; i < data.routes.size(); ++i) {
         auto obj_codes_routes_map = data.object_codes[ed::types::make_pt_object(data.routes[i])];
         BOOST_REQUIRE_EQUAL(obj_codes_routes_map.size(), 1);
-        for (const auto obj_codes : obj_codes_routes_map) {
+        for (const auto& obj_codes : obj_codes_routes_map) {
             BOOST_CHECK_EQUAL(obj_codes.second[0], "route_" + std::to_string(i + 1));
         }
     }
     // companies
     auto obj_codes_map = data.object_codes[ed::types::make_pt_object(data.companies[0])];
     BOOST_REQUIRE_EQUAL(obj_codes_map.size(), 1);
-    for (const auto obj_codes : obj_codes_map) {
+    for (const auto& obj_codes : obj_codes_map) {
         BOOST_CHECK_EQUAL(obj_codes.second[0], "A");
         BOOST_CHECK_EQUAL(obj_codes.second[1], "B");
     }
     obj_codes_map = data.object_codes[ed::types::make_pt_object(data.companies[1])];
     BOOST_REQUIRE_EQUAL(obj_codes_map.size(), 1);
-    for (const auto obj_codes : obj_codes_map) {
+    for (const auto& obj_codes : obj_codes_map) {
         BOOST_CHECK_EQUAL(obj_codes.second[0], "A");
     }
 
