@@ -591,6 +591,8 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     navitia::make_and_apply_disruption(create_disruption(properties),
                                        *b.data->pt_data, *b.data->meta);
 
+    nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
+
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
     BOOST_CHECK_EQUAL(nav_dis->properties.size(), 1);
     property = *nav_dis->properties.begin();
@@ -603,6 +605,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
                                        *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
     BOOST_CHECK_EQUAL(nav_dis->properties.size(), 0);
 }
 

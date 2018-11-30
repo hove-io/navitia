@@ -54,6 +54,47 @@ namespace bg = boost::gregorian;
 
 namespace {
 
+static nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
+                              const nt::VehicleJourney* vj,
+                              const std::string& new_vj_uri,
+                              nt::RTLevel rt_level,
+                              nt::ValidityPattern new_vp,
+                              std::vector<nt::StopTime> new_stop_times,
+                              nt::PT_Data& pt_data) {
+    auto* company = vj->company;
+    auto vehicle_journey_type = vj->vehicle_journey_type;
+    auto odt_message = vj->odt_message;
+    auto vehicle_properties = vj->_vehicle_properties;
+
+    auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+            rt_level,
+            new_vp,
+            vj->route,
+            std::move(new_stop_times),
+            pt_data);
+    vj = nullptr;//after create_discrete_vj, the vj can have been deleted
+
+    new_vj->company = company;
+    new_vj->vehicle_journey_type = vehicle_journey_type;
+    new_vj->odt_message = odt_message;
+    new_vj->_vehicle_properties = vehicle_properties;
+
+    if (! mvj->get_base_vj().empty()) {
+        new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+        new_vj->name = mvj->get_base_vj().at(0)->name;
+    } else {
+        // If we set nothing for physical_mode, it'll crash when building raptor
+        new_vj->physical_mode = pt_data.physical_modes[0];
+        new_vj->name = new_vj_uri;
+    }
+    /*
+     * Properties manually added to guarantee the good behavior for raptor and consistency.
+     * */
+    new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
+    return new_vj;
+
+}
+
 struct apply_impacts_visitor : public boost::static_visitor<> {
     boost::shared_ptr<nt::disruption::Impact> impact;
     nt::PT_Data& pt_data;
@@ -271,31 +312,18 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
-            auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+
+            auto* new_vj = create_vj_from_old_vj(
+                    mvj,
+                    vj,
+                    new_vj_uri,
                     rt_level,
                     new_vp,
-                    vj->route,
                     std::move(new_stop_times),
                     pt_data);
+            vj = nullptr; //after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: "<< new_vj->uri << " is created");
-
-            if (! mvj->get_base_vj().empty()) {
-                new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                new_vj->name = mvj->get_base_vj().at(0)->name;
-            } else {
-                // If we set nothing for physical_mode, it'll crash when building raptor
-                new_vj->physical_mode = pt_data.physical_modes[0];
-                new_vj->name = new_vj_uri;
-            }
-            /*
-             * Properties manually added to guarantee the good behavior for raptor and consistency.
-             * */
-            new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
-            new_vj->company = vj->company;
-            new_vj->vehicle_journey_type = vj->vehicle_journey_type;
-            new_vj->odt_message = vj->odt_message;
-            new_vj->_vehicle_properties = vj->_vehicle_properties;
         }
         this->log_end_action(uri);
     }
@@ -442,32 +470,18 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
-            auto* new_vj = mvj->create_discrete_vj(new_vj_uri,
+
+            auto* new_vj = create_vj_from_old_vj(
+                    mvj,
+                    vj,
+                    new_vj_uri,
                     rt_level,
                     new_vp,
-                    vj->route,
                     std::move(new_stop_times),
                     pt_data);
+            vj = nullptr; //after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log,  "new_vj: "<< new_vj->uri << " is created");
-
-            if (! mvj->get_base_vj().empty()) {
-                new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                new_vj->name = mvj->get_base_vj().at(0)->name;
-            } else {
-                // If we set nothing for physical_mode, it'll crash when building raptor
-                new_vj->physical_mode = pt_data.physical_modes[0];
-                new_vj->name = new_vj_uri;
-            }
-            /*
-             * Properties manually added to guarantee the good behavior for raptor and consistency.
-             * */
-            new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
-            new_vj->company = vj->company;
-            new_vj->vehicle_journey_type = vj->vehicle_journey_type;
-            new_vj->odt_message = vj->odt_message;
-            new_vj->_vehicle_properties = vj->_vehicle_properties;
-
         }
         log_end_action(stop_point->uri);
     }
