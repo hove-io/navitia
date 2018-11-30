@@ -94,7 +94,7 @@ struct StopPointConnection: public Header, hasProperties {
     int max_duration;
     ConnectionType connection_kind;
 
-    StopPointConnection() : departure(NULL), destination(NULL), display_duration(0), duration(0),
+    StopPointConnection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0), connection_kind(ConnectionType::Default){}
 
    bool operator<(const StopPointConnection& other) const;

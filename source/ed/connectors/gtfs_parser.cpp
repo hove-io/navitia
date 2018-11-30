@@ -308,7 +308,7 @@ void StopsGtfsHandler::finish(Data& data) {
                     "the stop area " + sa_sps.first  + " has not been found for the stop points :  ";
             for(auto sp : sa_sps.second) {
                 error_message += sp->uri;
-                sp->stop_area = 0;
+                sp->stop_area = nullptr;
             }
             LOG4CPLUS_WARN(logger, error_message);
         }
