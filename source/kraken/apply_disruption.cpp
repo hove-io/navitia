@@ -59,7 +59,7 @@ static nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
                               const std::string& new_vj_uri,
                               nt::RTLevel rt_level,
                               nt::ValidityPattern new_vp,
-                              const std::vector<nt::StopTime> new_stop_times,
+                              std::vector<nt::StopTime> new_stop_times,
                               nt::PT_Data& pt_data) {
     auto* company = vj->company;
     auto vehicle_journey_type = vj->vehicle_journey_type;
