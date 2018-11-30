@@ -950,7 +950,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
 void StopTimeGtfsHandler::init(Data&) {
     LOG4CPLUS_INFO(logger, "reading stop times");
-    id_c = csv.get_pos_col("trip_id"),
+    trip_c = csv.get_pos_col("trip_id");
     arrival_c = csv.get_pos_col("arrival_time");
     departure_c = csv.get_pos_col("departure_time");
     stop_c = csv.get_pos_col("stop_id");
@@ -1027,15 +1027,15 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         return {};
     }
 
-    auto vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[id_c]);
+    auto vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[trip_c]);
     if(vj_it == gtfs_data.tz.vj_by_name.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey '" << row[id_c] << "'");
+        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey '" << row[trip_c] << "'");
         return {};
     }
     std::vector<nm::StopTime*> stop_times;
 
     //the validity pattern may have been split because of DST, so we need to create one vj for each
-    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[id_c]); vj_it != vj_end_it; ++vj_it) {
+    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_c]); vj_it != vj_end_it; ++vj_it) {
 
         nm::StopTime* stop_time = new nm::StopTime();
 

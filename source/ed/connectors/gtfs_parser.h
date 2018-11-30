@@ -340,7 +340,7 @@ struct TripsGtfsHandler : public GenericHandler {
 };
 struct StopTimeGtfsHandler : public GenericHandler {
     StopTimeGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, arrival_c,
+    int trip_c, arrival_c,
     departure_c, stop_c,
     stop_seq_c, pickup_c,
     drop_off_c;
