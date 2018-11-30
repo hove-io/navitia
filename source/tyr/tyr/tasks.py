@@ -153,7 +153,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
-            return chain(*actions)()
+            return chain(*actions).apply()
 
 
 def send_to_mimir(instance, filename):
