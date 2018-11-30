@@ -697,6 +697,226 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
     BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170101T093500"_dt);
 }
 
+/*
+ * departure                                        the shortest journey is :
+ *     |         |--- B --- 5min \
+ *     A --------|                arrival               A ----------> C
+ *               |--- C --- 0min /
+ *
+ * Bug found on a journey request where the datetime is an arrival, involving alighting time.
+ * The best solution won't be selected if :
+ *  - the requested arrival_time < (arrival_time + arrival access time) (not sure at 100%)
+ *  - the same journey pattern is available one day before the requested date
+ *
+ *  Stop | Departure | Arrival | Alighting | Foot path
+ *    A  |   9:00    |   9:00  |   9:00    |     X
+ *    B  |   9:10    |   9:10  |   9:25    |   5 min
+ *    C  |   9:10    |   9:10  |   9:25    |   0 min
+ */
+
+BOOST_AUTO_TEST_CASE(arrival_with_alighting) {
+    ed::builder b("20190101");
+
+    b.sa("stop_area:A", 0, 0, false)("stop_point:A");
+    b.sa("stop_area:B", 10, 10, false)("stop_point:B");
+    b.sa("stop_area:C", 10, 8, false)("stop_point:C");
+
+    b.vj("1", "011", "block_1").uri("vj:1")
+        ("stop_point:A", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0)
+        ("stop_point:B", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900)
+        ("stop_point:C", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900);
+
+    b.data->pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*b.data);
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("stop_area:A")->stop_point_list.front())] = 0_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.front())] = 5_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:C")->stop_point_list.front())] = 0_min;
+
+    // The journey pattern is not available the day before the requested date
+    // the result is OK
+    auto result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(0, "09:25"_t),
+        type::RTLevel::Base,
+        2_min,
+        DateTimeUtils::min,
+        10,
+        type::AccessibiliteParams(),
+        {},
+        {},
+        false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190101T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190101T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190101T092500"_dt);
+
+    // The journey pattern is available the day before the requested date
+    // but the requested arrival time >= arrival time + access time
+    // the result is OK
+    result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(1, "09:30"_t),
+        type::RTLevel::Base,
+        2_min,
+        DateTimeUtils::min,
+        10,
+        type::AccessibiliteParams(),
+        {},
+        {},
+        false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190102T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190102T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190102T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190102T092500"_dt);
+
+    // The journey pattern is available the day before the requested date
+    // the requested arrival time < arrival time + access time
+    // the result is KO
+    result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(1, "09:25"_t),
+        type::RTLevel::Base,
+        2_min,
+        DateTimeUtils::min,
+        10,
+        type::AccessibiliteParams(),
+        {},
+        {},
+        false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190102T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190102T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190102T091000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190102T092500"_dt);
+}
+
+/*
+ *                                 arrival         the shortest journey is :
+ *          / 0 min --- A ---|        |
+ * departure                 |------- C               A ----------> C
+ *          \ 5 min --- B ---|
+ *
+ * Bug found on a journey request where the datetime is a departure, involving boarding time.
+ * The best solution won't be selected if :
+ *  - the requested departure_time > (departure_time - departure access time) (not sure at 100%)
+ *  - the same journey pattern is available one day after the requested date
+ *
+ *  Stop | Departure | Arrival | Boarding | Foot path
+ *    A  |   9:00    |   9:00  |   8:45   |   0 min
+ *    B  |   9:00    |   9:00  |   8:45   |   5 min
+ *    C  |   9:30    |   9:30  |   9:30   |    X
+ */
+
+BOOST_AUTO_TEST_CASE(departure_with_boarding) {
+    ed::builder b("20190101");
+
+    b.sa("stop_area:A", 0, 0, false)("stop_point:A");
+    b.sa("stop_area:B", 0, 5, false)("stop_point:B");
+    b.sa("stop_area:C", 5, 2.5, false)("stop_point:C");
+
+    b.vj("1", "011", "block_1").uri("vj:1")
+        ("stop_point:A", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
+        ("stop_point:B", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
+        ("stop_point:C", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
+
+    b.data->pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*b.data);
+    const type::PT_Data& d = *b.data->pt_data;
+
+    routing::map_stop_point_duration departures, arrivals;
+    departures[SpIdx(*d.stop_areas_map.at("stop_area:A")->stop_point_list.front())] = 0_min;
+    departures[SpIdx(*d.stop_areas_map.at("stop_area:B")->stop_point_list.front())] = 5_min;
+    arrivals[SpIdx(*d.stop_areas_map.at("stop_area:C")->stop_point_list.front())] = 0_min;
+
+    // The journey pattern is not available the day after the requested date
+    // the result is OK
+    auto result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(1, "08:45"_t),
+        type::RTLevel::Base,
+        2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190102T084500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190102T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190102T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190102T093000"_dt);
+
+    // The journey pattern is available the day after the requested date
+    // but the requested departure time <= (departure time - access time)
+    // the result is OK
+    result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(0, "08:40"_t),
+        type::RTLevel::Base,
+        2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190101T084500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190101T093000"_dt);
+
+    // The journey pattern is available the day after the requested date
+    // the requested departure time > (departure time - access time)
+    // the result is KO
+    result = raptor.compute_all(
+        departures,
+        arrivals,
+        DateTimeUtils::set(0, "08:45"_t),
+        type::RTLevel::Base,
+        2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20190101T084500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20190101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20190101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20190101T093000"_dt);
+}
+
 // The vp should be shifted to the previous day since the boarding time will be before midnight
 BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
     ed::builder b("20170101");
