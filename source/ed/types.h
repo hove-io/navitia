@@ -228,7 +228,6 @@ struct Line : public Header, Nameable {
 
 struct LineGroup : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::LineGroup;
-    std::string name;
     Line* main_line;
 
     bool operator<(const LineGroup & other) const;
