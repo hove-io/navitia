@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
-    auto get_adapted = [&b](const nt::VehicleJourney* vj, int nb_adapted_vj) {
+    auto get_adapted = [](const nt::VehicleJourney* vj, int nb_adapted_vj) {
         BOOST_REQUIRE_EQUAL(vj->meta_vj->get_adapted_vj().size(), nb_adapted_vj);
         return vj->meta_vj->get_adapted_vj().back().get();
     };
