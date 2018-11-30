@@ -194,7 +194,7 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
                         d.geo_ref->word_weight,
                         nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             }
-            if(main_stop_area_weight_factor != 1.0){
+            if(main_stop_area_weight_factor != 1.0f){
                 auto main_stop_areas = get_main_stop_areas(d);
                 for(auto& r: result){
                     if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
