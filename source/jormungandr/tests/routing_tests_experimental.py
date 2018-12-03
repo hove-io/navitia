@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
-from .routing_tests import OnBasicRouting
 
 """
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
