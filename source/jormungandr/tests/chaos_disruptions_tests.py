@@ -884,7 +884,7 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
 
         # As the public transport is blocked by the disruption, we should find only 1 journey here
         assert len(response_adapted['journeys']) == 1
-        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
+        assert response_adapted['journeys'][0]['type'] == 'best'
 
         # delete disruption on stop point
         self.send_mock(disruption_id, disruption_target, disruption_target_type, is_deleted=True)
@@ -945,7 +945,7 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
         # No public transport journey is found, the only way it by foot
         assert len(response_adapted['journeys']) == 1
-        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
+        assert response_adapted['journeys'][0]['type'] == 'best'
 
         # delete disruption on stop point
         self.send_mock(disruption_id, disruption_target, disruption_target_type, is_deleted=True)

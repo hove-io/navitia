@@ -32,21 +32,19 @@ from jormungandr.scenarios import journey_filter as jf
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
 import navitiacommon.response_pb2 as response_pb2
 from navitiacommon import default_values
-from jormungandr.scenarios.default import Scenario, are_equals
+from jormungandr.scenarios.new_default import sort_journeys
 from jormungandr.utils import str_to_time_stamp
 import random
 import itertools
 
 
 def empty_journeys_test():
-    scenario = Scenario()
     response = response_pb2.Response()
-    scenario.sort_journeys(response, 'arrival_time')
+    sort_journeys(response, 'arrival_time', True)
     assert not response.journeys
 
 
 def different_arrival_times_test():
-    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -64,13 +62,12 @@ def different_arrival_times_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 2 * 60
 
-    scenario.sort_journeys(response, 'arrival_time')
+    sort_journeys(response, 'arrival_time', True)
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0758")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
 
 
 def different_departure_times_test():
-    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.departure_date_time = str_to_time_stamp("20140422T0800")
@@ -88,13 +85,12 @@ def different_departure_times_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 2 * 60
 
-    scenario.sort_journeys(response, 'departure_time')
+    sort_journeys(response, 'departure_time', True)
     assert response.journeys[0].departure_date_time == str_to_time_stamp("20140422T0758")
     assert response.journeys[1].departure_date_time == str_to_time_stamp("20140422T0800")
 
 
 def different_duration_test():
-    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -112,7 +108,7 @@ def different_duration_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 3 * 60
 
-    scenario.sort_journeys(response, 'arrival_time')
+    sort_journeys(response, 'arrival_time', True)
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 3 * 60
@@ -120,7 +116,6 @@ def different_duration_test():
 
 
 def different_nb_transfers_test():
-    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -147,7 +142,7 @@ def different_nb_transfers_test():
     journey2.sections[0].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[0].duration = 25 * 60
 
-    scenario.sort_journeys(response, 'arrival_time')
+    sort_journeys(response, 'arrival_time', True)
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25 * 60
@@ -157,7 +152,6 @@ def different_nb_transfers_test():
 
 
 def different_duration_non_pt_test():
-    scenario = Scenario()
     response = response_pb2.Response()
     journey1 = response.journeys.add()
     journey1.arrival_date_time = str_to_time_stamp("20140422T0800")
@@ -196,7 +190,7 @@ def different_duration_non_pt_test():
     journey2.sections[3].type = response_pb2.PUBLIC_TRANSPORT
     journey2.sections[3].duration = 15 * 60
 
-    scenario.sort_journeys(response, 'arrival_time')
+    sort_journeys(response, 'arrival_time', True)
     assert response.journeys[0].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[1].arrival_date_time == str_to_time_stamp("20140422T0800")
     assert response.journeys[0].duration == 25 * 60
@@ -243,47 +237,6 @@ def create_dummy_journey():
     return journey
 
 
-def test_journeys_equality_test_different_journeys():
-    """
-    test the are_equals method, applied to different journeys
-    """
-    journey1 = create_dummy_journey()
-    modified_section = journey1.sections[0]
-    modified_section.origin.uri = "stop_point_10"
-    modified_section.destination.uri = "stop_point_22"
-    modified_section.vehicle_journey.uri = "vj_tata"
-
-    journey2 = create_dummy_journey()
-
-    assert not are_equals(journey1, journey2)
-
-
-def test_journeys_equality_test_different_nb_sections():
-    """
-    test the are_equals method, applied to journeys with different number of sections
-    """
-    journey1 = create_dummy_journey()
-    modified_section = journey1.sections.add()
-    modified_section.origin.uri = "stop_point_10"
-    modified_section.destination.uri = "stop_point_22"
-    modified_section.vehicle_journey.uri = "vj_tata"
-
-    journey2 = create_dummy_journey()
-
-    assert not are_equals(journey1, journey2)
-
-
-def test_journeys_equality_test_same_journeys():
-    """No question, a  journey must be equal to self"""
-    journey1 = create_dummy_journey()
-
-    assert are_equals(journey1, journey1)
-
-    # and likewise if not the same memory address
-    journey2 = create_dummy_journey()
-    assert are_equals(journey1, journey2)
-
-
 def journey_pairs_gen(list_responses):
     return itertools.combinations(jf.get_qualified_journeys(list_responses), 2)
 
@@ -316,23 +269,6 @@ def test_num_qualifed_journeys():
     journey3.tags.append("another_tag")
 
     assert jf.nb_qualifed_journeys(responses) == 2
-
-
-def test_journeys_equality_test_almost_same_journeys():
-    """
-    test the are_equals method, applied to different journeys, but with meaningless differences
-    """
-    journey1 = create_dummy_journey()
-    modified_section = journey1.sections[4]
-    modified_section.duration = 1337
-
-    journey2 = create_dummy_journey()
-    modified_section = journey2.sections[0]
-    modified_section.length = 42
-    modified_section = journey2.sections[1]
-    modified_section.transfer_type = response_pb2.stay_in
-
-    assert are_equals(journey1, journey2)
 
 
 def test_similar_journeys():

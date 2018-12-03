@@ -281,21 +281,6 @@ class Instance(object):
         return get_value_or_default('max_nb_transfers', instance_db, self.name)
 
     @property
-    def min_tc_with_car(self):
-        instance_db = self.get_models()
-        return get_value_or_default('min_tc_with_car', instance_db, self.name)
-
-    @property
-    def min_tc_with_bike(self):
-        instance_db = self.get_models()
-        return get_value_or_default('min_tc_with_bike', instance_db, self.name)
-
-    @property
-    def min_tc_with_bss(self):
-        instance_db = self.get_models()
-        return get_value_or_default('min_tc_with_bss', instance_db, self.name)
-
-    @property
     def min_bike(self):
         instance_db = self.get_models()
         return get_value_or_default('min_bike', instance_db, self.name)
@@ -311,29 +296,9 @@ class Instance(object):
         return get_value_or_default('min_car', instance_db, self.name)
 
     @property
-    def factor_too_long_journey(self):
-        instance_db = self.get_models()
-        return get_value_or_default('factor_too_long_journey', instance_db, self.name)
-
-    @property
     def successive_physical_mode_to_limit_id(self):
         instance_db = self.get_models()
         return get_value_or_default('successive_physical_mode_to_limit_id', instance_db, self.name)
-
-    @property
-    def min_duration_too_long_journey(self):
-        instance_db = self.get_models()
-        return get_value_or_default('min_duration_too_long_journey', instance_db, self.name)
-
-    @property
-    def max_duration_criteria(self):
-        instance_db = self.get_models()
-        return get_value_or_default('max_duration_criteria', instance_db, self.name)
-
-    @property
-    def max_duration_fallback_mode(self):
-        instance_db = self.get_models()
-        return get_value_or_default('max_duration_fallback_mode', instance_db, self.name)
 
     @property
     def priority(self):

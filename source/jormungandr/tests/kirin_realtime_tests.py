@@ -1116,7 +1116,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 1
-        assert response['journeys'][0]['type'] == 'non_pt_walk'
+        assert response['journeys'][0]['type'] == 'best'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
