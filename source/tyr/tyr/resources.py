@@ -274,7 +274,7 @@ class Instance(flask_restful.Resource):
             type=str,
             case_sensitive=False,
             help='the name of the scenario used by jormungandr',
-            choices=['keolis', 'new_default', 'distributed'],
+            choices=['new_default', 'distributed'],
             location=('json', 'values'),
             default=instance.scenario,
         )
