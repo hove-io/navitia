@@ -72,43 +72,6 @@ def compare(obj1, obj2, compare_generator):
     )
 
 
-def are_equals(journey1, journey2):
-    """
-    To decide that 2 journeys are equals, we loop through all values of the
-    compare_journey_generator and stop at the first non equals value
-    """
-    return compare(journey1, journey2, compare_journey_generator)
-
-
-def compare_journey_generator(journey):
-    """
-    Generator used to compare journeys together
-
-    2 journeys are equals if they share for all the sections the same :
-     * departure time
-     * arrival time
-     * vj
-     * type
-     * departure location
-     * arrival location
-    """
-    yield journey.departure_date_time
-    yield journey.arrival_date_time
-    yield journey.destination.uri if journey.destination else 'no_destination'
-    for s in journey.sections:
-        yield s.type
-        yield s.begin_date_time
-        yield s.end_date_time
-        yield s.uris.vehicle_journey
-        # NOTE: we want to ensure that we always yield the same number of elt
-        yield s.origin.uri if s.origin else 'no_origin'
-        yield s.destination.uri if s.destination else 'no_destination'
-
-
-def count_typed_journeys(journeys):
-    return sum(1 for journey in journeys if journey.type)
-
-
 class JourneySorter(object):
     """
     abstract class for journey sorter
