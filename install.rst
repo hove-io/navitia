@@ -21,7 +21,7 @@ Dependencies
 
 #. Python
 
-   Each python module have a pip requirements.txt and a requirements_dev.txt file that list it's dependencies.
+   Each python module have a pip requirements.txt (and some of them a requirements_dev.txt) file that list it's dependencies.
 
    To install the dependencies for a module use `pip` (you can also wrap that in a virtualenv):
 
