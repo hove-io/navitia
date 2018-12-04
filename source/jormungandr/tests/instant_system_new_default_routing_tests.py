@@ -46,6 +46,8 @@ MOCKED_INSTANCE_CONF = {
                     "network": "Super Covoit",
                     "rating_scale_min": 0,
                     "rating_scale_max": 5,
+                    "crowfly_radius": 200,
+                    "timeframe_duration": 1800,
                     "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
                 },
                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
