@@ -89,15 +89,24 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     pbnavitia::StopTimeUpdateStatus get_effect(nd::StopTimeUpdate::Status status) const {
         switch (status) {
         case nd::StopTimeUpdate::Status::ADDED:
+        case nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR:
             return pbnavitia::ADDED;
         case nd::StopTimeUpdate::Status::DELAYED:
             return pbnavitia::DELAYED;
         case nd::StopTimeUpdate::Status::DELETED:
+        case nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR:
             return pbnavitia::DELETED;
         case nd::StopTimeUpdate::Status::UNCHANGED:
         default:
             return pbnavitia::UNCHANGED;
         }
+    }
+
+    bool is_detour(nd::StopTimeUpdate::Status dep_status, nd::StopTimeUpdate::Status arr_status) const {
+        return ((dep_status == nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR) ||
+                (dep_status == nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR) ||
+                (arr_status == nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR) ||
+                (arr_status == nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR));
     }
 
     void operator()(const nd::UnknownPtObj&) const {}
@@ -108,6 +117,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         for (const auto& stu: impact.aux_info.stop_times) {
             auto* impacted_stop = pobj->add_impacted_stops();
             impacted_stop->set_cause(stu.cause);
+            impacted_stop->set_is_detour(is_detour(stu.departure_status, stu.arrival_status));
 
             impacted_stop->set_departure_status(get_effect(stu.departure_status));
             impacted_stop->set_arrival_status(get_effect(stu.arrival_status));
@@ -844,11 +854,13 @@ static uint32_t get_local_time(const nt::StopTime* st, const uint32_t time) {
 void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia::StopTime* stop_time) {
     const auto* st = &stu->stop_time;
     // we don't want to output amended departure/arrival for deleted departure/arrival
-    if (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) {
+    if ((stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) &&
+            (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR)) {
         stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
         stop_time->set_utc_arrival_time(st->arrival_time);
     }
-    if (stu->departure_status != nd::StopTimeUpdate::Status::DELETED) {
+    if ((stu->departure_status != nd::StopTimeUpdate::Status::DELETED) &&
+            (stu->departure_status != nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR)) {
         stop_time->set_departure_time(get_local_time(st, st->departure_time));
         stop_time->set_utc_departure_time(st->departure_time);
     }

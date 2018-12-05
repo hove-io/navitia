@@ -40,6 +40,8 @@ struct RTStopTime {
     bool _departure_skipped = false;
     bool _arrival_skipped = false;
     bool _is_added = false;
+    bool _deleted_for_detour = false;
+    bool _added_for_detour = false;
     RTStopTime(const std::string& n, int arrival_time, int departure_time):
         _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
     RTStopTime(const std::string& n, int time):
@@ -52,6 +54,8 @@ struct RTStopTime {
     RTStopTime& departure_skipped() { _departure_skipped = true; return *this; }
     RTStopTime& skipped() { return arrival_skipped().departure_skipped(); }
     RTStopTime& added() { _is_added = true; return *this; }
+    RTStopTime& deleted_for_detour() {_deleted_for_detour = true; return * this; }
+    RTStopTime& added_for_detour() {_added_for_detour = true; return * this; }
 };
 
 inline transit_realtime::TripUpdate
@@ -79,16 +83,22 @@ make_delay_message(const std::string& vj_uri,
         arrival->set_delay(delayed_st._arrival_delay.total_seconds());
         departure->set_time(delayed_st._departure_time);
         departure->set_delay(delayed_st._departure_delay.total_seconds());
-        auto skipped = transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED;
-        auto added = transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED;
         if (delayed_st._departure_skipped) {
-            departure->SetExtension(kirin::stop_time_event_relationship, skipped);
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::DELETED);
         }
         if (delayed_st._arrival_skipped) {
-            arrival->SetExtension(kirin::stop_time_event_relationship, skipped);
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::DELETED);
         }
-        if(delayed_st._is_added) {
-            arrival->SetExtension(kirin::stop_time_event_relationship, added);
+        if (delayed_st._is_added) {
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED);
+        }
+        if (delayed_st._deleted_for_detour) {
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR);
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR);
+        }
+        if (delayed_st._added_for_detour) {
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED_FOR_DETOUR);
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED_FOR_DETOUR);
         }
     }
 
