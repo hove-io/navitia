@@ -36,7 +36,7 @@ from jormungandr.realtime_schedule.siri import Siri
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 import xml.etree.ElementTree as et
-from jormungandr.tests.utils_test import MockResponse, MockRequests
+import requests_mock
 
 
 def make_request_test():
@@ -128,13 +128,14 @@ def next_passage_for_route_point_test():
     mock the http call to return a good response, we should get some next_passages
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
-    mock_requests = MockRequests({'http://bob.com/': (mock_good_response(), 200)})
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
 
-    with mock.patch('requests.post', mock_requests.post):
+    with requests_mock.Mocker() as m:
+        m.post('http://bob.com/', text=mock_good_response())
         passages = siri._get_next_passage_for_route_point(
             route_point, from_dt=_timestamp("12:00"), current_dt=_timestamp("12:00"), count=1
         )
+        assert m.called
         assert len(passages) == 1
         assert passages[0].datetime == datetime.datetime(2016, 3, 29, 13, 37, tzinfo=pytz.UTC)
 
@@ -147,12 +148,12 @@ def next_passage_for_route_point_failure_test():
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
 
-    mock_requests = MockRequests({'http://bob.com/': (mock_good_response(), 404)})
-
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
 
-    with mock.patch('requests.post', mock_requests.post):
+    with requests_mock.Mocker() as m:
+        m.post('http://bob.com/', text=mock_good_response(), status_code=404)
         passages = siri.next_passage_for_route_point(route_point, from_dt=_timestamp("12:00"), count=2)
+        assert m.called
 
         assert passages is None
 
