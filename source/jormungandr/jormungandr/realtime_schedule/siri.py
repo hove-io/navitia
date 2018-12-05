@@ -47,7 +47,7 @@ class Siri(RealtimeProxy):
 
 
     curl example to check/test that external service is working:
-    curl -X POST '{server}' -d '<x:Envelope 
+    curl -X POST '{server}' -d '<x:Envelope
     xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
         <x:Header/>
         <x:Body>
@@ -75,7 +75,7 @@ class Siri(RealtimeProxy):
     the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
 
     In practice it will look like:
-    curl -X POST 'http://bobito.fr:8080/ProfilSiriKidfProducer-Bobito/SiriServices' -d '<x:Envelope 
+    curl -X POST 'http://bobito.fr:8080/ProfilSiriKidfProducer-Bobito/SiriServices' -d '<x:Envelope
     xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
         <x:Header/>
         <x:Body>
@@ -187,7 +187,7 @@ class Siri(RealtimeProxy):
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
     def _call_siri(self, request):
         encoded_request = request.encode('utf-8', 'backslashreplace')
-        headers = {"Content-Type": "text/xml; charset=UTF-8", "Content-Length": len(encoded_request)}
+        headers = {"Content-Type": "text/xml; charset=UTF-8", "Content-Length": str(len(encoded_request))}
 
         logging.getLogger(__name__).debug('siri RT service, post at {}: {}'.format(self.service_url, request))
         try:
