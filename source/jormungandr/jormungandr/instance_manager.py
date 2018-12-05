@@ -183,20 +183,19 @@ class InstanceManager(object):
                 break
 
     def init_socket_reaper(self):
-        try:
-            from uwsgidecorators import timer
+        # Disable uwsgi timers for now
+        # try:
+        #    from uwsgidecorators import timer
 
-            logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
+        #    logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
 
-            @timer(self.reaper_interval, target='active-workers')
-            def reaper_timer(signal):
-                self.socket_reaper_thread(disable_gevent=True)
+        #    @timer(self.reaper_interval, target='active-workers')
+        #    def reaper_timer(signal):
+        #        self.socket_reaper_thread(disable_gevent=True)
 
-        except ImportError:
-            logging.getLogger(__name__).info(
-                "uwsgi timers not available, falling back to gevent for socket reaper"
-            )
-            gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
+        # except ImportError:
+        logging.getLogger(__name__).info("uwsgi timers not available, falling back to gevent for socket reaper")
+        gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
 
     def socket_reaper_thread(self, disable_gevent=False):
         for instance in self.instances.values():
