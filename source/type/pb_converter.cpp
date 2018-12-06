@@ -45,6 +45,7 @@ www.navitia.io
 #include "time_tables/thermometer.h"
 #include "routing/dataraptor.h"
 #include "ptreferential/ptreferential.h"
+#include "utils/functions.h"
 
 
 namespace gd = boost::gregorian;
@@ -103,10 +104,10 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     }
 
     bool is_detour(nd::StopTimeUpdate::Status dep_status, nd::StopTimeUpdate::Status arr_status) const {
-        return ((dep_status == nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR) ||
-                (dep_status == nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR) ||
-                (arr_status == nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR) ||
-                (arr_status == nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR));
+        return (in(dep_status, {nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR,
+                                nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR}) ||
+                in(arr_status, {nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR,
+                                nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR}));
     }
 
     void operator()(const nd::UnknownPtObj&) const {}

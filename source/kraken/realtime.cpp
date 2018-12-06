@@ -40,6 +40,8 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <chrono>
+#include "utils/functions.h"
+
 namespace navitia {
 
 namespace nd = type::disruption;
@@ -208,11 +210,6 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
             return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
         default: break;
         }
-        if (! event.has_delay() || event.delay() != 0) {
-            return nt::disruption::StopTimeUpdate::Status::DELAYED;
-        } else {
-            return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
-        }
     } else {
         //TODO: to be deleted once this version is deployed in prod.
         auto transit_realtime_status = get_relationship(event, st);
@@ -223,11 +220,11 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
             return nt::disruption::StopTimeUpdate::Status::ADDED;
         default: break;
         }
-        if (! event.has_delay() || event.delay() != 0) {
-            return nt::disruption::StopTimeUpdate::Status::DELAYED;
-        } else {
-            return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
-        }
+    }
+    if (! event.has_delay() || event.delay() != 0) {
+        return nt::disruption::StopTimeUpdate::Status::DELAYED;
+    } else {
+        return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
     }
 }
 
@@ -245,10 +242,10 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
                 && trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
-            if (get_status(st.departure(), st) == StopTimeUpdate::Status::ADDED ||
-                    get_status(st.departure(), st) == StopTimeUpdate::Status::ADDED_FOR_DETOUR ||
-                    get_status(st.arrival(), st) == StopTimeUpdate::Status::ADDED ||
-                    get_status(st.arrival(), st) == StopTimeUpdate::Status::ADDED_FOR_DETOUR) {
+            if (in(get_status(st.departure(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR}) ||
+                    in(get_status(st.arrival(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
                 LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
                 return true;
             }
@@ -447,16 +444,13 @@ create_disruption(const std::string& id,
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if ((arrival_status == StopTimeUpdate::Status::DELETED) ||
-                    (arrival_status == StopTimeUpdate::Status::DELETED_FOR_DETOUR))
-                {
+                if (in(arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if ((departure_status == StopTimeUpdate::Status::DELETED) ||
-                        (departure_status == StopTimeUpdate::Status::DELETED_FOR_DETOUR)){
+                if (in(departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());

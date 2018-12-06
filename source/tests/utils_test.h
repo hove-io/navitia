@@ -90,6 +90,7 @@ make_delay_message(const std::string& vj_uri,
             arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::DELETED);
         }
         if (delayed_st._is_added) {
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED);
             arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED);
         }
         if (delayed_st._deleted_for_detour) {

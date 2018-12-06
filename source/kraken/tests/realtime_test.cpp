@@ -2343,9 +2343,9 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
     b.sa("D", 0, 0, true, true);
 
     b.vj("1").uri("vj:1")
-                   ("stop_point:A", "08:00"_t)
-                   ("stop_point:B", "08:30"_t)
-                   ("stop_point:C", "09:00"_t);
+            ("stop_point:A", "08:00"_t)
+            ("stop_point:B", "08:30"_t)
+            ("stop_point:C", "09:00"_t);
 
     b.make();
 
@@ -2373,7 +2373,6 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
 
-    // Add a new stop_time in vj = vj:1 betwen stops B and C (B_bis added_for_detour) with B deleted_for_detour and
     // Delete the stop_time at B (delete_for_detour) followed by a new stop_time added at B_bis (added_for_detour) and C unchanged.
     transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
             "20171101",
@@ -2394,6 +2393,7 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:B_bis");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0900"_pts);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 4);
@@ -2415,3 +2415,68 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
 }
 
+BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_in_the_trip_for_detour) {
+
+    //Init data for a vj = vj:1 -> A -> B -> C
+    ed::builder b("20171101");
+
+    b.sa("A", 0, 0, true, true);
+    b.sa("B", 0, 0, true, true);
+    b.sa("B_bis", 0, 0, true, true);
+    b.sa("C", 0, 0, true, true);
+    b.sa("D", 0, 0, true, true);
+
+    b.vj("1").uri("vj:1")
+            ("stop_point:A", "08:00"_t)
+            ("stop_point:B", "08:30"_t)
+            ("stop_point:C", "09:00"_t);
+
+    b.make();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20171101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                {ntest::to_posix_timestamp(datetime)},
+                true, navitia::type::AccessibiliteParams(), {}, {},
+                sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+
+    // Delete the stop_time at B (delete_for_detour) followed by a new stop_time added at B_bis (added_for_detour) and C unchanged.
+    // Since the arrival time of newly added stop_time is earlier than deleted, this disruption is rejected by kraken (BUG)
+    // TODO: Update this test after correction in kraken
+    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts).deleted_for_detour(),
+                    RTStopTime("stop_point:B_bis", "20171101T0825"_pts).added_for_detour(),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+
+    navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true);
+
+    b.make();
+
+    // Since the disruption is rejected by kraken, no impact is added.
+    res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
+}

@@ -1290,7 +1290,7 @@ class TestKirinStopTimeOnDetourAtTheEnd(MockKirinDisruptionsFixture):
         disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])
 
-        # New disruption with two stop_times same as base schedule and
+        # New disruption with one stop_time same as base schedule, another one deleted and
         # a new stop_time on stop_point:stopC added at the end
         self.send_mock(
             "vjA",
@@ -1331,7 +1331,7 @@ class TestKirinStopTimeOnDetourAtTheEnd(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 11
+        assert len(disrupts['disruptions']) == nb_disruptions_before + 1
         assert has_the_disruption(disrupts, 'stop_time_with_detour')
         last_disrupt = disrupts['disruptions'][-1]
         assert last_disrupt['severity']['effect'] == 'DETOUR'
@@ -1352,6 +1352,61 @@ class TestKirinStopTimeOnDetourAtTheEnd(MockKirinDisruptionsFixture):
         assert impacted_stops[2]['cause'] == 'added for detour'
         assert impacted_stops[2]['departure_status'] == 'added'
         assert impacted_stops[2]['arrival_status'] == 'added'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisruptionsFixture):
+    def test_stop_time_with_detour_and_arrival_before_deleted_at_the_end(self):
+        """
+        1. create a new_stop_time at C to replace existing one at A so that we have A deleted_for_detour
+        and C added_for_detour with arrival time < to arrival time of A (deleted)
+        2. Kraken rejects this disruption and is a BUG. Adjust this test after correction in kraken
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption with one stop_time same as base schedule, another one deleted and
+        # a new stop_time on stop_point:stopC added at the end
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                    arrival_skipped=True,
+                    is_detour=True,
+                    message='deleted for detour',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080101"),
+                    departure=tstamp("20120614T080101"),
+                    is_added=True,
+                    is_detour=True,
+                    message='added for detour',
+                ),
+            ],
+            disruption_id='stop_time_with_detour',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == nb_disruptions_before
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None):
