@@ -17,10 +17,10 @@ aniso8601==0.82
 anyjson==0.3.3
 argparse==1.2.1
 billiard==3.5.0.4
-celery==4.2.1
+celery==4.0.2
 configobj==5.0.6
 itsdangerous==0.24
-kombu==4.2.1
+kombu==4.0.2
 protobuf
 psycopg2
 pydns==2.3.6

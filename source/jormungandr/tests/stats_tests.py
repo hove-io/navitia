@@ -41,6 +41,7 @@ import mock
 import kombu
 import unittest
 from navitiacommon import stat_pb2
+import pytest
 
 
 class MockStatManager(AbstractTestFixture):
@@ -196,6 +197,20 @@ class TestRabbitMqPublication(unittest.TestCase):
                 time_to_live -= 1
 
         on_message_mock.assert_called_once_with("test", mock.ANY)
+
+    @pytest.mark.timeout(5)
+    def test_StatManager_can_publish_rabbit_down(self):
+        app.config['SAVE_STAT'] = True
+        app.config['EXCHANGE_NAME'] = 'test_rabbitmq'
+        # Nothing should be listening on 5673
+        app.config['BROKER_URL'] = 'amqp://guest:guest@127.0.0.42:5673//'
+
+        stat_mngr = StatManager(auto_delete=True)
+        import socket
+
+        with pytest.raises(socket.error):
+            stat_mngr.publish_request('bla', 'test')
+            assert False, 'something looking like rabbitmq is listening on 127.0.0.42:5673'
 
 
 @dataset({"main_routing_test": {}})
