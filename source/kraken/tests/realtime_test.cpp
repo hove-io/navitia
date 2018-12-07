@@ -2481,6 +2481,18 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
-    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:B_bis");
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 4);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).is_detour(), false);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).is_detour(), true);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).is_detour(), true);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).is_detour(), false);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
 }
