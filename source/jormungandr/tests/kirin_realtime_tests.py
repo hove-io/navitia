@@ -1361,6 +1361,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         1. create a new_stop_time at C to replace existing one at A so that we have A deleted_for_detour
         and C added_for_detour with arrival time < to arrival time of A (deleted)
         2. Kraken rejects this disruption and is a BUG. Adjust this test after correction in kraken
+        For details see: https://jira.kisio.org/browse/NAVP-1118
         """
         disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])

@@ -2373,7 +2373,8 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
 
-    // Delete the stop_time at B (delete_for_detour) followed by a new stop_time added at B_bis (added_for_detour) and C unchanged.
+    // Delete the stop_time at B (delete_for_detour) followed by a new stop_time
+    // added at B_bis (added_for_detour) and C unchanged.
     transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
             "20171101",
             {
@@ -2457,9 +2458,12 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
 
-    // Delete the stop_time at B (delete_for_detour) followed by a new stop_time added at B_bis (added_for_detour) and C unchanged.
-    // Since the arrival time of newly added stop_time is earlier than deleted, this disruption is rejected by kraken (BUG)
-    // TODO: Update this test after correction in kraken
+    // Delete the stop_time at B (delete_for_detour) followed by a new stop_time added
+    // at B_bis (added_for_detour) and C unchanged.
+    // Since the arrival time of newly added stop_time is earlier than deleted, this disruption
+    // is rejected by kraken (BUG)
+    // TODO XFAIL: Update this test after correction in kraken
+    // For details see: https://jira.kisio.org/browse/NAVP-1118
     transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
             "20171101",
             {
