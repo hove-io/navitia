@@ -739,7 +739,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
         values.push_back(sp->fare_zone);
-        if(sp->stop_area != NULL){
+        if(sp->stop_area != nullptr){
             values.push_back(std::to_string(sp->stop_area->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -772,13 +772,13 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
         values.push_back(line->name);
         values.push_back(line->color);
         values.push_back(line->code);
-        if(line->commercial_mode != NULL){
+        if(line->commercial_mode != nullptr){
             values.push_back(std::to_string(line->commercial_mode->idx));
         }else{
             values.push_back(lotus.null_value);
         }
 
-        if(line->network != NULL){
+        if(line->network != nullptr){
             values.push_back(std::to_string(line->network->idx));
         } else {
             LOG4CPLUS_INFO(logger, "Line " + line->uri + " ignored because it doesn't "
@@ -868,7 +868,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
         values.push_back(std::to_string(route->idx));
         values.push_back(navitia::encode_uri(route->uri));
         values.push_back(route->name);
-        if(route->line != NULL){
+        if(route->line != nullptr){
             values.push_back(std::to_string(route->line->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -959,7 +959,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
             values.push_back(std::to_string(stop->shape_from_prev->idx));
         }
 
-        if(stop->vehicle_journey != NULL){
+        if(stop->vehicle_journey != nullptr){
             values.push_back(std::to_string(stop->vehicle_journey->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -1023,12 +1023,12 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(navitia::encode_uri(vj->uri));
         values.push_back(vj->name);
 
-        if(vj->validity_pattern != NULL){
+        if(vj->validity_pattern != nullptr){
             values.push_back(std::to_string(vj->validity_pattern->idx));
         }else{
             values.push_back(lotus.null_value);
         }
-        if (vj->dataset != NULL){
+        if (vj->dataset != nullptr){
             values.push_back(std::to_string(vj->dataset->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -1037,12 +1037,12 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->end_time));
         values.push_back(std::to_string(vj->headway_secs));
 
-        if(vj->adapted_validity_pattern != NULL){
+        if(vj->adapted_validity_pattern != nullptr){
             values.push_back(std::to_string(vj->adapted_validity_pattern->idx));
         }else{
             values.push_back(std::to_string(vj->validity_pattern->idx));
         }
-        if(vj->company != NULL){
+        if(vj->company != nullptr){
             values.push_back(std::to_string(vj->company->idx));
         }else{
             values.push_back(lotus.null_value);
@@ -1050,7 +1050,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(std::to_string(vj->route->idx));
         values.push_back(std::to_string(vj->physical_mode->idx));
 
-        if(vj->theoric_vehicle_journey != NULL){
+        if(vj->theoric_vehicle_journey != nullptr){
             values.push_back(std::to_string(vj->theoric_vehicle_journey->idx));
         }else{
             //@TODO WTF??

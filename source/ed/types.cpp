@@ -41,9 +41,9 @@ bool PhysicalMode::operator<(const PhysicalMode& other) const {
 }
 
 bool Line::operator<(const Line& other) const {
-    if(this->commercial_mode == NULL && other.commercial_mode != NULL){
+    if(this->commercial_mode == nullptr && other.commercial_mode != nullptr){
         return true;
-    }else if(other.commercial_mode == NULL && this->commercial_mode != NULL){
+    }else if(other.commercial_mode == nullptr && this->commercial_mode != nullptr){
         return false;
     }
     if(this->commercial_mode == other.commercial_mode){

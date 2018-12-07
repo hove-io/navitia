@@ -694,7 +694,7 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        nt::ValidityPattern* validity_pattern = NULL;
+        nt::ValidityPattern* validity_pattern = nullptr;
         validity_pattern = new nt::ValidityPattern(data.meta->production_date.begin(), const_it["days"].as<std::string>());
 
         validity_pattern->idx = data.pt_data->validity_patterns.size();
@@ -1293,7 +1293,7 @@ void EdReader::fill_house_numbers(navitia::type::Data& data, pqxx::work& work){
             hn.coord.set_lon(const_it["lon"].as<double>());
             hn.coord.set_lat(const_it["lat"].as<double>());
             navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
-            if (way != NULL){
+            if (way != nullptr){
                 way->add_house_number(hn);
             }
         }
@@ -1812,9 +1812,9 @@ void EdReader::build_rel_way_admin(navitia::type::Data&, pqxx::work& work){
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<idx_t>()];
-        if (way != NULL){
+        if (way != nullptr){
             navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-            if (admin != NULL){
+            if (admin != nullptr){
                 way->admin_list.push_back(admin);
             }
         }
@@ -1826,9 +1826,9 @@ void EdReader::build_rel_admin_admin(navitia::type::Data&, pqxx::work& work){
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Admin* admin_master = this->admin_map[const_it["master_admin_id"].as<idx_t>()];
-        if (admin_master != NULL){
+        if (admin_master != nullptr){
             navitia::georef::Admin* admin = this->admin_map[const_it["admin_id"].as<idx_t>()];
-            if ((admin != NULL)){
+            if ((admin != nullptr)){
                 admin_master->admin_list.push_back(admin);
             }
         }

@@ -278,18 +278,18 @@ void StopsGtfsHandler::init(Data& data) {
     // we allocate with values sized for the Île-de-France
     data.stop_points.reserve(56000);
     data.stop_areas.reserve(13000);
-    id_c = csv.get_pos_col("stop_id"),
-            code_c = csv.get_pos_col("stop_code"),
-            lat_c = csv.get_pos_col("stop_lat"),
-            lon_c = csv.get_pos_col("stop_lon"),
-            zone_c = csv.get_pos_col("zone_id"),
-            type_c = csv.get_pos_col("location_type"),
-            parent_c = csv.get_pos_col("parent_station"),
-            name_c = csv.get_pos_col("stop_name"),
-            desc_c = csv.get_pos_col("stop_desc"),
-            wheelchair_c = csv.get_pos_col("wheelchair_boarding"),
-            platform_c = csv.get_pos_col("platform_code"),
-            timezone_c = csv.get_pos_col("stop_timezone");
+    id_c = csv.get_pos_col("stop_id");
+    code_c = csv.get_pos_col("stop_code");
+    lat_c = csv.get_pos_col("stop_lat");
+    lon_c = csv.get_pos_col("stop_lon");
+    zone_c = csv.get_pos_col("zone_id");
+    type_c = csv.get_pos_col("location_type");
+    parent_c = csv.get_pos_col("parent_station");
+    name_c = csv.get_pos_col("stop_name");
+    desc_c = csv.get_pos_col("stop_desc");
+    wheelchair_c = csv.get_pos_col("wheelchair_boarding");
+    platform_c = csv.get_pos_col("platform_code");
+    timezone_c = csv.get_pos_col("stop_timezone");
     if (code_c == -1) {
         code_c = id_c;
     }
@@ -308,7 +308,7 @@ void StopsGtfsHandler::finish(Data& data) {
                     "the stop area " + sa_sps.first  + " has not been found for the stop points :  ";
             for(auto sp : sa_sps.second) {
                 error_message += sp->uri;
-                sp->stop_area = 0;
+                sp->stop_area = nullptr;
             }
             LOG4CPLUS_WARN(logger, error_message);
         }
@@ -471,11 +471,14 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
 }
 
 void RouteGtfsHandler::init(Data&) {
-    id_c = csv.get_pos_col("route_id"), short_name_c = csv.get_pos_col("route_short_name"),
-            long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
-            desc_c = csv.get_pos_col("route_desc"),
-            color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id"),
-            text_color_c = csv.get_pos_col("route_text_color");
+    id_c = csv.get_pos_col("route_id");
+    short_name_c = csv.get_pos_col("route_short_name");
+    long_name_c = csv.get_pos_col("route_long_name");
+    type_c = csv.get_pos_col("route_type");
+    desc_c = csv.get_pos_col("route_desc");
+    color_c = csv.get_pos_col("route_color");
+    agency_c = csv.get_pos_col("agency_id");
+    text_color_c = csv.get_pos_col("route_text_color");
 }
 
 nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -538,9 +541,9 @@ void RouteGtfsHandler::finish(Data& data) {
 }
 
 void TransfersGtfsHandler::init(Data&) {
-    from_c = csv.get_pos_col("from_stop_id"),
-            to_c = csv.get_pos_col("to_stop_id"),
-            time_c = csv.get_pos_col("min_transfer_time");
+    from_c = csv.get_pos_col("from_stop_id");
+        to_c = csv.get_pos_col("to_stop_id");
+        time_c = csv.get_pos_col("min_transfer_time");
 }
 
 void TransfersGtfsHandler::finish(Data& data) {
@@ -626,11 +629,16 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 void CalendarGtfsHandler::init(Data& data) {
     data.validity_patterns.reserve(10000);
 
-    id_c = csv.get_pos_col("service_id"), monday_c = csv.get_pos_col("monday"),
-            tuesday_c = csv.get_pos_col("tuesday"), wednesday_c = csv.get_pos_col("wednesday"),
-            thursday_c = csv.get_pos_col("thursday"), friday_c = csv.get_pos_col("friday"),
-            saturday_c = csv.get_pos_col("saturday"), sunday_c = csv.get_pos_col("sunday"),
-            start_date_c = csv.get_pos_col("start_date"), end_date_c = csv.get_pos_col("end_date");
+    id_c = csv.get_pos_col("service_id");
+    monday_c = csv.get_pos_col("monday");
+    tuesday_c = csv.get_pos_col("tuesday");
+    wednesday_c = csv.get_pos_col("wednesday");
+    thursday_c = csv.get_pos_col("thursday");
+    friday_c = csv.get_pos_col("friday");
+    saturday_c = csv.get_pos_col("saturday");
+    sunday_c = csv.get_pos_col("sunday");
+    start_date_c = csv.get_pos_col("start_date");
+    end_date_c = csv.get_pos_col("end_date");
 }
 
 void CalendarGtfsHandler::finish(Data& data) {
@@ -754,8 +762,9 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
 }
 
 void CalendarDatesGtfsHandler::init(Data&) {
-    id_c = csv.get_pos_col("service_id"), date_c = csv.get_pos_col("date"),
-            e_type_c = csv.get_pos_col("exception_type");
+    id_c = csv.get_pos_col("service_id");
+    date_c = csv.get_pos_col("date");
+    e_type_c = csv.get_pos_col("exception_type");
 }
 
 void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -941,13 +950,13 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
 void StopTimeGtfsHandler::init(Data&) {
     LOG4CPLUS_INFO(logger, "reading stop times");
-    id_c = csv.get_pos_col("trip_id"),
-            arrival_c = csv.get_pos_col("arrival_time"),
-            departure_c = csv.get_pos_col("departure_time"),
-            stop_c = csv.get_pos_col("stop_id"),
-            stop_seq_c = csv.get_pos_col("stop_sequence"),
-            pickup_c = csv.get_pos_col("pickup_type"),
-            drop_off_c = csv.get_pos_col("drop_off_type");
+    trip_c = csv.get_pos_col("trip_id");
+    arrival_c = csv.get_pos_col("arrival_time");
+    departure_c = csv.get_pos_col("departure_time");
+    stop_c = csv.get_pos_col("stop_id");
+    stop_seq_c = csv.get_pos_col("stop_sequence");
+    pickup_c = csv.get_pos_col("pickup_type");
+    drop_off_c = csv.get_pos_col("drop_off_type");
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
@@ -1018,15 +1027,15 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         return {};
     }
 
-    auto vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[id_c]);
+    auto vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[trip_c]);
     if(vj_it == gtfs_data.tz.vj_by_name.end()) {
-        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey '" << row[id_c] << "'");
+        LOG4CPLUS_WARN(logger, "Impossible to find the vehicle_journey '" << row[trip_c] << "'");
         return {};
     }
     std::vector<nm::StopTime*> stop_times;
 
     //the validity pattern may have been split because of DST, so we need to create one vj for each
-    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[id_c]); vj_it != vj_end_it; ++vj_it) {
+    for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_c]); vj_it != vj_end_it; ++vj_it) {
 
         nm::StopTime* stop_time = new nm::StopTime();
 
@@ -1068,8 +1077,10 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 }
 
 void FrequenciesGtfsHandler::init(Data&) {
-    trip_id_c = csv.get_pos_col("trip_id"), start_time_c = csv.get_pos_col("start_time"),
-    end_time_c = csv.get_pos_col("end_time"), headway_secs_c = csv.get_pos_col("headway_secs");
+    trip_id_c = csv.get_pos_col("trip_id");
+    start_time_c = csv.get_pos_col("start_time");
+    end_time_c = csv.get_pos_col("end_time");
+    headway_secs_c = csv.get_pos_col("headway_secs");
 }
 
 void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
