@@ -1446,7 +1446,6 @@ void EdPersistor::insert_prices(const ed::Data& data) {
             tickets.tickets.front().ticket.caption,
             tickets.tickets.front().ticket.comment
         };
-        LOG4CPLUS_INFO(logger, "ticket : " << boost::algorithm::join(values, ","));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
