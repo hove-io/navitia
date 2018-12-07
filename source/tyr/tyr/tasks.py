@@ -205,7 +205,13 @@ def send_to_mimir(instance, filename):
 def update_data():
     for instance in models.Instance.query_existing().all():
         current_app.logger.debug("Update data of : {}".format(instance.name))
-        instance_config = load_instance_config(instance.name)
+        instance_config = None
+        try:
+            instance_config = load_instance_config(instance.name)
+        except:
+            current_app.logger.exception("impossible to load instance configuration for %s", instance.name)
+            # Do not stop the task if only one instance is missing
+            continue
         files = glob.glob(instance_config.source_directory + "/*")
         if files:
             import_data(files, instance, backup_file=True)
