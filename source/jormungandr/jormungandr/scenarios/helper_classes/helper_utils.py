@@ -67,12 +67,10 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     to_coord = get_pt_object_coord(section.destination)
     section.length = int(crowfly_distance_between(from_coord, to_coord))
 
-    # The section "distances" and "durations" in the response needs to be updated according to the mode.
+    # The section "durations" in the response needs to be updated according to the mode.
     # only if it isn't a 'free' crow_fly
+    # The section "distances" will be updated later
     if section.duration > 0:
-        if hasattr(pt_journey.distances, mode):
-            setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
-
         if hasattr(pt_journey.durations, mode):
             setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
 
@@ -132,7 +130,7 @@ def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
-def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity):
+def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity, mode):
     """
     Replace pt_journey's fallback sections with the given fallback_dp.
 
@@ -148,6 +146,10 @@ def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity
         section_to_update = pt_journey.sections[-1]
     else:
         section_to_update = pt_journey.sections[0]
+
+    if hasattr(pt_journey.distances, mode):
+        total_fallback_length = sum(s.length for s in fallback_sections)
+        setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + total_fallback_length))
 
     pt_journey.sections.remove(section_to_update)
     pt_journey.sections.extend(fallback_sections)
@@ -325,7 +327,7 @@ def _build_fallback(
             if not _is_crowfly_needed(
                 pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
             ):
-                _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity)
+                _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity, mode)
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 
