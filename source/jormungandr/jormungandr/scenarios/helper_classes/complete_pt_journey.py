@@ -76,7 +76,7 @@ def wait_and_build_crowflies(
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
-        if pt_journeys:
+        if pt_journeys and pt_journeys.journeys:
             origin_crowfly = {
                 "entry_point": requested_orig_obj,
                 "mode": dep_mode,

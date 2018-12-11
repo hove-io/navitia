@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
+import pytest
 from jormungandr import app
 
 
@@ -114,10 +115,12 @@ class TestHeatMap(AbstractTestFixture):
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
-        assert get_duration(stopB_coord, response) == 7  # about 0
-        assert get_duration(s_coord, response) == 20  # about 18
-        assert get_duration(stopA_coord, response) == 9  # about 2
-        assert get_duration(r_coord, response) == 74  # about 2 + 81
+
+        tolerance = 10
+        assert get_duration(stopB_coord, response) == pytest.approx(0, abs=tolerance)  # about 0
+        assert get_duration(s_coord, response) == pytest.approx(18, abs=tolerance)  # about 18
+        assert get_duration(stopA_coord, response) == pytest.approx(2, abs=tolerance)  # about 2
+        assert get_duration(r_coord, response) == pytest.approx(83, abs=tolerance)  # about 2 + 81
         self.check_context(response)
 
     def test_heat_maps_to_stop_point(self):
@@ -126,11 +129,12 @@ class TestHeatMap(AbstractTestFixture):
         q = q.format('20120614T080200', 'stopA', '3600')
         response = self.query(q)
 
+        tolerance = 10
         is_valid_heat_maps(response, self.tester, q)
-        assert get_duration(stopA_coord, response) == 9  # about 0
-        assert get_duration(r_coord, response) == 87  # about 81
-        assert get_duration(stopB_coord, response) == 67  # about 60
-        assert get_duration(s_coord, response) == 73  # about 60 + 18
+        assert get_duration(stopA_coord, response) == pytest.approx(0, abs=tolerance)  # about 0
+        assert get_duration(r_coord, response) == pytest.approx(81, abs=tolerance)  # about 81
+        assert get_duration(stopB_coord, response) == pytest.approx(60, abs=tolerance)  # about 60
+        assert get_duration(s_coord, response) == pytest.approx(78, abs=tolerance)  # about 60 + 18
         self.check_context(response)
 
     def test_heat_maps_no_datetime(self):
