@@ -111,7 +111,7 @@ struct routing_api_data {
               |
               |
               |
-              S
+              S----T
 
                 We want to go from S to R:
 
@@ -141,6 +141,7 @@ struct routing_api_data {
                                 R(210,  80)   10
                                 S( 10,  10)   11
                                 D(  0,  30)   12
+                                T( 40,  10)   13
         */
 
         boost::add_vertex(navitia::georef::Vertex(A),b.data->geo_ref->graph);
@@ -156,6 +157,7 @@ struct routing_api_data {
         boost::add_vertex(navitia::georef::Vertex(R),b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(S),b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(D),b.data->geo_ref->graph);
+        boost::add_vertex(navitia::georef::Vertex(T),b.data->geo_ref->graph);
 
         b.data->geo_ref->init();
 
@@ -273,6 +275,14 @@ struct routing_api_data {
         way->add_house_number(navitia::georef::HouseNumber(D.lon(), D.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
 
+        way = new navitia::georef::Way();
+        way->name = "rue ts"; // T->S
+        way->idx = 14;
+        way->way_type = "rue";
+        way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(T.lon(), T.lat(), 1));
+        b.data->geo_ref->ways.push_back(way);
+
         // A->B
         add_edges(0, *b.data->geo_ref, AA, BB, distance_ab, navitia::type::Mode_e::Walking);
         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
@@ -357,6 +367,13 @@ struct routing_api_data {
         add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Car);
         b.data->geo_ref->ways[13]->edges.emplace_back(BB, DD);
         b.data->geo_ref->ways[13]->edges.emplace_back(DD, BB);
+
+        // T->S
+        add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Walking);
+        add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Bike);
+        add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Car);
+        b.data->geo_ref->ways[14]->edges.emplace_back(TT, SS);
+        b.data->geo_ref->ways[14]->edges.emplace_back(SS, TT);
 
         //and we add 2 bike sharing poi, to check the placemark
         navitia::georef::POIType* poi_type = new navitia::georef::POIType();
@@ -719,6 +736,7 @@ struct routing_api_data {
     int RR = 10;
     int SS = 11;
     int DD = 12;
+    int TT = 13;
 
     navitia::type::GeographicalCoord A = {120, 80, false};
     navitia::type::GeographicalCoord G = {100, 80, false};
@@ -733,6 +751,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord R = {210, 80, false};
     navitia::type::GeographicalCoord S = {10, 10, false};
     navitia::type::GeographicalCoord D = {0, 30, false};
+    navitia::type::GeographicalCoord T = {50, 10, false};
 
     navitia::type::GeographicalCoord HouseNmber42 = {10., 100., false};
 

@@ -1065,6 +1065,21 @@ class JourneyCommon(object):
             in response[0]['message']
         )
 
+    def test_journeys_distances(self):
+        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&"
+        response = self.query_region(query)
+        pt_journey = next((j for j in response['journeys'] if j['type'] != 'non_pt_walk'), None)
+        assert pt_journey
+
+        def get_length(s):
+            return s['geojson']['properties'][0]['length']
+
+        total_walking = get_length(pt_journey['sections'][0]) + get_length(pt_journey['sections'][2])
+
+        distances = pt_journey['distances']
+        assert distances['walking'] == total_walking
+        assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
