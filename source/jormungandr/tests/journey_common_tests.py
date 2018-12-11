@@ -1078,7 +1078,7 @@ class JourneyCommon(object):
 
         distances = pt_journey['distances']
         assert distances['walking'] == total_walking
-        assert distances['car'] == distances['bike'] == distances['ridesharing']
+        assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
 
 
 @dataset({"main_stif_test": {}})

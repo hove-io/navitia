@@ -141,7 +141,7 @@ struct routing_api_data {
                                 R(210,  80)   10
                                 S( 10,  10)   11
                                 D(  0,  30)   12
-                                T( 20,  10)   13
+                                T( 40,  10)   13
         */
 
         boost::add_vertex(navitia::georef::Vertex(A),b.data->geo_ref->graph);
@@ -751,7 +751,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord R = {210, 80, false};
     navitia::type::GeographicalCoord S = {10, 10, false};
     navitia::type::GeographicalCoord D = {0, 30, false};
-    navitia::type::GeographicalCoord T = {20, 10, false};
+    navitia::type::GeographicalCoord T = {50, 10, false};
 
     navitia::type::GeographicalCoord HouseNmber42 = {10., 100., false};
 
