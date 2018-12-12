@@ -998,6 +998,10 @@ class Scenario(simple.Scenario):
 
         self.finalise_journeys(request, responses, distributed_context, instance, api_request['debug'])
 
+        # At this point, we should have every details on the journeys.
+        # We refilter again(again and again...)
+        journey_filter.filter_detailed_journeys(responses, request)
+
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])

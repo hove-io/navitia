@@ -525,6 +525,26 @@ def apply_final_journey_filters(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
 
+def filter_detailed_journeys(responses, request):
+    journey_generator = get_qualified_journeys
+    if request.get('debug', False):
+        journey_generator = get_all_journeys
+
+    journeys = journey_generator(responses)
+
+    min_bike = request.get('_min_bike', None)
+    min_car = request.get('_min_car', None)
+    orig_modes = request.get('origin_mode', [])
+    dest_modes = request.get('destination_mode', [])
+
+    too_heavy_journey_filter = FilterTooShortHeavyJourneys(
+        min_bike=min_bike, min_car=min_car, orig_modes=orig_modes, dest_modes=dest_modes
+    )
+    f_wrapped = filter_wrapper(is_debug=request.get('debug', False), filter_obj=too_heavy_journey_filter)
+
+    [f_wrapped(j) for j in journeys]
+
+
 def _get_worst_similar(j1, j2, request):
     """
     Decide which is the worst journey between 2 similar journeys.
