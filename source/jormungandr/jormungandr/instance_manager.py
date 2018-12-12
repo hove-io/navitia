@@ -214,7 +214,9 @@ class InstanceManager(object):
             # workers that didn't create a timer can still run the signal handler
             # if uwsgi dispatch the signal to them
             # signal are dispatched randomly to workers (not round robbin :()
-            logging.getLogger(__name__).info("No more uwsgi timer available, only gevent will be used")
+            logging.getLogger(__name__).info(
+                "No more uwsgi timer available or not running in uwsgi, only gevent will be used"
+            )
 
     def reap_sockets(self):
         for instance in self.instances.values():
