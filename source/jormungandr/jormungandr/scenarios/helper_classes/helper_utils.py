@@ -147,10 +147,6 @@ def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity
     else:
         section_to_update = pt_journey.sections[0]
 
-    if hasattr(pt_journey.distances, mode):
-        total_fallback_length = sum(s.length for s in fallback_sections)
-        setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + total_fallback_length))
-
     pt_journey.sections.remove(section_to_update)
     pt_journey.sections.extend(fallback_sections)
     pt_journey.sections.sort(SectionSorter())
@@ -330,6 +326,13 @@ def _build_fallback(
                 pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
             ):
                 _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity, mode)
+
+                # update distances if it's a proper computed streetnetwork fallback
+                if fallback_dp and fallback_dp.journeys:
+                    pt_journey.distances.walking += fallback_dp.journeys[0].distances.walking
+                    pt_journey.distances.bike += fallback_dp.journeys[0].distances.bike
+                    pt_journey.distances.car += fallback_dp.journeys[0].distances.car
+                    pt_journey.distances.ridesharing += fallback_dp.journeys[0].distances.ridesharing
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 
