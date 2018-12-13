@@ -333,6 +333,15 @@ def _build_fallback(
                     pt_journey.distances.bike += fallback_dp.journeys[0].distances.bike
                     pt_journey.distances.car += fallback_dp.journeys[0].distances.car
                     pt_journey.distances.ridesharing += fallback_dp.journeys[0].distances.ridesharing
+            # if it's only a crowfly fallback, update distance if it's not a teleport
+            elif hasattr(pt_journey.distances, mode):
+                if fallback_logic.represent_start():
+                    crowfly_section = pt_journey.sections[0]
+                else:
+                    crowfly_section = pt_journey.sections[-1]
+                if crowfly_section.duration:
+                    setattr(pt_journey.distances, mode,
+                            (getattr(pt_journey.distances, mode) + crowfly_section.length))
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 
