@@ -2,8 +2,8 @@
 
 Code 40x
 --------
-> When there's an error you'll receive a response with a error object
-containing a unique error id
+> When navitia is unable to give an answer, you'll receive a response with a error object
+containing a unique error id, in an 4XX http code response
 
 ```shell
 #request
@@ -20,11 +20,9 @@ HTTP/1.1 404 OK
 }
 ```
 
-This errors appears when there is an error in the request
-
 The are two possible 40x http codes :
 
--   Code 404:
+-   Code 404: unable to find an object
 
 | Error id                     | Description                                                                |
 |------------------------------|----------------------------------------------------------------------------|
@@ -34,7 +32,7 @@ The are two possible 40x http codes :
 | no_origin_nor_destination | Couldn't find an origin nor a destination for the journeys                 |
 | unknown_object              | As it's said                                                               |
 
--   Code 400:
+-   Code 400: bad request
 
 | Error id          | Description                             |
 |-------------------|-----------------------------------------|
