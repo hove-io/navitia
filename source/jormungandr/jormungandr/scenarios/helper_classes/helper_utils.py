@@ -167,13 +167,15 @@ def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
     pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
     pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
     pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
+    pt_journey.durations.ridesharing += aligned_fallback.journeys[0].durations.ridesharing
 
     pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
     pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
     pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
+    pt_journey.distances.ridesharing += aligned_fallback.journeys[0].distances.ridesharing
 
     # For start fallback section copy pt_section.origin to last fallback_section.destination
-    # where as for end fallback section copy last pt_section.destination to fallback_section.origin
+    # whereas for end fallback section copy last pt_section.destination to fallback_section.origin
     if fallback_period_extremity.represents_start:
         aligned_fallback.journeys[0].sections[0].origin.CopyFrom(pt_journey.sections[-1].destination)
     else:
