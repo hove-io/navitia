@@ -130,7 +130,7 @@ def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
-def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity, mode):
+def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity):
     """
     Replace pt_journey's fallback sections with the given fallback_dp.
 
@@ -325,7 +325,7 @@ def _build_fallback(
             if not _is_crowfly_needed(
                 pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
             ):
-                _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity, mode)
+                _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity)
 
                 # update distances if it's a proper computed streetnetwork fallback
                 if fallback_dp and fallback_dp.journeys:
