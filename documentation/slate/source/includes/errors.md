@@ -2,8 +2,8 @@
 
 Code 40x
 --------
-> When navitia is unable to give an answer, you'll receive a response with a error object
-containing a unique error id, in an 4XX http code response
+> When navitia is unable to give an answer, you'll receive a response with an error object
+containing a unique error id, in a 4XX http code response
 
 ```shell
 #request
