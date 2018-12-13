@@ -340,8 +340,11 @@ def _build_fallback(
                 else:
                     crowfly_section = pt_journey.sections[-1]
                 if crowfly_section.duration:
-                    setattr(pt_journey.distances, mode,
-                            (getattr(pt_journey.distances, mode) + crowfly_section.length))
+                    setattr(
+                        pt_journey.distances,
+                        mode,
+                        (getattr(pt_journey.distances, mode) + crowfly_section.length),
+                    )
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 
