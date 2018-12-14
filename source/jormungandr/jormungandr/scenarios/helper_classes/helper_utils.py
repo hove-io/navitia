@@ -67,13 +67,6 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     to_coord = get_pt_object_coord(section.destination)
     section.length = int(crowfly_distance_between(from_coord, to_coord))
 
-    # The section "durations" in the response needs to be updated according to the mode.
-    # only if it isn't a 'free' crow_fly
-    # The section "distances" will be updated later
-    if section.duration > 0:
-        if hasattr(pt_journey.durations, mode):
-            setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
-
     section.id = six.text_type(generate_id())
     return section
 
@@ -327,24 +320,36 @@ def _build_fallback(
             ):
                 _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity)
 
-                # update distances if it's a proper computed streetnetwork fallback
+                # update distances and durations if it's a proper computed streetnetwork fallback
                 if fallback_dp and fallback_dp.journeys:
                     pt_journey.distances.walking += fallback_dp.journeys[0].distances.walking
                     pt_journey.distances.bike += fallback_dp.journeys[0].distances.bike
                     pt_journey.distances.car += fallback_dp.journeys[0].distances.car
                     pt_journey.distances.ridesharing += fallback_dp.journeys[0].distances.ridesharing
-            # if it's only a crowfly fallback, update distance if it's not a teleport
-            elif hasattr(pt_journey.distances, mode):
+
+                    pt_journey.durations.walking += fallback_dp.journeys[0].durations.walking
+                    pt_journey.durations.bike += fallback_dp.journeys[0].durations.bike
+                    pt_journey.durations.car += fallback_dp.journeys[0].durations.car
+                    pt_journey.durations.ridesharing += fallback_dp.journeys[0].durations.ridesharing
+            # if it's only a crowfly fallback, update distances and durations if it's not a teleport
+            else:
                 if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
                     crowfly_section = pt_journey.sections[0]
                 else:
                     crowfly_section = pt_journey.sections[-1]
                 if crowfly_section.duration:
-                    setattr(
-                        pt_journey.distances,
-                        mode,
-                        (getattr(pt_journey.distances, mode) + crowfly_section.length),
-                    )
+                    if hasattr(pt_journey.distances, mode):
+                        setattr(
+                            pt_journey.distances,
+                            mode,
+                            (getattr(pt_journey.distances, mode) + crowfly_section.length),
+                        )
+                    if hasattr(pt_journey.durations, mode):
+                        setattr(
+                            pt_journey.durations,
+                            mode,
+                            (getattr(pt_journey.durations, mode) + crowfly_section.duration),
+                        )
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 
