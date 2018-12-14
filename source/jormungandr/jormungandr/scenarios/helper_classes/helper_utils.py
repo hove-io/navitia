@@ -145,34 +145,6 @@ def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity
     pt_journey.sections.sort(SectionSorter())
 
 
-def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
-    """
-    :param fallback_period_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-    """
-    aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_period_extremity)
-
-    pt_journey.duration += aligned_fallback.journeys[0].duration
-    pt_journey.durations.total = pt_journey.duration
-    pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
-    pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
-    pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
-    pt_journey.durations.ridesharing += aligned_fallback.journeys[0].durations.ridesharing
-
-    pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
-    pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
-    pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
-    pt_journey.distances.ridesharing += aligned_fallback.journeys[0].distances.ridesharing
-
-    # For start fallback section copy pt_section.origin to last fallback_section.destination
-    # whereas for end fallback section copy last pt_section.destination to fallback_section.origin
-    if fallback_period_extremity.represents_start:
-        aligned_fallback.journeys[0].sections[0].origin.CopyFrom(pt_journey.sections[-1].destination)
-    else:
-        aligned_fallback.journeys[0].sections[-1].destination.CopyFrom(pt_journey.sections[0].origin)
-
-    _extend_pt_sections_with_fallback_sections(pt_journey, aligned_fallback)
-
-
 def _get_fallback_logic(fallback_type):
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
         return BeginningFallback()
