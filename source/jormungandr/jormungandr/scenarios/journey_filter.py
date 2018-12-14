@@ -378,15 +378,10 @@ def similar_journeys_generator(journey, pt_functor):
     for idx, s in enumerate(journey.sections):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield pt_functor(s)
-        elif s.type == response_pb2.STREET_NETWORK:
-            # special case, we don't want to consider the walking section after/before parking a car
-            # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
-            if is_walk_after_parking(journey, idx):
-                continue
+        elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
+            continue
+        elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
             yield 'sn:%s' % s.street_network.mode
-        elif s.type == response_pb2.CROW_FLY and s.street_network.mode == response_pb2.Ridesharing:
-            # crowfly in ridesharing must be distinct from crowfly in walking
-            yield "sn:{}".format(s.street_network.mode)
 
 
 def similar_journeys_vj_generator(journey):
