@@ -320,18 +320,18 @@ def _build_fallback(
             ):
                 _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity)
 
-                # update distances and durations if it's a proper computed streetnetwork fallback
+                # update distances and durations by mode if it's a proper computed streetnetwork fallback
                 if fallback_dp and fallback_dp.journeys:
-                    pt_journey.distances.walking += fallback_dp.journeys[0].distances.walking
-                    pt_journey.distances.bike += fallback_dp.journeys[0].distances.bike
-                    pt_journey.distances.car += fallback_dp.journeys[0].distances.car
-                    pt_journey.distances.ridesharing += fallback_dp.journeys[0].distances.ridesharing
+                    all_modes = ['walking', 'bike', 'car', 'ridesharing']
+                    for m in all_modes:
+                        fb_distance = getattr(fallback_dp.journeys[0].distances, m)
+                        main_distance = getattr(pt_journey.distances, m)
+                        setattr(pt_journey.distances, m, fb_distance + main_distance)
 
-                    pt_journey.durations.walking += fallback_dp.journeys[0].durations.walking
-                    pt_journey.durations.bike += fallback_dp.journeys[0].durations.bike
-                    pt_journey.durations.car += fallback_dp.journeys[0].durations.car
-                    pt_journey.durations.ridesharing += fallback_dp.journeys[0].durations.ridesharing
-            # if it's only a crowfly fallback, update distances and durations if it's not a teleport
+                        fb_duration = getattr(fallback_dp.journeys[0].durations, m)
+                        main_duration = getattr(pt_journey.durations, m)
+                        setattr(pt_journey.durations, m, fb_duration + main_duration)
+            # if it's only a non-teleport crowfly fallback, update distances and durations by mode
             else:
                 if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
                     crowfly_section = pt_journey.sections[0]
