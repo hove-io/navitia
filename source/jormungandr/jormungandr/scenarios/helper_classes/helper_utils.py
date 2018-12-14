@@ -335,7 +335,7 @@ def _build_fallback(
                     pt_journey.distances.ridesharing += fallback_dp.journeys[0].distances.ridesharing
             # if it's only a crowfly fallback, update distance if it's not a teleport
             elif hasattr(pt_journey.distances, mode):
-                if fallback_logic.represent_start():
+                if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
                     crowfly_section = pt_journey.sections[0]
                 else:
                     crowfly_section = pt_journey.sections[-1]
