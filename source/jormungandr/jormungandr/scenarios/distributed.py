@@ -289,6 +289,13 @@ class Scenario(new_default.Scenario):
         try:
             with FutureManager() as future_manager:
                 self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug)
+
+                from jormungandr.scenarios import journey_filter
+
+                # At this point, we should have every details on the journeys.
+                # We refilter again(again and again...)
+                journey_filter.filter_detailed_journeys(responses, request)
+
         except Exception as e:
             final_e = FinaliseException(e)
             return [final_e.get()]

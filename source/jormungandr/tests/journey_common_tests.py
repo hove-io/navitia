@@ -1080,6 +1080,39 @@ class JourneyCommon(object):
         assert distances['walking'] == total_walking
         assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
 
+    def test_journeys_too_short_heavy_mode_fallback_filter(self):
+        template = (
+            'journeys?from=8.98311981954709e-05;8.98311981954709e-05'
+            '&to=0.0018864551621048887;0.0007186495855637672'
+            '&datetime=20120614080000'
+            '&first_section_mode[]=car'
+            '&first_section_mode[]=walking'
+            '&car_speed=1'
+            '&_min_car={min_car}'
+            '&debug=true'
+        )
+
+        query = template.format(min_car=1)
+        response = self.query_region(query)
+        assert all('to_delete' not in j['tags'] for j in response['journeys'])
+
+        car_fallback_pt_journey = next((j for j in response['journeys'] if j['type'] == 'car'), None)
+
+        assert car_fallback_pt_journey
+        assert car_fallback_pt_journey['sections'][0]['mode'] == 'car'
+
+        car_fallback_duration = car_fallback_pt_journey['sections'][0]['duration']
+
+        query = template.format(min_car=car_fallback_duration + 1)
+
+        response = self.query_region(query)
+        car_fallback_pt_journey = next((j for j in response['journeys'] if j['type'] == 'car'), None)
+
+        assert car_fallback_pt_journey
+        assert car_fallback_pt_journey['sections'][0]['mode'] == 'car'
+
+        assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):

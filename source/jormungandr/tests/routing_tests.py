@@ -99,6 +99,12 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         """
         pass
 
+    def test_journeys_too_short_heavy_mode_fallback_filter(self):
+        """
+        This new feature is not supported in default
+        """
+        pass
+
 
 @config()
 class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
