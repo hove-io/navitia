@@ -1113,8 +1113,6 @@ class JourneyCommon(object):
 
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
 
-
-
     def test_coherence_of_section_origin_and_destination_objects(self):
         """
         Tests the coherence of objects between sections
@@ -1166,7 +1164,6 @@ class JourneyCommon(object):
         assert first_journey['sections'][2]['from']['embedded_type'] == 'stop_point'
         assert len(first_journey['sections'][2]['from']['stop_point']) == 8
         assert 'physical_modes' not in first_journey['sections'][2]['from']['stop_point']
-
 
 
 @dataset({"main_stif_test": {}})
