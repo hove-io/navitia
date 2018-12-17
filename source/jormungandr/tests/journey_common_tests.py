@@ -1114,6 +1114,61 @@ class JourneyCommon(object):
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
 
 
+
+    def test_coherence_of_section_origin_and_destination_objects(self):
+        """
+        Tests the coherence of objects between sections
+
+        """
+        # Response contains three sections : street_network + public_transport + street_network
+        response = self.query_region(journey_basic_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_basic_query)
+        assert len(response['journeys']) == 2
+        first_journey = response['journeys'][0]
+        assert len(first_journey['sections']) == 3
+
+        assert first_journey['sections'][0]['type'] == 'street_network'
+        assert first_journey['sections'][0]['to']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][0]['to']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][0]['to']['stop_point']
+
+        assert first_journey['sections'][1]['type'] == 'public_transport'
+        assert first_journey['sections'][1]['from']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][1]['from']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][1]['from']['stop_point']
+
+        assert first_journey['sections'][2]['type'] == 'street_network'
+        assert first_journey['sections'][2]['from']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][2]['from']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][2]['from']['stop_point']
+
+        # Response contains three sections : street_network + public_transport + crow_fly
+        # Query journeys with free_radius = 0
+        response = self.query(
+            '/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000'
+        )
+        assert len(response['journeys']) == 2
+        first_journey = response['journeys'][0]
+        assert len(first_journey['sections']) == 3
+
+        assert first_journey['sections'][0]['type'] == 'street_network'
+        assert first_journey['sections'][0]['to']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][0]['to']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][0]['to']['stop_point']
+
+        assert first_journey['sections'][1]['type'] == 'public_transport'
+        assert first_journey['sections'][1]['from']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][1]['from']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][1]['from']['stop_point']
+
+        assert first_journey['sections'][2]['type'] == 'crow_fly'
+        assert first_journey['sections'][2]['from']['embedded_type'] == 'stop_point'
+        assert len(first_journey['sections'][2]['from']['stop_point']) == 8
+        assert 'physical_modes' not in first_journey['sections'][2]['from']['stop_point']
+
+
+
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
     def test_add_error_field(self):
