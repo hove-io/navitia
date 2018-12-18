@@ -1132,14 +1132,16 @@ class JourneyCommon(object):
 
         assert first_journey['sections'][1]['type'] == 'public_transport'
         assert first_journey['sections'][1]['from']['embedded_type'] == 'stop_point'
-        assert len(first_journey['sections'][0]['to']['stop_point']) == \
-               len(first_journey['sections'][1]['from']['stop_point'])
+        assert len(first_journey['sections'][0]['to']['stop_point']) == len(
+            first_journey['sections'][1]['from']['stop_point']
+        )
         assert 'physical_modes' not in first_journey['sections'][1]['from']['stop_point']
 
         assert first_journey['sections'][2]['type'] == 'street_network'
         assert first_journey['sections'][2]['from']['embedded_type'] == 'stop_point'
-        assert len(first_journey['sections'][1]['to']['stop_point']) == \
-               len(first_journey['sections'][2]['from']['stop_point'])
+        assert len(first_journey['sections'][1]['to']['stop_point']) == len(
+            first_journey['sections'][2]['from']['stop_point']
+        )
         assert 'physical_modes' not in first_journey['sections'][2]['from']['stop_point']
 
         # Response contains three sections : street_network + public_transport + crow_fly
@@ -1157,14 +1159,16 @@ class JourneyCommon(object):
 
         assert first_journey['sections'][1]['type'] == 'public_transport'
         assert first_journey['sections'][1]['from']['embedded_type'] == 'stop_point'
-        assert len(first_journey['sections'][0]['to']['stop_point']) == \
-               len(first_journey['sections'][1]['from']['stop_point'])
+        assert len(first_journey['sections'][0]['to']['stop_point']) == len(
+            first_journey['sections'][1]['from']['stop_point']
+        )
         assert 'physical_modes' not in first_journey['sections'][1]['from']['stop_point']
 
         assert first_journey['sections'][2]['type'] == 'crow_fly'
         assert first_journey['sections'][2]['from']['embedded_type'] == 'stop_point'
-        assert len(first_journey['sections'][1]['to']['stop_point']) == \
-               len(first_journey['sections'][2]['from']['stop_point'])
+        assert len(first_journey['sections'][1]['to']['stop_point']) == len(
+            first_journey['sections'][2]['from']['stop_point']
+        )
         assert 'physical_modes' not in first_journey['sections'][2]['from']['stop_point']
 
 
