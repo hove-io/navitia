@@ -30,6 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import pytest
 from six.moves.urllib.parse import quote
 from .tests_mechanism import dataset
 from jormungandr import i_manager
@@ -1518,6 +1519,26 @@ class JourneysWithPtref:
         self.is_valid_journey_response(response, query)
 
         assert len(response['journeys']) == 1
+
+    def test_journeys_crowfly_distances(self):
+
+        query = "journeys?from=9.001;9&to=stop_area:stop2&datetime=20140105T040000"
+        response = self.query_region(query)
+
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+
+        pt_journey = next((j for j in response['journeys']), None)
+        assert pt_journey
+
+        distances = pt_journey['distances']
+        assert distances['walking'] == pytest.approx(109, abs=2)
+        assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
+        durations = pt_journey['durations']
+        assert durations['walking'] == pytest.approx(138, abs=2)
+        assert durations['total'] == pytest.approx(3438, abs=2)
+        assert durations['car'] == distances['bike'] == distances['ridesharing'] == 0
 
 
 @dataset({"main_routing_test": {}})
