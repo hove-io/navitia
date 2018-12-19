@@ -30,7 +30,7 @@ Create a file `jormungandr.json` in a custom directory like:
 ```json
 {
     "key": "some_region",
-    "socket": "ipc:///tmp/default_kraken"
+    "zmq_socket": "ipc:///tmp/default_kraken"
 }
 ```
 
