@@ -715,9 +715,9 @@ void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::
     }
 }
 
-static_data * static_data::instance = 0;
+static_data * static_data::instance = nullptr;
 static_data * static_data::get() {
-    if (instance == 0) {
+    if (instance == nullptr) {
         static_data* temp = new static_data();
 
         boost::assign::insert(temp->types_string)

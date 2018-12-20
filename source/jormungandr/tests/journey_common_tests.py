@@ -30,6 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import pytest
 from six.moves.urllib.parse import quote
 from .tests_mechanism import dataset
 from jormungandr import i_manager
@@ -1065,6 +1066,54 @@ class JourneyCommon(object):
             in response[0]['message']
         )
 
+    def test_journeys_distances(self):
+        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&"
+        response = self.query_region(query)
+        pt_journey = next((j for j in response['journeys'] if j['type'] != 'non_pt_walk'), None)
+        assert pt_journey
+
+        def get_length(s):
+            return s['geojson']['properties'][0]['length']
+
+        total_walking = get_length(pt_journey['sections'][0]) + get_length(pt_journey['sections'][2])
+
+        distances = pt_journey['distances']
+        assert distances['walking'] == total_walking
+        assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
+
+    def test_journeys_too_short_heavy_mode_fallback_filter(self):
+        template = (
+            'journeys?from=8.98311981954709e-05;8.98311981954709e-05'
+            '&to=0.0018864551621048887;0.0007186495855637672'
+            '&datetime=20120614080000'
+            '&first_section_mode[]=car'
+            '&first_section_mode[]=walking'
+            '&car_speed=1'
+            '&_min_car={min_car}'
+            '&debug=true'
+        )
+
+        query = template.format(min_car=1)
+        response = self.query_region(query)
+        assert all('to_delete' not in j['tags'] for j in response['journeys'])
+
+        car_fallback_pt_journey = next((j for j in response['journeys'] if j['type'] == 'car'), None)
+
+        assert car_fallback_pt_journey
+        assert car_fallback_pt_journey['sections'][0]['mode'] == 'car'
+
+        car_fallback_duration = car_fallback_pt_journey['sections'][0]['duration']
+
+        query = template.format(min_car=car_fallback_duration + 1)
+
+        response = self.query_region(query)
+        car_fallback_pt_journey = next((j for j in response['journeys'] if j['type'] == 'car'), None)
+
+        assert car_fallback_pt_journey
+        assert car_fallback_pt_journey['sections'][0]['mode'] == 'car'
+
+        assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -1470,6 +1519,26 @@ class JourneysWithPtref:
         self.is_valid_journey_response(response, query)
 
         assert len(response['journeys']) == 1
+
+    def test_journeys_crowfly_distances(self):
+
+        query = "journeys?from=9.001;9&to=stop_area:stop2&datetime=20140105T040000"
+        response = self.query_region(query)
+
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+
+        pt_journey = next((j for j in response['journeys']), None)
+        assert pt_journey
+
+        distances = pt_journey['distances']
+        assert distances['walking'] == pytest.approx(109, abs=2)
+        assert distances['car'] == distances['bike'] == distances['ridesharing'] == 0
+        durations = pt_journey['durations']
+        assert durations['walking'] == pytest.approx(138, abs=2)
+        assert durations['total'] == pytest.approx(3438, abs=2)
+        assert durations['car'] == distances['bike'] == distances['ridesharing'] == 0
 
 
 @dataset({"main_routing_test": {}})

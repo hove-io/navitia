@@ -67,15 +67,6 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     to_coord = get_pt_object_coord(section.destination)
     section.length = int(crowfly_distance_between(from_coord, to_coord))
 
-    # The section "distances" and "durations" in the response needs to be updated according to the mode.
-    # only if it isn't a 'free' crow_fly
-    if section.duration > 0:
-        if hasattr(pt_journey.distances, mode):
-            setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
-
-        if hasattr(pt_journey.durations, mode):
-            setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
-
     section.id = six.text_type(generate_id())
     return section
 
@@ -152,32 +143,6 @@ def _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity
     pt_journey.sections.remove(section_to_update)
     pt_journey.sections.extend(fallback_sections)
     pt_journey.sections.sort(SectionSorter())
-
-
-def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
-    """
-    :param fallback_period_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-    """
-    aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_period_extremity)
-
-    pt_journey.duration += aligned_fallback.journeys[0].duration
-    pt_journey.durations.total = pt_journey.duration
-    pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
-    pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
-    pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
-
-    pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
-    pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
-    pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
-
-    # For start fallback section copy pt_section.origin to last fallback_section.destination
-    # where as for end fallback section copy last pt_section.destination to fallback_section.origin
-    if fallback_period_extremity.represents_start:
-        aligned_fallback.journeys[0].sections[0].origin.CopyFrom(pt_journey.sections[-1].destination)
-    else:
-        aligned_fallback.journeys[0].sections[-1].destination.CopyFrom(pt_journey.sections[0].origin)
-
-    _extend_pt_sections_with_fallback_sections(pt_journey, aligned_fallback)
 
 
 def _get_fallback_logic(fallback_type):
@@ -326,6 +291,37 @@ def _build_fallback(
                 pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
             ):
                 _update_fallback_sections(pt_journey, fallback_dp, fallback_period_extremity)
+
+                # update distances and durations by mode if it's a proper computed streetnetwork fallback
+                if fallback_dp and fallback_dp.journeys:
+                    all_modes = ['walking', 'bike', 'car', 'ridesharing']
+                    for m in all_modes:
+                        fb_distance = getattr(fallback_dp.journeys[0].distances, m)
+                        main_distance = getattr(pt_journey.distances, m)
+                        setattr(pt_journey.distances, m, fb_distance + main_distance)
+
+                        fb_duration = getattr(fallback_dp.journeys[0].durations, m)
+                        main_duration = getattr(pt_journey.durations, m)
+                        setattr(pt_journey.durations, m, fb_duration + main_duration)
+            # if it's only a non-teleport crowfly fallback, update distances and durations by mode
+            else:
+                if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+                    crowfly_section = pt_journey.sections[0]
+                else:
+                    crowfly_section = pt_journey.sections[-1]
+                if crowfly_section.duration:
+                    if hasattr(pt_journey.distances, mode):
+                        setattr(
+                            pt_journey.distances,
+                            mode,
+                            (getattr(pt_journey.distances, mode) + crowfly_section.length),
+                        )
+                    if hasattr(pt_journey.durations, mode):
+                        setattr(
+                            pt_journey.durations,
+                            mode,
+                            (getattr(pt_journey.durations, mode) + crowfly_section.duration),
+                        )
 
     fallback_logic.set_journey_bound_datetime(pt_journey)
 

@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
+import pytest
 from jormungandr import app
 
 
@@ -91,6 +92,12 @@ class TestHeatMap(AbstractTestFixture):
 
     """
 
+    """
+    For the purpose of tests' stability, a tolerance is used when comparing with the expected value. Since when the test
+    dataset is changed, the position of heatmap's cells will also move around a little bit, so do the projections.
+    """
+    HEATMAP_TOLERANCE = 10
+
     def test_from_heat_map_coord(self):
         query = "v1/coverage/main_routing_test/" + heat_map_basic_query
         response = self.query(query)
@@ -114,10 +121,11 @@ class TestHeatMap(AbstractTestFixture):
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
-        assert get_duration(stopB_coord, response) == 7  # about 0
-        assert get_duration(s_coord, response) == 20  # about 18
-        assert get_duration(stopA_coord, response) == 9  # about 2
-        assert get_duration(r_coord, response) == 74  # about 2 + 81
+
+        assert get_duration(stopB_coord, response) == pytest.approx(0, abs=self.HEATMAP_TOLERANCE)  # about 0
+        assert get_duration(s_coord, response) == pytest.approx(18, abs=self.HEATMAP_TOLERANCE)  # about 18
+        assert get_duration(stopA_coord, response) == pytest.approx(2, abs=self.HEATMAP_TOLERANCE)  # about 2
+        assert get_duration(r_coord, response) == pytest.approx(83, abs=self.HEATMAP_TOLERANCE)  # about 2 + 81
         self.check_context(response)
 
     def test_heat_maps_to_stop_point(self):
@@ -126,11 +134,12 @@ class TestHeatMap(AbstractTestFixture):
         q = q.format('20120614T080200', 'stopA', '3600')
         response = self.query(q)
 
+        tolerance = 10
         is_valid_heat_maps(response, self.tester, q)
-        assert get_duration(stopA_coord, response) == 9  # about 0
-        assert get_duration(r_coord, response) == 87  # about 81
-        assert get_duration(stopB_coord, response) == 67  # about 60
-        assert get_duration(s_coord, response) == 73  # about 60 + 18
+        assert get_duration(stopA_coord, response) == pytest.approx(0, abs=self.HEATMAP_TOLERANCE)  # about 0
+        assert get_duration(r_coord, response) == pytest.approx(81, abs=self.HEATMAP_TOLERANCE)  # about 81
+        assert get_duration(stopB_coord, response) == pytest.approx(60, abs=self.HEATMAP_TOLERANCE)  # about 60
+        assert get_duration(s_coord, response) == pytest.approx(78, abs=self.HEATMAP_TOLERANCE)  # about 60 + 18
         self.check_context(response)
 
     def test_heat_maps_no_datetime(self):

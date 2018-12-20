@@ -300,8 +300,8 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
 struct DisruptedNetwork {
     ed::builder b;
     navitia::PbCreator pb_creator;
-    const ptime since = "20180102T060000"_dt;
-    const ptime until = "20180103T060000"_dt;
+    const boost::posix_time::ptime since = "20180102T060000"_dt;
+    const boost::posix_time::ptime until = "20180103T060000"_dt;
 
     DisruptedNetwork() : b("20180101") {
         b.vj_with_network("network_1","line_1")

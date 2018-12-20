@@ -52,9 +52,7 @@ class LoadDataCommand(Command):
         data_dirs = data_dir.split(',')
         logging.info("loading data dir : {}".format(data_dirs))
 
-        futur_res = load_data.delay(instance.id, data_dirs)
-
         # this api is only used in artemis and artemis wants to know when this
         # task is finished, so the easiest way for the moment is to wait for
         # the answer
-        futur_res.get()
+        load_data(instance.id, data_dirs)

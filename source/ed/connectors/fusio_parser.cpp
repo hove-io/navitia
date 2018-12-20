@@ -332,8 +332,8 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
 
 void TransfersFusioHandler::init(Data& d) {
     TransfersGtfsHandler::init(d);
-    real_time_c = csv.get_pos_col("real_min_transfer_time"),
-            property_id_c = csv.get_pos_col("property_id");
+    real_time_c = csv.get_pos_col("real_min_transfer_time");
+    property_id_c = csv.get_pos_col("property_id");
     // TODO equipment_id NTFSv0.4: remove property_id when we stop to support NTFSv0.3
     if (property_id_c == -1){
         property_id_c = csv.get_pos_col("equipment_id");
@@ -1006,14 +1006,15 @@ void LineGroupLinksFusioHandler::handle_line(Data& data, const csv_row& row, boo
 }
 
 void CompanyFusioHandler::init(Data&) {
-    id_c = csv.get_pos_col("company_id"), name_c = csv.get_pos_col("company_name"),
-            company_address_name_c = csv.get_pos_col("company_address_name"),
-            company_address_number_c = csv.get_pos_col("company_address_number"),
-            company_address_type_c = csv.get_pos_col("company_address_type"),
-            company_url_c = csv.get_pos_col("company_url"),
-            company_mail_c = csv.get_pos_col("company_mail"),
-            company_phone_c = csv.get_pos_col("company_phone"),
-            company_fax_c = csv.get_pos_col("company_fax");
+    id_c = csv.get_pos_col("company_id");
+    name_c = csv.get_pos_col("company_name");
+    company_address_name_c = csv.get_pos_col("company_address_name");
+    company_address_number_c = csv.get_pos_col("company_address_number");
+    company_address_type_c = csv.get_pos_col("company_address_type");
+    company_url_c = csv.get_pos_col("company_url");
+    company_mail_c = csv.get_pos_col("company_mail");
+    company_phone_c = csv.get_pos_col("company_phone");
+    company_fax_c = csv.get_pos_col("company_fax");
 }
 
 void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {

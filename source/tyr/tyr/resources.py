@@ -107,7 +107,46 @@ class Job(flask_restful.Resource):
         return {'message': 'OK'}, 200
 
 
-class PoiType(flask_restful.Resource):
+def _validate_poi_types_json(poi_types_json):
+    """
+    poi_types configuration must follow some rules so that the binarisation is OK.
+    It's checked at bina, but tyr must also reject broken config directly so that the user knows.
+    """
+
+    # Check that the conf is a valid json
+    try:
+        validate(poi_types_json, poi_type_conf_format)
+    except ValidationError as e:
+        abort(400, status="error", message='{}'.format(parse_error(e)))
+
+    # Check that poi_type.id defined are unique
+    poi_types_map = {}
+    for p in poi_types_json.get('poi_types', []):
+        if p.get('id') in poi_types_map:
+            abort(400, status="error", message='POI type id {} is defined multiple times'.format(p.get('id')))
+        poi_types_map[p.get('id')] = p.get('name')
+
+    # Check that poi_type.id 'amenity:parking' and 'amenity:bicycle_rental' are defined.
+    # Those are mandatory as they are used for journey processing (BSS and car).
+    if not 'amenity:parking' in poi_types_map or not 'amenity:bicycle_rental' in poi_types_map:
+        abort(
+            400,
+            status="error",
+            message='The 2 POI types id=amenity:parking and id=amenity:bicycle_rental must be defined',
+        )
+
+    # Check that rules to affect poi_types to OSM object are using a poi_type.id defined in "poi_types" list.
+    for r in poi_types_json.get('rules', []):
+        pt_id = r.get('poi_type_id')
+        if not pt_id in poi_types_map:
+            abort(
+                400,
+                status="error",
+                message='Using an undefined POI type id ({}) forbidden in rules'.format(pt_id),
+            )
+
+
+class InstancePoiType(flask_restful.Resource):
     def get(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_types = '{}'
@@ -123,36 +162,7 @@ class PoiType(flask_restful.Resource):
             abort(400, status="error", message='Incorrect json provided')
 
         try:
-            try:
-                validate(poi_types_json, poi_type_conf_format)
-            except ValidationError as e:
-                abort(400, status="error", message='{}'.format(parse_error(e)))
-
-            poi_types_map = {}
-            for p in poi_types_json.get('poi_types', []):
-                if p.get('id') in poi_types_map:
-                    abort(
-                        400,
-                        status="error",
-                        message='POI type id {} is defined multiple times'.format(p.get('id')),
-                    )
-                poi_types_map[p.get('id')] = p.get('name')
-
-            if not 'amenity:parking' in poi_types_map or not 'amenity:bicycle_rental' in poi_types_map:
-                abort(
-                    400,
-                    status="error",
-                    message='The 2 POI types id=amenity:parking and id=amenity:bicycle_rental must be defined',
-                )
-
-            for r in poi_types_json.get('rules', []):
-                pt_id = r.get('poi_type_id')
-                if not pt_id in poi_types_map:
-                    abort(
-                        400,
-                        status="error",
-                        message='Using an undefined POI type id ({}) forbidden in rules'.format(pt_id),
-                    )
+            _validate_poi_types_json(poi_types_json)
 
             poi_types = models.PoiTypeJson(
                 json.dumps(poi_types_json, ensure_ascii=False).encode('utf-8', 'backslashreplace'), instance
@@ -176,7 +186,46 @@ class PoiType(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-        return '', 204
+        return json.loads('{}'), 204
+
+
+class AutocompletePoiType(flask_restful.Resource):
+    def get(self, name):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        poi_types = '{}'
+        if autocomplete_param.poi_types_json:
+            poi_types = autocomplete_param.poi_types_json
+        return json.loads(poi_types)
+
+    def post(self, name):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        try:
+            poi_types_json = request.get_json(silent=False)
+        except:
+            abort(400, status="error", message='Incorrect json provided')
+
+        try:
+            _validate_poi_types_json(poi_types_json)
+            autocomplete_param.poi_types_json = json.dumps(poi_types_json, ensure_ascii=False).encode(
+                'utf-8', 'backslashreplace'
+            )
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return json.loads(autocomplete_param.poi_types_json), 200
+
+    def delete(self, name):
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        try:
+            autocomplete_param.poi_types_json = None
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+
+        return json.loads('{}'), 204
 
 
 class Instance(flask_restful.Resource):

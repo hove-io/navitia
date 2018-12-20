@@ -614,6 +614,12 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         params.append('--import-way')
     if autocomplete_instance.poi == 'OSM':
         params.append('--import-poi')
+        if autocomplete_instance.poi_types_json:
+            poi_types_file_name = '{}/poi-types.json'.format(os.path.dirname(working_directory))
+            with open(poi_types_file_name, 'w') as f:
+                f.write(autocomplete_instance.poi_types_json)
+            params.append('--poi-config')
+            params.append(poi_types_file_name)
     params.append('--dataset')
     params.append(autocomplete_instance.name)
     try:

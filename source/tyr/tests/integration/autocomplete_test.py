@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, division
 from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
 import json
 import pytest
+import jmespath
 from navitiacommon import models
 from tyr import app
 
@@ -184,3 +185,75 @@ def test_get_last_datasets_autocomplete(create_autocomplete_parameter):
     # if we ask for the 2 last datasets per type, we got all of them
     resp = api_get('/v0/autocomplete_parameters/idf/last_datasets?count=2')
     assert len(resp) == 3
+
+
+@pytest.fixture
+def minimal_poi_types_json():
+    return {
+        "poi_types": [
+            {"id": "amenity:bicycle_rental", "name": "Station VLS"},
+            {"id": "amenity:parking", "name": "Parking"},
+        ],
+        "rules": [
+            {
+                "osm_tags_filters": [{"key": "amenity", "value": "bicycle_rental"}],
+                "poi_type_id": "amenity:bicycle_rental",
+            },
+            {"osm_tags_filters": [{"key": "amenity", "value": "parking"}], "poi_type_id": "amenity:parking"},
+        ],
+    }
+
+
+def test_autocomplete_poi_types(create_two_autocomplete_parameters, minimal_poi_types_json):
+    resp = api_get('/v0/autocomplete_parameters/france')
+    assert resp['name'] == 'france'
+
+    # POST a minimal conf
+    resp = api_post(
+        '/v0/autocomplete_parameters/france/poi_types',
+        data=json.dumps(minimal_poi_types_json),
+        content_type='application/json',
+    )
+
+    def test_minimal_conf(resp):
+        assert len(resp['poi_types']) == 2
+        assert len(resp['rules']) == 2
+        bss_type = jmespath.search("poi_types[?id=='amenity:bicycle_rental']", resp)
+        assert len(bss_type) == 1
+        assert bss_type[0]['name'] == 'Station VLS'
+        bss_rule = jmespath.search("rules[?poi_type_id=='amenity:bicycle_rental']", resp)
+        assert len(bss_rule) == 1
+        assert bss_rule[0]['osm_tags_filters'][0]['value'] == 'bicycle_rental'
+        # check that it's not the "default" conf
+        assert not jmespath.search("poi_types[?id=='amenity:townhall']", resp)
+
+    # check that the conf is correctly set on france
+    test_minimal_conf(resp)
+
+    # check that the conf on europe is still empty
+    resp = api_get('/v0/autocomplete_parameters/europe/poi_types')
+    assert not resp
+
+    # check GET of newly defined france conf
+    resp = api_get('/v0/autocomplete_parameters/france/poi_types')
+    test_minimal_conf(resp)
+
+    # check DELETE of france conf
+    resp, code = api_delete('/v0/autocomplete_parameters/france/poi_types', check=False, no_json=True)
+    assert not resp
+    assert code == 204
+
+    # check get of conf on france is now empty
+    resp = api_get('/v0/autocomplete_parameters/france/poi_types')
+    assert not resp
+
+    # check that tyr refuses incorrect conf
+    resp, code = api_post(
+        '/v0/autocomplete_parameters/france/poi_types',
+        data=json.dumps({'poi_types': [{'id': 'bob', 'name': 'Bob'}]}),
+        content_type='application/json',
+        check=False,
+    )
+    assert code == 400
+    assert resp['status'] == 'error'
+    assert 'rules' in resp['message']

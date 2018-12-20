@@ -183,7 +183,7 @@ class InstanceManager(object):
                 break
 
     def init_socket_reaper(self):
-        # Disable uwsgi for now
+        # Disable uwsgi timers for now
         # try:
         #    from uwsgidecorators import timer
 

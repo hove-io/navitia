@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(t10) {
 
 
 BOOST_AUTO_TEST_CASE(t12) {
-    srand(time(NULL));
+    srand(time(nullptr));
     Thermometer t;
     std::vector<vector_idx> req;
     req.push_back({4,5,6});

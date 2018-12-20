@@ -93,7 +93,7 @@ navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::Geographic
     }
     double x = coord.lon();
     double y = coord.lat();
-    pj_transform(this->origin.proj_pj, this->destination.proj_pj, 1, 1,&x, &y, NULL);
+    pj_transform(this->origin.proj_pj, this->destination.proj_pj, 1, 1,&x, &y, nullptr);
     coord.set_lon(x);
     coord.set_lat(y);
     if(this->destination.is_degree){

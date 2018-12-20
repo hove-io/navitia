@@ -49,6 +49,14 @@ def celery_setup_logging(*args, **kwargs):
     pass
 
 
+'''
+Since Celery 4.0, JSON is the default serializer replacing pickle.
+Problem is, some of our tasks are not JSON serializable (ie. class AutocompleteUpdateData)
+So back to pickle it is !
+'''
+app.config['CELERY_TASK_SERIALIZER'] = 'pickle'
+
+
 if app.config['REDIS_PASSWORD']:
     app.config['CELERY_RESULT_BACKEND'] = 'redis://:%s@%s:%s/%s' % (
         app.config['REDIS_PASSWORD'],

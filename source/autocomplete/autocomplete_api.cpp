@@ -194,7 +194,7 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
                         d.geo_ref->word_weight,
                         nbmax, valid_admin_ptr(d.pt_data->stop_areas, admin_ptr), d.geo_ref->ghostwords);
             }
-            if(main_stop_area_weight_factor != 1.0){
+            if(main_stop_area_weight_factor != 1.0f){
                 auto main_stop_areas = get_main_stop_areas(d);
                 for(auto& r: result){
                     if(main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)){
@@ -383,7 +383,7 @@ void autocomplete(navitia::PbCreator& pb_creator,
 
 
     std::vector<AutocompleteResult> results;
-    for(const auto group: build_type_groups(filter)){
+    for(const auto& group: build_type_groups(filter)){
         for(nt::Type_e type : group) {
             //search for candidate
             auto found = complete(d, type, q, admin_ptr, nb_items_to_search, search_type, main_stop_area_weight_factor);

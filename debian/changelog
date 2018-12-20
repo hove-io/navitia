@@ -1,3 +1,24 @@
+navitia2 (2.69.0) unstable; urgency=low
+
+  * Distributed: Update distances once the details are computed  <https://github.com/CanalTP/navitia/pull/2624>
+  * Distributed: Add filter for finalized journeys  <https://github.com/CanalTP/navitia/pull/2629>
+  * Distributed: update distances also for pure crowflies  <https://github.com/CanalTP/navitia/pull/2632>
+  * Kraken: Fix clang compilation  <https://github.com/CanalTP/navitia/pull/2615>
+  * kraken: fix tests that were failling without tcmalloc  <https://github.com/CanalTP/navitia/pull/2608>
+  * Kraken: Fix a bug in the presence of alighting and boarding data  <https://github.com/CanalTP/navitia/pull/2612>
+  * kraken: Remove a few use-after-free error  <https://github.com/CanalTP/navitia/pull/2613>
+  * Kraken: Realtime Add effect in trip update  <https://github.com/CanalTP/navitia/pull/2601>
+  * Jormungandr: integration of new parameters for Instant System  <https://github.com/CanalTP/navitia/pull/2590>
+  * Jormungandr: Rollback to celery and kombu 4.0.2   <https://github.com/CanalTP/navitia/pull/2622>
+  * Jormungandr: log request-id provided in the request  <https://github.com/CanalTP/navitia/pull/2605>
+  * Jormungandr: Celery version bump  <https://github.com/CanalTP/navitia/pull/2595>
+  * Tyr: fix celery problem  <https://github.com/CanalTP/navitia/pull/2614>
+  * Tyr: add poi_types json configuration management to mimir autocomplete  <https://github.com/CanalTP/navitia/pull/2602>
+  * Utils: Diff against commit's ancestor  <https://github.com/CanalTP/navitia/pull/2609>
+  * Sys: Clean up tcmalloc linking  <https://github.com/CanalTP/navitia/pull/2603>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Thu, 20 Dec 2018 11:12:53 +0100
+
 navitia2 (2.68.2) unstable; urgency=low
 
   * jormun: disable uwsgi timer waiting for proper fix <https://github.com/CanalTP/navitia/pull/2618>

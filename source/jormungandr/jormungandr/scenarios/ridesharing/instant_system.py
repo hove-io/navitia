@@ -65,6 +65,8 @@ class InstantSystem(AbstractRidesharingService):
         rating_scale_min=None,
         rating_scale_max=None,
         timeout=2,
+        crowfly_radius=200,
+        timeframe_duration=1800,
     ):
         self.instance = instance
         self.service_url = service_url
@@ -75,6 +77,8 @@ class InstantSystem(AbstractRidesharingService):
         self.system_id = 'Instant System'
         self.timeout = timeout
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
+        self.crowfly_radius = crowfly_radius
+        self.timeframe_duration = timeframe_duration
 
         self.journey_metadata = rsj.MetaData(
             system_id=self.system_id,
@@ -242,10 +246,16 @@ class InstantSystem(AbstractRidesharingService):
         datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime, pytz.utc).strftime(
             '%Y-%m-%dT%H:%M:%SZ'
         )
+        if period_extremity.represents_start:
+            datetime_str = '{}/PT{}S'.format(datetime_str, self.timeframe_duration)
+        else:
+            datetime_str = 'PT{}S/{}'.format(self.timeframe_duration, datetime_str)
 
         params = {
             'from': from_coord,
             'to': to_coord,
+            'fromRadius': self.crowfly_radius,
+            'toRadius': self.crowfly_radius,
             ('arrivalDate', 'departureDate')[bool(period_extremity.represents_start)]: datetime_str,
         }
 

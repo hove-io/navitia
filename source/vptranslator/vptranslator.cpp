@@ -42,14 +42,6 @@ static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     for (;it != end; ++it) { os << ", " << *it; }
     return os << "}";
 }
-template<typename T>
-static std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
-    os << "[";
-    auto it = v.cbegin(), end = v.cend();
-    if (it != end) { os << *it++; }
-    for (; it != end; ++it) { os << ", " << *it; }
-    return os << "]";
-}
 }
 
 namespace navitia {

@@ -40,7 +40,6 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <chrono>
-
 namespace navitia {
 
 namespace nd = type::disruption;
@@ -238,8 +237,7 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     return false;
 }
 
-
-static nt::disruption::Effect get_trip_effect(nt::disruption::StopTimeUpdate::Status status){
+static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTimeUpdate::Status status){
     using nt::disruption::StopTimeUpdate;
     using nt::disruption::Effect;
 
@@ -256,6 +254,51 @@ static nt::disruption::Effect get_trip_effect(nt::disruption::StopTimeUpdate::St
     }
 }
 
+static nt::disruption::Effect get_trip_effect(transit_realtime::Alert_Effect effect) {
+    using transit_realtime::Alert_Effect;
+    using nt::disruption::Effect;
+    switch(effect) {
+    case Alert_Effect::Alert_Effect_NO_SERVICE:
+        return Effect::NO_SERVICE;
+    case Alert_Effect::Alert_Effect_REDUCED_SERVICE:
+        return Effect::REDUCED_SERVICE;
+    case Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS:
+        return Effect::SIGNIFICANT_DELAYS;
+    case Alert_Effect::Alert_Effect_DETOUR:
+        return Effect::DETOUR;
+    case Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE:
+        return Effect::ADDITIONAL_SERVICE;
+    case Alert_Effect::Alert_Effect_MODIFIED_SERVICE:
+        return Effect::MODIFIED_SERVICE;
+    case Alert_Effect::Alert_Effect_OTHER_EFFECT:
+        return Effect::OTHER_EFFECT;
+    case Alert_Effect::Alert_Effect_STOP_MOVED:
+        return Effect::STOP_MOVED;
+    case Alert_Effect::Alert_Effect_UNKNOWN_EFFECT:
+    default:
+        return Effect::UNKNOWN_EFFECT;
+    }
+}
+
+static const std::string get_wordings(nt::disruption::Effect effect) {
+    using nt::disruption::Effect;
+    switch(effect) {
+    case Effect::NO_SERVICE:
+        return "trip canceled";
+    case Effect::SIGNIFICANT_DELAYS:
+        return "trip delayed";
+    case Effect::DETOUR:
+    case Effect::MODIFIED_SERVICE:
+        return  "trip modified";
+    case Effect::REDUCED_SERVICE:
+    case Effect::ADDITIONAL_SERVICE:
+    case Effect::OTHER_EFFECT:
+    case Effect::STOP_MOVED:
+    case Effect::UNKNOWN_EFFECT:
+    default:
+        return "";
+    }
+}
 
 static const type::disruption::Disruption*
 create_disruption(const std::string& id,
@@ -289,6 +332,7 @@ create_disruption(const std::string& id,
     if (trip_update.trip().HasExtension(kirin::contributor)) {
         disruption.contributor = trip_update.trip().GetExtension(kirin::contributor);
     }
+
     disruption.publication_period = data.meta->production_period();
     disruption.created_at = timestamp;
     disruption.updated_at = timestamp;
@@ -315,12 +359,12 @@ create_disruption(const std::string& id,
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }
-        std::string wording;
+        // TODO: Effect calculated from stoptime_status -> to be removed later
+        // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcoded...
-            wording = "trip canceled";
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
@@ -401,18 +445,16 @@ create_disruption(const std::string& id,
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
-            trip_effect = get_trip_effect(most_important_stoptime_status);
+            trip_effect = get_calculated_trip_effect(most_important_stoptime_status);
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
-        if (wording.empty()) {
-            if ( trip_effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
-                wording = "trip delayed";
-            } else if (in(trip_effect, {nt::disruption::Effect::DETOUR,
-                                        nt::disruption::Effect::MODIFIED_SERVICE})) {
-                wording = "trip modified";
-            }
+
+        if (trip_update.HasExtension(kirin::effect)){
+            trip_effect = get_trip_effect(trip_update.GetExtension(kirin::effect));
         }
+        std::string wording = get_wordings(trip_effect);
+
         impact->application_periods.push_back({begin_app_period, end_app_period});
         impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
         nd::Impact::link_informed_entity(

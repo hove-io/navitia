@@ -38,7 +38,16 @@ from jormungandr.utils import str_to_time_stamp
 from jormungandr import app
 import time
 import mock
+import kombu
+import unittest
 from navitiacommon import stat_pb2
+import pytest
+
+
+class MockStatManager(AbstractTestFixture):
+    @mock.patch('jormungandr.stat_manager.StatManager')
+    def setUp(self):
+        pass
 
 
 class MockWrapper:
@@ -160,8 +169,52 @@ class MockWrapper:
         self.called = True
 
 
+class TestRabbitMqPublication(unittest.TestCase):
+    def test_StatManager_can_publish(self):
+        self.has_message = False
+
+        app.config['SAVE_STAT'] = True
+        app.config['EXCHANGE_NAME'] = 'test_rabbitmq'
+
+        stat_mngr = StatManager(auto_delete=True)
+        queue = kombu.Queue(
+            name="test_queue",
+            exchange=stat_mngr.exchange,
+            routing_key="bla",
+            channel=stat_mngr.connection,
+            auto_delete=True,
+        )
+        queue.declare()
+
+        stat_mngr.publish_request("bla", "test")
+
+        on_message_mock = mock.Mock()
+
+        with stat_mngr.connection.Consumer([queue], callbacks=[on_message_mock], no_ack=True):
+            time_to_live = 100
+            while on_message_mock.called == False and time_to_live > 0:
+                stat_mngr.connection.drain_events(timeout=1)
+                time_to_live -= 1
+
+        on_message_mock.assert_called_once_with("test", mock.ANY)
+
+    @pytest.mark.timeout(5)
+    def test_StatManager_can_publish_rabbit_down(self):
+        app.config['SAVE_STAT'] = True
+        app.config['EXCHANGE_NAME'] = 'test_rabbitmq'
+        # Nothing should be listening on 5673
+        app.config['BROKER_URL'] = 'amqp://guest:guest@127.0.0.42:5673//'
+
+        stat_mngr = StatManager(auto_delete=True)
+        import socket
+
+        with pytest.raises(socket.error):
+            stat_mngr.publish_request('bla', 'test')
+            assert False, 'something looking like rabbitmq is listening on 127.0.0.42:5673'
+
+
 @dataset({"main_routing_test": {}})
-class TestStatJourneys(AbstractTestFixture):
+class TestStatJourneys(MockStatManager):
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
@@ -203,7 +256,7 @@ class TestStatJourneys(AbstractTestFixture):
 
 
 @dataset({"main_ptref_test": {}})
-class TestStatPlaces(AbstractTestFixture):
+class TestStatPlaces(MockStatManager):
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
