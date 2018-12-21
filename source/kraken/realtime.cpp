@@ -152,7 +152,7 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
             bool dep_deleted = in(stu.departure_status,
                     {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
             if (! dep_deleted) {
-                if (last_stop_event_time && *last_stop_event_time > st.departure_time) {
+                if (last_stop_event_time > st.departure_time) {
                     LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding departure");
                     return false;
                 }
