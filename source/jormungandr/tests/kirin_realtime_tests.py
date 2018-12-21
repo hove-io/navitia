@@ -1387,6 +1387,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
                     arrival=tstamp("20120614T080102"),
                     departure=tstamp("20120614T080102"),
                     arrival_skipped=True,
+                    departure_skipped=True,
                     is_detour=True,
                     message='deleted for detour',
                 ),
@@ -1420,7 +1421,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
 
         assert bool(impacted_stops[1]['is_detour']) is True
         assert impacted_stops[1]['cause'] == 'deleted for detour'
-        assert impacted_stops[1]['departure_status'] == 'unchanged'
+        assert impacted_stops[1]['departure_status'] == 'deleted'
         assert impacted_stops[1]['arrival_status'] == 'deleted'
 
         assert bool(impacted_stops[2]['is_detour']) is True
@@ -1428,7 +1429,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         assert impacted_stops[2]['departure_status'] == 'added'
         assert impacted_stops[2]['arrival_status'] == 'added'
 
-        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&direct_path=none".format(
+        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
         )
 
