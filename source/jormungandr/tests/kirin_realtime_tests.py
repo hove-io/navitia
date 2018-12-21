@@ -1428,7 +1428,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         assert impacted_stops[2]['departure_status'] == 'added'
         assert impacted_stops[2]['arrival_status'] == 'added'
 
-        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
+        B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&direct_path=none".format(
             from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
         )
 
