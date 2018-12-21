@@ -218,6 +218,7 @@ class ImpactedStopSerializer(PbNestedSerializer):
     stop_time_effect = EnumField(attr='effect', pb_type=StopTimeUpdateStatus)
     departure_status = EnumField()
     arrival_status = EnumField()
+    is_detour = jsonschema.Field(schema_type=bool, display_none=True)
 
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):

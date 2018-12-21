@@ -70,6 +70,7 @@ UpdatedStopTime = make_namedtuple(
     departure_skipped=False,
     arrival_skipped=False,
     is_added=False,
+    is_detour=False,
 )
 
 
@@ -1278,6 +1279,137 @@ class TestKrakenNoAdd(MockKirinDisruptionsFixture):
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
 
 
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinStopTimeOnDetourAtTheEnd(MockKirinDisruptionsFixture):
+    def test_stop_time_with_detour_at_the_end(self):
+        """
+        1. create a new_stop_time at C to replace existing one at A so that we have
+            A deleted_for_detour and C added_for_detour
+        2. test that a new journey is possible with section type = public_transport from B to C
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption with one stop_time same as base schedule, another one deleted and
+        # a new stop_time on stop_point:stopC added at the end
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                    arrival_skipped=True,
+                    is_detour=True,
+                    message='deleted for detour',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080104"),
+                    departure=tstamp("20120614T080104"),
+                    is_added=True,
+                    is_detour=True,
+                    message='added for detour',
+                ),
+            ],
+            disruption_id='stop_time_with_detour',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == nb_disruptions_before + 1
+        assert has_the_disruption(disrupts, 'stop_time_with_detour')
+        last_disrupt = disrupts['disruptions'][-1]
+        assert last_disrupt['severity']['effect'] == 'DETOUR'
+
+        # Verify impacted objects
+        assert len(last_disrupt['impacted_objects']) == 1
+        impacted_stops = last_disrupt['impacted_objects'][0]['impacted_stops']
+        assert len(impacted_stops) == 3
+        assert bool(impacted_stops[0]['is_detour']) is False
+        assert impacted_stops[0]['cause'] == 'on time'
+
+        assert bool(impacted_stops[1]['is_detour']) is True
+        assert impacted_stops[1]['cause'] == 'deleted for detour'
+        assert impacted_stops[1]['departure_status'] == 'unchanged'
+        assert impacted_stops[1]['arrival_status'] == 'deleted'
+
+        assert bool(impacted_stops[2]['is_detour']) is True
+        assert impacted_stops[2]['cause'] == 'added for detour'
+        assert impacted_stops[2]['departure_status'] == 'added'
+        assert impacted_stops[2]['arrival_status'] == 'added'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisruptionsFixture):
+    def test_stop_time_with_detour_and_arrival_before_deleted_at_the_end(self):
+        """
+        1. create a new_stop_time at C to replace existing one at A so that we have A deleted_for_detour
+        and C added_for_detour with arrival time < to arrival time of A (deleted)
+        2. Kraken rejects this disruption and is a BUG. Adjust this test after correction in kraken
+        For details see: https://jira.kisio.org/browse/NAVP-1118
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption with one stop_time same as base schedule, another one deleted and
+        # a new stop_time on stop_point:stopC added at the end
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                    arrival_skipped=True,
+                    is_detour=True,
+                    message='deleted for detour',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T080101"),
+                    departure=tstamp("20120614T080101"),
+                    is_added=True,
+                    is_detour=True,
+                    message='added for detour',
+                ),
+            ],
+            disruption_id='stop_time_with_detour',
+        )
+
+        # Verify disruptions
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == nb_disruptions_before
+
+
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
@@ -1312,18 +1444,22 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
             stop_time_update.departure.time = st.departure
             stop_time_update.departure.delay = st.departure_delay
 
-            def get_relationship(is_skipped=False, is_added=False):
+            def get_stop_time_status(is_skipped=False, is_added=False, is_detour=False):
                 if is_skipped:
-                    return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED
+                    if is_detour:
+                        return kirin_pb2.DELETED_FOR_DETOUR
+                    return kirin_pb2.DELETED
                 if is_added:
-                    return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.ADDED
-                return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
+                    if is_detour:
+                        return kirin_pb2.ADDED_FOR_DETOUR
+                    return kirin_pb2.ADDED
+                return kirin_pb2.SCHEDULED
 
-            stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_relationship] = get_relationship(
-                st.arrival_skipped, st.is_added
+            stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_status] = get_stop_time_status(
+                st.arrival_skipped, st.is_added, st.is_detour
             )
-            stop_time_update.departure.Extensions[kirin_pb2.stop_time_event_relationship] = get_relationship(
-                st.departure_skipped, st.is_added
+            stop_time_update.departure.Extensions[kirin_pb2.stop_time_event_status] = get_stop_time_status(
+                st.departure_skipped, st.is_added, st.is_detour
             )
             if st.message:
                 stop_time_update.Extensions[kirin_pb2.stoptime_message] = st.message

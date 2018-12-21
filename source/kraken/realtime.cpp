@@ -40,6 +40,8 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <chrono>
+#include "utils/functions.h"
+
 namespace navitia {
 
 namespace nd = type::disruption;
@@ -194,18 +196,32 @@ get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
 static nt::disruption::StopTimeUpdate::Status
 get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-    auto transit_realtime_status = get_relationship(event, st);
-    switch (transit_realtime_status) {
-    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
-        return nt::disruption::StopTimeUpdate::Status::DELETED;
-    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
-        return nt::disruption::StopTimeUpdate::Status::ADDED;
-    default: break;
-    }
 
-    if (! event.has_delay() // for retrocompatibility since the old kirin version
-                                   // was not giving delays
-               || event.delay() != 0) {
+    if (event.HasExtension(kirin::stop_time_event_status)) {
+        const auto event_status = event.GetExtension(kirin::stop_time_event_status);
+        switch (event_status) {
+        case kirin::StopTimeEventStatus::ADDED:
+            return nt::disruption::StopTimeUpdate::Status::ADDED;
+        case kirin::StopTimeEventStatus::DELETED:
+            return nt::disruption::StopTimeUpdate::Status::DELETED;
+        case kirin::StopTimeEventStatus::DELETED_FOR_DETOUR:
+            return nt::disruption::StopTimeUpdate::Status::DELETED_FOR_DETOUR;
+        case kirin::StopTimeEventStatus::ADDED_FOR_DETOUR:
+            return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
+        default: break;
+        }
+    } else {
+        //TODO: to be deleted once this version is deployed in prod.
+        auto transit_realtime_status = get_relationship(event, st);
+        switch (transit_realtime_status) {
+        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
+            return nt::disruption::StopTimeUpdate::Status::DELETED;
+        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
+            return nt::disruption::StopTimeUpdate::Status::ADDED;
+        default: break;
+        }
+    }
+    if (! event.has_delay() || event.delay() != 0) {
         return nt::disruption::StopTimeUpdate::Status::DELAYED;
     } else {
         return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
@@ -215,6 +231,7 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
 static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
+    using nt::disruption::StopTimeUpdate;
 
     // adding a trip is adding service
     if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
@@ -225,10 +242,10 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
                 && trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
-            if (get_relationship(st.departure(), st) ==
-                        trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED
-                    || get_relationship(st.arrival(), st) ==
-                            trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED) {
+            if (in(get_status(st.departure(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR}) ||
+                    in(get_status(st.arrival(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
                 LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
                 return true;
             }
@@ -246,8 +263,10 @@ static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTim
     case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
         return Effect::SIGNIFICANT_DELAYS;
     case StopTimeUpdate::Status::ADDED:
+    case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
         return Effect::MODIFIED_SERVICE;
     case StopTimeUpdate::Status::DELETED:
+    case StopTimeUpdate::Status::DELETED_FOR_DETOUR:
         return Effect::DETOUR;
     default:
         return Effect::UNKNOWN_EFFECT;
@@ -425,13 +444,13 @@ create_disruption(const std::string& id,
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if (arrival_status == StopTimeUpdate::Status::DELETED) {
+                if (in(arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (departure_status == StopTimeUpdate::Status::DELETED) {
+                if (in(departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
