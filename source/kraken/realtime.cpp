@@ -111,7 +111,7 @@ static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
                 return false;
             }
             // we don't update for a deleted stop_time for departure
-            if (!is_deleted(st.departure())) {
+            if (!is_deleted(st.departure()) && !is_deleted(st.arrival())) {
                 last_st_dep = departure_time;
             }
         }
@@ -156,7 +156,7 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
                 return false;
             }
             // we don't update for a deleted stop_time on departure
-            if (!dep_deleted) {
+            if (!dep_deleted && !arr_deleted) {
                 last_st = st;
             }
         }
