@@ -179,7 +179,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
                 auto duration = pt::microsec_clock::universal_time() - copy_begin;
-                this->metrics.observe_data_clonning(duration.total_seconds());
+                this->metrics.observe_data_cloning(duration.total_seconds());
                 LOG4CPLUS_INFO(logger, "data copied in " << duration);
             }
             if (entity.is_deleted()) {

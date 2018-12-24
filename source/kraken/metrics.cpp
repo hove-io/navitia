@@ -108,9 +108,9 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                              .Register(*registry)
                              .Add({}, create_exponential_buckets(0.1, 1.5, 22));
 
-    this->data_clonning_histogram = &prometheus::BuildHistogram()
-                             .Name("kraken_data_clonning_duration_seconds")
-                             .Help("duration of clonning data")
+    this->data_cloning_histogram = &prometheus::BuildHistogram()
+                             .Name("kraken_data_cloning_duration_seconds")
+                             .Help("duration of cloning data")
                              .Labels({{"coverage", coverage}})
                              .Register(*registry)
                              .Add({}, create_exponential_buckets(0.1, 1.5, 22));
@@ -150,11 +150,11 @@ void Metrics::observe_data_loading(double duration) const{
     this->data_loading_histogram->Observe(duration);
 }
 
-void Metrics::observe_data_clonning(double duration) const{
+void Metrics::observe_data_cloning(double duration) const{
     if(!registry) {
         return;
     }
-    this->data_clonning_histogram->Observe(duration);
+    this->data_cloning_histogram->Observe(duration);
 }
 
 void Metrics::observe_handle_rt(double duration) const{
