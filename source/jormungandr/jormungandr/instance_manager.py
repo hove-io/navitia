@@ -142,9 +142,11 @@ class InstanceManager(object):
         logging.getLogger(__name__).info('clear cache')
         try:
             cache.delete_memoized(self._all_keys_of_id)
-        except RuntimeError:
+        except:
             # if there is an error with cache, flask want to access to the app, this will fail at startup
             # with a "working outside of application context"
+            # redis timeout also raise an exception: redis.exceptions.TimeoutError
+            # each backend has it's own exceptions, so we catch everything :(
             logger = logging.getLogger(__name__)
             logger.exception('there seem to be some kind of problems with the cache')
 
