@@ -33,6 +33,15 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from abc import abstractmethod, ABCMeta
 from jormungandr.exceptions import UnknownObject, TechnicalError, log_exception
 import six
+from jormungandr.new_relic import record_custom_event
+
+
+class AutocompleteError(RuntimeError):
+    pass
+
+
+class AutocompleteUnavailable(AutocompleteError):
+    pass
 
 
 class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
@@ -65,6 +74,12 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
     def geo_status(self, instance):
         pass
 
+    def record_status(self, status, exc=None):
+        data = {'type': type(self).__name__, 'status': status}
+        if exc is not None:
+            data["cause"] = str(exc)
+        record_custom_event('autocomplete_status', data)
+
     def get_object_by_uri(self, uri, instances=None, current_datetime=None):
         """
         same as get_by_uri, but more user friendly, return the object or none if nothing was found
@@ -76,12 +91,17 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         details = None
         try:
             details = self.get_by_uri(uri, instances=instances, current_datetime=current_datetime)
-        except TechnicalError as e:
+        except AutocompleteUnavailable as e:
+            self.record_status('unavailable', e)
+            return None
+        except (TechnicalError, RuntimeError) as e:
+            self.record_status('error', e)
             log_exception(sender=None, exception=e)
-        except RuntimeError as e:
-            log_exception(sender=None, exception=e)
+            return None
         except UnknownObject:
             pass
+
+        self.record_status('ok')
 
         if not details:
             # impossible to find the object
