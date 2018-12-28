@@ -15,6 +15,9 @@ target_link_libraries(routing types fare georef utils autocomplete ${BOOST_LIBS}
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark routing  boost_program_options data routing)
 
+add_executable(benchmark_raptor_cache benchmark_raptor_cache.cpp)
+target_link_libraries(benchmark_raptor_cache routing  boost_program_options data profiler)
+
 add_library(routing_cli_utils routing_cli_utils.cpp)
 add_dependencies(routing_cli_utils protobuf_files)
 
