@@ -122,6 +122,35 @@ def mock_good_response():
     """
 
 
+def mock_error_response():
+    return """<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ns1:GetStopMonitoringResponse xmlns:ns1="http://wsdl.siri.org.uk">
+      <ServiceDeliveryInfo xmlns:ns2="http://www.ifopt.org.uk/acsb" xmlns:ns3="http://datex2.eu/schema/1_0/1_0" xmlns:ns4="http://www.ifopt.org.uk/ifopt" xmlns:ns5="http://www.siri.org.uk/siri">
+        <ns5:ResponseTimestamp>2018-12-31T09:11:27.681+01:00</ns5:ResponseTimestamp>
+        <ns5:ProducerRef>Orleans</ns5:ProducerRef>
+        <ns5:ResponseMessageIdentifier>Orleans:SM:RQ:630908</ns5:ResponseMessageIdentifier>
+        <ns5:RequestMessageRef>IDontCare</ns5:RequestMessageRef>
+      </ServiceDeliveryInfo>
+      <Answer xmlns:ns2="http://www.ifopt.org.uk/acsb" xmlns:ns3="http://datex2.eu/schema/1_0/1_0" xmlns:ns4="http://www.ifopt.org.uk/ifopt" xmlns:ns5="http://www.siri.org.uk/siri">
+        <ns5:StopMonitoringDelivery>
+          <ns5:ResponseTimestamp>2018-12-31T09:11:27.681+01:00</ns5:ResponseTimestamp>
+          <ns5:RequestMessageRef>IDontCare</ns5:RequestMessageRef>
+          <ns5:Status>false</ns5:Status>
+          <ns5:ErrorCondition>
+            <ns5:NoInfoForTopicError/>
+            <ns5:Description>Pas de donn&#xE9;e</ns5:Description>
+          </ns5:ErrorCondition>
+        </ns5:StopMonitoringDelivery>
+      </Answer>
+      <AnswerExtension xmlns:ns2="http://www.ifopt.org.uk/acsb" xmlns:ns3="http://datex2.eu/schema/1_0/1_0" xmlns:ns4="http://www.ifopt.org.uk/ifopt" xmlns:ns5="http://www.siri.org.uk/siri"/>
+    </ns1:GetStopMonitoringResponse>
+  </soap:Body>
+</soap:Envelope>
+    """
+
+
 def next_passage_for_route_point_test():
     """
     test the whole next_passage_for_route_point
@@ -152,6 +181,24 @@ def next_passage_for_route_point_failure_test():
 
     with requests_mock.Mocker() as m:
         m.post('http://bob.com/', text=mock_good_response(), status_code=404)
+        passages = siri.next_passage_for_route_point(route_point, from_dt=_timestamp("12:00"), count=2)
+        assert m.called
+
+        assert passages is None
+
+
+def next_passage_for_route_point_error_test():
+    """
+    test the whole next_passage_for_route_point
+
+    the siri's response contains a error, we should get 'None'
+    """
+    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
+
+    route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')
+
+    with requests_mock.Mocker() as m:
+        m.post('http://bob.com/', text=mock_error_response(), status_code=404)
         passages = siri.next_passage_for_route_point(route_point, from_dt=_timestamp("12:00"), count=2)
         assert m.called
 
