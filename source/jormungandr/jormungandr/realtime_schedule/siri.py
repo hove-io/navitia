@@ -39,6 +39,28 @@ from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
 import aniso8601
 from datetime import datetime
+from flask_restful.inputs import boolean
+
+
+def to_bool(b):
+    """
+    encapsulate flask_restful.inputs.boolean to prevent exception if format isn't valid
+
+    >>> to_bool('true')
+    True
+    >>> to_bool('false')
+    False
+    >>> to_bool('f')
+    False
+    >>> to_bool('t')
+    False
+    >>> to_bool('bob')
+    False
+    """
+    try:
+        return boolean(b)
+    except ValueError:
+        return False
 
 
 class Siri(RealtimeProxy):
@@ -142,7 +164,18 @@ class Siri(RealtimeProxy):
         if not siri_response or siri_response.status_code != 200:
             raise RealtimeProxyError('invalid response')
         logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response.text))
-        return self._get_passages(siri_response.content, route_point)
+
+        ns = {'siri': 'http://www.siri.org.uk/siri'}
+        tree = None
+        try:
+            tree = et.fromstring(siri_response.content)
+        except et.ParseError:
+            logging.getLogger(__name__).exception("invalid xml")
+            raise RealtimeProxyError('invalid xml')
+
+        self._validate_response_or_raise(tree, ns)
+
+        return self._get_passages(tree, ns, route_point)
 
     def status(self):
         return {
@@ -155,19 +188,31 @@ class Siri(RealtimeProxy):
             },
         }
 
-    def _get_passages(self, xml, route_point):
-        ns = {'siri': 'http://www.siri.org.uk/siri'}
-        try:
-            root = et.fromstring(xml)
-        except et.ParseError as e:
-            logging.getLogger(__name__).exception("invalid xml")
-            raise RealtimeProxyError('invalid xml')
+    def _validate_response_or_raise(self, tree, ns):
+        stop_monitoring_delivery = tree.find('.//siri:StopMonitoringDelivery', ns)
+        if stop_monitoring_delivery is None:
+            raise RealtimeProxyError('No StopMonitoringDelivery in response')
+
+        status = stop_monitoring_delivery.find('.//siri:Status', ns)
+        if status is not None and not to_bool(status.text):
+            error_condition = stop_monitoring_delivery.find('.//siri:ErrorCondition', ns)
+            if error_condition and list(error_condition):
+                # Log the error returned by SIRI, the is a node for the normalized error code
+                # and another node that hold the description
+                code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
+                description_node = error_condition.find('.//siri:Description', ns)
+                description = description_node.text if description_node is not None else None
+                logging.getLogger(__name__).warn('error in siri response: %s/%s', code, description)
+            raise RealtimeProxyError('response status = false')
+        pass
+
+    def _get_passages(self, tree, ns, route_point):
 
         stop = route_point.fetch_stop_id(self.object_id_tag)
         line = route_point.fetch_line_id(self.object_id_tag)
         route = route_point.fetch_route_id(self.object_id_tag)
         next_passages = []
-        for visit in root.findall('.//siri:MonitoredStopVisit', ns):
+        for visit in tree.findall('.//siri:MonitoredStopVisit', ns):
             cur_stop = visit.find('.//siri:StopPointRef', ns).text
             if stop != cur_stop:
                 continue
