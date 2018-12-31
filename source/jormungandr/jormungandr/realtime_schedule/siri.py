@@ -195,6 +195,8 @@ class Siri(RealtimeProxy):
 
         status = stop_monitoring_delivery.find('.//siri:Status', ns)
         if status is not None and not to_bool(status.text):
+            # Status is false: there is a problem, but we may have a valid response too...
+            # Lets log whats happening
             error_condition = stop_monitoring_delivery.find('.//siri:ErrorCondition', ns)
             if error_condition and list(error_condition):
                 # Log the error returned by SIRI, the is a node for the normalized error code
@@ -203,8 +205,12 @@ class Siri(RealtimeProxy):
                 description_node = error_condition.find('.//siri:Description', ns)
                 description = description_node.text if description_node is not None else None
                 logging.getLogger(__name__).warn('error in siri response: %s/%s', code, description)
-            raise RealtimeProxyError('response status = false')
-        pass
+            monitored_stops = stop_monitoring_delivery.findall('.//siri:MonitoredStopVisit', ns)
+            if monitored_stops is None or len(monitored_stops) < 1:
+                # we might want to ignore error that match siri:NoInfoForTopicError,
+                # maybe it mean that there is no next departure, maybe not...
+                # There is no departures and status is false: this look like a real error...
+                raise RealtimeProxyError('response status = false')
 
     def _get_passages(self, tree, ns, route_point):
 
