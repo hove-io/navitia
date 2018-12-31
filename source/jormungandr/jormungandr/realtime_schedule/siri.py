@@ -228,8 +228,11 @@ class Siri(RealtimeProxy):
             cur_route = visit.find('.//siri:DirectionName', ns).text
             if route != cur_route:
                 continue
+            # TODO? we should ignore MonitoredCall with a DepartureStatus set to "Cancelled"
             cur_destination = visit.find('.//siri:DestinationName', ns).text
             cur_dt = visit.find('.//siri:ExpectedDepartureTime', ns).text
+            # TODO? fallback on siri:AimedDepartureTime is there is not ExpectedDepartureTime
+            # In that case we may want to set realtime to False
             cur_dt = aniso8601.parse_datetime(cur_dt)
             next_passages.append(RealTimePassage(cur_dt, cur_destination))
 
