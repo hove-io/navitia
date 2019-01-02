@@ -183,26 +183,50 @@ class InstanceManager(object):
                 break
 
     def init_socket_reaper(self):
-        # Disable uwsgi timers for now
-        # try:
-        #    from uwsgidecorators import timer
+        # start a greenlet that handle connection closing when idle
+        logging.getLogger(__name__).info("spawning a socket reaper with gevent")
+        gevent.spawn(self.socket_reaper_thread)
 
-        #    logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
+        # Use uwsgi timer if we are running in uwsgi without gevent.
+        # When we are using uwsgi without gevent, idle workers won't run the greenlet, it will only
+        # be scheduled when waiting for a response of an external service (kraken mostly)
+        try:
+            import uwsgi
 
-        #    @timer(self.reaper_interval, target='active-workers')
-        #    def reaper_timer(signal):
-        #        self.socket_reaper_thread(disable_gevent=True)
+            # In gevent mode we stop, no need to add a timer, the greenlet will be scheduled while waiting
+            # for incomming request.
+            if 'gevent' in uwsgi.opt:
+                return
 
-        # except ImportError:
-        logging.getLogger(__name__).info("uwsgi timers not available, falling back to gevent for socket reaper")
-        gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
+            logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
 
-    def socket_reaper_thread(self, disable_gevent=False):
+            # Register a signal handler for the signal 1 of uwsgi
+            # this signal will trigger the socket reaper and can be run by any worker
+            def reaper_timer(signal):
+                self.reap_sockets()
+
+            uwsgi.register_signal(1, 'active-workers', reaper_timer)
+            # Add a timer that trigger this signal every reaper_interval second
+            uwsgi.add_timer(1, self.reaper_interval)
+        except (ImportError, ValueError):
+            # ImportError is triggered if we aren't in uwsgi
+            # ValueError is raise if there is no more timer availlable: only 64 timers can be created
+            # workers that didn't create a timer can still run the signal handler
+            # if uwsgi dispatch the signal to them
+            # signal are dispatched randomly to workers (not round robbin :()
+            logging.getLogger(__name__).info(
+                "No more uwsgi timer available or not running in uwsgi, only gevent will be used"
+            )
+
+    def reap_sockets(self):
         for instance in self.instances.values():
             instance.reap_socket(self.socket_ttl)
+            gevent.idle(-1)  # request handling has the priority
 
-        if not disable_gevent:
-            gevent.spawn_later(self.reaper_interval, self.socket_reaper_thread)
+    def socket_reaper_thread(self, disable_gevent=False):
+        while True:
+            self.reap_sockets()
+            gevent.sleep(self.reaper_interval)
 
     def thread_ping(self, timer=10):
         """
