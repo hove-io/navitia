@@ -291,6 +291,7 @@ static const std::string get_wordings(nt::disruption::Effect effect) {
     case Effect::MODIFIED_SERVICE:
         return  "trip modified";
     case Effect::REDUCED_SERVICE:
+        return "reduced service";
     case Effect::ADDITIONAL_SERVICE:
     case Effect::OTHER_EFFECT:
     case Effect::STOP_MOVED:
