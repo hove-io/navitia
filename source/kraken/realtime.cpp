@@ -80,27 +80,41 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     return false;
 }
 
+static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
+    if (event.HasExtension(kirin::stop_time_event_status)) {
+        return in(event.GetExtension(kirin::stop_time_event_status),
+        {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
+    } else {
+        return false;
+    }
+}
+
 static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
     if (trip_update.trip().schedule_relationship() ==
                                 transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
             && trip_update.stop_time_update_size()) {
-        uint32_t last_st_dep = std::numeric_limits<uint32_t>::max();
+        uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& st: trip_update.stop_time_update()) {
             uint32_t arrival_time = st.arrival().time();
+            if (! is_deleted(st.arrival())) {
+                if (last_stop_event_time > arrival_time) {
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                        << st.stop_id() << " is not correctly ordered regarding arrival");
+                    return false;
+                }
+                last_stop_event_time = arrival_time;
+            }
+
             uint32_t departure_time = st.departure().time();
-            if (last_st_dep != std::numeric_limits<uint32_t>::max()
-                    && last_st_dep > arrival_time) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                    << st.stop_id() << " is not correctly ordered");
-                return false;
+            if (! is_deleted(st.departure())) {
+                if (last_stop_event_time > departure_time) {
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                        << st.stop_id() << " is not correctly ordered regarding departure");
+                    return false;
+                }
+                last_stop_event_time = departure_time;
             }
-            if (arrival_time > departure_time) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": For the Stop Time "
-                                    << st.stop_id() << " departure is before the arrival");
-                return false;
-            }
-            last_st_dep = departure_time;
         }
     }
     return true;
@@ -120,22 +134,30 @@ static std::ostream& operator<<(std::ostream& s, const nt::StopTime& st) {
  */
 static bool check_disruption(const nt::disruption::Disruption& disruption) {
     auto log = log4cplus::Logger::getInstance("realtime");
+    using nt::disruption::StopTimeUpdate;
     for (const auto& impact: disruption.get_impacts()) {
-        boost::optional<const nt::StopTime&> last_st;
+        uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& stu: impact->aux_info.stop_times) {
             const auto& st = stu.stop_time;
-            if (last_st) {
-                if (last_st->departure_time > st.arrival_time) {
-                    LOG4CPLUS_WARN(log, "stop time " << *last_st
-                                   << " and " << st << " are not correctly ordered");
+
+            bool arr_deleted = in(stu.arrival_status,
+                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (! arr_deleted) {
+                if (last_stop_event_time > st.arrival_time)  {
+                    LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding arrival");
                     return false;
                 }
+                last_stop_event_time = st.arrival_time;
             }
-            if (st.departure_time < st.arrival_time) {
-                LOG4CPLUS_WARN(log, "For the st " << st << " departure is before the arrival");
-                return false;
+            bool dep_deleted = in(stu.departure_status,
+                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (! dep_deleted) {
+                if (last_stop_event_time > st.departure_time) {
+                    LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding departure");
+                    return false;
+                }
+                last_stop_event_time = st.departure_time;
             }
-            last_st = st;
         }
     }
     return true;
