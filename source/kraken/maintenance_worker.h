@@ -40,11 +40,15 @@ www.navitia.io
 
 namespace navitia {
 
+class Metrics;
+
 class MaintenanceWorker{
     private:
         DataManager<type::Data>& data_manager;
         log4cplus::Logger logger;
         const kraken::Configuration conf;
+
+        const Metrics& metrics;
 
         AmqpClient::Channel::ptr_t channel;
         //nom de la queue créer pour ce worker
@@ -79,7 +83,7 @@ class MaintenanceWorker{
         bool is_initialized = false;
 
     public:
-        MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf);
+        MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
 
         bool load_and_switch();
 
