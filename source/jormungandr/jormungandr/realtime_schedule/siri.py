@@ -198,7 +198,12 @@ class Siri(RealtimeProxy):
             # Status is false: there is a problem, but we may have a valid response too...
             # Lets log whats happening
             error_condition = stop_monitoring_delivery.find('.//siri:ErrorCondition', ns)
-            if error_condition and list(error_condition):
+            if error_condition is not None and list(error_condition):
+                if error_condition.find('.//siri:NoInfoForTopicError', ns) is not None:
+                    # There is no data, we might be at the end of the service
+                    # OR the SIRI server doesn't update it's own data: their is no way to known
+                    # let's say it's normal and not log nor return base_schedule data
+                    return
                 # Log the error returned by SIRI, the is a node for the normalized error code
                 # and another node that hold the description
                 code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
