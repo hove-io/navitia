@@ -201,7 +201,7 @@ class Siri(RealtimeProxy):
             if error_condition is not None and list(error_condition):
                 if error_condition.find('.//siri:NoInfoForTopicError', ns) is not None:
                     # There is no data, we might be at the end of the service
-                    # OR the SIRI server doesn't update it's own data: their is no way to known
+                    # OR the SIRI server doesn't update it's own data: there is no way to known
                     # let's say it's normal and not log nor return base_schedule data
                     return
                 # Log the error returned by SIRI, the is a node for the normalized error code
