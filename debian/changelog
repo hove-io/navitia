@@ -1,3 +1,16 @@
+navitia2 (2.70.0) unstable; urgency=low
+
+  * kraken: Manages added_for_detour in advance  <https://github.com/CanalTP/navitia/pull/2626>
+  * kraken: use new version of concurrentLRU  <https://github.com/CanalTP/navitia/pull/2638>
+  * jormun: refactoring of zmq socket reaper  <https://github.com/CanalTP/navitia/pull/2625>
+  * kraken: add metrics for data loading  <https://github.com/CanalTP/navitia/pull/2627>
+  * kraken: migration to c++14  <https://github.com/CanalTP/navitia/pull/2639>
+  * Kraken: optimize raptor cache creation  <https://github.com/CanalTP/navitia/pull/2630>
+  * kraken: update zmq load balancer  <https://github.com/CanalTP/navitia/pull/2628>
+  * kraken: new StopTimeEventStatus with detour implemented  <https://github.com/CanalTP/navitia/pull/2620>
+
+ -- Nonifier <olivier.georget@kisio.org>  Fri, 04 Jan 2019 14:01:39 +0100
+
 navitia2 (2.69.0) unstable; urgency=low
 
   * Distributed: Update distances once the details are computed  <https://github.com/CanalTP/navitia/pull/2624>
