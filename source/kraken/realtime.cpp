@@ -40,6 +40,8 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 #include <chrono>
+#include "utils/functions.h"
+
 namespace navitia {
 
 namespace nd = type::disruption;
@@ -78,27 +80,41 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     return false;
 }
 
+static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
+    if (event.HasExtension(kirin::stop_time_event_status)) {
+        return in(event.GetExtension(kirin::stop_time_event_status),
+        {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
+    } else {
+        return false;
+    }
+}
+
 static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
     if (trip_update.trip().schedule_relationship() ==
                                 transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
             && trip_update.stop_time_update_size()) {
-        uint32_t last_st_dep = std::numeric_limits<uint32_t>::max();
+        uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& st: trip_update.stop_time_update()) {
             uint32_t arrival_time = st.arrival().time();
+            if (! is_deleted(st.arrival())) {
+                if (last_stop_event_time > arrival_time) {
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                        << st.stop_id() << " is not correctly ordered regarding arrival");
+                    return false;
+                }
+                last_stop_event_time = arrival_time;
+            }
+
             uint32_t departure_time = st.departure().time();
-            if (last_st_dep != std::numeric_limits<uint32_t>::max()
-                    && last_st_dep > arrival_time) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                    << st.stop_id() << " is not correctly ordered");
-                return false;
+            if (! is_deleted(st.departure())) {
+                if (last_stop_event_time > departure_time) {
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                        << st.stop_id() << " is not correctly ordered regarding departure");
+                    return false;
+                }
+                last_stop_event_time = departure_time;
             }
-            if (arrival_time > departure_time) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": For the Stop Time "
-                                    << st.stop_id() << " departure is before the arrival");
-                return false;
-            }
-            last_st_dep = departure_time;
         }
     }
     return true;
@@ -118,22 +134,30 @@ static std::ostream& operator<<(std::ostream& s, const nt::StopTime& st) {
  */
 static bool check_disruption(const nt::disruption::Disruption& disruption) {
     auto log = log4cplus::Logger::getInstance("realtime");
+    using nt::disruption::StopTimeUpdate;
     for (const auto& impact: disruption.get_impacts()) {
-        boost::optional<const nt::StopTime&> last_st;
+        uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& stu: impact->aux_info.stop_times) {
             const auto& st = stu.stop_time;
-            if (last_st) {
-                if (last_st->departure_time > st.arrival_time) {
-                    LOG4CPLUS_WARN(log, "stop time " << *last_st
-                                   << " and " << st << " are not correctly ordered");
+
+            bool arr_deleted = in(stu.arrival_status,
+                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (! arr_deleted) {
+                if (last_stop_event_time > st.arrival_time)  {
+                    LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding arrival");
                     return false;
                 }
+                last_stop_event_time = st.arrival_time;
             }
-            if (st.departure_time < st.arrival_time) {
-                LOG4CPLUS_WARN(log, "For the st " << st << " departure is before the arrival");
-                return false;
+            bool dep_deleted = in(stu.departure_status,
+                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (! dep_deleted) {
+                if (last_stop_event_time > st.departure_time) {
+                    LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding departure");
+                    return false;
+                }
+                last_stop_event_time = st.departure_time;
             }
-            last_st = st;
         }
     }
     return true;
@@ -194,18 +218,32 @@ get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
 static nt::disruption::StopTimeUpdate::Status
 get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-    auto transit_realtime_status = get_relationship(event, st);
-    switch (transit_realtime_status) {
-    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
-        return nt::disruption::StopTimeUpdate::Status::DELETED;
-    case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
-        return nt::disruption::StopTimeUpdate::Status::ADDED;
-    default: break;
-    }
 
-    if (! event.has_delay() // for retrocompatibility since the old kirin version
-                                   // was not giving delays
-               || event.delay() != 0) {
+    if (event.HasExtension(kirin::stop_time_event_status)) {
+        const auto event_status = event.GetExtension(kirin::stop_time_event_status);
+        switch (event_status) {
+        case kirin::StopTimeEventStatus::ADDED:
+            return nt::disruption::StopTimeUpdate::Status::ADDED;
+        case kirin::StopTimeEventStatus::DELETED:
+            return nt::disruption::StopTimeUpdate::Status::DELETED;
+        case kirin::StopTimeEventStatus::DELETED_FOR_DETOUR:
+            return nt::disruption::StopTimeUpdate::Status::DELETED_FOR_DETOUR;
+        case kirin::StopTimeEventStatus::ADDED_FOR_DETOUR:
+            return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
+        default: break;
+        }
+    } else {
+        //TODO: to be deleted once this version is deployed in prod.
+        auto transit_realtime_status = get_relationship(event, st);
+        switch (transit_realtime_status) {
+        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
+            return nt::disruption::StopTimeUpdate::Status::DELETED;
+        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
+            return nt::disruption::StopTimeUpdate::Status::ADDED;
+        default: break;
+        }
+    }
+    if (! event.has_delay() || event.delay() != 0) {
         return nt::disruption::StopTimeUpdate::Status::DELAYED;
     } else {
         return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
@@ -215,6 +253,7 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
 static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
+    using nt::disruption::StopTimeUpdate;
 
     // adding a trip is adding service
     if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
@@ -225,10 +264,10 @@ static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
                 && trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
-            if (get_relationship(st.departure(), st) ==
-                        trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED
-                    || get_relationship(st.arrival(), st) ==
-                            trt::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED) {
+            if (in(get_status(st.departure(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR}) ||
+                    in(get_status(st.arrival(), st),
+            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
                 LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
                 return true;
             }
@@ -246,8 +285,10 @@ static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTim
     case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
         return Effect::SIGNIFICANT_DELAYS;
     case StopTimeUpdate::Status::ADDED:
+    case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
         return Effect::MODIFIED_SERVICE;
     case StopTimeUpdate::Status::DELETED:
+    case StopTimeUpdate::Status::DELETED_FOR_DETOUR:
         return Effect::DETOUR;
     default:
         return Effect::UNKNOWN_EFFECT;
@@ -425,13 +466,13 @@ create_disruption(const std::string& id,
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if (arrival_status == StopTimeUpdate::Status::DELETED) {
+                if (in(arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (departure_status == StopTimeUpdate::Status::DELETED) {
+                if (in(departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());

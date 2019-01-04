@@ -44,6 +44,7 @@ www.navitia.io
 #include <chrono>
 #include <thread>
 #include "utils/get_hostname.h"
+#include "metrics.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -58,11 +59,14 @@ void MaintenanceWorker::load_data(){
     auto chaos_database = conf.chaos_database();
     auto contributors = conf.rt_topics();
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
+    auto start = pt::microsec_clock::universal_time();
     if(this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size())){
         auto data = data_manager.get_data();
         data->is_realtime_loaded = false;
         data->meta->instance_name = conf.instance_name();
     }
+    auto duration = pt::microsec_clock::universal_time() - start;
+    this->metrics.observe_data_loading(duration.total_seconds());
 }
 
 
@@ -174,7 +178,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             if (!data) {
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
-                LOG4CPLUS_INFO(logger, "data copied in " << (pt::microsec_clock::universal_time() - copy_begin));
+                auto duration = pt::microsec_clock::universal_time() - copy_begin;
+                this->metrics.observe_data_cloning(duration.total_seconds());
+                LOG4CPLUS_INFO(logger, "data copied in " << duration);
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
@@ -200,8 +206,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->build_raptor(conf.raptor_cache_size());
         data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));
+        auto duration = pt::microsec_clock::universal_time() - begin;
+        this->metrics.observe_handle_rt(duration.total_seconds());
         LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disruption applied in "
-                                               << pt::microsec_clock::universal_time() - begin);
+                                               << duration);
     } else if (envelopes.size() > 0) {
         // we didn't had to update Data because there is no change but we want to track that realtime data
         // is being processed as it should because "nothing has changed" isn't the same thing
@@ -335,10 +343,11 @@ void MaintenanceWorker::init_rabbitmq(){
     LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 
-MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, kraken::Configuration conf) :
+MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, kraken::Configuration conf, const Metrics& metrics) :
         data_manager(data_manager),
         logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
         conf(conf),
+        metrics(metrics),
         next_try_realtime_loading(pt::microsec_clock::universal_time()){
 
     // Connect Rabbitmq

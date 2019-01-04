@@ -43,6 +43,32 @@ DEFAULT_CYKLEO_FEED_PUBLISHER = {'id': 'cykleo', 'name': 'cykleo', 'license': 'P
 
 
 class CykleoProvider(CommonBssProvider):
+    """
+    class managing calls to Cykleo external service providing real-time BSS stands availability
+
+    The service requires authentication
+
+    curl example to check/test that external service is working:
+    # first get a token
+    curl -H 'Content-Type: application/json' -H 'Accept: application/json'
+         -d '{"username": "{username}", "password": "{password}", "sphere": "VLS"}'
+         -X POST '{url}/bo/auth'
+    # then retrieve the whole message referential using the 'access_token' value obtained
+    curl -H 'Authorization: Bearer {access_token}' -d 'organization_id={organization_id}'
+         -X GET '{url}/bo/stations/availability'
+
+    All variables are provided on connector's init, except for the {access_token}
+    Then the connector matches 'station/assetStation/commercialNumber' in Cykleo API with
+    the 'ref' value in OSM.
+
+    So in practice it will look like:
+    curl -H 'Content-Type: application/json' -H 'Accept: application/json'
+         -d '{"username": "toto@bobito.com", "password": "fzeDrof#czea", "sphere": "VLS"}'
+         -X POST 'https://url.cykleo.com/bo/auth
+    curl -H 'Authorization: Bearer fzkS.Ekb4S.QA' -d 'organization_id=42'
+         -X GET 'https://url.cykleo.com/bo/stations/availability'
+    """
+
     def __init__(
         self,
         url,

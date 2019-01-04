@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -436,6 +436,11 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
 }
 
 CachedNextStopTime::DtStFromJpp::DtStFromJpp(const vDtStByJpp& map) {
+    size_t s = 0;
+    for (const auto& elt: map) {
+        s += elt.second.size();
+    }
+    dtsts.reserve(s);
     until.assign(map, 0);
     for (const auto elt: map) {
         boost::push_back(dtsts, elt.second);

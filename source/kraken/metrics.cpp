@@ -100,6 +100,27 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                         .Labels({{"coverage", coverage}})
                         .Register(*registry);
     this->in_flight = &in_flight_family.Add({});
+
+    this->data_loading_histogram = &prometheus::BuildHistogram()
+                             .Name("kraken_data_loading_duration_seconds")
+                             .Help("duration of loading data")
+                             .Labels({{"coverage", coverage}})
+                             .Register(*registry)
+                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
+
+    this->data_cloning_histogram = &prometheus::BuildHistogram()
+                             .Name("kraken_data_cloning_duration_seconds")
+                             .Help("duration of cloning data")
+                             .Labels({{"coverage", coverage}})
+                             .Register(*registry)
+                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
+
+    this->handle_rt_histogram = &prometheus::BuildHistogram()
+                             .Name("kraken_handle_rt_duration_seconds")
+                             .Help("duration for handling disruptions and realtime")
+                             .Labels({{"coverage", coverage}})
+                             .Register(*registry)
+                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
 }
 
 InFlightGuard Metrics::start_in_flight() const{
@@ -120,6 +141,27 @@ void Metrics::observe_api(pbnavitia::API api, double duration) const{
         auto logger = log4cplus::Logger::getInstance("metrics");
         LOG4CPLUS_WARN(logger, "api " << pbnavitia::API_Name(api) << " not found in metrics");
     }
+}
+
+void Metrics::observe_data_loading(double duration) const{
+    if(!registry) {
+        return;
+    }
+    this->data_loading_histogram->Observe(duration);
+}
+
+void Metrics::observe_data_cloning(double duration) const{
+    if(!registry) {
+        return;
+    }
+    this->data_cloning_histogram->Observe(duration);
+}
+
+void Metrics::observe_handle_rt(double duration) const{
+    if(!registry) {
+        return;
+    }
+    this->handle_rt_histogram->Observe(duration);
 }
 
 

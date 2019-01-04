@@ -246,7 +246,9 @@ struct StopTimeUpdate {
         // Note: status are ordered, from least to most important
         UNCHANGED = 0,
         ADDED,
+        ADDED_FOR_DETOUR,
         DELETED,
+        DELETED_FOR_DETOUR,
         DELAYED
     };
     Status departure_status{Status::UNCHANGED};

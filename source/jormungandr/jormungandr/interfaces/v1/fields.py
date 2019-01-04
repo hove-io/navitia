@@ -955,6 +955,7 @@ impacted_stop = {
     "stop_time_effect": enum_type(attribute='effect'),
     "departure_status": enum_type(),
     "arrival_status": enum_type(),
+    "is_detour": fields.Boolean(),
 }
 
 impacted_object = {

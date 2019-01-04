@@ -69,10 +69,17 @@ protected:
     std::shared_ptr<prometheus::Registry> registry;
     std::map<pbnavitia::API, prometheus::Histogram*> request_histogram;
     prometheus::Gauge* in_flight;
+    prometheus::Histogram* data_loading_histogram;
+    prometheus::Histogram* data_cloning_histogram;
+    prometheus::Histogram* handle_rt_histogram;
 public:
     Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
     void observe_api(pbnavitia::API api, double duration) const;
     InFlightGuard start_in_flight() const;
+
+    void observe_data_loading(double duration) const;
+    void observe_data_cloning(double duration) const;
+    void observe_handle_rt(double duration) const;
 };
 
 }

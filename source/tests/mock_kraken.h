@@ -69,14 +69,14 @@ struct mock_kraken {
 
         LoadBalancer lb(context);
         lb.bind(conf.zmq_socket_path(), "inproc://workers");
+        navitia::Metrics metric(boost::none, "mock");
 
         //this option is not parsed by get_options_description because it is used only here
         if (std::find(other_options.begin(), other_options.end(),
                       "spawn_maintenance_worker") != other_options.end()) {
-            threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
+            threads.create_thread(navitia::MaintenanceWorker(data_manager, conf, metric));
         }
 
-        navitia::Metrics metric(boost::none, "mock");
 
         // Launch only one thread for the tests
         threads.create_thread(std::bind(&doWork,
