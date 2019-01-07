@@ -75,7 +75,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         pass
 
     def record_status(self, status, exc=None):
-        data = {'type': type(self).__name__, 'status': status}
+         data = {'type': self.__class__.__name__, 'status': status}
         if exc is not None:
             data["cause"] = str(exc)
         record_custom_event('autocomplete_status', data)
