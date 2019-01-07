@@ -906,6 +906,52 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
+    def test_read_trip_effect_from_tripupdate(self):
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+        assert nb_disruptions_before == 10
+
+        vjs_before = self.query_region('vehicle_journeys')
+        assert len(vjs_before['vehicle_journeys']) == 7
+
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120614T080224"),
+                    departure=tstamp("20120614T080225"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120614T080400"),
+                    departure=tstamp("20120614T080400"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                    departure_skipped=True,
+                ),
+            ],
+            disruption_id='reduced_service_vjA',
+            effect='reduced_service',
+        )
+        disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disrupts['disruptions']) == 11
+        assert has_the_disruption(disrupts, 'reduced_service_vjA')
+        last_disrupt = disrupts['disruptions'][-1]
+        assert last_disrupt['severity']['effect'] == 'REDUCED_SERVICE'
+        assert last_disrupt['severity']['name'] == 'reduced service'
+
+        vjs_after = self.query_region('vehicle_journeys')
+        # we got a new vj due to the disruption, which means the disruption is handled correctly
+        assert len(vjs_after['vehicle_journeys']) == 8
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
     def test_add_modify_and_delete_one_stop_time(self):
         """
@@ -1189,7 +1235,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
             == 'unchanged'  # Why ?
         )
         assert disrupts['disruptions'][11]['severity']['effect'] == 'DETOUR'
-        assert disrupts['disruptions'][11]['severity']['name'] == 'trip modified'
+        assert disrupts['disruptions'][11]['severity']['name'] == 'detour'
 
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
@@ -1299,6 +1345,8 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
         trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.SIGNIFICANT_DELAYS
     elif effect == 'detour':
         trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.DETOUR
+    elif effect == 'reduced_service':
+        trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.REDUCED_SERVICE
 
     if status == 'canceled':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED
