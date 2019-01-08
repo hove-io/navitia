@@ -198,10 +198,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
             mvj->push_unique_impact(impact);
-        } else if (in(impact->severity->effect, {nt::disruption::Effect::SIGNIFICANT_DELAYS,
-                                                 nt::disruption::Effect::MODIFIED_SERVICE,
-                                                 nt::disruption::Effect::DETOUR}) &&
-                   // we don't want to apply delay or detour without stoptime's information
+        } else if (// we don't want to apply delay or detour without stoptime's information
                    // if there is no stoptimes it should be modeled as a NO_SERVICE
                    // else it is something else, like for example a SIGNIFICANT_DELAYS on a line
                    // and in this case we do not have enough information to apply the impact
@@ -501,12 +498,15 @@ static bool is_modifying_effect(nt::disruption::Effect e) {
     return in(e, {nt::disruption::Effect::NO_SERVICE,
                   nt::disruption::Effect::SIGNIFICANT_DELAYS,
                   nt::disruption::Effect::MODIFIED_SERVICE,
-                  nt::disruption::Effect::DETOUR});
+                  nt::disruption::Effect::DETOUR,
+                  nt::disruption::Effect::REDUCED_SERVICE});
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
                   nt::PT_Data& pt_data, const nt::MetaData& meta) {
     if (! is_modifying_effect(impact->severity->effect)) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Ingoring impact: " << impact->uri
+                << " the effect is not handled");
         return;
     }
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Adding impact: " << impact->uri);
