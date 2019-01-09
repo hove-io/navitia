@@ -83,7 +83,7 @@ class Siri(RealtimeProxy):
                     <siri:RequestTimestamp>{datetime}</siri:RequestTimestamp>
                     <siri:MessageIdentifier>IDontCare</siri:MessageIdentifier>
                     <siri:MonitoringRef>{stop_code}</siri:MonitoringRef>
-                    <siri:MaximumStopVisits>{nb_desired}</siri:MaximumStopVisits>
+                    <siri:MinimumStopVisitsPerLine>{nb_desired}</siri:MinimumStopVisitsPerLine>
                 </Request>
                 <RequestExtension xmlns=""/>
             </GetStopMonitoring>
@@ -291,7 +291,7 @@ class Siri(RealtimeProxy):
                 <siri:RequestTimestamp>{dt}</siri:RequestTimestamp>
                 <siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>
                 <siri:MonitoringRef>{MonitoringRef}</siri:MonitoringRef>
-                <siri:MaximumStopVisits>{count}</siri:MaximumStopVisits>
+                <siri:MinimumStopVisitsPerLine>{count}</siri:MinimumStopVisitsPerLine>
               </Request>
               <RequestExtension xmlns=""/>
             </GetStopMonitoring>
