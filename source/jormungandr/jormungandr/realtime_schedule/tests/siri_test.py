@@ -49,7 +49,7 @@ def make_request_test():
     ns = {'siri': 'http://www.siri.org.uk/siri'}
 
     assert root.find('.//siri:MonitoringRef', ns).text == 'Tri:SP:toto:LOC'
-    assert root.find('.//siri:MaximumStopVisits', ns).text == '2'
+    assert root.find('.//siri:MinimumStopVisitsPerLine', ns).text == '2'
     assert root.find('.//siri:RequestTimestamp', ns).text == '2016-02-07T12:00:00'
     assert root.find('.//siri:RequestorRef', ns).text == 'Stibada'
 
