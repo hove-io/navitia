@@ -554,19 +554,25 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     // as date management is taken care of in validity pattern,
     // we have to contain first stop_time in [00:00 ; 24:00[ (and propagate to other st)
     for (nt::StopTime& st: vj_ptr->stop_time_list) {
-        st.arrival_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
-        st.departure_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
-        st.alighting_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
-        st.boarding_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
         // a vj cannot be longer than 24h and its start is contained in [00:00 ; 24:00[
-        assert(st.arrival_time >= 0);
-        assert(st.arrival_time < ndtu::SECONDS_PER_DAY * 2);
-        assert(st.departure_time >= 0);
-        assert(st.departure_time < ndtu::SECONDS_PER_DAY * 2);
-        assert(st.alighting_time >= 0);
-        assert(st.alighting_time < ndtu::SECONDS_PER_DAY * 2);
-        assert(st.boarding_time >= 0);
-        assert(st.boarding_time < ndtu::SECONDS_PER_DAY * 2);
+        if (st.drop_off_allowed()) {
+            st.arrival_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+            st.alighting_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+
+            assert(st.arrival_time >= 0);
+            assert(st.arrival_time < ndtu::SECONDS_PER_DAY * 2);
+            assert(st.alighting_time >= 0);
+            assert(st.alighting_time < ndtu::SECONDS_PER_DAY * 2);
+        }
+        if (st.pick_up_allowed()) {
+            st.departure_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+            st.boarding_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+
+            assert(st.departure_time >= 0);
+            assert(st.departure_time < ndtu::SECONDS_PER_DAY * 2);
+            assert(st.boarding_time >= 0);
+            assert(st.boarding_time < ndtu::SECONDS_PER_DAY * 2);
+        }
     }
 
     // Desactivating the other vjs. The last creation has priority on

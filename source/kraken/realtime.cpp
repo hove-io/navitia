@@ -46,6 +46,15 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
+static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
+    if (event.HasExtension(kirin::stop_time_event_status)) {
+        return in(event.GetExtension(kirin::stop_time_event_status),
+        {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
+    } else {
+        return false;
+    }
+}
+
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     namespace bpt = boost::posix_time;
 
@@ -68,8 +77,9 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
         for (const auto& st: trip_update.stop_time_update()) {
             auto ptime_arrival = bpt::from_time_t(st.arrival().time());
             auto ptime_departure = bpt::from_time_t(st.departure().time());
-            if (ptime_arrival < start_first_day_of_impact
-                    || ptime_departure < start_first_day_of_impact) {
+
+            if ((! is_deleted(st.arrival()) && ptime_arrival < start_first_day_of_impact)
+                    || (! is_deleted(st.departure()) && ptime_departure < start_first_day_of_impact)) {
                 LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
                                     << st.stop_id() << " is before the day of impact");
                 return false;
@@ -80,14 +90,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     return false;
 }
 
-static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
-    if (event.HasExtension(kirin::stop_time_event_status)) {
-        return in(event.GetExtension(kirin::stop_time_event_status),
-        {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
-    } else {
-        return false;
-    }
-}
+
 
 static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");

@@ -2342,7 +2342,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts_size(), 2);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+    BOOST_CHECK_EQUAL(res.impacts(1).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
 
     // We should not have any journey in public_transport from B_bis to C
@@ -2372,9 +2372,9 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).is_detour(), false);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
+    BOOST_CHECK_EQUAL(res.impacts(2).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+    BOOST_CHECK_EQUAL(res.impacts(2).impacted_objects(0).impacted_stops(2).is_detour(), false);
+    BOOST_CHECK_EQUAL(res.impacts(2).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
 
     // We should not have any journey in public_transport from B_bis to C
     res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
@@ -2544,4 +2544,62 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).is_detour(), false);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+}
+
+
+BOOST_AUTO_TEST_CASE(remove_add_stoptime_with_0_departure_arrival) {
+
+    //Init data for a vj = vj:1 -> A -> B -> C
+    ed::builder b("20171101");
+
+    b.sa("A", 0, 0, true, true);
+    b.sa("B", 0, 0, true, true);
+    b.sa("B_bis", 0, 0, true, true);
+    b.sa("C", 0, 0, true, true);
+    b.sa("D", 0, 0, true, true);
+
+    b.vj("1").uri("vj:1")
+               ("stop_point:A", "08:00"_t)
+               ("stop_point:B", "08:30"_t)
+               ("stop_point:C", "09:00"_t);
+
+    b.make();
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:D", "20171101T0745"_pts).added(),
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+
+    navitia::handle_realtime("just_new_stop", timestamp, just_new_stop, *b.data, true);
+
+    b.make();
+    auto vj = b.get<nt::VehicleJourney>("vj:1:modified:0:just_new_stop");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].pick_up_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].drop_off_allowed(), false);
+
+    // Delete the recently added stop_time in vj = vj:1 B_bis
+    transit_realtime::TripUpdate delete_new_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:D", "19700101T1200"_pts).skipped(),
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+    navitia::handle_realtime("delete_new_stop", timestamp, delete_new_stop, *b.data, true);
+
+    b.make();
+
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:delete_new_stop");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].pick_up_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].drop_off_allowed(), false);
+
 }
