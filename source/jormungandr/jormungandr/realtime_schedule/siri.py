@@ -39,6 +39,28 @@ from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
 import aniso8601
 from datetime import datetime
+from flask_restful.inputs import boolean
+
+
+def to_bool(b):
+    """
+    encapsulate flask_restful.inputs.boolean to prevent exception if format isn't valid
+
+    >>> to_bool('true')
+    True
+    >>> to_bool('false')
+    False
+    >>> to_bool('f')
+    False
+    >>> to_bool('t')
+    False
+    >>> to_bool('bob')
+    False
+    """
+    try:
+        return boolean(b)
+    except ValueError:
+        return False
 
 
 class Siri(RealtimeProxy):
@@ -142,7 +164,18 @@ class Siri(RealtimeProxy):
         if not siri_response or siri_response.status_code != 200:
             raise RealtimeProxyError('invalid response')
         logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response.text))
-        return self._get_passages(siri_response.content, route_point)
+
+        ns = {'siri': 'http://www.siri.org.uk/siri'}
+        tree = None
+        try:
+            tree = et.fromstring(siri_response.content)
+        except et.ParseError:
+            logging.getLogger(__name__).exception("invalid xml")
+            raise RealtimeProxyError('invalid xml')
+
+        self._validate_response_or_raise(tree, ns)
+
+        return self._get_passages(tree, ns, route_point)
 
     def status(self):
         return {
@@ -155,19 +188,42 @@ class Siri(RealtimeProxy):
             },
         }
 
-    def _get_passages(self, xml, route_point):
-        ns = {'siri': 'http://www.siri.org.uk/siri'}
-        try:
-            root = et.fromstring(xml)
-        except et.ParseError as e:
-            logging.getLogger(__name__).exception("invalid xml")
-            raise RealtimeProxyError('invalid xml')
+    def _validate_response_or_raise(self, tree, ns):
+        stop_monitoring_delivery = tree.find('.//siri:StopMonitoringDelivery', ns)
+        if stop_monitoring_delivery is None:
+            raise RealtimeProxyError('No StopMonitoringDelivery in response')
+
+        status = stop_monitoring_delivery.find('.//siri:Status', ns)
+        if status is not None and not to_bool(status.text):
+            # Status is false: there is a problem, but we may have a valid response too...
+            # Lets log whats happening
+            error_condition = stop_monitoring_delivery.find('.//siri:ErrorCondition', ns)
+            if error_condition is not None and list(error_condition):
+                if error_condition.find('.//siri:NoInfoForTopicError', ns) is not None:
+                    # There is no data, we might be at the end of the service
+                    # OR the SIRI server doesn't update it's own data: there is no way to known
+                    # let's say it's normal and not log nor return base_schedule data
+                    return
+                # Log the error returned by SIRI, the is a node for the normalized error code
+                # and another node that hold the description
+                code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
+                description_node = error_condition.find('.//siri:Description', ns)
+                description = description_node.text if description_node is not None else None
+                logging.getLogger(__name__).warn('error in siri response: %s/%s', code, description)
+            monitored_stops = stop_monitoring_delivery.findall('.//siri:MonitoredStopVisit', ns)
+            if monitored_stops is None or len(monitored_stops) < 1:
+                # we might want to ignore error that match siri:NoInfoForTopicError,
+                # maybe it mean that there is no next departure, maybe not...
+                # There is no departures and status is false: this look like a real error...
+                raise RealtimeProxyError('response status = false')
+
+    def _get_passages(self, tree, ns, route_point):
 
         stop = route_point.fetch_stop_id(self.object_id_tag)
         line = route_point.fetch_line_id(self.object_id_tag)
         route = route_point.fetch_route_id(self.object_id_tag)
         next_passages = []
-        for visit in root.findall('.//siri:MonitoredStopVisit', ns):
+        for visit in tree.findall('.//siri:MonitoredStopVisit', ns):
             cur_stop = visit.find('.//siri:StopPointRef', ns).text
             if stop != cur_stop:
                 continue
@@ -177,8 +233,11 @@ class Siri(RealtimeProxy):
             cur_route = visit.find('.//siri:DirectionName', ns).text
             if route != cur_route:
                 continue
+            # TODO? we should ignore MonitoredCall with a DepartureStatus set to "Cancelled"
             cur_destination = visit.find('.//siri:DestinationName', ns).text
             cur_dt = visit.find('.//siri:ExpectedDepartureTime', ns).text
+            # TODO? fallback on siri:AimedDepartureTime is there is not ExpectedDepartureTime
+            # In that case we may want to set realtime to False
             cur_dt = aniso8601.parse_datetime(cur_dt)
             next_passages.append(RealTimePassage(cur_dt, cur_destination))
 
