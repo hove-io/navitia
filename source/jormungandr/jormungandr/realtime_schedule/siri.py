@@ -201,11 +201,11 @@ class Siri(RealtimeProxy):
             if error_condition is not None and list(error_condition):
                 if error_condition.find('.//siri:NoInfoForTopicError', ns) is not None:
                     # There is no data, we might be at the end of the service
-                    # OR the SIRI server doesn't update it's own data: there is no way to known
+                    # OR the SIRI server doesn't update it's own data: there is no way to know
                     # let's say it's normal and not log nor return base_schedule data
                     return
-                # Log the error returned by SIRI, the is a node for the normalized error code
-                # and another node that hold the description
+                # Log the error returned by SIRI, there is a node for the normalized error code
+                # and another node that holds the description
                 code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
                 description_node = error_condition.find('.//siri:Description', ns)
                 description = description_node.text if description_node is not None else None
@@ -213,8 +213,8 @@ class Siri(RealtimeProxy):
             monitored_stops = stop_monitoring_delivery.findall('.//siri:MonitoredStopVisit', ns)
             if monitored_stops is None or len(monitored_stops) < 1:
                 # we might want to ignore error that match siri:NoInfoForTopicError,
-                # maybe it mean that there is no next departure, maybe not...
-                # There is no departures and status is false: this look like a real error...
+                # maybe it means that there is no next departure, maybe not...
+                # There is no departures and status is false: this looks like a real error...
                 raise RealtimeProxyError('response status = false')
 
     def _get_passages(self, tree, ns, route_point):
@@ -236,7 +236,7 @@ class Siri(RealtimeProxy):
             # TODO? we should ignore MonitoredCall with a DepartureStatus set to "Cancelled"
             cur_destination = visit.find('.//siri:DestinationName', ns).text
             cur_dt = visit.find('.//siri:ExpectedDepartureTime', ns).text
-            # TODO? fallback on siri:AimedDepartureTime is there is not ExpectedDepartureTime
+            # TODO? fallback on siri:AimedDepartureTime if there is no ExpectedDepartureTime
             # In that case we may want to set realtime to False
             cur_dt = aniso8601.parse_datetime(cur_dt)
             next_passages.append(RealTimePassage(cur_dt, cur_destination))
