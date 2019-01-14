@@ -303,6 +303,9 @@ class MixedSchedule(object):
             return cmp(p1.stop_date_time.departure_date_time, p2.stop_date_time.departure_date_time)
 
         resp.next_departures.sort(comparator)
+        count = request['count']
+        if len(resp.next_departures) > count and rt_proxy:
+            del resp.next_departures[count:]
 
         # handle pagination :
         # If real time information exist, we have to change pagination score.
