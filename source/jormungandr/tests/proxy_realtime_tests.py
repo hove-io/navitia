@@ -347,7 +347,7 @@ class TestDepartures(AbstractTestFixture):
         test that count parameter is correctly taken into account when using realtime proxies
         We search for departures on C:vj1: C:S0 -> 11:30, C:S1 -> 12:30, C:S2 -> 13:30
         So we got departures for the route points of the line C to the stops C:S0, C:S1, C:S2
-        So there is two departures:
+        So there are two departures:
         Base_schedule:
           - C:S0 -> 11:30
           - C:S1 -> 12:30

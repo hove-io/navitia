@@ -304,7 +304,7 @@ class MixedSchedule(object):
 
         resp.next_departures.sort(comparator)
         count = request['count']
-        if len(resp.next_departures) > count and rt_proxy:
+        if len(resp.next_departures) > count:
             del resp.next_departures[count:]
 
         # handle pagination :
