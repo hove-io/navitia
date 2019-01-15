@@ -1485,7 +1485,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         # There is no public transport from B to C
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
-        assert response['journeys'][0]['type'] == 'non_pt_walk'
+        assert response['journeys'][0]['type'] == 'best'
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]  # means it's base_schedule
 
         # Query with data_freshness=realtime
