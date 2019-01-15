@@ -178,7 +178,7 @@ void passages(PbCreator& pb_creator,
         passage->mutable_stop_date_time()->set_arrival_date_time(navitia::to_posix_timestamp(arrival_dt));
 
         //find base datetime
-        auto base_st = get_base_stop_time(dt_stop_time.second);
+        auto base_st = dt_stop_time.second->get_base_stop_time();
         if (base_st != nullptr) {
             auto base_departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st,
                                                    base_ptime, true);
