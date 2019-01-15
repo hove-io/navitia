@@ -1,32 +1,32 @@
-/* Copyright © 2001-2015, Canal TP and/or its affiliates. All rights reserved.
-
-This file is part of Navitia,
-    the software to build cool stuff with public transport.
-
-Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
-Help us simplify mobility and open public transport:
-    a non ending quest to the responsive locomotion way of traveling!
-
-LICENCE: This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-Stay tuned using
-twitter @navitia
-IRC #navitia on freenode
-https://groups.google.com/d/forum/navitia
-www.navitia.io
-*/
+//  Copyright © 2001-2015, Canal TP and/or its affiliates. All rights reserved.
+// 
+// This file is part of Navitia,
+//     the software to build cool stuff with public transport.
+// 
+// Hope you'll enjoy and contribute to this project,
+//     powered by Canal TP (www.canaltp.fr).
+// Help us simplify mobility and open public transport:
+//     a non ending quest to the responsive locomotion way of traveling!
+// 
+// LICENCE: This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+// 
+// Stay tuned using
+// twitter @navitia
+// IRC #navitia on freenode
+// https://groups.google.com/d/forum/navitia
+// www.navitia.io
+//
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_realtime
@@ -51,6 +51,9 @@ BOOST_GLOBAL_FIXTURE( logger_initialized );
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace ntest = navitia::test;
+namespace tr = transit_realtime;
+namespace ptref = navitia::ptref;
+
 using ntest::RTStopTime;
 
 static const std::string feed_id = "42";
@@ -70,6 +73,28 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     return trip_update;
 }
 
+pbnavitia::Response compute_iti(
+    const ed::builder& b,
+    const char* datetime, 
+    const std::string& from, 
+    const std::string& to,
+    const navitia::type::RTLevel level) 
+{
+    navitia::type::EntryPoint origin(b.data->get_type_of_id(from), from);
+    navitia::type::EntryPoint destination(b.data->get_type_of_id(to), to);
+
+    navitia::PbCreator pb_creator(b.data.get(), "20171101T073000"_dt, null_time_period);
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    make_response(pb_creator, raptor, origin, destination,
+            { ntest::to_posix_timestamp(datetime) },
+            true, navitia::type::AccessibiliteParams(), {}, {},
+            sn_worker, level, 2_min);
+
+    return  pb_creator.get_response();
+}
 
 BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     ed::builder b("20150928");
@@ -2544,4 +2569,65 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).is_detour(), false);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+}
+
+BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
+    ed::builder b("20171101");
+
+    b.sa("A");
+    b.sa("B");
+    b.sa("C");
+    b.sa("D");
+
+    b.vj("L1").uri("vj:1")
+        ("stop_point:A", "08:10"_t)
+        ("stop_point:C", "08:30"_t)
+        ("stop_point:D", "08:40"_t);
+    b.make();
+ 
+    tr::TripUpdate add_stop = ntest::make_delay_message("vj:1", "20171101", {
+        RTStopTime("stop_point:A", "20171101T0810"_pts),
+        RTStopTime("stop_point:B", "20171101T0820"_pts).added(),
+        RTStopTime("stop_point:C", "20171101T0830"_pts),
+        RTStopTime("stop_point:D", "20171101T0840"_pts),
+    });
+
+    navitia::handle_realtime("add_new_stop", timestamp, add_stop, *b.data, true);
+    b.make();
+
+    auto res = compute_iti(b, "20171101T080000", "A", "D", nt::RTLevel::RealTime);
+    
+    BOOST_REQUIRE_EQUAL(res.impacts_size(), 1);
+    BOOST_REQUIRE_EQUAL(res.impacts(0).impacted_objects_size(), 1);
+
+    const auto & stop_time_updates = res.impacts(0).impacted_objects(0).impacted_stops();
+    BOOST_REQUIRE_EQUAL(stop_time_updates.size(), 4);
+
+    const auto & stop_time_A = stop_time_updates.Get(0);
+    BOOST_CHECK_EQUAL(stop_time_A.stop_point().uri(), "stop_point:A");
+    BOOST_CHECK_EQUAL(stop_time_A.base_stop_time().arrival_time(), "08:10"_t);
+    BOOST_CHECK_EQUAL(stop_time_A.base_stop_time().departure_time() ,"08:10"_t);
+    BOOST_CHECK_EQUAL(stop_time_A.amended_stop_time().arrival_time(), "08:10"_t);
+    BOOST_CHECK_EQUAL(stop_time_A.amended_stop_time().departure_time(), "08:10"_t);
+
+    const auto & stop_time_B = stop_time_updates.Get(1);
+    BOOST_CHECK_EQUAL(stop_time_B.stop_point().uri(), "stop_point:B");
+    BOOST_CHECK_MESSAGE(stop_time_B.base_stop_time().arrival_time() == "00:00"_t, "Base stop time doesn't exist for added stop time");
+    BOOST_CHECK_MESSAGE(stop_time_B.base_stop_time().departure_time() == "00:00"_t, "Base stop time doesn't exist for added stop time");
+    BOOST_CHECK_EQUAL(stop_time_B.amended_stop_time().arrival_time(), "08:20"_t);
+    BOOST_CHECK_EQUAL(stop_time_B.amended_stop_time().departure_time(), "08:20"_t);
+
+    const auto & stop_time_C = stop_time_updates.Get(2);
+    BOOST_CHECK_EQUAL(stop_time_C.stop_point().uri(), "stop_point:C");
+    BOOST_CHECK_EQUAL(stop_time_C.base_stop_time().arrival_time(), "08:30"_t);
+    BOOST_CHECK_EQUAL(stop_time_C.base_stop_time().departure_time() ,"08:30"_t);
+    BOOST_CHECK_EQUAL(stop_time_C.amended_stop_time().arrival_time(), "08:30"_t);
+    BOOST_CHECK_EQUAL(stop_time_C.amended_stop_time().departure_time(), "08:30"_t);
+
+    const auto & stop_time_D = stop_time_updates.Get(3);
+    BOOST_CHECK_EQUAL(stop_time_D.stop_point().uri(), "stop_point:D");
+    BOOST_CHECK_EQUAL(stop_time_D.base_stop_time().arrival_time(), "08:40"_t);
+    BOOST_CHECK_EQUAL(stop_time_D.base_stop_time().departure_time() ,"08:40"_t);
+    BOOST_CHECK_EQUAL(stop_time_D.amended_stop_time().arrival_time(), "08:40"_t);
+    BOOST_CHECK_EQUAL(stop_time_D.amended_stop_time().departure_time(), "08:40"_t);
 }
