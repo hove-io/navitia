@@ -32,13 +32,14 @@ import logging
 import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
-from jormungandr.utils import get_uri_pt_object
+from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
     StreetNetworkPathKey,
 )
 from jormungandr import utils
+
 
 class Kraken(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, modes=[], id='kraken', timeout=10, api_key=None, **kwargs):
