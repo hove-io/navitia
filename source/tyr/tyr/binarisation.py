@@ -54,7 +54,7 @@ from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob
-from redis.exceptions import ConnectionError
+from redis.exceptions import ConnectionError, LockError
 import retrying
 
 
@@ -97,6 +97,19 @@ def make_connection_string(instance_config):
     return connection_string
 
 
+def lock_release(lock, logger):
+    # we store the token of the lock to be able to restore it later in case of error
+    token = lock.local.token
+    try:
+        lock.release()
+    except:
+        # release failed and token has been invalidated, any retry will fail, we restore the token
+        # so in case of a connection error we will reconnect and release the lock
+        lock.local.token = token
+        logger.exception("exception when trying to release lock, will retry")
+        raise
+
+
 class Lock(object):
     def __init__(self, timeout):
         self.timeout = timeout
@@ -127,7 +140,14 @@ class Lock(object):
                     logger.debug('release lock on %s for %s', job.instance.name, func.__name__)
                     # sometimes we are disconnected from redis when we want to release the lock,
                     # so we retry only the release
-                    retrying.Retrying(stop_max_attempt_number=5, wait_fixed=1000).call(lock.release)
+                    try:
+                        retrying.Retrying(stop_max_attempt_number=5, wait_fixed=1000).call(
+                            lock_release, lock, logger
+                        )
+                    except LockError:
+                        logger.exception(
+                            "impossible to release lock: continue but following task may be locked :("
+                        )
 
         return wrapper
 
