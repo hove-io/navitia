@@ -32,7 +32,7 @@ import logging
 import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
-from jormungandr.utils import get_pt_object_coord
+from jormungandr.utils import get_uri_pt_object
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
@@ -40,16 +40,12 @@ from jormungandr.street_network.street_network import (
 )
 from jormungandr import utils
 
-
-def get_uri_pt_object(obj):
-    return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(obj))
-
-
 class Kraken(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, modes=[], id='kraken', timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.modes = modes
         self.sn_system_id = id
+        self.get_uri_pt_func = get_uri_pt_object
 
     def status(self):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
@@ -97,9 +93,9 @@ class Kraken(AbstractStreetNetworkService):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
+        req.direct_path.origin.place = self.get_uri_pt_func(pt_object_origin)
         req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = get_uri_pt_object(pt_object_destination)
+        req.direct_path.destination.place = self.get_uri_pt_func(pt_object_destination)
         req.direct_path.destination.access_duration = 0
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
@@ -157,11 +153,11 @@ class Kraken(AbstractStreetNetworkService):
 
         for o in origins:
             orig = req.sn_routing_matrix.origins.add()
-            orig.place = get_uri_pt_object(o)
+            orig.place = self.get_uri_pt_func(o)
             orig.access_duration = 0
         for d in destinations:
             dest = req.sn_routing_matrix.destinations.add()
-            dest.place = get_uri_pt_object(d)
+            dest.place = self.get_uri_pt_func(d)
             dest.access_duration = 0
 
         req.sn_routing_matrix.mode = street_network_mode
