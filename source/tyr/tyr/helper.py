@@ -32,6 +32,7 @@ import logging
 import logging.config
 import uuid
 import celery
+from celery.exceptions import TimeoutError
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
@@ -39,6 +40,22 @@ from flask import current_app
 import os
 import sys
 import tempfile
+
+
+def wait_or_raise(async_result):
+    """
+    wait for the end of an async task.
+    Reraise the exception from the task in case of an error
+    """
+    # wait() will only throw exception at the start of the call
+    # if the worker raise an exception once the waiting has started the exception isn't raised by wait
+    # so we do a periodic polling on wait...
+    while True:
+        try:
+            async_result.wait(timeout=5)
+            return  # wait ended, we stop the endless loop
+        except TimeoutError:
+            pass  # everything is fine: let's poll!
 
 
 def configure_logger(app):

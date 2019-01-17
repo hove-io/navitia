@@ -32,6 +32,8 @@ from tyr import tasks
 import logging
 from tyr import manager
 
+from tyr.helper import wait_or_raise
+
 
 @manager.command
 def import_last_autocomplete_dataset(instance_name, wait=True):
@@ -50,7 +52,7 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
     logger.info('we reimport the last dataset of autocomplete %s, composed of: %s', instance_name, files)
     future, _ = tasks.import_autocomplete(files, instance, backup_file=False)
     if wait and future:
-        future.wait()
+        wait_or_raise(future)
 
     logger.info('last datasets reimport finished for %s', instance_name)
 
@@ -74,7 +76,7 @@ def import_last_stop_dataset(instance_name, wait=True):
         _file = files[0]
         future = tasks.import_in_mimir(_file, instance)
         if wait and future:
-            future.wait()
+            wait_or_raise(future)
         logger.info('last datasets reimport finished for %s', instance.name)
     else:
         logger.info('No file to reimport to mimir the last dataset of %s', instance.name)
