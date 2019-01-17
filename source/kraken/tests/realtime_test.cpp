@@ -1750,20 +1750,19 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
-    // The realtime vj should have all 3 stop_times but lose the boarding / alighting time on stop_point:10
-    // since it's a lollipop vj and it can't find the base_st
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().departure_time, "08:11"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:11"_t);
-    // SHOULD BE : BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:06"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:40"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:40"_t);
-    // SHOULD BE : BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:46"_t);
+
+    // The realtime vj should have all 3 stop_times 
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).stop_point->uri, "stop_point:10");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).departure_time, "08:11"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).boarding_time, "08:06"_t); // Boarding time is 5 min (300s) before departure 
+    
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:45"_t); // Alighting time is 5 min (300s) after arrival
 }
 
 BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
