@@ -32,7 +32,7 @@ import logging
 import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
-from jormungandr.utils import get_pt_object_coord
+from jormungandr.utils import get_uri_pt_object
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
