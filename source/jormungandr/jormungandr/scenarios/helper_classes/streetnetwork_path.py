@@ -32,6 +32,7 @@ from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
+from navitiacommon import response_pb2
 
 
 class StreetNetworkPath:
