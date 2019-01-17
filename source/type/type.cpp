@@ -191,33 +191,40 @@ const StopTime* StopTime::get_base_stop_time() const {
         return this; 
     }
     
-    std::vector<const nt::StopTime*> st_base;
-    for (const auto& st_it: base_vj->stop_time_list) {
-        if (stop_point == st_it.stop_point) {
-            st_base.push_back(&st_it);
+    // Partially handle lollipop 
+    //
+    // We get the rank of the stop_stime in the current VJ, and 
+    // return the one with same rank in the base VJ. 
+    // There are limitations if:
+    //   * the lollopop's node (stop_point B) is added before 
+    //          ie. Base VJ:     A - B - C - B - D
+    //              RT VJ:   B - A - B - C - B - D 
+    //   * the first stop time of the node is deleted
+    //          ie. Base VJ:     A - B - C - B - D
+    //              RT VJ:       A - - - C - B - D 
+    // TODO - Use Levenshtein (edit) distance to handle those cases properly
+    size_t rank_current_vj = 0;
+    for (const auto& st : vehicle_journey->stop_time_list) {
+        if (&st == this) {
+            break;
+        }
+        if (stop_point == st.stop_point) {
+            rank_current_vj++;
         }
     }
 
-    if (st_base.empty()) { return nullptr; }
-
-    // handle lolipop 
-    size_t nb_rt_st_found = 0;
-    if (st_base.size() > 1) {
-        for (const auto& st : vehicle_journey->stop_time_list) {
-            if (&st == this) {
-                return st_base[nb_rt_st_found];
+    for (const auto& base_st: base_vj->stop_time_list) {
+        if (stop_point == base_st.stop_point) {
+            if(rank_current_vj == 0) {
+                return &base_st;
             }
-            if (stop_point == st.stop_point) {
-                nb_rt_st_found++;
-            }
+            rank_current_vj--;
         }
-
-        auto logger = log4cplus::Logger::getInstance("log");
-        LOG4CPLUS_DEBUG(logger, "Ignored stop_time finding: impossible to match exactly one base stop_time");
-        return nullptr;
     }
 
-    return st_base[0];
+    auto logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time << ": impossible to match exactly one base stop_time");
+    return nullptr;
 }
 
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
