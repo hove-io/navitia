@@ -42,7 +42,7 @@ import sys
 import tempfile
 
 
-def wait_and_raise(async_result):
+def wait_or_raise(async_result):
     """
     wait for the end of an async task.
     Reraise the exception from the task in case of an error

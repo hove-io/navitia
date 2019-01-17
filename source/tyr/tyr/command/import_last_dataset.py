@@ -31,7 +31,7 @@ from navitiacommon import models
 from tyr import tasks
 import logging
 from tyr import manager
-from tyr.helper import get_instance_logger, wait_and_raise
+from tyr.helper import get_instance_logger, wait_or_raise
 
 
 @manager.command
@@ -65,4 +65,4 @@ def import_last_dataset(
         custom_output_dir=custom_output_dir,
     )
     if not nowait and future:
-        wait_and_raise(future)
+        wait_or_raise(future)
