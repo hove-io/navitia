@@ -176,26 +176,48 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
 }
 
 const StopTime* StopTime::get_base_stop_time() const {
-    const nt::StopTime* st_base = nullptr;
-    size_t nb_st_found = 0;
-    if (vehicle_journey == nullptr) { return nullptr; }
-    auto base_vj = vehicle_journey->get_corresponding_base();
-    if (base_vj == nullptr) { return nullptr; }
+    
+    if (vehicle_journey == nullptr) { 
+        return nullptr; 
+    }
 
-    if (vehicle_journey == base_vj) { return this; }
+    auto base_vj = vehicle_journey->get_corresponding_base();
+    
+    if (base_vj == nullptr) { 
+        return nullptr; 
+    }
+
+    if (vehicle_journey == base_vj) { 
+        return this; 
+    }
+    
+    std::vector<const nt::StopTime*> st_base;
     for (const auto& st_it: base_vj->stop_time_list) {
         if (stop_point == st_it.stop_point) {
-            st_base = &st_it;
-            ++nb_st_found;
+            st_base.push_back(&st_it);
         }
     }
-    //TODO handle lolipop vj, bob-commerce-commerce-bobito vj...
-    if (nb_st_found != 1) {
+
+    if (st_base.empty()) { return nullptr; }
+
+    // handle lolipop 
+    size_t nb_rt_st_found = 0;
+    if (st_base.size() > 1) {
+        for (const auto& st : vehicle_journey->stop_time_list) {
+            if (&st == this) {
+                return st_base[nb_rt_st_found];
+            }
+            if (stop_point == st.stop_point) {
+                nb_rt_st_found++;
+            }
+        }
+
         auto logger = log4cplus::Logger::getInstance("log");
         LOG4CPLUS_DEBUG(logger, "Ignored stop_time finding: impossible to match exactly one base stop_time");
         return nullptr;
     }
-    return st_base;
+
+    return st_base[0];
 }
 
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {

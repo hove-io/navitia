@@ -2631,3 +2631,103 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
     BOOST_CHECK_EQUAL(stop_time_D.amended_stop_time().arrival_time(), "08:40"_t);
     BOOST_CHECK_EQUAL(stop_time_D.amended_stop_time().departure_time(), "08:40"_t);
 }
+
+
+BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
+    /*
+    We create a network with a lollipop and apply delay on every stop points.
+    We expect from the "real time" VJ that its base stop times are matching the original VJ.
+
+        (08:10) A   A' (08:50)
+                ▼   ▲
+        (08:20) B   B' (08:40)
+                \   /
+                 \ /
+        (08:30)   C
+    */
+    ed::builder b("20171101");
+
+    const auto* vj = b.vj("L1").uri("vj:1")
+        ("A", "08:10"_t)
+        ("B", "08:20"_t)
+        ("C", "08:30"_t)
+        ("B", "08:40"_t)
+        ("A", "08:50"_t).make();
+    b.make();
+
+    navitia::handle_realtime("add_new_stop", timestamp, 
+                             ntest::make_delay_message("vj:1", "20171101", {
+                                RTStopTime("A", "20171101T0810"_pts).delay(1_min),
+                                RTStopTime("B", "20171101T0820"_pts).delay(1_min),
+                                RTStopTime("C", "20171101T0830"_pts).delay(1_min),
+                                RTStopTime("B", "20171101T0840"_pts).delay(1_min),
+                                RTStopTime("A", "20171101T0850"_pts).delay(1_min),
+                             }), 
+                             *b.data, true);
+    b.make();
+
+    const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
+
+    const auto & stoptime_rltm_A = realtime_vj->stop_time_list[0];
+    const auto & stoptime_rltm_B = realtime_vj->stop_time_list[1];
+    const auto & stoptime_rltm_C = realtime_vj->stop_time_list[2];
+    const auto & stoptime_rltm_B_bis = realtime_vj->stop_time_list[3];
+    const auto & stoptime_rltm_A_bis = realtime_vj->stop_time_list[4];
+
+    BOOST_CHECK_EQUAL(stoptime_rltm_A.get_base_stop_time(), &vj->stop_time_list[0]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_B.get_base_stop_time(), &vj->stop_time_list[1]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_C.get_base_stop_time(), &vj->stop_time_list[2]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_B_bis.get_base_stop_time(), &vj->stop_time_list[3]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_A_bis.get_base_stop_time(), &vj->stop_time_list[4]);
+}
+
+BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
+    /*
+    We create a network with a lollipop and apply delay on every stop points.
+    We expect from the "real time" VJ that its base stop times are matching the original VJ.
+
+        (08:10) A   
+                ▼
+                |    
+        (08:20) B ▶ ─────╮
+                         C (08:30) 
+        (08:40) B ◀ ─────╯
+                |     
+                ▼ 
+        (08:50) D
+    */
+    ed::builder b("20171101");
+
+    const auto* vj = b.vj("L1").uri("vj:1")
+        ("A", "08:10"_t)
+        ("B", "08:20"_t)
+        ("C", "08:30"_t)
+        ("B", "08:40"_t)
+        ("D", "08:50"_t).make();
+    b.make();
+
+    navitia::handle_realtime("add_new_stop", timestamp, 
+                             ntest::make_delay_message("vj:1", "20171101", {
+                                RTStopTime("A", "20171101T0810"_pts).delay(1_min),
+                                RTStopTime("B", "20171101T0820"_pts).delay(1_min),
+                                RTStopTime("C", "20171101T0830"_pts).delay(1_min),
+                                RTStopTime("B", "20171101T0840"_pts).delay(1_min),
+                                RTStopTime("D", "20171101T0850"_pts).delay(1_min),
+                             }), 
+                             *b.data, true);
+    b.make();
+
+    const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
+
+    const auto & stoptime_rltm_A = realtime_vj->stop_time_list[0];
+    const auto & stoptime_rltm_B = realtime_vj->stop_time_list[1];
+    const auto & stoptime_rltm_C = realtime_vj->stop_time_list[2];
+    const auto & stoptime_rltm_B_bis = realtime_vj->stop_time_list[3];
+    const auto & stoptime_rltm_D = realtime_vj->stop_time_list[4];
+
+    BOOST_CHECK_EQUAL(stoptime_rltm_A.get_base_stop_time(), &vj->stop_time_list[0]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_B.get_base_stop_time(), &vj->stop_time_list[1]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_C.get_base_stop_time(), &vj->stop_time_list[2]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_B_bis.get_base_stop_time(), &vj->stop_time_list[3]);
+    BOOST_CHECK_EQUAL(stoptime_rltm_D.get_base_stop_time(), &vj->stop_time_list[4]);
+}
