@@ -75,9 +75,21 @@ class StreetNetworkPath:
 
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
-        return self._instance.direct_path_with_fp(
-            self._mode, self._orig_obj, self._dest_obj, self._fallback_extremity, self._request, self._path_type
-        )
+        try:
+            return self._instance.direct_path_with_fp(
+                self._mode,
+                self._orig_obj,
+                self._dest_obj,
+                self._fallback_extremity,
+                self._request,
+                self._path_type,
+            )
+        except Exception as e:
+            print("Exception':{}".format(str(e)))
+            resp = response_pb2.Response()
+            resp.status_code = 500
+            resp.response_type = response_pb2.NO_SOLUTION
+            return resp
 
     def _do_request(self):
         logger = logging.getLogger(__name__)

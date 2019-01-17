@@ -103,9 +103,23 @@ class FallbackDurations:
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
-        return self._instance.get_street_network_routing_matrix(
-            origins, destinations, self._mode, self._max_duration_to_pt, self._request, **self._speed_switcher
-        )
+        try:
+            return self._instance.get_street_network_routing_matrix(
+                origins,
+                destinations,
+                self._mode,
+                self._max_duration_to_pt,
+                self._request,
+                **self._speed_switcher
+            )
+        except Exception as e:
+            print("Exception':{}".format(str(e)))
+            resp = response_pb2.StreetNetworkRoutingMatrix()
+            row = resp.rows.add()
+            routing = row.routing_response.add()
+            routing.duration = -1
+            routing.routing_status = response_pb2.unknown
+            return resp
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
