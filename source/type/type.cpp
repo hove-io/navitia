@@ -196,7 +196,7 @@ const StopTime* StopTime::get_base_stop_time() const {
     // We get the rank of the stop_stime in the current VJ, and 
     // return the one with same rank in the base VJ. 
     // There are limitations if:
-    //   * the lollopop's node (stop_point B) is added before 
+    //   * the lollipop's node (stop_point B) is added before
     //          ie. Base VJ:     A - B - C - B - D
     //              RT VJ:   B - A - B - C - B - D 
     //   * the first stop time of the node is deleted
@@ -223,7 +223,8 @@ const StopTime* StopTime::get_base_stop_time() const {
     }
 
     auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time << ": impossible to match exactly one base stop_time");
+    LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time
+                            << ": impossible to match exactly one base stop_time");
     return nullptr;
 }
 

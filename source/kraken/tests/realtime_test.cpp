@@ -73,7 +73,7 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     return trip_update;
 }
 
-pbnavitia::Response compute_iti(
+static pbnavitia::Response compute_iti(
     const ed::builder& b,
     const char* datetime, 
     const std::string& from, 

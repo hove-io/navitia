@@ -56,7 +56,7 @@ struct Demand {
     nt::AccessibiliteParams accessibilite_params;
 };
 
-void compute(std::vector<Demand> demands, boost::progress_display& show_progress, const type::Data& data){
+static void compute(std::vector<Demand> demands, boost::progress_display& show_progress, const type::Data& data){
 
     std::random_shuffle(demands.begin(), demands.end());
     std::vector<const CachedNextStopTime*> results;
