@@ -445,6 +445,8 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
     else:
         logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
         return
+    if not shape.is_valid:
+        raise ValueError("shape isn't valid")
 
     connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}".format(
         u=instance_conf.pg_username,
