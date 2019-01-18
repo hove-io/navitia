@@ -342,6 +342,35 @@ class TestDepartures(AbstractTestFixture):
         for stop_sched in response['stop_schedules']:
             assert len(stop_sched['date_times']) == 2
 
+    def test_departures_count(self):
+        """
+        test that count parameter is correctly taken into account when using realtime proxies
+        We search for departures on C:vj1: C:S0 -> 11:30, C:S1 -> 12:30, C:S2 -> 13:30
+        So we got departures for the route points of the line C to the stops C:S0, C:S1, C:S2
+        So there are two departures:
+        Base_schedule:
+          - C:S0 -> 11:30
+          - C:S1 -> 12:30
+
+        In realtime C:S1 has no departure, but C:S0 got another one, so still two departures:
+          - C:S0 -> 11:32:42
+          - C:S0 -> 11:42:42
+
+        When we set count to 1 we want only one departure (the first one)
+        """
+        query = 'vehicle_journeys/C:vj1/departures?from_datetime=20160102T1000&count=100&_current_datetime=20160102T1000'
+        response = self.query_region(query, display=True)
+
+        assert "departures" in response
+        assert len(response["departures"]) == 2
+
+        query = 'vehicle_journeys/C:vj1/departures?from_datetime=20160102T1000&count=1&_current_datetime=20160102T1000'
+        response_count = self.query_region(query)
+
+        assert "departures" in response_count
+        assert len(response_count["departures"]) == 1
+        assert response_count["departures"] == response["departures"][:1]
+
 
 MOCKED_PROXY_CONF = [
     {

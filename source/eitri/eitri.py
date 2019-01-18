@@ -43,12 +43,22 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @clingon.clize()
-def eitri(data_dir, output_file='./data.nav.lz4', ed_component_path='', add_pythonpath=[]):
+def eitri(
+    data_dir,
+    output_file='./data.nav.lz4',
+    ed_component_path='',
+    cities_exec_path='',
+    import_cities='',
+    add_pythonpath=[],
+):
     """
     Generate a data.nav.lz4 file
 
     :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
     :param output_file: output data.nav.lz4 file path
+    :param cities_exec_path: optional, where to find the command 'cities'
+    :param import_cities: optional, cities files ex:france_boundaries.osm.pbf,
+                          if given, cities will be loaded
     """
 
     # there is some problems with environment variables and cmake, so all args
@@ -59,5 +69,13 @@ def eitri(data_dir, output_file='./data.nav.lz4', ed_component_path='', add_pyth
     from ed_handler import generate_nav
     from docker_wrapper import PostgresDocker
 
-    with closing(PostgresDocker()) as docker:
-        generate_nav(data_dir, docker.get_db_params(), output_file, ed_component_path=ed_component_path)
+    with closing(PostgresDocker()) as docker_ed, closing(PostgresDocker()) as docker_cities:
+        generate_nav(
+            data_dir,
+            docker_ed,
+            docker_cities,
+            output_file,
+            ed_component_path=ed_component_path,
+            cities_exec_path=cities_exec_path,
+            import_cities=import_cities,
+        )

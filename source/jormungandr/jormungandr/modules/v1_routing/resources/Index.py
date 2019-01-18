@@ -36,7 +36,7 @@ from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
-from jormungandr import i_manager, USE_SERPY
+from jormungandr import i_manager, USE_SERPY, cache
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask_restful.fields import Raw
 from jormungandr import bss_provider_manager
@@ -101,6 +101,7 @@ class TechnicalStatus(ModuleResource):
             "regions": [],
             "bss_providers": [provider.status() for provider in bss_provider_manager.get_providers()],
         }
+
         regions = i_manager.get_regions()
         for key_region in regions:
             req = request_pb2.Request()
@@ -124,5 +125,10 @@ class TechnicalStatus(ModuleResource):
                 }
             resp_dict['region_id'] = key_region
             response['regions'].append(resp_dict)
+
+        # if we use our implementation of redisCache display the status
+        cache_status_op = getattr(cache.cache, "status", None)
+        if callable(cache_status_op):
+            response['redis'] = cache_status_op()
 
         return response

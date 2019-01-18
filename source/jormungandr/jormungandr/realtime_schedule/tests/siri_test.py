@@ -284,7 +284,7 @@ def next_passage_for_route_point_error_test():
     """
     test the whole next_passage_for_route_point
 
-    the siri's response contains a error, we should get 'None'
+    the siri's response contains an error, we should get 'None'
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
 
@@ -302,7 +302,7 @@ def next_passage_for_route_point_no_data_test():
     """
     test the whole next_passage_for_route_point
 
-    the siri's response contains a error of type NoInfoForTopicError: there is no next departure
+    the siri's response contains an error of type NoInfoForTopicError: there is no next departure
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
 
@@ -318,7 +318,7 @@ def next_passage_for_route_point_no_data_test():
 
 def next_passage_for_route_point_good_response_with_error_test():
     """
-    mock the http call to return a good response that also contain an error, we should get some next_passages
+    mock the http call to return a good response that also contains an error, we should get some next_passages
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
     route_point = MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu')

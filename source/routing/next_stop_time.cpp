@@ -437,7 +437,7 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
 
 CachedNextStopTime::DtStFromJpp::DtStFromJpp(const vDtStByJpp& map) {
     size_t s = 0;
-    for (const auto& elt: map) {
+    for (const auto elt: map) {
         s += elt.second.size();
     }
     dtsts.reserve(s);

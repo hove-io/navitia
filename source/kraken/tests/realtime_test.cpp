@@ -2285,9 +2285,21 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true);
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true);
 
     b.make();
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "1111110");
+    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "1111111");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+
+    // Check the realtime vj with a newly added stop_time
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed-1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2315,15 +2327,54 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("delete_new_stop_time_in_the_trip", timestamp, delete_new_stop, *b.data, true);
+    navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true);
 
     b.make();
+
+    // Check the realtime vj after the recently added stop_time is deleted
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-2");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 2);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+
+    // We should not have any journey in public_transport from B_bis to C
+    res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+
+    // Delete the recently deleted stop_time in vj = vj:1 B_bis
+    // We should be able to add impact on the stop_time even if it is already deleted.
+    transit_realtime::TripUpdate redelete_stop = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    RTStopTime("stop_point:A", "20171101T0800"_pts),
+                    RTStopTime("stop_point:B", "20171101T0830"_pts),
+                    RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
+                    RTStopTime("stop_point:C", "20171101T0900"_pts),
+            });
+
+    navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true);
+    b.make();
+
+    // Check the realtime vj after the recently added stop_time is deleted twice
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-3");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+
+    res = compute("20171101T073000", "stop_point:A", "stop_point:C");
+    BOOST_CHECK_EQUAL(res.impacts_size(), 3);
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).is_detour(), false);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
 
     // We should not have any journey in public_transport from B_bis to C
     res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");

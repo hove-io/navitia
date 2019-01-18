@@ -41,12 +41,17 @@ www.navitia.io
 #include "utils/zmq.h"
 #include "utils/functions.h" //navitia::absolute_path function
 
-static void show_usage(const std::string& name)
+static void show_usage(const std::string& name, const boost::program_options::options_description& descr)
 {
     std::cerr << "Usage:\n"
               << "\t" << name << " --help\t\tShow this message.\n"
               << "\t" << name << " [config_file]\tSpecify the path of the configuration file "
-              << "(default: kraken.ini in the current path)"
+              << "(default: kraken.ini in the current path) \n\n"
+              << "Configuration file (kraken.ini) can have the following parameter: \n"
+              << descr
+              << "\n"
+              << "Parameters from the configuration file can also be declared by environment variable like: \n"
+              << "\t KRAKEN_GENERAL_instance_name=<inst_name>"
               << std::endl;
 }
 
@@ -64,7 +69,8 @@ int main(int argn, char** argv){
     if(argn > 1){
         std::string arg = argv[1];
         if(arg == "-h" || arg == "--help"){
-            show_usage(argv[0]);
+            auto opt_desc = navitia::kraken::get_options_description();
+            show_usage(argv[0], opt_desc);
             return 0;
         }else{
             // The first argument is the path to the configuration file

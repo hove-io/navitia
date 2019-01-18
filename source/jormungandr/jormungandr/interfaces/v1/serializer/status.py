@@ -177,3 +177,11 @@ class StatusSerializer(CommonStatusSerializer):
 class BssProviderSerializer(serpy.DictSerializer):
     network = Field(schema_type=str, display_none=True)
     operators = jsonschema.Field(schema_type=str, display_none=True, many=True)
+
+
+class RedisStatusSerializer(serpy.DictSerializer):
+    circuit_breaker = MethodField(schema_type=CircuitBreakerSerializer, display_none=False)
+
+    def get_circuit_breaker(self, obj):
+        o = obj.get('circuit_breaker', None)
+        return CircuitBreakerSerializer(o, display_none=False).data if o else None

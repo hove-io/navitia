@@ -329,13 +329,19 @@ static const std::string get_wordings(nt::disruption::Effect effect) {
     case Effect::SIGNIFICANT_DELAYS:
         return "trip delayed";
     case Effect::DETOUR:
+        return "detour";
     case Effect::MODIFIED_SERVICE:
         return  "trip modified";
     case Effect::REDUCED_SERVICE:
+        return "reduced service";
     case Effect::ADDITIONAL_SERVICE:
+        return "additional service";
     case Effect::OTHER_EFFECT:
+        return "other effect";
     case Effect::STOP_MOVED:
+        return "stop moved";
     case Effect::UNKNOWN_EFFECT:
+        return "unknown effect";
     default:
         return "";
     }

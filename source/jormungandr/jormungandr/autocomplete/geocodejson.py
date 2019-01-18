@@ -33,7 +33,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 
 import jormungandr
-from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
+from jormungandr.autocomplete.abstract_autocomplete import (
+    AbstractAutocomplete,
+    AutocompleteUnavailable,
+    AutocompleteError,
+)
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
 import pybreaker
@@ -394,13 +398,13 @@ class GeocodeJson(AbstractAutocomplete):
             return self.breaker.call(method, url, **kwargs)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('external autocomplete service dead (error: {})'.format(e))
-            raise GeocodeJsonError('circuit breaker open')
+            raise GeocodeJsonUnavailable('circuit breaker open')
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
-            raise GeocodeJsonError('external autocomplete service timeout')
+            raise GeocodeJsonUnavailable('external autocomplete service timeout')
         except:
             logging.getLogger(__name__).exception('error in autocomplete request')
-            raise GeocodeJsonError('impossible to access external autocomplete service')
+            raise GeocodeJsonUnavailable('impossible to access external autocomplete service')
 
     @classmethod
     def _check_response(cls, response, uri):
@@ -408,6 +412,8 @@ class GeocodeJson(AbstractAutocomplete):
             raise GeocodeJsonError('impossible to access autocomplete service')
         if response.status_code == 404:
             raise UnknownObject(uri)
+        if response.status_code == 503:
+            raise GeocodeJsonUnavailable('geocodejson responded with 503')
         if response.status_code != 200:
             raise GeocodeJsonError('error in autocomplete request')
 
@@ -561,5 +567,9 @@ class GeocodeJson(AbstractAutocomplete):
         return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}
 
 
-class GeocodeJsonError(RuntimeError):
+class GeocodeJsonError(AutocompleteError):
+    pass
+
+
+class GeocodeJsonUnavailable(AutocompleteUnavailable):
     pass

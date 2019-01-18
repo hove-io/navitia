@@ -410,12 +410,13 @@ class DictAddressesSerializer(serpy.DictSerializer):
         return obj.get('message')
 
 
-class TechnicalStatusSerializer(serpy.DictSerializer):
+class TechnicalStatusSerializer(NullableDictSerializer):
     regions = status.CommonStatusSerializer(many=True, display_none=False)
     jormungandr_version = Field(schema_type=str, display_none=True)
     bss_providers = status.BssProviderSerializer(many=True, display_none=False)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     warnings = base.BetaEndpointsSerializer()
+    redis = status.RedisStatusSerializer(display_none=False)
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data
