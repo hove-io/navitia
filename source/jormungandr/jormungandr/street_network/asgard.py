@@ -38,6 +38,7 @@ from contextlib import contextmanager
 import queue
 from navitiacommon import response_pb2
 from zmq import green as zmq
+import six
 
 
 class Asgard(Kraken):

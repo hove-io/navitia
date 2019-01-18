@@ -113,7 +113,7 @@ class FallbackDurations:
                 **self._speed_switcher
             )
         except Exception as e:
-            print("Exception':{}".format(str(e)))
+            logging.getLogger(__name__).error("Exception':{}".format(str(e)))
             resp = response_pb2.StreetNetworkRoutingMatrix()
             row = resp.rows.add()
             routing = row.routing_response.add()
