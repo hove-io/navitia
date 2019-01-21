@@ -172,7 +172,11 @@ class FallbackDurations:
         streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
         sn_routing_matrix = self._get_street_network_routing_matrix(streetnetwork_service, origins, destinations)
 
-        if not sn_routing_matrix or not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
+        if (
+            not sn_routing_matrix
+            or not len(sn_routing_matrix.rows)
+            or not len(sn_routing_matrix.rows[0].routing_response)
+        ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
             return result
 
