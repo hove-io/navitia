@@ -205,7 +205,7 @@ const StopTime* StopTime::get_base_stop_time() const {
     // TODO - Use Levenshtein (edit) distance to handle those cases properly
     size_t rank_current_vj = 0;
     for (const auto& st : vehicle_journey->stop_time_list) {
-        if (st.has_similar_timings(*this)) {
+        if (st.is_similar(*this)) {
             break;
         }
         if (stop_point == st.stop_point) {
@@ -228,7 +228,7 @@ const StopTime* StopTime::get_base_stop_time() const {
     return nullptr;
 }
 
-bool StopTime::has_similar_timings(const StopTime& st) const {
+bool StopTime::is_similar(const StopTime& st) const {
     return arrival_time == st.arrival_time
         && departure_time == st.departure_time
         && stop_point->idx == st.stop_point->idx;
