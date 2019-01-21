@@ -114,12 +114,7 @@ class FallbackDurations:
             )
         except Exception as e:
             logging.getLogger(__name__).error("Exception':{}".format(str(e)))
-            resp = response_pb2.StreetNetworkRoutingMatrix()
-            row = resp.rows.add()
-            routing = row.routing_response.add()
-            routing.duration = -1
-            routing.routing_status = response_pb2.unknown
-            return resp
+            return None
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -177,7 +172,7 @@ class FallbackDurations:
         streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
         sn_routing_matrix = self._get_street_network_routing_matrix(streetnetwork_service, origins, destinations)
 
-        if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
+        if not sn_routing_matrix or not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
             return result
 

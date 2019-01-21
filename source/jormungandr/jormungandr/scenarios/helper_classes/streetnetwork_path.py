@@ -87,10 +87,7 @@ class StreetNetworkPath:
             )
         except Exception as e:
             logging.getLogger(__name__).error("Exception':{}".format(str(e)))
-            resp = response_pb2.Response()
-            resp.status_code = 500
-            resp.response_type = response_pb2.NO_SOLUTION
-            return resp
+            return None
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
