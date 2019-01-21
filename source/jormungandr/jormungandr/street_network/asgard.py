@@ -30,23 +30,23 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.exceptions import TechnicalError
-from jormungandr.utils import get_pt_object_coord
 
-from jormungandr.street_network.valhalla import Valhalla
+from jormungandr.street_network.kraken import Kraken
+from jormungandr.utils import get_pt_object_coord
 
 from contextlib import contextmanager
 import queue
-from navitiacommon import response_pb2, request_pb2, type_pb2
+from navitiacommon import response_pb2
 from zmq import green as zmq
-import six
 
 
-class Asgard(Valhalla):
+class Asgard(Kraken):
     def __init__(
         self, instance, service_url, asgard_socket, modes=[], id='asgard', timeout=10, api_key=None, **kwargs
     ):
         super(Asgard, self).__init__(instance, service_url, modes, id, timeout, api_key, **kwargs)
         self.asgard_socket = asgard_socket
+        self.timeout = timeout
         self._sockets = queue.Queue()
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
@@ -56,28 +56,26 @@ class Asgard(Valhalla):
             "car": request['car_speed'],
             "bss": request['bss_speed'],
         }
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.street_network_routing_matrix
 
-        for o in origins:
-            orig = req.sn_routing_matrix.origins.add()
-            orig.place = 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(o))
-            orig.access_duration = 0
-        for d in destinations:
-            dest = req.sn_routing_matrix.destinations.add()
-            dest.place = 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(d))
-            dest.access_duration = 0
-
-        req.sn_routing_matrix.mode = mode
-        req.sn_routing_matrix.speed = speed_switcher.get(mode, kwargs.get("walking"))
-        req.sn_routing_matrix.max_duration = max_duration
+        req = self._create_sn_routing_matrix_request(
+            origins, destinations, mode, max_duration, speed_switcher, **kwargs
+        )
 
         res = self._call_asgard(req)
         # TODO handle car park
-        if res.HasField('error'):
-            logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
-            raise TechnicalError('routing matrix fail')
+        self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
+
+    def _direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
+        req = self._create_direct_path_request(
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request
+        )
+        return self._call_asgard(req)
+
+    def get_uri_pt_object(self, pt_object):
+        return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))
 
     @contextmanager
     def socket(self, context):

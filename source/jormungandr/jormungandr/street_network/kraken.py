@@ -78,11 +78,24 @@ class Kraken(AbstractStreetNetworkService):
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
+        req = self._create_direct_path_request(
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request
+        )
+
+        response = self.instance.send_and_receive(req)
+
+        if should_invert_journey:
+            return self._reverse_journeys(response)
+        return response
+
+    def _create_direct_path_request(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request
+    ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
+        req.direct_path.origin.place = self.get_uri_pt_object(pt_object_origin)
         req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = get_uri_pt_object(pt_object_destination)
+        req.direct_path.destination.place = self.get_uri_pt_object(pt_object_destination)
         req.direct_path.destination.access_duration = 0
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
@@ -101,11 +114,10 @@ class Kraken(AbstractStreetNetworkService):
             'max_car_no_park_duration_to_pt'
         ]
 
-        response = self.instance.send_and_receive(req)
+        return req
 
-        if should_invert_journey:
-            return self._reverse_journeys(response)
-        return response
+    def get_uri_pt_object(self, pt_object):
+        return utils.get_uri_pt_object(pt_object)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
@@ -118,8 +130,6 @@ class Kraken(AbstractStreetNetworkService):
             "bss": request['bss_speed'],
             "ridesharing": request['car_no_park_speed'],
         }
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.street_network_routing_matrix
 
         # kraken can only manage 1-n request, so we reverse request if needed
         if len(origins) > 1:
@@ -129,24 +139,40 @@ class Kraken(AbstractStreetNetworkService):
             else:
                 origins, destinations = destinations, origins
 
+        req = self._create_sn_routing_matrix_request(
+            origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+        )
+
+        res = self.instance.send_and_receive(req)
+        self._check_for_error_and_raise(res)
+
+        return res.sn_routing_matrix
+
+    def _create_sn_routing_matrix_request(
+        self, origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+    ):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.street_network_routing_matrix
+
         for o in origins:
             orig = req.sn_routing_matrix.origins.add()
-            orig.place = get_uri_pt_object(o)
+            orig.place = self.get_uri_pt_object(o)
             orig.access_duration = 0
         for d in destinations:
             dest = req.sn_routing_matrix.destinations.add()
-            dest.place = get_uri_pt_object(d)
+            dest.place = self.get_uri_pt_object(d)
             dest.access_duration = 0
 
         req.sn_routing_matrix.mode = street_network_mode
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
 
-        res = self.instance.send_and_receive(req)
+        return req
+
+    def _check_for_error_and_raise(self, res):
         if res.HasField('error'):
             logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
             raise TechnicalError('routing matrix fail')
-        return res.sn_routing_matrix
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
