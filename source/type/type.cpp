@@ -205,7 +205,7 @@ const StopTime* StopTime::get_base_stop_time() const {
     // TODO - Use Levenshtein (edit) distance to handle those cases properly
     size_t rank_current_vj = 0;
     for (const auto& st : vehicle_journey->stop_time_list) {
-        if (&st == this) {
+        if (st.has_similar_timings(*this)) {
             break;
         }
         if (stop_point == st.stop_point) {
@@ -214,7 +214,7 @@ const StopTime* StopTime::get_base_stop_time() const {
     }
 
     for (const auto& base_st: base_vj->stop_time_list) {
-        if (stop_point == base_st.stop_point) {
+        if(stop_point->idx == base_st.stop_point->idx) {
             if(rank_current_vj == 0) {
                 return &base_st;
             }
@@ -225,6 +225,12 @@ const StopTime* StopTime::get_base_stop_time() const {
     auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time << ": impossible to match exactly one base stop_time");
     return nullptr;
+}
+
+bool StopTime::has_similar_timings(const StopTime& st) const {
+    return arrival_time == st.arrival_time
+        && departure_time == st.departure_time
+        && stop_point->idx == st.stop_point->idx;
 }
 
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
