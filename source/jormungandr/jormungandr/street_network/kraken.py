@@ -46,7 +46,6 @@ class Kraken(AbstractStreetNetworkService):
         self.instance = instance
         self.modes = modes
         self.sn_system_id = id
-        self.get_uri_pt_func = get_uri_pt_object
 
     def status(self):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
@@ -94,9 +93,9 @@ class Kraken(AbstractStreetNetworkService):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = self.get_uri_pt_func(pt_object_origin)
+        req.direct_path.origin.place = self.get_uri_pt_object(pt_object_origin)
         req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = self.get_uri_pt_func(pt_object_destination)
+        req.direct_path.destination.place = self.get_uri_pt_object(pt_object_destination)
         req.direct_path.destination.access_duration = 0
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
@@ -116,6 +115,9 @@ class Kraken(AbstractStreetNetworkService):
         ]
 
         return req
+
+    def get_uri_pt_object(self, pt_object):
+        return utils.get_uri_pt_object(pt_object)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
@@ -154,11 +156,11 @@ class Kraken(AbstractStreetNetworkService):
 
         for o in origins:
             orig = req.sn_routing_matrix.origins.add()
-            orig.place = self.get_uri_pt_func(o)
+            orig.place = self.get_uri_pt_object(o)
             orig.access_duration = 0
         for d in destinations:
             dest = req.sn_routing_matrix.destinations.add()
-            dest.place = self.get_uri_pt_func(d)
+            dest.place = self.get_uri_pt_object(d)
             dest.access_duration = 0
 
         req.sn_routing_matrix.mode = street_network_mode

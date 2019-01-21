@@ -40,10 +40,6 @@ from navitiacommon import response_pb2
 from zmq import green as zmq
 
 
-def get_uri_pt_object_for_asgard(obj):
-    return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(obj))
-
-
 class Asgard(Kraken):
     def __init__(
         self, instance, service_url, asgard_socket, modes=[], id='asgard', timeout=10, api_key=None, **kwargs
@@ -52,7 +48,6 @@ class Asgard(Kraken):
         self.asgard_socket = asgard_socket
         self.timeout = timeout
         self._sockets = queue.Queue()
-        self.get_uri_pt_func = get_uri_pt_object_for_asgard
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
         speed_switcher = {
@@ -78,6 +73,9 @@ class Asgard(Kraken):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
         )
         return self._call_asgard(req)
+
+    def get_uri_pt_object(self, pt_object):
+        return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))
 
     @contextmanager
     def socket(self, context):
