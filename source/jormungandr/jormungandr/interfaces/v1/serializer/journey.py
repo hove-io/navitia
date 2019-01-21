@@ -337,6 +337,7 @@ class JourneySerializer(PbNestedSerializer):
     calendars = CalendarSerializer(many=True, display_none=False)
     sections = SectionSerializer(many=True, display_none=False)
     debug = jsonschema.MethodField(schema_type=JourneyDebugSerializer(), display_none=False)
+    links = base.DescribedField(schema_type=LinkSchema(many=True))
 
     def get_debug(self, obj):
         if not hasattr(g, 'debug') or not g.debug:

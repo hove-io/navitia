@@ -91,7 +91,6 @@ def test_get_instance(create_instance):
 
 def test_update_instances(create_instance):
     params = {
-        "min_tc_with_bss": 5,
         "journey_order": "arrival_time",
         "max_duration": 200,
         "max_bss_duration_to_pt": 10,
@@ -100,16 +99,12 @@ def test_update_instances(create_instance):
         "walking_transfer_penalty": 20,
         "night_bus_filter_base_factor": 300,
         "walking_speed": 1.62,
-        "max_duration_fallback_mode": "bike",
         "priority": 4,
         "car_speed": 55.55,
-        "min_tc_with_car": 100,
-        "min_tc_with_bike": 100,
         "min_bike": 40,
         "max_walking_duration_to_pt": 300,
         "min_car": 400,
         "max_bike_duration_to_pt": 600,
-        "max_duration_criteria": "duration",
         "scenario": "new_default",
         "bss_speed": 2.1,
         "min_bss": 40,

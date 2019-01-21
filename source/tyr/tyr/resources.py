@@ -274,7 +274,7 @@ class Instance(flask_restful.Resource):
             type=str,
             case_sensitive=False,
             help='the name of the scenario used by jormungandr',
-            choices=['default', 'keolis', 'destineo', 'new_default', 'distributed'],
+            choices=['new_default', 'distributed'],
             location=('json', 'values'),
             default=instance.scenario,
         )
@@ -365,27 +365,6 @@ class Instance(flask_restful.Resource):
             default=instance.car_no_park_speed,
         )
         parser.add_argument(
-            'min_tc_with_car',
-            type=int,
-            help='minimum duration of tc when a car fallback is used',
-            location=('json', 'values'),
-            default=instance.min_tc_with_car,
-        )
-        parser.add_argument(
-            'min_tc_with_bike',
-            type=int,
-            help='minimum duration of tc when a bike fallback is used',
-            location=('json', 'values'),
-            default=instance.min_tc_with_bike,
-        )
-        parser.add_argument(
-            'min_tc_with_bss',
-            type=int,
-            help='minimum duration of tc when a bss fallback is used',
-            location=('json', 'values'),
-            default=instance.min_tc_with_bss,
-        )
-        parser.add_argument(
             'min_bike',
             type=int,
             help='minimum duration of bike fallback',
@@ -407,44 +386,12 @@ class Instance(flask_restful.Resource):
             default=instance.min_car,
         )
         parser.add_argument(
-            'factor_too_long_journey',
-            type=float,
-            help='if a journey is X time longer than the earliest one we remove it',
-            location=('json', 'values'),
-            default=instance.factor_too_long_journey,
-        )
-        parser.add_argument(
-            'min_duration_too_long_journey',
-            type=int,
-            help='all journeys with a duration fewer than this value will be kept no matter what even if they '
-            'are 20 times slower than the earliest one',
-            location=('json', 'values'),
-            default=instance.min_duration_too_long_journey,
-        )
-        parser.add_argument(
             'successive_physical_mode_to_limit_id',
             type=str,
             help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
             ' used by _max_successive_physical_mode rule',
             location=('json', 'values'),
             default=instance.successive_physical_mode_to_limit_id,
-        )
-        parser.add_argument(
-            'max_duration_criteria',
-            type=str,
-            choices=['time', 'duration'],
-            help='',
-            location=('json', 'values'),
-            default=instance.max_duration_criteria,
-        )
-
-        parser.add_argument(
-            'max_duration_fallback_mode',
-            type=str,
-            choices=['walking', 'bss', 'bike', 'car'],
-            help='',
-            location=('json', 'values'),
-            default=instance.max_duration_fallback_mode,
         )
 
         parser.add_argument(
@@ -611,16 +558,9 @@ class Instance(flask_restful.Resource):
                     'bss_speed',
                     'car_speed',
                     'car_no_park_speed',
-                    'min_tc_with_car',
-                    'min_tc_with_bike',
-                    'min_tc_with_bss',
                     'min_bike',
                     'min_bss',
                     'min_car',
-                    'min_duration_too_long_journey',
-                    'factor_too_long_journey',
-                    'max_duration_criteria',
-                    'max_duration_fallback_mode',
                     'max_duration',
                     'walking_transfer_penalty',
                     'night_bus_filter_max_factor',
