@@ -27,7 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-class ConstantParking():
+
+class ConstantParking:
     def __init__(self, park_duration, leave_parking_duration, **kwargs):
         self.park_duration = park_duration
         self.leave_parking_duration = leave_parking_duration

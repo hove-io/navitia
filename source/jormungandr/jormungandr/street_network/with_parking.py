@@ -46,7 +46,7 @@ class WithParking(AbstractStreetNetworkService):
             config['args'].update({'service_url': None})
         if 'instance' not in config['args']:
             config['args'].update({'instance': instance})
-        
+
         self.street_network = utils.create_object(config)
 
     def status(self):
@@ -55,7 +55,9 @@ class WithParking(AbstractStreetNetworkService):
     def _direct_path(
         self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
     ):
-        response = self.street_network._direct_path(mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type)
+        response = self.street_network._direct_path(
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        )
         if response and len(response.journeys):
             self.add_parking_time_in_direct_path(response)
 
@@ -70,8 +72,9 @@ class WithParking(AbstractStreetNetworkService):
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
-        return self.street_network.get_street_network_routing_matrix(origins, destinations, street_network_mode, max_duration, request, **kwargs)
-
+        return self.street_network.get_street_network_routing_matrix(
+            origins, destinations, street_network_mode, max_duration, request, **kwargs
+        )
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
