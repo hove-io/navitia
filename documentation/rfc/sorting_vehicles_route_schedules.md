@@ -79,17 +79,17 @@ The topological sort of the created graph is C, A, B. This is our solution, corr
 
 # Performances
 
-Let _n_ be the number of vertices, and _e_ be the number of edges. O(_e_) = O(_n_²).  The worst case complexity of the straightforward implementation is
+Let _n_ be the number of vertices, and _e_ be the number of edges. O(_e_) = O(_n_ ²).  The worst case complexity of the straightforward implementation is
 
-  O(_e_ * (_n_ + _e_)) = O(_e_²) = O(_n_⁴)
+  O(_e_ * (_n_ + _e_)) = O(_e_ ²) = O(_n_ ⁴)
 
-In practice, this algorithm is too costly for big time tables.  Let _k_ be the number of edges that will be removed.  O(_k_) = O(_n_²).  In practice, it seems that Ω(_k_) = Ω(_n_).  If we use binary searches to find each edges that we need to remove, the complexity is
+In practice, this algorithm is too costly for big time tables.  Let _k_ be the number of edges that will be removed.  O(_k_) = O(_n_ ²).  In practice, it seems that Ω(_k_) = Ω(_n_).  If we use binary searches to find each edges that we need to remove, the complexity is
 
-  O(_k_ * log(_e_) * (_n_ + _e_)) = O(_k_ * _n_² * log(_n_²)) = O(_k_ * _n_² * log(_n_))
+  O(_k_ * log(_e_) * (_n_ + _e_)) = O(_k_ * _n_ ² * log(_n_ ²)) = O(_k_ * _n_ ² * log(_n_))
 
 Thus, in our case, this algorithm seems to run in
 
-  Ω(_k_ * _n_² * log(_n_)) = Ω(_n_³ * log(_n_))
+  Ω(_k_ * _n_ ² * log(_n_)) = Ω(_n_ ³ * log(_n_))
 
 which is much better than the naive implementation.  In practice, our problematic case run in 33 seconds using the naive algorithm, and 1 seconds using the binary searches.
 
