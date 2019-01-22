@@ -35,8 +35,6 @@ www.navitia.io
 
 namespace navitia {
 
-const type::StopTime* get_base_stop_time(const type::StopTime* st_orig);
-
 /**
  * Compute base passage from amended passage, knowing amended and base stop-times
  */

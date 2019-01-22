@@ -133,7 +133,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
                                                            impacted_stop->mutable_amended_stop_time());
 
             // we need to get the base stoptime
-            const auto* base_st = impact.aux_info.get_base_stop_time(stu);
+            const auto* base_st = stu.stop_time.get_base_stop_time();
             if (base_st) {
                 filler.copy(0, DumpMessage::No).fill_pb_object(base_st, impacted_stop->mutable_base_stop_time());
             }
@@ -1397,7 +1397,7 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
         //for calendar we don't want to have a date
         rs_date_time->set_date(navitia::to_int_date(navitia::to_posix_time(stop_time_calendar->date_time, *pb_creator.data)));
 
-        if (auto base_st = get_base_stop_time(stop_time_calendar->stop_time)) {
+        if (auto base_st = stop_time_calendar->stop_time->get_base_stop_time()) {
             auto base_dt = get_date_time(routing::StopEvent::pick_up,
                                          stop_time_calendar->stop_time,
                                          base_st,

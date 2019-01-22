@@ -39,8 +39,9 @@ www.navitia.io
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
-
-namespace navitia { namespace type { namespace disruption {
+namespace navitia { 
+namespace type { 
+namespace disruption {
 
 std::vector<ImpactedVJ>
 get_impacted_vehicle_journeys(const LineSection& ls,
@@ -443,47 +444,6 @@ void DisruptionHolder::forget_vj(const VehicleJourney* vj) {
     }
 }
 
-namespace detail {
-
-const StopTime* AuxInfoForMetaVJ::get_base_stop_time(const StopTimeUpdate& stu) const {
-    //TODO check effect when available, we can do this only for UPDATED
-    auto* vj = stu.stop_time.vehicle_journey;
-    auto log = log4cplus::Logger::getInstance("log");
-    if (! vj) {
-        LOG4CPLUS_WARN(log, "impossible to find corresponding base stoptime "
-                            "since the stoptime update is not yet associated to a vj");
-        return nullptr;
-    }
-
-    const auto* base_vj = vj->get_corresponding_base();
-
-    if (! base_vj) {
-        return nullptr;
-    }
-
-    size_t idx = 0;
-    for (const auto& stop_update: stop_times) {
-        // TODO check stop_update effect not to consider added stops
-        if (&stop_update != &stu) {
-            idx ++;
-            continue;
-        }
-        if (idx >= base_vj->stop_time_list.size()) {
-            LOG4CPLUS_WARN(log, "The stoptime update list of " << base_vj->meta_vj->uri <<
-                                " is not consistent with the list of stoptimes");
-            return nullptr;
-        }
-        const auto& base_st = base_vj->stop_time_list[idx];
-        if (stu.stop_time.stop_point != base_st.stop_point) {
-            LOG4CPLUS_WARN(log, "The stoptime update list of " << base_vj->meta_vj->uri <<
-                                " is not consistent with the list of stoptimes, stoppoint are different");
-            return nullptr;
-        }
-        return &base_st;
-    }
-
-    return nullptr;
-}
-}
-
-}}}//namespace
+} // namespace discruption
+} // namespace type
+} // namespace navitia

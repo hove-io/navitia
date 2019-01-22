@@ -32,7 +32,7 @@ www.navitia.io
 #include "utils/logger.h"
 #include "utils/map_find.h"
 #include "type/datetime.h"
-#include "type/type_utils.h"
+#include "type/type.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -230,7 +230,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             // Use the corresponding base stop_time for boarding and alighting duration
             for(auto& st: vj->stop_time_list) {
-                const auto base_st = get_base_stop_time(&st);
+                const auto base_st = st.get_base_stop_time();
                 if(base_st) {
                     st.boarding_time = st.departure_time - base_st->get_boarding_duration();
                     st.alighting_time = st.arrival_time + base_st->get_alighting_duration();

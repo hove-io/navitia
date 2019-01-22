@@ -757,6 +757,11 @@ struct StopTime {
 
     const StopTime* get_base_stop_time() const;
 
+    //  Check if a stop time has similar hours of departure/arrival/alighting/boarding_time etc...
+    //  We don't want to rely on properties that might change with real time object.
+    //  Note : This is usefull in the case of a StopTimeUpdate that owns a partially constructed Stop Time.
+    bool is_similar(const StopTime& st) const;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & boarding_time & alighting_time & vehicle_journey
             & stop_point & shape_from_prev & properties & local_traffic_zone;
