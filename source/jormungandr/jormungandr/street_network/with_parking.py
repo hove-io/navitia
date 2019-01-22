@@ -72,9 +72,25 @@ class WithParking(AbstractStreetNetworkService):
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
-        return self.street_network.get_street_network_routing_matrix(
+        response = self.street_network.get_street_network_routing_matrix(
             origins, destinations, street_network_mode, max_duration, request, **kwargs
         )
+
+        if response and len(response.rows) and len(response.rows[0].routing_response):
+            self.add_parking_time_in_routing_matrix(response.rows[0].routing_response, origins, destinations)
+
+        return response
+
+    def add_parking_time_in_routing_matrix(self, response, origins, destinations):
+        logger = logging.getLogger(__name__)
+        additionnal_parking_time = (
+            self.parking_module.park_duration
+            if len(origins) == 1
+            else self.parking_module.leave_parking_duration
+        )
+        logger.debug("Adding additionnal parking time for routing_matrix " + str(additionnal_parking_time))
+        for r in response:
+            r.duration += additionnal_parking_time
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
