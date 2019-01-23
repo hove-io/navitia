@@ -45,7 +45,9 @@ class Asgard(Kraken):
     def __init__(
         self, instance, service_url, asgard_socket, modes=None, id=None, timeout=10, api_key=None, **kwargs
     ):
-        super(Asgard, self).__init__(instance, service_url, modes or [], id or 'asgard', timeout, api_key, **kwargs)
+        super(Asgard, self).__init__(
+            instance, service_url, modes or [], id or 'asgard', timeout, api_key, **kwargs
+        )
         self.asgard_socket = asgard_socket
         self.timeout = timeout
         self._sockets = queue.Queue()
