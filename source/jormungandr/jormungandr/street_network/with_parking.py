@@ -36,10 +36,10 @@ from jormungandr import utils
 
 
 class WithParking(AbstractStreetNetworkService):
-    def __init__(self, instance, service_url, modes=[], id='with_parking', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        self.modes = modes
-        self.sn_system_id = id
+        self.modes = modes or []
+        self.sn_system_id = id or 'with_parking'
         self.parking_module = utils.create_object(kwargs.get('parking', None))
         config = kwargs.get('street_network', None)
         if 'service_url' not in config['args']:

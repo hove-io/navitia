@@ -29,6 +29,6 @@
 
 
 class ConstantParking:
-    def __init__(self, park_duration, leave_parking_duration, **kwargs):
+    def __init__(self, park_duration, leave_parking_duration):
         self.park_duration = park_duration
         self.leave_parking_duration = leave_parking_duration
