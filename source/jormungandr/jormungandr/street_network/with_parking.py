@@ -33,6 +33,7 @@ from jormungandr import street_network
 
 from jormungandr.street_network.asgard import Asgard
 from jormungandr import utils
+from navitiacommon import response_pb2
 
 
 class WithParking(AbstractStreetNetworkService):
@@ -59,15 +60,21 @@ class WithParking(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )
         if response and len(response.journeys):
-            self.add_parking_time_in_direct_path(response)
+            self.add_parking_section_in_direct_path(response)
 
         return response
 
-    def add_parking_time_in_direct_path(self, response):
+    def add_parking_section_in_direct_path(self, response):
         logger = logging.getLogger(__name__)
-        logger.debug("Adding parking time for direct path " + str(self.parking_module.park_duration))
+        logger.debug("Creating parking section for direct path")
         for journey in response.journeys:
-            journey.duration += self.parking_module.park_duration
+            section = journey.sections.add()
+            section.duration = self.parking_module.park_duration
+            section.type = response_pb2.PARK
+            section.id = 'section_1'
+            section.begin_date_time = journey.sections[0].end_date_time
+            section.end_date_time = section.begin_date_time + section.duration
+            journey.arrival_date_time = section.end_date_time
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
