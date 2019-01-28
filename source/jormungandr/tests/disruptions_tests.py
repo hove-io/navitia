@@ -39,6 +39,7 @@ from .check_utils import (
     is_valid_stop_area,
     is_valid_line_report,
     s_coord,
+    get_disruption,
 )
 import jmespath
 
@@ -436,7 +437,8 @@ class TestDisruptions(AbstractTestFixture):
         # Check message, channel and types
         disruption_message = get_not_null(response, 'disruptions')
         assert len(disruption_message) == 2
-        message = get_not_null(disruption_message[1], 'messages')
+        disruption = get_disruption(disruption_message, 'too_bad_route_A:0')
+        message = get_not_null(disruption, 'messages')
         assert message[0]['text'] == 'no luck'
         channel = get_not_null(message[0], 'channel')
         assert channel['id'] == 'sms'
