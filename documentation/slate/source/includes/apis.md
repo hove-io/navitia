@@ -365,7 +365,7 @@ Example:
 <aside class="warning">
     On vehicle_journey this filter is applied using only the first stop time.
     On disruption this filter must intersect with one application period.
-    "since" is included and "until" is excluded.
+    "since" is included and "until" is excluded. If "since" is present without "until", end_production_date is used to calculate "since until period". 
 </aside>
 
 #### disable_geojson
