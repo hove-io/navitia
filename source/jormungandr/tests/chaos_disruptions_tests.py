@@ -649,7 +649,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         # some disruption are loaded on the dataset though
         nb_pre_loaded_disruption = len(get_not_null(self.query_region('disruptions'), 'disruptions'))
-        assert nb_pre_loaded_disruption == 10
+        assert nb_pre_loaded_disruption == 11
 
         self.send_mock("blocking_line_disruption", "A", "line", blocking=True)
         self.send_mock("blocking_network_disruption", "base_network", "network", blocking=True)
