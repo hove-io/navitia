@@ -580,17 +580,6 @@ class TestDisruptions(AbstractTestFixture):
         ]
         assert {d['id'] for d in disrup} == {'later_impact'}
 
-    '''
-    def test_disruption_invalid_period_filtering(self):
-        """if we query with a since or an until not in the production period, we got an error"""
-        resp, code = self.query_region('disruptions?since=20201016T000000', check=False)
-        assert code == 404
-        assert resp['error']['message'] == 'ptref : invalid filtering period, not in production period'
-
-        resp, code = self.query_region('disruptions?until=20001016T000000', check=False)
-        assert code == 404
-        assert resp['error']['message'] == 'ptref : invalid filtering period, not in production period'
-    '''
     def test_forbidden_uris_on_disruptions(self):
         """test forbidden uri for disruptions"""
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions")
@@ -730,19 +719,22 @@ class TestDisruptions(AbstractTestFixture):
 
         # api /disruptions on pt_ref with parameters &since and &until sends all the disruptions on pt_objects
         # with filter on since and until with search period intersecting application_period
-        response = self.query_region('stop_areas/stopA/disruptions?since=20120801T000000&until=20120902T000000&' +
-                                     curr_date_filter)
+        response = self.query_region(
+            'stop_areas/stopA/disruptions?since=20120801T000000&until=20120902T000000&' + curr_date_filter
+        )
         disruptions = response['disruptions']
         assert len(disruptions) == 1
 
         # gives the disruption in future out of data poduction period
-        response = self.query_region('stop_areas/stopA/disruptions?since=20130703T000000&until=20130801T000000&' +
-                                     curr_date_filter)
+        response = self.query_region(
+            'stop_areas/stopA/disruptions?since=20130703T000000&until=20130801T000000&' + curr_date_filter
+        )
         disruptions = response['disruptions']
         assert len(disruptions) == 1
 
-        response = self.query_region('stop_areas/stopA/disruptions?since=20120801T000000&until=20130801T000000&' +
-                                     curr_date_filter)
+        response = self.query_region(
+            'stop_areas/stopA/disruptions?since=20120801T000000&until=20130801T000000&' + curr_date_filter
+        )
         disruptions = response['disruptions']
         assert len(disruptions) == 2
 
@@ -862,4 +854,3 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         )
         assert code == 404
         assert response['error']['message'] == 'invalid filtering period (since > until)'
-

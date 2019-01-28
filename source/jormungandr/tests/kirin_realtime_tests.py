@@ -1225,7 +1225,9 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert has_the_disruption(disrupts, 'deleted_stop_time')
         last_disruption = disrupts['disruptions'][-1]
         assert last_disruption['impacted_objects'][0]['impacted_stops'][0]['arrival_status'] == 'deleted'
-        assert last_disruption['impacted_objects'][0]['impacted_stops'][0]['departure_status'] == 'unchanged' # Why?
+        assert (
+            last_disruption['impacted_objects'][0]['impacted_stops'][0]['departure_status'] == 'unchanged'
+        )  # Why?
         assert last_disruption['severity']['effect'] == 'DETOUR'
         assert last_disruption['severity']['name'] == 'detour'
 
