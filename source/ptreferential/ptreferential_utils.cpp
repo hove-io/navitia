@@ -225,18 +225,18 @@ filter_on_period(const Indexes& indexes,
     auto end = bt::ptime(data.meta->production_date.end());
 
     if (since) {
-        if (data.meta->production_date.is_before(since->date())) {
+        if (data.meta->production_date.is_before(since->date()) && requested_type != nt::Type_e::Impact) {
             throw ptref_error("invalid filtering period, not in production period");
         }
-        if (since->date() >= data.meta->production_date.begin()) {
+        if ((since->date() >= data.meta->production_date.begin()) || (requested_type == nt::Type_e::Impact)) {
             start = *since;
         }
     }
     if (until) {
-        if (data.meta->production_date.is_after(until->date())) {
+        if (data.meta->production_date.is_after(until->date()) && requested_type != nt::Type_e::Impact) {
             throw ptref_error("invalid filtering period, not in production period");
         }
-        if (until->date() <= data.meta->production_date.last()) {
+        if ((until->date() <= data.meta->production_date.last()) || (requested_type == nt::Type_e::Impact)) {
             end = *until;
         }
     }
