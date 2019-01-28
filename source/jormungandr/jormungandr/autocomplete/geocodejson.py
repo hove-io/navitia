@@ -488,7 +488,7 @@ class GeocodeJson(AbstractAutocomplete):
     def basic_params(self, instances):
         if not instances:
             return {}
-        return {'pt_dataset': [i.name for i in instances]}
+        return {'pt_dataset[]': [i.name for i in instances]}
 
     def make_params(self, request, instances, timeout):
         params = self.basic_params(instances)

@@ -42,7 +42,7 @@ class DatasetChecker(object):
         self.datasets = datasets
 
     def __call__(self, *args, **kwargs):
-        d = kwargs.get('params', {}).get('pt_dataset')
+        d = kwargs.get('params', {}).get('pt_dataset[]')
         if d is not None:
             assert set(d) == self.datasets
         else:
