@@ -45,6 +45,64 @@ using navitia::type::OdtLevel_e;
 namespace navitia{
 namespace ptref{
 
+namespace ast {
+
+Expr& Expr::operator+=(Expr const& rhs) {
+    expr = BinaryOp<Or>(expr, rhs);
+    return *this;
+}
+Expr& Expr::operator-=(Expr const& rhs) {
+    expr = BinaryOp<Diff>(expr, rhs);
+    return *this;
+}
+Expr& Expr::operator*=(Expr const& rhs) {
+    expr = BinaryOp<And>(expr, rhs);
+    return *this;
+}
+
+void print_quoted_string(std::ostream& os, const std::string& s) {
+    os << '"';
+    for (const auto& c: s) {
+        switch (c) {
+        case '\\':
+        case '"':
+            os << '\\' << c;
+            break;
+        default: os << c;
+        }
+    }
+    os << '"';
+}
+std::ostream& operator<<(std::ostream& os, const Expr& expr) {
+    return os << expr.expr;
+}
+std::ostream& operator<<(std::ostream& os, const All&) { return os << "all"; }
+std::ostream& operator<<(std::ostream& os, const Empty&) { return os << "empty"; }
+std::ostream& operator<<(std::ostream& os, const Fun& fun) {
+    os << fun.type << '.' << fun.method << '(';
+    auto it = fun.args.begin(), end = fun.args.end();
+    if (it != end) { print_quoted_string(os, *it); ++it; }
+    for (; it != end; ++it) {
+        os << ", ";
+        print_quoted_string(os, *it);
+    }
+    return os << ')';
+}
+std::ostream& operator<<(std::ostream& os, const GetCorresponding& to_object) {
+    return os << "(GET " << to_object.type << " <- " << to_object.expr << ')';
+}
+std::ostream& operator<<(std::ostream& os, const BinaryOp<And>& op) {
+    return os << '(' << op.lhs << " AND " << op.rhs << ')';
+}
+std::ostream& operator<<(std::ostream& os, const BinaryOp<Or>& op) {
+    return os << '(' << op.lhs << " OR " << op.rhs << ')';
+}
+std::ostream& operator<<(std::ostream& os, const BinaryOp<Diff>& op) {
+    return os << '(' << op.lhs << " - " << op.rhs << ')';
+}
+
+}
+
 namespace {
 
 template <typename Iterator>
@@ -80,15 +138,9 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
 
         get_corresponding = (qi::lit("get") | qi::lit("GET")) >> ident >> "<-" >> expr;
         expr_leaf = '(' >> expr >> ')' | pred | get_corresponding;
-        expr_diff = (expr_leaf >> '-' >> expr_diff)
-            [_val = phx::construct<ast::BinaryOp<ast::Diff>>(_1, _2)]
-            | expr_leaf[_val = _1];
-        expr_and = (expr_diff >> (qi::lit("AND") | qi::lit("and")) >> expr_and)
-            [_val = phx::construct<ast::BinaryOp<ast::And>>(_1, _2)]
-            | expr_diff[_val = _1];
-        expr_or = (expr_and >> (qi::lit("OR") | qi::lit("or")) >> expr_or)
-            [_val = phx::construct<ast::BinaryOp<ast::Or>>(_1, _2)]
-            | expr_and[_val = _1];
+        expr_diff = expr_leaf[_val = _1] >> *('-' >> expr_leaf[_val -= _1]);
+        expr_and = expr_diff[_val = _1] >> *((qi::lit("AND") | qi::lit("and")) >> expr_diff[_val *= _1]);
+        expr_or = expr_and[_val = _1] >> *((qi::lit("OR") | qi::lit("or")) >> expr_and[_val += _1]);
         expr = expr_or;
 
         ident = qi::lexeme[qi::alpha >> *(qi::alnum | qi::char_("_"))];
@@ -246,22 +298,23 @@ struct Eval: boost::static_visitor<Indexes> {
     }
     Indexes operator()(const ast::GetCorresponding& expr) const {
         const auto from = type_by_caption(expr.type);
-        auto indexes = boost::apply_visitor(Eval(from, data), expr.expr);
+        auto indexes = Eval(from, data)(expr.expr);
         return get_corresponding(indexes, from, target, data);
     }
     Indexes operator()(const ast::BinaryOp<ast::And>& expr) const {
-        return get_intersection(boost::apply_visitor(*this, expr.lhs),
-                                boost::apply_visitor(*this, expr.rhs));
+        return get_intersection((*this)(expr.lhs), (*this)(expr.rhs));
     }
     Indexes operator()(const ast::BinaryOp<ast::Diff>& expr) const {
-        return get_difference(boost::apply_visitor(*this, expr.lhs),
-                              boost::apply_visitor(*this, expr.rhs));
+        return get_difference((*this)(expr.lhs), (*this)(expr.rhs));
     }
     Indexes operator()(const ast::BinaryOp<ast::Or>& expr) const {
-        auto res = boost::apply_visitor(*this, expr.lhs);
-        const auto other = boost::apply_visitor(*this, expr.rhs);
+        auto res = (*this)(expr.lhs);
+        const auto other = (*this)(expr.rhs);
         res.insert(boost::container::ordered_unique_range_t(), other.begin(), other.end());
         return res;
+    }
+    Indexes operator()(const ast::Expr& expr) const {
+        return boost::apply_visitor(*this, expr.expr);
     }
 };
 
@@ -361,7 +414,7 @@ Indexes make_query_ng(const Type_e requested_type,
     const auto expr = parse(request_ng);
     LOG4CPLUS_TRACE(logger, "ptref_ng parsed: " << expr
             << " [requesting: " << navitia::type::static_data::captionByType(requested_type) << "]");
-    return boost::apply_visitor(Eval(requested_type, data), expr);
+    return Eval(requested_type, data)(expr);
 }
 
 }} // namespace navitia::ptref
