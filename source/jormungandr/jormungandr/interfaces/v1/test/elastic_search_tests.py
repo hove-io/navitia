@@ -540,7 +540,7 @@ def bragi_make_params_with_instance_test():
     request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib'], 'timeout': 1000}
+    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset[]': ['bib'], 'timeout': 1000}
     len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
