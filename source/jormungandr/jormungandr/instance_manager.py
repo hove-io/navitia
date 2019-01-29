@@ -310,9 +310,13 @@ class InstanceManager(object):
             if name in self.instances:
                 available_instances = [self.instances[name]]
         elif lon and lat:
-            available_instances = [self.instances[k] for k in self._all_keys_of_coord(lon, lat)]
+            available_instances = [
+                self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
+            ]
         elif object_id:
-            available_instances = [self.instances[k] for k in self._all_keys_of_id(object_id)]
+            available_instances = [
+                self.instances[k] for k in self._find_coverage_by_object_id(object_id) if k in self.instances
+            ]
         else:
             available_instances = list(self.instances.values())
 
