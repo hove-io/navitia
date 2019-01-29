@@ -221,27 +221,21 @@ filter_on_period(const Indexes& indexes,
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
     }
-    auto start = bt::ptime(data.meta->production_date.begin());
-    auto end = bt::ptime(data.meta->production_date.end());
-
-    if (since) {
-        if (data.meta->production_date.is_before(since->date()) && requested_type != nt::Type_e::Impact) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if ((since->date() >= data.meta->production_date.begin()) || (requested_type == nt::Type_e::Impact)) {
-            start = *since;
-        }
+    auto start = bt::ptime(bt::neg_infin);
+    auto end = bt::ptime(bt::pos_infin);
+    if (requested_type == nt::Type_e::VehicleJourney) {
+        start = bt::ptime(data.meta->production_date.begin());
+        end = bt::ptime(data.meta->production_date.end());
     }
-    if (until) {
-        if (data.meta->production_date.is_after(until->date()) && requested_type != nt::Type_e::Impact) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if ((until->date() <= data.meta->production_date.last()) || (requested_type == nt::Type_e::Impact)) {
-            end = *until;
-        }
+
+    if (since && *since > start) {
+        start = *since;
+    }
+    if (until && *until < end) {
+        end = *until + bt::seconds(1);
     }
     // we want end to be in the period, so we add one seconds
-    bt::time_period period {start, end + bt::seconds(1)};
+    bt::time_period period {start, end};
 
     switch (requested_type) {
     case nt::Type_e::VehicleJourney:

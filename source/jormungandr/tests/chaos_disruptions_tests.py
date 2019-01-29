@@ -801,7 +801,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         """
         query = 'disruptions?since=20120801T000000'
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 9
+        assert len(disruptions) == 10
 
         # query with parameter tags[]
         resp, code = self.query_region('disruptions?since=20120801T000000&tags[]=tag_name', check=False)
@@ -817,7 +817,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         self.send_mock("disruption_on_stopB", "stopB", "stop_area", message='message', tags=tags)
 
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 12
+        assert len(disruptions) == 13
 
         disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=rer')['disruptions']
         assert len(disruptions) == 1
@@ -832,7 +832,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         disruptions = self.query_region(
             'disruptions?since=20120801T000000' '&filter=stop_area.id="stopA" or stop_area.id="stopB"'
         )['disruptions']
-        assert len(disruptions) == 3
+        assert len(disruptions) == 4
 
         # query with parameter filter and tags with one value
         disruptions = self.query_region(

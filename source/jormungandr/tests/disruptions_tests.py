@@ -712,12 +712,12 @@ class TestDisruptions(AbstractTestFixture):
         assert len(disruptions) == 2
 
         # api /disruptions on pt_ref with parameters &since sends all the disruptions on pt_objects with filter
-        # on since and until(=production_end_date) with search period intersecting application_period
+        # on since and until(=positive infinite value) with search period intersecting application_period
         response = self.query_region('stop_areas/stopA/disruptions?since=20120801T000000&' + curr_date_filter)
         disruptions = response['disruptions']
         for d in disruptions:
             is_valid_disruption(d)
-        assert len(disruptions) == 1
+        assert len(disruptions) == 2
 
         # api /disruptions on pt_ref with parameters &since and &until sends all the disruptions on pt_objects
         # with filter on since and until with search period intersecting application_period
