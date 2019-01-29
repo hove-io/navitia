@@ -70,6 +70,7 @@ class WithParking(AbstractStreetNetworkService):
         for journey in response.journeys:
             section = journey.sections.add()
             section.duration = self.parking_module.park_duration
+            journey.duration += self.parking_module.park_duration
             section.type = response_pb2.PARK
             section.id = 'section_1'
             section.begin_date_time = journey.sections[0].end_date_time
