@@ -51,7 +51,7 @@ The status of the impact depends only of 'now' and is:
 To understand a bit how those periods behave with the different query dates let's consider this example:
 
 ```
-[------------------------------------------------------------------------------------]  production period
+[-------------------------------------------------------------]  			production period
                    
                                                 Impact
                                     <--------------------------------->                 publication period
@@ -64,12 +64,12 @@ To understand a bit how those periods behave with the different query dates let'
 ## now is before the impact's publication period
 
 ```
-[------------------|------------------------------------------------------------------]  production period
+[------------------|------------------------------------------]  			production period
                    |
                    |                             Impact
-                   |                 <----------------------------->                     publication period
+                   |                 <----------------------------->                    publication period
                    |
-                   |                                  (------------)                     application period
+                   |                                  (------------)                    application period
                    |
                    |
                   now
@@ -88,12 +88,12 @@ do we show the impact ?      No
 # now is inside the impact's publication period but before the application period
 
 ```
-[------------------------------------------|------------------------------------------]  production period
+[------------------------------------------|------------------]  			production period
                                            |                                           
                                            |     Impact
-                                    <------|----------------------->                     publication period
+                                    <------|----------------------->                    publication period
                                            |                                           
-                                           |          (------------)                     application period
+                                           |          (------------)                    application period
                                            |                                           
                                           now                                           
 
@@ -108,12 +108,12 @@ what is it's status ?        futur
 ### context is before the application period
 
 ```
-[------------------------------------------|------------------------------------------]  production period
+[------------------------------------------|------------------]  			production period
                                            |                                           
                                            |     Impact
-                                    <------|----------------------->                     publication period
+                                    <------|----------------------->                    publication period
                                            |                                           
-                                           |          (------------)                     application period
+                                           |          (------------)                    application period
                                            |                                           
                                           now                                           
                                  {----}
@@ -127,12 +127,12 @@ what is it's status ?        -
 ### context intersect the application period
 
 ```
-[------------------------------------------|------------------------------------------]  production period
+[------------------------------------------|------------------]  			production period
                                            |                                           
                                            |     Impact
-                                    <------|----------------------->                     publication period
+                                    <------|----------------------->                    publication period
                                            |                                           
-                                           |          (------------)                     application period
+                                           |          (------------)                    application period
                                            |                                           
                                           now                                           
                                                    {----}
@@ -146,12 +146,12 @@ what is it's status ?        futur
 ### context is after the application period
 
 ```
-[------------------------------------------|------------------------------------------]  production period
+[------------------------------------------|------------------]  			production period
                                            |                                           
                                            |     Impact
-                                    <------|----------------------->                     publication period
+                                    <------|----------------------->                    publication period
                                            |                                           
-                                           |          (------------)                     application period
+                                           |          (------------)                    application period
                                            |                                           
                                           now                                           
                                                                        {----}
@@ -166,12 +166,12 @@ what is it's status ?        -
 # now is inside the impact's publication period and inside the application period
 
 ```
-[-----------------------------------------------------------|-------------------------]  production period
+[-----------------------------------------------------------|-]  			production period
                                                             |                          
                                                 Impact      |                         
-                                    <-----------------------|------>                     publication period
+                                    <-----------------------|------>                    publication period
                                                             |                          
-                                                     (------|------)                     application period
+                                                     (------|------)                    application period
                                                             |                          
                                                            now                          
 
@@ -187,12 +187,12 @@ what is it's status ?        Active
 ### context is before the application period
 
 ```
-[-----------------------------------------------------------|-------------------------]  production period
+[-----------------------------------------------------------|-]  			production period
                                                             |                          
                                                 Impact      |                         
-                                    <-----------------------|------>                     publication period
+                                    <-----------------------|------>                    publication period
                                                             |                          
-                                                     (------|------)                     application period
+                                                     (------|------)                    application period
                                                             |                          
                                                            now                          
                                         {----}
@@ -206,12 +206,12 @@ what is it's status ?        -
 ### context intersects the application period
 
 ```
-[-----------------------------------------------------------|-------------------------]  production period
+[-----------------------------------------------------------|-]  			production period
                                                             |                          
                                                 Impact      |                         
-                                    <-----------------------|------>                     publication period
+                                    <-----------------------|------>                    publication period
                                                             |                          
-                                                     (------|------)                     application period
+                                                     (------|------)                    application period
                                                             |                          
                                                            now                          
                                                                 {----}
@@ -225,12 +225,12 @@ what is it's status ?        Active
 ### context is after the application period
 
 ```
-[-----------------------------------------------------------|-------------------------]  production period
+[-----------------------------------------------------------|-]  			production period
                                                             |                          
                                                 Impact      |                         
-                                    <-----------------------|------>                     publication period
+                                    <-----------------------|------>                    publication period
                                                             |                          
-                                                     (------|------)                     application period
+                                                     (------|------)                    application period
                                                             |                          
                                                            now                          
                                                                       {----}

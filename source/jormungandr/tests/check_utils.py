@@ -1379,7 +1379,4 @@ def get_schedule(scs, sp_uri, line_code):
 
 
 def get_disruption(disruptions, disrupt_id):
-    for d in disruptions:
-        if d['id'] == disrupt_id:
-            return d
-    return None
+    return next((d for d in disruptions if d['id'] == disrupt_id), None)
