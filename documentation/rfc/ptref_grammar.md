@@ -45,7 +45,7 @@ For programatic usage, it is recommended to:
  * substitute `"` by `\"` and `\` by `\\`
  * surround the string with `"`
 
-examples:
+Examples:
  * `1337`
  * `-42`
  * `-123.45e-12`
@@ -65,7 +65,7 @@ In the following table, if the invocation is begining with `collection`, any col
 |`collection.name(name)`|all the objects of type `collection` that have `name` as name|for types without name (as `connection`), it is equivalent to `empty`|
 |`disruption.between(since, until)`|all the disruptions that are active during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`disruption.since(since)`|all the disruptions that are active after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
-|`disruption.tag(tag)`|all the disruptions containing the given tags|equivalent to `disruption.tags(tag)`|
+|`disruption.tag(tag)`|all the disruptions containing the given tag|equivalent to `disruption.tags(tag)`|
 |`disruption.tags(tag1, tag2, ...)`|all the disruptions containing at least one of the given tags|at least one tag must be given|
 |`disruption.until(until)`|all the disruptions that are active before the given datetime|`until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`line.code(code)`|all the lines containing the given code|this predicate use the field `line.code`, not `line.codes[]`|
@@ -81,9 +81,21 @@ In the following table, if the invocation is begining with `collection`, any col
 
 #### Interpretation
 
+Each predicate correspond to a set of object of a given type, but the request might be from another type. In this case, the request will return the objects corresponding to the set of objects described by the predicate.
+
+For example, if you have the request `/v1/coverage/id/lines?filter=stop_area.name("Mairie")`, you first get the set of the stop areas with "Mairie" as name, and then returns all the lines that pass by these stop areas.
+
 ### Field test predicates
 
+As a short hand, every method with exactly one parameter of the form `collection.method(param)` can be rewritten as `collection.method = param` (with or without spaces around `=`).
+
+Example:
+ * `stop_area.id("foo")` can be written `stop_area.id = "foo"`
+ * `line.code(14)` can be written `line.code=14`
+
 ### DWITHIN predicate
+
+For backward compatibility, `collection.within(distance, lon;lat)` can be written `collection.coord DWITHIN(lon, lat, distance)`. This syntax is deprecated and might disapear in a futur release.
 
 ## Expressions
 
