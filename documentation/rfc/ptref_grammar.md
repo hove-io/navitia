@@ -61,7 +61,7 @@ In the following table, if the invocation is begining with `collection`, any col
 |-------|---------------|------|
 |`collection.has_code(type, value)`|all the objects of type `collection` that have the code `{type: "type", value: "value"}` in `codes[]`|only the `codes[]` field is used|
 |`collection.id(id)`|the object of type `collection` that have `id` as identifier (empty if this identifier is not present)|for types without identifier (as `connection`), it is equivalent to `empty`|
-|`collection.uri(id)`|same as `collection.id(id)`||
+|`collection.uri(id)`|same as `collection.id(id)`|deprecated|
 |`collection.name(name)`|all the objects of type `collection` that have `name` as name|for types without name (as `connection`), it is equivalent to `empty`|
 |`disruption.between(since, until)`|all the disruptions that are active during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`disruption.since(since)`|all the disruptions that are active after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
