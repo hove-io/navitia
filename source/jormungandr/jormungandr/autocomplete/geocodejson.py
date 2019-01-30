@@ -487,12 +487,12 @@ class GeocodeJson(AbstractAutocomplete):
 
     def basic_params(self, instances):
         if not instances:
-            return {}
-        return {'pt_dataset[]': [i.name for i in instances]}
+            return []
+        return [('pt_dataset[]', i.name) for i in instances]
 
     def make_params(self, request, instances, timeout):
         params = self.basic_params(instances)
-        params.update({"q": request["q"], "limit": request["count"]})
+        params.extend([("q", request["q"]), ("limit", request["count"])])
         if request.get("type[]"):
             types = []
             map_type = {
@@ -506,15 +506,15 @@ class GeocodeJson(AbstractAutocomplete):
                     logging.getLogger(__name__).debug('stop_point is not handled by bragi')
                     continue
 
-                types.extend(map_type[type])
-
-            params["type[]"] = types
+                for t in map_type[type]:
+                    params.append(("type[]", t))
 
         if request.get("from"):
-            params["lon"], params["lat"] = self.get_coords(request["from"])
+            lon, lat = self.get_coords(request["from"])
+            params.extend([('lon', lon), ('lat', lat)])
         if timeout:
             # bragi timeout is in ms
-            params["timeout"] = int(timeout * 1000)
+            params.append(("timeout", int(timeout * 1000)))
 
         return params
 
@@ -553,12 +553,11 @@ class GeocodeJson(AbstractAutocomplete):
 
         if lon is not None and lat is not None:
             url = self.make_url('reverse')
-            params['lon'] = lon
-            params['lat'] = lat
+            params.extend([('lon', lon), ('lat', lat)])
         else:
             url = self.make_url('features', uri)
 
-        params['timeout'] = int(self.fast_timeout * 1000)
+        params.append(("timeout", int(self.fast_timeout * 1000)))
 
         raw_response = self.call_bragi(url, requests.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaler(raw_response, uri)

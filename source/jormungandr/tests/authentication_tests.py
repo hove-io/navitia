@@ -42,11 +42,9 @@ class DatasetChecker(object):
         self.datasets = datasets
 
     def __call__(self, *args, **kwargs):
-        d = kwargs.get('params', {}).get('pt_dataset[]')
-        if d is not None:
-            assert set(d) == self.datasets
-        else:
-            assert d == self.datasets
+        params = kwargs.get('params', [])
+        d = set(p[1] for p in params if p[0] == 'pt_dataset[]')
+        assert d == self.datasets
         return MockResponse({"features": []}, 200, url='')
 
 

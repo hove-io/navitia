@@ -530,13 +530,18 @@ BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
 
 def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=200):
     url = 'https://host_of_bragi/autocomplete'
-    params = {
-        'q': u'bob',
-        'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-        'limit': limite,
-        'pt_dataset[]': 'main_routing_test',
-        'timeout': 2000,
-    }
+    params = [
+        ('q', u'bob'),
+        ('type[]', u'public_transport:stop_area'),
+        ('type[]', u'street'),
+        ('type[]', u'house'),
+        ('type[]', u'poi'),
+        ('type[]', u'city'),
+        ('limit', limite),
+        ('pt_dataset[]', 'main_routing_test'),
+        ('timeout', 2000),
+    ]
+    params.sort()
 
     url += "?{}".format(urlencode(params, doseq=True))
     mock_requests = MockRequests({url: (bragi_response, http_response_code)})
@@ -594,6 +599,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
+            params = {p[0]: p[1] for p in params}
             assert params.get('lon') == '3.25'
             assert params.get('lat') == '49.84'
             assert params.get('timeout') == 2000
@@ -635,7 +641,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['public_transport:stop_area', 'street', 'house', 'poi', 'city']
+
+            assert set(p[1] for p in params if p[0] == 'type[]') == set(
+                ['public_transport:stop_area', 'street', 'house', 'poi', 'city']
+            )
             return MockResponse({}, 200, '')
 
         with mock.patch('requests.get', http_get) as mock_method:
@@ -650,7 +659,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['city', 'street', 'house']
+            assert set(p[1] for p in params if p[0] == 'type[]') == set(['city', 'street', 'house'])
 
             return MockResponse({}, 200, '')
 
@@ -679,7 +688,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['street', 'house']
+            assert set(p[1] for p in params if p[0] == 'type[]') == set(['street', 'house'])
 
             return MockResponse({}, 200, '')
 
@@ -1194,6 +1203,7 @@ class TestBragiShape(AbstractTestFixture):
             def http_get(url, *args, **kwargs):
                 params = kwargs.pop('params')
                 assert params
+                params = {p[0]: p[1] for p in params}
                 assert params.get('lon') == '12'
                 assert params.get('lat') == '42'
                 return MockResponse({}, 200, '')
@@ -1210,6 +1220,7 @@ class TestBragiShape(AbstractTestFixture):
             def http_get(url, *args, **kwargs):
                 params = kwargs.pop('params')
                 assert params
+                params = {p[0]: p[1] for p in params}
                 assert params.get('lon') == '1'
                 assert params.get('lat') == '2'
                 return MockResponse({}, 200, '')
@@ -1226,6 +1237,7 @@ class TestBragiShape(AbstractTestFixture):
             def http_get(url, *args, **kwargs):
                 params = kwargs.pop('params')
                 assert params
+                params = {p[0]: p[1] for p in params}
                 assert not params.get('lon')
                 assert not params.get('lat')
                 return MockResponse({}, 200, '')
@@ -1298,12 +1310,17 @@ class AbstractAutocompleteAndRouting:
          - the poi 'bobette'
          - an adresse in bob's street that is not in the dataset
         """
-        args = {
-            u'pt_dataset[]': 'main_routing_test',
-            u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            u'limit': 10,
-            'timeout': 2000,
-        }
+        args = [
+            (u'pt_dataset[]', 'main_routing_test'),
+            (u'type[]', u'public_transport:stop_area'),
+            (u'type[]', u'street'),
+            (u'type[]', u'house'),
+            (u'type[]', u'poi'),
+            (u'type[]', u'city'),
+            (u'limit', 10),
+            ('timeout', 2000),
+        ]
+        args.sort()
         params = urlencode(args, doseq=True)
 
         features_url = 'https://host_of_bragi/features/bobette?{}'.format(
@@ -1320,11 +1337,19 @@ class AbstractAutocompleteAndRouting:
                 doseq=True,
             )
         )
+        bobette_args = deepcopy(args) + [('q', 'bobette')]
+        bobette_args.sort()
+        bobette_params = urlencode(bobette_args, doseq=True)
+
+        bob_args = deepcopy(args) + [('q', '20 rue bob')]
+        bob_args.sort()
+        bob_params = urlencode(bob_args, doseq=True)
+
         mock_requests = MockRequests(
             {
-                'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (BRAGI_MOCK_BOBETTE, 200),
+                'https://host_of_bragi/autocomplete?{p}'.format(p=bobette_params): (BRAGI_MOCK_BOBETTE, 200),
                 features_url: (BRAGI_MOCK_BOBETTE, 200),
-                'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (BOB_STREET, 200),
+                'https://host_of_bragi/autocomplete?{p}'.format(p=bob_params): (BOB_STREET, 200),
                 reverse_url: (BOB_STREET, 200),
             }
         )
