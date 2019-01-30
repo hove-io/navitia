@@ -614,7 +614,7 @@ class TestDisruptions(AbstractTestFixture):
         warnings = get_not_null(response, 'warnings')
         assert len(warnings) == 1
         assert warnings[0]['id'] == 'beta_endpoint'
-        assert len(get_not_null(response, 'disruptions')) == 3
+        assert len(get_not_null(response, 'disruptions')) == 4
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
