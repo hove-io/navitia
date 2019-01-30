@@ -540,12 +540,10 @@ def bragi_make_params_with_instance_test():
     request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset[]': 'bib', 'timeout': 1000}
-
-    len(rsp) == len(params)
-    for key, value in params:
-        assert key in rsp
-        assert value == rsp[key]
+    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('timeout', 1000)]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
 
 
 def bragi_make_params_with_multiple_instances_test():
@@ -577,11 +575,10 @@ def bragi_make_params_without_instance_test():
     request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
-    rsp = {'q': 'aa', 'limit': 20, 'timeout': 100}
-    len(rsp) == len(params)
-    for key, value in params:
-        assert key in rsp
-        assert value == rsp[key]
+    rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100)]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
 
 
 # TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?
