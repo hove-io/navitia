@@ -159,4 +159,59 @@ Example:
 
 ### Get the list of stop areas you can go from a given stop area without connection using a given network
 
+You are doing a time table between 2 stop areas for a specific network. In the interface, you first select the first stop area, and then, you must propose the candidate second stop areas.
+
+The search is:
+1. get all the vehicle journeys from my network that pass by the first stop area
+2. get the stop areas where the vehicle journeys stop
+3. remove the first stop area from this list
+
+For the first step, the corresponding query is
+
+> `/v1/coverage/id/vehicle_journeys?filter=network.id=MyNetwork and stop_area.id=FirstStopArea`
+
+Then, for the second step, we get the stop areas corresponding to the previous request:
+
+> `/v1/coverage/id/stop_areas?filter=get vehicle_journey <- network.id=MyNetwork and stop_area.id=FirstStopArea`
+
+From this, we now need to remove the first stop area:
+
+> `/v1/coverage/id/stop_areas?filter=(get vehicle_journey <- network.id=MyNetwork and stop_area.id=FirstStopArea) - stop_area.id=FirstStopArea`
+
 ### Get all the line that are not composed only of buses in connection with a given line
+
+In the home page of a line, you want to list the lines in connection. But, as there is a lot of bus lines, you only want the lines that contains other modes.
+
+The search is:
+1. get all the connection of the line
+2. get all the lines from these connections
+3. remove the line
+4. keep the lines that have other modes than bus.
+
+The steps 1 and 2 can be found with
+
+> `/v1/coverage/id/lines?filter=get connection <- line.id=MyLine`
+
+Then, remove the line:
+
+> `/v1/coverage/id/lines?filter=(get connection <- line.id=MyLine) - line.id=MyLine`
+
+For the last step, the temptation is to remove the buses:
+
+> `/v1/coverage/id/lines?filter=(get connection <- line.id=MyLine) - line.id=MyLine - physical_mode.id=physical_mode:Bus`
+
+But it will also remove lines that have, for example, buses and trains. That's not what we want. So, the idea is to first list the physical modes that are not bus:
+
+> `/v1/coverage/id/physical_modes?filter=all - physical_mode.id=physical_mode:Bus`
+
+Take the corresponding lines:
+
+> `/v1/coverage/id/lines?filter=all - physical_mode.id=physical_mode:Bus`
+
+And intersect with our list of lines:
+
+> `/v1/coverage/id/lines?filter=(all - physical_mode.id=physical_mode:Bus) and ((get connection <- line.id=MyLine) - line.id=MyLine)`
+
+We now can cleanup the useless parenthesis:
+
+> `/v1/coverage/id/lines?filter=all - physical_mode.id=physical_mode:Bus and (get connection <- line.id=MyLine) - line.id=MyLine`
