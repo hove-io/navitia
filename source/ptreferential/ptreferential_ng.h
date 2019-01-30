@@ -69,15 +69,27 @@ struct Diff;
 template<typename OpTag>
 struct BinaryOp;
 
-typedef boost::variant<
-    All,
-    Empty,
-    Fun,
-    boost::recursive_wrapper<GetCorresponding>,
-    boost::recursive_wrapper<BinaryOp<And>>,
-    boost::recursive_wrapper<BinaryOp<Or>>,
-    boost::recursive_wrapper<BinaryOp<Diff>>>
-Expr;
+struct Expr {
+    typedef boost::variant<
+        All,
+        Empty,
+        Fun,
+        boost::recursive_wrapper<GetCorresponding>,
+        boost::recursive_wrapper<BinaryOp<And>>,
+        boost::recursive_wrapper<BinaryOp<Or>>,
+        boost::recursive_wrapper<BinaryOp<Diff>>
+     > type;
+
+    Expr(): expr(All()) {}
+    template<typename E>
+    Expr(E const& expr): expr(expr) {}
+
+    Expr& operator+=(Expr const& rhs);
+    Expr& operator-=(Expr const& rhs);
+    Expr& operator*=(Expr const& rhs);
+
+    type expr;
+};
 
 struct GetCorresponding {
     std::string type;
@@ -90,49 +102,15 @@ struct BinaryOp {
     BinaryOp(Expr l, Expr r): lhs(l), rhs(r) {}
 };
 
-template<typename OS> OS& operator<<(OS& os, const All&) { return os << "all"; }
-template<typename OS> OS& operator<<(OS& os, const Empty&) { return os << "empty"; }
-template<typename OS>
-void print_quoted_string(OS& os, const std::string& s) {
-    os << '"';
-    for (const auto& c: s) {
-        switch (c) {
-        case '\\':
-        case '"':
-            os << '\\' << c;
-            break;
-        default: os << c;
-        }
-    }
-    os << '"';
-}
-template<typename OS>
-OS& operator<<(OS& os, const Fun& fun) {
-    os << fun.type << '.' << fun.method << '(';
-    auto it = fun.args.begin(), end = fun.args.end();
-    if (it != end) { print_quoted_string(os, *it); ++it; }
-    for (; it != end; ++it) {
-        os << ", ";
-        print_quoted_string(os, *it);
-    }
-    return os << ')';
-}
-template<typename OS>
-OS& operator<<(OS& os, const GetCorresponding& to_object) {
-    return os << "(GET " << to_object.type << " <- " << to_object.expr << ')';
-}
-template<typename OS>
-OS& operator<<(OS& os, const BinaryOp<And>& op) {
-    return os << '(' << op.lhs << " AND " << op.rhs << ')';
-}
-template<typename OS>
-OS& operator<<(OS& os, const BinaryOp<Or>& op) {
-    return os << '(' << op.lhs << " OR " << op.rhs << ')';
-}
-template<typename OS>
-OS& operator<<(OS& os, const BinaryOp<Diff>& op) {
-    return os << '(' << op.lhs << " - " << op.rhs << ')';
-}
+void print_quoted_string(std::ostream& os, const std::string& s);
+std::ostream& operator<<(std::ostream& os, const Expr& expr);
+std::ostream& operator<<(std::ostream& os, const All&);
+std::ostream& operator<<(std::ostream& os, const Empty&);
+std::ostream& operator<<(std::ostream& os, const Fun& fun);
+std::ostream& operator<<(std::ostream& os, const GetCorresponding& to_object);
+std::ostream& operator<<(std::ostream& os, const BinaryOp<And>& op);
+std::ostream& operator<<(std::ostream& os, const BinaryOp<Or>& op);
+std::ostream& operator<<(std::ostream& os, const BinaryOp<Diff>& op);
 
 }// namespace ast
 

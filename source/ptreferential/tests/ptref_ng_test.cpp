@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_expr) {
-    assert_expr(" all - empty - all ", "(all - (empty - all))");
-    assert_expr(" all and empty and all ", "(all AND (empty AND all))");
-    assert_expr(" all or empty or all ", "(all OR (empty OR all))");
+    assert_expr(" all - empty - all ", "((all - empty) - all)");
+    assert_expr(" all and empty and all ", "((all AND empty) AND all)");
+    assert_expr(" all or empty or all ", "((all OR empty) OR all)");
     assert_expr("all and all or empty and all", "((all AND all) OR (empty AND all))");
     assert_expr(
         "all and all or empty and all or empty and all",
-        "((all AND all) OR ((empty AND all) OR (empty AND all)))"
+        "(((all AND all) OR (empty AND all)) OR (empty AND all))"
     );
     assert_expr("all - all and empty - all", "((all - all) AND (empty - all))");
     assert_expr("all - all or empty - all", "((all - all) OR (empty - all))");
