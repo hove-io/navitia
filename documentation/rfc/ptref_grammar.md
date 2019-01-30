@@ -50,7 +50,7 @@ Examples:
  * `-42`
  * `-123.45e-12`
  * `2.37715;48.846781`
- * `"I can have spaces and accentuated letters: éèà"` (decoded as `2.37715;48.846781`)
+ * `"I can have spaces and accentuated letters: éèà"` (decoded as `I can have spaces and accentuated letters: éèà`)
  * `"a \" and a \\ within a string"` (decoded as `a " and a \ within a string`)
 
 #### Availlable methods
