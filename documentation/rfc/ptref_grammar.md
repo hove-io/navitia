@@ -206,12 +206,8 @@ But it will also remove lines that have, for example, buses and trains. That's n
 
 Take the corresponding lines:
 
-> `/v1/coverage/id/lines?filter=all - physical_mode.id=physical_mode:Bus`
+> `/v1/coverage/id/lines?filter=get physical_mode <- all - physical_mode.id=physical_mode:Bus`
 
 And intersect with our list of lines:
 
-> `/v1/coverage/id/lines?filter=(all - physical_mode.id=physical_mode:Bus) and ((get connection <- line.id=MyLine) - line.id=MyLine)`
-
-We now can cleanup the useless parenthesis:
-
-> `/v1/coverage/id/lines?filter=all - physical_mode.id=physical_mode:Bus and (get connection <- line.id=MyLine) - line.id=MyLine`
+> `/v1/coverage/id/lines?filter=(get physical_mode <- all - physical_mode.id=physical_mode:Bus) and (get connection <- line.id=MyLine) - line.id=MyLine`
