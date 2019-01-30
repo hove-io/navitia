@@ -99,6 +99,52 @@ For backward compatibility, `collection.within(distance, lon;lat)` can be writte
 
 ## Expressions
 
+Now, we have predicates to select object, and we need a tool to combine these predicate. Expressions are this tool. There is 3 different operators:
+ * `AND` (or `and`): returns the intersection between the 2 predicates
+ * `OR` (or `or`): returns the union between the 2 predicates
+ * `-`: returns the set difference between the 2 predicates
+ 
+ ### `AND`
+ 
+ `/v1/coverage/id/collections?filter=pred1 and pred2` is equivalent to take the objects in common between `/v1/coverage/id/collections?filter=pred1` and `/v1/coverage/id/collections?filter=pred2`.
+ 
+ Example:
+ * `/v1/coverage/id/stop_areas?filter=network.id=RATP and physical_mode.id=physical_mode:Bus` returns the stop areas where buses of the network RATP stop.
+ * `/v1/coverage/id/lines?filter=stop_area.name=Nation and stop_area.name="Charles de Gaulle Etoile"` returns the lines that stop at Nation and Charles de Gaulle Etoile.
+ * `/v1/coverage/id/lines?filter=line.code=14 and physical_mode.id=physical_mode:Metro` returns the metro lines with code 14.
+ 
+ ### `OR`
+ 
+ `/v1/coverage/id/collections?filter=pred1 or pred2` is equivalent to take the objects that appear in `/v1/coverage/id/collections?filter=pred1` or in `/v1/coverage/id/collections?filter=pred2`.
+ 
+ Examples:
+ * `/v1/coverage/id/pois?filter=poi.id=foo or poi.id=bar` returns the pois `foo` and `bar` (if they exists).
+ * `/v1/coverage/id/stop_areas?filter=line.code=A or line.code=B` returns the stop areas where line A or line B stop.
+ * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro or network.id=SNCF` returns the SNCF lines and the Metro lines.
+ 
+ ### `-`
+ 
+ `/v1/coverage/id/collections?filter=pred1 - pred2` is equivalent to take the objects that appear in `/v1/coverage/id/collections?filter=pred1` and remove the objects that appear in `/v1/coverage/id/collections?filter=pred2`.
+ 
+ Examples:
+ * `/v1/coverage/id/physical_modes?filter=all - physical_mode.id=physical_mode:Bus` returns all the physical modes except Bus.
+ * `/v1/coverage/id/lines?filter=network.id=SNCF - physical_mode.id=physical_mode:Bus` returns the lines from the network SNCF that don't have buses.
+ * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - stop_area.name=Nation` returns the metro lines that don't stop at Nation.
+ 
+ ### Combining expressions
+ 
+ You can combine operators to create more complicated expressions. The priorities of the operators are chosen to feel natural to programmers: `-`, `AND`, `OR` is the priority order. Their associativity are left to right. Parenthesis can be used to change this order (or remove ambiguities).
+ 
+ |without parenthesis|equivalent to|
+ |-------------------|-------------|
+ |`pred1 and pred2 or pred3 and pred4`|`(pred1 and pred2) or (pred3 and pred4)`|
+ |`pred1 - pred2 - pred3`|`(pred1 - pred2) - pred3`|
+ |`pred1 or pred2 - pred3 and pred4 or pred5`|`(pred1 or ((pred2 - pred3) and pred4)) or pred5`|
+ 
+ Examples:
+ * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - stop_area.name=Nation - stop_area.name="Charles de Gaulle Etoile"` returns the metro lines that don't stop at Nation or Charles de Gaulle Etoile. Can also be written `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - (stop_area.name=Nation or stop_area.name="Charles de Gaulle Etoile")`
+ * `/v1/coverage/id/lines?filter=stop_area.name=Nation and stop_area.name="Charles de Gaulle Etoile" - (stop_area.name=Bastille or stop_area.name=Corvisart)` returns the lines that stop at Nation and Charles de Gaulle Etoile but not at Bastille nor Corvisart.
+
 ## Sub request
 
 ## Some examples
