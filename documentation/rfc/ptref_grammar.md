@@ -147,5 +147,16 @@ Now, we have predicates to select object, and we need a tool to combine these pr
 
 ## Sub request
 
-## Some examples
+Method predicates allow you to request for a set of object of a given type, and then getting the corresponding objects of another type. Sub request allow you to chain such a pattern. Imagine you want to list the line of the same network of a given line. First, you want to get the networks corresponding to the given line, and then getting the corresponding lines from these networks.
 
+The syntax is `get collection <- expression`. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
+
+Example:
+* `/v1/coverage/id/lines?filter=get network <- line.id=Metro14` returns the lines from the network of the line Metro14.
+* `/v1/coverage/id/physical_modes?filter=get connection <- line.id=Metro14` returns the physical modes in connection with the line Metro14.
+
+## Advanced examples
+
+### Get the list of stop areas you can go from a given stop area without connection using a given network
+
+### Get all the line that are not composed only of buses in connection with a given line
