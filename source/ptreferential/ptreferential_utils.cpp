@@ -217,12 +217,12 @@ filter_on_period(const Indexes& indexes,
                  const boost::optional<bt::ptime>& until,
                  const type::Data& data) {
 
-    // we create the right period using since, until and the production period
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
     }
     auto start = bt::ptime(bt::neg_infin);
     auto end = bt::ptime(bt::pos_infin);
+    // we also use production period to create the right period for VehicleJourney
     if (requested_type == nt::Type_e::VehicleJourney) {
         start = bt::ptime(data.meta->production_date.begin());
         end = bt::ptime(data.meta->production_date.end());
@@ -231,10 +231,10 @@ filter_on_period(const Indexes& indexes,
     if (since && *since > start) {
         start = *since;
     }
+    // we want end to be in the period, so we add one seconds
     if (until && *until < end) {
         end = *until + bt::seconds(1);
     }
-    // we want end to be in the period, so we add one seconds
     bt::time_period period {start, end};
 
     switch (requested_type) {
