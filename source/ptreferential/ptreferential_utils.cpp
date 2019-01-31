@@ -180,9 +180,13 @@ filter_vj_on_period(const Indexes& indexes,
                     const type::Data& data) {
 
     Indexes res;
+    bt::time_period production_period = {bt::ptime(data.meta->production_date.begin()),
+                                         bt::ptime(data.meta->production_date.end())};
+    const auto period_to_check = production_period.intersection(period);
+
     for (const idx_t idx: indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (! keep_vj(vj, period)) { continue; }
+        if (! keep_vj(vj, period_to_check)) { continue; }
         res.insert(idx);
     }
     return res;
@@ -222,12 +226,6 @@ filter_on_period(const Indexes& indexes,
     }
     auto start = bt::ptime(bt::neg_infin);
     auto end = bt::ptime(bt::pos_infin);
-    // we also use production period to create the right period for VehicleJourney
-    if (requested_type == nt::Type_e::VehicleJourney) {
-        start = bt::ptime(data.meta->production_date.begin());
-        end = bt::ptime(data.meta->production_date.end());
-    }
-
     if (since && *since > start) {
         start = *since;
     }
