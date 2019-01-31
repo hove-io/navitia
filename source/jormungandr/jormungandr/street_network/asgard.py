@@ -52,6 +52,14 @@ class Asgard(Kraken):
         self.timeout = timeout
         self._sockets = queue.Queue()
 
+    def status(self):
+        return {
+            'id': unicode(self.sn_system_id),
+            'class': self.__class__.__name__,
+            'modes': self.modes,
+            'asgard_socket': self.asgard_socket,
+        }
+
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
         speed_switcher = {
             "walking": request['walking_speed'],

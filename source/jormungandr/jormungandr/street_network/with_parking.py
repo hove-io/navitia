@@ -29,15 +29,14 @@
 
 import logging
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
-from jormungandr import street_network
+from jormungandr import street_network, utils
 
 from jormungandr.street_network.asgard import Asgard
-from jormungandr import utils
 from navitiacommon import response_pb2
 
 
 class WithParking(AbstractStreetNetworkService):
-    def __init__(self, instance, service_url, modes, id=None, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.modes = modes or []
         self.sn_system_id = id or 'with_parking'
@@ -48,6 +47,7 @@ class WithParking(AbstractStreetNetworkService):
         if 'instance' not in config['args']:
             config['args'].update({'instance': instance})
 
+        config['args'].update({'modes': self.modes})
         self.street_network = utils.create_object(config)
 
     def status(self):
@@ -60,22 +60,35 @@ class WithParking(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )
         if response and len(response.journeys):
-            self.add_parking_section_in_direct_path(response)
+            self.add_parking_section_in_direct_path(response, pt_object_destination)
 
         return response
 
-    def add_parking_section_in_direct_path(self, response):
+    def add_parking_section_in_direct_path(self, response, pt_object_destination):
         logger = logging.getLogger(__name__)
-        logger.debug("Creating parking section for direct path")
+        logger.info("Creating parking section for direct path")
+
         for journey in response.journeys:
             section = journey.sections.add()
+            journey.nb_sections += 1
+
+            # The origin and destination of the parking section is the destination of the journey
+            section.origin.CopyFrom(pt_object_destination)
+            section.destination.CopyFrom(pt_object_destination)
+            # And we have to complete the destination of the first section ourself
+            # Because Jormun does not do it afterwards
+            journey.sections[0].destination.CopyFrom(pt_object_destination)
+
             section.duration = self.parking_module.park_duration
             journey.duration += self.parking_module.park_duration
+            journey.durations.total += self.parking_module.park_duration
+
             section.type = response_pb2.PARK
             section.id = 'section_1'
+
             section.begin_date_time = journey.sections[0].end_date_time
             section.end_date_time = section.begin_date_time + section.duration
-            journey.arrival_date_time = section.end_date_time
+            journey.arrival_date_time += self.parking_module.park_duration
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs

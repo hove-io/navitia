@@ -30,9 +30,6 @@
 from __future__ import absolute_import
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.street_network.asgard import Asgard
-import requests as requests
-from mock import MagicMock
-import json
 import logging
 from navitiacommon import response_pb2, type_pb2
 
@@ -63,6 +60,8 @@ def route_response(mode):
     response = response_pb2.Response()
     response.response_type = response_pb2.ITINERARY_FOUND
     journey = response.journeys.add()
+    journey.nb_transfers = 0
+    journey.nb_sections = 1
     journey.departure_date_time = 1548669936
     journey.arrival_date_time = 1548670472
     journey.requested_date_time = 1548669936
@@ -89,6 +88,8 @@ def route_response(mode):
     section.duration = duration
     section.length = distance
     section.id = "section"
+    section.begin_date_time = 1548669936
+    section.end_date_time = 1548670472
 
     return response
 
