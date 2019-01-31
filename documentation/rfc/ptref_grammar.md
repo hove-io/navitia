@@ -58,7 +58,7 @@ Examples:
 
 #### Availlable methods
 
-In the following table, if the invocation is begining with `collection`, any collection can be used, else the method will only work for the specified collection.
+In the following table, if the invocation starts with `collection`, any collection can be used, else the method will only work for the specified collection.
 
 | query | signification | note |
 |-------|---------------|------|
@@ -167,7 +167,7 @@ Examples:
 
 ## Advanced examples
 
-### Get the list of stop areas you can go from a given stop area without connection using a given network
+### Get the list of stop areas accessible from a given stop area, a network and without connection.
 
 You are doing a time table between 2 stop areas for a specific network. In the interface, you first select the first stop area, and then, you must propose the candidate second stop areas.
 
