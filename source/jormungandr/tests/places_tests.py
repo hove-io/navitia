@@ -138,11 +138,10 @@ class TestPlaces(AbstractTestFixture):
         assert len(response['places_nearby']) > 0
         is_valid_places(response['places_nearby'])
 
-        assert len(response['disruptions']) == 1
-
+        assert len(response['disruptions']) == 2
         disruptions = get_not_null(response, 'disruptions')
-
-        assert disruptions[0]['disruption_id'] == 'disruption_on_stop_A'
+        disrupt = get_disruption(disruptions, 'too_bad')
+        assert disrupt['disruption_id'] == 'disruption_on_stop_A'
         messages = get_not_null(disruptions[0], 'messages')
 
         assert (messages[0]['text']) == 'no luck'
@@ -194,7 +193,7 @@ class TestPlaces(AbstractTestFixture):
         response = self.query_region("coords/{}/places_nearby?_current_datetime=20120815T160000".format(id))
         assert len(response['places_nearby']) > 0
         is_valid_places(response['places_nearby'])
-        assert len(response['disruptions']) == 1
+        assert len(response['disruptions']) == 2
 
         response = self.query_region(
             "coords/{}/places_nearby?_current_datetime=20120815T160000" "&disable_disruption=true".format(id)
@@ -208,7 +207,7 @@ class TestPlaces(AbstractTestFixture):
         )
         assert len(response['places_nearby']) > 0
         is_valid_places(response['places_nearby'])
-        assert len(response['disruptions']) == 1
+        assert len(response['disruptions']) == 2
 
     def test_main_stop_area_weight_factor(self):
         response = self.query_region("places?type[]=stop_area&q=stop")

@@ -721,6 +721,25 @@ struct routing_api_data {
                 .severity("disruption")
                 .on_line_section("B", "stopB", "stopB", {"B:3"})
                 .msg("try again", nt::disruption::ChannelType::sms);
+
+        // We create one disruption on stop 'stop_point:uselessA' with application period which doesn't intersect
+        // with production period but lies well inside publication period.
+        auto large_publication_period = btp(default_date, "20130801T120000"_dt);
+        // application_end_date > applicaion_start_date > production_end_date
+        auto future_application_period = btp("20130701T120000"_dt, "20130801T120000"_dt);
+        //we create one disruption on stop A
+        b.disrupt(nt::RTLevel::Adapted, "disruption_2_on_stop_A")
+                .publication_period(large_publication_period)
+                .tag("tag")
+                .properties(properties)
+                .impact()
+                    .uri("too_bad_future")
+                    .application_periods(future_application_period)
+                    .severity("info")
+                    .on(nt::Type_e::StopArea, "stopA")
+                    .msg("no luck", nt::disruption::ChannelType::sms)
+                    .msg("try again", nt::disruption::ChannelType::sms)
+                    .publish(large_publication_period);
     }
 
     int AA = 0;
