@@ -169,7 +169,7 @@ Examples:
 
 ### Get the list of stop areas accessible from a given stop area, a network and without connection.
 
-You are doing an interface to construct a time table of all the trains between 2 chosen stop areas. The user select 2 stop areas, and the interface gives all the train passing by these 2 stop areas with their times of passage.
+You are doing an interface to construct a time table of all the trains between 2 chosen stop areas. The user select 2 stop areas, and the interface gives all the trains passing by these 2 stop areas with their times of passage.
 
 To improve the user experience, you want that, one time the user has chosen the first stop area, the interface propose the list of candidate stop areas for the second field. The goal of this example is to construct the query to find the relevant stop areas.
 
