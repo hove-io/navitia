@@ -20,7 +20,7 @@ The elementary building block of a query is the predicate. They define a set of 
 
 ### Elementary predicates
 
-There is 2 elementary predicates: `all` and `empty`. As expected, `all` returns all the queried objects while `empty` returns none.
+There are 2 elementary predicates: `all` and `empty`. As expected, `all` returns all the queried objects while `empty` returns none.
 
 Examples:
  * `/v1/coverage/id/stop_areas?filter=all`: returns all the stop areas of the coverage.
