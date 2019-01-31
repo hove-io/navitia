@@ -190,7 +190,7 @@ From this, we now need to remove the first stop area:
 
 ### Get all the line that are not composed only of buses in connection with a given line
 
-In the home page of a line, you want to list the lines in connection. But, as there is a lot of bus lines, you only want the lines that contains other modes.
+In the home page of a line, you want to list the lines in connection. But, as there are a lot of bus lines, you only want the lines that contain other modes.
 
 The search is:
 1. get all the connection of the line
