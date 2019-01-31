@@ -158,6 +158,7 @@ The syntax is `get collection <- expression`. It is lower priority that the set 
 |-------------------|-------------|
 |`get collection1 <- get collection2 <- pred1 or pred2`|`get collection1 <- (get collection2 <- (pred1 or pred2))`|
 |`pred1 or get collection <- pred2 - pred3`|`pred1 or (get collection <- (pred2 - pred3))`|
+|`get collection1 <- pred1 or get collection2 <- pred2 and pred3`|`get collection1 <- (pred1 or (get collection2 <- (pred2 and pred3)))`|
 
 
 Examples:
