@@ -33,6 +33,8 @@ Method predicates are in the form `collection.method(string, string, ...)` where
  * `method` is a method name, corresponding to the filter on the `collection`;
  * arguments to the method between `(` and `)`, as strings, separated by `,`.
  
+Example: `/v1/coverage/id/stop_areas?filter=stop_area.has_code("neptune","1242")`
+ 
 #### Strings
  
 A string can be:
@@ -42,7 +44,8 @@ A string can be:
 Basic strings are great to easily type numbers and navitia coordinates. It can also handle most of the identifiers, but be warned that you will run into troubles if you use the basic string syntax in a programatic way (think of identifiers with spaces or accentuated letters).
 
 For programatic usage, it is recommended to:
- * substitute `"` by `\"` and `\` by `\\`
+ * substitute `\` by `\\`
+ * substitute `"` by `\"` 
  * surround the string with `"`
 
 Examples:
@@ -89,7 +92,7 @@ For example, if you have the request `/v1/coverage/id/lines?filter=stop_area.nam
 
 As a short hand, every method with exactly one parameter of the form `collection.method(param)` can be rewritten as `collection.method = param` (with or without spaces around `=`).
 
-Example:
+Examples:
  * `stop_area.id("foo")` can be written `stop_area.id = "foo"`
  * `line.code(14)` can be written `line.code=14`
 
@@ -99,7 +102,7 @@ For backward compatibility, `collection.within(distance, lon;lat)` can be writte
 
 ## Expressions
 
-Now, we have predicates to select object, and we need a tool to combine these predicate. Expressions are this tool. There is 3 different operators:
+Expressions allow to combine predicates. There are 3 different operators:
  * `AND` (or `and`): returns the intersection between the 2 predicates
  * `OR` (or `or`): returns the union between the 2 predicates
  * `-`: returns the set difference between the 2 predicates
@@ -108,7 +111,7 @@ Now, we have predicates to select object, and we need a tool to combine these pr
  
  `/v1/coverage/id/collections?filter=pred1 and pred2` is equivalent to take the objects in common between `/v1/coverage/id/collections?filter=pred1` and `/v1/coverage/id/collections?filter=pred2`.
  
- Example:
+ Examples:
  * `/v1/coverage/id/stop_areas?filter=network.id=RATP and physical_mode.id=physical_mode:Bus` returns the stop areas where buses of the network RATP stop.
  * `/v1/coverage/id/lines?filter=stop_area.name=Nation and stop_area.name="Charles de Gaulle Etoile"` returns the lines that stop at Nation and Charles de Gaulle Etoile.
  * `/v1/coverage/id/lines?filter=line.code=14 and physical_mode.id=physical_mode:Metro` returns the metro lines with code 14.
@@ -135,11 +138,11 @@ Now, we have predicates to select object, and we need a tool to combine these pr
  
  You can combine operators to create more complicated expressions. The priorities of the operators are chosen to feel natural to programmers: `-`, `AND`, `OR` is the priority order. Their associativity are left to right. Parenthesis can be used to change this order (or remove ambiguities).
  
- |without parenthesis|equivalent to|
- |-------------------|-------------|
- |`pred1 and pred2 or pred3 and pred4`|`(pred1 and pred2) or (pred3 and pred4)`|
- |`pred1 - pred2 - pred3`|`(pred1 - pred2) - pred3`|
- |`pred1 or pred2 - pred3 and pred4 or pred5`|`(pred1 or ((pred2 - pred3) and pred4)) or pred5`|
+|without parenthesis|equivalent to|
+|-------------------|-------------|
+|`pred1 and pred2 or pred3 and pred4`|`(pred1 and pred2) or (pred3 and pred4)`|
+|`pred1 - pred2 - pred3`|`(pred1 - pred2) - pred3`|
+|`pred1 or pred2 - pred3 and pred4 or pred5`|`(pred1 or ((pred2 - pred3) and pred4)) or pred5`|
  
  Examples:
  * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - stop_area.name=Nation - stop_area.name="Charles de Gaulle Etoile"` returns the metro lines that don't stop at Nation or Charles de Gaulle Etoile. Can also be written `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - (stop_area.name=Nation or stop_area.name="Charles de Gaulle Etoile")`
@@ -149,9 +152,15 @@ Now, we have predicates to select object, and we need a tool to combine these pr
 
 Method predicates allow you to request for a set of object of a given type, and then getting the corresponding objects of another type. Sub request allow you to chain such a pattern. Imagine you want to list the line of the same network of a given line. First, you want to get the networks corresponding to the given line, and then getting the corresponding lines from these networks.
 
-The syntax is `get collection <- expression`. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
+The syntax is `get collection <- expression`. It is lower priority that the set operators and its associativity is right to left. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
 
-Example:
+|without parenthesis|equivalent to|
+|-------------------|-------------|
+|`get collection1 <- get collection2 <- pred1 or pred2`|`get collection1 <- (get collection2 <- (pred1 or pred2))`|
+|`pred1 or get collection <- pred2 - pred3`|`pred1 or (get collection <- (pred2 - pred3))`|
+
+
+Examples:
 * `/v1/coverage/id/lines?filter=get network <- line.id=Metro14` returns the lines from the network of the line Metro14.
 * `/v1/coverage/id/physical_modes?filter=get connection <- line.id=Metro14` returns the physical modes in connection with the line Metro14.
 
