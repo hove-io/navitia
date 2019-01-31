@@ -70,12 +70,18 @@ class MockRequests(object):
         self.responses = responses
 
     def get(self, url, *args, **kwargs):
-        if kwargs.get('params'):
+        params = kwargs.get('params')
+        if params:
             from six.moves.urllib.parse import urlencode
 
-            url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
+            params.sort()
+            url += "?{}".format(urlencode(params, doseq=True))
 
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
+        r = self.responses.get(url)
+        if r:
+            return MockResponse(r[0], r[1], url)
+        else:
+            raise Exception("impossible to find mock response for url {}".format(url))
 
     def post(self, *args, **kwargs):
         return self.get(*args, **kwargs)
