@@ -169,24 +169,26 @@ Examples:
 
 ### Get the list of stop areas accessible from a given stop area, a network and without connection.
 
-You are doing a time table between 2 stop areas for a specific network. In the interface, you first select the first stop area, and then, you must propose the candidate second stop areas.
+You are doing an interface to construct a time table of all the trains between 2 chosen stop areas. The user select 2 stop areas, and the interface gives all the train passing by these 2 stop areas with their times of passage.
+
+To improve the user experience, you want that, one time the user has chosen the first stop area, the interface propose the list of candidate stop areas for the second field. The goal of this example is to construct the query to find the relevant stop areas.
 
 The search is:
-1. get all the vehicle journeys from my network that pass by the first stop area
+1. get all the trains that pass by the first stop area
 2. get the stop areas where the vehicle journeys stop
 3. remove the first stop area from this list
 
 For the first step, the corresponding query is
 
-> `/v1/coverage/id/vehicle_journeys?filter=network.id=MyNetwork and stop_area.id=FirstStopArea`
+> `/v1/coverage/id/vehicle_journeys?filter=physical_mode.id=physical_mode:Train and stop_area.id=FirstStopArea`
 
 Then, for the second step, we get the stop areas corresponding to the previous request:
 
-> `/v1/coverage/id/stop_areas?filter=get vehicle_journey <- network.id=MyNetwork and stop_area.id=FirstStopArea`
+> `/v1/coverage/id/stop_areas?filter=get vehicle_journey <- physical_mode.id=physical_mode:Train and stop_area.id=FirstStopArea`
 
 From this, we now need to remove the first stop area:
 
-> `/v1/coverage/id/stop_areas?filter=(get vehicle_journey <- network.id=MyNetwork and stop_area.id=FirstStopArea) - stop_area.id=FirstStopArea`
+> `/v1/coverage/id/stop_areas?filter=(get vehicle_journey <- physical_mode.id=physical_mode:Train and stop_area.id=FirstStopArea) - stop_area.id=FirstStopArea`
 
 ### Get all the line that are not composed only of buses in connection with a given line
 
