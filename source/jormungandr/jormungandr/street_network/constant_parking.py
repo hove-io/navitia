@@ -35,8 +35,8 @@ class ConstantParking(AbstractParkingModule):
         self.park_duration = park_duration
         self.leave_parking_duration = leave_parking_duration
 
-    def get_parking_duration(self, coords, datetime):
+    def get_parking_duration(self, coords):
         return self.park_duration
 
-    def get_leave_parking_duration(self, coords, datetime):
+    def get_leave_parking_duration(self):
         return self.leave_parking_duration

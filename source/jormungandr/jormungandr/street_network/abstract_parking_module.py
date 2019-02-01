@@ -36,9 +36,9 @@ ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 class AbstractParkingModule(ABC):
     @abc.abstractmethod
-    def get_parking_duration(self, coords, datetime):
+    def get_parking_duration(self, coords):
         pass
 
     @abc.abstractmethod
-    def get_leave_parking_duration(self, coords, datetime):
+    def get_leave_parking_duration(self):
         pass

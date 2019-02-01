@@ -81,13 +81,13 @@ class WithParking(AbstractStreetNetworkService):
             journey.sections[0].destination.CopyFrom(pt_object_destination)
 
             section.duration = self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+                get_pt_object_coord(pt_object_destination)
             )
             journey.duration += self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+                get_pt_object_coord(pt_object_destination)
             )
             journey.durations.total += self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+                get_pt_object_coord(pt_object_destination)
             )
 
             section.type = response_pb2.PARK
@@ -96,7 +96,7 @@ class WithParking(AbstractStreetNetworkService):
             section.begin_date_time = journey.sections[0].end_date_time
             section.end_date_time = section.begin_date_time + section.duration
             journey.arrival_date_time += self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+                get_pt_object_coord(pt_object_destination)
             )
 
     def get_street_network_routing_matrix(
@@ -112,15 +112,22 @@ class WithParking(AbstractStreetNetworkService):
         return response
 
     def add_parking_time_in_routing_matrix(self, response, origins, destinations):
-        logger = logging.getLogger(__name__)
-        additionnal_parking_time = (
-            self.parking_module.park_duration
-            if len(origins) == 1
-            else self.parking_module.leave_parking_duration
-        )
-        logger.debug("Adding additionnal parking time for routing_matrix " + str(additionnal_parking_time))
+        if len(origins) == 1:
+            # The parking time depends on the place we want to park in
+            self.add_additionnal_parking_time(response, destinations)
+        else:
+            self.add_additionnal_leave_parking_time(response)
+
+    def add_additionnal_parking_time(self, response, destinations):
+        # The response and the destination related to this response are ordered the same way
+        for r, dest in zip(response, destinations):
+            if r.routing_status == response_pb2.reached:
+                r.duration += self.parking_module.get_parking_duration(dest)
+
+    def add_additionnal_leave_parking_time(self, response):
+        additionnal_leave_parking_time = self.parking_module.get_leave_parking_duration()
         for r in response:
-            r.duration += additionnal_parking_time
+            r.duration += additionnal_leave_parking_time
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
