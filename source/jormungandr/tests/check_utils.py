@@ -1376,3 +1376,7 @@ def get_schedule(scs, sp_uri, line_code):
             if rp_sched['stop_point']['id'] == sp_uri and rp_sched['route']['line']['code'] == line_code
         )
     ]
+
+
+def get_disruption(disruptions, disrupt_id):
+    return next((d for d in disruptions if d['id'] == disrupt_id), None)

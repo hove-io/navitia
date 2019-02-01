@@ -649,7 +649,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         # some disruption are loaded on the dataset though
         nb_pre_loaded_disruption = len(get_not_null(self.query_region('disruptions'), 'disruptions'))
-        assert nb_pre_loaded_disruption == 10
+        assert nb_pre_loaded_disruption == 11
 
         self.send_mock("blocking_line_disruption", "A", "line", blocking=True)
         self.send_mock("blocking_network_disruption", "base_network", "network", blocking=True)
@@ -801,7 +801,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         """
         query = 'disruptions?since=20120801T000000'
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 9
+        assert len(disruptions) == 10
 
         # query with parameter tags[]
         resp, code = self.query_region('disruptions?since=20120801T000000&tags[]=tag_name', check=False)
@@ -817,7 +817,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         self.send_mock("disruption_on_stopB", "stopB", "stop_area", message='message', tags=tags)
 
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 12
+        assert len(disruptions) == 13
 
         disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=rer')['disruptions']
         assert len(disruptions) == 1
@@ -832,7 +832,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         disruptions = self.query_region(
             'disruptions?since=20120801T000000' '&filter=stop_area.id="stopA" or stop_area.id="stopB"'
         )['disruptions']
-        assert len(disruptions) == 3
+        assert len(disruptions) == 4
 
         # query with parameter filter and tags with one value
         disruptions = self.query_region(
@@ -884,7 +884,7 @@ class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
 
         # As the public transport is blocked by the disruption, we should find only 1 journey here
         assert len(response_adapted['journeys']) == 1
-        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
+        assert response_adapted['journeys'][0]['type'] == 'best'
 
         # delete disruption on stop point
         self.send_mock(disruption_id, disruption_target, disruption_target_type, is_deleted=True)
@@ -945,7 +945,7 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
         # No public transport journey is found, the only way it by foot
         assert len(response_adapted['journeys']) == 1
-        assert response_adapted['journeys'][0]['type'] == 'non_pt_walk'
+        assert response_adapted['journeys'][0]['type'] == 'best'
 
         # delete disruption on stop point
         self.send_mock(disruption_id, disruption_target, disruption_target_type, is_deleted=True)

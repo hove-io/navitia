@@ -60,29 +60,11 @@ max_nb_transfers = 10
 
 journey_order = 'arrival_time'
 
-min_tc_with_car = 5 * 60
-
-min_tc_with_bike = 5 * 60
-
-min_tc_with_bss = 5 * 60
-
 min_bike = 4 * 60
 
 min_bss = 4 * 60 + 3 * 60  # we want 4minute on the bike, so we add the time to pick and put back the bss
 
 min_car = 5 * 60
-
-# if a journey is X time longer than the earliest one we remove it
-factor_too_long_journey = 4
-
-# all journeys with a duration fewer than this value will be kept no matter what even if they are 20 times slower than the earliest one
-min_duration_too_long_journey = 15 * 60
-
-# criteria used for select the journey used for calculate the max duration
-max_duration_criteria = 'time'
-
-# only journey with this mode (or slower mode) will be used for calculate the max_duration
-max_duration_fallback_mode = 'walking'
 
 # specify the latest time point of request, relative to datetime, in second
 max_duration = 60 * 60 * 24  # seconds

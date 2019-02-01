@@ -180,9 +180,13 @@ filter_vj_on_period(const Indexes& indexes,
                     const type::Data& data) {
 
     Indexes res;
+    bt::time_period production_period = {bt::ptime(data.meta->production_date.begin()),
+                                         bt::ptime(data.meta->production_date.end())};
+    const auto period_to_check = production_period.intersection(period);
+
     for (const idx_t idx: indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (! keep_vj(vj, period)) { continue; }
+        if (! keep_vj(vj, period_to_check)) { continue; }
         res.insert(idx);
     }
     return res;
@@ -217,31 +221,19 @@ filter_on_period(const Indexes& indexes,
                  const boost::optional<bt::ptime>& until,
                  const type::Data& data) {
 
-    // we create the right period using since, until and the production period
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
     }
-    auto start = bt::ptime(data.meta->production_date.begin());
-    auto end = bt::ptime(data.meta->production_date.end());
-
-    if (since) {
-        if (data.meta->production_date.is_before(since->date())) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if (since->date() >= data.meta->production_date.begin()) {
-            start = *since;
-        }
-    }
-    if (until) {
-        if (data.meta->production_date.is_after(until->date())) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if (until->date() <= data.meta->production_date.last()) {
-            end = *until;
-        }
+    auto start = bt::ptime(bt::neg_infin);
+    auto end = bt::ptime(bt::pos_infin);
+    if (since && *since > start) {
+        start = *since;
     }
     // we want end to be in the period, so we add one seconds
-    bt::time_period period {start, end + bt::seconds(1)};
+    if (until && *until < end) {
+        end = *until + bt::seconds(1);
+    }
+    bt::time_period period {start, end};
 
     switch (requested_type) {
     case nt::Type_e::VehicleJourney:

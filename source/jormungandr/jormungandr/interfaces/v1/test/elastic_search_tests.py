@@ -504,7 +504,7 @@ def bragi_call_test():
         ]
     }
     mock_requests = MockRequests(
-        {'http://bob.com/autocomplete?q=rue+bobette&limit=10&timeout=2000': (bragi_response, 200)}
+        {'http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000': (bragi_response, 200)}
     )
     from jormungandr import app
 
@@ -540,11 +540,30 @@ def bragi_make_params_with_instance_test():
     request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib'], 'timeout': 1000}
-    len(list(rsp.keys())) == len(list(params.keys()))
-    for key, value in rsp.items():
-        assert key in params
-        assert value == params[key]
+    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('timeout', 1000)]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
+
+
+def bragi_make_params_with_multiple_instances_test():
+    """
+    test of generate params with instance
+    """
+    instance1 = mock.MagicMock()
+    instance1.name = 'bib'
+    instance2 = mock.MagicMock()
+    instance2.name = 'bob'
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {"q": "aa", "count": 20}
+
+    params = bragi.make_params(request=request, instances=[instance1, instance2], timeout=1)
+    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('pt_dataset[]', 'bob'), ('timeout', 1000)]
+
+    params.sort()
+    rsp.sort()
+    assert params == rsp
 
 
 def bragi_make_params_without_instance_test():
@@ -556,11 +575,10 @@ def bragi_make_params_without_instance_test():
     request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
-    rsp = {'q': 'aa', 'limit': 20, 'timeout': 100}
-    assert len(list(rsp.keys())) == len(list(params.keys()))
-    for key, value in rsp.items():
-        assert key in params
-        assert value == params[key]
+    rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100)]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
 
 
 # TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?

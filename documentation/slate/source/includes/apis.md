@@ -365,7 +365,7 @@ Example:
 <aside class="warning">
     On vehicle_journey this filter is applied using only the first stop time.
     On disruption this filter must intersect with one application period.
-    "since" is included and "until" is excluded.
+    "since" and "until" are included.
 </aside>
 
 #### disable_geojson

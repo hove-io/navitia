@@ -116,8 +116,8 @@ void line_reports(navitia::PbCreator& pb_creator,
                   const std::vector<std::string>& forbidden_uris,
                   const boost::optional<boost::posix_time::ptime>& since,
                   const boost::optional<boost::posix_time::ptime>& until) {
-    const auto start = get_optional_value_or(since, bt::ptime(d.meta->production_date.begin()));
-    const auto end = get_optional_value_or(until, bt::ptime(d.meta->production_date.end()));
+    const auto start = get_optional_value_or(since, bt::ptime(bt::neg_infin));
+    const auto end = get_optional_value_or(until, bt::ptime(bt::pos_infin));
     pb_creator.action_period = bt::time_period(start, end);
 
     if (end < start) {

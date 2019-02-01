@@ -271,8 +271,6 @@ inline bool operator<(StopTimeUpdate::Status a, StopTimeUpdate::Status b) {
 namespace detail {
 struct AuxInfoForMetaVJ {
     std::vector<StopTimeUpdate> stop_times;
-    // get the corresponding stoptime in the base vj. return null if nothing found
-    const StopTime* get_base_stop_time(const StopTimeUpdate&) const;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {

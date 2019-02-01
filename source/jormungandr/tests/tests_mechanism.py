@@ -62,7 +62,7 @@ krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free, is_open_data, scenario='default'):
+    def __init__(self, priority, is_free, is_open_data, scenario='new_default'):
         self.priority = priority
         self.is_free = is_free
         self.is_open_data = is_open_data
@@ -175,7 +175,7 @@ class AbstractTestFixture(unittest.TestCase):
             logging.info('instance %s has priority %s', name, priority)
             is_free = cls.data_sets[name].get('is_free', False)
             is_open_data = cls.data_sets[name].get('is_open_data', False)
-            scenario = cls.data_sets[name].get('scenario', 'default')
+            scenario = cls.data_sets[name].get('scenario', 'new_default')
             cls.mocks.append(
                 mock.patch.object(
                     i_manager.instances[name],
@@ -402,32 +402,6 @@ class AbstractTestFixture(unittest.TestCase):
     def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
-        """default next behaviour is 1 min after the best or the soonest"""
-        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or next(
-            (j for j in response.get('journeys', [])), None
-        )
-
-        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        assert j_departure + timedelta(minutes=1) == dt
-
-    @staticmethod
-    def check_previous_datetime_link(dt, response, clockwise):
-        if not response.get('journeys'):
-            return
-        """default previous behaviour is 1 min before the best or the latest """
-        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or next(
-            (j for j in response.get('journeys', [])), None
-        )
-
-        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        assert j_departure - timedelta(minutes=1) == dt
-
-
-class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
-    @staticmethod
-    def check_next_datetime_link(dt, response, clockwise):
-        if not response.get('journeys'):
-            return
         """default next behaviour is 1s after the best or the soonest"""
         from jormungandr.scenarios.qualifier import min_from_criteria
 
@@ -451,6 +425,10 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         assert j_departure - timedelta(seconds=1) == dt
+
+
+class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
+    pass
 
 
 def dataset(datasets, global_config={}):

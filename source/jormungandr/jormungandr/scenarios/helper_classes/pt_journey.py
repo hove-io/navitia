@@ -214,7 +214,7 @@ class PtJourneyPool:
                 direct_path_type,
                 request=self._request,
             )
-            if dp.journeys:
+            if dp and dp.journeys:
                 self._journey_params.direct_path_duration = dp.journeys[0].durations.total
             else:
                 self._journey_params.direct_path_duration = None
