@@ -27,6 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import abc
+
+# Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
+# http://stackoverflow.com/a/38668373/1614576
+ABC = abc.ABCMeta(str("ABC"), (object,), {})
+
 
 class AbstractParkingModule(ABC):
     @abc.abstractmethod

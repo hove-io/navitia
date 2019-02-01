@@ -27,8 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from jormungandr.street_network.abstract_parking_module import AbstractParkingModule
 
-class ConstantParking:
+
+class ConstantParking(AbstractParkingModule):
     def __init__(self, park_duration, leave_parking_duration):
         self.park_duration = park_duration
         self.leave_parking_duration = leave_parking_duration
