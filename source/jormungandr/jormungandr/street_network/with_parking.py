@@ -30,6 +30,7 @@
 import logging
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
 from jormungandr import street_network, utils
+from jormungandr.utils import get_pt_object_coord
 
 from jormungandr.street_network.asgard import Asgard
 from navitiacommon import response_pb2
@@ -79,16 +80,24 @@ class WithParking(AbstractStreetNetworkService):
             # Because Jormun does not do it afterwards
             journey.sections[0].destination.CopyFrom(pt_object_destination)
 
-            section.duration = self.parking_module.park_duration
-            journey.duration += self.parking_module.park_duration
-            journey.durations.total += self.parking_module.park_duration
+            section.duration = self.parking_module.get_parking_duration(
+                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+            )
+            journey.duration += self.parking_module.get_parking_duration(
+                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+            )
+            journey.durations.total += self.parking_module.get_parking_duration(
+                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+            )
 
             section.type = response_pb2.PARK
             section.id = 'section_1'
 
             section.begin_date_time = journey.sections[0].end_date_time
             section.end_date_time = section.begin_date_time + section.duration
-            journey.arrival_date_time += self.parking_module.park_duration
+            journey.arrival_date_time += self.parking_module.get_parking_duration(
+                get_pt_object_coord(pt_object_destination), journey.sections[0].end_date_time
+            )
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs

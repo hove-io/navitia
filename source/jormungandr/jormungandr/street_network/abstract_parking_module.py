@@ -28,13 +28,11 @@
 # www.navitia.io
 
 
-class ConstantParking:
-    def __init__(self, park_duration, leave_parking_duration):
-        self.park_duration = park_duration
-        self.leave_parking_duration = leave_parking_duration
-
+class AbstractParkingModule(ABC):
+    @abc.abstractmethod
     def get_parking_duration(self, coords, datetime):
-        return self.park_duration
+        pass
 
+    @abc.abstractmethod
     def get_leave_parking_duration(self, coords, datetime):
-        return self.leave_parking_duration
+        pass
