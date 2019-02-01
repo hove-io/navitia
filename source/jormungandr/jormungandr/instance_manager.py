@@ -254,8 +254,7 @@ class InstanceManager(object):
             authentication.abort_request(user)
         return valid_instances
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', None))
-    def _all_keys_of_id(self, object_id):
+    def _find_coverage_by_object_id(self, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -267,6 +266,10 @@ class InstanceManager(object):
             except:
                 raise InvalidArguments(object_id)
             return self._all_keys_of_coord(flon, flat)
+        return self._all_keys_of_id(object_id)
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', None))
+    def _all_keys_of_id(self, object_id):
         instances = []
         futures = {}
         for name, instance in self.instances.items():
@@ -307,9 +310,13 @@ class InstanceManager(object):
             if name in self.instances:
                 available_instances = [self.instances[name]]
         elif lon and lat:
-            available_instances = [self.instances[k] for k in self._all_keys_of_coord(lon, lat)]
+            available_instances = [
+                self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
+            ]
         elif object_id:
-            available_instances = [self.instances[k] for k in self._all_keys_of_id(object_id)]
+            available_instances = [
+                self.instances[k] for k in self._find_coverage_by_object_id(object_id) if k in self.instances
+            ]
         else:
             available_instances = list(self.instances.values())
 
