@@ -1,6 +1,6 @@
 # Public Transit Referential grammar
 
-It's possible to do advanced query to the public transit referential. The query is in the form `/v1/coverage/id/collections?filter=query`. This is the documentation of the `query` syntax. For simplicity, the queries in this documentation will not be urlencoded, but it must be in practice.
+It's possible to do advanced query to the public transit referential. The query is in the form `/v1/coverage/id/collections?filter=query`. This is the documentation of the `collections` and `query` syntax. `query` must be urlencoded in practice, but for simplicity it is not the case in this documentation.
 
 Each query is composed of 2 parts: the collection to be asked (`collections` in the example), and the query itself that describe the wanted objects.
 
@@ -16,7 +16,7 @@ The `arrivals`, `departures` and `stop_schedules` endpoint builds their response
 
 ## Predicates
 
-The elementary building block of a query is the predicate. They define a set of requested objects.
+The elementary building block of a query is the predicate. It defines a set of requested objects.
 
 ### Elementary predicates
 
@@ -38,10 +38,10 @@ Example: `/v1/coverage/id/stop_areas?filter=stop_area.has_code("neptune","1242")
 #### Strings
  
 A string can be:
- * an escaped string, begining and ending with `"`, with `\x` transformed as `x` within the string
+ * an escaped string, beginning and ending with `"`, with `\x` transformed as `x` within the string
  * a basic string, composed of any letter, digit, `_`, `.`, `:`, `;`, `|` and `-`.
  
-Basic strings are great to easily type numbers and navitia coordinates. It can also handle most of the identifiers, but be warned that you will run into troubles if you use the basic string syntax in a programatic way (think of identifiers with spaces or accentuated letters).
+Basic strings are great to easily type numbers and navitia coordinates. It can also handle most of the identifiers, but be warned that you will run into troubles if you use the basic string syntax in a programmatic way (think of identifiers with spaces or accentuated letters).
 
 For programatic usage, it is recommended to:
  * substitute `\` by `\\`
@@ -152,7 +152,7 @@ Expressions allow to combine predicates. There are 3 different operators:
 
 Method predicates allow you to request for a set of object of a given type, and then getting the corresponding objects of another type. Sub request allow you to chain such a pattern. Imagine you want to list the line of the same network of a given line. First, you want to get the networks corresponding to the given line, and then getting the corresponding lines from these networks.
 
-The syntax is `get collection <- expression`. It is lower priority that the set operators and its associativity is right to left. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
+The syntax is `get collection <- expression`. It is lower priority than the operators and its associativity is right to left. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
 
 |without parenthesis|equivalent to|
 |-------------------|-------------|
@@ -169,13 +169,13 @@ Examples:
 
 ### Get the list of stop areas accessible from a given stop area, a network and without connection.
 
-You are doing an interface to construct a time table of all the trains between 2 chosen stop areas. The user select 2 stop areas, and the interface gives all the trains passing by these 2 stop areas with their times of passage.
+You are doing an interface to construct a time table of all the trains between 2 chosen stop areas. The user selects 2 stop areas, and the interface gives all the trains passing by these 2 stop areas with their times of passage.
 
-To improve the user experience, you want that, one time the user has chosen the first stop area, the interface propose the list of candidate stop areas for the second field. The goal of this example is to construct the query to find the relevant stop areas.
+To improve the user experience, you want that, once the user has chosen the first stop area, the interface propose the list of candidate stop areas for the second field. The goal of this example is to construct the query to find the relevant stop areas.
 
 The search is:
 1. get all the trains that pass by the first stop area
-2. get the stop areas where the vehicle journeys stop
+2. get the stop areas where the vehicle's journeys stop
 3. remove the first stop area from this list
 
 For the first step, the corresponding query is
@@ -190,14 +190,14 @@ From this, we now need to remove the first stop area:
 
 > `/v1/coverage/id/stop_areas?filter=(get vehicle_journey <- physical_mode.id=physical_mode:Train and stop_area.id=FirstStopArea) - stop_area.id=FirstStopArea`
 
-### Get all the line that are not composed only of buses in connection with a given line
+### Get all the lines that are not composed only of buses in connection with a given line
 
 In the home page of a line, you want to list the lines in connection. But, as there are a lot of bus lines, you only want the lines that contain other modes.
 
 The search is:
 1. get all the connection of the line
 2. get all the lines from these connections
-3. remove the line
+3. remove the initial line
 4. keep the lines that have other modes than bus.
 
 The steps 1 and 2 can be found with
