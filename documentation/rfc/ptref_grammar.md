@@ -66,21 +66,21 @@ In the following table, if the invocation starts with `collection`, any collecti
 |`collection.id(id)`|the object of type `collection` that have `id` as identifier (empty if this identifier is not present)|for types without identifier (as `connection`), it is equivalent to `empty`|
 |`collection.uri(id)`|same as `collection.id(id)`|deprecated|
 |`collection.name(name)`|all the objects of type `collection` that have `name` as name|for types without name (as `connection`), it is equivalent to `empty`|
-|`disruption.between(since, until)`|all the disruptions that are active during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
-|`disruption.since(since)`|all the disruptions that are active after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`disruption.tag(tag)`|all the disruptions containing the given tag|equivalent to `disruption.tags(tag)`|
 |`disruption.tags(tag1, tag2, ...)`|all the disruptions containing at least one of the given tags|at least one tag must be given|
+|`disruption.between(since, until)`|all the disruptions that are active during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
+|`disruption.since(since)`|all the disruptions that are active after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`disruption.until(until)`|all the disruptions that are active before the given datetime|`until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
+|`vehicle_journey.between(since, until)`|all the vehicle journeys that start during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
+|`vehicle_journey.since(since)`|all the vehicle journeys that start after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
+|`vehicle_journey.until(until)`|all the vehicle journeys that start before the given datetime|`until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
+|`vehicle_journey.has_disruption()`|all the vehicle journeys containing at least a disruption ||
+|`vehicle_journey.has_headsign(headsign)`|all the vehicle journeys containing the given headsign ||
 |`line.code(code)`|all the lines containing the given code|this predicate use the field `line.code`, not `line.codes[]`|
 |`line.odt_level(level)`|all the lines with the given on demand transport property|level can be `scheduled`, `with_stops` or `zonal`|
 |`poi.within(distance, coord)`|all the POIs within `distance` meters from `coord`|`distance` in a positive integer, `coord` is a navitia coord (`lon;lat`)|
 |`stop_area.within(distance, coord)`|all the stop areas within `distance` meters from `coord`|`distance` in a positive integer, `coord` is a navitia coord (`lon;lat`)|
 |`stop_point.within(distance, coord)`|all the stop points within `distance` meters from `coord`|`distance` in a positive integer, `coord` is a navitia coord (`lon;lat`)|
-|`vehicle_journey.between(since, until)`|all the vehicle journeys that start during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
-|`vehicle_journey.has_disruption()`|all the vehicle journeys containing at least a disruption ||
-|`vehicle_journey.has_headsign(headsign)`|all the vehicle journeys containing the given headsign ||
-|`vehicle_journey.since(since)`|all the vehicle journeys that start after the given datetime|`since` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
-|`vehicle_journey.until(until)`|all the vehicle journeys that start before the given datetime|`until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 
 #### Interpretation
 
