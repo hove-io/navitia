@@ -114,6 +114,8 @@ struct dataRAPTOR {
 
     dataRAPTOR() {}
     void load(const navitia::type::PT_Data&, size_t cache_size = 10);
+
+    void warmup(const dataRAPTOR& other);
 };
 
 }}

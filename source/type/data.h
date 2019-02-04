@@ -231,6 +231,8 @@ public:
                           const std::vector<std::string>& contributors = {});
     void build_raptor(size_t cache_size = 10);
 
+    void warmup(const Data& other);
+
     /** Sauvegarde les données */
     void save(const std::string & filename) const;
 
