@@ -150,7 +150,7 @@ Expressions allow to combine predicates. There are 3 different operators:
 
 ## Sub request
 
-Method predicates allow you to request for a set of object of a given type, and then getting the corresponding objects of another type. Sub request allow you to chain such a pattern. Imagine you want to list the line of the same network of a given line. First, you want to get the networks corresponding to the given line, and then getting the corresponding lines from these networks.
+Method predicates allow you to request for a set of object of a given type, and then getting the corresponding objects of another type. Sub request allows you to chain such a pattern. Imagine you want to list the line of the same network of a given line. First, you want to get the networks corresponding to the given line, and then getting the corresponding lines from these networks.
 
 The syntax is `get collection <- expression`. It is lower priority than the operators and its associativity is right to left. It can be used as a predicate (`(get collection <- expression) or pred`), and nested several times (`get collection1 <- get collection2 <- expression`).
 
