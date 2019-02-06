@@ -173,7 +173,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 struct PbCreator {
     std::set<const nt::Contributor*, Less> contributors;
-    std::set<boost::shared_ptr<type::disruption::Impact>> impacts;
+    std::set<boost::shared_ptr<type::disruption::Impact>, Less> impacts;
     //std::reference_wrapper<const nt::Data> data;
     const nt::Data* data = nullptr;
     pt::ptime now;
