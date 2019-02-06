@@ -105,7 +105,7 @@ namespace {
         navitia::apply_disruption( disruption, *b.data->pt_data, *b.data->meta);
     }
 
-    std::set<std::string> get_impacts_uris(const std::set<Impact::SharedImpact> & impacts)
+    std::set<std::string> get_impacts_uris(const std::set<Impact::SharedImpact, Less> & impacts)
     {
         std::set<std::string> uris;
         boost::range::transform(impacts,
