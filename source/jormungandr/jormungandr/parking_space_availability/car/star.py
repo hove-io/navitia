@@ -33,18 +33,15 @@ import jmespath
 
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
-from jormungandr.ptref import FeedPublisher
 
 DEFAULT_STAR_FEED_PUBLISHER = None
 
 
 class StarProvider(CommonCarParkProvider):
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
-
-        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.provider_name = 'STAR'
 
-        super(StarProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+        super(StarProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
     def process_data(self, data, poi):
         park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)

@@ -34,18 +34,21 @@ import logging
 import pybreaker
 import requests as requests
 
-from jormungandr import cache, app, utils, new_relic
+from jormungandr import cache, app, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from jormungandr.ptref import FeedPublisher
+
 from abc import abstractmethod
 
 
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
-    def __init__(self, url, operators, dataset, timeout, **kwargs):
+    def __init__(self, url, operators, dataset, timeout, feed_publisher, **kwargs):
 
         self.ws_service_template = url + '?dataset={}'
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self.dataset = dataset
+        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL'])
         self.reset_timeout = kwargs.get(
             'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S']

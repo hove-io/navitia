@@ -33,7 +33,6 @@ import jmespath
 
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
-from jormungandr.ptref import FeedPublisher
 
 DEFAULT_SYTRAL_FEED_PUBLISHER = None
 
@@ -42,9 +41,8 @@ class SytralProvider(CommonCarParkProvider):
 
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_SYTRAL_FEED_PUBLISHER, **kwargs):
         self.provider_name = 'SYTRAL'
-        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
-        super(SytralProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+        super(SytralProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
     def process_data(self, data, poi):
         park = jmespath.search(
