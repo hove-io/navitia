@@ -28,6 +28,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from mock import MagicMock
 
 from jormungandr.parking_space_availability.car.sytral import SytralProvider
@@ -36,7 +37,7 @@ from jormungandr.parking_space_availability.car.parking_places import ParkingPla
 import json
 
 poi = {
-    'properties': {'operator': 'sytral', 'ref': '42'},
+    'properties': {'operator': 'sytral', 'ref': 'park_42'},
     'poi_type': {'name': 'Parking', 'id': 'poi_type:public_parking'},
 }
 
@@ -45,7 +46,7 @@ sytral_response = """
         "records":
         [
             {
-                "car_park_id": 42,
+                "car_park_id": "park_42",
                 "updated_time": "2019-01-29T14:47:21.826327317+01:00",
                 "available": 4,
                 "occupied": 3,
