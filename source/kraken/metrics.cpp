@@ -72,6 +72,14 @@ static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double
     return bucket_boundaries;
 }
 
+static prometheus::Histogram::BucketBoundaries create_fixed_duration_buckets() {
+    //boundaries need to be sorted!
+    auto bucket_boundaries = prometheus::Histogram::BucketBoundaries{
+        0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2, 5, 10
+    };
+    return bucket_boundaries;
+}
+
 
 Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage){
     if(endpoint == boost::none){
@@ -91,7 +99,7 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     auto desc = pbnavitia::API_descriptor();
     for(int i = 0; i < desc->value_count(); ++i){
         auto value = desc->value(i);
-        auto& histo = histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 1.5, 25));
+        auto& histo = histogram_family.Add({{"api", value->name()}}, create_fixed_duration_buckets());
         this->request_histogram[static_cast<pbnavitia::API>(value->number())] = &histo;
     }
     auto& in_flight_family = prometheus::BuildGauge()
@@ -106,21 +114,21 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                              .Help("duration of loading data")
                              .Labels({{"coverage", coverage}})
                              .Register(*registry)
-                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
+                             .Add({}, create_exponential_buckets(1, 2, 10));
 
     this->data_cloning_histogram = &prometheus::BuildHistogram()
                              .Name("kraken_data_cloning_duration_seconds")
                              .Help("duration of cloning data")
                              .Labels({{"coverage", coverage}})
                              .Register(*registry)
-                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
+                             .Add({}, create_exponential_buckets(1, 2, 10));
 
     this->handle_rt_histogram = &prometheus::BuildHistogram()
                              .Name("kraken_handle_rt_duration_seconds")
                              .Help("duration for handling disruptions and realtime")
                              .Labels({{"coverage", coverage}})
                              .Register(*registry)
-                             .Add({}, create_exponential_buckets(0.1, 1.5, 22));
+                             .Add({}, create_exponential_buckets(1, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const{
