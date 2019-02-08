@@ -183,6 +183,10 @@ void Data::build_raptor(size_t cache_size) {
     LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
 }
 
+void Data::warmup(const Data& other){
+    this->dataRaptor->warmup(*other.dataRaptor);
+}
+
 void Data::save(const std::string& filename) const {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     boost::filesystem::path p(filename);
