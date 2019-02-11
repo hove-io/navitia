@@ -81,7 +81,7 @@ class ChannelSerializer(PbNestedSerializer):
     content_type = jsonschema.Field(schema_type=str, display_none=True)
     id = jsonschema.Field(schema_type=str, display_none=True)
     name = jsonschema.Field(schema_type=str, display_none=True)
-    types = EnumListField(attr='channel_types', pb_type=Channel.ChannelType)
+    types = EnumListField(attr='channel_types', pb_type=Channel.ChannelType)  # type: ignore
 
 
 class MessageSerializer(PbNestedSerializer):
@@ -91,7 +91,7 @@ class MessageSerializer(PbNestedSerializer):
 
 class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
-    effect = EnumField(pb_type=Severity.Effect, lower_case=False)
+    effect = EnumField(pb_type=Severity.Effect, lower_case=False)  # type: ignore
     color = jsonschema.Field(schema_type=str)
     priority = jsonschema.Field(schema_type=int)
 
@@ -645,7 +645,9 @@ class StopDateTimeSerializer(PbNestedSerializer):
     stop_point = StopPointSerializer()
     # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
     additional_informations = AdditionalInformation(
-        attr='additional_informations', display_none=True, pb_type=Properties.AdditionalInformation
+        attr='additional_informations',
+        display_none=True,
+        pb_type=Properties.AdditionalInformation,  # type: ignore
     )
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(pb_type=RTLevel)

@@ -46,7 +46,7 @@ use concurrent.futures ) by
 """
 
 
-class _AbstractFuture(ABC):
+class _AbstractFuture(ABC):  # type: ignore
     @abc.abstractmethod
     def get_future(self):
         pass
@@ -56,7 +56,7 @@ class _AbstractFuture(ABC):
         pass
 
 
-class _AbstractPoolManager(ABC):
+class _AbstractPoolManager(ABC):  # type: ignore
     @abc.abstractmethod
     def create_future(self, fun, *args, **kwargs):
         pass

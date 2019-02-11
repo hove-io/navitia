@@ -108,8 +108,8 @@ class TravelerProfile(object):
         list(map(override, arg_2_profile_attr))
 
     @classmethod
-    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    @memory_cache.memoize(app.config.get(str('MEMORY_CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 300))
     def make_traveler_profile(cls, coverage, traveler_type):
         """
         travelers_profile factory method,
@@ -141,8 +141,8 @@ class TravelerProfile(object):
         )
 
     @classmethod
-    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    @memory_cache.memoize(app.config.get(str('MEMORY_CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 300))
     def get_profiles_by_coverage(cls, coverage):
         traveler_profiles = []
         for traveler_type in acceptable_traveler_types:

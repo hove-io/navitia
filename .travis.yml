@@ -30,7 +30,12 @@ script:
 matrix:
   include:
     - python: "3.6"
-      before_script: python3.6 -m pip install black==18.9b0;
-      script:  black --check --diff .
+      before_script:
+        - python3.6 -m pip install black==18.9b0
+        - pip install -r source/jormungandr/requirements_dev.txt
+        - bash source/scripts/build_protobuf.sh
+      script:
+        - black --check --diff .
+        - pushd source/jormungandr && MYPYPATH=.:../navitiacommon mypy --ignore-missing-imports --py2 jormungandr && popd
   exclude:
     - python: "3.6"

@@ -124,7 +124,7 @@ class CykleoProvider(CommonBssProvider):
             logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
             raise BssProxyError(str(e))
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10 * 60))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CYKLEO_JETON'), 10 * 60))
     def get_access_token(self):
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         data = {"username": self.username, "password": self.password, "sphere": "VLS"}
@@ -143,7 +143,7 @@ class CykleoProvider(CommonBssProvider):
             return None
         return access_token
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO', 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CYKLEO'), 30))
     def _call_webservice(self):
         access_token = self.get_access_token()
         headers = {'Authorization': 'Bearer {}'.format(access_token)}

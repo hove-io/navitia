@@ -30,6 +30,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+try:
+    from typing import Dict, Text, Any, Union
+except ImportError:
+    pass
 from contextlib import contextmanager
 from threading import Lock
 from flask_restful import abort
@@ -58,14 +63,14 @@ import time
 from collections import deque
 
 type_to_pttype = {
-    "stop_area": request_pb2.PlaceCodeRequest.StopArea,
-    "network": request_pb2.PlaceCodeRequest.Network,
-    "company": request_pb2.PlaceCodeRequest.Company,
-    "line": request_pb2.PlaceCodeRequest.Line,
-    "route": request_pb2.PlaceCodeRequest.Route,
-    "vehicle_journey": request_pb2.PlaceCodeRequest.VehicleJourney,
-    "stop_point": request_pb2.PlaceCodeRequest.StopPoint,
-    "calendar": request_pb2.PlaceCodeRequest.Calendar,
+    "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
+    "network": request_pb2.PlaceCodeRequest.Network,  # type: ignore
+    "company": request_pb2.PlaceCodeRequest.Company,  # type: ignore
+    "line": request_pb2.PlaceCodeRequest.Line,  # type: ignore
+    "route": request_pb2.PlaceCodeRequest.Route,  # type: ignore
+    "vehicle_journey": request_pb2.PlaceCodeRequest.VehicleJourney,  # type: ignore
+    "stop_point": request_pb2.PlaceCodeRequest.StopPoint,  # type: ignore
+    "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
 
 STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike', 'ridesharing')
@@ -93,11 +98,14 @@ def _set_default_street_network_config(street_network_configs):
 
 
 class Instance(object):
+    name = None  # type: Text
+    _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
+
     def __init__(
         self,
-        context,
-        name,
-        zmq_socket,
+        context,  # type: zmq.Context
+        name,  # type: Text
+        zmq_socket,  # type: Text
         street_network_configurations,
         ridesharing_configurations,
         realtime_proxies_configuration,
@@ -116,8 +124,8 @@ class Instance(object):
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
         )
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
@@ -126,7 +134,7 @@ class Instance(object):
         self.street_network_services = street_network.StreetNetwork.get_street_network_services(
             self, street_network_configurations
         )
-        self.ridesharing_services = []
+        self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
             self.ridesharing_services = ridesharing_service.Ridesharing.get_ridesharing_services(
                 self, ridesharing_configurations
@@ -169,8 +177,8 @@ class Instance(object):
     def __repr__(self):
         return 'instance.{}'.format(self.name)
 
-    @memory_cache.memoize(app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 30))
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 300))
     def _get_models(self):
         if app.config['DISABLE_DATABASE']:
             return None
@@ -217,111 +225,133 @@ class Instance(object):
 
     @property
     def journey_order(self):
+        # type: () -> Text
         instance_db = self.get_models()
         return get_value_or_default('journey_order', instance_db, self.name)
 
     @property
     def autocomplete_backend(self):
+        # type: () -> Text
         instance_db = self.get_models()
         return get_value_or_default('autocomplete_backend', instance_db, self.name)
 
     @property
     def max_walking_duration_to_pt(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_walking_duration_to_pt', instance_db, self.name)
 
     @property
     def max_bss_duration_to_pt(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_bss_duration_to_pt', instance_db, self.name)
 
     @property
     def max_bike_duration_to_pt(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_bike_duration_to_pt', instance_db, self.name)
 
     @property
     def max_car_duration_to_pt(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_car_duration_to_pt', instance_db, self.name)
 
     @property
     def max_car_no_park_duration_to_pt(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
 
     @property
     def walking_speed(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('walking_speed', instance_db, self.name)
 
     @property
     def bss_speed(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('bss_speed', instance_db, self.name)
 
     @property
     def bike_speed(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('bike_speed', instance_db, self.name)
 
     @property
     def car_speed(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('car_speed', instance_db, self.name)
 
     @property
     def car_no_park_speed(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('car_no_park_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_nb_transfers', instance_db, self.name)
 
     @property
     def min_bike(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_bike', instance_db, self.name)
 
     @property
     def min_bss(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_bss', instance_db, self.name)
 
     @property
     def min_car(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_car', instance_db, self.name)
 
     @property
     def successive_physical_mode_to_limit_id(self):
+        # type: () -> Text
         instance_db = self.get_models()
         return get_value_or_default('successive_physical_mode_to_limit_id', instance_db, self.name)
 
     @property
     def priority(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('priority', instance_db, self.name)
 
     @property
     def bss_provider(self):
+        # type: () -> bool
         instance_db = self.get_models()
         return get_value_or_default('bss_provider', instance_db, self.name)
 
     @property
     def car_park_provider(self):
+        # type: () -> bool
         instance_db = self.get_models()
         return get_value_or_default('car_park_provider', instance_db, self.name)
 
     @property
     def max_additional_connections(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_additional_connections', instance_db, self.name)
 
     @property
     def is_free(self):
+        # type: () -> bool
         instance_db = self.get_models()
         if not instance_db:
             return False
@@ -330,6 +360,7 @@ class Instance(object):
 
     @property
     def is_open_data(self):
+        # type: () -> bool
         instance_db = self.get_models()
         if not instance_db:
             return False
@@ -338,46 +369,55 @@ class Instance(object):
 
     @property
     def max_duration(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_duration', instance_db, self.name)
 
     @property
     def walking_transfer_penalty(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('walking_transfer_penalty', instance_db, self.name)
 
     @property
     def night_bus_filter_max_factor(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('night_bus_filter_max_factor', instance_db, self.name)
 
     @property
     def night_bus_filter_base_factor(self):
+        # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('night_bus_filter_base_factor', instance_db, self.name)
 
     @property
     def realtime_pool_size(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('realtime_pool_size', instance_db, self.name)
 
     @property
     def min_nb_journeys(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_nb_journeys', instance_db, self.name)
 
     @property
     def max_nb_journeys(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_nb_journeys', instance_db, self.name)
 
     @property
     def min_journeys_calls(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_journeys_calls', instance_db, self.name)
 
     @property
     def max_successive_physical_mode(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_successive_physical_mode', instance_db, self.name)
 
@@ -388,16 +428,19 @@ class Instance(object):
 
     @property
     def max_extra_second_pass(self):
+        # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_extra_second_pass', instance_db, self.name)
 
     @property
     def max_nb_crowfly_by_mode(self):
+        # type: () -> Dict[Text, int]
         instance_db = self.get_models()
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
     def reap_socket(self, ttl):
+        # type: (int) -> None
         if self.zmq_socket_type != 'transient':
             return
         logger = logging.getLogger(__name__)

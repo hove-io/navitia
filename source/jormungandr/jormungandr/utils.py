@@ -36,7 +36,6 @@ import pytz
 from jormungandr.timezone import get_timezone
 from navitiacommon import response_pb2, type_pb2
 from navitiacommon.parser_args_type import DateTimeFormat
-from builtins import range, zip
 from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
@@ -67,6 +66,7 @@ def get_uri_pt_object(pt_object):
 
 
 def kilometers_to_meters(distance):
+    # type: (float) -> float
     return distance * 1000.0
 
 
