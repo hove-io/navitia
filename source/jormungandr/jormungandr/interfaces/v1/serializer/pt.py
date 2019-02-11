@@ -399,10 +399,10 @@ class PlaceSerializer(PbGenericSerializer):
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
-    embedded_type = EnumField(attr='embedded_type', required=False, pb_type=NavitiaType, display_none=True)
+    embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
-    distance = jsonschema.IntField(required=False, display_none=True, description='Distance to the object in meters')
+    distance = jsonschema.StrField(required=False, display_none=True, description='Distance to the object in meters')
 
 class PlaceNearbySerializer(PlaceSerializer):
     pass
