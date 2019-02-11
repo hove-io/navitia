@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 try:
-    from typing import Dict, Text, Any, Union
+    from typing import Dict, Text, Deque, List, Tuple
 except ImportError:
     pass
 from contextlib import contextmanager
