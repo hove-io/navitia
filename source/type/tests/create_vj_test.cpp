@@ -100,115 +100,103 @@ BOOST_AUTO_TEST_CASE(clean_up_useless_vjs_test) {
     using year = navitia::type::ValidityPattern::year_bitset;
     namespace nt = navitia::type;
 
-    {
-        // clean_up_useless_vjs() is called to clean VJs, with all validity patterns = 0
+    // clean_up_useless_vjs() is called to clean VJs, with all validity patterns = 0, for a given Meta VJ.
+    // VJ can be base/adapted/realtime type
 
-        ed::builder b("20120614");
-        auto& pt_data = *b.data->pt_data;
+    ed::builder b("20120614");
+    auto& pt_data = *b.data->pt_data;
 
-        // Add new base VJ uri_A (all validity patterns = 0)
-        const auto* empty_base_vj = b.vj("A", "000000", "block_id_A", false, "uri_A")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-        auto* mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
-        BOOST_CHECK_EQUAL(empty_base_vj->base_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(empty_base_vj->adapted_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(empty_base_vj->rt_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    // Add new base VJ uri_A (all validity patterns = 0)
+    const auto* empty_base_vj = b.vj("line_A", "000000", "block_id_A", false, "uri_A", "meta_vj_name_A")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(empty_base_vj->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(empty_base_vj->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(empty_base_vj->rt_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 1);
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    auto* mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 0);
 
-        // Add new base VJ uri_B
-        const auto* base_vj = b.vj("A", "000001", "block_id_A", false, "uri_B")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-        BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(base_vj->rt_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 2);
+    // Add new base VJ uri_B
+    // clean_up_useless_vjs is called before creating uri_B VJ.
+    // clean_up_useless_vjs will suppress uri_A VJ.
+    const auto* base_vj = b.vj("line_A", "000001", "block_id_A", false, "uri_B", "meta_vj_name_A")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("000001"));
+    BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("000001"));
+    BOOST_CHECK_EQUAL(base_vj->rt_validity_pattern()->days, year("000001"));
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 1);
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 0);
 
-        // Cleaning VJs with all validity patterns = 0
-        // Vj uri_A have to disappear
-        mvj->clean_up_useless_vjs(pt_data);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 2);
+    // Add new base VJ uri_C
+    // clean_up_useless_vjs is called before creating uri_C VJ.
+    // clean_up_useless_vjs will suppress nothing.
+    base_vj = b.vj("line_A", "000011", "block_id_A", false, "uri_C", "meta_vj_name_A")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("000011"));
+    BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("000011"));
+    BOOST_CHECK_EQUAL(base_vj->rt_validity_pattern()->days, year("000011"));
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 2);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 0);
 
-        // Add new base VJ uri_C
-        base_vj = b.vj("A", "000010", "block_id_A", false, "uri_C")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-        BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("000010"));
-        BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("000010"));
-        BOOST_CHECK_EQUAL(base_vj->rt_validity_pattern()->days, year("000010"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
+    // Add new adapted VJ (all validity patterns = 0)
+    // clean_up_useless_vjs is called before creating adapted VJ.
+    // clean_up_useless_vjs will suppress nothing.
+    auto sts = base_vj->stop_time_list;
+    sts.at(1).arrival_time = 8200;
+    sts.at(1).departure_time = 8200;
+    nt::ValidityPattern vp(boost::gregorian::date(2012,06,14));
+    vp.days = year("000000");
+    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, base_vj->route, sts, pt_data);
+    BOOST_CHECK_EQUAL(adapted_vj->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(adapted_vj->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(adapted_vj->rt_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 3);
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 2);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 0);
 
-        // All MetaVehiceJourneys are kept, even after suppression of useless VJs...
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 3);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0))->get_label(), "uri_A");
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(1))->get_label(), "uri_B");
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(2))->get_label(), "uri_C");
-    }
-
-    {
-        // clean_up_useless_vjs() is not called to clean VJs, with all validity patterns = 0, because it
-        // is already called at the end of the "create_discrete_vj" function.
-        // This function is use to add a new adapted vj.
-
-        ed::builder b("20120614");
-        auto& pt_data = *b.data->pt_data;
-
-        // Add new base VJ uri_A (all validity patterns = 0)
-        const auto* empty_base_vj = b.vj("A", "000000", "block_id_A", false, "uri_A")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-        BOOST_CHECK_EQUAL(empty_base_vj->base_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(empty_base_vj->adapted_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(empty_base_vj->rt_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 1);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
-        // Add new base VJ uri_B
-        const auto* base_vj = b.vj("A", "000001", "block_id_A", false, "uri_B")("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-        BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(base_vj->adapted_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(base_vj->rt_validity_pattern()->days, year("000001"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 2);
-
-        // Add new adapted VJ
-        auto sts = base_vj->stop_time_list;
-        sts.at(1).arrival_time = 8200;
-        sts.at(1).departure_time = 8200;
-        nt::ValidityPattern vp(boost::gregorian::date(2012,06,14));
-        vp.days = year("000000");
-        // we add an adapted vj in the first MetaVehicleJourney, corresponding to the base VJ with all
-        // validity pattern = 0. So the cleaning function will suppress it.
-        auto* mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
-        const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, base_vj->route, sts, pt_data);
-        BOOST_CHECK_EQUAL(adapted_vj->base_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(adapted_vj->adapted_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(adapted_vj->rt_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
-        // when we added an adapted vj, we don't create new MetaVehiceJourney, but we hang up this one inside
-        // an existing mvj.
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 2);
-
-        // Add new realtime VJ
-        sts = base_vj->stop_time_list;
-        sts.at(1).arrival_time = 8300;
-        sts.at(1).departure_time = 8300;
-        nt::ValidityPattern vp2(boost::gregorian::date(2012,06,14));
-        vp2.days = year("000000");
-        // we add a realtime vj in the first MetaVehicleJourney, corresponding to the adapted VJ with all
-        // validity pattern = 0. So the cleaning function will suppress it.
-        mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
-        adapted_vj = mvj->create_discrete_vj("realime", nt::RTLevel::RealTime, vp2, base_vj->route, sts, pt_data);
-        BOOST_CHECK_EQUAL(adapted_vj->base_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(adapted_vj->adapted_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(adapted_vj->rt_validity_pattern()->days, year("000000"));
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
-        BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 2);
-        // when we added a realtime vj, we don't create new MetaVehiceJourney, but we hang up this one inside
-        // an existing mvj.
-        BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 2);
-    }
+    // Add new realtime VJ
+    // clean_up_useless_vjs is called before creating realtime VJ.
+    // clean_up_useless_vjs will suppress the adapted VJ.
+    sts = base_vj->stop_time_list;
+    sts.at(1).arrival_time = 8200;
+    sts.at(1).departure_time = 8200;
+    nt::ValidityPattern vp2(boost::gregorian::date(2012,06,14));
+    vp2.days = year("001110");
+    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    const auto* rt_vj = mvj->create_discrete_vj("realtime", nt::RTLevel::RealTime, vp2, base_vj->route, sts, pt_data);
+    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("001110"));
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
+    BOOST_CHECK_EQUAL(pt_data.vehicle_journeys.size(), 3);
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 2);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 1);
 }
 
