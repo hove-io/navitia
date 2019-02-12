@@ -60,10 +60,7 @@ sytral_response = """
 
 def car_park_space_get_information_test():
     parking_places = ParkingPlaces(available=4, occupied=3, available_PRM=1, occupied_PRM=0)
-    provider = SytralProvider(url="sytral.url",
-                              operators={'Sytral'},
-                              dataset='sytral_dataset',
-                              timeout=42)
+    provider = SytralProvider(url="sytral.url", operators={'Sytral'}, dataset='sytral_dataset', timeout=42)
     provider._call_webservice = MagicMock(return_value=json.loads(sytral_response))
     info = provider.get_informations(poi)
     assert info == parking_places

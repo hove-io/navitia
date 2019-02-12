@@ -38,18 +38,16 @@ DEFAULT_SYTRAL_FEED_PUBLISHER = None
 
 
 class SytralProvider(CommonCarParkProvider):
-
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_SYTRAL_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_SYTRAL_FEED_PUBLISHER, **kwargs
+    ):
         self.provider_name = 'SYTRAL'
 
         super(SytralProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
     def process_data(self, data, poi):
-        park = jmespath.search(
-            'records[?car_park_id==`{}`]|[0]'.format(poi['properties']['ref']), data
-        )
+        park = jmespath.search('records[?car_park_id==`{}`]|[0]'.format(poi['properties']['ref']), data)
         if park:
-            return ParkingPlaces(park['available'],
-                                 park['occupied'],
-                                 park['available_PRM'],
-                                 park['occupied_PRM'])
+            return ParkingPlaces(
+                park['available'], park['occupied'], park['available_PRM'], park['occupied_PRM']
+            )
