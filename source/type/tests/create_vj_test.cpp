@@ -158,13 +158,7 @@ BOOST_AUTO_TEST_CASE(clean_up_useless_vjs_test) {
     // Add new adapted VJ (all validity patterns = 0)
     // clean_up_useless_vjs is called before creating adapted VJ.
     // clean_up_useless_vjs will suppress nothing.
-    auto sts = base_vj->stop_time_list;
-    sts.at(1).arrival_time = 8200;
-    sts.at(1).departure_time = 8200;
-    nt::ValidityPattern vp(boost::gregorian::date(2012,06,14));
-    vp.days = year("000000");
-    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
-    const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, base_vj->route, sts, pt_data);
+    const auto* adapted_vj = b.vj("line_A", "000000", "block_id_A", false, "uri_adapted", "meta_vj_name_A", "", nt::RTLevel::Adapted)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
     BOOST_CHECK_EQUAL(adapted_vj->base_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(adapted_vj->adapted_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(adapted_vj->rt_validity_pattern()->days, year("000000"));
@@ -180,13 +174,7 @@ BOOST_AUTO_TEST_CASE(clean_up_useless_vjs_test) {
     // Add new realtime VJ
     // clean_up_useless_vjs is called before creating realtime VJ.
     // clean_up_useless_vjs will suppress the adapted VJ.
-    sts = base_vj->stop_time_list;
-    sts.at(1).arrival_time = 8200;
-    sts.at(1).departure_time = 8200;
-    nt::ValidityPattern vp2(boost::gregorian::date(2012,06,14));
-    vp2.days = year("001110");
-    mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
-    const auto* rt_vj = mvj->create_discrete_vj("realtime", nt::RTLevel::RealTime, vp2, base_vj->route, sts, pt_data);
+    const auto* rt_vj = b.vj("line_A", "001110", "block_id_A", false, "uri_realtime", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
     BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("001110"));
@@ -198,5 +186,32 @@ BOOST_AUTO_TEST_CASE(clean_up_useless_vjs_test) {
     BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 2);
     BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
     BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(create_only_rt_vjs_test) {
+    using year = navitia::type::ValidityPattern::year_bitset;
+    namespace nt = navitia::type;
+
+    // Create a route with a Meta VJ.
+    // Inside the MVJ, we add 2 Realtime VJ
+    // There is no base VJ inside (Usefull for adding a new trip in Realtime mode)
+    ed::builder b("20120614");
+    auto& pt_data = *b.data->pt_data;
+
+    const auto* rt_vj = b.vj("line_A", "000011", "block_id_A", false, "uri_C", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("000011"));
+    rt_vj = b.vj("line_A", "001100", "block_id_A", false, "uri_C", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("001100"));
+    // Meta VJ
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    auto* mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));
+    BOOST_CHECK_EQUAL(mvj->get_label(), "meta_vj_name_A");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 2);
 }
 

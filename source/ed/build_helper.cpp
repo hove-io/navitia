@@ -56,7 +56,8 @@ VJ::VJ(builder& b,
        const std::string& physical_mode,
        const uint32_t start_time,
        const uint32_t end_time,
-       const uint32_t headway_secs):
+       const uint32_t headway_secs,
+       const nt::RTLevel vj_type):
     b(b),
     network_name(network_name),
     line_name(line_name),
@@ -69,6 +70,7 @@ VJ::VJ(builder& b,
     start_time(start_time),
     end_time(end_time),
     headway_secs(headway_secs),
+    _vj_type(vj_type),
     _vp(b.begin, validity_pattern)
 {}
 
@@ -180,14 +182,14 @@ nt::VehicleJourney* VJ::make() {
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         _uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, _vp, route, sts, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, _vj_type, _vp, route, sts, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, _vp, route, sts, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, _vj_type, _vp, route, sts, pt_data);
     }
     // default dataset
     if (!vj->dataset){
@@ -543,9 +545,22 @@ VJ builder::vj(const std::string& line_name,
                const bool wheelchair_boarding,
                const std::string& uri,
                const std::string& meta_vj,
-               const std::string& physical_mode){
-    return vj_with_network("base_network", line_name, validity_pattern, block_id,
-                           wheelchair_boarding, uri, meta_vj, physical_mode);
+               const std::string& physical_mode,
+               const nt::RTLevel vj_type)
+{
+    return vj_with_network("base_network",
+                           line_name,
+                           validity_pattern,
+                           block_id,
+                           wheelchair_boarding,
+                           uri,
+                           meta_vj,
+                           physical_mode,
+                           false,
+                           0,
+                           0,
+                           0,
+                           vj_type);
 }
 
 VJ builder::vj_with_network(const std::string& network_name,
@@ -559,10 +574,12 @@ VJ builder::vj_with_network(const std::string& network_name,
                             const bool is_frequency,
                             const uint32_t start_time,
                             const uint32_t end_time,
-                            const uint32_t headway_secs) {
+                            const uint32_t headway_secs,
+                            const nt::RTLevel vj_type)
+{
     return VJ(*this, network_name, line_name, validity_pattern, block_id, is_frequency,
               wheelchair_boarding, uri, meta_vj, physical_mode,
-              start_time, end_time, headway_secs);
+              start_time, end_time, headway_secs, vj_type);
 }
 
 

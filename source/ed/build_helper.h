@@ -78,6 +78,7 @@ struct VJ {
     const uint32_t start_time;
     const uint32_t end_time;
     const uint32_t headway_secs;
+    const nt::RTLevel _vj_type;
     std::vector<ST> stop_times;
     nt::VehicleJourney* vj = nullptr;
     nt::ValidityPattern _vp;
@@ -96,7 +97,8 @@ struct VJ {
        const std::string& physical_mode = "",
        const uint32_t start_time = 0,
        const uint32_t end_time = 0,
-       const uint32_t headway_secs = 0);
+       const uint32_t headway_secs = 0,
+       const nt::RTLevel vj_type =  nt::RTLevel::Base);
 
     VJ(VJ&&) = default;
     VJ& operator=(VJ&&) = delete;
@@ -244,7 +246,8 @@ struct builder {
           const bool wheelchair_boarding = true,
           const std::string& uri="",
           const std::string& meta_vj="",
-          const std::string& physical_mode = "");
+          const std::string& physical_mode = "",
+          const nt::RTLevel vj_type = nt::RTLevel::Base);
 
     VJ vj_with_network(const std::string& network_name,
                        const std::string& line_name,
@@ -257,7 +260,8 @@ struct builder {
                        const bool is_frequency=false,
                        const uint32_t start_time = 0,
                        const uint32_t end_time = 0,
-                       const uint32_t headway_secs = 0);
+                       const uint32_t headway_secs = 0,
+                       const nt::RTLevel vj_type = nt::RTLevel::Base);
 
     VJ frequency_vj(const std::string& line_name,
                     const uint32_t start_time,
