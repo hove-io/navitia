@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_restful import fields, marshal_with, reqparse
+from flask_restful import fields, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone

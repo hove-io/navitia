@@ -1208,17 +1208,14 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
     """
 
     def test_first_last_datetime_same_day(self):
-        if not app.config['USE_SERPY']:
-            return
-
         """              20170102
-                       from_datetime 20170102T1630       
-                            |  
+                       from_datetime 20170102T1630
+                            |
                             v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
-         
+
         """
         from_datetime = "20170102T163000"
         response = self.query_region(
@@ -1249,10 +1246,10 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
 
         """              20170102
                        from_datetime 20170103T0001
-                                  |  
+                                  |
                                   v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
 
         """
@@ -1284,10 +1281,10 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
 
         """              20170102
                        from_datetime 20170102T2301
-                                  |  
+                                  |
                                   v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
 
         """
@@ -1318,14 +1315,12 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_diff_validity(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170102                                                20170103
-                                      from_datetime 20170103T0300       
-                                                  |  
+                                      from_datetime 20170103T0300
+                                                  |
                                                   v
         (Open)                         (Close)           (Open)                       (Close)
-        07:00                          25:55     03:00   07:00                        25:55 
+        07:00                          25:55     03:00   07:00                        25:55
          X_s1 ------------------------ X_S4              X_s1 ----------------------- X_S4
 
         """
@@ -1355,13 +1350,13 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
-        """ 
-                        20170103            (switch of vp)             20170104    
-                                         from_datetime 20170104T0300        
-                                                    |  
+        """
+                        20170103            (switch of vp)             20170104
+                                         from_datetime 20170104T0300
+                                                    |
                                                     v
         (Open)                         (Close)           (Open)                       (Close)
-        07:00                          25:55     03:00   07:00                        25:55 
+        07:00                          25:55     03:00   07:00                        25:55
          X_s1 ------------------------ X_S4              X_s1 ----------------------- X_S4
 
         """
@@ -1391,13 +1386,13 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
-        """ 
-                         20170105             (switch of vp)            20170106    
-                  from_datetime 20170105T2200        
-                                 |  
+        """
+                         20170105             (switch of vp)            20170106
+                  from_datetime 20170105T2200
+                                 |
                                  v
          (Open)                 22:00  (Close)           (Open)                       (Close)
-         07:00                          25:55             07:00                        25:55 
+         07:00                          25:55             07:00                        25:55
           X_s1 ------------------------ X_S4              X_s1 ----------------------- X_S4
 
          """
@@ -1428,14 +1423,12 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_another_validity(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170104
-                           from_datetime 20170105T0030       
-                                      |  
+                           from_datetime 20170105T0030
+                                      |
                                       v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
 
         """
@@ -1466,14 +1459,12 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_just_after_midnight(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170101
                            from_datetime 20170102T002959
-                                      |  
+                                      |
                                       v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
 
         """
@@ -1489,14 +1480,12 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T013000"
 
     def test_first_last_datetime_with_very_small_duration(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170101
                            from_datetime 20170102T002959
-                                      |  
+                                      |
                                       v
         (Open)                        (Close)
-        07:00                          25:55  
+        07:00                          25:55
          X_s1 ------------------------ X_S4
 
         """
@@ -1514,11 +1503,11 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T013000"
 
         """              20170102
-        from_datetime 20170102T065959       
-                  |  
+        from_datetime 20170102T065959
+                  |
                   v
                     (Open)                        (Close)
-                    07:00                          25:55  
+                    07:00                          25:55
                      X_s1 ------------------------ X_S4
 
         """
@@ -1569,15 +1558,12 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
     """
 
     def test_first_last_datetime_same_day(self):
-        if not app.config['USE_SERPY']:
-            return
-
         """              20170102
-        from_datetime 20170102T0631       
-                 |  
+        from_datetime 20170102T0631
+                 |
                  v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1609,10 +1595,10 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
 
         """              20170102
                          from_datetime 20170103T000100
-                                    |  
+                                    |
                                     v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1643,11 +1629,9 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_diff_validity(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170102                                      20170103
-                                      from_datetime 20170103T0300       
-                                                 |  
+                                      from_datetime 20170103T0300
+                                                 |
                                                  v
         (Open)                        (Close)            (Open)                        (Close)
         06:00                         00:55     03:00    06:00                         00:55
@@ -1680,10 +1664,10 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
-        """ 
-                        20170104                                                  20170105    
-                                      from_datetime 20170105T0300        
-                                                |  
+        """
+                        20170104                                                  20170105
+                                      from_datetime 20170105T0300
+                                                |
                                                 v
         (Open)                        (Close)            (Open)                        (Close)
         06:00                         00:55    03:00     06:00                         00:55
@@ -1717,15 +1701,12 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_another_validity(self):
-        if not app.config['USE_SERPY']:
-            return
-
         """              20170105
-       from_datetime 20170105T0730       
-                  |  
+       from_datetime 20170105T0730
+                  |
                   v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1756,15 +1737,12 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_just_after_midnight(self):
-        if not app.config['USE_SERPY']:
-            return
-
         """              20170101 (the beginning of production)
                            from_datetime 20170102T000001
-                                      |  
+                                      |
                                       v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1781,12 +1759,12 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[1]['first_datetime']['date_time'] == "20170102T064000"
         assert stop_schedules[1]['last_datetime']['date_time'] == "20170102T064500"
 
-        """              20170102 
+        """              20170102
                            from_datetime 20170103T000001
-                                      |  
+                                      |
                                       v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1802,14 +1780,12 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T001000"
 
     def test_first_last_datetime_with_very_small_duration(self):
-        if not app.config['USE_SERPY']:
-            return
         """              20170102
-                            from_datetime 20170102T235959  
-                                      |  
+                            from_datetime 20170102T235959
+                                      |
                                       v
         (Open)                        (Close)
-        06:00                         00:55  
+        06:00                         00:55
          X_S1 ------------------------ X_S4
 
         """
@@ -1830,11 +1806,11 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
         """              20170102
-        from_datetime 20170102T055959  
-                  |  
+        from_datetime 20170102T055959
+                  |
                   v
                     (Open)                        (Close)
-                    06:00                         00:55  
+                    06:00                         00:55
                     X_S1 ------------------------ X_S4
 
         """

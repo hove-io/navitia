@@ -25,19 +25,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
-import jormungandr
-from jormungandr.interfaces.v1.serializer import serialize_with, api
-from flask_restful import marshal_with
-from collections import OrderedDict
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.interfaces.v1.serializer import serialize_with
 
 
-def get_serializer(serpy, marshall):
-    if jormungandr.USE_SERPY:
-        return serialize_with(serpy)
-    else:
-        return marshal_with(OrderedDict(marshall), display_null=False)
+def get_serializer(serpy, marshall=None):
+    return serialize_with(serpy)
 
 
 def get_obj_serializer(obj):
-    return get_serializer(serpy=obj.output_type_serializer, marshall=obj.collections)
+    return get_serializer(serpy=obj.output_type_serializer)

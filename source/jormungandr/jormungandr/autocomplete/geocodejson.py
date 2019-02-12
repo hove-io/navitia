@@ -461,16 +461,9 @@ class GeocodeJson(AbstractAutocomplete):
         json_response = response_bragi.json()
         # Clean dict objects depending on depth passed in request parameter.
         json_response = cls._clean_response(json_response, depth)
-        if jormungandr.USE_SERPY:
-            from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
+        from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 
-            return GeocodePlacesSerializer(json_response).data
-        else:
-            m = marshal(json_response, geocodejson)
-            # Removing places that are not marshalled (None)
-            if isinstance(m.get('places'), list):
-                m['places'] = [p for p in m['places'] if p is not None]
-            return m
+        return GeocodePlacesSerializer(json_response).data
 
     def make_url(self, end_point, uri=None):
 
