@@ -142,6 +142,7 @@ class PlacesCommonSerializer(serpy.DictSerializer):
     If you add/modify fields here, please reflect your changes in
     'jormungandr.jormungandr.interfaces.v1.serializer.pt.PlaceSerializer'.
     '''
+
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     quality = LiteralField(0, deprecated=True)

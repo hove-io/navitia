@@ -80,9 +80,9 @@ class PbIntField(PbField):
 class NestedPbField(PbField):
     """
     handle nested pb field.
-    
+
     define attr='base_stop_time.departure_time'
-    
+
     it will get the departure_time field of the base_stop_time field
     """
 
@@ -283,8 +283,10 @@ class NestedPropertyField(jsonschema.Field):
 class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
 
+
 class StringNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(str)
+
 
 class LambdaField(Field):
     getter_takes_serializer = True
