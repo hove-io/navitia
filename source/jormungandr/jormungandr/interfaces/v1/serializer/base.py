@@ -283,6 +283,8 @@ class NestedPropertyField(jsonschema.Field):
 class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
 
+class StringNestedPropertyField(NestedPropertyField):
+    to_value = staticmethod(str)
 
 class LambdaField(Field):
     getter_takes_serializer = True

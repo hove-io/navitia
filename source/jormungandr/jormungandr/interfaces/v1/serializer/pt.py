@@ -395,6 +395,11 @@ class StopAreaSerializer(PbGenericSerializer):
 
 
 class PlaceSerializer(PbGenericSerializer):
+    '''
+    Warning: This class share it's interface with PlacesCommonSerializer (for Bragi)
+    If you add/modify fields here, please reflect your changes in
+    'jormungandr.jormungandr.interfaces.v1.serializer.geocode_json.PlacesCommonSerializer'.
+    '''
     quality = jsonschema.Field(schema_type=int, display_none=True, required=False, deprecated=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
