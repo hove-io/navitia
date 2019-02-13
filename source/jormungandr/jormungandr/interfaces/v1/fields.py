@@ -776,6 +776,7 @@ place = {
     "name": fields.String(),
     "quality": fields.Integer(),
     "id": fields.String(attribute='uri'),
+    "distance": fields.String(),
 }
 
 pt_object = {

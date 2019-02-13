@@ -395,6 +395,12 @@ class StopAreaSerializer(PbGenericSerializer):
 
 
 class PlaceSerializer(PbGenericSerializer):
+    '''
+    Warning: This class share it's interface with PlacesCommonSerializer (for Bragi)
+    If you add/modify fields here, please reflect your changes in
+    'jormungandr.jormungandr.interfaces.v1.serializer.geocode_json.PlacesCommonSerializer'.
+    '''
+
     quality = jsonschema.Field(schema_type=int, display_none=True, required=False, deprecated=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
@@ -402,10 +408,13 @@ class PlaceSerializer(PbGenericSerializer):
     embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
+    distance = jsonschema.StrField(
+        required=False, display_none=True, description='Distance to the object in meters'
+    )
 
 
 class PlaceNearbySerializer(PlaceSerializer):
-    distance = jsonschema.StrField(display_none=True)
+    pass
 
 
 class NetworkSerializer(PbGenericSerializer):
