@@ -326,7 +326,13 @@ ast::Expr parse(const std::string& request) {
 
     ast::Expr expr;
     auto iter = request.begin(), end = request.end();
-    if (phrase_parse(iter, end, grammar, space, expr)) {
+    bool parse_ok;
+    try {
+        parse_ok = phrase_parse(iter, end, grammar, space, expr);
+    } catch (qi::expectation_failure<std::string::const_iterator>&) {
+        parse_ok = false;
+    }
+    if (parse_ok) {
         if(iter != end) {
             const std::string unparsed(iter, end);
             throw parsing_error(parsing_error::partial_error, "Filter: Unable to parse the whole string. Not parsed: >>" + unparsed + "<<");
