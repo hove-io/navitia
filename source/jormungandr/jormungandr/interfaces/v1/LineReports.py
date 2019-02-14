@@ -88,7 +88,7 @@ class LineReports(ResourceUri, ResourceUtc):
             help="If filled, will restrain the search within the given disruption tags",
         )
 
-        self.collection = 'line_reports'  # TODO what?
+        self.collection = 'line_reports'
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

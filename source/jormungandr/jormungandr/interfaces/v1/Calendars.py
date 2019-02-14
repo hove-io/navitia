@@ -87,7 +87,7 @@ class Calendars(ResourceUri):
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
         )
-        self.collection = 'calendars'  # TODO ?
+        self.collection = 'calendars'
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

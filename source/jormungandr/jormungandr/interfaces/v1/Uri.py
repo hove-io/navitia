@@ -140,8 +140,6 @@ class Uri(ResourceUri, ResourceUtc):
         self.get_decorators.insert(0, ManageError())
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
-        collection = self.collection
-
         args = self.parsers["get"].parse_args()
 
         if args['disable_geojson']:
@@ -151,12 +149,12 @@ class Uri(ResourceUri, ResourceUtc):
         for forbid_id in args['__temporary_forbidden_id[]']:
             args['forbidden_uris[]'].append(forbid_id)
 
-        if "odt_level" in args and args["odt_level"] != "all" and "lines" not in collection:
+        if "odt_level" in args and args["odt_level"] != "all" and "lines" not in self.collection:
             abort(404, message="bad request: odt_level filter can only be applied to lines")
 
         if region is None and lat is None and lon is None:
             if "external_code" in args and args["external_code"]:
-                type_ = collections_to_resource_type[collection]
+                type_ = collections_to_resource_type[self.collection]
                 for instance in i_manager.get_regions():
                     res = i_manager.instances[instance].has_external_code(type_, args["external_code"])
                     if res:
@@ -188,18 +186,18 @@ class Uri(ResourceUri, ResourceUtc):
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-            if collection is None:
-                collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
+            if self.collection is None:
+                self.collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
         args["filter"] = self.get_filter(uris, args)
 
-        if collection and id:
-            f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
+        if self.collection and id:
+            f = u'{o}.uri={v}'.format(o=collections_to_resource_type[self.collection], v=protect(id))
             if args.get("filter"):
                 args["filter"] = '({}) and {}'.format(args["filter"], f)
             else:
                 args["filter"] = f
 
-        response = i_manager.dispatch(args, collection, instance_name=self.region)
+        response = i_manager.dispatch(args, self.collection, instance_name=self.region)
         return response
 
     def options(self, **kwargs):
