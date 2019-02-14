@@ -1,7 +1,7 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -26,16 +26,19 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-import pytest
-from jormungandr.interfaces.v1.fields import get_collections, CollectionException
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 
-def test_invalid_collection_name():
-    with pytest.raises(CollectionException):
-        get_collections('toto')
+raw_feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt",
+}
 
-
-def test_disruption_collection_name():
-    disruptions = get_collections('disruptions')
-    assert len(disruptions) == 5
+raw_feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright",
+}

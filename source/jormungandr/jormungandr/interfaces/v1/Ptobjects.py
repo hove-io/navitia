@@ -31,21 +31,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from flask_restful import fields, abort
+from flask_restful import abort
 from flask.globals import g
 
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
-from jormungandr.interfaces.v1.fields import (
-    NonNullList,
-    NonNullNested,
-    PbField,
-    error,
-    pt_object,
-    feed_publisher,
-    context,
-    disruption_marshaller,
-)
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.parsers import default_count_arg_type
@@ -53,15 +43,6 @@ from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFor
 
 from datetime import datetime
 import six
-
-
-pt_objects = {
-    "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "error": PbField(error, attribute='error'),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-    "context": context,
-}
 
 pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area", "stop_point"]
 pt_object_type_default_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]
@@ -108,7 +89,6 @@ class Ptobjects(ResourceUri):
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
         self.collection = 'pt_objects'
-        self.collections = pt_objects
         self.get_decorators.insert(0, get_obj_serializer(self))
 
     def options(self, **kwargs):

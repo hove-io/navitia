@@ -31,26 +31,17 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.make_links import create_external_link
-from flask_restful import marshal
 from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager, cache
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from flask_restful.fields import Raw
 from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
-from jormungandr.interfaces.v1.fields import (
-    ListLit,
-    beta_endpoint,
-    context_utc,
-    instance_status,
-    add_common_status,
-)
-from flask_restful import fields
+from jormungandr.interfaces.v1 import add_common_status
 
 
 class Index(ModuleResource):
@@ -78,15 +69,6 @@ class Index(ModuleResource):
         return response, 200
 
 
-technical_status = {
-    "bss_providers": Raw,
-    "regions": Raw,
-    "jormungandr_version": Raw,
-    "context": context_utc,
-    "warnings": ListLit([fields.Nested(beta_endpoint)]),
-}
-
-
 class TechnicalStatus(ModuleResource):
     """
     Status is mainly used for supervision
@@ -94,7 +76,7 @@ class TechnicalStatus(ModuleResource):
     return status for all instances
     """
 
-    @get_serializer(serpy=TechnicalStatusSerializer, marshall=technical_status)
+    @get_serializer(serpy=TechnicalStatusSerializer)
     def get(self):
         response = {
             "jormungandr_version": __version__,
