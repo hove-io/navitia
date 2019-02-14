@@ -1,5 +1,5 @@
 # encoding: utf-8
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -31,24 +31,23 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import jmespath
 
-from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
+from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 
-DEFAULT_STAR_FEED_PUBLISHER = None
+DEFAULT_SYTRAL_FEED_PUBLISHER = None
 
 
-class StarProvider(CommonCarParkProvider):
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
-        self.provider_name = 'STAR'
+class SytralProvider(CommonCarParkProvider):
+    def __init__(
+        self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_SYTRAL_FEED_PUBLISHER, **kwargs
+    ):
+        self.provider_name = 'SYTRAL'
 
-        super(StarProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
+        super(SytralProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
     def process_data(self, data, poi):
-        park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
+        park = jmespath.search('records[?car_park_id==`{}`]|[0]'.format(poi['properties']['ref']), data)
         if park:
-            available = jmespath.search('fields.nombreplacesdisponibles', park)
-            occupied = jmespath.search('fields.nombreplacesoccupees', park)
-            # Person with reduced mobility
-            available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
-            occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
-            return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+            return ParkingPlaces(
+                park['available'], park['occupied'], park['available_PRM'], park['occupied_PRM']
+            )

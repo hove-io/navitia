@@ -1,5 +1,5 @@
 # encoding: utf-8
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -29,26 +29,38 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import jmespath
+from mock import MagicMock
 
-from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
+from jormungandr.parking_space_availability.car.sytral import SytralProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 
-DEFAULT_STAR_FEED_PUBLISHER = None
+import json
+
+poi = {
+    'properties': {'operator': 'sytral', 'ref': 'park_42'},
+    'poi_type': {'name': 'Parking', 'id': 'poi_type:public_parking'},
+}
+
+sytral_response = """
+    {
+        "records":
+        [
+            {
+                "car_park_id": "park_42",
+                "updated_time": "2019-01-29T14:47:21.826327317+01:00",
+                "available": 4,
+                "occupied": 3,
+                "available_PRM": 1,
+                "occupied_PRM": 0
+            }
+        ]
+    }
+    """
 
 
-class StarProvider(CommonCarParkProvider):
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
-        self.provider_name = 'STAR'
-
-        super(StarProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
-
-    def process_data(self, data, poi):
-        park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
-        if park:
-            available = jmespath.search('fields.nombreplacesdisponibles', park)
-            occupied = jmespath.search('fields.nombreplacesoccupees', park)
-            # Person with reduced mobility
-            available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
-            occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
-            return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+def car_park_space_get_information_test():
+    parking_places = ParkingPlaces(available=4, occupied=3, available_PRM=1, occupied_PRM=0)
+    provider = SytralProvider(url="sytral.url", operators={'Sytral'}, dataset='sytral_dataset', timeout=42)
+    provider._call_webservice = MagicMock(return_value=json.loads(sytral_response))
+    info = provider.get_informations(poi)
+    assert info == parking_places
