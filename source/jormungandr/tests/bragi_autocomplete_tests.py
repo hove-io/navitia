@@ -562,6 +562,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
             assert len(r) == 1
+            assert r[0]['id'] == '3.282103;49.847586'
             assert r[0]['name'] == '20 Rue Bob (Bobtown)'
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
@@ -740,6 +741,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
             r = response.get('places')
             assert len(r) == 1
+            assert r[0]['id'] == 'bobette'
             assert r[0]['embedded_type'] == 'poi'
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
