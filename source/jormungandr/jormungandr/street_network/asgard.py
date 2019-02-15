@@ -43,12 +43,22 @@ import six
 
 class Asgard(Kraken):
     def __init__(
-        self, instance, service_url, asgard_socket, modes=[], id='asgard', timeout=10, api_key=None, **kwargs
+        self, instance, service_url, asgard_socket, modes=None, id=None, timeout=10, api_key=None, **kwargs
     ):
-        super(Asgard, self).__init__(instance, service_url, modes, id, timeout, api_key, **kwargs)
+        super(Asgard, self).__init__(
+            instance, service_url, modes or [], id or 'asgard', timeout, api_key, **kwargs
+        )
         self.asgard_socket = asgard_socket
         self.timeout = timeout
         self._sockets = queue.Queue()
+
+    def status(self):
+        return {
+            'id': unicode(self.sn_system_id),
+            'class': self.__class__.__name__,
+            'modes': self.modes,
+            'asgard_socket': self.asgard_socket,
+        }
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
         speed_switcher = {

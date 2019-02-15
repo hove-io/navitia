@@ -75,10 +75,10 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
 
 static pbnavitia::Response compute_iti(
     const ed::builder& b,
-    const char* datetime, 
-    const std::string& from, 
+    const char* datetime,
+    const std::string& from,
     const std::string& to,
-    const navitia::type::RTLevel level) 
+    const navitia::type::RTLevel level)
 {
     navitia::type::EntryPoint origin(b.data->get_type_of_id(from), from);
     navitia::type::EntryPoint destination(b.data->get_type_of_id(to), to);
@@ -1751,11 +1751,11 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
 
-    // The realtime vj should have all 3 stop_times 
+    // The realtime vj should have all 3 stop_times
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).stop_point->uri, "stop_point:10");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).departure_time, "08:11"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).boarding_time, "08:06"_t); // Boarding time is 5 min (300s) before departure 
-    
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).boarding_time, "08:06"_t); // Boarding time is 5 min (300s) before departure
+
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
@@ -2365,9 +2365,15 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
-    BOOST_CHECK_EQUAL(res.impacts_size(), 2);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 2);
+    for (const auto& impact: res.impacts()) {
+        if (impact.uri() == "feed-2") {
+            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+            BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).is_detour(), false);
+            BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
+        }
+    }
 
     // We should not have any journey in public_transport from B_bis to C
     res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
@@ -2396,9 +2402,13 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).is_detour(), false);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
+    for (const auto& impact: res.impacts()) {
+        if (impact.uri() == "feed-3") {
+            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+            BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).is_detour(), false);
+            BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
+        }
+    }
 
     // We should not have any journey in public_transport from B_bis to C
     res = compute("20171101T073000", "stop_point:B_bis", "stop_point:C");
@@ -2583,7 +2593,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
         ("stop_point:C", "08:30"_t)
         ("stop_point:D", "08:40"_t);
     b.make();
- 
+
     tr::TripUpdate add_stop = ntest::make_delay_message("vj:1", "20171101", {
         RTStopTime("stop_point:A", "20171101T0810"_pts),
         RTStopTime("stop_point:B", "20171101T0820"_pts).added(),
@@ -2595,7 +2605,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
     b.make();
 
     auto res = compute_iti(b, "20171101T080000", "A", "D", nt::RTLevel::RealTime);
-    
+
     BOOST_REQUIRE_EQUAL(res.impacts_size(), 1);
     BOOST_REQUIRE_EQUAL(res.impacts(0).impacted_objects_size(), 1);
 
@@ -2654,14 +2664,14 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
         ("A", "08:50"_t).make();
     b.make();
 
-    navitia::handle_realtime("add_new_stop", timestamp, 
+    navitia::handle_realtime("add_new_stop", timestamp,
                              ntest::make_delay_message("vj:1", "20171101", {
                                 RTStopTime("A", "20171101T0810"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0820"_pts).delay(1_min),
                                 RTStopTime("C", "20171101T0830"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0840"_pts).delay(1_min),
                                 RTStopTime("A", "20171101T0850"_pts).delay(1_min),
-                             }), 
+                             }),
                              *b.data, true);
     b.make();
 
@@ -2685,14 +2695,14 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
     We create a network with a lollipop and apply delay on every stop points.
     We expect from the "real time" VJ that its base stop times are matching the original VJ.
 
-        (08:10) A   
+        (08:10) A
                 ▼
-                |    
+                |
         (08:20) B ▶ ─────╮
-                         C (08:30) 
+                         C (08:30)
         (08:40) B ◀ ─────╯
-                |     
-                ▼ 
+                |
+                ▼
         (08:50) D
     */
     ed::builder b("20171101");
@@ -2705,14 +2715,14 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
         ("D", "08:50"_t).make();
     b.make();
 
-    navitia::handle_realtime("add_new_stop", timestamp, 
+    navitia::handle_realtime("add_new_stop", timestamp,
                              ntest::make_delay_message("vj:1", "20171101", {
                                 RTStopTime("A", "20171101T0810"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0820"_pts).delay(1_min),
                                 RTStopTime("C", "20171101T0830"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0840"_pts).delay(1_min),
                                 RTStopTime("D", "20171101T0850"_pts).delay(1_min),
-                             }), 
+                             }),
                              *b.data, true);
     b.make();
 

@@ -1,3 +1,16 @@
+navitia2 (2.73.0) unstable; urgency=low
+
+  * Doc: ptref grammar  <https://github.com/CanalTP/navitia/pull/2664>
+  * Kraken: Fix realtime test (on ubuntu 16.04)  <https://github.com/CanalTP/navitia/pull/2670>
+  * Jormun: Sytral parking RT + test  <https://github.com/CanalTP/navitia/pull/2669>
+  * Doc: 'distance' field from 'Place' object in the swagger  <https://github.com/CanalTP/navitia/pull/2671>
+  * PTref: Fix uncatched exception when ptref_ng read an unclosed string  <https://github.com/CanalTP/navitia/pull/2677>
+  * Kraken: rebuild previous raptor cache in maintenance worker after applying realtime  <https://github.com/CanalTP/navitia/pull/2668>
+  * Kraken: reduce the number of labels on prometheus metrics  <https://github.com/CanalTP/navitia/pull/2672>
+  * Jormungandr: Module with parking  <https://github.com/CanalTP/navitia/pull/2660>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 15 Feb 2019 11:02:44 +0100
+
 navitia2 (2.72.0) unstable; urgency=low
 
   * Jormun: do not cache coverage search by coord  <https://github.com/CanalTP/navitia/pull/2665>

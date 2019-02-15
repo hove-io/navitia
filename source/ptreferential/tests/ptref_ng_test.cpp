@@ -119,6 +119,7 @@ BOOST_AUTO_TEST_CASE(parse_str) {
     assert_expr(R"#(a.a("\""))#", R"#(a.a("\""))#");
     assert_expr(R"#(a.a("\\"))#", R"#(a.a("\\"))#");
     assert_expr(R"#(a.a("  "))#", R"#(a.a("  "))#");
+    BOOST_CHECK_THROW(parse(R"#(a.a=\"42)#"), parsing_error); // unclosed "
 }
 
 BOOST_AUTO_TEST_CASE(parse_legacy_tests) {

@@ -42,10 +42,10 @@ from jormungandr import utils
 
 
 class Kraken(AbstractStreetNetworkService):
-    def __init__(self, instance, service_url, modes=[], id='kraken', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        self.modes = modes
-        self.sn_system_id = id
+        self.modes = modes or []
+        self.sn_system_id = id or 'kraken'
 
     def status(self):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}

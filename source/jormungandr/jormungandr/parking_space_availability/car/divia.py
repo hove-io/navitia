@@ -34,7 +34,6 @@ from collections import namedtuple
 
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
-from jormungandr.ptref import FeedPublisher
 
 DEFAULT_DIVIA_FEED_PUBLISHER = None
 
@@ -43,7 +42,7 @@ SearchPattern = namedtuple('SearchPattern', ['id_park', 'available', 'total'])
 
 def divia_maker(search_patterns):
     class _DiviaProvider(CommonCarParkProvider):
-        # search patterns that are different depending on divia's dataset
+        # search patterns are different depending on divia's dataset
         id_park = None
         available = None
         total = None
@@ -51,11 +50,9 @@ def divia_maker(search_patterns):
         def __init__(
             self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs
         ):
-
-            self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
             self.provider_name = 'DIVIA'
 
-            super(_DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+            super(_DiviaProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
         def process_data(self, data, poi):
             park = jmespath.search(

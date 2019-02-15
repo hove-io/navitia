@@ -308,7 +308,7 @@ geocode_admin = {
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
     "administrative_region": AdministrativeRegionField(),
-    "distance": Integer(attribute='distance', default=None),
+    "distance": fields.String(attribute='distance', default=None),
 }
 
 
@@ -318,7 +318,7 @@ geocode_addr = {
     "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "address": AddressField(),
-    "distance": Integer(attribute='distance', default=None),
+    "distance": fields.String(attribute='distance', default=None),
 }
 
 geocode_poi = {
@@ -327,7 +327,7 @@ geocode_poi = {
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField(),
-    "distance": Integer(attribute='distance', default=None),
+    "distance": fields.String(attribute='distance', default=None),
 }
 
 geocode_stop_area = {
@@ -336,7 +336,7 @@ geocode_stop_area = {
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "stop_area": StopAreaField(),
-    "distance": Integer(attribute='distance', default=None),
+    "distance": fields.String(attribute='distance', default=None),
 }
 
 geocode_feature_func_mapping = {
