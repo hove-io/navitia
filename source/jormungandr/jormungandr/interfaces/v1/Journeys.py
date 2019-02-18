@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask_restful import fields, marshal_with, abort, inputs
+from flask_restful import fields, abort, inputs
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import (

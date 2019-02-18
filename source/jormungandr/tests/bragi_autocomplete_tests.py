@@ -759,10 +759,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             response = self.query_region("places/1234?&pt_dataset[]=main_routing_test")
 
             assert response.get('feed_publishers')
-            if app.config['USE_SERPY']:
-                assert len(response.get('feed_publishers')) == 3
-            else:
-                assert len(response.get('feed_publishers')) == 2
+            assert len(response.get('feed_publishers')) == 3
 
             r = response.get('places')
             assert len(r) == 1
@@ -803,10 +800,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             )
 
             assert response.get('feed_publishers')
-            if app.config['USE_SERPY']:
-                assert len(response.get('feed_publishers')) == 3
-            else:
-                assert len(response.get('feed_publishers')) == 2
+            assert len(response.get('feed_publishers')) == 3
 
             r = response.get('places')
             assert len(r) == 1
@@ -861,10 +855,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'properties' not in r[0]['stop_area']
             # Attribute displayed but None
             assert not r[0]['stop_area'].get('timezone')
-            if app.config['USE_SERPY']:
-                assert 'distance' not in r[0]
-            else:
-                assert not r[0]['distance']
+            assert 'distance' not in r[0]
 
     def test_feature_unknown_type(self):
         mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_TYPE_UNKNOWN, limite=2)
@@ -995,10 +986,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            if app.config['USE_SERPY']:
-                assert 'distance' not in r[0]
-            else:
-                assert not r[0]['distance']
+            assert 'distance' not in r[0]
+
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['properties']["amenity"] == "bicycle_rental"
@@ -1064,10 +1053,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Créteil (94000)'
             assert r[0]['administrative_region']['id'] == 'admin:fr:941'
             assert r[0]['administrative_region']['zip_code'] == '94000'
-            if app.config['USE_SERPY']:
-                assert 'distance' not in r[0]
-            else:
-                assert not r[0]['distance']
+            assert 'distance' not in r[0]
 
     def test_autocomplete_for_administrative_region_with_wrong_type(self):
         mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE)

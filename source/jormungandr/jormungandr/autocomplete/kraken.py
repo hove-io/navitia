@@ -43,7 +43,7 @@ from jormungandr.interfaces.v1.fields import (
     feed_publisher,
     disruption_marshaller,
 )
-from flask_restful import marshal_with, fields, abort
+from flask_restful import fields, abort
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.utils import date_to_timestamp

@@ -58,10 +58,6 @@ from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
 
-# there is a import order problem to get this variable in decorators (current_app is not in the context)
-# so we make it a global variable
-USE_SERPY = app.config.get('USE_SERPY')
-
 app.url_rule_class = NavitiaRule
 app.request_class = NavitiaRequest
 CORS(
