@@ -198,14 +198,14 @@ BOOST_AUTO_TEST_CASE(create_only_rt_vjs_test) {
     ed::builder b("20120614");
     auto& pt_data = *b.data->pt_data;
 
-    const auto* rt_vj = b.vj("line_A", "000011", "block_id_A", false, "uri_C", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    const auto* rt_vj = b.vj("line_A", "000011", "block_id_A", false, "uri_A", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
     BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
     BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("000011"));
-    rt_vj = b.vj("line_A", "001100", "block_id_A", false, "uri_C", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
-    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("000000"));
-    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("000000"));
-    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("001100"));
+    const auto* rt_vj2 = b.vj("line_A", "001100", "block_id_A", false, "uri_B", "meta_vj_name_A", "", nt::RTLevel::RealTime)("stop1", 8000, 8000)("stop2", 8100, 8100).make();
+    BOOST_CHECK_EQUAL(rt_vj2->base_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj2->adapted_validity_pattern()->days, year("000000"));
+    BOOST_CHECK_EQUAL(rt_vj2->rt_validity_pattern()->days, year("001100"));
     // Meta VJ
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     auto* mvj = pt_data.meta_vjs.get_mut(navitia::Idx<nt::MetaVehicleJourney>(0));

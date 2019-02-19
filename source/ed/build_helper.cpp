@@ -70,7 +70,7 @@ VJ::VJ(builder& b,
     start_time(start_time),
     end_time(end_time),
     headway_secs(headway_secs),
-    _vj_type(vj_type),
+    vj_type(vj_type),
     _vp(b.begin, validity_pattern)
 {}
 
@@ -182,14 +182,14 @@ nt::VehicleJourney* VJ::make() {
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         _uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, _vj_type, _vp, route, sts, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, vj_type, _vp, route, sts, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, _vj_type, _vp, route, sts, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, vj_type, _vp, route, sts, pt_data);
     }
     // default dataset
     if (!vj->dataset){

@@ -78,7 +78,7 @@ struct VJ {
     const uint32_t start_time;
     const uint32_t end_time;
     const uint32_t headway_secs;
-    const nt::RTLevel _vj_type;
+    const nt::RTLevel vj_type;
     std::vector<ST> stop_times;
     nt::VehicleJourney* vj = nullptr;
     nt::ValidityPattern _vp;
