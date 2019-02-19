@@ -57,6 +57,7 @@ namespace navitia { namespace kraken{
             int broker_sleeptime() const;
             bool is_realtime_enabled() const;
             bool is_realtime_add_enabled() const;
+            bool enable_realtime_add_trip() const;
             int kirin_timeout() const;
             int kirin_retry_timeout() const;
             bool display_contributors() const;

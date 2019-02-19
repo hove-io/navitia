@@ -250,17 +250,23 @@ get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
     }
 }
 
-static bool is_added_service(const transit_realtime::TripUpdate& trip_update) {
+static bool is_added_trip(const transit_realtime::TripUpdate& trip_update) {
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
-    using nt::disruption::StopTimeUpdate;
 
-    // adding a trip is adding service
     if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
         LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
         return true;
     }
-    else if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
+    return false;
+}
+
+static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) {
+    namespace trt = transit_realtime;
+    auto log = log4cplus::Logger::getInstance("realtime");
+    using nt::disruption::StopTimeUpdate;
+
+    if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
@@ -351,16 +357,11 @@ static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
-                  const type::Data& data,
-                  const bool is_realtime_add_enabled) {
+                  const type::Data& data)
+{
     namespace bpt = boost::posix_time;
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
-
-    if (! is_realtime_add_enabled && is_added_service(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Disruption is ADDING service and realtime-adding is disabled: ignoring it");
-        return nullptr;
-    }
 
     LOG4CPLUS_DEBUG(log, "Creating disruption");
 
@@ -522,13 +523,23 @@ void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate& trip_update,
                      const type::Data& data,
-                     const bool is_realtime_add_enabled) {
+                     const bool is_realtime_add_enabled,
+                     const bool enable_realtime_add_trip)
+{
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
     if (! is_handleable(trip_update)
             || ! check_trip_update(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
+        return;
+    }
+    if (! enable_realtime_add_trip && is_added_trip(trip_update)) {
+        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring it");
+        return;
+    }
+    if (! is_realtime_add_enabled && is_added_stop_time(trip_update)) {
+        LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring it");
         return;
     }
 
@@ -539,7 +550,7 @@ void handle_realtime(const std::string& id,
         return;
     }
 
-    const auto* disruption = create_disruption(id, timestamp, trip_update, data, is_realtime_add_enabled);
+    const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
     if (! disruption || ! check_disruption(*disruption)) {
         LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
