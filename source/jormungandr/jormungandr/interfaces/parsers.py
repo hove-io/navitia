@@ -31,5 +31,5 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import app
 from navitiacommon import parser_args_type
 
-parser_max_count = app.config['PARSER_MAX_COUNT']
+parser_max_count = app.config.get(str('PARSER_MAX_COUNT'), 1000)
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)

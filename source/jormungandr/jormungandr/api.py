@@ -125,7 +125,6 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.logger.warning('=======================================================')
     import profile
 
-    profile.Profile.bias = rest_api.app.config.get('PROFILING_BIAS', 0)
     from werkzeug.contrib.profiler import ProfilerMiddleware
 
     rest_api.app.config['PROFILE'] = True

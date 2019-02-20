@@ -45,7 +45,7 @@ from navitiacommon.utils import street_source_types, address_source_types, poi_s
 from navitiacommon import default_values
 import os
 
-db = SQLAlchemy()
+db = SQLAlchemy()  # type: SQLAlchemy
 
 
 class TimestampMixin(object):
@@ -73,7 +73,7 @@ class ArrayOfEnum(ARRAY):
         return process
 
 
-class EndPoint(db.Model):
+class EndPoint(db.Model):  # type: ignore
     """
     define a DNS name exposed by navitia, each useris associated wich one
     """
@@ -95,7 +95,7 @@ class EndPoint(db.Model):
         return cls.query.filter(cls.default == True).first()
 
 
-class Host(db.Model):
+class Host(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.Text, nullable=False)
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
@@ -107,7 +107,7 @@ class Host(db.Model):
         return self.value
 
 
-class User(db.Model):
+class User(db.Model):  # type: ignore
     __table_args__ = (
         UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
         UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'),
@@ -223,7 +223,7 @@ class User(db.Model):
         return instances
 
 
-class Key(db.Model):
+class Key(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
@@ -243,7 +243,7 @@ class Key(db.Model):
         return cls.query.filter_by(token=token).first()
 
 
-class PoiTypeJson(db.Model):
+class PoiTypeJson(db.Model):  # type: ignore
     poi_types_json = db.Column(db.Text, nullable=True)
     instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), primary_key=True, nullable=False)
 
@@ -254,7 +254,7 @@ class PoiTypeJson(db.Model):
         self.instance = instance
 
 
-class Instance(db.Model):
+class Instance(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     discarded = db.Column(db.Boolean, default=False, nullable=False)
@@ -540,7 +540,7 @@ class Instance(db.Model):
         return '<Instance %r>' % self.name
 
 
-class TravelerProfile(db.Model):
+class TravelerProfile(db.Model):  # type: ignore
     # http://stackoverflow.com/questions/24872541/could-not-assemble-any-primary-key-columns-for-mapped-table
     __tablename__ = 'traveler_profile'
     coverage_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
@@ -608,7 +608,7 @@ class TravelerProfile(db.Model):
         return models
 
 
-class Api(db.Model):
+class Api(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
 
@@ -621,7 +621,7 @@ class Api(db.Model):
         return '<Api %r>' % self.name
 
 
-class Authorization(db.Model):
+class Authorization(db.Model):  # type: ignore
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
     instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), primary_key=True, nullable=False)
     api_id = db.Column(db.Integer, db.ForeignKey('api.id'), primary_key=True, nullable=False)
@@ -635,7 +635,7 @@ class Authorization(db.Model):
         return '<Authorization %r-%r-%r>' % (self.user_id, self.instance_id, self.api_id)
 
 
-class Job(db.Model, TimestampMixin):
+class Job(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     task_uuid = db.Column(db.Text)
     instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'))
@@ -657,7 +657,7 @@ class Job(db.Model, TimestampMixin):
         return cls.query.all()
 
 
-class Metric(db.Model):
+class Metric(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
 
@@ -676,7 +676,7 @@ class Metric(db.Model):
         return '<Metric {}>'.format(self.id)
 
 
-class DataSet(db.Model):
+class DataSet(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Text, nullable=False)
     family_type = db.Column(db.Text, nullable=False)
@@ -700,7 +700,7 @@ class DataSet(db.Model):
         return '<DataSet %r>' % self.id
 
 
-class BillingPlan(db.Model):
+class BillingPlan(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     max_request_count = db.Column(db.Integer, default=0)
@@ -715,7 +715,7 @@ class BillingPlan(db.Model):
         return cls.query.filter_by(default=True, end_point=end_point).first()
 
 
-class AutocompleteParameter(db.Model, TimestampMixin):
+class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
     street = db.Column(db.Enum(*street_source_types, name='source_street'), nullable=True)

@@ -28,6 +28,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+try:
+    from typing import Dict, Text, Any, Tuple
+except ImportError:
+    pass
 import logging
 from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
@@ -52,12 +57,14 @@ class PartialResponseContext(object):
     partial_response_is_empty = True
     orig_places_free_access = None
     dest_places_free_access = None
-    journeys_to_modes = dict()  # Map of journeys's internal id to fallback modes.
+    # Map of journeys's internal id to fallback modes.
+    journeys_to_modes = dict()  # type: Dict[Text, Tuple[Text, Text]]
 
 
 class Distributed(object):
     @staticmethod
     def _map_journeys_to_modes(pt_journey_elements):
+        # type: (Any) -> Dict[Text, Tuple[Text, Text]]
         """
         Map the journeys's internal id (for each pt_journey_elements) with its fallback modes
 

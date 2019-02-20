@@ -80,14 +80,16 @@ class Timeo(RealtimeProxy):
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'])
+        fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_TIMEO_FAIL'), 5)
+        )
         reset_timeout = kwargs.get(
-            'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S']
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'), 60)
         )
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         # A step is applied on from_datetime to discretize calls and allow caching them
         self.from_datetime_step = kwargs.get(
-            'from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60)
+            'from_datetime_step', app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60)
         )
 
         # Note: if the timezone is not know, pytz raise an error
@@ -116,7 +118,7 @@ class Timeo(RealtimeProxy):
         except:
             return self.rt_system_id
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60))
     def _call_timeo(self, url):
         """
         http call to timeo
@@ -306,7 +308,7 @@ class Timeo(RealtimeProxy):
             },
         }
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
     def _get_direction_name(self, line_uri, object_code, default_value):
         stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
 

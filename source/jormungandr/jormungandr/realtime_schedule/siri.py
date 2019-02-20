@@ -243,7 +243,7 @@ class Siri(RealtimeProxy):
 
         return next_passages
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SIRI'), 60))
     def _call_siri(self, request):
         encoded_request = request.encode('utf-8', 'backslashreplace')
         headers = {"Content-Type": "text/xml; charset=UTF-8", "Content-Length": str(len(encoded_request))}
