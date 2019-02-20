@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker: navitia/debian8_dev
+  steps:
+    - checkout
+    - run: git submodule update --init --recursive
+    - run: pip install --exists-action=w -r source/jormungandr/requirements_dev.txt
+    - run: mkdir build && cd build
+    - run: cmake -DCMAKE_BUILD_TYPE=Release ../source
+    - run: make -j$(nproc)
+    - run: make test
