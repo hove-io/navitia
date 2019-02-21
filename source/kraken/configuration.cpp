@@ -59,7 +59,9 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.is_realtime_enabled", po::value<bool>()->default_value(false),
                                         "enable loading of realtime data")
         ("GENERAL.is_realtime_add_enabled", po::value<bool>()->default_value(false),
-                                        "enable loading of realtime data that add stop_times or trips")
+                                        "enable loading of realtime data that add stop_times")
+        ("GENERAL.is_realtime_add_trip_enabled", po::value<bool>()->default_value(false),
+                                        "enable loading of realtime data that add trips (only if is_realtime_add_enabled is activated)")
         ("GENERAL.kirin_timeout", po::value<int>()->default_value(60000),
                                   "timeout in ms for loading realtime data from kirin")
         ("GENERAL.kirin_retry_timeout", po::value<int>()->default_value(5*60*1000),
@@ -163,6 +165,10 @@ bool Configuration::is_realtime_enabled() const{
 
 bool Configuration::is_realtime_add_enabled() const{
     return this->vm["GENERAL.is_realtime_add_enabled"].as<bool>();
+}
+
+bool Configuration::is_realtime_add_trip_enabled() const{
+    return this->vm["GENERAL.is_realtime_add_trip_enabled"].as<bool>();
 }
 
 int Configuration::kirin_timeout() const{
