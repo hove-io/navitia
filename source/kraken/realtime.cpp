@@ -266,8 +266,7 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
     auto log = log4cplus::Logger::getInstance("realtime");
     using nt::disruption::StopTimeUpdate;
 
-    if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED
-                && trip_update.stop_time_update_size()) {
+    if (trip_update.stop_time_update_size()) {
         for (const auto& st: trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
             if (in(get_status(st.departure(), st),
@@ -524,7 +523,7 @@ void handle_realtime(const std::string& id,
                      const transit_realtime::TripUpdate& trip_update,
                      const type::Data& data,
                      const bool is_realtime_add_enabled,
-                     const bool enable_realtime_add_trip)
+                     const bool is_realtime_add_trip_enabled)
 {
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
@@ -534,12 +533,18 @@ void handle_realtime(const std::string& id,
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
     }
-    if (! enable_realtime_add_trip && is_added_trip(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring it");
+    // if is_realtime_add_enabled = false, this disables the adding trip option too
+    if ((! is_realtime_add_enabled && is_added_stop_time(trip_update)) ||
+        (! is_realtime_add_enabled && is_added_trip(trip_update))) {
+        LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring trip update id "
+                << trip_update.trip().trip_id()
+                << " with ADDED/ADDED_FOR_DETOUR stop times or ADDITIONAL_SERVICE effect");
         return;
     }
-    if (! is_realtime_add_enabled && is_added_stop_time(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring it");
+    if (! is_realtime_add_trip_enabled && is_added_trip(trip_update)) {
+        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring trip update id "
+                << trip_update.trip().trip_id()
+                << " with ADDITIONAL_SERVICE effect");
         return;
     }
 
