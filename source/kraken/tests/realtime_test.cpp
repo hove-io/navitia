@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     // we should not have created any objects save for one validity_pattern
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_REQUIRE_EQUAL(disruption->contributor, "cow.owner");
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     // we should not have created any objects save for one validity_pattern
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150929");
     const auto& pt_data = b.data->pt_data;
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     BOOST_CHECK_EQUAL(stus[1].cause, "birds on the tracks");
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     // we add a third time the same message but with a different id, it should not change anything
     // but for the number of impacts in the meta vj
-    navitia::handle_realtime("bobette", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("bobette", timestamp, trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -347,8 +347,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
                     RTStopTime("stop2", "20150928T0910"_pts).delay(9_min)
             });
     b.data->build_uri();
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 }
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update_1, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update_1, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     }
 
     // we add a second time the realtime message
-    navitia::handle_realtime(feed_id_1, timestamp, trip_update_2, *b.data, true);
+    navitia::handle_realtime(feed_id_1, timestamp, trip_update_2, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     auto vj_A = pt_data->vehicle_journeys.at(0);
     BOOST_CHECK_EQUAL(vj_A->base_validity_pattern(), vj_A->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update_A, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update_A, *b.data, true, true);
 
     // We should have 3 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 3);
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     BOOST_CHECK_NE(vj_A->base_validity_pattern(), vj_A->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime(feed_id_1, timestamp, trip_update_B, *b.data, true);
+    navitia::handle_realtime(feed_id_1, timestamp, trip_update_B, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 2);
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     auto vj_A = pt_data->vehicle_journeys.at(0);
     BOOST_CHECK_EQUAL(vj_A->base_validity_pattern(), vj_A->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, trip_update_A, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, trip_update_A, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
 
-    navitia::handle_realtime(feed_id, timestamp, wrong_st_order, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, wrong_st_order, *b.data, true, true);
 
     //there should be no disruption added
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
                     RTStopTime("stop2", "20150928T0910"_pts, "20150928T0900"_pts).arrival_delay(9_min)
             });
 
-    navitia::handle_realtime(feed_id, timestamp, dep_before_arr, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, dep_before_arr, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_data->disruption_holder.nb_disruptions(), 0);
@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
                     RTStopTime("stop2", "20150927T0300"_pts).delay(18_h)
             });
 
-    navitia::handle_realtime(feed_id, timestamp, wrong_first_st, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, wrong_first_st, *b.data, true, true);
 
     //there should be no disruption added
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayD0", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0", timestamp, trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("delay1DayD0_bis", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0_bis", timestamp, trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayPassMidnightD0", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayPassMidnightD0", timestamp, trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("delay1DayPassMidnightD0_bis", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayPassMidnightD0_bis", timestamp, trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("delay1HourD0", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1HourD0", timestamp, second_trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1003,7 +1003,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("backToNormalD0", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("backToNormalD0", timestamp, second_trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1070,7 +1070,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1081,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("delay1HourD1", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1HourD1", timestamp, second_trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1142,7 +1142,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1DayD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1153,7 +1153,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("cancelD0", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD0", timestamp, second_trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay1dayD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1dayD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1220,7 +1220,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("cancelD1", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD1", timestamp, second_trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -1270,7 +1270,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("cancelD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1283,7 +1283,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("cancelD1", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD1", timestamp, second_trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -1340,7 +1340,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("delay10HoursD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay10HoursD0", timestamp, first_trip_update, *b.data, true, true);
 
     // We should have 2 vj
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1351,7 +1351,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     // we add a second time the realtime message, it should not change anything
-    navitia::handle_realtime("cancelD0", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD0", timestamp, second_trip_update, *b.data, true, true);
 
 
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1412,7 +1412,7 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts().size(), 0);
 
-    navitia::handle_realtime("delay1hourD0", timestamp, first_trip_update, *b.data, true);
+    navitia::handle_realtime("delay1hourD0", timestamp, first_trip_update, *b.data, true, true);
 
     // get vj realtime for d0 and check it's on day 0
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -1425,7 +1425,7 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(vj_rt_d0->get_impacts().size(), 1);
     BOOST_CHECK_EQUAL(vj_rt_d0->get_impacts()[0]->uri, "delay1hourD0");
 
-    navitia::handle_realtime("delay2hourD1", timestamp, second_trip_update, *b.data, true);
+    navitia::handle_realtime("delay2hourD1", timestamp, second_trip_update, *b.data, true, true);
 
     // get vj realtime for d1 and check it's on day 1
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
@@ -1441,7 +1441,7 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(vj_rt_d1->get_impacts().size(), 1);
     BOOST_CHECK_EQUAL(vj_rt_d1->get_impacts()[0]->uri, "delay2hourD1");
 
-    navitia::handle_realtime("cancelD3", timestamp, third_trip_update, *b.data, true);
+    navitia::handle_realtime("cancelD3", timestamp, third_trip_update, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 3);
@@ -1469,8 +1469,8 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
             RTStopTime("stop2", "20150929T1010"_pts).delay(1_h)
         });
     transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
-    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true);
-    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true);
+    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
+    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
 
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
@@ -1494,7 +1494,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
             RTStopTime("stop1", "20150928T0910"_pts).delay(69_min),
             RTStopTime("stop2", "20150929T1010"_pts).delay(69_min)
         });
-    navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data, true, true);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
     navitia::disruption::traffic_reports(pb_creator, *b.data,
@@ -1531,7 +1531,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime(feed_id, timestamp, bad_trip_update, *b.data, true);
+    navitia::handle_realtime(feed_id, timestamp, bad_trip_update, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1603,9 +1603,9 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     auto vj = pt_data->vehicle_journeys.front();
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    navitia::handle_realtime("feed_42", "20150101T1337"_dt, trip_update_1, *b.data, true);
-    navitia::handle_realtime("feed_43", "20150101T1338"_dt, trip_update_2, *b.data, true);
-    navitia::handle_realtime("feed_44", "20150101T1339"_dt, trip_update_3, *b.data, true);
+    navitia::handle_realtime("feed_42", "20150101T1337"_dt, trip_update_1, *b.data, true, true);
+    navitia::handle_realtime("feed_43", "20150101T1338"_dt, trip_update_2, *b.data, true, true);
+    navitia::handle_realtime("feed_44", "20150101T1339"_dt, trip_update_3, *b.data, true, true);
 
     BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
@@ -1673,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
                     RTStopTime("stop_point:30", "20170102T084000"_pts, "20170102T084100"_pts).delay(10_min),
                     RTStopTime("stop_point:40", "20170102T085000"_pts, "20170102T085100"_pts).delay(10_min)
             });
-    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data, true);
+    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1734,7 +1734,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
                     RTStopTime("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
                     RTStopTime("stop_point:10", "20170102T084000"_pts, "20170102T084100"_pts).delay(10_min),
             });
-    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data, true);
+    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1781,7 +1781,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
                     RTStopTime("B", "20170101T082000"_pts).skipped(),
                     RTStopTime("C", "20170101T083000"_pts),
             });
-    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true);
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true, true);
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1850,7 +1850,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
                     RTStopTime("C", "20170101T083000"_pts).skipped(),
                     RTStopTime("D", "20170101T084000"_pts),
             });
-    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true);
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true, true);
 
     auto trip_update_2 = ntest::make_delay_message("vj:1",
             "20170101",
@@ -1860,7 +1860,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
                     RTStopTime("C", "20170101T083500"_pts).delay(5_min),
                     RTStopTime("D", "20170101T084000"_pts),
             });
-    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_2, *b.data, true);
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_2, *b.data, true, true);
     b.data->build_raptor();
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1956,7 +1956,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true);
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
     b.make();
 
@@ -2032,7 +2032,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("bob1", timestamp, trip_update1, *b.data, true);
+    navitia::handle_realtime("bob1", timestamp, trip_update1, *b.data, true, true);
 
     transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
             "20150928",
@@ -2042,7 +2042,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("bob2", timestamp, trip_update2, *b.data, true);
+    navitia::handle_realtime("bob2", timestamp, trip_update2, *b.data, true, true);
 
     transit_realtime::TripUpdate trip_update3 = ntest::make_delay_message("vj:1",
             "20150928",
@@ -2052,7 +2052,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true);
+    navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true, true);
 
     b.make();
 
@@ -2094,7 +2094,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("late-01", timestamp, trip_update1, *b.data, true);
+    navitia::handle_realtime("late-01", timestamp, trip_update1, *b.data, true, true);
 
     transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
             "20171102",
@@ -2104,7 +2104,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
             });
     b.data->build_uri();
 
-    navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true);
+    navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true, true);
 
     b.make();
 
@@ -2192,7 +2192,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true);
+    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2214,7 +2214,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     //Use trip_update effect (MODIFIED_SERVICE)
     delay_and_new_stop.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
-    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true);
+    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2237,7 +2237,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     //Use trip_update effect = SIGNIFICANT_DELAYS just for the test
     new_stop_at_the_end.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
-    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true);
+    navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true, true);
 
     b.make();
 
@@ -2309,7 +2309,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true);
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2351,7 +2351,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true);
+    navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2391,7 +2391,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true);
+    navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true, true);
     b.make();
 
     // Check the realtime vj after the recently added stop_time is deleted twice
@@ -2469,7 +2469,7 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true);
+    navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2556,7 +2556,7 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             });
 
-    navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true);
+    navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
     b.make();
 
@@ -2601,7 +2601,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
         RTStopTime("stop_point:D", "20171101T0840"_pts),
     });
 
-    navitia::handle_realtime("add_new_stop", timestamp, add_stop, *b.data, true);
+    navitia::handle_realtime("add_new_stop", timestamp, add_stop, *b.data, true, true);
     b.make();
 
     auto res = compute_iti(b, "20171101T080000", "A", "D", nt::RTLevel::RealTime);
@@ -2672,7 +2672,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
                                 RTStopTime("B", "20171101T0840"_pts).delay(1_min),
                                 RTStopTime("A", "20171101T0850"_pts).delay(1_min),
                              }),
-                             *b.data, true);
+                             *b.data, true, true);
     b.make();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
@@ -2723,7 +2723,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
                                 RTStopTime("B", "20171101T0840"_pts).delay(1_min),
                                 RTStopTime("D", "20171101T0850"_pts).delay(1_min),
                              }),
-                             *b.data, true);
+                             *b.data, true, true);
     b.make();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
