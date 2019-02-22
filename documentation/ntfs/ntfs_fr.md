@@ -516,8 +516,10 @@ feed_license_url | chaine | Libre | URL associée à la license d'utilisation de
 fusio_url | chaine | Libre | URL du système ayant généré le jeu de données
 fusio_version | chaine | Libre | Version du système ayant généré le jeu de données
 tartare_platform | chaine | Libre | Tag indiquant la plateforme qui a généré les données
-tartare_coverage_id | chaine | Libre | Id du coverage ayant généré le jeu de données
-tartare_contributor_id | chaine | Libre | Id du contributeur ayant généré le jeu de données
+tartare_coverage_id | chaine | Libre | Id du coverage Tartare ayant généré le jeu de données (1)
+tartare_contributor_id | chaine | Libre | Id du contributeur Tartare ayant généré le jeu de données (1)
+
+    (1) seul l'un des champs `tartare_coverage_id` et `tartare_contributor_id` sera présent. Il servent a tracer la source de la donnée dans Tartare afin de faciliter les diagnostiques.
 
 ### grid_calendars.txt (optionnel)
 Ce fichier contient les calendriers.
