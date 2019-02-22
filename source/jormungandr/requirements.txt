@@ -40,4 +40,4 @@ python-json-logger==0.1.7
 jmespath==0.9.3
 shortuuid
 click==6.7
-typing; python_version < '3.0'
+typing
