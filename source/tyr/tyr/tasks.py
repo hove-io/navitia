@@ -269,21 +269,26 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     task = {'bano': bano2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
-    for _file in files:
+    # it's important for the admin to be loaded first, then addresses, then street, then poi
+    import_order = ['cosmogony', 'bano', 'osm']
+    files_and_types = [(f, type_of_autocomplete_data(f)) for f in files]
+    files_and_types = sorted(files_and_types, key=lambda f_t: import_order.index(f_t[1]))
+
+    for f, ftype in files_and_types:
         dataset = models.DataSet()
-        dataset.type = type_of_autocomplete_data(_file)
+        dataset.type = ftype
         dataset.family_type = 'autocomplete_{}'.format(dataset.type)
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(_file, autocomplete_instance.backup_dir(autocomplete_dir))
+                filename = move_to_backupdirectory(f, autocomplete_instance.backup_dir(autocomplete_dir))
             else:
-                filename = _file
+                filename = f
             actions.append(
                 task[dataset.type].si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid)
             )
         else:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, f))
             continue
 
         # currently the name of a dataset is the path to it
