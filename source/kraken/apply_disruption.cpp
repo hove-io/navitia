@@ -208,6 +208,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                                                          meta.production_date);
             if (! r && ! mvj->get_base_vj().empty()) {
                 r = mvj->get_base_vj().at(0)->route;
+            } else {
+                // Take the first route into the data (it is temporary).
+                // It'll replace by new method to create new default route.
+                r = pt_data.routes[0];
             }
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
@@ -499,7 +503,8 @@ static bool is_modifying_effect(nt::disruption::Effect e) {
                   nt::disruption::Effect::SIGNIFICANT_DELAYS,
                   nt::disruption::Effect::MODIFIED_SERVICE,
                   nt::disruption::Effect::DETOUR,
-                  nt::disruption::Effect::REDUCED_SERVICE});
+                  nt::disruption::Effect::REDUCED_SERVICE,
+                  nt::disruption::Effect::ADDITIONAL_SERVICE});
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,

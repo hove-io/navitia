@@ -44,7 +44,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized()   { navitia::init_logger("logger", "TRACE"); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -2740,3 +2740,170 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
     BOOST_CHECK_EQUAL(stoptime_rltm_B_bis.get_base_stop_time(), &vj->stop_time_list[3]);
     BOOST_CHECK_EQUAL(stoptime_rltm_D.get_base_stop_time(), &vj->stop_time_list[4]);
 }
+
+BOOST_AUTO_TEST_CASE(add_new_trip) {
+
+    using year = navitia::type::ValidityPattern::year_bitset;
+
+    ed::builder b("20190101");
+    auto& pt_data = *b.data->pt_data;
+
+    b.sa("A", 0, 0, true, true);
+    b.sa("B", 0, 0, true, true);
+    b.sa("C", 0, 0, true, true);
+    b.sa("D", 0, 0, true, true);
+    b.sa("E", 0, 0, true, true);
+    b.sa("F", 0, 0, true, true);
+    b.sa("G", 0, 0, true, true);
+
+    b.vj("1").uri("vj:1")
+                 ("stop_point:A", "08:00"_t)
+                 ("stop_point:B", "08:30"_t)
+                 ("stop_point:C", "09:00"_t)
+                 ("stop_point:D", "09:30"_t);
+    b.make();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                {ntest::to_posix_timestamp(datetime)},
+                true, navitia::type::AccessibiliteParams(), {}, {},
+                sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:D");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T080000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).stop_point().uri(), "stop_point:A");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T083000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop_point:B");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).departure_date_time(), "20190101T090000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:C");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).departure_date_time(), "20190101T093000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).stop_point().uri(), "stop_point:D");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+
+    // For the moment, trip from A to G no exists
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+
+    // Add a new stop_time in vj = vj:1 betwen stops B and C with B and C unchanged
+    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:E", "20190101T0830"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:G", "20190101T0930"_pts).added(),
+        },
+        "comp_id_new_trip",
+        "physical_mode_id_new_trip",
+        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+
+    // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, false, false);
+    b.make();
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+
+    // call function with is_realtime_add_enabled=false
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, false, true);
+    b.make();
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+
+    // call function with is_realtime_add_trip_enabled=false
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, false);
+    b.make();
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+
+    // New call with activation parameter = true
+    navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, true);
+    b.make();
+
+    //Check if meta vj exist
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj:1"), true);
+    auto* mvj = pt_data.meta_vjs.get_mut("vj:1");
+    BOOST_CHECK_EQUAL(mvj->get_label(), "vj:1");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 1);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), true);
+    mvj = pt_data.meta_vjs.get_mut("vj_new_trip");
+    BOOST_CHECK_EQUAL(mvj->get_label(), "vj_new_trip");
+    BOOST_CHECK_EQUAL(mvj->get_base_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_adapted_vj().size(), 0);
+    BOOST_CHECK_EQUAL(mvj->get_rt_vj().size(), 1);
+
+    // Check the original vj
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
+
+    auto* vj = pt_data.vehicle_journeys_map["vj:1"];
+    BOOST_CHECK_EQUAL(vj->uri, "vj:1");
+    BOOST_CHECK_EQUAL(vj->idx, 0);
+    BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj:1");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("11111111"));
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("11111111"));
+    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("11111111"));
+
+    vj = pt_data.vehicle_journeys_map["vj_new_trip:modified:0:feed-1"];
+    BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip:modified:0:feed-1");
+    BOOST_CHECK_EQUAL(vj->idx, 1);
+    BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("00000001"));
+
+    // New Trip added
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T080000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).stop_point().uri(), "stop_point:A");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T083000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop_point:E");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).departure_date_time(), "20190101T090000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:F");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).departure_date_time(), "20190101T093000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).stop_point().uri(), "stop_point:G");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+    // impact
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_ADDITIONAL_SERVICE);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 4);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+}
+

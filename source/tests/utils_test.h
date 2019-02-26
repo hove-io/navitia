@@ -21,7 +21,7 @@ inline void handle_realtime_test(const std::string& id,
                                  const transit_realtime::TripUpdate& trip_update,
                                  const type::Data& data,
                                  std::unique_ptr<navitia::routing::RAPTOR>& raptor) {
-    navitia::handle_realtime(id, timestamp, trip_update, data, true, true);
+    navitia::handle_realtime(id, timestamp, trip_update, data,true);
     data.dataRaptor->load(*data.pt_data);
     raptor = std::make_unique<navitia::routing::RAPTOR>(data);
 }
@@ -62,15 +62,20 @@ inline transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& start_date,
         const std::vector<RTStopTime>& delayed_time_stops,
-        const std::string& company_id = "") {
+        const std::string& company_id = "",
+        const std::string& physical_mode_id = "",
+        const transit_realtime::TripDescriptor_ScheduleRelationship effect = transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED)
+{
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
     trip->SetExtension(kirin::company_id, company_id);
+    auto vehicle_descriptor = trip_update.mutable_vehicle();
+    vehicle_descriptor->SetExtension(kirin::physical_mode_id, physical_mode_id);
     // start_date is used to disambiguate trips that are very late, cf:
     // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
     trip->set_start_date(start_date);
-    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
+    trip->set_schedule_relationship(effect);
     auto st_update = trip_update.mutable_stop_time_update();
 
     for (const auto& delayed_st: delayed_time_stops) {
