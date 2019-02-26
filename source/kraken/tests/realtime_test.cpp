@@ -2764,6 +2764,19 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
                  ("stop_point:B", "08:30"_t)
                  ("stop_point:C", "09:00"_t)
                  ("stop_point:D", "09:30"_t);
+
+    // Add company
+    std::string comp_name = "comp_name";
+    std::string comp_uri = "comp_uri";
+    navitia::type::Company* cmp1 = new navitia::type::Company();
+    cmp1->line_list.push_back(b.lines["1"]);
+    cmp1->idx = b.data->pt_data->companies.size();
+    cmp1->name = comp_name;
+    cmp1->uri = comp_uri;
+    b.data->pt_data->companies.push_back(cmp1);
+    b.data->pt_data->companies_map[comp_uri] = cmp1;
+    b.lines["1"]->company_list.push_back(cmp1);
+
     b.make();
 
     navitia::routing::RAPTOR raptor(*(b.data));
@@ -2814,7 +2827,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
             RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:G", "20190101T0930"_pts).added(),
         },
-        "comp_id_new_trip",
+        comp_uri,
         "physical_mode_id_new_trip",
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
 
@@ -2851,11 +2864,11 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
 
 
 
-    // New call with activation parameter = true
+    // New call with all activation parameter = true
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.make();
 
-    //Check meta vj table
+    // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj:1"), true);
     auto* mvj = pt_data.meta_vjs.get_mut("vj:1");
@@ -2884,6 +2897,8 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("11111111"));
 
     vj = pt_data.vehicle_journeys_map["vj_new_trip:modified:0:feed-1"];
+    BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
+    BOOST_CHECK_EQUAL(vj->company->name, comp_name);
     BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip:modified:0:feed-1");
     BOOST_CHECK_EQUAL(vj->idx, 1);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
@@ -2982,7 +2997,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
             RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
-        "comp_id_new_trip_2",
+        comp_uri,
         "physical_mode_id_new_trip_2",
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
@@ -3002,6 +3017,8 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
 
     // new VJ
     vj = pt_data.vehicle_journeys_map["vj_new_trip_2:modified:0:feed-2"];
+    BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
+    BOOST_CHECK_EQUAL(vj->company->name, comp_name);
     BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip_2:modified:0:feed-2");
     BOOST_CHECK_EQUAL(vj->idx, 2);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip_2");
