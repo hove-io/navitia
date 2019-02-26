@@ -1435,11 +1435,11 @@ class AutocompleteParameter(flask_restful.Resource):
             type=str,
             required=False,
             default='OSM',
-            help='source for admin: [FUSIO, OSM]',
+            help='source for admin: {}'.format(utils.admin_source_types),
             location=('json', 'values'),
             choices=utils.admin_source_types,
         )
-        parser.add_argument('admin_level', type=int, action='append', required=True)
+        parser.add_argument('admin_level', type=int, action='append', required=False)
 
         args = parser.parse_args()
 

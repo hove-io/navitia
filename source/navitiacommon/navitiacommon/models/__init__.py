@@ -40,7 +40,7 @@ from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
-from navitiacommon.utils import street_source_types, address_source_types, poi_source_types, admin_source_types
+from navitiacommon.utils import street_source_types
 
 from navitiacommon import default_values
 import os
@@ -718,10 +718,10 @@ class BillingPlan(db.Model):  # type: ignore
 class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
-    street = db.Column(db.Enum(*street_source_types, name='source_street'), nullable=True)
-    address = db.Column(db.Enum(*address_source_types, name='source_address'), nullable=True)
-    poi = db.Column(db.Enum(*poi_source_types, name='source_poi'), nullable=True)
-    admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
+    street = db.Column(db.Text, nullable=True)
+    address = db.Column(db.Text, nullable=True)
+    poi = db.Column(db.Text, nullable=True)
+    admin = db.Column(db.Text, nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=False)
     poi_types_json = db.Column(db.Text, nullable=True)
 
