@@ -54,6 +54,7 @@ from tyr.binarisation import (
     osm2mimir,
     stops2mimir,
     ntfs2mimir,
+    cosmogony2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -218,6 +219,7 @@ def update_data():
 
 
 BANO_REGEXP = re.compile('.*bano.*')
+COSMOGONY_REGEXP = re.compile('.*cosmogony.*')
 
 
 def type_of_autocomplete_data(filename):
@@ -228,6 +230,7 @@ def type_of_autocomplete_data(filename):
     return can be:
         - 'bano'
         - 'osm'
+        - 'cosmogony'
 
     """
 
@@ -235,6 +238,8 @@ def type_of_autocomplete_data(filename):
         # first we try fusio, because it can load fares too
         if any(f for f in files if BANO_REGEXP.match(f)):
             return 'bano'
+        if len(files) == 1 and COSMOGONY_REGEXP.match(files[0]):
+            return 'cosmogony'
         if len(files) == 1 and files[0].endswith('.pbf'):
             return 'osm'
         return None
@@ -261,7 +266,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     job = models.Job()
     actions = []
 
-    task = {'bano': bano2mimir, 'osm': osm2mimir}
+    task = {'bano': bano2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
     for _file in files:
