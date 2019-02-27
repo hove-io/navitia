@@ -2938,6 +2938,18 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     // Recall the same new trip.
     // The old "new trip" is replace by the new, but the meta VJ is the same (don't create).
     // The old impact is suppress too
+    // To show that it is the new GTFS-RT, schedules has changed
+    new_trip = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:E", "20190101T0930"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T1000"_pts).added(),
+            RTStopTime("stop_point:G", "20190101T1030"_pts).added(),
+        },
+        comp_uri,
+        "physical_mode_id_new_trip",
+        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.make();
 
@@ -2965,13 +2977,13 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T080000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T090000"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).stop_point().uri(), "stop_point:A");
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T083000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T093000"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop_point:E");
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).departure_date_time(), "20190101T090000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).departure_date_time(), "20190101T100000"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:F");
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).departure_date_time(), "20190101T093000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).departure_date_time(), "20190101T103000"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).stop_point().uri(), "stop_point:G");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
     // impact
