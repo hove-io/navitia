@@ -46,41 +46,6 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
-static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
-    namespace bpt = boost::posix_time;
-
-    auto log = log4cplus::Logger::getInstance("realtime");
-    // Case 1: the trip is cancelled
-    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
-        return true;
-    }
-    // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
-    // departure is brought forward), we check the size of stop_time_update because we can't find a proper
-    // enum in gtfs-rt proto to express this idea
-    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
-         && trip_update.stop_time_update_size()) {
-
-        // WARNING: here trip.start_date is considered UTC, not local
-        //(this date differs if vj starts during the period between midnight UTC and local midnight)
-        auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
-
-        auto start_first_day_of_impact = bpt::ptime(start_date, bpt::time_duration(0, 0, 0, 0));
-        for (const auto& st: trip_update.stop_time_update()) {
-            auto ptime_arrival = bpt::from_time_t(st.arrival().time());
-            auto ptime_departure = bpt::from_time_t(st.departure().time());
-            if (ptime_arrival < start_first_day_of_impact
-                    || ptime_departure < start_first_day_of_impact) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                    << st.stop_id() << " is before the day of impact");
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
     if (event.HasExtension(kirin::stop_time_event_status)) {
         return in(event.GetExtension(kirin::stop_time_event_status),
@@ -278,6 +243,59 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
                 return true;
             }
         }
+    }
+    return false;
+}
+
+static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
+                          const bool is_realtime_add_enabled,
+                          const bool is_realtime_add_trip_enabled)
+{
+    namespace bpt = boost::posix_time;
+
+    auto log = log4cplus::Logger::getInstance("realtime");
+
+    // if is_realtime_add_enabled = false, this disables the adding trip option too
+    if ((! is_realtime_add_enabled && is_added_stop_time(trip_update)) ||
+        (! is_realtime_add_enabled && is_added_trip(trip_update))) {
+        LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring trip update id "
+                << trip_update.trip().trip_id()
+                << " with ADDED/ADDED_FOR_DETOUR stop times or ADDITIONAL_SERVICE effect");
+        return false;
+    }
+    if (! is_realtime_add_trip_enabled && is_added_trip(trip_update)) {
+        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring trip update id "
+                << trip_update.trip().trip_id()
+                << " with ADDITIONAL_SERVICE effect");
+        return false;
+    }
+    // Case 1: the trip is cancelled
+    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+        return true;
+    }
+    // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
+    // departure is brought forward), we check the size of stop_time_update because we can't find a proper
+    // enum in gtfs-rt proto to express this idea
+    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
+         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
+         && trip_update.stop_time_update_size()) {
+
+        // WARNING: here trip.start_date is considered UTC, not local
+        //(this date differs if vj starts during the period between midnight UTC and local midnight)
+        auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+
+        auto start_first_day_of_impact = bpt::ptime(start_date, bpt::time_duration(0, 0, 0, 0));
+        for (const auto& st: trip_update.stop_time_update()) {
+            auto ptime_arrival = bpt::from_time_t(st.arrival().time());
+            auto ptime_departure = bpt::from_time_t(st.departure().time());
+            if (ptime_arrival < start_first_day_of_impact
+                    || ptime_departure < start_first_day_of_impact) {
+                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
+                                    << st.stop_id() << " is before the day of impact");
+                return false;
+            }
+        }
+        return true;
     }
     return false;
 }
@@ -536,23 +554,9 @@ void handle_realtime(const std::string& id,
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
-    if (! is_handleable(trip_update)
+    if (! is_handleable(trip_update, is_realtime_add_enabled, is_realtime_add_trip_enabled)
             || ! check_trip_update(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
-        return;
-    }
-    // if is_realtime_add_enabled = false, this disables the adding trip option too
-    if ((! is_realtime_add_enabled && is_added_stop_time(trip_update)) ||
-        (! is_realtime_add_enabled && is_added_trip(trip_update))) {
-        LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring trip update id "
-                << trip_update.trip().trip_id()
-                << " with ADDED/ADDED_FOR_DETOUR stop times or ADDITIONAL_SERVICE effect");
-        return;
-    }
-    if (! is_realtime_add_trip_enabled && is_added_trip(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring trip update id "
-                << trip_update.trip().trip_id()
-                << " with ADDITIONAL_SERVICE effect");
         return;
     }
 
