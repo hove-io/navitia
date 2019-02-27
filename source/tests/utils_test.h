@@ -69,9 +69,13 @@ make_delay_message(const std::string& vj_uri,
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
-    trip->SetExtension(kirin::company_id, company_id);
+    if (company_id != "") {
+        trip->SetExtension(kirin::company_id, company_id);
+    }
     auto vehicle_descriptor = trip_update.mutable_vehicle();
-    vehicle_descriptor->SetExtension(kirin::physical_mode_id, physical_mode_id);
+    if (physical_mode_id != "") {
+        vehicle_descriptor->SetExtension(kirin::physical_mode_id, physical_mode_id);
+    }
     // start_date is used to disambiguate trips that are very late, cf:
     // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
     trip->set_start_date(start_date);

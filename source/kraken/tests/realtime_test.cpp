@@ -2998,9 +2998,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
 
 
-
-
-    // Add new trip with new id
+    // If the company id doesn't exist inside the data, we reject teh new trip
     transit_realtime::TripUpdate new_trip_2 = ntest::make_delay_message("vj_new_trip_2",
         "20190101",
         {
@@ -3009,7 +3007,30 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
             RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
-        "comp_uri_2",
+        "company_id_that_doesnt_exist",
+        "physical_mode_id_new_trip_2",
+        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+
+    // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.make();
+    res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip_2"), false);
+
+
+    // Add new trip with new id
+    new_trip_2 = ntest::make_delay_message("vj_new_trip_2",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+        },
+        comp_uri,
         "physical_mode_id_new_trip_2",
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
@@ -3064,5 +3085,6 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
+
 }
 

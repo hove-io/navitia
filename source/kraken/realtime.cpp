@@ -248,6 +248,7 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
 }
 
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
+                          nt::PT_Data& pt_data,
                           const bool is_realtime_add_enabled,
                           const bool is_realtime_add_trip_enabled)
 {
@@ -280,6 +281,15 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
          trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
          && trip_update.stop_time_update_size()) {
 
+        // check if company id exists
+        if (trip_update.trip().HasExtension(kirin::company_id) &&
+            pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
+            LOG4CPLUS_DEBUG(log, "Trip company "
+                    << trip_update.trip().GetExtension(kirin::company_id)
+                    <<  " don't exists: ignoring trip id "
+                    << trip_update.trip().trip_id());
+            return false;
+        }
         // WARNING: here trip.start_date is considered UTC, not local
         //(this date differs if vj starts during the period between midnight UTC and local midnight)
         auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
@@ -554,7 +564,7 @@ void handle_realtime(const std::string& id,
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
-    if (! is_handleable(trip_update, is_realtime_add_enabled, is_realtime_add_trip_enabled)
+    if (! is_handleable(trip_update, *data.pt_data, is_realtime_add_enabled, is_realtime_add_trip_enabled)
             || ! check_trip_update(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
