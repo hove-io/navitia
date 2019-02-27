@@ -2817,8 +2817,6 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
 
 
-
-
     transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
         "20190101",
         {
@@ -2860,8 +2858,6 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
-
-
 
 
     // New call with all activation parameter = true
@@ -2931,8 +2927,6 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
-
-
 
 
     // Recall the same new trip.
@@ -3085,6 +3079,5 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
-
 }
 
