@@ -112,6 +112,8 @@ void MaintenanceWorker::load_realtime(){
         data_manager.get_data()->is_realtime_loaded = true;
     }else{
         LOG4CPLUS_WARN(logger, "no realtime data receive before timeout: going without it!");
+        // Incase of timeout we can delete the existing queue as we create a new queque in each call to the function
+        channel->DeleteQueue(queue_name);
     }
 }
 
