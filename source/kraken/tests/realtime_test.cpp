@@ -1549,6 +1549,8 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
     navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
     navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
+//    b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
+    b.data->build_raptor(1);
 
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
@@ -1573,6 +1575,8 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
             RTStopTime("stop2", "20150929T1010"_pts).delay(69_min)
         });
     navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data, true, true);
+//    b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
+    b.data->build_raptor(1);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
     navitia::disruption::traffic_reports(pb_creator, *b.data,

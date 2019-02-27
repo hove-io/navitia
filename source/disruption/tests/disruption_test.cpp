@@ -349,6 +349,9 @@ struct DisruptedNetwork {
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
+//        b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
+        b.data->build_raptor(1);
+
         pb_creator.init(b.data.get(), since, period);
     }
 };
