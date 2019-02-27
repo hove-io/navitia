@@ -153,6 +153,23 @@ struct PT_Data : boost::noncopyable{
 
     type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref);
 
+    type::Network* get_or_create_network(const std::string& uri,
+                                         const std::string& name,
+                                         int sort = std::numeric_limits<int>::max());
+    type::CommercialMode* get_or_create_commercial_mode(const std::string& uri,
+                                                        const std::string& name);
+    type::Line* get_or_create_line(const std::string& uri,
+                                   const std::string& name,
+                                   type::Network* network,
+                                   type::CommercialMode* commercial_mode,
+                                   int sort = std::numeric_limits<int>::max(),
+                                   const std::string& color = {"000000"},
+                                   const std::string& text_color = {"FFFFFF"});
+    type::Route* get_or_create_route(const std::string& uri,
+                                     const std::string& name,
+                                     type::Line* line,
+                                     type::StopArea* destination = nullptr,
+                                     const std::string& direction_type = {});
 
     void clean_weak_impacts();
 

@@ -182,6 +182,21 @@ static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
     return impacts_uris.str();
 }
 
+
+static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
+    nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
+    nt::CommercialMode* comm_mode = pt_data.get_or_create_commercial_mode("commercial_mode:additional_service",
+                                                                          "additional service");
+    // TODO: manage line.code when necessary
+    nt::Line* line = pt_data.get_or_create_line("line:additional_service", "additional service", network, comm_mode);
+    // TODO: manage route.direction_type ("0") when necessary
+    //       manage route.destination (StopArea*) when necessary
+    nt::Route* route = pt_data.get_or_create_route("route:additional_service", "additional service", line);
+
+    return route;
+}
+
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -193,6 +208,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     using apply_impacts_visitor::operator();
 
     void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
+        nt::Route* route = get_or_create_route(*impact, pt_data);
+
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
