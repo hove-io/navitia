@@ -73,7 +73,6 @@ class Asgard(Kraken):
         )
 
         res = self._call_asgard(req)
-        # TODO handle car park
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 

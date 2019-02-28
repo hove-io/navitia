@@ -98,31 +98,15 @@ class TestWithParkingDirectPath(AbstractTestFixture):
         assert section_1['to'] == section_2['from']
         assert section_2['from'] == section_2['to']
 
+        assert section_2['type'] == 'park'
+
 
 from jormungandr.street_network.parking.augeas import Augeas
 
 
-class MockedAugeas(Augeas):
+class MockAugeas(Augeas):
     def _request(self, _):
-        return {
-            "durations": [
-                {
-                    "car_park": {
-                        "id": "2256024156",
-                        "name": "",
-                        "lon": 2.361614,
-                        "lat": 48.826064,
-                        "total_places": 0,
-                        "available": 0,
-                        "occupied": 0,
-                        "available_PRM": 0,
-                        "occupied_PRM": 0,
-                    },
-                    "distance": 118,
-                    "duration": 450,
-                }
-            ]
-        }
+        return 42
 
 
 MOCKED_AUGEAS_WITH_ASGARD_CONF = [
@@ -131,7 +115,7 @@ MOCKED_AUGEAS_WITH_ASGARD_CONF = [
         "class": "jormungandr.street_network.with_parking.WithParking",
         "args": {
             "parking": {
-                "class": "tests.direct_path_asgard_integration_tests.MockAugeas",
+                "class": "tests.direct_path_parking_with_asgard_integration_tests.MockAugeas",
                 "args": {"service_url": "http://who.cares"},
             },
             "street_network": {
@@ -173,9 +157,9 @@ class TestWithParkingAugeasDirectPath(AbstractTestFixture):
         # car from asgard
         assert 'car' in response['journeys'][0]['tags']
         assert len(response['journeys'][0]['sections']) == 2
-        assert response['journeys'][0]['duration'] == 1100
+        assert response['journeys'][0]['duration'] == 542
         assert response['journeys'][0]['durations']['car'] == 500
-        assert response['journeys'][0]['durations']['total'] == 1100
+        assert response['journeys'][0]['durations']['total'] == 542
         assert response['journeys'][0]['distances']['car'] == 50
 
         section_1 = response['journeys'][0]['sections'][0]
@@ -184,3 +168,5 @@ class TestWithParkingAugeasDirectPath(AbstractTestFixture):
         assert section_1['to']['address']["name"] == "rue ag"
         assert section_1['to'] == section_2['from']
         assert section_2['from'] == section_2['to']
+
+        assert section_2['type'] == 'park'

@@ -157,7 +157,7 @@ def _get_fallback_logic(fallback_type):
     )
 
 
-class BeginningFallback:
+class BeginningFallback(object):
     def get_first_non_crowfly_section(self, pt_journey):
         return next(s for s in pt_journey.sections if s.type != response_pb2.CROW_FLY)
 
@@ -183,7 +183,7 @@ class BeginningFallback:
         pt_journey.departure_date_time = pt_journey.sections[0].begin_date_time
 
 
-class EndingFallback:
+class EndingFallback(object):
     def get_first_non_crowfly_section(self, pt_journey):
         return next(s for s in reversed(pt_journey.sections) if s.type != response_pb2.CROW_FLY)
 

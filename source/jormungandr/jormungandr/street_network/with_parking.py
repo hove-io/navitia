@@ -29,11 +29,10 @@
 
 import logging
 import itertools
-from jormungandr.street_network.street_network import AbstractStreetNetworkService
-from jormungandr import street_network, utils
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
+from jormungandr import utils
 from jormungandr.utils import get_pt_object_coord
 
-from jormungandr.street_network.asgard import Asgard
 from navitiacommon import response_pb2
 
 
@@ -62,11 +61,19 @@ class WithParking(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )
         if response and len(response.journeys):
-            self.add_parking_section_in_direct_path(response, pt_object_destination)
+            # Depending of the fallback type(beginning/ending fallback), the parking section's
+            # place can be the origin/destination of the pt_journey
+
+            pt_object = (
+                pt_object_origin
+                if direct_path_type is StreetNetworkPathType.ENDING_FALLBACK
+                else pt_object_destination
+            )
+            self.add_parking_section_in_direct_path(response, pt_object, direct_path_type)
 
         return response
 
-    def add_parking_section_in_direct_path(self, response, pt_object_destination):
+    def add_parking_section_in_direct_path(self, response, pt_object, direct_path_type):
         logger = logging.getLogger(__name__)
         logger.info("Creating parking section for direct path")
 
@@ -74,28 +81,33 @@ class WithParking(AbstractStreetNetworkService):
             section = journey.sections.add()
             journey.nb_sections += 1
 
-            # The origin and destination of the parking section is the destination of the journey
-            section.origin.CopyFrom(pt_object_destination)
-            section.destination.CopyFrom(pt_object_destination)
-            # And we have to complete the destination of the first section ourself
-            # Because Jormun does not do it afterwards
-            journey.sections[0].destination.CopyFrom(pt_object_destination)
+            section.origin.CopyFrom(pt_object)
+            section.destination.CopyFrom(pt_object)
 
-            parking_duration = self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination)
-            )
+            parking_duration = self.parking_module.get_parking_duration(get_pt_object_coord(pt_object))
             section.duration += parking_duration
             journey.duration += parking_duration
             journey.durations.total += parking_duration
 
-            section.type = response_pb2.PARK
             section.id = 'section_1'
 
-            section.begin_date_time = journey.sections[0].end_date_time
-            section.end_date_time = section.begin_date_time + section.duration
-            journey.arrival_date_time += self.parking_module.get_parking_duration(
-                get_pt_object_coord(pt_object_destination)
-            )
+            if direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
+                journey.sections[0].origin.CopyFrom(pt_object)
+                section.type = response_pb2.LEAVE_PARKING
+                section.begin_date_time = journey.sections[0].begin_date_time
+                section.end_date_time = section.begin_date_time + section.duration
+                # we push off the whole car section
+                journey.sections[0].begin_date_time += section.duration
+                journey.sections[0].end_date_time += section.duration
+            else:
+                # And we have to complete the destination of the first section ourselves
+                # Because Jormun does not do it afterwards
+                journey.sections[-2].destination.CopyFrom(pt_object)
+                section.type = response_pb2.PARK
+                section.begin_date_time = journey.sections[-1].end_date_time
+                section.end_date_time = section.begin_date_time + section.duration
+
+            journey.arrival_date_time += parking_duration
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
