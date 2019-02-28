@@ -46,6 +46,7 @@ class Data {
         void load_disruptions(const std::string&,
                               const std::vector<std::string>& = {}){}
         void build_raptor(size_t){}
+        void build_autocomplete(){}
         mutable std::atomic<bool> loading;
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
