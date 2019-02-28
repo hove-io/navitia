@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -122,11 +122,11 @@ struct ContainerTrait<type::MetaVehicleJourney> {
     typedef vect_type associative_type;
 };
 
-/** Contient toutes les données théoriques du référentiel transport en communs
+/** Contains all the data (base-schedule and realtime) of the PublicTransport Referential (in short PT-Ref)
   *
-  * Il existe trois formats de stockage : texte, binaire, binaire compressé
-  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcout quasiment nul et
-  * peut même (sur des disques lents) accélerer le chargement).
+  * There are 3 storage formats : text, binary, compressed binary
+  * It is advised to use the compressed binary format (compression has almost no additional overhead and can even
+  * speed up loading from slow disks)
   */
 class Data : boost::noncopyable{
 
@@ -145,15 +145,15 @@ public:
 
     // data referential
 
-    /// public transport (PT) referential
+    // public transport (PT) referential
     std::unique_ptr<PT_Data> pt_data;
 
     std::unique_ptr<navitia::georef::GeoRef> geo_ref;
 
-    /// precomputed data for raptor (public transport routing algorithm)
+    // precomputed data for raptor (public transport routing algorithm)
     std::unique_ptr<navitia::routing::dataRAPTOR> dataRaptor;
 
-    /// Fare data
+    // Fare data
     std::unique_ptr<navitia::fare::Fare> fare;
 
     // functor to find admins
@@ -173,21 +173,21 @@ public:
         return res;
     }
 
-    /** Retourne tous les indices d'un type donné
+    /** Return all indexes of a given type
       *
-      * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
+      * In practice, return an array with elements ranging from 0 to (n-1) where n is the number of elements
       */
     Indexes get_all_index(Type_e type) const;
 
     size_t get_nb_obj(Type_e type) const;
 
-    /** Étant donné une liste d'indexes pointant vers source,
-      * retourne une liste d'indexes pointant vers target
+    /** Given a list of indexes of 'source' objects
+      * return a list of indexes of 'target' objects
       */
     Indexes get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const;
 
-    /** Étant donné un index pointant vers source,
-      * retourne une liste d'indexes pointant vers target
+    /** Given one index of a 'source' object
+      * return a list of indexes of 'target' objects
       */
     Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
@@ -216,7 +216,7 @@ public:
     template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){
-            unsigned int v = data_version;//sinon ca link pas...
+            unsigned int v = data_version; // won't link otherwise...
             auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
             throw navitia::data::wrong_version(msg.str());
         }
@@ -233,17 +233,16 @@ public:
 
     void warmup(const Data& other);
 
-    /** Sauvegarde les données */
+    /** Save data */
     void save(const std::string & filename) const;
 
-    /** Construit l'indexe ExternelCode */
+    /** Build ExternalCode index */
     void build_uri();
 
-    /** Construit l'indexe Autocomplete */
+    /** Build Autocomplete index */
     void build_autocomplete();
 
-
-    /** Construit l'indexe ProximityList */
+    /** Build ProximityList index */
     void build_proximity_list();
     /** Set admins*/
     void build_administrative_regions();
@@ -260,18 +259,17 @@ public:
     /** For some pt object we compute the label */
     void compute_labels();
 
-    /** Retourne le type de l'id donné */
-
+    /** Return the type of the id provided */
     Type_e get_type_of_id(const std::string & id) const;
 
-    /** Charge les données binaires compressées en LZ4
+    /** Load data from a binary file compressed using LZ4
       *
-      * La compression LZ4 est extrèmement rapide mais moyennement performante
-      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
+      * LZ4 compression is super fast but its efficiency is average
+      * The goal is for the read of compressed file to be as fast as without compression
       */
     void load(std::istream& ifs);
 
-    /** Sauvegarde les données en binaire compressé avec LZ4*/
+    /** Save data in a binary file compressed using LZ4*/
     void save(std::ostream& ifs) const;
 
     // Deep clone from the given Data.
