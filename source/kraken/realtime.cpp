@@ -284,9 +284,18 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
         // check if company id exists
         if (trip_update.trip().HasExtension(kirin::company_id) &&
             pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
-            LOG4CPLUS_DEBUG(log, "Trip company "
+            LOG4CPLUS_DEBUG(log, "Trip company id "
                     << trip_update.trip().GetExtension(kirin::company_id)
-                    <<  " don't exists: ignoring trip id "
+                    <<  " doesn't exists: ignoring trip id "
+                    << trip_update.trip().trip_id());
+            return false;
+        }
+        // check if physical mode id exists
+        if (trip_update.vehicle().HasExtension(kirin::physical_mode_id) &&
+            pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id)) == pt_data.physical_modes_map.end()) {
+            LOG4CPLUS_DEBUG(log, "Trip physical mode id "
+                    << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
+                    <<  " doesn't exists: ignoring trip id "
                     << trip_update.trip().trip_id());
             return false;
         }
@@ -431,6 +440,9 @@ create_disruption(const std::string& id,
         impact->updated_at = timestamp;
         if (trip_update.trip().HasExtension(kirin::company_id)) {
             impact->company_id = trip_update.trip().GetExtension(kirin::company_id);
+        }
+        if (trip_update.vehicle().HasExtension(kirin::physical_mode_id)) {
+            impact->physical_mode_id = trip_update.vehicle().GetExtension(kirin::physical_mode_id);
         }
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));

@@ -283,6 +283,7 @@ struct Impact {
     using SharedImpact = boost::shared_ptr<Impact>;
     std::string uri;
     std::string company_id;
+    std::string physical_mode_id;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
@@ -303,7 +304,7 @@ struct Impact {
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & company_id & created_at & updated_at & application_periods
+        ar & uri & company_id & physical_mode_id & created_at & updated_at & application_periods
            & severity & _informed_entities & messages & disruption
            & aux_info;
     }

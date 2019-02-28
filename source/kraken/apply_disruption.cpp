@@ -244,8 +244,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->name = mvj->get_base_vj().at(0)->name;
             } else {
-                // If we set nothing for physical_mode, it'll crash when building raptor
-                vj->physical_mode = pt_data.physical_modes[0];
+                if (!impact->physical_mode_id.empty()) {
+                    nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
+                        .if_found([&vj](navitia::type::PhysicalMode* p){ vj->physical_mode = p; })
+                        .if_not_found([&](){ LOG4CPLUS_WARN(log, "[disruption] Associate physical mode into new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
+                }
                 vj->name = new_vj_uri;
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
