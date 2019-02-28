@@ -722,7 +722,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
     address = db.Column(db.Text, nullable=True)
     poi = db.Column(db.Text, nullable=True)
     admin = db.Column(db.Text, nullable=True)
-    admin_level = db.Column(ARRAY(db.Integer), nullable=False)
+    admin_level = db.Column(ARRAY(db.Integer), nullable=True, server_default="{}")
     poi_types_json = db.Column(db.Text, nullable=True)
 
     def __init__(

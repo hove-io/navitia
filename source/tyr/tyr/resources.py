@@ -1425,7 +1425,7 @@ class AutocompleteParameter(flask_restful.Resource):
             'poi',
             type=str,
             required=False,
-            default='FUSIO',
+            default='OSM',
             help='source for poi: [FUSIO, OSM]',
             location=('json', 'values'),
             choices=utils.poi_source_types,

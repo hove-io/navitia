@@ -25,6 +25,9 @@ def upgrade():
     sa.Enum(name='source_poi').drop(op.get_bind(), checkfirst=False)
     sa.Enum(name='source_admin').drop(op.get_bind(), checkfirst=False)
 
+    # with cosmogony admin_level are no longer mandatory
+    op.alter_column('autocomplete_parameter', 'admin_level', nullable=True, server_default="{}")
+
 
 def downgrade():
     source_street = sa.Enum('OSM', name='source_street')
@@ -47,9 +50,8 @@ def downgrade():
     op.add_column('autocomplete_parameter', sa.Column('street', source_street))
     op.add_column('autocomplete_parameter', sa.Column('address', source_address))
 
-    op.execute(
-        'update autocomplete_parameter set admin=_admin::source_admin, poi=_poi::source_poi, street=_street::source_street, address=_address::source_address;'
-    )
+    # we put some default values for every one
+    op.execute("update autocomplete_parameter set admin='OSM', poi='OSM', street='OSM', address='BANO';")
 
     op.drop_column('autocomplete_parameter', '_admin')
     op.drop_column('autocomplete_parameter', '_poi')

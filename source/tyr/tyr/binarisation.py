@@ -740,7 +740,7 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
 @celery.task(bind=True)
 def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch cosmogony2mimir """
-    autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reattach the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running cosmogony2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
