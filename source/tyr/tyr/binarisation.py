@@ -747,7 +747,15 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     cnx_string = current_app.config['MIMIR_URL']
     cosmo_file = unzip_if_needed(filename)
 
-    params = ['-i', cosmo_file, '--connection-string', cnx_string, '--dataset', autocomplete_instance.name]
+    params = [
+        '--input',
+        cosmo_file,
+        '--connection-string',
+        cnx_string,
+        '--dataset',
+        autocomplete_instance.name,
+        '--french-id-retrocompatibility',
+    ]
     try:
         res = launch_exec("cosmogony2mimir", params, logger)
         if res != 0:
