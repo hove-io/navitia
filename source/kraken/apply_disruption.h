@@ -42,6 +42,12 @@ namespace navitia {
 boost::posix_time::time_period
 execution_period(const boost::gregorian::date& date, const nt::VehicleJourney& vj);
 
+/**
+ * WARNING: this method can add, remove or transform PT-Ref objects in PT_Data
+ * After using it, make sure to rebuild:
+ * - RAPTOR (probably through Data.build_raptor)
+ * - AUTOCOMPLETE on PT-Ref (probably through PT_Data.build_autocomplete)
+ */
 void apply_disruption(const type::disruption::Disruption&,
                       navitia::type::PT_Data&,
                       const navitia::type::MetaData&);
