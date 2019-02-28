@@ -29,7 +29,6 @@
 
 from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
 import requests
-import functools
 
 
 class Augeas(AbstractParkingModule):

@@ -63,7 +63,6 @@ class WithParking(AbstractStreetNetworkService):
         if response and len(response.journeys):
             # Depending of the fallback type(beginning/ending fallback), the parking section's
             # place can be the origin/destination of the pt_journey
-
             pt_object = (
                 pt_object_origin
                 if direct_path_type is StreetNetworkPathType.ENDING_FALLBACK
