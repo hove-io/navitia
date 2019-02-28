@@ -78,36 +78,41 @@ class WithParking(AbstractStreetNetworkService):
         logger.info("Creating parking section for direct path")
 
         for journey in response.journeys:
-            section = journey.sections.add()
-            journey.nb_sections += 1
-
-            section.origin.CopyFrom(pt_object)
-            section.destination.CopyFrom(pt_object)
-
             parking_duration = self.parking_module.get_parking_duration(get_pt_object_coord(pt_object))
-            section.duration += parking_duration
+
+            parking_section = response_pb2.Section()
+
+            parking_section.id = 'section_1'
+            parking_section.origin.CopyFrom(pt_object)
+            parking_section.destination.CopyFrom(pt_object)
+            parking_section.duration += parking_duration
+
             journey.duration += parking_duration
             journey.durations.total += parking_duration
 
-            section.id = 'section_1'
-
             if direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
+                # And we have to complete the destination of the first section ourselves
+                # Because Jormun does not do it afterwards
                 journey.sections[0].origin.CopyFrom(pt_object)
-                section.type = response_pb2.LEAVE_PARKING
-                section.begin_date_time = journey.sections[0].begin_date_time
-                section.end_date_time = section.begin_date_time + section.duration
+                parking_section.type = response_pb2.LEAVE_PARKING
+                parking_section.begin_date_time = journey.sections[0].begin_date_time
+                parking_section.end_date_time = parking_section.begin_date_time + parking_duration
                 # we push off the whole car section
-                journey.sections[0].begin_date_time += section.duration
-                journey.sections[0].end_date_time += section.duration
+                for s in journey.sections:
+                    s.begin_date_time += parking_duration
+                    s.end_date_time += parking_duration
             else:
                 # And we have to complete the destination of the first section ourselves
                 # Because Jormun does not do it afterwards
-                journey.sections[-2].destination.CopyFrom(pt_object)
-                section.type = response_pb2.PARK
-                section.begin_date_time = journey.sections[-1].end_date_time
-                section.end_date_time = section.begin_date_time + section.duration
+                journey.sections[-1].destination.CopyFrom(pt_object)
+                parking_section.type = response_pb2.PARK
+                parking_section.begin_date_time = journey.sections[-1].end_date_time
+                parking_section.end_date_time = parking_section.begin_date_time + parking_duration
 
             journey.arrival_date_time += parking_duration
+
+            journey.sections.extend([parking_section])
+            journey.nb_sections += 1
 
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs

@@ -49,7 +49,13 @@ class Augeas(AbstractParkingModule):
         return r.json().get('durations')
 
     def _request(self, coords):
-        params = {'lon': coords.lon, 'lat': coords.lat, 'n': 1, 'max_park_duration': self.max_park_duration}
+        params = {
+            'lon': coords.lon,
+            'lat': coords.lat,
+            'n': 1,
+            "walking_speed": 1.11,
+            'max_park_duration': self.max_park_duration,
+        }
         url = requests.compat.urljoin(self.service_url, '/v0/park_duration')
         r = requests.get(url=url, params=params)
         durations = r.json().get('durations')
