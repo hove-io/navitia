@@ -55,7 +55,14 @@ from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
 from tyr.validations import datetime_format
-from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete, cities
+from tyr.tasks import (
+    create_autocomplete_depot,
+    remove_autocomplete_depot,
+    import_autocomplete,
+    cities,
+    cosmogony2cities,
+    COSMOGONY_REGEXP,
+)
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
@@ -1664,11 +1671,19 @@ class Cities(flask_restful.Resource):
             logging.info("No file provided")
             return {'message': 'No file provided'}, 400
 
-        osm_file = args['file']
-        osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), "file"))
-        osm_file.save(osm_file_path)
+        f = args['file']
+        file_name = f.filename
+        file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
+        f.save(file_path)
 
-        cities.delay(osm_file_path)
+        logging.info("file: {}".format(f))
+
+        if COSMOGONY_REGEXP.match(file_name):
+            # it's a cosmogony file, we import it with cosmogony2cities
+            cosmogony2cities.delay(file_path)
+        else:
+            # we import it the 'old' way, with cities
+            cities.delay(file_path)
 
         return {'message': 'OK'}, 200
 

@@ -482,6 +482,25 @@ def cities(osm_path):
 
 
 @celery.task()
+def cosmogony2cities(cosmogony_path):
+    """ launch cosmogony2cities """
+    res = -1
+    try:
+        res = launch_exec(
+            "cosmogony2cities",
+            ['--input', cosmogony_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
+            logging,
+        )
+        if res != 0:
+            logging.error('cosmogony2cities failed')
+    except Exception as e:
+        logging.exception('cosmogony2cities exception : {}'.format(e.message))
+
+    logging.info('Import of cosmogony2cities finished')
+    return res
+
+
+@celery.task()
 def bounding_shape(instance_name, shape_path):
     """ Set the bounding shape to a custom value """
 
