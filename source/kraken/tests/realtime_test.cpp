@@ -2907,6 +2907,8 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     vj = pt_data.vehicle_journeys_map["vj_new_trip:modified:0:feed-1"];
     BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
     BOOST_CHECK_EQUAL(vj->company->name, comp_name);
+    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
     BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip:modified:0:feed-1");
     BOOST_CHECK_EQUAL(vj->idx, 1);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
