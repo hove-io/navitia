@@ -2823,7 +2823,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
     BOOST_CHECK_EQUAL(res.impacts_size(), 0);
 
-    // For the moment, trip from A to G no exists
+    // For the moment, trip from A to G doesn't exist
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3006,7 +3006,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(), pbnavitia::StopTimeUpdateStatus::ADDED);
 
 
-    // If the company id doesn't exist inside the data, we reject teh new trip
+    // If the company id doesn't exist inside the data, we reject the new trip
     transit_realtime::TripUpdate new_trip_2 = ntest::make_delay_message("vj_new_trip_2",
         "20190101",
         {
@@ -3041,7 +3041,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
         "physical_mode_id_that_doesnt_exist",
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
 
-    // the new trip update is blocked directly
+    // The new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.make();
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");
@@ -3065,7 +3065,7 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
     b.make();
 
-    //Check if meta vj exist
+    // Check if meta vj exist
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
     mvj = pt_data.meta_vjs.get_mut("vj_new_trip_2");
     BOOST_CHECK_EQUAL(mvj->get_label(), "vj_new_trip_2");
@@ -3077,11 +3077,12 @@ BOOST_AUTO_TEST_CASE(add_new_trip) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
 
-    // new VJ
+    // New VJ
     vj = pt_data.vehicle_journeys_map["vj_new_trip_2:modified:0:feed-2"];
-    // Can't access to company because the field is null...
-    // BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
-    // BOOST_CHECK_EQUAL(vj->company->name, comp_name);
+    BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
+    BOOST_CHECK_EQUAL(vj->company->name, comp_name);
+    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
     BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip_2:modified:0:feed-2");
     BOOST_CHECK_EQUAL(vj->idx, 2);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip_2");
