@@ -111,7 +111,7 @@ struct departure_board_fixture {
                 RTStopTime("S2", "20160101T1007"_pts).delay(7_min),
                 RTStopTime("A:e", "20160101T1107"_pts).delay(7_min),
             });
-        navitia::handle_realtime("delay_vj1", "20160101T1337"_dt, trip_update1, *b.data, true);
+        navitia::handle_realtime("delay_vj1", "20160101T1337"_dt, trip_update1, *b.data, true, true);
 
         auto trip_update2 = ntest::make_delay_message("A:vj2", "20160101", {
                 RTStopTime("A:s", "20160101T0907"_pts).delay(7_min),
@@ -119,7 +119,7 @@ struct departure_board_fixture {
                 RTStopTime("S2", "20160101T1107"_pts).delay(7_min),
                 RTStopTime("A:e", "20160101T1207"_pts).delay(7_min),
             });
-        navitia::handle_realtime("delay_vj2", "20160101T1337"_dt, trip_update2, *b.data, true);
+        navitia::handle_realtime("delay_vj2", "20160101T1337"_dt, trip_update2, *b.data, true, true);
 
         auto trip_update3 = ntest::make_delay_message("A:vj3", "20160101", {
                 RTStopTime("A:s", "20160101T1007"_pts).delay(7_min),
@@ -127,7 +127,7 @@ struct departure_board_fixture {
                 RTStopTime("S2", "20160101T1207"_pts).delay(7_min),
                 RTStopTime("A:e", "20160101T1307"_pts).delay(7_min),
             });
-        navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data, true);
+        navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data, true, true);
 
 
         //
@@ -151,7 +151,7 @@ struct departure_board_fixture {
                 RTStopTime("stopP2", "20160104T0008"_pts, "20160104T0010"_pts).delay(4_min),
                 RTStopTime("stopP3", "20160104T0017"_pts).delay(4_min),
             });
-        navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true);
+        navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true, true);
 
         //
         //      20160103                    |    20160104
@@ -175,7 +175,7 @@ struct departure_board_fixture {
                 RTStopTime("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts).delay(21_min),
                 RTStopTime("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
-        navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true);
+        navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true, true);
         b.data->build_raptor();
         b.data->build_uri();
     }

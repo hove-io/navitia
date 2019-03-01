@@ -49,9 +49,11 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         self.timeout = timeout
         self.dataset = dataset
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
-        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL'])
+        self.fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL'), 5)
+        )
         self.reset_timeout = kwargs.get(
-            'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S']
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S'), 60)
         )
         self.breaker = pybreaker.CircuitBreaker(fail_max=self.fail_max, reset_timeout=self.reset_timeout)
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
@@ -76,7 +78,7 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         properties = poi.get('properties', {})
         return properties.get('operator', '').lower() in self.operators
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK', 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CAR_PARK'), 30))
     def _call_webservice(self, request_url):
         try:
             if self.api_key:

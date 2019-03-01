@@ -41,26 +41,22 @@ import sys
 import six
 from jormungandr import init
 
-app = Flask(__name__)
+app = Flask(__name__)  # type: Flask
 
 init.load_configuration(app)
 init.logger(app)
 
 # we want to patch gevent as early as possible
-if app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
+if app.config.get(str('PATCH_WITH_GEVENT_SOCKET'), False):
     init.patch_http()
 
 from jormungandr import new_relic
 
-new_relic.init(app.config.get('NEWRELIC_CONFIG_PATH', None))
+new_relic.init(app.config.get(str('NEWRELIC_CONFIG_PATH'), None))
 
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
-
-# there is a import order problem to get this variable in decorators (current_app is not in the context)
-# so we make it a global variable
-USE_SERPY = app.config.get('USE_SERPY')
 
 app.url_rule_class = NavitiaRule
 app.request_class = NavitiaRequest
@@ -71,10 +67,10 @@ CORS(
     send_wildcard=False,
     headers=['Access-Control-Request-Headers', 'Authorization'],
 )
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config[str('CORS_HEADERS')] = 'Content-Type'
 
 
-app.wsgi_app = ReverseProxied(app.wsgi_app)
+app.wsgi_app = ReverseProxied(app.wsgi_app)  # type: ignore
 got_request_exception.connect(log_exception, app)
 
 # we want the old behavior for reqparse
@@ -85,11 +81,11 @@ rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 from navitiacommon.models import db
 
 db.init_app(app)
-cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
-memory_cache = Cache(app, config=app.config['MEMORY_CACHE_CONFIGURATION'])
+cache = Cache(app, config=app.config[str('CACHE_CONFIGURATION')])  # type: Cache
+memory_cache = Cache(app, config=app.config[str('MEMORY_CACHE_CONFIGURATION')])  # type: Cache
 
-if app.config['AUTOCOMPLETE_SYSTEMS'] is not None:
-    global_autocomplete = {k: utils.create_object(v) for k, v in app.config['AUTOCOMPLETE_SYSTEMS'].items()}
+if app.config[str('AUTOCOMPLETE_SYSTEMS')] is not None:
+    global_autocomplete = {k: utils.create_object(v) for k, v in app.config[str('AUTOCOMPLETE_SYSTEMS')].items()}
 else:
     from jormungandr.autocomplete.kraken import Kraken
 
@@ -98,9 +94,9 @@ else:
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(
-    instances_dir=app.config.get('INSTANCES_DIR', None),
-    instance_filename_pattern=app.config.get('INSTANCES_FILENAME_PATTERN', '*.json'),
-    start_ping=app.config.get('START_MONITORING_THREAD', True),
+    instances_dir=app.config.get(str('INSTANCES_DIR'), None),
+    instance_filename_pattern=app.config.get(str('INSTANCES_FILENAME_PATTERN'), '*.json'),
+    start_ping=app.config.get(str('START_MONITORING_THREAD'), True),
 )
 i_manager.initialisation()
 
@@ -111,7 +107,7 @@ stat_manager = StatManager()
 bss_provider_manager = init.bss_providers(app)
 from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
 
-car_park_provider_manager = CarParkingProviderManager(app.config['CAR_PARK_PROVIDER'])
+car_park_provider_manager = CarParkingProviderManager(app.config[str('CAR_PARK_PROVIDER')])
 
 
 from jormungandr import api

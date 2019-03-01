@@ -78,7 +78,7 @@ class JcdecauxProvider(CommonBssProvider):
             and properties.get('network', '').lower() == self.network
         )
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_JCDECAUX'), 30))
     def _call_webservice(self):
         try:
             data = self.breaker.call(

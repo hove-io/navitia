@@ -30,13 +30,18 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+try:
+    from typing import Dict, Text, Any, Union
+except ImportError:
+    pass
 from flask import Blueprint
 from jormungandr.module_resource import ModuleResourcesManager, ModuleResource
 import six
 
 
 class ModulesLoader(object):
-    modules = {}
+    modules = {}  # type: Dict[Text, Union[AModule, ABlueprint]]
 
     def __init__(self, api):
         self.api = api

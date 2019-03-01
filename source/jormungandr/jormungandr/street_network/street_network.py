@@ -52,7 +52,7 @@ StreetNetworkPathKey = namedtuple(
 )
 
 
-class AbstractStreetNetworkService(ABC):
+class AbstractStreetNetworkService(ABC):  # type: ignore
     @abc.abstractmethod
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs

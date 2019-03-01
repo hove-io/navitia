@@ -100,7 +100,7 @@ class TestMultiCoverage:
         with pytest.raises(RegionNotFound):
             compute_regions(self.args)
 
-    def test_multi_coverage_no_region(self):
+    def test_multi_coverage_no_region_peru(self):
         """no orig """
         self._mock_function(None, ['peru'])
 

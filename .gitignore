@@ -31,3 +31,4 @@ debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
 .cache
 *.gcov
+.mypy_cache

@@ -750,6 +750,7 @@ MAIN_ROUTING_TEST_SETTING_NO_ADD = {
 
 MAIN_ROUTING_TEST_SETTING = deepcopy(MAIN_ROUTING_TEST_SETTING_NO_ADD)
 MAIN_ROUTING_TEST_SETTING['main_routing_test']['kraken_args'].append('--GENERAL.is_realtime_add_enabled=1')
+MAIN_ROUTING_TEST_SETTING['main_routing_test']['kraken_args'].append('--GENERAL.is_realtime_add_trip_enabled=1')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

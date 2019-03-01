@@ -194,7 +194,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                                 navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(),
                                 *data,
-                                conf.is_realtime_add_enabled());
+                                conf.is_realtime_add_enabled(),
+                                conf.is_realtime_add_trip_enabled());
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
             }

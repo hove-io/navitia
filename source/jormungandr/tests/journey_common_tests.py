@@ -1025,8 +1025,6 @@ class JourneyCommon(object):
     def test_section_fare_zone(self):
         from jormungandr import app
 
-        if not app.config['USE_SERPY']:
-            return
         """
         In a 'stop_point', the section 'fare_zone' should be present if the info is available
         (only the Serpy serializer has this feature, as Marshall will be deprecated soon)

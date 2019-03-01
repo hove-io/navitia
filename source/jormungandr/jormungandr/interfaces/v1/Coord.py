@@ -69,13 +69,10 @@ class Coord(ResourceUri):
         if len(response.places_nearby) > 0:
             e_type = response.places_nearby[0].embedded_type
             if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
-                if jormungandr.USE_SERPY:
-                    from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
+                from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
 
-                    new_address = PlacesNearbySerializer(response).data
-                    return {"address": new_address["places_nearby"][0]["address"]}
-                else:
-                    return {"address": marshal(response.places_nearby[0].address, address)}
+                new_address = PlacesNearbySerializer(response).data
+                return {"address": new_address["places_nearby"][0]["address"]}
         return None
 
     def _get_args(self, lon=None, lat=None, id=None):

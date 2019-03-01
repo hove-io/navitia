@@ -133,7 +133,7 @@ class Synthese(RealtimeProxy):
         except:
             return self.rt_system_id
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYNTHESE', 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYNTHESE'), 30))
     def _call_synthese(self, url):
         """
         http call to synthese

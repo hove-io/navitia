@@ -36,7 +36,7 @@ from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
-from jormungandr import i_manager, USE_SERPY, cache
+from jormungandr import i_manager, cache
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from flask_restful.fields import Raw
 from jormungandr import bss_provider_manager
@@ -112,11 +112,7 @@ class TechnicalStatus(ModuleResource):
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
                 add_common_status(raw_resp_dict, instance)
-
-                if USE_SERPY:
-                    resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
-                else:
-                    resp_dict = marshal(raw_resp_dict['status'], instance_status)
+                resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",

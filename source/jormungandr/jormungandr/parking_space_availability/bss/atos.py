@@ -94,7 +94,7 @@ class AtosProvider(CommonBssProvider):
 
         return Stands(0, 0, StandsStatus.unavailable)
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_ATOS'), 30))
     def _get_all_stands(self):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)

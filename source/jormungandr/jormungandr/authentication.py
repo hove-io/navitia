@@ -105,8 +105,10 @@ def get_token():
         return auth
 
 
-@memory_cache.memoize(current_app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 30))
-@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+@memory_cache.memoize(
+    current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
+)
+@cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def has_access(region, api, abort, user):
     """
     Check the Authorization of the current user for this region and this API.
@@ -140,8 +142,10 @@ def has_access(region, api, abort, user):
             return False
 
 
-@memory_cache.memoize(current_app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 30))
-@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+@memory_cache.memoize(
+    current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
+)
+@cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def cache_get_user(token):
     """
     We allow this method to be cached even if it depends on the current time
@@ -150,14 +154,18 @@ def cache_get_user(token):
     return User.get_from_token(token, datetime.datetime.now())
 
 
-@memory_cache.memoize(current_app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 30))
-@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+@memory_cache.memoize(
+    current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
+)
+@cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def cache_get_key(token):
     return Key.get_by_token(token)
 
 
-@memory_cache.memoize(current_app.config['MEMORY_CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 30))
-@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+@memory_cache.memoize(
+    current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
+)
+@cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def get_all_available_instances(user):
     """
     get the list of instances that a user can use (for the autocomplete apis)

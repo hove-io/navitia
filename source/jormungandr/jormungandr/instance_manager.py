@@ -268,7 +268,7 @@ class InstanceManager(object):
             return self._all_keys_of_coord(flon, flat)
         return self._all_keys_of_id(object_id)
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', None))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
     def _all_keys_of_id(self, object_id):
         instances = []
         futures = {}

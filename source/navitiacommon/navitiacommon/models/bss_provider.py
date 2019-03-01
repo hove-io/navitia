@@ -35,7 +35,7 @@ from navitiacommon.models import db, TimestampMixin
 from datetime import timedelta
 
 
-class BssProvider(db.Model, TimestampMixin):
+class BssProvider(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Text, primary_key=True)
     network = db.Column(db.Text, unique=False, nullable=False)
     klass = db.Column(db.Text, unique=False, nullable=False)
