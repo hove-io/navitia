@@ -1,3 +1,13 @@
+navitia2 (2.74.0) unstable; urgency=low
+
+  * Kraken: Update existing tests with is_realtime_add_trip_enabled flag  <https://github.com/CanalTP/navitia/pull/2683>
+  * Kraken: Add enable_realtime_add_trip flag  <https://github.com/CanalTP/navitia/pull/2679>
+  * Jormun: Experimentation with mypy  <https://github.com/CanalTP/navitia/pull/2673>
+  * Kraken: UTests around clean_useless_vjs func  <https://github.com/CanalTP/navitia/pull/2675>
+  * Jormun: remove marshal first step  <https://github.com/CanalTP/navitia/pull/2674>
+
+ -- mbounabi <Mehdi.Bounabi@Kisio.org>  Fri, 01 Mar 2019 11:03:00 +0100
+
 navitia2 (2.73.0) unstable; urgency=low
 
   * Doc: ptref grammar  <https://github.com/CanalTP/navitia/pull/2664>
