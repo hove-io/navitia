@@ -1,0 +1,9 @@
+---
+BasedOnStyle: chromium
+IndentWidth: 4
+---
+Language: Cpp
+ColumnLimit: 120
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: true
+BreakBeforeBinaryOperators: NonAssignment
