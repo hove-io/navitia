@@ -46,6 +46,17 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
+static bool is_circulating(const transit_realtime::TripUpdate& trip_update)
+{
+    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
+         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
+         && trip_update.stop_time_update_size()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
     if (event.HasExtension(kirin::stop_time_event_status)) {
         return in(event.GetExtension(kirin::stop_time_event_status),
@@ -57,9 +68,7 @@ static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) 
 
 static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
-    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
-         && trip_update.stop_time_update_size()) {
+    if (is_circulating(trip_update)) {
         uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& st: trip_update.stop_time_update()) {
             uint32_t arrival_time = st.arrival().time();
@@ -248,7 +257,7 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
 }
 
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
-                          nt::PT_Data& pt_data,
+                          const nt::PT_Data& pt_data,
                           const bool is_realtime_add_enabled,
                           const bool is_realtime_add_trip_enabled)
 {
@@ -277,16 +286,14 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
     // departure is brought forward), we check the size of stop_time_update because we can't find a proper
     // enum in gtfs-rt proto to express this idea
-    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
-         && trip_update.stop_time_update_size()) {
+    if (is_circulating(trip_update)) {
 
         // check if company id exists
         if (trip_update.trip().HasExtension(kirin::company_id) &&
             pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip company id "
                     << trip_update.trip().GetExtension(kirin::company_id)
-                    <<  " doesn't exists: ignoring trip id "
+                    <<  " doesn't exist: ignoring trip update id "
                     << trip_update.trip().trip_id());
             return false;
         }
@@ -295,7 +302,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
             pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id)) == pt_data.physical_modes_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip physical mode id "
                     << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
-                    <<  " doesn't exists: ignoring trip id "
+                    <<  " doesn't exist: ignoring trip update id "
                     << trip_update.trip().trip_id());
             return false;
         }
@@ -454,10 +461,7 @@ create_disruption(const std::string& id,
             // Yeah, that's quite hardcoded...
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
-        else if ((trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-                  trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED)
-                  && trip_update.stop_time_update_size())
-        {
+        else if (is_circulating(trip_update)) {
             LOG4CPLUS_TRACE(log, "a trip has been changed");
             using nt::disruption::StopTimeUpdate;
             auto most_important_stoptime_status = StopTimeUpdate::Status::UNCHANGED;
@@ -584,10 +588,16 @@ void handle_realtime(const std::string& id,
 
     // Get or create meta VJ
     navitia::type::MetaVehicleJourney* meta_vj = nullptr;
-    if (! data.pt_data->meta_vjs.exists(trip_update.trip().trip_id())) {
+    bool meta_vj_exists = data.pt_data->meta_vjs.exists(trip_update.trip().trip_id());
+    if (! meta_vj_exists && (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)) {
         LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
         meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
+        // TODO : pick a meaningful TZ
         meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
+    } else if (! meta_vj_exists && (trip_update.trip().schedule_relationship() != transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)) {
+        LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
+                << trip_update.trip().trip_id());
+        return;
     } else {
         LOG4CPLUS_DEBUG(log, "Vehicle journey founded : " << trip_update.trip().trip_id());
         meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
