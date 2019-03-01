@@ -54,6 +54,7 @@ from tyr.binarisation import (
     osm2mimir,
     stops2mimir,
     ntfs2mimir,
+    cosmogony2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -218,6 +219,7 @@ def update_data():
 
 
 BANO_REGEXP = re.compile('.*bano.*')
+COSMOGONY_REGEXP = re.compile('.*cosmogony.*')
 
 
 def type_of_autocomplete_data(filename):
@@ -228,6 +230,7 @@ def type_of_autocomplete_data(filename):
     return can be:
         - 'bano'
         - 'osm'
+        - 'cosmogony'
 
     """
 
@@ -235,6 +238,8 @@ def type_of_autocomplete_data(filename):
         # first we try fusio, because it can load fares too
         if any(f for f in files if BANO_REGEXP.match(f)):
             return 'bano'
+        if len(files) == 1 and COSMOGONY_REGEXP.match(files[0]):
+            return 'cosmogony'
         if len(files) == 1 and files[0].endswith('.pbf'):
             return 'osm'
         return None
@@ -261,24 +266,29 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     job = models.Job()
     actions = []
 
-    task = {'bano': bano2mimir, 'osm': osm2mimir}
+    task = {'bano': bano2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
-    for _file in files:
+    # it's important for the admin to be loaded first, then addresses, then street, then poi
+    import_order = ['cosmogony', 'bano', 'osm']
+    files_and_types = [(f, type_of_autocomplete_data(f)) for f in files]
+    files_and_types = sorted(files_and_types, key=lambda f_t: import_order.index(f_t[1]))
+
+    for f, ftype in files_and_types:
         dataset = models.DataSet()
-        dataset.type = type_of_autocomplete_data(_file)
+        dataset.type = ftype
         dataset.family_type = 'autocomplete_{}'.format(dataset.type)
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(_file, autocomplete_instance.backup_dir(autocomplete_dir))
+                filename = move_to_backupdirectory(f, autocomplete_instance.backup_dir(autocomplete_dir))
             else:
-                filename = _file
+                filename = f
             actions.append(
                 task[dataset.type].si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid)
             )
         else:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, f))
             continue
 
         # currently the name of a dataset is the path to it
@@ -468,6 +478,25 @@ def cities(osm_path):
         logging.exception('cities exception : {}'.format(e.message))
 
     logging.info('Import of cities finished')
+    return res
+
+
+@celery.task()
+def cosmogony2cities(cosmogony_path):
+    """ launch cosmogony2cities """
+    res = -1
+    try:
+        res = launch_exec(
+            "cosmogony2cities",
+            ['--input', cosmogony_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
+            logging,
+        )
+        if res != 0:
+            logging.error('cosmogony2cities failed')
+    except Exception as e:
+        logging.exception('cosmogony2cities exception : {}'.format(e.message))
+
+    logging.info('Import of cosmogony2cities finished')
     return res
 
 
