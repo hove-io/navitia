@@ -315,7 +315,7 @@ struct Impact {
         return boost::make_iterator_range(_informed_entities.begin(), _informed_entities.end());
     }
 
-    // add the ptobj to the enformed entities and make all the needed backref
+    // add the ptobj to the informed entities and make all the needed backref
     // Note: it's a static method because we need the shared_ptr to the impact
     static void link_informed_entity(PtObj ptobj, SharedImpact& impact, const boost::gregorian::date_period&, type::RTLevel);
 

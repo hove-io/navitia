@@ -122,7 +122,7 @@ struct ContainerTrait<type::MetaVehicleJourney> {
     typedef vect_type associative_type;
 };
 
-/** Contains all the data (base-schedule and realtime) of the PublicTransport Referential (in short PT-Ref)
+/** Contains all the Public Transport Referential data (aka. PT-Ref), base-schedule and realtime.
   *
   * There are 3 storage formats : text, binary, compressed binary
   * It is advised to use the compressed binary format (compression has almost no additional overhead and can even
@@ -173,21 +173,21 @@ public:
         return res;
     }
 
-    /** Return all indexes of a given type
+    /** Returns all indexes of a given type
       *
-      * In practice, return an array with elements ranging from 0 to (n-1) where n is the number of elements
+      * In practice, returns an array of elements ranging from 0 to (n-1) where n is the number of elements
       */
     Indexes get_all_index(Type_e type) const;
 
     size_t get_nb_obj(Type_e type) const;
 
     /** Given a list of indexes of 'source' objects
-      * return a list of indexes of 'target' objects
+      * returns a list of indexes of 'target' objects
       */
     Indexes get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const;
 
     /** Given one index of a 'source' object
-      * return a list of indexes of 'target' objects
+      * returns a list of indexes of 'target' objects
       */
     Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
@@ -265,11 +265,11 @@ public:
     /** Load data from a binary file compressed using LZ4
       *
       * LZ4 compression is super fast but its efficiency is average
-      * The goal is for the read of compressed file to be as fast as without compression
+      * The goal is to achieve the same read performance with and without compression
       */
     void load(std::istream& ifs);
 
-    /** Save data in a binary file compressed using LZ4*/
+    /** Save data in a compressed binary file using LZ4*/
     void save(std::ostream& ifs) const;
 
     // Deep clone from the given Data.
