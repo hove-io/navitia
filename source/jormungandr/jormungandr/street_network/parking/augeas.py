@@ -27,8 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import requests
-import pybreaker
+import requests, pybreaker, logging
 from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
 
 
@@ -38,12 +37,13 @@ class Augeas(AbstractParkingModule):
         self.max_park_duration = max_park_duration
         # TODO: put into a config when the POC is validated
         self.breaker = pybreaker.CircuitBreaker(fail_max=500, reset_timeout=60)
+        self.logger = logging.getLogger(__name__)
 
     def _breaker_wrapper(self, fun, *args, **kwargs):
         try:
             return self.breaker.call(fun, *args, **kwargs)
         except Exception as e:
-            self.log.exception('error occurred when requesting Augeas: {}'.format(str(e)))
+            self.logger.exception('error occurred when requesting Augeas: {}'.format(str(e)))
             raise
 
     def _request_in_batch(self, coords):
@@ -57,10 +57,10 @@ class Augeas(AbstractParkingModule):
         r = requests.post(url=url, json=data)
         return r.json().get('durations')
 
-    def _request(self, coords):
+    def _request(self, coord):
         params = {
-            'lon': coords.lon,
-            'lat': coords.lat,
+            'lon': coord.lon,
+            'lat': coord.lat,
             'n': 1,
             "walking_speed": 1.11,
             'max_park_duration': self.max_park_duration,
