@@ -29,50 +29,15 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_restful import fields, abort
+from flask_restful import abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import (
-    error,
-    PbField,
-    NonNullList,
-    NonNullNested,
-    feed_publisher,
-    Links,
-    JsonString,
-    place,
-    ListLit,
-    beta_endpoint,
-    context,
-)
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
-from jormungandr.interfaces.v1.fields import DateTime
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon.parser_args_type import UnsignedInteger
-
-graphical_isochrone = {
-    "geojson": JsonString(),
-    "max_duration": fields.Integer(),
-    "min_duration": fields.Integer(),
-    'from': PbField(place, attribute='origin'),
-    "to": PbField(place, attribute="destination"),
-    'requested_date_time': DateTime(),
-    'min_date_time': DateTime(),
-    'max_date_time': DateTime(),
-}
-
-
-graphical_isochrones = {
-    "isochrones": NonNullList(NonNullNested(graphical_isochrone), attribute="graphical_isochrones"),
-    "error": PbField(error, attribute='error'),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-    "links": fields.List(Links()),
-    "warnings": ListLit([fields.Nested(beta_endpoint)]),
-    'context': context,
-}
 
 
 class GraphicalIsochrone(JourneyCommon):
@@ -89,7 +54,7 @@ class GraphicalIsochrone(JourneyCommon):
             help="To provide multiple duration parameters",
         )
 
-    @get_serializer(serpy=GraphicalIsrochoneSerializer, marshall=graphical_isochrones)
+    @get_serializer(serpy=GraphicalIsrochoneSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
 

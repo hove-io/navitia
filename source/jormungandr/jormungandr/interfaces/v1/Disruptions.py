@@ -36,41 +36,12 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import (
-    PbField,
-    error,
-    network,
-    line,
-    NonNullList,
-    NonNullNested,
-    pagination,
-    stop_area,
-    disruption_marshaller,
-    feed_publisher,
-)
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
-from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
-from flask_restful import fields
 from flask.globals import g
 from datetime import datetime
 import six
-
-disruption = {
-    "network": PbField(network, attribute='network'),
-    "lines": NonNullList(NonNullNested(line)),
-    "stop_areas": NonNullList(NonNullNested(stop_area)),
-    "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey)),
-}
-
-traffic_reports = {
-    "traffic_reports": NonNullList(NonNullNested(disruption)),
-    "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-}
 
 
 class TrafficReport(ResourceUri):
@@ -127,7 +98,6 @@ class TrafficReport(ResourceUri):
             help="If filled, will restrain the search within the given disruption tags",
         )
         self.collection = 'traffic_reports'
-        self.collections = traffic_reports
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

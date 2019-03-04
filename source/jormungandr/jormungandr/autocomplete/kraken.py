@@ -34,31 +34,14 @@ from jormungandr.exceptions import InvalidArguments
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.scenarios.utils import build_pagination, places_type
-from jormungandr.interfaces.v1.fields import (
-    NonNullList,
-    place,
-    NonNullNested,
-    PbField,
-    error,
-    feed_publisher,
-    disruption_marshaller,
-)
-from flask_restful import fields, abort
+from flask_restful import abort
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.utils import date_to_timestamp
 
 
-places = {
-    "places": NonNullList(NonNullNested(place)),
-    "error": PbField(error, attribute='error'),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-}
-
-
 class Kraken(AbstractAutocomplete):
-    @get_serializer(serpy=api.PlacesSerializer, marshall=places)
+    @get_serializer(serpy=api.PlacesSerializer)
     def get(self, request, instances):
         if len(instances) != 1:
             raise InvalidArguments('kraken autocomplete works only for one (and only one) instance')
@@ -108,7 +91,7 @@ class Kraken(AbstractAutocomplete):
             status.poi_sources.append(resp.geo_status.poi_source)
         return status
 
-    @get_serializer(serpy=api.PlacesSerializer, marshall=places)
+    @get_serializer(serpy=api.PlacesSerializer)
     def get_by_uri(self, uri, instances=None, current_datetime=None):
         if len(instances) != 1:
             raise InvalidArguments('kraken search by uri works only for one (and only one) instance')

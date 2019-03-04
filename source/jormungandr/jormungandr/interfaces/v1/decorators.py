@@ -29,7 +29,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer import serialize_with
 
 
-def get_serializer(serpy, marshall=None):
+def get_serializer(serpy):
     return serialize_with(serpy)
 
 
