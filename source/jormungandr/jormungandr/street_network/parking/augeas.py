@@ -26,15 +26,25 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
+from __future__ import absolute_import, print_function, unicode_literals, division
 import requests
+import pybreaker
+from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
 
 
 class Augeas(AbstractParkingModule):
     def __init__(self, service_url, max_park_duration=1200):
         self.service_url = service_url
         self.max_park_duration = max_park_duration
+        # TODO: put into a config when the POC is validated
+        self.breaker = pybreaker.CircuitBreaker(fail_max=500, reset_timeout=60)
+
+    def _breaker_wrapper(self, fun, *args, **kwargs):
+        try:
+            return self.breaker.call(fun, *args, **kwargs)
+        except Exception as e:
+            self.log.exception('error occurred when requesting Augeas: {}'.format(str(e)))
+            raise
 
     def _request_in_batch(self, coords):
         data = {
@@ -63,13 +73,13 @@ class Augeas(AbstractParkingModule):
         return durations[0].get('duration', self.max_park_duration)
 
     def get_parking_duration(self, coord):
-        return self._request(coord)
+        return self._breaker_wrapper(self._request, coord=coord)
 
     def get_leave_parking_duration(self, coord):
-        return self._request(coord)
+        return self._breaker_wrapper(self._request, coord=coord)
 
     def get_parking_duration_in_batch(self, coords):
-        return self._request_in_batch(coords)
+        return self._breaker_wrapper(self._request_in_batch, coords=coords)
 
     def get_leave_duration_in_batch(self, coords):
-        return self._request_in_batch(coords)
+        return self._breaker_wrapper(self._request_in_batch, coords=coords)

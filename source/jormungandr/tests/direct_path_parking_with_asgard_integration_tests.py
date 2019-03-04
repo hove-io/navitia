@@ -105,7 +105,7 @@ from jormungandr.street_network.parking.augeas import Augeas
 
 
 class MockAugeas(Augeas):
-    def _request(self, _):
+    def _request(self, *_, **__):
         return 42
 
 
