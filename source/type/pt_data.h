@@ -153,14 +153,6 @@ struct PT_Data : boost::noncopyable{
 
     type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref);
 
-    /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
-      *
-      * Le template a été surchargé pour gérer des const char* (string passée comme literal)
-      */
-    template<class RequestedType>
-    std::vector<RequestedType*> find(std::string RequestedType::* attribute, const char * str){
-        return find(attribute, std::string(str));
-    }
 
     void clean_weak_impacts();
 
