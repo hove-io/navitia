@@ -251,34 +251,27 @@ places_types = {
 class PlacesNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=PlacesNearbySerializer, *args, **kwargs)
-        self.parsers["get"].add_argument(
+        parser_get = self.parsers["get"]
+        parser_get.add_argument(
             "type[]",
             type=OptionValue(list(places_type.keys())),
             action="append",
             default=["stop_area", "stop_point", "poi"],
             help="Type of the objects to return",
         )
-        self.parsers["get"].add_argument("filter", type=six.text_type, default="", help="Filter your objects")
-        self.parsers["get"].add_argument(
-            "distance", type=int, default=500, help="Distance range of the query in meters"
-        )
-        self.parsers["get"].add_argument(
-            "count", type=default_count_arg_type, default=10, help="Elements per page"
-        )
-        self.parsers["get"].add_argument(
-            "depth", type=DepthArgument(), default=1, help="Maximum depth on objects"
-        )
-        self.parsers["get"].add_argument(
-            "start_page", type=int, default=0, help="The page number of the ptref result"
-        )
-        self.parsers["get"].add_argument(
+        parser_get.add_argument("filter", type=six.text_type, default="", help="Filter your objects")
+        parser_get.add_argument("distance", type=int, default=500, help="Distance range of the query in meters")
+        parser_get.add_argument("count", type=default_count_arg_type, default=10, help="Elements per page")
+        parser_get.add_argument("depth", type=DepthArgument(), default=1, help="Maximum depth on objects")
+        parser_get.add_argument("start_page", type=int, default=0, help="The page number of the ptref result")
+        parser_get.add_argument(
             "bss_stands",
             type=BooleanType(),
             default=False,
             deprecated=True,
             help="DEPRECATED, Use add_poi_infos[]=bss_stands",
         )
-        self.parsers["get"].add_argument(
+        parser_get.add_argument(
             "add_poi_infos[]",
             type=OptionValue(add_poi_infos_types),
             default=['bss_stands', 'car_park'],
@@ -287,7 +280,7 @@ class PlacesNearby(ResourceUri):
             help="Show more information about the poi if it's available, for instance, "
             "show BSS/car park availability in the pois(BSS/car park) of the response",
         )
-        self.parsers["get"].add_argument(
+        parser_get.add_argument(
             "_current_datetime",
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
@@ -297,13 +290,20 @@ class PlacesNearby(ResourceUri):
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
         )
-        self.parsers['get'].add_argument(
+        parser_get.add_argument(
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
-        self.parsers['get'].add_argument(
+        parser_get.add_argument(
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
-        args = self.parsers["get"].parse_args()
+        parser_get.add_argument(
+            "equipment_details",
+            default=False,
+            type=bool,
+            help="enhance response with accessibility equipement details",
+        )
+
+        args = parser_get.parse_args()
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
