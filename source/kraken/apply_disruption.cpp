@@ -579,7 +579,15 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         for(const auto& wptr: modified_by_moved) {
             if (auto share_ptr = wptr.lock()){
-                disruptions_collection.insert(share_ptr);
+                // Do not reapply the same disruption. If we have more than one impact we will
+                // reapply the one we just deleted.
+                // We need to keep the link though, because other impacts from the disruption may
+                // need to be deleted after this one and they need to stay in modified_by.
+                if (share_ptr->disruption->uri != impact->disruption->uri) {
+                    disruptions_collection.insert(share_ptr);
+                } else {
+                    mvj->push_unique_impact(share_ptr);
+                }
             }
         }
         // we check if we now have useless vehicle_journeys to cleanup
