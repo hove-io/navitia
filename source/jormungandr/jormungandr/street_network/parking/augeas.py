@@ -27,16 +27,24 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import requests, pybreaker, logging
+import requests
+import pybreaker
+import logging
+from datetime import timedelta
 from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
+
+DEFAULT_MAX_PARKING_DURATION = int(timedelta(seconds=1200).total_seconds())
 
 
 class Augeas(AbstractParkingModule):
-    def __init__(self, service_url, max_park_duration=1200):
+    def __init__(self, service_url, max_park_duration=DEFAULT_MAX_PARKING_DURATION):
         self.service_url = service_url
         self.max_park_duration = max_park_duration
         # TODO: put into a config when the POC is validated
-        self.breaker = pybreaker.CircuitBreaker(fail_max=500, reset_timeout=60)
+        one_minute = timedelta(seconds=60).total_seconds()
+        self.breaker = pybreaker.CircuitBreaker(fail_max=10, reset_timeout=one_minute)
+        self.request_timeout = timedelta(seconds=0.1).total_seconds()
+
         self.logger = logging.getLogger(__name__)
 
     def _breaker_wrapper(self, fun, *args, **kwargs):
@@ -54,7 +62,7 @@ class Augeas(AbstractParkingModule):
             "coords": [[c.lon, c.lat] for c in coords],
         }
         url = requests.compat.urljoin(self.service_url, '/v0/park_duration')
-        r = requests.post(url=url, json=data)
+        r = requests.post(url=url, json=data, timeout=self.request_timeout)
         return r.json().get('durations')
 
     def _request(self, coord):
@@ -66,7 +74,7 @@ class Augeas(AbstractParkingModule):
             'max_park_duration': self.max_park_duration,
         }
         url = requests.compat.urljoin(self.service_url, '/v0/park_duration')
-        r = requests.get(url=url, params=params)
+        r = requests.get(url=url, params=params, timeout=self.request_timeout)
         durations = r.json().get('durations')
         if not durations:
             return self.max_park_duration
