@@ -304,8 +304,15 @@ def stop_points(is_collection):
                 **kwargs
             )
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument(
+            parser_get = self.parsers["get"]
+            parser_get.add_argument(
                 "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+            parser_get.add_argument(
+                "equipment_details",
+                default=False,
+                type=bool,
+                help="enhance response with accessibility equipement details",
             )
 
     return StopPoints
@@ -319,8 +326,15 @@ def stop_areas(is_collection):
         def __init__(self):
             Uri.__init__(self, is_collection, "stop_areas", output_type_serializer=api.StopAreasSerializer)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument(
+            parser_get = self.parsers["get"]
+            parser_get.add_argument(
                 "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+            parser_get.add_argument(
+                "equipment_details",
+                default=False,
+                type=bool,
+                help="enhance response with accessibility equipement details",
             )
 
     return StopAreas
