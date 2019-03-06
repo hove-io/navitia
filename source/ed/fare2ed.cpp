@@ -53,6 +53,8 @@ int fare2ed(int argc, const char * argv[])
 {
     std::string connection_string, fare_dir;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("version,v", "Show version")
@@ -62,6 +64,7 @@ int fare2ed(int argc, const char * argv[])
         ("fare,f", po::value<std::string>(&fare_dir)->required(), "Directory of fare files")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

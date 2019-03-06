@@ -47,6 +47,7 @@ namespace navitia { namespace cli {
         nt::Data data;
 
         compute_options() : desc("Simple journey computation"){
+            // clang-format off
             desc.add_options()
             ("start,s", po::value<std::string>(&start), "uri of point to start")
             ("target,t", po::value<std::string>(&target), "uri of point to end")
@@ -55,6 +56,7 @@ namespace navitia { namespace cli {
             ("firstsectionmode,f", po::value<std::string>(&first_section_mode), "can be walking, bike, car, bss")
             ("lastsectionmonde,l", po::value<std::string>(&last_section_mode), "can be walking, bike, car, bss")
             ("protobuf,p", "Full-output");
+            // clang-format on
         }
         bool compute();
         void load(const std::string &file);

@@ -53,6 +53,8 @@ int main(int argc, char * argv[])
                 fare_dir;
     double simplify_tolerance;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("date,d", po::value<std::string>(&date), "Beginning date")
@@ -68,6 +70,7 @@ int main(int argc, char * argv[])
              "user=navitia dbname=navitia password=navitia")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

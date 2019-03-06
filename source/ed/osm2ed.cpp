@@ -951,6 +951,8 @@ int osm2ed(int argc, const char** argv) {
     std::string input, connection_string, json_poi_types;
 
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("version,v", "Show version")
         ("help,h", "Show this message")
@@ -964,6 +966,7 @@ int osm2ed(int argc, const char** argv) {
                        "a json string describing poi_types and rules to build them from OSM tags")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

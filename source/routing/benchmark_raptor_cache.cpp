@@ -80,6 +80,7 @@ int main(int argc, char** argv){
     std::string file, profile;
     int nb_days, size, nb_threads;
 
+    // clang-format off
     desc.add_options()
             ("help", "Show this message")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Path to data.nav.lz4")
@@ -87,6 +88,8 @@ int main(int argc, char** argv){
             ("size,s", po::value<int>(&size)->default_value(10), "raptor cache size")
             ("threads,t", po::value<int>(&nb_threads)->default_value(1), "number of threads to run")
             ("profile,p", po::value<std::string>(&profile)->default_value(""), "profile file");
+    // clang-format on
+
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);

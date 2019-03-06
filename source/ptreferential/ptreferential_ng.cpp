@@ -112,7 +112,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
         using boost::spirit::_1;
         using boost::spirit::_2;
         namespace phx = boost::phoenix;
-
+        // clang-format off
         pred = all | empty | fun | cmp | dwithin;
         all = qi::lit("all")[_val = phx::construct<ast::All>()];
         empty = qi::lit("empty")[_val = phx::construct<ast::Empty>()];
@@ -146,6 +146,8 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
         ident = qi::lexeme[qi::alpha >> *(qi::alnum | qi::char_("_"))];
         str = qi::lexeme[+(qi::alnum | qi::char_("_.:;|-"))]
             | qi::lexeme['"' > (*(qi::char_ - qi::char_("\"\\") | ('\\' > qi::char_))) > '"'];
+
+        // clang-format on
     }
 
     // Pred

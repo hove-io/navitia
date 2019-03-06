@@ -165,6 +165,8 @@ int ed2nav(int argc, const char * argv[])
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("version,v", "Show version")
@@ -185,6 +187,7 @@ int ed2nav(int argc, const char * argv[])
          "cities database connection parameters: host=localhost user=navitia dbname=cities password=navitia")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

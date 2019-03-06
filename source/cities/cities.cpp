@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -364,12 +364,15 @@ int main(int argc, char** argv) {
     pt::ptime start;
     std::string input, connection_string;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("version,v", "Show version")
         ("help,h", "Show this message")
         ("input,i", po::value<std::string>(&input)->required(), "Input OSM File")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
          "Database connection parameters: host=localhost user=navitia dbname=navitia password=navitia");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

@@ -46,12 +46,15 @@ int main(int argc, char** argv) {
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
 
+    // clang-format off
     desc.add_options()
             ("help", "Show this message")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"),
                      "Path to data.nav.lz4")
             ("output,o", po::value<std::string>(&output)->default_value("graph.csv"),
                      "Output file");
+    // clang-format on
+
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);

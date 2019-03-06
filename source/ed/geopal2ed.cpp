@@ -48,6 +48,8 @@ int main(int argc, char * argv[])
 {
     std::string input, connection_string;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("input,i", po::value<std::string>(&input), "Input directory")
@@ -58,6 +60,7 @@ int main(int argc, char * argv[])
              "dbname=navitia password=navitia")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

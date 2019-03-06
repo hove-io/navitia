@@ -44,6 +44,7 @@ po::options_description get_options_description(const boost::optional<std::strin
                                                 const boost::optional<std::string> zmq,
                                                 const boost::optional<bool> display_contributors ){
     po::options_description desc("Allowed options");
+    // clang-format off
     desc.add_options()
         ("GENERAL.database", po::value<std::string>()->default_value("data.nav.lz4"), "path to the data file")
 
@@ -90,6 +91,7 @@ po::options_description get_options_description(const boost::optional<std::strin
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
 
+    // clang-format on
     return desc;
 
 }
