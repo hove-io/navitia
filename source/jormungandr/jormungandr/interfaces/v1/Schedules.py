@@ -156,7 +156,7 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "equipment_details",
             default=False,
-            type=bool,
+            type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
 
