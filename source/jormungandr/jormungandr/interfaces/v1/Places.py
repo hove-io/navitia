@@ -296,12 +296,6 @@ class PlacesNearby(ResourceUri):
         parser_get.add_argument(
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
-        parser_get.add_argument(
-            "equipment_details",
-            default=False,
-            type=BooleanType(),
-            help="enhance response with accessibility equipement details",
-        )
 
         args = parser_get.parse_args()
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
