@@ -311,7 +311,7 @@ def stop_points(is_collection):
             parser_get.add_argument(
                 "equipment_details",
                 default=False,
-                type=bool,
+                type=BooleanType(),
                 help="enhance response with accessibility equipement details",
             )
 
@@ -333,7 +333,7 @@ def stop_areas(is_collection):
             parser_get.add_argument(
                 "equipment_details",
                 default=False,
-                type=bool,
+                type=BooleanType(),
                 help="enhance response with accessibility equipement details",
             )
 

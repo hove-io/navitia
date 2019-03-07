@@ -356,7 +356,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "equipment_details",
             default=True,
-            type=bool,
+            type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
 
