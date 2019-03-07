@@ -353,6 +353,12 @@ class Journeys(JourneyCommon):
             hidden=True,
             help="limit nb of stop points accesible by bss crowfly, " "used especially in distributed scenario",
         )
+        parser_get.add_argument(
+            "equipment_details",
+            default=True,
+            type=bool,
+            help="enhance response with accessibility equipement details",
+        )
 
         args = self.parsers["get"].parse_args()
 

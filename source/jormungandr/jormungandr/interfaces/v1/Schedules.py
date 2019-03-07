@@ -153,6 +153,12 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
+        parser_get.add_argument(
+            "equipment_details",
+            default=False,
+            type=bool,
+            help="enhance response with accessibility equipement details",
+        )
 
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
