@@ -2396,7 +2396,7 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
 }
 
 // We check that with a disruption with two impacts impacting the same vj the update is working.
-// It was failing before since after deleting each impact, we were reapplying the all disruption.
+// It was failing before since after deleting each impact, we were reapplying the disruption.
 BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     ed::builder b("20190301");
 
@@ -2413,11 +2413,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
             ("stop_point:40", "13:00"_t)
             ("stop_point:50", "14:00"_t);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
@@ -2506,11 +2502,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
             ("stop_point:20", "13:00"_t)
             ("stop_point:10", "14:00"_t);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);

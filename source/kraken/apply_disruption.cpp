@@ -579,10 +579,18 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         for(const auto& wptr: modified_by_moved) {
             if (auto share_ptr = wptr.lock()){
-                // Do not reapply the same disruption. If we have more than one impact we will
-                // reapply the one we just deleted.
-                // We need to keep the link though, because other impacts from the disruption may
-                // need to be deleted after this one and they need to stay in modified_by.
+                /*
+                 * Do not reapply the same disruption. If we have more than one impact in it
+                 * we would reapply all of its impacts (even the one we are deleting).
+                 * We need to keep the link to remaining impacts of the disruption though, because
+                 * they will be deleted after this one. They must stay in modified_by for that.
+                 *
+                 * /!\ WARNING /!\
+                 * This is working because we never delete a single impact of a disruption.
+                 * delete_impact is only called by delete_disruption which delete every impacts.
+                 * If this was not the case we would need to find a way to reapply part of a
+                 * disruption's impacts, and not all of them, after each deletion of an impact.
+                 */
                 if (share_ptr->disruption->uri != impact->disruption->uri) {
                     disruptions_collection.insert(share_ptr);
                 } else {
