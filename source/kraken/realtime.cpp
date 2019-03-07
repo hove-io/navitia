@@ -289,7 +289,8 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     if (is_circulating(trip_update)) {
 
         // check if company id exists
-        if (trip_update.trip().HasExtension(kirin::company_id) &&
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED &&
+            trip_update.trip().HasExtension(kirin::company_id) &&
             pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip company id "
                     << trip_update.trip().GetExtension(kirin::company_id)
@@ -298,7 +299,8 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
             return false;
         }
         // check if physical mode id exists
-        if (trip_update.vehicle().HasExtension(kirin::physical_mode_id) &&
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED &&
+            trip_update.vehicle().HasExtension(kirin::physical_mode_id) &&
             pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id)) == pt_data.physical_modes_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip physical mode id "
                     << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
@@ -599,7 +601,7 @@ void handle_realtime(const std::string& id,
                 << trip_update.trip().trip_id());
         return;
     } else {
-        LOG4CPLUS_DEBUG(log, "Vehicle journey founded : " << trip_update.trip().trip_id());
+        LOG4CPLUS_DEBUG(log, "Vehicle journey found : " << trip_update.trip().trip_id());
         meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
     }
 

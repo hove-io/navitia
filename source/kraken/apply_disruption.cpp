@@ -220,18 +220,59 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (const auto& stu: impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
             }
+
+            // Create new VJ
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
                 canceled_vp,
                 r,
                 std::move(stoptimes),
                 pt_data);
-            if (!impact->company_id.empty()) {
-                nu::make_map_find(pt_data.companies_map, impact->company_id)
-                    .if_found([&vj](navitia::type::Company* c){ vj->company = c; })
-                    .if_not_found([&](){ LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id); });
-            }
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
+
+            // Add company
+            if (!impact->company_id.empty()) {
+                LOG4CPLUS_TRACE(log, "kikou " << impact->company_id);
+                nu::make_map_find(pt_data.companies_map, impact->company_id)
+                    .if_found([&](navitia::type::Company* c){
+                        vj->company = c;
+                        LOG4CPLUS_TRACE(log, "[disruption] Associate company into new VJ. Company id : " << impact->company_id); })
+                    .if_not_found([&](){
+                        // for protection, use the companies[0]
+                        // TODO : Create default company
+                        vj->company = pt_data.companies[0];
+                        LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id); });
+            } else {
+                if (! mvj->get_base_vj().empty()) {
+                    vj->company = mvj->get_base_vj().at(0)->company;
+                } else {
+                    // for protection, use the companies[0]
+                    // TODO : Create default company
+                    vj->company = pt_data.companies[0];
+                }
+            }
+
+            // Add physical mode
+            if (!impact->physical_mode_id.empty()) {
+                nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
+                    .if_found([&](navitia::type::PhysicalMode* p){
+                        vj->physical_mode = p;
+                        LOG4CPLUS_TRACE(log, "[disruption] Associate physical mode into new VJ. Physical mode id : " << impact->physical_mode_id); })
+                    .if_not_found([&](){
+                        // for protection, use the physical_modes[0]
+                        // TODO : Create default physical mode
+                        vj->physical_mode = pt_data.physical_modes[0];
+                        LOG4CPLUS_WARN(log, "[disruption] Associate physical mode into new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
+            } else {
+                if (! mvj->get_base_vj().empty()) {
+                    vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                } else {
+                    // for protection, use the physical_modes[0]
+                    // TODO : Create default physical mode
+                    vj->physical_mode = pt_data.physical_modes[0];
+                }
+            }
+
             // Use the corresponding base stop_time for boarding and alighting duration
             for(auto& st: vj->stop_time_list) {
                 const auto base_st = st.get_base_stop_time();
@@ -240,16 +281,17 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     st.alighting_time = st.arrival_time + base_st->get_alighting_duration();
                 }
             }
+
+            // name and dataset
             if (! mvj->get_base_vj().empty()) {
-                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->name = mvj->get_base_vj().at(0)->name;
+                vj->dataset = mvj->get_base_vj().at(0)->dataset;
             } else {
-                if (!impact->physical_mode_id.empty()) {
-                    nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
-                        .if_found([&vj](navitia::type::PhysicalMode* p){ vj->physical_mode = p; })
-                        .if_not_found([&](){ LOG4CPLUS_WARN(log, "[disruption] Associate physical mode into new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
-                }
                 vj->name = new_vj_uri;
+                // for protection, use the datasets[0]
+                // TODO : Create default data set
+                vj->dataset = pt_data.datasets[0];
+                LOG4CPLUS_WARN(log, "[disruption] Associate dataset into new VJ doesn't work, take first data set by default");
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
