@@ -26,19 +26,24 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-import abc
-
-# Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
-# http://stackoverflow.com/a/38668373/1614576
-ABC = abc.ABCMeta(str("ABC"), (object,), {})
+from __future__ import absolute_import, print_function, unicode_literals, division
+import abc, six
 
 
-class AbstractParkingModule(ABC):  # type: ignore
+@six.add_metaclass(abc.ABCMeta)
+class AbstractParkingModule:
     @abc.abstractmethod
-    def get_parking_duration(self, coords):
+    def get_parking_duration(self, coord):
         pass
 
     @abc.abstractmethod
-    def get_leave_parking_duration(self):
+    def get_leave_parking_duration(self, coord):
+        pass
+
+    @abc.abstractmethod
+    def get_parking_duration_in_batch(self, coords):
+        pass
+
+    @abc.abstractmethod
+    def get_leave_duration_in_batch(self, coords):
         pass

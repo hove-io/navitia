@@ -26,8 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from jormungandr.street_network.abstract_parking_module import AbstractParkingModule
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.street_network.parking.abstract_parking_module import AbstractParkingModule
 
 
 class ConstantParking(AbstractParkingModule):
@@ -35,8 +35,14 @@ class ConstantParking(AbstractParkingModule):
         self.park_duration = park_duration
         self.leave_parking_duration = leave_parking_duration
 
-    def get_parking_duration(self, coords):
+    def get_parking_duration(self, coord):
         return self.park_duration
 
-    def get_leave_parking_duration(self):
+    def get_leave_parking_duration(self, coord):
         return self.leave_parking_duration
+
+    def get_parking_duration_in_batch(self, coords):
+        return [self.park_duration] * len(coords)
+
+    def get_leave_duration_in_batch(self, coords):
+        return [self.leave_parking_duration] * len(coords)
