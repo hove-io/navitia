@@ -408,8 +408,8 @@ class PlaceSerializer(PbGenericSerializer):
     embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
-    distance = jsonschema.StrField(
-        required=False, display_none=True, description='Distance to the object in meters'
+    distance = base.PbStrField(
+        required=False, display_none=False, description='Distance to the object in meters'
     )
 
 
