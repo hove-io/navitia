@@ -308,12 +308,6 @@ def stop_points(is_collection):
             parser_get.add_argument(
                 "original_id", type=six.text_type, help="original uri of the object you want to query"
             )
-            parser_get.add_argument(
-                "equipment_details",
-                default=False,
-                type=BooleanType(),
-                help="enhance response with accessibility equipement details",
-            )
 
     return StopPoints
 
@@ -329,12 +323,6 @@ def stop_areas(is_collection):
             parser_get = self.parsers["get"]
             parser_get.add_argument(
                 "original_id", type=six.text_type, help="original uri of the object you want to query"
-            )
-            parser_get.add_argument(
-                "equipment_details",
-                default=False,
-                type=BooleanType(),
-                help="enhance response with accessibility equipement details",
             )
 
     return StopAreas
