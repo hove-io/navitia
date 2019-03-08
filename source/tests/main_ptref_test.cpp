@@ -73,6 +73,10 @@ struct data_set {
             monday_cal->exceptions.push_back(exd);
         }
         b.data->pt_data->calendars.push_back(monday_cal);
+
+        // Commercial modes
+        b.data->pt_data->get_or_create_commercial_mode("Commercial_mode:Car", "Car");
+
         //add lines
         b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
         b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
@@ -91,19 +95,13 @@ struct data_set {
         b.vj("line:Ça roule").uri("vj_b")
                 ("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
+        b.lines["line:Ça roule"]->commercial_mode = nullptr;  // remove commercial_mode to allow label testing
 
         //add a mock shape
         b.lines["line:A"]->shape = {
                                     {{1,2}, {2,2}, {4,5}},
                                     {{10,20}, {20,20}, {40,50}}
                                    };
-
-        // Commercial modes
-        navitia::type::CommercialMode* cm = new navitia::type::CommercialMode();
-        cm->uri = "Commercial_mode:Car";
-        cm->name = "Car";
-        b.data->pt_data->commercial_modes.push_back(cm);
-        b.lines["line:A"]->commercial_mode = cm;
 
         for (auto r: b.lines["line:A"]->route_list) {
             r->shape = {

@@ -556,7 +556,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region('pt_objects?q=line:Ca roule&type[]=line')
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
-        # not valid as there is no commercial mode (which impact name)
+        # not valid as there is no commercial mode (which impacts name)
         assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
 
     def test_query_with_strange_char(self):

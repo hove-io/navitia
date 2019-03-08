@@ -217,10 +217,8 @@ struct DisruptionCreator {
 
 struct builder {
     std::map<std::string, navitia::type::Line *> lines;
-    std::map<std::string, std::map<std::string, navitia::type::Route *>> routes_by_line;
     std::map<std::string, navitia::type::StopArea *> sas;
     std::map<std::string, navitia::type::StopPoint *> sps;
-    std::map<std::string, navitia::type::Network *> nts;
     std::multimap<std::string, navitia::type::VehicleJourney*> block_vjs;
 
     boost::gregorian::date begin;

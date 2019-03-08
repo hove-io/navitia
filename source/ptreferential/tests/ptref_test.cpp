@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
     b.vj("A").route("r1")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r2")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r3")("stop2", "09:10"_t)("stop3", "10:10"_t)("stop4", "11:10"_t);
-    b.vj("B").route("r3")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
+    b.vj("B").route("r4")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
 
     b.make();
 

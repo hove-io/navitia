@@ -189,7 +189,7 @@ static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::
                                                                           "additional service");
     // TODO: manage line.code when necessary
     nt::Line* line = pt_data.get_or_create_line("line:additional_service", "additional service", network, comm_mode);
-    // TODO: manage route.direction_type ("0") when necessary
+    // TODO: manage route.direction_type ("0" ?) when necessary
     //       manage route.destination (StopArea*) when necessary
     nt::Route* route = pt_data.get_or_create_route("route:additional_service", "additional service", line);
 
