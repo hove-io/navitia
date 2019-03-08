@@ -40,6 +40,8 @@ Line 5 (every 20 minutes):
 |----|----|-----|
 |9:05|9:07|10:00|
 
+Connections: only intra stop point, 2 minutes except for F 3 minutes.
+
 ### RAPTOR and the specificities
 
 The routing algorithm is build around RAPTOR, a routing algorithm developped at Microsoft and published in 2012. The paper can be found [here](https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/raptor_alenex.pdf).
