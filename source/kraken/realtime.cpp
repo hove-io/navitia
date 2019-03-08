@@ -50,7 +50,7 @@ static bool is_circulating(const transit_realtime::TripUpdate& trip_update)
 {
     if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
          trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
-         && trip_update.stop_time_update_size()) {
+         && trip_update.stop_time_update_size() > 1) {
         return true;
     } else {
         return false;
