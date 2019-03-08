@@ -232,7 +232,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             // Add company
             if (!impact->company_id.empty()) {
-                LOG4CPLUS_TRACE(log, "kikou " << impact->company_id);
                 nu::make_map_find(pt_data.companies_map, impact->company_id)
                     .if_found([&](navitia::type::Company* c){
                         vj->company = c;
@@ -241,7 +240,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                         // for protection, use the companies[0]
                         // TODO : Create default company
                         vj->company = pt_data.companies[0];
-                        LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id); });
+                        LOG4CPLUS_WARN(log, "[disruption] Associate random company to new VJ. Company doesn't exist with id : " << impact->company_id); });
             } else {
                 if (! mvj->get_base_vj().empty()) {
                     vj->company = mvj->get_base_vj().at(0)->company;
@@ -249,6 +248,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     // for protection, use the companies[0]
                     // TODO : Create default company
                     vj->company = pt_data.companies[0];
+                    LOG4CPLUS_WARN(log, "[disruption] Associate random company to new VJ because base VJ doesn't exist");
                 }
             }
 
@@ -262,7 +262,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                         // for protection, use the physical_modes[0]
                         // TODO : Create default physical mode
                         vj->physical_mode = pt_data.physical_modes[0];
-                        LOG4CPLUS_WARN(log, "[disruption] Associate physical mode into new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
+                        LOG4CPLUS_WARN(log, "[disruption] Associate random physical mode to new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
             } else {
                 if (! mvj->get_base_vj().empty()) {
                     vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
@@ -270,6 +270,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     // for protection, use the physical_modes[0]
                     // TODO : Create default physical mode
                     vj->physical_mode = pt_data.physical_modes[0];
+                    LOG4CPLUS_WARN(log, "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
                 }
             }
 
@@ -291,7 +292,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 // for protection, use the datasets[0]
                 // TODO : Create default data set
                 vj->dataset = pt_data.datasets[0];
-                LOG4CPLUS_WARN(log, "[disruption] Associate dataset into new VJ doesn't work, take first data set by default");
+                LOG4CPLUS_WARN(log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj

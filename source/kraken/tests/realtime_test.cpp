@@ -2796,7 +2796,7 @@ struct AddTripDataset {
         b.data->pt_data->contributors.push_back(contributor);
         b.data->pt_data->contributors_map[contributor->uri] = contributor;
 
-        // Add data set
+        // Add dataset
         dataset_name = "dataset_name";
         dataset_uri = "dataset_uri";
         navitia::type::Dataset * dataset = new navitia::type::Dataset();
