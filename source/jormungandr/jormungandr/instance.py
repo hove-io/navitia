@@ -111,6 +111,7 @@ class Instance(object):
         realtime_proxies_configuration,
         zmq_socket_type,
         autocomplete_type,
+        equipment_details_providers,  # type: List
     ):
         self.geom = None
         self._sockets = deque()
@@ -123,6 +124,7 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
+        self.equipment_details_providers = []
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
@@ -155,6 +157,19 @@ class Instance(object):
             )
 
         self.zmq_socket_type = zmq_socket_type
+
+        self.configure_equipment_details_providers(equipment_details_providers, name)
+
+    def configure_equipment_details_providers(self, equipment_details_providers, instance_name):
+        equipment_providers = [provider['key'] for provider in app.config[str('EQUIPMENT_DETAILS_PROVIDERS')]]
+        for provider in equipment_details_providers:
+            if provider not in equipment_providers:
+                raise RuntimeError(
+                    'impossible to find equipment details provider: {} '
+                    'cannot initialize instance {}'.format(provider, instance_name)
+                )
+
+        self.equipment_details_providers = equipment_details_providers
 
     @property
     def autocomplete(self):
