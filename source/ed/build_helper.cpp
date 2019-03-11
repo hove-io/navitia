@@ -760,15 +760,24 @@ void builder::finish() {
              }
          }
      }
-     data->build_raptor();
+     data->build_raptor(1);
  }
 
- void builder::make() {
+
+void builder::make() {
     generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
     finish();
 }
+
+
+void builder::finalize_disruption_batch() {
+    data->pt_data->build_autocomplete(*(data->geo_ref));
+    data->pt_data->clean_weak_impacts();
+    data->build_raptor(1);
+}
+
 
 /*
 1. Initilise the first admin in the list to all stop_area and way

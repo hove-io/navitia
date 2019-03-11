@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 2);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     BOOST_CHECK_NE(vj_B->base_validity_pattern(), vj_B->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
     navitia::apply_disruption(disrup, *b.data->pt_data, *b.data->meta);
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -860,7 +860,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -938,7 +938,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1170,7 +1170,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1308,7 +1308,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1440,7 +1440,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1618,7 +1618,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1691,7 +1691,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -2038,7 +2038,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
 
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2132,7 +2132,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
 
     navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2183,7 +2183,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
 
     navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2272,7 +2272,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2294,7 +2294,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     delay_and_new_stop.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2317,7 +2317,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     new_stop_at_the_end.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:D");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2390,7 +2390,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the original vj
     auto* vj = b.get<nt::VehicleJourney>("vj:1");
@@ -2433,7 +2433,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted
     vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-2");
@@ -2473,7 +2473,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
             transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE);
 
     navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted twice
     vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-3");
@@ -2552,7 +2552,7 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
             transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2640,7 +2640,7 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
 
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Same verifications as in the test above
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2684,7 +2684,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
     });
 
     navitia::handle_realtime("add_new_stop", timestamp, add_stop, *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     auto res = compute_iti(b, "20171101T080000", "A", "D", nt::RTLevel::RealTime);
 
@@ -2755,7 +2755,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
                                 RTStopTime("A", "20171101T0850"_pts).delay(1_min),
                              }),
                              *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
 
@@ -2806,7 +2806,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
                                 RTStopTime("D", "20171101T0850"_pts).delay(1_min),
                              }),
                              *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
 
@@ -3035,7 +3035,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -3124,7 +3124,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         comp_uri,
         phy_mode_uri);
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     //Check meta vj (there is no creation)
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -3184,7 +3184,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         comp_uri,
         phy_mode_uri);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check if meta vj exist
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
@@ -3278,7 +3278,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, false);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3288,7 +3288,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3298,7 +3298,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, false);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3343,7 +3343,7 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3386,7 +3386,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);

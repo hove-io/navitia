@@ -314,6 +314,7 @@ struct builder {
     void fill_missing_destinations();
 
     void make(); // Build the all thing !
+    void finalize_disruption_batch();
 
     navitia::georef::Way* add_way(const std::string& name, const std::string& way_type, const bool visible = true);
 };
