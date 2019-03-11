@@ -177,7 +177,6 @@ struct departure_board_fixture {
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true, true);
         b.data->build_raptor();
-        b.data->build_uri();
     }
 };
 

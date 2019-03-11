@@ -2023,6 +2023,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
         ("C", "10:00"_t)
         ("D", "11:00"_t)
         ("E", "12:00"_t);
+    b.data->build_uri();
 
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
@@ -2034,7 +2035,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
                     RTStopTime("E", "20150928T1200"_pts).delay(0_min)
             },
             transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
-    b.data->build_uri();
 
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
@@ -2103,6 +2103,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
     b.vj("1").uri("vj:1")
         ("A", "08:00"_t)
         ("B", "09:00"_t);
+    b.data->build_uri();
 
     transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
             "20150928",
@@ -2110,7 +2111,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
                     RTStopTime("A", "20150928T0801"_pts).delay(1_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob1", timestamp, trip_update1, *b.data, true, true);
 
@@ -2120,7 +2120,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
                     RTStopTime("A", "20150928T0805"_pts).delay(5_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob2", timestamp, trip_update2, *b.data, true, true);
 
@@ -2130,7 +2129,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
                     RTStopTime("A", "20150928T0802"_pts).delay(2_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true, true);
 
@@ -2165,6 +2163,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
         ("A", "08:00"_t)
         ("B", "08:00"_t)
         ("C", "09:00"_t);
+    b.data->build_uri();
 
     transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
             "20171101",
@@ -2172,7 +2171,6 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
                     RTStopTime("A", "20171101T0801"_pts).delay(1_min),
                     RTStopTime("B", "20171101T0801"_pts).delay(1_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("late-01", timestamp, trip_update1, *b.data, true, true);
 
@@ -2182,7 +2180,6 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
                     RTStopTime("A", "20171102T0802"_pts).delay(2_min),
                     RTStopTime("B", "20171102T0802"_pts).delay(2_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true, true);
 
