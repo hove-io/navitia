@@ -2877,7 +2877,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.make();
+    b.data->build_raptor();
 
     // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -2966,7 +2966,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         phy_mode_uri,
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.make();
+    b.data->build_raptor();
 
     //Check meta vj (there is no creation)
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -3026,7 +3026,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         phy_mode_uri,
         transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
-    b.make();
+    b.data->build_raptor();
 
     // Check if meta vj exist
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
@@ -3120,7 +3120,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, false);
-    b.make();
+    b.data->build_raptor();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3130,7 +3130,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, true);
-    b.make();
+    b.data->build_raptor();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3140,7 +3140,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, false);
-    b.make();
+    b.data->build_raptor();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3185,7 +3185,7 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.make();
+    b.data->build_raptor();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3228,7 +3228,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.make();
+    b.data->build_raptor();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
