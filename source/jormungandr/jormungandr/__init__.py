@@ -100,14 +100,22 @@ i_manager = InstanceManager(
 )
 i_manager.initialisation()
 
+
 from jormungandr.stat_manager import StatManager
 
 stat_manager = StatManager()
 
 bss_provider_manager = init.bss_providers(app)
+
+
 from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
 
 car_park_provider_manager = CarParkingProviderManager(app.config[str('CAR_PARK_PROVIDER')])
+
+
+from jormungandr.equipments.equipment_provider_manager import EquipmentProviderManager
+
+equipment_provider_manager = EquipmentProviderManager(app.config[str('EQUIPMENT_DETAILS_PROVIDERS')])
 
 
 from jormungandr import api

@@ -49,7 +49,7 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete
+from jormungandr import cache, memory_cache, app, global_autocomplete, equipment_provider_manager
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -111,7 +111,7 @@ class Instance(object):
         realtime_proxies_configuration,
         zmq_socket_type,
         autocomplete_type,
-        equipment_details_providers,  # type: List
+        instance_equipment_providers,  # type: List[Text]
     ):
         self.geom = None
         self._sockets = deque()
@@ -158,18 +158,17 @@ class Instance(object):
 
         self.zmq_socket_type = zmq_socket_type
 
-        self.configure_equipment_details_providers(equipment_details_providers, name)
+        self.equipment_providers = {}
 
-    def configure_equipment_details_providers(self, equipment_details_providers, instance_name):
-        equipment_providers = [provider['key'] for provider in app.config[str('EQUIPMENT_DETAILS_PROVIDERS')]]
-        for provider in equipment_details_providers:
-            if provider not in equipment_providers:
-                raise RuntimeError(
-                    'impossible to find equipment details provider: {} '
-                    'cannot initialize instance {}'.format(provider, instance_name)
-                )
+        self.configure_equipment_details_providers(instance_equipment_providers)
 
-        self.equipment_details_providers = equipment_details_providers
+    def configure_equipment_details_providers(self, instance_equipment_providers):
+        for provider_key in instance_equipment_providers:
+            provider = equipment_provider_manager.get_providers(provider_key)
+            if provider:
+                self.equipment_providers[provider_key] = provider
+            else:
+                logging.getLogger(__name__).warning("Couldn't find Provider: {}".format(provider))
 
     @property
     def autocomplete(self):
