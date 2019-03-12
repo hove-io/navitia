@@ -27,8 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.tests.utils_test import MockResponse, user_set, FakeUser
+from jormungandr.tests.utils_test import user_set, FakeUser
 from navitiacommon import models
+import requests_mock
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
@@ -37,15 +38,12 @@ import json
 import mock
 
 
-class DatasetChecker(object):
-    def __init__(self, datasets):
-        self.datasets = datasets
+BRAGI_RESPONSE = {"features": []}
 
-    def __call__(self, *args, **kwargs):
-        params = kwargs.get('params', [])
-        d = set(p[1] for p in params if p[0] == 'pt_dataset[]')
-        assert d == self.datasets
-        return MockResponse({"features": []}, 200, url='')
+
+def check_dataset(m, datasets):
+    params = m.request_history[-1].qs
+    assert set(datasets) == set(params.get('pt_dataset[]'))
 
 
 authorizations = {
@@ -512,51 +510,65 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
         navitia gives bragi all the instances the user can use
         """
-        no_check = lambda *args, **kwargs: MockResponse({"features": []}, 200, url='')
+        response = {"features": []}
         # bob is a normal user, it can access the open_data, and it can access main_routing_test
         # he thus can use main_routing_test and empty_routing_test (because it's opendata)
         with user_set(app, FakeUserAuth, 'bob'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test', 'empty_routing_test'})):
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=response)
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 200
+                assert m.called
+                check_dataset(m, {'main_routing_test', 'empty_routing_test'})
 
         # user_without_any_coverage cannot access anything, so no pt_dataset is given
         with user_set(app, FakeUserAuth, 'user_without_any_coverage'):
-            with mock.patch('requests.get', no_check):
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=response)
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 403
 
         # tgv has not access to the open_data but can use main_routing_test, it cannot use the global place
         with user_set(app, FakeUserAuth, 'tgv'):
-            with mock.patch('requests.get', no_check):
+            with requests_mock.Mocker() as m:
                 _, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 403
             # but it can use the main_routing_test places
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+            with requests_mock.Mocker() as m:
                 _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
                 assert status == 200
 
         # super_user can use all the instances
         with user_set(app, FakeUserAuth, 'super_user'):
-            with mock.patch(
-                'requests.get',
-                DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'}),
-            ):
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=response)
                 _, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 200
+                assert m.called
+                check_dataset(m, {'main_routing_test', 'empty_routing_test', 'departure_board_test'})
 
         # but when querying /v1/coverage/<something>/places only one pt_dataset is given to bragi
         with user_set(app, FakeUserAuth, 'super_user'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
-                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=response)
+                _, status = self.query_no_assert(
+                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
+                )
                 assert status == 200
-            with mock.patch('requests.get', DatasetChecker({'departure_board_test'})):
-                _, status = self.query_no_assert('/v1/coverage/departure_board_test/places?q=bob')
+                assert m.called
+                check_dataset(m, {'main_routing_test'})
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=response)
+                _, status = self.query_no_assert(
+                    '/v1/coverage/departure_board_test/places?q=bob&_autocomplete=bragi'
+                )
                 assert status == 200
+                assert m.called
+                check_dataset(m, {'departure_board_test'})
 
     def test_places_authentication_no_user(self):
         """a user is mandatory to use the places api API"""
-        with mock.patch('requests.get', DatasetChecker({})):
+        with requests_mock.Mocker() as m:
             _, status = self.query_no_assert('/v1/places?q=bob')
             assert status == 401
             _, status = self.query_no_assert('/v1/coverage/departure_board_test/places?q=bob')
@@ -573,32 +585,42 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
         On a public navitia, a user can use all the instances
         """
         with user_set(app, FakeUserAuth, 'bob'):
-            with mock.patch(
-                'requests.get',
-                DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'}),
-            ):
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 200
+                assert m.called
+                check_dataset(m, {'main_routing_test', 'empty_routing_test', 'departure_board_test'})
 
     def test_speficic_places_authentication(self):
         """
         for a specific coverage's places, there is still only one coverage
         """
         with user_set(app, FakeUserAuth, 'bob'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
-                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+            with requests_mock.Mocker() as m:
+                m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
+                _, status = self.query_no_assert(
+                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
+                )
                 assert status == 200
+                assert m.called
+                check_dataset(m, {'main_routing_test'})
 
     def test_global_places_authentication_no_user(self):
         """even without a user we can access all the places apis"""
-        with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
-            _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+        with requests_mock.Mocker() as m:
+            m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
+            _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi')
             assert status == 200
-        with mock.patch(
-            'requests.get', DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'})
-        ):
-            _, status = self.query_no_assert('/v1/places?q=bob')
+            assert m.called
+            check_dataset(m, {'main_routing_test'})
+
+        with requests_mock.Mocker() as m:
+            m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
+            _, status = self.query_no_assert('/v1/places?q=bob&_autocomplete=bragi')
             assert status == 200
+            assert m.called
+            check_dataset(m, {'main_routing_test', 'empty_routing_test', 'departure_board_test'})
 
     # TODO add more tests on:
     # * disruptions

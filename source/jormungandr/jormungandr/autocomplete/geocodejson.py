@@ -43,7 +43,6 @@ import requests
 import pybreaker
 from jormungandr import app
 from jormungandr.exceptions import UnknownObject
-import re
 
 
 def create_admin_field(geocoding):
@@ -351,7 +350,7 @@ class GeocodeJson(AbstractAutocomplete):
 
         params.append(("timeout", int(self.fast_timeout * 1000)))
 
-        raw_response = self.call_bragi(url, requests.get, timeout=self.fast_timeout, params=params)
+        raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaler(raw_response, uri)
 
     def status(self):
