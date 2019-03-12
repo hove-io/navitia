@@ -58,12 +58,19 @@ The routing algorithm is build around RAPTOR, a routing algorithm developped at 
 
 Basically, you give to RAPTOR the set of journey patterns it can use, the set of stop points it can use (for transfers), the datetime you can reach the stop points and the direction. It gives you, for each stop points and each number of transfers, the earliest arrival datetime.
 
-* datastructures
-* stay in
-* ITL
-* Something else?
+Our implementation is very close to the original RAPTOR algorithm. There is 2 added functionnalities:
+ - stay in: they are oportunistic, i.e. it is not guananteed to be optimally using the stay in. The journey patterns doesn't take the stay in into account.
+ - ITL: as we are only one zone per stop time, the implementation is quite straightforward: at the furst pickup, we set the current zone to the zone of the stop point. If the zone change, no more drop off is forbidden because of the zone because we can choose afterward the good pick up.
+ 
+ The journey pattern are generated automatically. They must have the same succession of stop times (except datetimes) and must not overtake.
 
 ### The first pass on example 1
+
+In this section, you can find some examples of the result of raptor. Our implementation doesn't remember the vehicle journeys used, they are chosen by the raptor solution reader, explained later.
+
+The input of the algorithm is a set of journey patterns and stop points that can be used, and a starting datetime plus durations to access the reachable stop points. These 2 last inputs are used to compute the first TR0 line.
+
+The PTx lines correspond to the earliest arrival to a stop point using x vehicles (including stay in). The TRx correspond to the earliest arrival to a stop point after x vehicles plus the connections.
 
 Starting from A at 7:45:
 
@@ -88,6 +95,8 @@ Starting from A at 7:55:
 |PT3  |    |    |    |    |    |    |**10:00**|
 |TR3  |    |    |    |    |    |    |10:02    |
 |PT4  |    |    |    |    |    |    |         |
+
+The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if we target G, starting at 7:45 from A gives G at 10:00using 0 connection, but starting at 7:55 gives 12:00 using 0 connection and 10:00 using 1 connection.
 
 ### Second pass
 
