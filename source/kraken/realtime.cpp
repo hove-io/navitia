@@ -46,14 +46,44 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
+static bool is_cancelled(const transit_realtime::TripUpdate& trip_update)
+{
+    if (trip_update.HasExtension(kirin::effect)) {
+        if (trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
 static bool is_circulating(const transit_realtime::TripUpdate& trip_update)
 {
-    if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-         trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
-         && trip_update.stop_time_update_size()) {
-        return true;
+    if (trip_update.HasExtension(kirin::effect)) {
+        if ((trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE ||
+             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS ||
+             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR ||
+             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE ||
+             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE)
+             && trip_update.stop_time_update_size()) {
+            return true;
+        } else {
+            return false;
+        }
     } else {
-        return false;
+        if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
+             trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
+            && trip_update.stop_time_update_size()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
@@ -229,11 +259,21 @@ static bool is_added_trip(const transit_realtime::TripUpdate& trip_update) {
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
 
-    if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
-        LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
-        return true;
+    if (trip_update.HasExtension(kirin::effect)) {
+        if (trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE) {
+            LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED) {
+            LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
+            return true;
+        } else {
+            return false;
+        }
     }
-    return false;
 }
 
 static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) {
@@ -280,7 +320,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
         return false;
     }
     // Case 1: the trip is cancelled
-    if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+    if (is_cancelled(trip_update)) {
         return true;
     }
     // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
@@ -289,7 +329,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     if (is_circulating(trip_update)) {
 
         // check if company id exists
-        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED &&
+        if (is_added_trip(trip_update) &&
             trip_update.trip().HasExtension(kirin::company_id) &&
             pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip company id "
@@ -299,7 +339,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
             return false;
         }
         // check if physical mode id exists
-        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED &&
+        if (is_added_trip(trip_update) &&
             trip_update.vehicle().HasExtension(kirin::physical_mode_id) &&
             pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id)) == pt_data.physical_modes_map.end()) {
             LOG4CPLUS_DEBUG(log, "Trip physical mode id "
@@ -459,7 +499,7 @@ create_disruption(const std::string& id,
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
-        if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_CANCELED) {
+        if (is_cancelled(trip_update)) {
             // Yeah, that's quite hardcoded...
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
@@ -540,12 +580,7 @@ create_disruption(const std::string& id,
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
-            if (trip_update.trip().schedule_relationship() == trt::TripDescriptor_ScheduleRelationship_ADDED) {
-                // Yeah, that's quite hardcoded...
-                trip_effect = nt::disruption::Effect::ADDITIONAL_SERVICE;
-            } else {
-                trip_effect = get_calculated_trip_effect(most_important_stoptime_status);
-            }
+            trip_effect = get_calculated_trip_effect(most_important_stoptime_status);
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
@@ -591,12 +626,12 @@ void handle_realtime(const std::string& id,
     // Get or create meta VJ
     navitia::type::MetaVehicleJourney* meta_vj = nullptr;
     bool meta_vj_exists = data.pt_data->meta_vjs.exists(trip_update.trip().trip_id());
-    if (! meta_vj_exists && (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)) {
+    if (! meta_vj_exists && is_added_trip(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
         meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
         // TODO : pick a meaningful TZ
         meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
-    } else if (! meta_vj_exists && (trip_update.trip().schedule_relationship() != transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)) {
+    } else if (! meta_vj_exists && is_added_trip(trip_update)) {
         LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
                 << trip_update.trip().trip_id());
         return;

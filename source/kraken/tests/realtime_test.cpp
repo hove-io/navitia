@@ -258,6 +258,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
                     RTStopTime("stop2", "20150928T0910"_pts).delay(9_min)
             },
+            transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS,
             comp_id_1);
     b.data->build_uri();
 
@@ -1954,7 +1955,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
                     RTStopTime("C", "20150928T1000"_pts).delay(0_min),
                     RTStopTime("D", "20150928T1105"_pts).delay(5_min),
                     RTStopTime("E", "20150928T1200"_pts).delay(0_min)
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
     b.data->build_uri();
 
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
@@ -2191,7 +2193,8 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B", "20171101T0830"_pts),
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).added(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true, true);
 
@@ -2350,7 +2353,8 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B", "20171101T0830"_pts),
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
 
     navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true, true);
 
@@ -2390,7 +2394,8 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B", "20171101T0830"_pts),
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
 
     navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true, true);
     b.make();
@@ -2468,8 +2473,8 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
                     RTStopTime("stop_point:B", "20171101T0830"_pts).deleted_for_detour(),
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).added_for_detour(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
-
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
     b.make();
@@ -2555,7 +2560,8 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
                     RTStopTime("stop_point:B", "20171101T0830"_pts).deleted_for_detour(),
                     RTStopTime("stop_point:B_bis", "20171101T0825"_pts).added_for_detour(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
 
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
@@ -2872,9 +2878,9 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
             RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:G", "20190101T0930"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         comp_uri,
-        phy_mode_uri,
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.data->build_raptor();
@@ -2962,9 +2968,9 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
             RTStopTime("stop_point:F", "20190101T1000"_pts).added(),
             RTStopTime("stop_point:G", "20190101T1030"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         comp_uri,
-        phy_mode_uri,
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        phy_mode_uri);
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.data->build_raptor();
 
@@ -3022,9 +3028,9 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
             RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         comp_uri,
-        phy_mode_uri,
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        phy_mode_uri);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
     b.data->build_raptor();
 
@@ -3113,9 +3119,9 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
             RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:G", "20190101T0930"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         comp_uri,
-        phy_mode_uri,
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        phy_mode_uri);
 
     // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
@@ -3179,9 +3185,9 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
             RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         "company_id_that_doesnt_exist",
-        phy_mode_uri,
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        phy_mode_uri);
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
@@ -3222,9 +3228,9 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
             RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
         comp_uri,
-        "physical_mode_id_that_doesnt_exist",
-        transit_realtime::TripDescriptor_ScheduleRelationship_ADDED);
+        "physical_mode_id_that_doesnt_exist");
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
