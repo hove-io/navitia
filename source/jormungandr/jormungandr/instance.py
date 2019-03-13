@@ -124,7 +124,6 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
-        self.equipment_details_providers = []
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),

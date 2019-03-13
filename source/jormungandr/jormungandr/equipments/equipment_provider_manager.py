@@ -44,7 +44,9 @@ class EquipmentProviderManager(object):
         # TODO: create providers instance only if key is present in the Jormungandr instance config ?
         for configuration in equipment_providers_configuration:
             arguments = configuration.get('args', {})
-            self._equipment_providers_legacy[configuration['key']] = self._init_class(configuration['class'], arguments)
+            self._equipment_providers_legacy[configuration['key']] = self._init_class(
+                configuration['class'], arguments
+            )
 
     def _init_class(self, cls, arguments):
         """
