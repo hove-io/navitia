@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,28 +26,5 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
-from abc import abstractmethod, ABCMeta
-import six
 
-
-class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
-    """
-    abstract class managing calls to external service providing real-time parking places info
-    """
-
-    @abstractmethod
-    def support_poi(self, poi):
-        pass
-
-    @abstractmethod
-    def get_informations(self, poi):
-        pass
-
-    @abstractmethod
-    def status(self):
-        pass
-
-    @abstractmethod
-    def feed_publisher(self):
-        pass
+from __future__ import absolute_import, print_function, division
