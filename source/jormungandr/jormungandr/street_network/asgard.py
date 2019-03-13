@@ -57,6 +57,7 @@ class Asgard(Kraken):
             fail_max=app.config['CIRCUIT_BREAKER_MAX_ASGARD_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_ASGARD_TIMEOUT_S'],
         )
+        self.logger = logging.getLogger(__name__)
 
     def status(self):
         return {
@@ -120,16 +121,16 @@ class Asgard(Kraken):
                 else:
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
-                    logger = logging.getLogger(__name__)
-                    logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
-                    raise pybreaker.CircuitBreakerError('asgard on {} failed'.format(self.asgard_socket))
+                    self.logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
+                    raise TechnicalError('asgard on {} failed'.format(self.asgard_socket))
 
         try:
             return self.breaker.call(_request)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Asgard routing service dead (error: {})'.format(e))
+            self.logger.error('Asgard routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
+            raise
         except Exception as e:
-            logging.getLogger(__name__).exception('Asgard routing error')
+            self.logger.exception('Asgard routing error')
             self.record_external_failure(str(e))
-        return None
+            raise
