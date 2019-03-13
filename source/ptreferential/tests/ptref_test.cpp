@@ -708,3 +708,17 @@ BOOST_AUTO_TEST_CASE(find_path_example) {
     // the path is Route -> Line -> CommercialMode
     BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
 }
+
+BOOST_AUTO_TEST_CASE(find_path_coord) {
+    ed::builder b("201601011T1739");
+    b.make();
+
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "coord.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "way.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "address.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "admin.uri=\"42\"", *(b.data)),
+                      ptref_error);
+}
