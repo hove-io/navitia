@@ -46,7 +46,7 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
-static bool is_cancelled(const transit_realtime::TripUpdate& trip_update)
+static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update)
 {
     if (trip_update.HasExtension(kirin::effect)) {
         if (trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE) {
@@ -63,7 +63,7 @@ static bool is_cancelled(const transit_realtime::TripUpdate& trip_update)
     }
 }
 
-static bool is_circulating(const transit_realtime::TripUpdate& trip_update)
+static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
 {
     if (trip_update.HasExtension(kirin::effect)) {
         if ((trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE ||
@@ -98,7 +98,7 @@ static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) 
 
 static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
-    if (is_circulating(trip_update)) {
+    if (is_circulating_trip(trip_update)) {
         uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
         for (const auto& st: trip_update.stop_time_update()) {
             uint32_t arrival_time = st.arrival().time();
@@ -320,13 +320,13 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
         return false;
     }
     // Case 1: the trip is cancelled
-    if (is_cancelled(trip_update)) {
+    if (is_cancelled_trip(trip_update)) {
         return true;
     }
     // Case 2: the trip is not cancelled, but modified (ex: the train's arrival is delayed or the train's
     // departure is brought forward), we check the size of stop_time_update because we can't find a proper
     // enum in gtfs-rt proto to express this idea
-    if (is_circulating(trip_update)) {
+    if (is_circulating_trip(trip_update)) {
 
         // check if company id exists
         if (is_added_trip(trip_update) &&
@@ -499,11 +499,11 @@ create_disruption(const std::string& id,
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
-        if (is_cancelled(trip_update)) {
+        if (is_cancelled_trip(trip_update)) {
             // Yeah, that's quite hardcoded...
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
-        else if (is_circulating(trip_update)) {
+        else if (is_circulating_trip(trip_update)) {
             LOG4CPLUS_TRACE(log, "a trip has been changed");
             using nt::disruption::StopTimeUpdate;
             auto most_important_stoptime_status = StopTimeUpdate::Status::UNCHANGED;

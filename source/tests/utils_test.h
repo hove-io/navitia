@@ -62,7 +62,7 @@ inline transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& start_date,
         const std::vector<RTStopTime>& delayed_time_stops,
-        const transit_realtime::Alert_Effect effect = transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE,
+        const transit_realtime::Alert_Effect effect = transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS,
         const std::string& company_id = "",
         const std::string& physical_mode_id = "")
 {
@@ -80,7 +80,6 @@ make_delay_message(const std::string& vj_uri,
     // start_date is used to disambiguate trips that are very late, cf:
     // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
     trip->set_start_date(start_date);
-    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
     auto st_update = trip_update.mutable_stop_time_update();
 
     for (const auto& delayed_st: delayed_time_stops) {

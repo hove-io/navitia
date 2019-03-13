@@ -2311,7 +2311,8 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B", "20171101T0830"_pts),
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).added(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
 
     navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, true);
 
