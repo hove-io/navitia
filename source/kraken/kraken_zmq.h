@@ -40,6 +40,9 @@ www.navitia.io
 #include <log4cplus/ndc.h>
 #include "metrics.h"
 
+#include "utils/deadline.h"
+#include <boost/optional/optional_io.hpp>
+
 
 static void respond(zmq::socket_t& socket,
              const std::string& address,
@@ -72,6 +75,7 @@ inline void doWork(zmq::context_t& context,
     zmq::socket_t socket (context, ZMQ_REQ);
     socket.connect("inproc://workers");
     bool run = true;
+    auto enable_deadline = conf.enable_deadline();
     //Here we create the worker
     navitia::Worker w(conf);
     z_send(socket, "READY");
@@ -90,7 +94,6 @@ inline void doWork(zmq::context_t& context,
             //on gére le cas du sighup durant un recv
             continue;
         }
-
         navitia::InFlightGuard in_flight_guard(metrics.start_in_flight());
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
@@ -104,17 +107,34 @@ inline void doWork(zmq::context_t& context,
             respond(socket, address, response);
             continue;
         }
+
         api = pb_req.requested_api();
         log4cplus::NDCContextCreator ndc(pb_req.request_id());
         if(api != pbnavitia::METADATAS){
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
+
+        auto deadline = navitia::Deadline();
+        if(enable_deadline && pb_req.has_deadline()){
+            try{
+                deadline.set(boost::posix_time::from_iso_string(pb_req.deadline()));
+            }catch(const std::exception& e){
+                LOG4CPLUS_WARN(logger, "impossible to parse deadline " << pb_req.deadline() << " : " << e.what());
+            }
+        }
+
+        LOG4CPLUS_DEBUG(logger, "deadline set to " << deadline.get());
         const auto data = data_manager.get_data();
         try {
+            deadline.check();
             w.dispatch(pb_req, *data);
             if(api != pbnavitia::METADATAS){
                 LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
+        } catch (const navitia::DeadlineExpired& e) {
+            LOG4CPLUS_ERROR(logger, "deadline expired, aborting request: " << e.what());
+            w.pb_creator.fill_pb_error(pbnavitia::Error::deadline_expired, e.what());
+            //we still respond so this thread become availlable again
         } catch (const navitia::recoverable_exception& e) {
             //on a recoverable an internal server error is returned
             LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());

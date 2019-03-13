@@ -61,6 +61,7 @@ import itertools
 import six
 import time
 from collections import deque
+from datetime import datetime, timedelta
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -510,6 +511,8 @@ class Instance(object):
         self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
     ):
         logger = logging.getLogger(__name__)
+        deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
+        request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
         with self.socket(self.context) as socket:
             try:
                 request.request_id = flask.request.id
