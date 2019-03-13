@@ -158,17 +158,8 @@ class Instance(object):
 
         self.zmq_socket_type = zmq_socket_type
 
-        self.equipment_providers = {}
-
-        self.configure_equipment_details_providers(instance_equipment_providers)
-
-    def configure_equipment_details_providers(self, instance_equipment_providers):
-        for provider_key in instance_equipment_providers:
-            provider = equipment_provider_manager.get_providers(provider_key)
-            if provider:
-                self.equipment_providers[provider_key] = provider
-            else:
-                logging.getLogger(__name__).warning("Couldn't find Provider: {}".format(provider))
+        self.equipment_providers_ids = instance_equipment_providers
+        self.equipment_provider_manager = equipment_provider_manager
 
     @property
     def autocomplete(self):

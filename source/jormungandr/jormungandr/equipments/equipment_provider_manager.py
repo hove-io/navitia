@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from importlib import import_module
+
 import logging
 
 
@@ -36,29 +38,37 @@ class EquipmentProviderManager(object):
     def __init__(self, equipment_providers_configuration):
         self.logger = logging.getLogger(__name__)
         self.providers_config = equipment_providers_configuration
-        self.providers = {}
+        self._equipment_providers_legacy = {}
+        self._equipment_providers = {}
 
-    def get_providers(self, provider_key):
+        # TODO: create providers instance only if key is present in the Jormungandr instance config ?
+        for configuration in equipment_providers_configuration:
+            arguments = configuration.get('args', {})
+            self._equipment_providers_legacy[configuration['key']] = self._init_class(configuration['class'], arguments)
+
+    def _init_class(self, cls, arguments):
         """
-        :param provider_key: provider set in instance configuration
-        :return: True if provider key is defined in Jormun configuration
+        Create an instance of a provider according to config
+        :param cls: provider class in Jormungandr found in config file
+        :param arguments: parameters to set in the provider class
+        :return: instance of provider
         """
-        if not any([provider['key'] == provider_key for provider in self.providers_config]):
-            return None
+        # TODO: factorization with bss/car parking places ?
+        try:
+            if '.' not in cls:
+                self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
 
-        provider = self.providers.get(provider_key)
-        if not provider:
-            provider = self.providers[provider_key] = self._create_provider(self.providers_config[provider_key])
+            module_path, name = cls.rsplit('.', 1)
+            module = import_module(module_path)
+            attr = getattr(module, name)
+            return attr(**arguments)
+        except ImportError:
+            self.log.warn('impossible to build, cannot find class: {}'.format(cls))
 
-        return provider
-
-    def _create_provider(self, config):
+    def get_provider_by_key(self, provider_key):
         """
-        Create the Equipment Provider class
-        :param config: Configuration of the equipment provider found in the config file
+        :param provider_key: provider from instance configuration
         :return: provider
         """
-
-        # TODO: creation of the provider instance will be created in another PR
-        return None
-
+        # TODO: implement in an other PR
+        pass
