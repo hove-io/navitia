@@ -28,10 +28,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask_restful import abort, inputs
+from flask_restful import abort
 from jormungandr import i_manager, app
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
@@ -42,7 +43,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.v1.serializer import api, base
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
@@ -514,6 +515,11 @@ class Journeys(JourneyCommon):
             ):
                 responses[r] = response
                 continue
+
+            if args['equipment_details']:
+                # Manage equipments in stop points from the journeys sections
+                instance = i_manager.instances.get(self.region)
+                return instance.manage_equipments(response)
 
             return response
 

@@ -41,12 +41,18 @@ class EquipmentProviderManager(object):
         self._equipment_providers_legacy = {}
         self._equipment_providers = {}
 
-        # TODO: create providers instance only if key is present in the Jormungandr instance config ?
-        for configuration in equipment_providers_configuration:
-            arguments = configuration.get('args', {})
-            self._equipment_providers_legacy[configuration['key']] = self._init_class(
-                configuration['class'], arguments
-            )
+    def init_providers(self, providers_keys):
+        """
+        Create equipment providers only if defined in the Jormungandr instance and not already created
+        :param providers_keys: list of providers defined in the instance
+        """
+        for provider in self.providers_config:
+            if provider['key'].lower() in providers_keys and provider['key'].lower() not in dict(
+                self._equipment_providers, **self._equipment_providers_legacy
+            ):
+                self._equipment_providers_legacy[provider['key'].lower()] = self._init_class(
+                    provider['class'], provider['args']
+                )
 
     def _init_class(self, cls, arguments):
         """

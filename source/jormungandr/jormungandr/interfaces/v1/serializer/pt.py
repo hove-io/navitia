@@ -45,6 +45,8 @@ from navitiacommon.type_pb2 import (
     Severity,
     StopTimeUpdateStatus,
     RTLevel,
+    EquipmentDetails,
+    CurrentAvailability,
 )
 
 
@@ -346,6 +348,29 @@ class CommercialModeSerializer(PbGenericSerializer):
     pass
 
 
+class CauseSerializer(PbNestedSerializer):
+    label = base.PbStrField(display_none=True, required=False)
+
+
+class EffectSerializer(PbNestedSerializer):
+    label = base.PbStrField(display_none=True, required=False)
+
+
+class CurrentAvailabilitySerializer(PbNestedSerializer):
+    status = EnumField(pb_type=CurrentAvailability.EquipmentStatus, display_none=False, required=False)
+    periods = PeriodSerializer(many=True, display_none=False, required=False)
+    updated_at = base.PbStrField(display_none=True, required=False)
+    cause = CauseSerializer(display_none=False, required=False)
+    effect = EffectSerializer(display_none=False, required=False)
+
+
+class EquipmentDetailsSerializer(PbNestedSerializer):
+    id = base.PbStrField(display_none=False, required=False)
+    name = base.PbStrField(display_none=False, required=False)
+    embedded_type = EnumField(pb_type=EquipmentDetails.EquipmentType, display_none=False, required=False)
+    current_availability = CurrentAvailabilitySerializer(display_none=False, required=False)
+
+
 class StopPointSerializer(PbGenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
@@ -360,6 +385,7 @@ class StopPointSerializer(PbGenericSerializer):
     equipments = Equipments(attr='has_equipments', display_none=True)
     address = AddressSerializer(display_none=False)
     fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
+    equipment_details = EquipmentDetailsSerializer(many=True)
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):
@@ -395,11 +421,11 @@ class StopAreaSerializer(PbGenericSerializer):
 
 
 class PlaceSerializer(PbGenericSerializer):
-    '''
+    """
     Warning: This class share it's interface with PlacesCommonSerializer (for Bragi)
     If you add/modify fields here, please reflect your changes in
     'jormungandr.jormungandr.interfaces.v1.serializer.geocode_json.PlacesCommonSerializer'.
-    '''
+    """
 
     quality = jsonschema.Field(schema_type=int, display_none=True, required=False, deprecated=True)
     stop_area = StopAreaSerializer(display_none=False)

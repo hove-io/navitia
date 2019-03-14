@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,30 +27,28 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
-import navitiacommon.type_pb2 as type_pb2
+from __future__ import absolute_import, print_function, unicode_literals, division
 
-odt_levels = {"scheduled", "with_stops", "zonal", "all"}
-
-pb_odt_level = {
-    'scheduled': type_pb2.scheduled,
-    'with_stops': type_pb2.with_stops,
-    'zonal': type_pb2.zonal,
-    'all': type_pb2.all,
-}
-
-# When an emtpy string or 'none' is passed, it deactivates all
-add_poi_infos_types = ('bss_stands', 'car_park', '', 'none')
+from jormungandr import cache, app
+import pybreaker
+import logging
 
 
-def handle_poi_infos(add_poi_info_param, bss_stands_param):
+class SytralProvider(object):
     """
-    Check if info about bss stands and/or car parks is needed
-    :param add_poi_info_param: parameter 'add_poi_infos[]' of the query
-    :param bss_stands_param: parameter 'bss_stands' of the query (deprecated but still handled for retrocompatibility)
-    :return: True if info is needed, False otherwise
+    Class managing calls to SytralR webservice, providing real-time equipment details
     """
-    if bss_stands_param and "bss_stands" not in add_poi_info_param:
-        add_poi_info_param.append("bss_stands")
 
-    return any(value in add_poi_info_param for value in ['bss_stands', 'car_park'])
+    def __init__(self, url, dataset, timeout=2, **kwargs):
+        self.url = url + '?dataset={}'.format(dataset)
+        self.timeout = timeout
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
+            reset_timeout=kwargs.get(
+                'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S']
+            ),
+        )
+
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYTRAL'), 30))
+    def _call_webservice(self):
+        logging.getLogger(__name__).debug('systralRT RT service , call url : {}'.format(self.url))
