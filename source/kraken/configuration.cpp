@@ -76,7 +76,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.log_level", po::value<std::string>(), "log level of kraken")
         ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
-        ("GENERAL.enable_deadline", po::value<bool>()->default_value(false), "enforce deadline of request")
+        ("GENERAL.enable_deadline", po::value<bool>()->default_value(true), "enforce deadline of request")
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
