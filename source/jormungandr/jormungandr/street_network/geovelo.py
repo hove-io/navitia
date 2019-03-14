@@ -32,6 +32,8 @@ import logging
 import requests as requests
 import pybreaker
 import ujson
+
+requests.models.json = ujson
 import itertools
 import sys
 from navitiacommon import response_pb2
@@ -207,7 +209,7 @@ class Geovelo(AbstractStreetNetworkService):
             '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, ujson.dumps(data)
         )
         self._check_response(r)
-        resp_json = ujson.loads(r.text)
+        resp_json = r.json()
 
         if len(resp_json) - 1 != len(origins) * len(destinations):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
@@ -289,7 +291,9 @@ class Geovelo(AbstractStreetNetworkService):
 
             speed = section.length / section.duration if section.duration != 0 else 0
 
-            for geovelo_instruction in geovelo_section['details']['instructions'][1:]:
+            for geovelo_instruction in itertools.islice(
+                geovelo_section['details']['instructions'], 1, sys.maxint
+            ):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
                 path_item.length = geovelo_instruction[2]
@@ -298,9 +302,7 @@ class Geovelo(AbstractStreetNetworkService):
 
             shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])
             for sh in shape:
-                coord = section.street_network.coordinates.add()
-                coord.lon = sh[0]
-                coord.lat = sh[1]
+                section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
         return resp
 
