@@ -348,13 +348,15 @@ def test_update_autocomplete_backend(create_instance):
 
 def test_update_forgotten_attributs_in_backend(create_instance):
     resp = api_get('/v0/instances/fr')
-    print (resp)
     assert resp[0]['max_additional_connections'] == 2
     assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Bus'
     assert resp[0]['car_park_provider'] == True
 
-    params = {'max_additional_connections': 3, 'successive_physical_mode_to_limit_id': 'physical_mode:Train',
-              'car_park_provider': False}
+    params = {
+        'max_additional_connections': 3,
+        'successive_physical_mode_to_limit_id': 'physical_mode:Train',
+        'car_park_provider': False
+    }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     assert resp['max_additional_connections'] == 3
     assert resp['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
