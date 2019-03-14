@@ -33,7 +33,7 @@ import requests as requests
 import pybreaker
 import ujson
 
-requests.models.json = ujson
+requests.models.complexjson = ujson
 import itertools
 import sys
 from navitiacommon import response_pb2
