@@ -355,7 +355,7 @@ def test_update_forgotten_attributs_in_backend(create_instance):
     params = {
         'max_additional_connections': 3,
         'successive_physical_mode_to_limit_id': 'physical_mode:Train',
-        'car_park_provider': False
+        'car_park_provider': False,
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     assert resp['max_additional_connections'] == 3
