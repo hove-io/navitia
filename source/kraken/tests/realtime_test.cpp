@@ -2355,7 +2355,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             },
-            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
+            transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE);
 
     navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true, true);
 
@@ -2375,7 +2375,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.impacts_size(), 2);
     for (const auto& impact: res.impacts()) {
         if (impact.uri() == "feed-2") {
-            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_REDUCED_SERVICE);
             BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).is_detour(), false);
             BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
         }
@@ -2396,7 +2396,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
                     RTStopTime("stop_point:B_bis", "20171101T0845"_pts).skipped(),
                     RTStopTime("stop_point:C", "20171101T0900"_pts),
             },
-            transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
+            transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE);
 
     navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true, true);
     b.make();
@@ -2411,7 +2411,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);
     for (const auto& impact: res.impacts()) {
         if (impact.uri() == "feed-3") {
-            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_DETOUR);
+            BOOST_CHECK_EQUAL(impact.severity().effect(), pbnavitia::Severity_Effect_REDUCED_SERVICE);
             BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).is_detour(), false);
             BOOST_CHECK_EQUAL(impact.impacted_objects(0).impacted_stops(2).departure_status(), pbnavitia::StopTimeUpdateStatus::DELETED);
         }

@@ -67,6 +67,7 @@ static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
 {
     if (trip_update.HasExtension(kirin::effect)) {
         if ((trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE ||
+             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT ||
              trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS ||
              trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR ||
              trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE ||
@@ -373,13 +374,15 @@ static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTim
     using nt::disruption::Effect;
 
     switch (status) {
-    case StopTimeUpdate::Status::DELAYED:
     case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
+        return Effect::UNKNOWN_EFFECT;
+    case StopTimeUpdate::Status::DELAYED:
         return Effect::SIGNIFICANT_DELAYS;
     case StopTimeUpdate::Status::ADDED:
-    case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
         return Effect::MODIFIED_SERVICE;
     case StopTimeUpdate::Status::DELETED:
+        return Effect::REDUCED_SERVICE;
+    case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
     case StopTimeUpdate::Status::DELETED_FOR_DETOUR:
         return Effect::DETOUR;
     default:
