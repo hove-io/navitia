@@ -960,6 +960,86 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
 }
 
+BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
+    ed::builder b("20190101");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    b.make();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                {ntest::to_posix_timestamp(datetime)},
+                true, navitia::type::AccessibiliteParams(), {}, {},
+                sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    transit_realtime::TripUpdate delayed = ntest::make_delay_message("vj:1",
+        "20190101",
+        {
+            RTStopTime("stop1", "20190101T0900"_pts).delay(1_h),
+            RTStopTime("stop2", "20190101T1000"_pts).delay(1_h)
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
+
+    navitia::handle_realtime("feed-1", timestamp, delayed, *b.data, true, true);
+    b.data->build_raptor();
+
+    auto res = compute("20190101T073000", "stop1", "stop2");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 2);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T090000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T100000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop2");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+    // impact
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).uri(), "feed-1");
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_SIGNIFICANT_DELAYS);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 2);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::DELAYED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::DELAYED);
+
+    transit_realtime::TripUpdate back_to_normal = ntest::make_delay_message("vj:1",
+        "20190101",
+        {
+            RTStopTime("stop1", "20190101T0800"_pts),
+            RTStopTime("stop2", "20190101T0900"_pts)        },
+        transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT);
+
+    navitia::handle_realtime("feed-1", timestamp, back_to_normal, *b.data, true, true);
+    b.data->build_raptor();
+
+    res = compute("20190101T073000", "stop1", "stop2");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 2);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).departure_date_time(), "20190101T080000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(0).stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T090000"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop2");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+    // impact
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).uri(), "feed-1");
+    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_UNKNOWN_EFFECT);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 2);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+}
+
 /* testing a vj delayed to the day after (1 day late)
  * then a second disruption on the same day is pushed, bringing back the vj to normal
  * testing all is accepted and correctly handled
@@ -976,13 +1056,15 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
             {
                     RTStopTime("stop1", "20150929T0710"_pts).delay(23_h),
                     RTStopTime("stop2", "20150929T0810"_pts).delay(23_h)
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
     transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0801"_pts),
                     RTStopTime("stop2", "20150928T0901"_pts)
-            });
+            },
+            transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT);
     b.data->build_uri();
 
 
