@@ -33,7 +33,6 @@ import requests as requests
 import pybreaker
 import ujson
 
-requests.models.complexjson = ujson
 import itertools
 import sys
 from navitiacommon import response_pb2
@@ -108,8 +107,8 @@ class Geovelo(AbstractStreetNetworkService):
     @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
         return {
-            'starts': (cls._pt_object_summary_isochrone(o) for o in origins),
-            'ends': (cls._pt_object_summary_isochrone(o) for o in destinations),
+            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
+            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
             'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
             'transportMode': 'BIKE',
         }
@@ -209,7 +208,7 @@ class Geovelo(AbstractStreetNetworkService):
             '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, ujson.dumps(data)
         )
         self._check_response(r)
-        resp_json = r.json()
+        resp_json = ujson.loads(r.text)
 
         if len(resp_json) - 1 != len(origins) * len(destinations):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
@@ -331,7 +330,7 @@ class Geovelo(AbstractStreetNetworkService):
             ujson.dumps(data),
         )
         self._check_response(r)
-        resp_json = r.json()
+        resp_json = ujson.loads(r.text)
 
         if len(resp_json) != 1:
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
