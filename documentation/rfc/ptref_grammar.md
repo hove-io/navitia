@@ -25,27 +25,27 @@ There are 2 elementary predicates: `all` and `empty`. As expected, `all` returns
 Examples:
  * `/v1/coverage/id/stop_areas?filter=all`: returns all the stop areas of the coverage.
  * `/v1/coverage/id/stop_areas?filter=none`: returns 0 stop areas (you get a 404).
- 
+
 ### Method predicates
 
 Method predicates are in the form `collection.method(string, string, ...)` where:
  * `collection` is a collection name (as the collections queried, but singular);
  * `method` is a method name, corresponding to the filter on the `collection`;
  * arguments to the method between `(` and `)`, as strings, separated by `,`.
- 
+
 Example: `/v1/coverage/id/stop_areas?filter=stop_area.has_code("neptune","1242")`
- 
+
 #### Strings
- 
+
 A string can be:
  * an escaped string, beginning and ending with `"`, with `\x` transformed as `x` within the string
  * a basic string, composed of any letter, digit, `_`, `.`, `:`, `;`, `|` and `-`.
- 
+
 Basic strings are great to easily type numbers and navitia coordinates. It can also handle most of the identifiers, but be warned that you will run into troubles if you use the basic string syntax in a programmatic way (think of identifiers with spaces or accentuated letters).
 
 For programatic usage, it is recommended to:
  * substitute `\` by `\\`
- * substitute `"` by `\"` 
+ * substitute `"` by `\"`
  * surround the string with `"`
 
 Examples:
@@ -106,44 +106,44 @@ Expressions allow to combine predicates. There are 3 different operators:
  * `AND` (or `and`): returns the intersection between the 2 predicates
  * `OR` (or `or`): returns the union between the 2 predicates
  * `-`: returns the set difference between the 2 predicates
- 
+
  ### `AND`
- 
+
  `/v1/coverage/id/collections?filter=pred1 and pred2` is equivalent to take the objects in common between `/v1/coverage/id/collections?filter=pred1` and `/v1/coverage/id/collections?filter=pred2`.
- 
+
  Examples:
  * `/v1/coverage/id/stop_areas?filter=network.id=RATP and physical_mode.id=physical_mode:Bus` returns the stop areas where buses of the network RATP stop.
  * `/v1/coverage/id/lines?filter=stop_area.name=Nation and stop_area.name="Charles de Gaulle Etoile"` returns the lines that stop at Nation and Charles de Gaulle Etoile.
  * `/v1/coverage/id/lines?filter=line.code=14 and physical_mode.id=physical_mode:Metro` returns the metro lines with code 14.
- 
+
  ### `OR`
- 
+
  `/v1/coverage/id/collections?filter=pred1 or pred2` is equivalent to take the objects that appear in `/v1/coverage/id/collections?filter=pred1` or in `/v1/coverage/id/collections?filter=pred2`.
- 
+
  Examples:
  * `/v1/coverage/id/pois?filter=poi.id=foo or poi.id=bar` returns the pois `foo` and `bar` (if they exists).
  * `/v1/coverage/id/stop_areas?filter=line.code=A or line.code=B` returns the stop areas where line A or line B stop.
  * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro or network.id=SNCF` returns the SNCF lines and the Metro lines.
- 
+
  ### `-`
- 
+
  `/v1/coverage/id/collections?filter=pred1 - pred2` is equivalent to take the objects that appear in `/v1/coverage/id/collections?filter=pred1` and remove the objects that appear in `/v1/coverage/id/collections?filter=pred2`.
- 
+
  Examples:
  * `/v1/coverage/id/physical_modes?filter=all - physical_mode.id=physical_mode:Bus` returns all the physical modes except Bus.
  * `/v1/coverage/id/lines?filter=network.id=SNCF - physical_mode.id=physical_mode:Bus` returns the lines from the network SNCF that don't have buses.
  * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - stop_area.name=Nation` returns the metro lines that don't stop at Nation.
- 
+
  ### Combining expressions
- 
+
  You can combine operators to create more complicated expressions. The priorities of the operators are chosen to feel natural to programmers: `-`, `AND`, `OR` is the priority order. Their associativity are left to right. Parenthesis can be used to change this order (or remove ambiguities).
- 
+
 |without parenthesis|equivalent to|
 |-------------------|-------------|
 |`pred1 and pred2 or pred3 and pred4`|`(pred1 and pred2) or (pred3 and pred4)`|
 |`pred1 - pred2 - pred3`|`(pred1 - pred2) - pred3`|
 |`pred1 or pred2 - pred3 and pred4 or pred5`|`(pred1 or ((pred2 - pred3) and pred4)) or pred5`|
- 
+
  Examples:
  * `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - stop_area.name=Nation - stop_area.name="Charles de Gaulle Etoile"` returns the metro lines that don't stop at Nation or Charles de Gaulle Etoile. Can also be written `/v1/coverage/id/lines?filter=physical_mode.id=physical_mode:Metro - (stop_area.name=Nation or stop_area.name="Charles de Gaulle Etoile")`
  * `/v1/coverage/id/lines?filter=stop_area.name=Nation and stop_area.name="Charles de Gaulle Etoile" - (stop_area.name=Bastille or stop_area.name=Corvisart)` returns the lines that stop at Nation and Charles de Gaulle Etoile but not at Bastille nor Corvisart.
@@ -164,6 +164,15 @@ The syntax is `get collection <- expression`. It is lower priority than the oper
 Examples:
 * `/v1/coverage/id/lines?filter=get network <- line.id=Metro14` returns the lines from the network of the line Metro14.
 * `/v1/coverage/id/physical_modes?filter=get connection <- line.id=Metro14` returns the physical modes in connection with the line Metro14.
+
+## Data Graph
+The data is structured as a graph, where related objects are connected. When converting a collection into another, we use the graph to define the shortest series of jointures that needs to be performed to get to the target collection.
+
+The graph is as follow (edges may have weight to avoid unwanted behavior):
+
+![pt_graph](../diagrams/pt_graph.png)
+
+[edit_graph](https://dreampuf.github.io/GraphvizOnline/#%0Adigraph%20G%20%7B%0A%20%20%20%20subgraph%20cluster_0%20%7B%0A%20%20%20%20%20%20%20%20node%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20StopArea%20-%3E%20StopPoint%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Network%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Company%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20CommercialMode%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20PhysicalMode%20-%3E%20VehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20PhysicalMode%20-%3E%20JourneyPattern%20%5B%20label%3D%220.9%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20PhysicalMode%20-%3E%20JourneyPatternPoint%20%5B%20label%3D%221.8%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20CommercialMode%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20Company%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20Network%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20Route%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Route%20-%3E%20JourneyPattern%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Route%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Route%20-%3E%20VehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPattern%20-%3E%20Route%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPattern%20-%3E%20JourneyPatternPoint%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPattern%20-%3E%20VehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPattern%20-%3E%20PhysicalMode%20%5B%20label%3D%220.9%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20Route%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20JourneyPattern%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20Company%20%5B%20label%3D%222.5%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20PhysicalMode%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20ValidityPattern%20%5Bstyle%3D%22bold%22%5D%20%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20MetaVehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20Dataset%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPatternPoint%20-%3E%20JourneyPattern%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20JourneyPatternPoint%20-%3E%20StopPoint%20%5Bstyle%3D%22bold%22%5D%20%0A%20%20%20%20%20%20%20%20StopPoint%20-%3E%20StopArea%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20StopPoint%20-%3E%20JourneyPatternPoint%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20StopPoint%20-%3E%20Connection%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Connection%20-%3E%20StopPoint%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20POIType%20-%3E%20POI%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20POI%20-%3E%20POIType%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20Calendar%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Calendar%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20LineGroup%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20LineGroup%20-%3E%20Line%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20MetaVehicleJourney%20-%3E%20VehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Dataset%20-%3E%20Contributor%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Dataset%20-%3E%20VehicleJourney%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Contributor%20-%3E%20Dataset%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Route%20-%3E%20Dataset%20%5B%20label%3D%222%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20StopPoint%20-%3E%20Dataset%20%5B%20label%3D%223%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20Network%20-%3E%20Dataset%20%5B%20label%3D%223%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20StopPoint%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Line%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Route%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20StopArea%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Network%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20VehicleJourney%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20MetaVehicleJourney%20-%3E%20Impact%20%5Bstyle%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20Network%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20Line%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20Route%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20StopArea%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20StopPoint%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%20%20Impact%20-%3E%20MetaVehicleJourney%20%20%5B%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%7D%0A%0A%20%20%20%20subgraph%20cluster_1%20%7B%0A%20%20%20%20%20%20%20%20%23rank%3Dsink%0A%20%20%20%20%20%20%20%20%23rankdir%3DLR%0A%20%20%20%20%20%20%20%20node%20%5Bshape%3Dplaintext%5D%0A%20%20%20%20%20%20%20%20style%3D%22filled%22%0A%20%20%20%20%20%20%20%20style%3Dfilled%0A%09%09color%3Dlightgrey%0A%20%20%20%20%20%20%20%20%23label%20%3D%20%22Legend%22%3B%0A%20%20%20%20%20%20%20%20key%20%5Blabel%3D%3C%3Ctable%20border%3D%220%22%20cellpadding%3D%222%22%20cellspacing%3D%220%22%20cellborder%3D%220%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20align%3D%22right%22%20port%3D%22i1%22%3E%3Cfont%20color%3D%22black%22%3EDefault%20link%3C%2Ffont%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20align%3D%22right%22%20port%3D%22i2%22%3E%3Cfont%20color%3D%22red%22%3EShortcut%3C%2Ffont%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20align%3D%22right%22%20port%3D%22i3%22%3E%3Cfont%20color%3D%22green4%22%3EImpact%20link%3C%2Ffont%3E%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3C%2Ftable%3E%3E%5D%0A%20%20%20%20%20%20%20%20key2%20%5Blabel%3D%3C%3Ctable%20border%3D%220%22%20cellpadding%3D%222%22%20cellspacing%3D%220%22%20cellborder%3D%220%22%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20port%3D%22i1%22%3E%26nbsp%3B%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20port%3D%22i2%22%3E%26nbsp%3B%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3Ctr%3E%3Ctd%20port%3D%22i3%22%3E%26nbsp%3B%3C%2Ftd%3E%3C%2Ftr%3E%0A%20%20%20%20%20%20%20%20%20%20%3C%2Ftable%3E%3E%5D%0A%20%20%20%20%20%20%20%20key%3Ai1%3Ae%20-%3E%20key2%3Ai1%3Aw%20%5B%20label%3D%22weight%3D1%22%20style%3D%22bold%22%5D%0A%20%20%20%20%20%20%20%20key%3Ai2%3Ae%20-%3E%20key2%3Ai2%3Aw%20%5B%20label%3D%22weight%3Dx%22%20fontcolor%3D%22red%22%20color%3D%22red%22%20%5D%0A%20%20%20%20%20%20%20%20key%3Ai3%3Ae%20-%3E%20key2%3Ai3%3Aw%20%5B%20label%3D%22weight%3D100%22%20style%3D%22dashed%22%20fontcolor%3D%22green4%22%20color%3D%22green4%22%20%5D%0A%20%20%20%20%20%20%7D%0A%20%20%0A%7D)
 
 ## Advanced examples
 

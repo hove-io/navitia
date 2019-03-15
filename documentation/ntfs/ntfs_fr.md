@@ -506,14 +506,20 @@ feed_end_date | date | Optionnel | Date de fin de validité du jeu de données
 feed_creation_date |  date |  Optionnel | Date de génération du jeu de données
 feed_creation_time | heure | Optionnel | Heure de génération du jeu de données
 
-Le tableau ci-dessous indique les paramètres libres renseignés par Kisio Digital.
+Le tableau ci-dessous indique les paramètres libres renseignés par Kisio Digital (dépend de l'outil qui génère les données).
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-feed_provider | chaine | Libre | Société/Entité fournissant le jeu de données
+feed_publisher_name | chaine | Libre | Société/Entité fournissant le jeu de données
 feed_license | chaine | Libre | Licence d'utilisation des données globale du référentiel
+feed_license_url | chaine | Libre | URL associée à la license d'utilisation des données
 fusio_url | chaine | Libre | URL du système ayant généré le jeu de données
 fusio_version | chaine | Libre | Version du système ayant généré le jeu de données
+tartare_platform | chaine | Libre | Tag indiquant la plateforme qui a généré les données
+tartare_coverage_id | chaine | Libre | Id du coverage Tartare ayant généré le jeu de données (1)
+tartare_contributor_id | chaine | Libre | Id du contributeur Tartare ayant généré le jeu de données (1)
+
+    (1) seul l'un des champs `tartare_coverage_id` et `tartare_contributor_id` sera présent. Il servent a tracer la source de la donnée dans Tartare afin de faciliter les diagnostiques.
 
 ### grid_calendars.txt (optionnel)
 Ce fichier contient les calendriers.

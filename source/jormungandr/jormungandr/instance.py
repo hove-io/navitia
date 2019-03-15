@@ -49,7 +49,7 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete
+from jormungandr import cache, memory_cache, app, global_autocomplete, equipment_provider_manager
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -111,6 +111,7 @@ class Instance(object):
         realtime_proxies_configuration,
         zmq_socket_type,
         autocomplete_type,
+        instance_equipment_providers,  # type: List[Text]
     ):
         self.geom = None
         self._sockets = deque()
@@ -155,6 +156,9 @@ class Instance(object):
             )
 
         self.zmq_socket_type = zmq_socket_type
+
+        self.equipment_providers_ids = instance_equipment_providers
+        self.equipment_provider_manager = equipment_provider_manager
 
     @property
     def autocomplete(self):

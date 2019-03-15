@@ -126,6 +126,21 @@ def test_post_autocomplete(autocomplete_parameter_json):
     assert resp['admin_level'] == [8]
 
 
+def test_post_autocomplete_cosmo():
+    resp = api_post(
+        '/v0/autocomplete_parameters',
+        data=json.dumps({"name": "bobette", "admin": "COSMOGONY"}),
+        content_type='application/json',
+    )
+
+    assert resp['name'] == 'bobette'
+    assert resp['street'] == 'OSM'
+    assert resp['address'] == 'BANO'
+    assert resp['poi'] == 'OSM'
+    assert resp['admin'] == 'COSMOGONY'
+    assert resp['admin_level'] == []
+
+
 def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_parameter_json):
     resp = api_get('/v0/autocomplete_parameters/france')
     assert resp['name'] == 'france'

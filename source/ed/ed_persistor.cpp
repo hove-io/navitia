@@ -1495,7 +1495,6 @@ void EdPersistor::insert_origin_destination(const ed::Data& data) {
     }
     this->lotus.finish_bulk_insert();
 
-    std::cout << "links to tickets" << std::endl;
     //now we take care of the matching od ticket
     this->lotus.prepare_bulk_insert("navitia.od_ticket", {"id", "od_id", "ticket_id"});
     cpt = 0;

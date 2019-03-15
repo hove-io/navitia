@@ -29,7 +29,7 @@ from __future__ import absolute_import
 import serpy
 import logging
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
+from jormungandr.interfaces.v1.feed_publisher import raw_feed_publisher_bano, raw_feed_publisher_osm
 from jormungandr.interfaces.v1.serializer.base import (
     NestedDictGenericField,
     NestedDictCodeField,

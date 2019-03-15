@@ -19,6 +19,7 @@ Les fichiers sont formatés de la manière suivante :
 * Le séparateur de champ est le **";"**
 * Les colonnes sont toutes obligatoires et leur ordre doit etre respecté
 * Attention, 2 fichiers sont **avec** entête et un autre **sans** entête
+* La dernière ligne des fichiers doit se terminer par un retour à la ligne
 
 # Liste des fichiers de tarification
 Fichier | Contrainte | Commentaire

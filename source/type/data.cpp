@@ -532,7 +532,7 @@ void Data::aggregate_odt(){
         });
     }
 
-    //we first store the stops in a set not to have dupplicates
+    //we first store the stops in a set not to have duplicates
     for (const auto& p: odt_stops_by_admin) {
         for (const auto& sp: p.second) {
             p.first->odt_stop_points.push_back(sp);

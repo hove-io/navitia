@@ -108,6 +108,7 @@ class InstanceManager(object):
             config.get('realtime_proxies', []),
             config.get('zmq_socket_type', app.config.get('ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')),
             config.get('default_autocomplete', None),
+            config.get('equipment_details_providers', []),
         )
         self.instances[instance.name] = instance
 

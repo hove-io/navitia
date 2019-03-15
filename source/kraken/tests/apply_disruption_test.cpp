@@ -2394,3 +2394,173 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
             ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00000000"),
             rt_vj1->rt_validity_pattern()->days);
 }
+
+// We check that with a disruption with two impacts impacting the same vj the update is working.
+// It was failing before since after deleting each impact, we were reapplying the disruption.
+BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
+    ed::builder b("20190301");
+
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
+
+    b.vj("line:A", "1111111", "", true, "vj:1")
+            ("stop_point:10", "10:00"_t)
+            ("stop_point:20", "11:00"_t)
+            ("stop_point:30", "12:00"_t)
+            ("stop_point:40", "13:00"_t)
+            ("stop_point:50", "14:00"_t);
+
+    b.make();
+    b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+
+    auto dis_builder = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_two_stops_in_two_impacts");
+    dis_builder.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"});
+
+    dis_builder.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"});
+
+    navitia::apply_disruption(dis_builder.disruption, *b.data->pt_data, *b.data->meta);
+
+    // There should be only one more vj
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    // And the base vj:1 should have 2 impacts
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 2);
+
+    const auto* disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_two_stops_in_two_impacts");
+    BOOST_REQUIRE(disruption != nullptr);
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts().size(), 2);
+
+    navitia::delete_disruption("line_section_on_line:A_two_stops_in_two_impacts", *b.data->pt_data, *b.data->meta);
+
+    // Once again one vj after deletion. This was failing, we were reapplying the disruption and an adapted vj was kept
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+    // No more impacts
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+
+    // Can't reuse the same disruption since the memory has been freed.
+    auto dis_builder_update = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_two_stops_in_two_impacts");
+    dis_builder_update.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"});
+
+    dis_builder_update.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"});
+
+    navitia::apply_disruption(dis_builder_update.disruption, *b.data->pt_data, *b.data->meta);
+
+    // There should be only one more vj again
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    // This was failing too since the impact was not able to be applied again. We were getting 0.
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 2);
+
+    disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_two_stops_in_two_impacts");
+    BOOST_REQUIRE(disruption != nullptr);
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts().size(), 2);
+
+    navitia::delete_disruption("line_section_on_line:A_two_stops_in_two_impacts", *b.data->pt_data, *b.data->meta);
+
+    // Once again one vj after deletion. This was failing, we were reapplying the disruption
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+}
+
+// Same kind of test but applying to two differents VJ
+BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
+    ed::builder b("20190301");
+
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
+
+    b.vj("line:A", "1111111", "", true, "vj:1")
+            ("stop_point:10", "10:00"_t)
+            ("stop_point:20", "11:00"_t)
+            ("stop_point:30", "12:00"_t)
+            ("stop_point:40", "13:00"_t)
+            ("stop_point:50", "14:00"_t);
+
+    b.vj("line:A", "1111111", "", true, "vj:2").route("line:A:1")
+            ("stop_point:50", "10:00"_t)
+            ("stop_point:40", "11:00"_t)
+            ("stop_point:30", "12:00"_t)
+            ("stop_point:20", "13:00"_t)
+            ("stop_point:10", "14:00"_t);
+
+    b.make();
+    b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+
+    auto dis_builder = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_section_in_each_way");
+    dis_builder.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"});
+
+    dis_builder.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"});
+
+    navitia::apply_disruption(dis_builder.disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 1);
+
+    const auto* disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_section_in_each_way");
+    BOOST_REQUIRE(disruption != nullptr);
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts().size(), 2);
+
+    navitia::delete_disruption("line_section_on_line:A_section_in_each_way", *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+
+    // Can't reuse the same disruption since the memory has been freed.
+    auto dis_builder_update = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_section_in_each_way");
+    dis_builder_update.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"});
+
+    dis_builder_update.impact()
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
+            .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"});
+
+    navitia::apply_disruption(dis_builder_update.disruption, *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 1);
+
+    disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_section_in_each_way");
+    BOOST_REQUIRE(disruption != nullptr);
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts().size(), 2);
+
+    navitia::delete_disruption("line_section_on_line:A_section_in_each_way", *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+}

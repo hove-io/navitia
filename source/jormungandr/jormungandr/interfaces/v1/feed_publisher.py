@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,31 +26,19 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.interfaces.v1.Calendars import calendar
-from jormungandr.interfaces.v1 import fields
-from jormungandr.interfaces.v1.fields import (
-    NonNullList,
-    NonNullNested,
-    NonNullProtobufNested,
-    PbField,
-    FirstComment,
-    comment,
-    DisruptionLinks,
-)
+raw_feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt",
+}
 
-vehicle_journey = {
-    "id": fields.fields.String(attribute="uri"),
-    "name": fields.fields.String(),
-    "disruptions": DisruptionLinks(),
-    "journey_pattern": PbField(fields.journey_pattern),
-    "stop_times": NonNullList(NonNullNested(fields.stop_time)),
-    "comment": FirstComment(),
-    # for compatibility issue we keep a 'comment' field where we output the first comment (TODO v2)
-    "comments": NonNullList(NonNullNested(comment)),
-    "codes": NonNullList(NonNullNested(fields.code)),
-    "validity_pattern": NonNullProtobufNested(fields.validity_pattern),
-    "calendars": NonNullList(NonNullNested(calendar)),
-    "trip": NonNullProtobufNested(fields.trip),
+raw_feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright",
 }

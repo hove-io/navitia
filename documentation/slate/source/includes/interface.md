@@ -135,16 +135,16 @@ This is also true for the ordering of the attributes of objects.
 
 Examples of sorted objects tables:
 
-* journeys in a '/journeys' response
-* '/departures' and '/arrivals'
-* '/stop_schedules'
-* stop_points in '/routes/<id_route>/stop_points'
-* '/places_nearby'
-* '/places'
+* journeys in a `/journeys` response
+* `/departures` and `/arrivals`
+* `/stop_schedules`
+* stop_points in `/routes/{route_id}?depth=3`
+* `/places_nearby`
+* `/places`
 
 Examples of unsorted responses:
 
-* stop_points in '/lines/<id_line>/stop_points'
+* stop_points in `/lines/{line_id}/stop_points`
 * pretty much everything else...
 
 
