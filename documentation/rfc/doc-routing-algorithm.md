@@ -100,14 +100,15 @@ The different PTx on the destination stop points gives the earliest arrival to o
 
 ### Second pass
 
-* goal
-* selecting the second pass launches (max_extra_second_pass)
-* bounding the extra second passes
-* reusing the bound of the first passes to limit the search space
+As our main objective is earliest arrival time, and then, at equal earliest arrival time, latest departure time, We need another optimization as RAPTOR doesn't minimize this. For that, we do a second pass on the journey: for each candidate arrivals, we rerun RAPTOR in the other sens, minimizing departure times.
+
+The number of second pass can be quite high. For this, we compute a bound of the journeys ending to our current second pass initialisation, and check if this bound is dominated by the previously found journeys (found by the previous second passes). Thanks to this optimization, we can avoid a lot of useless second pass. To be safe, we globally bound the number of second passes realized (see the `max_extra_second_pass` parameter of the algorithm).
+
+To minimize the work done by a second pass, we reuse the datetime calculated at the first pass to compute bounds on each stop point. Thanks to these bounds, the second pass avoid to compute pathes that will never be accessible by the stop points of origin, greatly reducing the search space.
 
 ### The second pass on example 1
 
-Leaving G at 10:00:
+From the first pass from A at 7:45, there is only one candidate second pass: ending at G at 10:00:
 
 |level| A      | B  | C  | D  | E  | F  |  G  |
 |-----|--------|----|----|----|----|----|-----|
@@ -119,6 +120,8 @@ Leaving G at 10:00:
 |PT3  |**8:00**|    |    |    |    |    |     |
 |TR3  |7:58    |    |    |    |    |    |     |
 |PT4  |        |    |    |    |    |    |     |
+
+The second pass find 2 stating candidates: from A at 7:50 with 1 connection, and from A at 8:00 with 2 connections.
 
 ### Solution reader
 
