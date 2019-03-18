@@ -143,15 +143,13 @@ class Geovelo(AbstractStreetNetworkService):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
-            raise
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(t))
             self.record_external_failure('timeout')
-            raise
         except Exception as e:
             logging.getLogger(__name__).exception('Geovelo routing error')
             self.record_external_failure(str(e))
-            raise
+        return None
 
     @classmethod
     def _get_matrix(cls, json_response):
