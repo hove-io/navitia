@@ -1030,14 +1030,8 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).departure_date_time(), "20190101T090000"_pts);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop2");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
-    // impact
-    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
-    BOOST_CHECK_EQUAL(res.impacts(0).uri(), "feed-1");
-    BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_UNKNOWN_EFFECT);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 2);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
-    BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::UNCHANGED);
+    // Unknown effect impact is only with disruption API
+    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
 }
 
 /* testing a vj delayed to the day after (1 day late)

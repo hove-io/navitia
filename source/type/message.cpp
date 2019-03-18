@@ -170,7 +170,8 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
 
 bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // No delay on the section
-    if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS
+    if ((severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS ||
+         severity->effect == nt::disruption::Effect::UNKNOWN_EFFECT)
          && ! aux_info.stop_times.empty()) {
         // We don't handle removed or added stop, but we already match
         // on SIGNIFICANT_DELAYS, thus we should not have that here
