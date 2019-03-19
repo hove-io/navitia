@@ -124,6 +124,9 @@ instance_fields = {
     'max_extra_second_pass': fields.Raw,
     'max_nb_crowfly_by_mode': fields.Raw,
     'autocomplete_backend': fields.Raw,
+    'max_additional_connections': fields.Raw,
+    'successive_physical_mode_to_limit_id': fields.Raw,
+    'car_park_provider': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
