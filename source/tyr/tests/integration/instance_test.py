@@ -120,6 +120,8 @@ def test_update_instances(create_instance):
         "max_successive_physical_mode": 3,
         "final_line_filter": True,
         "max_extra_second_pass": 1,
+        "additional_time_after_first_section_taxi": 42,
+        "additional_time_before_last_section_taxi": 789,
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')

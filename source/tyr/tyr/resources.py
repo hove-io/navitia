@@ -542,6 +542,22 @@ class Instance(flask_restful.Resource):
             default=instance.autocomplete_backend,
         )
 
+        parser.add_argument(
+            'additional_time_after_first_section_taxi',
+            type=int,
+            help='additionnal time after the taxi section when used as first section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_after_first_section_taxi,
+        )
+
+        parser.add_argument(
+            'additional_time_before_last_section_taxi',
+            type=int,
+            help='additionnal time before the taxi section when used as last section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_before_last_section_taxi,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -587,6 +603,8 @@ class Instance(flask_restful.Resource):
                     'final_line_filter',
                     'max_extra_second_pass',
                     'autocomplete_backend',
+                    'additional_time_after_first_section_taxi',
+                    'additional_time_before_last_section_taxi',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')

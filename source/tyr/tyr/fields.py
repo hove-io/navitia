@@ -124,6 +124,8 @@ instance_fields = {
     'max_extra_second_pass': fields.Raw,
     'max_nb_crowfly_by_mode': fields.Raw,
     'autocomplete_backend': fields.Raw,
+    'additional_time_after_first_section_taxi': fields.Raw,
+    'additional_time_before_last_section_taxi': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
