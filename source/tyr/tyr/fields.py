@@ -126,6 +126,9 @@ instance_fields = {
     'autocomplete_backend': fields.Raw,
     'additional_time_after_first_section_taxi': fields.Raw,
     'additional_time_before_last_section_taxi': fields.Raw,
+    'max_additional_connections': fields.Raw,
+    'successive_physical_mode_to_limit_id': fields.Raw,
+    'car_park_provider': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

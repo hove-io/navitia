@@ -558,6 +558,22 @@ class Instance(flask_restful.Resource):
             default=instance.additional_time_before_last_section_taxi,
         )
 
+        parser.add_argument(
+            'max_additional_connections',
+            type=int,
+            help='maximum number of connections allowed in journeys',
+            location=('json', 'values'),
+            default=instance.max_additional_connections,
+        )
+
+        parser.add_argument(
+            'car_park_provider',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate call to car parking provider',
+            location=('json', 'values'),
+            default=instance.car_park_provider,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -605,6 +621,8 @@ class Instance(flask_restful.Resource):
                     'autocomplete_backend',
                     'additional_time_after_first_section_taxi',
                     'additional_time_before_last_section_taxi',
+                    'max_additional_connections',
+                    'car_park_provider',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
