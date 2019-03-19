@@ -405,7 +405,7 @@ class Instance(db.Model):  # type: ignore
     additional_time_after_first_section_taxi = db.Column(
         db.Integer, default=default_values.additional_time_after_first_section_taxi, nullable=False
     )
-        
+
     additional_time_before_last_section_taxi = db.Column(
         db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
     )
