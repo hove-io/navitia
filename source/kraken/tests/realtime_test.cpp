@@ -3317,3 +3317,26 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
 }
+
+BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_mode, AddTripDataset) {
+
+    auto& pt_data = *b.data->pt_data;
+
+    // If trip id doesn't exist and the GTFS-RT is not an "Add new trip", we reject
+    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_id_doesnt_exist",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0809"_pts).delay(9_min),
+            RTStopTime("stop_point:H", "20190101T0839"_pts).delay(9_min),
+            RTStopTime("stop_point:H", "20190101T0909"_pts).delay(9_min),
+            RTStopTime("stop_point:H", "20190101T0939"_pts).delay(9_min)
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
+
+    // the new trip update with bad id is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.data->build_raptor();
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_id_doesnt_exist"), false);
+}
+
