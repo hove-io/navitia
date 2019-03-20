@@ -28,15 +28,20 @@
 # www.navitia.io
 
 from enum import Enum
+from navitiacommon import response_pb2
 
 
 class FallbackModes(Enum):
-    walking = 0
-    bike = 1
-    bss = 2
-    car = 3
-    ridesharing = 4
-    taxi = 5
+    walking = response_pb2.Walking
+    bike = response_pb2.Bike
+    bss = response_pb2.Bss
+    car = response_pb2.Car
+    ridesharing = response_pb2.Ridesharing
+    taxi = response_pb2.Taxi
+
+    @classmethod
+    def __getitem__(cls, name):
+        return cls._member_map_get(name)
 
     @classmethod
     def modes_str(cls):
@@ -67,8 +72,8 @@ class FallbackModes(Enum):
             - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
             # handle ridesharing manually, we allow only combinations between bss/walking/taxi with ridesharing
             # but we don't allow ridesharing ridesharing
-            | _combi({cls.ridesharing}, {cls.bss, cls.walking, cls.ridesharing, cls.taxi})
-            | _combi({cls.bss, cls.walking, cls.ridesharing, cls.taxi}, {cls.ridesharing})
+            | _combi({cls.ridesharing}, {cls.bss, cls.walking, cls.taxi})
+            | _combi({cls.bss, cls.walking, cls.taxi}, {cls.ridesharing})
             # we don't want use bike at the ending fallback except when the beginning fallback is also bike
             # this is because, when it's bike bike, we consider that the traveler want to get on the public transport
             # with his bike and kraken will take this into consideration

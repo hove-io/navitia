@@ -378,7 +378,6 @@ def get_kraken_calls_test():
     assert get_kraken_calls(req) == {
         ('taxi', 'taxi'),
         ('ridesharing', 'walking'),
-        ('ridesharing', 'ridesharing'),
         ('taxi', 'bss'),
         ('ridesharing', 'bss'),
         ('taxi', 'ridesharing'),
