@@ -359,7 +359,7 @@ class EffectSerializer(PbNestedSerializer):
 class CurrentAvailabilitySerializer(PbNestedSerializer):
     status = EnumField(pb_type=CurrentAvailability.EquipmentStatus, display_none=False, required=False)
     periods = PeriodSerializer(many=True, display_none=False, required=False)
-    updated_at = base.PbStrField(display_none=True, required=False)
+    updated_at = base.PbStrField(display_none=False, required=False)
     cause = CauseSerializer(display_none=False, required=False)
     effect = EffectSerializer(display_none=False, required=False)
 

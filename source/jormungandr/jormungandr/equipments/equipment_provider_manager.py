@@ -49,12 +49,11 @@ class EquipmentProviderManager(object):
         :param providers_keys: list of providers defined in the instance
         """
         for provider in self.providers_config:
-            if provider['key'].lower() in providers_keys and provider['key'].lower() not in dict(
+            key = provider['key'].lower()
+            if key in providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
-                self._equipment_providers_legacy[provider['key'].lower()] = self._init_class(
-                    provider['class'], provider['args']
-                )
+                self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
 
     def _init_class(self, cls, arguments):
         """
