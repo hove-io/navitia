@@ -629,15 +629,17 @@ void handle_realtime(const std::string& id,
     // Get or create meta VJ
     navitia::type::MetaVehicleJourney* meta_vj = nullptr;
     bool meta_vj_exists = data.pt_data->meta_vjs.exists(trip_update.trip().trip_id());
-    if (! meta_vj_exists && is_added_trip(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
-        meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
-        // TODO : pick a meaningful TZ
-        meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
-    } else if (! meta_vj_exists && is_added_trip(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
-                << trip_update.trip().trip_id());
-        return;
+    if (! meta_vj_exists) {
+        if (is_added_trip(trip_update)) {
+            LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
+            meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
+            // TODO : pick a meaningful TZ
+            meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
+        } else {
+            LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
+                    << trip_update.trip().trip_id());
+            return;
+        }
     } else {
         LOG4CPLUS_DEBUG(log, "Vehicle journey found : " << trip_update.trip().trip_id());
         meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
