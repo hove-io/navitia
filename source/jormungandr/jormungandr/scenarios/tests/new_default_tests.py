@@ -368,6 +368,22 @@ def get_kraken_calls_test():
         ('bike', 'walking'),
         ('bike', 'taxi'),
         ('taxi', 'walking'),
+        ('taxi', 'ridesharing'),
+    }
+
+    req = {
+        "origin_mode": ["ridesharing", "taxi"],
+        "destination_mode": ["walking", "bss", "bike", "car", "ridesharing", "taxi"],
+    }
+    assert get_kraken_calls(req) == {
+        ('taxi', 'taxi'),
+        ('ridesharing', 'walking'),
+        ('ridesharing', 'ridesharing'),
+        ('taxi', 'bss'),
+        ('ridesharing', 'bss'),
+        ('taxi', 'ridesharing'),
+        ('taxi', 'walking'),
+        ('ridesharing', 'taxi'),
     }
 
 

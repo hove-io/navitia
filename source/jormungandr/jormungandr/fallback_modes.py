@@ -65,15 +65,15 @@ class FallbackModes(Enum):
             _combi(cls.modes_enum() - {cls.ridesharing}, non_personal_modes)
             # we remove bss walking and  walking bss, since they are redundant for kraken (bss includes walking)
             - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
-        ) | {
-            (cls.bike, cls.bike),
             # handle ridesharing manually, we allow only combinations between bss/walking with ridesharing
             # but we don't allow ridesharing ridesharing
-            (cls.bss, cls.ridesharing),
-            (cls.ridesharing, cls.bss),
-            (cls.walking, cls.ridesharing),
-            (cls.ridesharing, cls.walking),
-        }
+            | _combi({cls.ridesharing}, {cls.bss, cls.walking, cls.ridesharing, cls.taxi})
+            | _combi({cls.bss, cls.walking, cls.ridesharing, cls.taxi}, {cls.ridesharing})
+            # we don't want use bike at the ending fallback except when the beginning fallback is also bike
+            # this is because, when it's bike bike, we consider that the traveler want to get on the public transport
+            # with his bike and kraken will take this into consideration
+            | {(cls.bike, cls.bike)}
+        )
 
     @classmethod
     def get_allowed_combinations_str(cls):
