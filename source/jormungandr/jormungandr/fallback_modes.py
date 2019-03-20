@@ -65,7 +65,7 @@ class FallbackModes(Enum):
             _combi(cls.modes_enum() - {cls.ridesharing}, non_personal_modes)
             # we remove bss walking and  walking bss, since they are redundant for kraken (bss includes walking)
             - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
-            # handle ridesharing manually, we allow only combinations between bss/walking with ridesharing
+            # handle ridesharing manually, we allow only combinations between bss/walking/taxi with ridesharing
             # but we don't allow ridesharing ridesharing
             | _combi({cls.ridesharing}, {cls.bss, cls.walking, cls.ridesharing, cls.taxi})
             | _combi({cls.bss, cls.walking, cls.ridesharing, cls.taxi}, {cls.ridesharing})
