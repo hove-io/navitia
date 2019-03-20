@@ -402,6 +402,14 @@ class Instance(db.Model):  # type: ignore
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
 
+    additional_time_after_first_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_after_first_section_taxi, nullable=False
+    )
+
+    additional_time_before_last_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
