@@ -19,13 +19,13 @@ def upgrade():
         'instance',
         sa.Column(
             'additional_time_after_first_section_taxi', sa.Integer(), nullable=False, server_default='300'
-        )
+        ),
     )
     op.add_column(
         'instance',
         sa.Column(
             'additional_time_before_last_section_taxi', sa.Integer(), nullable=False, server_default='300'
-        )
+        ),
     )
 
 
