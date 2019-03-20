@@ -55,17 +55,25 @@ class FallbackModes(Enum):
             return set(product(first_sections_modes, last_section_modes))
 
         # this allowed combination is temporary, it does not handle all the use cases at all
+
+        # non personal modes are modes that don't require any additional equipments
+        # In principle, non personal modes are walking, bss, taxi and ridesharing, since we want to minimize the number
+        # of ridesharing, we handle combinations with ridesharing manually
+        # personal modes are bike and car, we don't allow to use personal modes in ending fallbacks, except bike bike.
         non_personal_modes = {cls.walking, cls.bss, cls.taxi}
         return (
             _combi(cls.modes_enum() - {cls.ridesharing}, non_personal_modes)
-            | {
-                (cls.bike, cls.bike),
-                (cls.bss, cls.ridesharing),
-                (cls.ridesharing, cls.bss),
-                (cls.walking, cls.ridesharing),
-                (cls.ridesharing, cls.walking),
-            }
-        ) - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
+            # we remove bss walking and  walking bss, since they are redundant for kraken (bss includes walking)
+            - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
+        ) | {
+            (cls.bike, cls.bike),
+            # handle ridesharing manually, we allow only combinations between bss/walking with ridesharing
+            # but we don't allow ridesharing ridesharing
+            (cls.bss, cls.ridesharing),
+            (cls.ridesharing, cls.bss),
+            (cls.walking, cls.ridesharing),
+            (cls.ridesharing, cls.walking),
+        }
 
     @classmethod
     def get_allowed_combinations_str(cls):
