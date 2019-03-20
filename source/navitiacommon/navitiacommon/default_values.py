@@ -120,10 +120,10 @@ max_nb_crowfly_by_mode = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 500
 
 autocomplete_backend = 'kraken'
 
-# Additionnal time after the taxi section when used as first section mode
+# Additionnal time in second after the taxi section when used as first section mode
 additional_time_after_first_section_taxi = 5 * 60
 
-# Additionnal time before the taxi section when used as last section mode
+# Additionnal time in second before the taxi section when used as last section mode
 additional_time_before_last_section_taxi = 5 * 60
 
 
