@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from mock import MagicMock
 from jormungandr.equipments.sytral import SytralProvider
+from jormungandr.equipments.equipment_provider_manager import EquipmentProviderManager
 from navitiacommon.type_pb2 import StopPoint
 
 mock_data = {
@@ -62,7 +63,7 @@ def create_stop_point(code_type, code_value):
 
 def equipments_get_information_test():
     """
-    Test that 'equipment_details' structure is added to StopPoint proto if necessary
+    Test that 'equipment_details' structure is added to StopPoint proto when conditions are met
     """
     provider = SytralProvider(url="sytral.url")
     provider._call_webservice = MagicMock(return_value=mock_data)
@@ -84,3 +85,30 @@ def equipments_get_information_test():
     st = create_stop_point("ASCENCEUR", "261")
     provider.get_informations([st])
     assert not st.equipment_details
+
+
+def equipments_provider_manager_test():
+    """
+    Test that equipment providers are created when conditions are met
+    """
+    manager = EquipmentProviderManager(
+        equipment_providers_configuration=[{'key': 'sytral', 'class': 'Sytral.class', 'args': 'Sytral.args'}]
+    )
+    manager._init_class = MagicMock(return_value="Provider")
+
+    # Provider name from instance doesn't match config provider
+    # No provider added in providers list
+    manager.init_providers(['divia'])
+    assert not manager._equipment_providers_legacy
+
+    # Provider name from instance matches config provider
+    # Sytral provider added in providers list
+    manager.init_providers(['sytral'])
+    assert manager._equipment_providers_legacy
+    assert len(manager._equipment_providers_legacy) == 1
+    assert manager._equipment_providers_legacy.keys()[0] == 'sytral'
+
+    # Provider already created
+    # No new provider added in providers list
+    manager.init_providers(['sytral'])
+    assert len(manager._equipment_providers_legacy) == 1
