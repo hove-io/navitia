@@ -89,7 +89,12 @@ def type_of_data(filename):
         if filename.endswith('.pbf'):
             return 'osm', filename
         if filename.endswith('.zip'):
-            zipf = zipfile.ZipFile(filename)
+            try:
+                zipf = zipfile.ZipFile(filename)
+            except Exception as e:
+                logging.exception('Corrupted source file  : {} error {}'.format(filename, e))
+                raise
+
             pt_type = files_type(zipf.namelist())
             if not pt_type:
                 return None, None

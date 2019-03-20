@@ -114,8 +114,16 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         dataset = models.DataSet()
         # NOTE: for the moment we do not use the path to load the data here
         # but we'll need to refactor this to take it into account
-        dataset.type, _ = utils.type_of_data(_file)
-        dataset.family_type = utils.family_of_data(dataset.type)
+        try:
+            dataset.type, _ = utils.type_of_data(_file)
+            dataset.family_type = utils.family_of_data(dataset.type)
+        except Exception:
+            if backup_file:
+                move_to_backupdirectory(_file, instance_config.backup_directory)
+            current_app.logger.debug("Corrupted source file : {} moved to {}".
+                                     format(_file, instance_config.backup_directory))
+            continue
+
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory)
