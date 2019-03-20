@@ -3336,7 +3336,7 @@ BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_
     // the new trip update with bad id is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.data->build_raptor();
-    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_id_doesnt_exist"), false);
 }
 
