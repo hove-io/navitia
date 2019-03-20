@@ -40,10 +40,6 @@ class FallbackModes(Enum):
     taxi = response_pb2.Taxi
 
     @classmethod
-    def __getitem__(cls, name):
-        return cls._member_map_get(name)
-
-    @classmethod
     def modes_str(cls):
         return {e.name for e in cls}
 
