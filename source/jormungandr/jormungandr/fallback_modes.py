@@ -39,32 +39,33 @@ class FallbackModes(Enum):
     taxi = 5
 
     @classmethod
-    def get_all_modes_str(cls):
-        return [e.name for e in cls]
+    def modes_str(cls):
+        return {e.name for e in cls}
 
     @classmethod
-    def get_all_modes_enum(cls):
-        return list(cls)
+    def modes_enum(cls):
+        return set(cls)
 
     @classmethod
     def get_allowed_combinations_enum(cls):
-        def sub_combi(first_sections_modes, last_section_modes):
+        def _combi(first_sections_modes, last_section_modes):
             from itertools import product
 
+            # cartesian product between two iterables
             return set(product(first_sections_modes, last_section_modes))
 
         # this allowed combination is temporary, it does not handle all the use cases at all
-
-        allowed_combinations = (
-            sub_combi([cls.walking], [cls.walking, cls.ridesharing])
-            | sub_combi([cls.bike], [cls.walking, cls.bike, cls.bss])
-            | sub_combi([cls.bss], [cls.bss, cls.ridesharing])
-            | sub_combi([cls.car], [cls.walking, cls.bss])
-            | sub_combi([cls.ridesharing], [cls.walking, cls.bss])
-            | sub_combi([cls.taxi], cls.get_all_modes_enum())
-            | sub_combi(cls.get_all_modes_enum(), [cls.taxi])
-        )
-        return allowed_combinations
+        non_personal_modes = {cls.walking, cls.bss, cls.taxi}
+        return (
+            _combi(cls.modes_enum() - {cls.ridesharing}, non_personal_modes)
+            | {
+                (cls.bike, cls.bike),
+                (cls.bss, cls.ridesharing),
+                (cls.ridesharing, cls.bss),
+                (cls.walking, cls.ridesharing),
+                (cls.ridesharing, cls.walking),
+            }
+        ) - {(cls.walking, cls.bss), (cls.bss, cls.walking)}
 
     @classmethod
     def get_allowed_combinations_str(cls):
@@ -76,6 +77,6 @@ class FallbackModes(Enum):
         return set(six.moves.map(lambda modes: (modes[0].name, modes[1].name), allowed_combinations_enum))
 
 
-all_fallback_modes = FallbackModes.get_all_modes_str()
+all_fallback_modes = FallbackModes.modes_str()
 
 allowed_combinations = FallbackModes.get_allowed_combinations_str()
