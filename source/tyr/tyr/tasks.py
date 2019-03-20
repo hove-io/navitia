@@ -120,8 +120,9 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         except Exception:
             if backup_file:
                 move_to_backupdirectory(_file, instance_config.backup_directory)
-            current_app.logger.debug("Corrupted source file : {} moved to {}".
-                                     format(_file, instance_config.backup_directory))
+            current_app.logger.debug(
+                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
+            )
             continue
 
         if dataset.type in task:
