@@ -671,31 +671,3 @@ class Instance(object):
             res.extend(rsjs)
             fps.add(fp)
         return res, fps
-
-    def manage_equipments(self, response):
-        """
-        Check the codes in the stop points from the response to call equipment details provider
-        :param response: the pb response received
-        :return: response: the pb response updated with equipment details
-        """
-
-        def get_from_to_stop_points_of_journeys(journeys):
-            """
-            :param journeys: the pb journey response
-            :return: generator of stop points that can be 'origin' or 'destination'
-            """
-            places = itertools.chain(*[(s.origin, s.destination) for j in journeys for s in j.sections])
-            return (
-                place.stop_point
-                for place in places
-                if place.embedded_type == type_pb2.NavitiaType.Value('STOP_POINT')
-            )
-
-        stop_points = get_from_to_stop_points_of_journeys(response.journeys)
-
-        for st in stop_points:
-            for code in st.codes:
-                # TODO: check expected code type for equipments and call webservice
-                pass
-
-        return response

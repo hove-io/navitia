@@ -519,7 +519,7 @@ class Journeys(JourneyCommon):
             if args['equipment_details']:
                 # Manage equipments in stop points from the journeys sections
                 instance = i_manager.instances.get(self.region)
-                return instance.manage_equipments(response)
+                return instance.equipment_provider_manager.manage_equipments(response)
 
             return response
 
