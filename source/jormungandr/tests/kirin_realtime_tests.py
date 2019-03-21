@@ -39,7 +39,6 @@ from tests.tests_mechanism import dataset
 from jormungandr.utils import str_to_time_stamp, make_namedtuple
 from tests import gtfs_realtime_pb2, kirin_pb2
 from tests.check_utils import (
-    is_valid_vehicle_journey,
     get_not_null,
     journey_basic_query,
     isochrone_basic_query,
@@ -478,7 +477,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         is_valid_disruption(dis, chaos_disrup=False)
         assert dis['disruption_id'] == 'vjA_skip_A'
-        assert dis['severity']['effect'] == 'DETOUR'
+        assert dis['severity']['effect'] == 'REDUCED_SERVICE'
         assert len(dis['impacted_objects']) == 1
         ptobj = dis['impacted_objects'][0]['pt_object']
         assert ptobj['embedded_type'] == 'trip'
@@ -547,6 +546,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
                 UpdatedStopTime("stop_point:stopA", tstamp("20120615T070400"), tstamp("20120615T070400")),
             ],
             disruption_id='96231_2015-07-28_0',
+            effect='unknown',
         )
 
         # A new vj is created
@@ -624,6 +624,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='vjA_on_time',
+            effect='unknown',
         )
 
         # We have a new diruption
@@ -1229,8 +1230,8 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert (
             last_disruption['impacted_objects'][0]['impacted_stops'][0]['departure_status'] == 'unchanged'
         )  # Why?
-        assert last_disruption['severity']['effect'] == 'DETOUR'
-        assert last_disruption['severity']['name'] == 'detour'
+        assert last_disruption['severity']['effect'] == 'REDUCED_SERVICE'
+        assert last_disruption['severity']['name'] == 'reduced service'
 
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
@@ -1509,7 +1510,9 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
     trip.start_date = date
     trip.Extensions[kirin_pb2.contributor] = rt_topic
 
-    if effect == 'modified':
+    if effect == 'unknown':
+        trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.UNKNOWN_EFFECT
+    elif effect == 'modified':
         trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.MODIFIED_SERVICE
     elif effect == 'delayed':
         trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.SIGNIFICANT_DELAYS

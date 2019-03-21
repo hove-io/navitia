@@ -120,6 +120,8 @@ def test_update_instances(create_instance):
         "max_successive_physical_mode": 3,
         "final_line_filter": True,
         "max_extra_second_pass": 1,
+        "additional_time_after_first_section_taxi": 42,
+        "additional_time_before_last_section_taxi": 789,
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
@@ -344,3 +346,40 @@ def test_update_autocomplete_backend(create_instance):
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['autocomplete_backend'] == 'bragi'
+
+
+def test_update_additional_time_for_taxi(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['additional_time_after_first_section_taxi'] == 300
+    assert resp[0]['additional_time_before_last_section_taxi'] == 300
+
+    params = {'additional_time_after_first_section_taxi': 42, 'additional_time_before_last_section_taxi': 3637}
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['additional_time_after_first_section_taxi'] == 42
+    assert resp['additional_time_before_last_section_taxi'] == 3637
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['additional_time_after_first_section_taxi'] == 42
+    assert resp[0]['additional_time_before_last_section_taxi'] == 3637
+
+
+def test_update_forgotten_attributs_in_backend(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['max_additional_connections'] == 2
+    assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Bus'
+    assert resp[0]['car_park_provider'] == True
+
+    params = {
+        'max_additional_connections': 3,
+        'successive_physical_mode_to_limit_id': 'physical_mode:Train',
+        'car_park_provider': False,
+    }
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['max_additional_connections'] == 3
+    assert resp['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
+    assert resp['car_park_provider'] == False
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['max_additional_connections'] == 3
+    assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
+    assert resp[0]['car_park_provider'] == False
