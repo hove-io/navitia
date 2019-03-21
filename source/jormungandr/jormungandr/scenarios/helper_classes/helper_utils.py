@@ -144,7 +144,7 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
 
     # We have to create the link between the fallback and the pt part manually here
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-        fallback_sections[0].destination.CopyFrom(journey.sections[0].origin)
+        fallback_sections[-1].destination.CopyFrom(journey.sections[0].origin)
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
