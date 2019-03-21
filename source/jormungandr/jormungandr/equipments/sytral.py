@@ -38,6 +38,8 @@ import pybreaker
 import logging
 import jmespath
 
+SYTRAL_TYPE_PREFIX = "TCL_"
+
 
 class SytralProvider(object):
     """
@@ -76,13 +78,13 @@ class SytralProvider(object):
 
     def _process_data(self, data, stop_points_list):
         """
-        For each stop point in te journeys response, the structure 'equipment_details' is updated if the corresponding code is present
+        For each stop point within journeys response, the structure 'equipment_details' is updated if the corresponding code is present
         :param data: equipments data received from the webservice
         :param stop_points_list: list of stop_points from the protobuf response
         """
         for st in stop_points_list:
             for code in st.codes:
-                if "TCL_" in code.type:
+                if SYTRAL_TYPE_PREFIX in code.type:
                     equipments_list = jmespath.search(
                         'equipments_details[?to_number(id)==`{}`]'.format(code.value), data
                     )
