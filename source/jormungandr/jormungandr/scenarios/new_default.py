@@ -78,6 +78,8 @@ from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr import fallback_modes
+
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
@@ -102,25 +104,11 @@ def get_kraken_calls(request):
     arr_modes = request['destination_mode']
 
     if len(dep_modes) == len(arr_modes) == 1:
-        return [(dep_modes[0], arr_modes[0])]
+        return {(dep_modes[0], arr_modes[0])}
 
-    # this allowed combination is temporary, it does not handle all the use cases at all
-    allowed_combination = [
-        ('bss', 'bss'),
-        ('walking', 'walking'),
-        ('bike', 'walking'),
-        ('car', 'walking'),
-        ('bike', 'bss'),
-        ('car', 'bss'),
-        ('bike', 'bike'),
-        ('ridesharing', 'walking'),
-        ('walking', 'ridesharing'),
-        ('ridesharing', 'bss'),
-        ('bss', 'ridesharing'),
-    ]
+    # this allowed_combinations is temporary, it does not handle all the use cases at all
     # We don't want to do ridesharing - ridesharing journeys
-
-    res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
+    res = {c for c in fallback_modes.allowed_combinations if c in itertools.product(dep_modes, arr_modes)}
 
     if not res:
         abort(

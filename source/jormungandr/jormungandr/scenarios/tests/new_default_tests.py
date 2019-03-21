@@ -341,24 +341,49 @@ def add_pt_sections(journey):
 
 
 def get_kraken_calls_test():
-    for md in ["bike", "walking", "bss", "car"]:
+    for md in ["bike", "walking", "bss", "car", "ridesharing", "taxi"]:
         req = {"origin_mode": [md], "destination_mode": [md]}
-        assert get_kraken_calls(req) == [(md, md)]
+        assert get_kraken_calls(req) == {(md, md)}
 
     req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"]}
-    assert get_kraken_calls(req) == [("walking", "walking")]
+    assert get_kraken_calls(req) == {("walking", "walking")}
 
     req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"]}
-    assert get_kraken_calls(req) == [("walking", "walking"), ("bike", "walking")]
+    assert get_kraken_calls(req) == {("walking", "walking"), ("bike", "walking")}
 
     req = {"origin_mode": ["bike", "walking"], "destination_mode": ["bss"]}
-    assert get_kraken_calls(req) == [("bike", "bss")]
+    assert get_kraken_calls(req) == {("bike", "bss")}
 
     req = {"origin_mode": ["bike", "car"], "destination_mode": ["bss"]}
-    assert get_kraken_calls(req) == [("bike", "bss"), ("car", "bss")]
+    assert get_kraken_calls(req) == {("bike", "bss"), ("car", "bss")}
 
     req = {"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]}
-    assert get_kraken_calls(req) == [("bike", "bike")]
+    assert get_kraken_calls(req) == {("bike", "bike")}
+
+    req = {"origin_mode": ["taxi", "bike"], "destination_mode": ["walking", "bss", "car", "ridesharing", "taxi"]}
+    assert get_kraken_calls(req) == {
+        ('taxi', 'taxi'),
+        ('taxi', 'bss'),
+        ('bike', 'bss'),
+        ('bike', 'walking'),
+        ('bike', 'taxi'),
+        ('taxi', 'walking'),
+        ('taxi', 'ridesharing'),
+    }
+
+    req = {
+        "origin_mode": ["ridesharing", "taxi"],
+        "destination_mode": ["walking", "bss", "bike", "car", "ridesharing", "taxi"],
+    }
+    assert get_kraken_calls(req) == {
+        ('taxi', 'taxi'),
+        ('ridesharing', 'walking'),
+        ('taxi', 'bss'),
+        ('ridesharing', 'bss'),
+        ('taxi', 'ridesharing'),
+        ('taxi', 'walking'),
+        ('ridesharing', 'taxi'),
+    }
 
 
 def get_kraken_calls_invalid_1_test():

@@ -31,19 +31,11 @@ from __future__ import absolute_import
 import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord, generate_id
-from navitiacommon import response_pb2
+from jormungandr.fallback_modes import FallbackModes
 from .helper_exceptions import *
 import copy
 import logging
 import six
-
-MODE_TO_PB_MODE = {
-    'walking': response_pb2.Walking,
-    'bike': response_pb2.Bike,
-    'bss': response_pb2.Bss,
-    'car': response_pb2.Car,
-    'ridesharing': response_pb2.Ridesharing,
-}
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -57,7 +49,7 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     section.begin_date_time = begin
     section.end_date_time = end
     if section.duration > 0:
-        section.street_network.mode = MODE_TO_PB_MODE.get(mode)
+        section.street_network.mode = FallbackModes[mode].value
     # mode is always walking for a teleportation crow_fly
     else:
         section.street_network.mode = response_pb2.Walking
