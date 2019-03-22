@@ -70,6 +70,7 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
     trip->SetExtension(kirin::contributor, "cow.owner");
     trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
+    trip_update.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE);
     return trip_update;
 }
 
@@ -3336,6 +3337,163 @@ BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_
     // the new trip update with bad id is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.data->build_raptor();
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
+}
+
+BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
+
+    auto& pt_data = *b.data->pt_data;
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                {ntest::to_posix_timestamp(datetime)},
+                true, navitia::type::AccessibiliteParams(), {}, {},
+                sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:E", "20190101T0830"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:G", "20190101T0930"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.data->build_raptor();
+
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+
+    // Check meta vj table
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj:1"), true);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), true);
+
+    // Check vj table
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
+
+    new_trip = ntest::make_delay_message("vj_new_trip_2",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-2", timestamp, new_trip, *b.data, true, true);
+    b.data->build_raptor();
+
+    res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).type(), pbnavitia::PUBLIC_TRANSPORT);
+
+    // Check meta vj table
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj:1"), true);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), true);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip_2"), true);
+
+    // Check vj table
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
+
+    transit_realtime::TripUpdate remove_new_trip = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0900"_pts),
+            RTStopTime("stop_point:E", "20190101T0930"_pts),
+            RTStopTime("stop_point:F", "20190101T1000"_pts),
+            RTStopTime("stop_point:G", "20190101T1030"_pts),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
+    b.data->build_raptor();
+
+    // For the moment, trip from A to G doesn't exist
+    res = compute("20190101T073000", "stop_point:A", "stop_point:G");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+
+    // Check meta vj table
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj:1"), true);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), true);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip_2"), true);
+
+    // Check vj table
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
+
+    // Send the same GTFS-RT. Have to reject it because id doesn't exist.
+    remove_new_trip = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0900"_pts),
+            RTStopTime("stop_point:E", "20190101T0930"_pts),
+            RTStopTime("stop_point:F", "20190101T1000"_pts),
+            RTStopTime("stop_point:G", "20190101T1030"_pts),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
+    b.data->build_raptor();
+
+    // Check meta vj table
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
+
+    // Check vj table
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
+}
+
+BOOST_FIXTURE_TEST_CASE(cant_cancelled_trip_that_doesnt_exist, AddTripDataset) {
+
+    auto& pt_data = *b.data->pt_data;
+
+    // Can't cancelled trip that doesn't exist
+    transit_realtime::TripUpdate remove_trip = ntest::make_delay_message("vj_id_doesnt_exist",
+        "20190101",
+        {
+            RTStopTime("stop_point:X", "20190101T0900"_pts),
+            RTStopTime("stop_point:X", "20190101T0930"_pts),
+            RTStopTime("stop_point:X", "20190101T1000"_pts),
+            RTStopTime("stop_point:X", "20190101T1030"_pts),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, remove_trip, *b.data, true, true);
+    b.data->build_raptor();
+
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
 }
