@@ -101,10 +101,11 @@ class SytralProvider(object):
                         details.current_availability.status = type_pb2.CurrentAvailability.EquipmentStatus.Value(
                             '{}'.format(equipment['current_availaibity']['status'])
                         )
-                        for period in equipment['current_availaibity']['periods']:
+                        current_availaibity = equipment['current_availaibity']
+                        for period in current_availaibity['periods']:
                             p = details.current_availability.periods.add()
                             p.begin = date_to_timestamp(parser.parse(period['begin']))
                             p.end = date_to_timestamp(parser.parse(period['end']))
-                        details.current_availability.updated_at = equipment['current_availaibity']['updated_at']
-                        details.current_availability.cause.label = equipment['current_availaibity']['cause']['label']
-                        details.current_availability.effect.label = equipment['current_availaibity']['effect']['label']
+                        details.current_availability.updated_at = current_availaibity['updated_at']
+                        details.current_availability.cause.label = current_availaibity['cause']['label']
+                        details.current_availability.effect.label = current_availaibity['effect']['label']

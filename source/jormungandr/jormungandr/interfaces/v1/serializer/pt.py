@@ -357,7 +357,9 @@ class EffectSerializer(PbNestedSerializer):
 
 
 class CurrentAvailabilitySerializer(PbNestedSerializer):
-    status = EnumField(pb_type=CurrentAvailability.EquipmentStatus, display_none=False, required=False)
+    status = EnumField(
+        pb_type=CurrentAvailability.EquipmentStatus, display_none=False, required=False  # type: ignore
+    )
     periods = PeriodSerializer(many=True, display_none=False, required=False)
     updated_at = base.PbStrField(display_none=False, required=False)
     cause = CauseSerializer(display_none=False, required=False)
@@ -367,7 +369,9 @@ class CurrentAvailabilitySerializer(PbNestedSerializer):
 class EquipmentDetailsSerializer(PbNestedSerializer):
     id = base.PbStrField(display_none=False, required=False)
     name = base.PbStrField(display_none=False, required=False)
-    embedded_type = EnumField(pb_type=EquipmentDetails.EquipmentType, display_none=False, required=False)
+    embedded_type = EnumField(
+        pb_type=EquipmentDetails.EquipmentType, display_none=False, required=False  # type: ignore
+    )
     current_availability = CurrentAvailabilitySerializer(display_none=False, required=False)
 
 
