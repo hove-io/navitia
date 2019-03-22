@@ -3435,7 +3435,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
     b.data->build_raptor();
 
-    // For the moment, trip from A to G doesn't exist
+    // trip from A to G is now removed
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
