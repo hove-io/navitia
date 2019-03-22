@@ -3478,6 +3478,11 @@ BOOST_FIXTURE_TEST_CASE(cant_cancelled_trip_that_doesnt_exist, AddTripDataset) {
 
     auto& pt_data = *b.data->pt_data;
 
+    BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 1);
+
     // Can't cancelled trip that doesn't exist
     transit_realtime::TripUpdate remove_trip = ntest::make_delay_message("vj_id_doesnt_exist",
         "20190101",
@@ -3494,7 +3499,9 @@ BOOST_FIXTURE_TEST_CASE(cant_cancelled_trip_that_doesnt_exist, AddTripDataset) {
     navitia::handle_realtime("feed-1", timestamp, remove_trip, *b.data, true, true);
     b.data->build_raptor();
 
-    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
+    BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 1);
 }
 
