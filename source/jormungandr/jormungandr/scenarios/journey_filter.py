@@ -36,6 +36,7 @@ import six
 from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
+from jormungandr.fallback_modes import FallbackModes
 
 
 def delete_journeys(responses, request):
@@ -138,6 +139,7 @@ def filter_journeys(responses, instance, request):
         ),
         FilterTooLongWaiting(),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
+        FilterTooLongDirectPath(instance=instance, request=request),
     ]
 
     # we add more filters in some special cases
@@ -315,6 +317,40 @@ class FilterDirectPath(SingleJourneyFilter):
         elif self.dp == 'only' and 'non_pt' not in journey.tags:
             return False
         return True
+
+
+class FilterTooLongDirectPath(SingleJourneyFilter):
+
+    message = 'too_long_direct_path'
+
+    def __init__(self, instance, request):
+        self.instance = instance
+        self.request = request
+
+    def filter_func(self, journey):
+        """
+        eliminates too long direct_path journey
+        """
+        # we filter only direct path
+        if 'non_pt' not in journey.tags:
+            return True
+        logger = logging.getLogger(__name__)
+
+        # TODO: Add taxi into the protobuf
+        for mode in FallbackModes.modes_str():
+            # the try-except is used to cover the case when mode is not (yet) set in protobuf
+            try:
+                if journey.durations.HasField(mode):
+                    duration = getattr(journey.durations, mode)
+                    attr_name = 'max_{}_direct_path_duration'.format(mode)
+                    max_duration = self.request[attr_name]
+                    if duration > max_duration:
+                        return False
+            except ValueError:
+                logger.warning("journey durations don't have {}".format(mode))
+
+        else:
+            return True
 
 
 def get_min_connections(journeys):

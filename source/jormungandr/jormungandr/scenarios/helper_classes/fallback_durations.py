@@ -28,13 +28,12 @@
 # www.navitia.io
 
 from __future__ import absolute_import
-from . import helper_future
 from navitiacommon import response_pb2
 from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr import new_relic
+from jormungandr import new_relic, utils
 import logging
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])

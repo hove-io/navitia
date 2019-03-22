@@ -98,6 +98,23 @@ def _set_default_street_network_config(street_network_configs):
     return street_network_configs
 
 
+# TODO: use this helper function for all properties if possible
+# Warning: it breaks static type deduction
+def _make_property_getter(attr_name):
+    """
+    a helper function.
+
+    return a getter for Instance's attr
+    :param attr_name:
+    :return:
+    """
+
+    def _getter(self):
+        return get_value_or_default(attr_name, self.get_models(), self.name)
+
+    return _getter
+
+
 class Instance(object):
     name = None  # type: Text
     _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
@@ -464,6 +481,15 @@ class Instance(object):
         # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('taxi_speed', instance_db, self.name)
+
+    max_walking_direct_path_duration = property(_make_property_getter('max_walking_direct_path_duration'))
+    max_bike_direct_path_duration = property(_make_property_getter('max_bike_direct_path_duration'))
+    max_bss_direct_path_duration = property(_make_property_getter('max_bss_direct_path_duration'))
+    max_car_direct_path_duration = property(_make_property_getter('max_car_direct_path_duration'))
+    max_taxi_direct_path_duration = property(_make_property_getter('max_taxi_direct_path_duration'))
+    max_ridesharing_direct_path_duration = property(
+        _make_property_getter('max_ridesharing_direct_path_duration')
+    )
 
     def reap_socket(self, ttl):
         # type: (int) -> None
