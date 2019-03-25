@@ -421,6 +421,7 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
                 break;
             case pbnavitia::StreetNetworkMode::Car:
             case pbnavitia::StreetNetworkMode::CarNoPark:
+            case pbnavitia::StreetNetworkMode::Taxi:
                 total_car_duration += section.duration();
                 total_car_distance += section.length();
                 break;

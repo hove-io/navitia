@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager
+from jormungandr import i_manager, fallback_modes
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
@@ -136,7 +136,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         ResourceUri.__init__(self, authentication=False, output_type_serializer=output_type_serializer)
         ResourceUtc.__init__(self)
 
-        modes = ["walking", "car", "bike", "bss", "ridesharing"]
         types = {
             "all": "All types",
             "best": "The best journey",
@@ -203,7 +202,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "first_section_mode[]",
-            type=OptionValue(modes),
+            type=OptionValue(fallback_modes.all_fallback_modes),
             dest="origin_mode",
             action="append",
             help='Force the first section mode '
@@ -221,17 +220,25 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "last_section_mode[]",
-            type=OptionValue(modes),
+            type=OptionValue(fallback_modes.all_fallback_modes),
             dest="destination_mode",
             action="append",
             help='Same as first_section_mode but for the last section.',
         )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(
-            "first_section_mode", hidden=True, deprecated=True, type=OptionValue(modes), action="append"
+            "first_section_mode",
+            hidden=True,
+            deprecated=True,
+            type=OptionValue(fallback_modes.all_fallback_modes),
+            action="append",
         )
         parser_get.add_argument(
-            "last_section_mode", hidden=True, deprecated=True, type=OptionValue(modes), action="append"
+            "last_section_mode",
+            hidden=True,
+            deprecated=True,
+            type=OptionValue(fallback_modes.all_fallback_modes),
+            action="append",
         )
 
         parser_get.add_argument(

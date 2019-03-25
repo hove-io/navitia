@@ -51,6 +51,7 @@ from jormungandr.parking_space_availability.parking_places_manager import Manage
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
+from jormungandr.scenarios import new_default, distributed
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -429,6 +430,10 @@ class Journeys(JourneyCommon):
                 args['_final_line_filter'] = mod.final_line_filter
             if args.get('_max_extra_second_pass') is None:
                 args['_max_extra_second_pass'] = mod.max_extra_second_pass
+            if args.get('additional_time_after_first_section_taxi') is None:
+                args['additional_time_after_first_section_taxi'] = mod.additional_time_after_first_section_taxi
+            if args.get('additional_time_before_last_section_taxi') is None:
+                args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
@@ -481,6 +486,13 @@ class Journeys(JourneyCommon):
             if original_datetime:
                 new_datetime = self.convert_to_utc(original_datetime)
             args['datetime'] = date_to_timestamp(new_datetime)
+
+            scenario_name = i_manager.get_instance_scenario_name(self.region, args.get('_override_scenario'))
+
+            if scenario_name == "new_default" and (
+                "taxi" in args["origin_mode"] or "taxi" in args["destination_mode"]
+            ):
+                abort(400, message="taxi is not available with new_default scenario")
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 
