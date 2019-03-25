@@ -160,6 +160,9 @@ class Instance(object):
         self.equipment_providers_ids = instance_equipment_providers
         self.equipment_provider_manager = equipment_provider_manager
 
+        # Create only equipment providers defined in the instance
+        self.equipment_provider_manager.init_providers(self.equipment_providers_ids)
+
     @property
     def autocomplete(self):
         if self._autocomplete_type:

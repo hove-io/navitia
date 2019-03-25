@@ -30,6 +30,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from importlib import import_module
+from itertools import chain
+from navitiacommon import type_pb2
 
 import logging
 
@@ -41,12 +43,17 @@ class EquipmentProviderManager(object):
         self._equipment_providers_legacy = {}
         self._equipment_providers = {}
 
-        # TODO: create providers instance only if key is present in the Jormungandr instance config ?
-        for configuration in equipment_providers_configuration:
-            arguments = configuration.get('args', {})
-            self._equipment_providers_legacy[configuration['key']] = self._init_class(
-                configuration['class'], arguments
-            )
+    def init_providers(self, providers_keys):
+        """
+        Create equipment providers only if defined in the Jormungandr instance and not already created
+        :param providers_keys: list of providers defined in the instance
+        """
+        for provider in self.providers_config:
+            key = provider['key'].lower()
+            if key in providers_keys and key not in dict(
+                self._equipment_providers, **self._equipment_providers_legacy
+            ):
+                self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
 
     def _init_class(self, cls, arguments):
         """
@@ -55,7 +62,6 @@ class EquipmentProviderManager(object):
         :param arguments: parameters to set in the provider class
         :return: instance of provider
         """
-        # TODO: factorization with bss/car parking places ?
         try:
             if '.' not in cls:
                 self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
@@ -67,10 +73,29 @@ class EquipmentProviderManager(object):
         except ImportError:
             self.log.warn('impossible to build, cannot find class: {}'.format(cls))
 
-    def get_provider_by_key(self, provider_key):
+    def manage_equipments(self, response):
         """
-        :param provider_key: provider from instance configuration
-        :return: provider
+        Call equipment details provider to update response
+        :param response: the pb response received
+        :return: response: the pb response updated with equipment details
         """
-        # TODO: implement in an other PR
-        pass
+
+        def get_from_to_stop_points_of_journeys(journeys):
+            """
+            :param journeys: the pb journey response
+            :return: generator of stop points that can be 'origin' or 'destination'
+            """
+            places = chain(*[(s.origin, s.destination) for j in journeys for s in j.sections])
+            return (
+                place.stop_point
+                for place in places
+                if place.embedded_type == type_pb2.NavitiaType.Value('STOP_POINT')
+                and place.HasField('stop_point')
+            )
+
+        stop_points = get_from_to_stop_points_of_journeys(response.journeys)
+
+        for provider in dict(self._equipment_providers, **self._equipment_providers_legacy).values():
+            provider.get_informations(stop_points)
+
+        return response
