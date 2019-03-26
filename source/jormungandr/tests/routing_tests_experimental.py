@@ -349,3 +349,112 @@ class TestJourneysRidesharingDistributed(
         This feature is not supported
         """
         pass
+
+
+MOCKED_INSTANCE_CONF_TAXI = {
+    "scenario": "distributed",
+    "instance_config": {
+        "street_network": [
+            {
+                "modes": ["taxi"],
+                "class": "jormungandr.street_network.taxi.Taxi",
+                "args": {
+                    "street_network": {
+                        "class": "jormungandr.street_network.kraken.Kraken",
+                        "args": {"timeout": 10},
+                    }
+                },
+            }
+        ]
+    },
+}
+
+
+@dataset({"main_routing_test": MOCKED_INSTANCE_CONF_TAXI})
+class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_first_section_mode_taxi(self):
+        query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 1
+
+        taxi_direct = journeys[0]
+
+        assert taxi_direct.get('departure_date_time') == '20120614T075000'
+        assert taxi_direct.get('arrival_date_time') == '20120614T075007'
+        assert taxi_direct.get('duration') == 7
+        assert taxi_direct.get('durations').get("car") == 7
+        assert taxi_direct.get('durations').get("total") == 7
+        assert taxi_direct.get('distances').get("car") == 87
+
+        sections = taxi_direct.get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075000'
+        assert sections[0].get('arrival_date_time') == '20120614T075007'
+        assert sections[0].get('duration') == 7
+        assert sections[0].get('type') == 'street_network'
+
+        query += "&taxi_speed=0.15"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        taxi_direct = journeys[0]
+
+        assert taxi_direct.get('departure_date_time') == '20120614T075000'
+        assert taxi_direct.get('arrival_date_time') == '20120614T080051'
+        assert taxi_direct.get('duration') == 651
+        assert taxi_direct.get('durations').get("car") == 651
+        assert taxi_direct.get('durations').get("total") == 651
+        assert taxi_direct.get('distances').get("car") == 97
+        sections = taxi_direct.get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075000'
+        assert sections[0].get('arrival_date_time') == '20120614T080051'
+        assert sections[0].get('duration') == 651
+        assert sections[0].get('type') == 'street_network'
+
+        taxi_fallback = journeys[1]
+
+        assert taxi_fallback.get('departure_date_time') == '20120614T075355'
+        assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
+
+        sections = taxi_fallback.get('sections')
+        assert len(sections) == 4
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075355'
+        assert sections[0].get('arrival_date_time') == '20120614T075600'
+        assert sections[0].get('duration') == 125
+        assert sections[0].get('type') == 'street_network'
+
+        assert sections[1].get('departure_date_time') == '20120614T075600'
+        assert sections[1].get('arrival_date_time') == '20120614T080100'
+        assert sections[1].get('duration') == 300
+        assert sections[1].get('type') == 'waiting'
+
+        assert sections[2].get('departure_date_time') == '20120614T080100'
+        assert sections[2].get('arrival_date_time') == '20120614T080102'
+        assert sections[2].get('duration') == 2
+        assert sections[2].get('type') == 'public_transport'
+
+        assert sections[3].get('mode') == 'walking'
+        assert sections[3].get('departure_date_time') == '20120614T080102'
+        assert sections[3].get('arrival_date_time') == '20120614T080222'
+        assert sections[3].get('duration') == 80
+        assert sections[3].get('type') == 'street_network'
+
+        query += "&max_duration=0"
+        response = self.query_region(query)
+        # the pt journey is eliminated
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1

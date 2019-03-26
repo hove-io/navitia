@@ -147,7 +147,7 @@ class _PtJourneySorter(object):
     ("walking-walking").
     """
 
-    mode_weight = {"walking": 1, "bike": 100, "bss": 500, "car": 1000}
+    mode_weight = {"walking": 1, "bike": 100, "bss": 500, "car": 1000, "taxi": 1000}
 
     def __call__(self, a, b):
         a_weight = self.mode_weight.get(a.dep_mode) + self.mode_weight.get(a.dep_mode)
