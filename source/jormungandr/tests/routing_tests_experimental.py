@@ -221,6 +221,7 @@ class TestJourneysDistributed(
             "car": instance.car_speed,
             "bss": instance.bss_speed,
             "ridesharing": instance.car_no_park_speed,
+            "taxi": instance.taxi_speed,
         }
         request = {
             "walking_speed": instance.walking_speed,
@@ -228,6 +229,7 @@ class TestJourneysDistributed(
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
             "car_no_park_speed": instance.car_no_park_speed,
+            "taxi_speed": instance.taxi_speed,
         }
         resp = instance.get_street_network_routing_matrix(
             [origin], [destination], mode, max_duration, request, **kwargs

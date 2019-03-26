@@ -73,7 +73,6 @@ class TravelerProfilesSerializer(serpy.Serializer):
     bike_speed = Field(schema_type=float)
     bss_speed = Field(schema_type=float)
     car_speed = Field(schema_type=float)
-    taxi_speed = Field(schema_type=float)
     first_section_mode = StringListField()
     is_from_db = Field(schema_type=bool)
     last_section_mode = StringListField()
