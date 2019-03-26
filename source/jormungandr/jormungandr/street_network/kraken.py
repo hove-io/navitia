@@ -129,6 +129,7 @@ class Kraken(AbstractStreetNetworkService):
             "car": request['car_speed'],
             "bss": request['bss_speed'],
             "ridesharing": request['car_no_park_speed'],
+            "taxi": request['taxi_speed'],
         }
 
         # kraken can only manage 1-n request, so we reverse request if needed

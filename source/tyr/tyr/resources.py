@@ -372,6 +372,13 @@ class Instance(flask_restful.Resource):
             default=instance.car_no_park_speed,
         )
         parser.add_argument(
+            'taxi_speed',
+            type=float,
+            help='the speed of taxi',
+            location=('json', 'values'),
+            default=instance.taxi_speed,
+        )
+        parser.add_argument(
             'min_bike',
             type=int,
             help='minimum duration of bike fallback',
@@ -597,6 +604,7 @@ class Instance(flask_restful.Resource):
                     'bss_speed',
                     'car_speed',
                     'car_no_park_speed',
+                    'taxi_speed',
                     'min_bike',
                     'min_bss',
                     'min_car',

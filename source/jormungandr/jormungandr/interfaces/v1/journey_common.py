@@ -298,6 +298,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
+            "taxi_speed",
+            type=PositiveFloat(),
+            dest="taxi_speed",
+            help='taxi speed speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+        )
+        parser_get.add_argument(
             "forbidden_uris[]",
             type=six.text_type,
             action="append",

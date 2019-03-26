@@ -238,7 +238,7 @@ class FallbackDurationsPool(dict):
             "car": request["car_speed"],
             "bss": request["bss_speed"],
             "ridesharing": request["car_no_park_speed"],
-            "taxi": request["car_no_park_speed"],
+            "taxi": request["taxi_speed"],
         }
 
         self._value = {}

@@ -28,6 +28,7 @@
 # www.navitia.io
 
 import logging
+import copy
 import itertools
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils
@@ -57,8 +58,11 @@ class Taxi(AbstractStreetNetworkService):
     def _direct_path(
         self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
     ):
+
+        copy_request = copy.deepcopy(request)
+        copy_request["car_no_park_speed"] = copy_request["taxi_speed"]
         response = self.street_network._direct_path(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, copy_request, direct_path_type
         )
 
         if response and len(response.journeys):
@@ -69,7 +73,7 @@ class Taxi(AbstractStreetNetworkService):
                 # We don't add an addtional waiting section for direct_path
                 if direct_path_type != StreetNetworkPathType.DIRECT:
                     self._add_additional_section_in_direct_path(
-                        response, pt_object_origin, pt_object_destination, request, direct_path_type
+                        response, pt_object_origin, pt_object_destination, copy_request, direct_path_type
                     )
 
         return response
@@ -147,13 +151,16 @@ class Taxi(AbstractStreetNetworkService):
     def get_street_network_routing_matrix(
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
+
+        copy_request = copy.deepcopy(request)
+        copy_request["car_no_park_speed"] = copy_request["taxi_speed"]
         response = self.street_network.get_street_network_routing_matrix(
-            origins, destinations, street_network_mode, max_duration, request, **kwargs
+            origins, destinations, street_network_mode, max_duration, copy_request, **kwargs
         )
 
         if response and len(response.rows) and len(response.rows[0].routing_response):
             self._add_additional_time_in_routing_matrix(
-                response.rows[0].routing_response, origins, destinations, request
+                response.rows[0].routing_response, origins, destinations, copy_request
             )
 
         return response
