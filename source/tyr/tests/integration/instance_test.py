@@ -301,6 +301,7 @@ def test_update_instances_with_invalid_scenario(create_instance):
         "full_sn_geometries": True,
         "max_car_no_park_duration_to_pt": 2691,
         "car_no_park_speed": 2.42,
+        "taxi_speed": 2.77,
         "min_nb_journeys": 1,
         "max_nb_journeys": None,
         "min_journeys_calls": 2,
@@ -383,3 +384,15 @@ def test_update_forgotten_attributs_in_backend(create_instance):
     assert resp[0]['max_additional_connections'] == 3
     assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
     assert resp[0]['car_park_provider'] == False
+
+
+def test_update_taxi_speed(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['taxi_speed'] == 11.11
+
+    params = {'taxi_speed': 53.23}
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['taxi_speed'] == 53.23
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['taxi_speed'] == 53.23
