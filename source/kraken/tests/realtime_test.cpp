@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
         transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
 
     navitia::handle_realtime("feed-1", timestamp, delayed, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     auto res = compute("20190101T073000", "stop1", "stop2");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
         transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT);
 
     navitia::handle_realtime("feed-1", timestamp, back_to_normal, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     res = compute("20190101T073000", "stop1", "stop2");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2933,9 +2933,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
-    b.data->pt_data->clean_weak_impacts();
-    b.data->build_raptor(1);
+    b.finalize_disruption_batch();
 
     it_network = pt_data.networks_map.find(network_id);
     BOOST_REQUIRE(it_network != pt_data.networks_map.end());
@@ -3410,7 +3408,7 @@ BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_
 
     // the new trip update with bad id is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
 }
