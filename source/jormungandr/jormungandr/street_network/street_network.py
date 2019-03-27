@@ -80,9 +80,6 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         :param pt_object_destination:
         :return: bool
         """
-        if request['max_{}_direct_path_duration'.format(mode)] is None:
-            return False
-
         speed = utils.make_speed_switcher(request)[mode]
         orig_coord = utils.get_pt_object_coord(pt_object_origin)
         dest_coord = utils.get_pt_object_coord(pt_object_destination)

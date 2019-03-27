@@ -313,15 +313,13 @@ def _make_test(mode):
         assert mode in response['journeys'][0]['tags']
         assert 'non_pt' in response['journeys'][0]['tags']
 
-        direct_path_duration = response['journeys'][0]['durations'][mode]
+        direct_path_duration = response['journeys'][0]['duration']
 
         query = (
             journey_basic_query
             + '&first_section_mode[]={mode}'
-            + '&walking_speed=1'
             + '&max_{mode}_direct_path_duration={max_dp_duration}'
             + '&max_duration=0'
-            + '&bss_speed=1'
             + '&datetime=20120614T075500'
             + '&debug=true'
         ).format(mode=mode, max_dp_duration=direct_path_duration - 1)
