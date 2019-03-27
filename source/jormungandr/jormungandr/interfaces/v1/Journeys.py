@@ -362,9 +362,7 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
-        # the limit of ridesharing doesn't make sense, since the ridesharing offer is obtained a posteriori,
-        # the duration is not handled
-        for mode in FallbackModes.modes_str() - {FallbackModes.ridesharing.name}:
+        for mode in FallbackModes.modes_str():
             parser_get.add_argument(
                 "max_{}_direct_path_duration".format(mode),
                 type=int,
@@ -445,21 +443,16 @@ class Journeys(JourneyCommon):
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
-            for mode in FallbackModes.modes_str() - {FallbackModes.ridesharing.name, FallbackModes.taxi.name}:
+            for mode in ('walking', 'car', 'bike', 'bss'):
                 nb_crowfly = args.get('_max_nb_crowfly_by_{}'.format(mode))
                 if nb_crowfly is not None:
                     args['max_nb_crowfly_by_mode'][mode] = nb_crowfly
-            args['max_nb_crowfly_by_mode'][FallbackModes.ridesharing.name] = args['max_nb_crowfly_by_mode'][
-                FallbackModes.taxi.name
-            ] = args['max_nb_crowfly_by_mode'][FallbackModes.car.name]
 
             # activated only for distributed
             for mode in FallbackModes.modes_str():
                 tmp = 'max_{}_direct_path_duration'.format(mode)
                 if args.get(tmp) is None:
                     args[tmp] = getattr(mod, tmp)
-
-            # TODO
 
         if region:
             _set_specific_params(i_manager.instances[region])
