@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr import cache, app
+from jormungandr import cache, app, new_relic
 from navitiacommon import type_pb2
 from dateutil import parser
 from jormungandr.utils import date_to_timestamp
@@ -37,6 +37,8 @@ from jormungandr.utils import date_to_timestamp
 import pybreaker
 import logging
 import jmespath
+import requests as requests
+import json
 
 SYTRAL_TYPE_PREFIX = "TCL_"
 
@@ -47,7 +49,7 @@ class SytralProvider(object):
     """
 
     def __init__(self, url, timeout=2, **kwargs):
-        self.url = url + '/equipments'
+        self.url = url
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
@@ -70,11 +72,30 @@ class SytralProvider(object):
         """
         Call equipments webservice with URL defined in settings
         :return: data received from the webservice
-
-        NOTE: CALL TO ACTUAL WEBSERVICE WILL BE DONE WHEN IT WILL BE AVAILABLE (NAVP-1231)
         """
         logging.getLogger(__name__).debug('sytralRT RT service , call url : {}'.format(self.url))
-        pass
+        result = None
+        try:
+            result = self.breaker.call(requests.get, url=self.url, timeout=self.timeout)
+            self.record_call("OK")
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('Service SytralRT is dead (error: {})'.format(e))
+            self.record_call('failure', reason='circuit breaker open')
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('SytralRT service timeout (error: {})'.format(t))
+            self.record_call('failure', reason='timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception('SytralRT service error: {}'.format(e))
+            self.record_call('failure', reason=str(e))
+        return result
+
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'parking_system_id': "SytralRT", 'dataset': "sytral", 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('parking_status', params)
 
     def _process_data(self, data, stop_points_list):
         """
@@ -86,7 +107,7 @@ class SytralProvider(object):
             for code in st.codes:
                 if SYTRAL_TYPE_PREFIX in code.type:
                     equipments_list = jmespath.search(
-                        'equipments_details[?to_number(id)==`{}`]'.format(code.value), data
+                        "equipments_details[?id=='{}']".format(code.value), json.loads(data.content)
                     )
 
                     if equipments_list:
