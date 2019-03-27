@@ -2905,6 +2905,83 @@ struct AddTripDataset {
     std::string dataset_uri;
 };
 
+
+BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    const std::string network_id = "network:additional_service";
+    auto it_network = pt_data.networks_map.find(network_id);
+    BOOST_CHECK(it_network == pt_data.networks_map.end());
+    const std::string cm_id = "commercial_mode:additional_service";
+    auto it_cm = pt_data.commercial_modes_map.find(cm_id);
+    BOOST_CHECK(it_cm == pt_data.commercial_modes_map.end());
+    const std::string line_id = "line:additional_service";
+    auto it_line = pt_data.lines_map.find(line_id);
+    BOOST_CHECK(it_line == pt_data.lines_map.end());
+    const std::string route_id = "route:additional_service";
+    auto it_route = pt_data.routes_map.find(route_id);
+    BOOST_CHECK(it_route == pt_data.routes_map.end());
+
+    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+        "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
+        comp_uri,
+        phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
+    b.data->pt_data->clean_weak_impacts();
+    b.data->build_raptor(1);
+
+    it_network = pt_data.networks_map.find(network_id);
+    BOOST_REQUIRE(it_network != pt_data.networks_map.end());
+    const nt::Network* network = it_network->second;
+    it_cm = pt_data.commercial_modes_map.find(cm_id);
+    BOOST_REQUIRE(it_cm != pt_data.commercial_modes_map.end());
+    const nt::CommercialMode* cm = it_cm->second;
+    it_line = pt_data.lines_map.find(line_id);
+    BOOST_REQUIRE(it_line != pt_data.lines_map.end());
+    const nt::Line* line = it_line->second;
+    it_route = pt_data.routes_map.find(route_id);
+    BOOST_REQUIRE(it_route != pt_data.routes_map.end());
+    const nt::Route* route = it_route->second;
+
+    // check links
+    BOOST_CHECK_EQUAL(network->line_list.front(), line);
+    BOOST_CHECK_EQUAL(line->network, network);
+    BOOST_CHECK_EQUAL(cm->line_list.front(), line);
+    BOOST_CHECK_EQUAL(line->commercial_mode, cm);
+    BOOST_CHECK_EQUAL(line->route_list.front(), route);
+    BOOST_CHECK_EQUAL(route->line, line);
+
+    // check indexes
+    BOOST_CHECK_EQUAL(pt_data.networks[network->idx], network);
+    BOOST_CHECK_EQUAL(pt_data.commercial_modes[cm->idx], cm);
+    BOOST_CHECK_EQUAL(pt_data.lines[line->idx], line);
+    BOOST_CHECK_EQUAL(pt_data.routes[route->idx], route);
+
+    // check uris
+    BOOST_CHECK_EQUAL(network->uri, network_id);
+    BOOST_CHECK_EQUAL(cm->uri, cm_id);
+    BOOST_CHECK_EQUAL(line->uri, line_id);
+    BOOST_CHECK_EQUAL(route->uri, route_id);
+
+    // check names
+    BOOST_CHECK_EQUAL(network->name, "additional service");
+    BOOST_CHECK_EQUAL(cm->name, "additional service");
+    BOOST_CHECK_EQUAL(line->name, "additional service");
+    BOOST_CHECK_EQUAL(route->name, "additional service");
+
+    BOOST_CHECK(route->destination == nullptr); // this will change, but it's not mandatory to have a destination
+}
+
+
 BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
 
     using year = navitia::type::ValidityPattern::year_bitset;
