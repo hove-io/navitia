@@ -304,7 +304,7 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
-def _make_test(mode):
+def _make_function(mode):
     def test_max_mode_direct_path_duration(self):
         query = (journey_basic_query + '&first_section_mode[]={mode}' + '&max_duration=0').format(mode=mode)
         response = self.query_region(query)
@@ -334,10 +334,10 @@ def _make_test(mode):
 @dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
 
-    test_max_walking_direct_path_duration = _make_test('walking')
-    test_max_car_direct_path_duration = _make_test('car')
-    test_max_bss_direct_path_duration = _make_test('bss')
-    test_max_bike_direct_path_duration = _make_test('bike')
+    test_max_walking_direct_path_duration = _make_function('walking')
+    test_max_car_direct_path_duration = _make_function('car')
+    test_max_bss_direct_path_duration = _make_function('bss')
+    test_max_bike_direct_path_duration = _make_function('bike')
 
 
 @config(
