@@ -76,7 +76,8 @@ class SytralProvider(object):
         logging.getLogger(__name__).debug('sytralRT RT service , call url : {}'.format(self.url))
         result = None
         try:
-            result = self.breaker.call(requests.get, url=self.url, timeout=self.timeout)
+            response = self.breaker.call(requests.get, url=self.url, timeout=self.timeout)
+            result = response.json()
             self.record_call("OK")
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Service SytralRT is dead (error: {})'.format(e))
@@ -106,9 +107,7 @@ class SytralProvider(object):
         for st in stop_points_list:
             for code in st.codes:
                 if SYTRAL_TYPE_PREFIX in code.type:
-                    equipments_list = jmespath.search(
-                        "equipments_details[?id=='{}']".format(code.value), json.loads(data.content)
-                    )
+                    equipments_list = jmespath.search("equipments_details[?id=='{}']".format(code.value), data)
 
                     if equipments_list:
                         equipment = equipments_list[0]
