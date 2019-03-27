@@ -128,13 +128,13 @@ additional_time_after_first_section_taxi = 5 * 60
 # Additionnal time in second before the taxi section when used as last section mode
 additional_time_before_last_section_taxi = 5 * 60
 
-max_walking_direct_path_duration = 60 * 60
+max_walking_direct_path_duration = 3 * 60 * 60
 
-max_bike_direct_path_duration = 2 * 60 * 60
+max_bike_direct_path_duration = 3 * 60 * 60
 
-max_bss_direct_path_duration = 2 * 60 * 60
+max_bss_direct_path_duration = 3 * 60 * 60
 
-max_car_direct_path_duration = 2 * 60 * 60
+max_car_direct_path_duration = 3 * 60 * 60
 
 max_taxi_direct_path_duration = 2 * 60 * 60
 

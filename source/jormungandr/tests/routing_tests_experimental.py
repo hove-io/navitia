@@ -304,6 +304,44 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
+def _make_test(mode):
+    def test_max_mode_direct_path_duration(self):
+        query = (journey_basic_query + '&first_section_mode[]={mode}' + '&max_duration=0').format(mode=mode)
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert mode in response['journeys'][0]['tags']
+        assert 'non_pt' in response['journeys'][0]['tags']
+
+        direct_path_duration = response['journeys'][0]['durations'][mode]
+
+        query = (
+            journey_basic_query
+            + '&first_section_mode[]={mode}'
+            + '&walking_speed=1'
+            + '&max_{mode}_direct_path_duration={max_dp_duration}'
+            + '&max_duration=0'
+            + '&bss_speed=1'
+            + '&datetime=20120614T075500'
+            + '&debug=true'
+        ).format(mode=mode, max_dp_duration=direct_path_duration - 1)
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert 'deleted_because_too_long_direct_path' in response['journeys'][0]['tags']
+
+    return test_max_mode_direct_path_duration
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+
+    test_max_walking_direct_path_duration = _make_test('walking')
+    test_max_car_direct_path_duration = _make_test('car')
+    test_max_bss_direct_path_duration = _make_test('bss')
+    test_max_bike_direct_path_duration = _make_test('bike')
+
+
 @config(
     {
         "scenario": "distributed",

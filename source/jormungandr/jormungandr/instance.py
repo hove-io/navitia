@@ -112,7 +112,7 @@ def _make_property_getter(attr_name):
     def _getter(self):
         return get_value_or_default(attr_name, self.get_models(), self.name)
 
-    return _getter
+    return property(_getter)
 
 
 class Instance(object):
@@ -482,14 +482,12 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('taxi_speed', instance_db, self.name)
 
-    max_walking_direct_path_duration = property(_make_property_getter('max_walking_direct_path_duration'))
-    max_bike_direct_path_duration = property(_make_property_getter('max_bike_direct_path_duration'))
-    max_bss_direct_path_duration = property(_make_property_getter('max_bss_direct_path_duration'))
-    max_car_direct_path_duration = property(_make_property_getter('max_car_direct_path_duration'))
-    max_taxi_direct_path_duration = property(_make_property_getter('max_taxi_direct_path_duration'))
-    max_ridesharing_direct_path_duration = property(
-        _make_property_getter('max_ridesharing_direct_path_duration')
-    )
+    max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
+    max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
+    max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')
+    max_car_direct_path_duration = _make_property_getter('max_car_direct_path_duration')
+    max_taxi_direct_path_duration = _make_property_getter('max_taxi_direct_path_duration')
+    max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 
     def reap_socket(self, ttl):
         # type: (int) -> None

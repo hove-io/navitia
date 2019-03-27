@@ -326,6 +326,15 @@ class FilterTooLongDirectPath(SingleJourneyFilter):
     def __init__(self, instance, request):
         self.instance = instance
         self.request = request
+        self.logger = logging.getLogger(__name__)
+
+    def _get_mode_of_journey(self, journey):
+        mode = FallbackModes.modes_str() & set(journey.tags)
+        if len(mode) != 1:
+            self.logger.error('Cannot determine the mode of direct path: {}'.format(mode))
+            return None
+
+        return next(iter(mode))
 
     def filter_func(self, journey):
         """
@@ -334,21 +343,20 @@ class FilterTooLongDirectPath(SingleJourneyFilter):
         # we filter only direct path
         if 'non_pt' not in journey.tags:
             return True
-        logger = logging.getLogger(__name__)
+
+        direct_path_mode = self._get_mode_of_journey(journey)
 
         # TODO: Add taxi into the protobuf
-        for mode in FallbackModes.modes_str():
-            # the try-except is used to cover the case when mode is not (yet) set in protobuf
-            try:
-                if journey.durations.HasField(mode):
-                    duration = getattr(journey.durations, mode)
-                    attr_name = 'max_{}_direct_path_duration'.format(mode)
-                    max_duration = self.request[attr_name]
-                    if duration > max_duration:
-                        return False
-            except ValueError:
-                logger.warning("journey durations don't have {}".format(mode))
-
+        # the try-except is used to cover the case when mode is not (yet) set in protobuf
+        try:
+            # this line may raise exception if mode is not set
+            if journey.durations.HasField(direct_path_mode):
+                attr_name = 'max_{}_direct_path_duration'.format(direct_path_mode)
+                max_duration = self.request[attr_name]
+                if journey.duration > max_duration:
+                    return False
+        except ValueError:
+            self.logger.warning("journey durations don't have {}".format(direct_path_mode))
         else:
             return True
 
