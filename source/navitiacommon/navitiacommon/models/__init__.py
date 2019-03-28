@@ -33,14 +33,11 @@ from __future__ import absolute_import
 import uuid
 import re
 from navitiacommon.sqlalchemy import SQLAlchemy
-from geoalchemy2.types import Geography
-from flask import current_app
-from sqlalchemy.orm import load_only, backref, aliased
+from sqlalchemy.orm import backref
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
-from navitiacommon.utils import street_source_types
 
 from navitiacommon import default_values
 import os
@@ -787,3 +784,4 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 
 # import at the end to prevent circular dependencies
 from navitiacommon.models.bss_provider import BssProvider
+from navitiacommon.models.equipments_providers import EquipmentsProvider
