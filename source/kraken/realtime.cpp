@@ -636,7 +636,7 @@ void handle_realtime(const std::string& id,
             // TODO : pick a meaningful TZ
             meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
         } else if (is_cancelled_trip(trip_update)) {
-            LOG4CPLUS_DEBUG(log, "Can't cancelled a trip that doesn't exist: ignoring trip update id "
+            LOG4CPLUS_DEBUG(log, "Can't cancel a trip that doesn't exist: ignoring trip update id "
                     << trip_update.trip().trip_id());
             return;
         } else {
