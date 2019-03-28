@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
-    auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
+    auto trip_update = ntest::make_trip_update_message("vj:1", "20120616", {
             ntest::RTStopTime("stop1", "20120617T0005"_pts).delay(65_min),
             ntest::RTStopTime("stop2", "20120617T0105"_pts).delay(55_min),
             ntest::RTStopTime("stop3", "20120617T0205"_pts).delay(80_min),
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
 
-    auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
+    auto trip_update = ntest::make_trip_update_message("vj:1", "20120616", {
             ntest::RTStopTime("stop1", "20120617T2300"_pts).delay(24_h),
             ntest::RTStopTime("stop2", "20120618T0005"_pts).delay(23_h + 50_min),
             ntest::RTStopTime("stop3", "20120618T0100"_pts).delay(24_h),
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
 
     BOOST_REQUIRE_EQUAL(vj->shift, 1);
 
-    auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
+    auto trip_update = ntest::make_trip_update_message("vj:1", "20120616", {
             ntest::RTStopTime("stop2", "20120618T0015"_pts).delay(48_h),
             ntest::RTStopTime("stop3", "20120618T0100"_pts).delay(48_h),
         });
