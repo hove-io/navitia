@@ -151,6 +151,15 @@ class InstanceManager(object):
             logger = logging.getLogger(__name__)
             logger.exception('there seem to be some kind of problems with the cache')
 
+    def get_instance_scenario_name(self, instance_name, override_scenario):
+        if override_scenario:
+            return override_scenario
+
+        instance = self.instances[instance_name]
+        instance_db = instance.get_models()
+        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        return scenario_name
+
     def dispatch(self, arguments, api, instance_name=None):
         if instance_name not in self.instances:
             raise RegionNotFound(instance_name)

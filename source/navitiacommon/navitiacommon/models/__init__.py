@@ -324,6 +324,8 @@ class Instance(db.Model):  # type: ignore
 
     car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)
 
+    taxi_speed = db.Column(db.Float, default=default_values.taxi_speed, nullable=False)
+
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
     min_bike = db.Column(db.Integer, default=default_values.min_bike, nullable=False)

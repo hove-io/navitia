@@ -56,6 +56,8 @@ car_speed = 11.11
 
 car_no_park_speed = 6.94  # 25km/h
 
+taxi_speed = 11.11  # same as car_speed
+
 max_nb_transfers = 10
 
 journey_order = 'arrival_time'

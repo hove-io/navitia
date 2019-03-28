@@ -446,6 +446,24 @@ class Instance(object):
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
+    @property
+    def additional_time_after_first_section_taxi(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('additional_time_after_first_section_taxi', instance_db, self.name)
+
+    @property
+    def additional_time_before_last_section_taxi(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('additional_time_before_last_section_taxi', instance_db, self.name)
+
+    @property
+    def taxi_speed(self):
+        # type: () -> float
+        instance_db = self.get_models()
+        return get_value_or_default('taxi_speed', instance_db, self.name)
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':

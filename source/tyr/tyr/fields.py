@@ -99,6 +99,7 @@ instance_fields = {
     'bss_speed': fields.Raw,
     'car_speed': fields.Raw,
     'car_no_park_speed': fields.Raw,
+    'taxi_speed': fields.Raw,
     'min_bike': fields.Raw,
     'min_bss': fields.Raw,
     'min_car': fields.Raw,

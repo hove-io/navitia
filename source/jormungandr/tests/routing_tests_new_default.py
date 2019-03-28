@@ -402,3 +402,12 @@ class TestNewDefaultWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultSce
 @config({"scenario": "new_default"})
 class TestNewDefaultTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
     pass
+
+
+@dataset({"main_routing_test": {"scenario": "new_default"}})
+class TestTaxiNewDefault(NewDefaultScenarioAbstractTestFixture):
+    def test_taxi_with_new_default(self):
+        query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "taxi is not available with new_default scenario" in response[0]['message']
