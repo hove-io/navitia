@@ -65,7 +65,7 @@ class Taxi(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, copy_request, direct_path_type
         )
 
-        if response and len(response.journeys):
+        if response:
             for journey in response.journeys:
                 for section in journey.sections:
                     section.street_network.mode = response_pb2.Taxi
@@ -158,7 +158,7 @@ class Taxi(AbstractStreetNetworkService):
             origins, destinations, street_network_mode, max_duration, copy_request, **kwargs
         )
 
-        if response and len(response.rows) and len(response.rows[0].routing_response):
+        if response and len(response.rows):
             self._add_additional_time_in_routing_matrix(
                 response.rows[0].routing_response, origins, destinations, copy_request
             )
