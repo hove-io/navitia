@@ -63,15 +63,9 @@ static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
 make_cancellation_message(const std::string& vj_uri, const std::string& date) {
-    transit_realtime::TripUpdate trip_update;
-    auto trip = trip_update.mutable_trip();
-    trip->set_trip_id(vj_uri);
-    trip->set_start_date(date);
-    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
-    trip->SetExtension(kirin::contributor, "cow.owner");
-    trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
-    trip_update.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE);
-    return trip_update;
+    return ntest::make_trip_update_message(vj_uri, date, {},
+                                           transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE,
+                                           "", "", "cow.owner", "cow on the tracks");
 }
 
 static pbnavitia::Response compute_iti(
