@@ -82,7 +82,9 @@ api.add_resource(
 
 api.add_resource(resources.BssProvider, '/v0/bss_providers', '/v0/bss_providers/<string:id>')
 
-api.add_resource(resources.EquipmentsProvider, '/v0/equipments_providers', '/v0/equipments_providers/<string:id>')
+api.add_resource(
+    resources.EquipmentsProvider, '/v0/equipments_providers', '/v0/equipments_providers/<string:id>'
+)
 
 # TODO: Find a way to handle GET on an URL and POST to another in one class
 api.add_resource(resources.CitiesStatus, '/v0/cities/status')

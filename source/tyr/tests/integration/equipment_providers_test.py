@@ -43,7 +43,7 @@ def default_config():
         sytral = models.EquipmentsProvider('sytral')
         sytral.instances = ['sytral_instance']
         sytral.klass = 'sytral.klass'
-        sytral.args = { 'url': 'http://sytral.url', 'fail_max': 5, 'timeout': 2}
+        sytral.args = {'url': 'http://sytral.url', 'fail_max': 5, 'timeout': 2}
         models.db.session.add(sytral)
 
         sytral2 = models.EquipmentsProvider('sytral2')
@@ -91,17 +91,14 @@ def test_equipments_provider_put(default_config):
     new_provider = {
         'class': 'jormungandr.equipments.sytral.SytralProvider',
         'key': 'sytral3',
-        'instances': [
-            'fr-se-lyon'
-        ],
-        'args': {
-            'url': 'sytral3.url',
-            'fail_max': 5,
-            'timeout': 1
-        }
+        'instances': ['fr-se-lyon'],
+        'args': {'url': 'sytral3.url', 'fail_max': 5, 'timeout': 1},
     }
     resp, status = api_put(
-        'v0/equipments_providers/sytral3', data=ujson.dumps(new_provider), content_type='application/json', check=False
+        'v0/equipments_providers/sytral3',
+        data=ujson.dumps(new_provider),
+        content_type='application/json',
+        check=False,
     )
     assert status == 201
     assert 'message' in resp
@@ -114,7 +111,8 @@ def test_equipments_provider_put(default_config):
     # Update existing provider
     new_provider['args']['url'] = 'sytral3.url.update'
     resp = api_put(
-        'v0/equipments_providers/sytral3', data=ujson.dumps(new_provider), content_type='application/json')
+        'v0/equipments_providers/sytral3', data=ujson.dumps(new_provider), content_type='application/json'
+    )
     assert 'message' in resp
     assert resp['message'] == 'Provider sytral3 from db is updated'
 

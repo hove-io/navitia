@@ -1813,6 +1813,7 @@ class EquipmentsProvider(flask_restful.Resource):
         """
         Create or update an equipment provider in db
         """
+
         def _validate_input(json_data):
             """
             Check that the data received contains all required info
