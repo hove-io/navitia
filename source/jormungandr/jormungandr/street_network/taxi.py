@@ -70,15 +70,16 @@ class Taxi(AbstractStreetNetworkService):
                 for section in journey.sections:
                     section.street_network.mode = response_pb2.Taxi
 
-                # We don't add an addtional waiting section for direct_path
+                # We don't add an additional waiting section for direct_path
+                # Only for fallback
                 if direct_path_type != StreetNetworkPathType.DIRECT:
-                    self._add_additional_section_in_direct_path(
+                    self._add_additional_section_in_fallback(
                         response, pt_object_origin, pt_object_destination, copy_request, direct_path_type
                     )
 
         return response
 
-    def _add_additional_section_in_direct_path(
+    def _add_additional_section_in_fallback(
         self, response, pt_object_origin, pt_object_destination, request, direct_path_type
     ):
         logger = logging.getLogger(__name__)
