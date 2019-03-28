@@ -240,3 +240,14 @@ bss_provider_fields = {
     'discarded': fields.Raw,
 }
 bss_provider_list_fields = {'bss_providers': fields.List(fields.Nested(bss_provider_fields))}
+
+equipment_provider_fields = {
+    'id': fields.Raw,
+    'instances': fields.List(fields.String),
+    'klass': fields.Raw,
+    'args': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'discarded': fields.Raw,
+}
+equipment_provider_list_fields = {'equipments_providers': fields.List(fields.Nested(equipment_provider_fields))}

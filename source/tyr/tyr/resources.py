@@ -45,7 +45,7 @@ import os
 import shutil
 import json
 from jsonschema import validate, ValidationError
-from tyr.formats import poi_type_conf_format, parse_error
+from tyr.formats import poi_type_conf_format, parse_error, equipments_provider_format
 from navitiacommon.default_traveler_profile_params import (
     default_traveler_profile_params,
     acceptable_traveler_types,
@@ -1791,6 +1791,73 @@ class BssProvider(flask_restful.Resource):
             abort(400, status="error", message='id is required')
         try:
             provider = models.BssProvider.find_by_id(id)
+            provider.discarded = True
+            models.db.session.commit()
+            return None, 204
+        except sqlalchemy.orm.exc.NoResultFound:
+            abort(404, status="error", message='object not found')
+
+
+class EquipmentsProvider(flask_restful.Resource):
+    @marshal_with(equipment_provider_list_fields)
+    def get(self, id=None):
+        if id:
+            try:
+                return {'equipments_providers': [models.EquipmentsProvider.find_by_id(id)]}
+            except sqlalchemy.orm.exc.NoResultFound:
+                return {'equipments_providers': []}, 404
+        else:
+            return {'equipments_providers': models.EquipmentsProvider.all()}
+
+    def put(self, id=None):
+        """
+        Create or update an equipment provider in db
+        """
+        def _validate_input(json_data):
+            """
+            Check that the data received contains all required info
+            :param json_data: data received in request
+            """
+            try:
+                validate(json_data, equipments_provider_format)
+            except ValidationError as e:
+                abort(400, status="error", message='{}'.format(parse_error(e)))
+
+        if not id:
+            abort(400, status="error", message='id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        _validate_input(input_json)
+        message = {"message": ""}
+        try:
+            provider = models.EquipmentsProvider.find_by_id(id)
+            status = 200
+            message["message"] = "Provider {} from db is updated".format(id)
+        except sqlalchemy.orm.exc.NoResultFound:
+            provider = models.EquipmentsProvider(id)
+            models.db.session.add(provider)
+            message["message"] = "Provider {} is created".format(id)
+            status = 201
+
+        provider.from_json(input_json)
+        try:
+            models.db.session.commit()
+        except sqlalchemy.exc.IntegrityError as ex:
+            abort(400, status="error", message=str(ex))
+        return message, status
+
+    def delete(self, id=None):
+        """
+        Delete an equipment provider in db, i.e. set parameter DISCARDED to TRUE
+        """
+        if not id:
+            abort(400, status="error", message='id is required')
+        try:
+            provider = models.EquipmentsProvider.find_by_id(id)
             provider.discarded = True
             models.db.session.commit()
             return None, 204
