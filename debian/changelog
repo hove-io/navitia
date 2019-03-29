@@ -1,3 +1,14 @@
+navitia2 (2.76.0) unstable; urgency=low
+
+  * [doc] Update line_sections.md  <https://github.com/CanalTP/navitia/pull/2727>
+  * [ALL] Adding taxi mode  <https://github.com/CanalTP/navitia/pull/2723>
+  * [Jormun] Make call to SytralRT's equipments details webservice  <https://github.com/CanalTP/navitia/pull/2725>
+  * [Jormun] Allow more fallback combinations  <https://github.com/CanalTP/navitia/pull/2716>
+  * [Jormungandr] Manage equipment providers  <https://github.com/CanalTP/navitia/pull/2713>
+  * [Jormun] Properly linking fallback to pt in distributed  <https://github.com/CanalTP/navitia/pull/2714>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 29 Mar 2019 15:03:41 +0100
+
 navitia2 (2.75.0) unstable; urgency=low
 
   * Jormun: Add equipment details provider configuration mechanism  <https://github.com/CanalTP/navitia/pull/2706>
