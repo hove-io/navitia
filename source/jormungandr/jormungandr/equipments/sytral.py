@@ -38,7 +38,6 @@ import pybreaker
 import logging
 import jmespath
 import requests as requests
-import json
 
 SYTRAL_TYPE_PREFIX = "TCL_"
 
@@ -48,14 +47,11 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, **kwargs):
+    def __init__(self, url, **kwargs):
         self.url = url
-        self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
-            reset_timeout=kwargs.get(
-                'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S']
-            ),
+            fail_max=kwargs.get('fail_max', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
+            reset_timeout=kwargs.get('timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S']),
         )
 
     def get_informations(self, stop_points_list):
