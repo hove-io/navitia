@@ -65,5 +65,8 @@ type::Indexes get_indexes_from_id(const type::Type_e type,
 type::Indexes get_indexes_from_name(const type::Type_e type,
                                     const std::string& name,
                                     const type::Data& data);
+type::Indexes get_indexes_from_codes(const type::Type_e type,
+                                     const std::string& key,
+                                     const type::Data& data);
 
 }} // navitia::ptref

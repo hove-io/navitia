@@ -558,6 +558,46 @@ BOOST_AUTO_TEST_CASE(code_request) {
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"A"}));
 }
 
+BOOST_AUTO_TEST_CASE(code_type_request){
+    ed::builder b("20190101");
+    b.sa("sa_1");
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.make();
+
+    // Add codes on stop point
+    const auto* sp = b.get<nt::StopPoint>("stop1");
+    b.data->pt_data->codes.add(sp, "code_type_1", "0");
+    b.data->pt_data->codes.add(sp, "code_type_1", "1");
+    sp = b.get<nt::StopPoint>("stop3");
+    b.data->pt_data->codes.add(sp, "code_type_1", "0");
+    b.data->pt_data->codes.add(sp, "code_type_1", "1");
+    sp = b.get<nt::StopPoint>("stop2");
+    b.data->pt_data->codes.add(sp, "code_type_2", "0");
+    sp = b.get<nt::StopPoint>("stop4");
+    b.data->pt_data->codes.add(sp, "code_type_2", "1");
+
+    // Add codes on stop area
+    const auto* sa = b.get<nt::StopArea>("sa_1");
+    b.data->pt_data->codes.add(sa, "code_type_1", "0");
+
+    auto res = make_query(nt::Type_e::StopPoint,
+                          R"(stop_point.has_code_type(code_type_1))",
+                          *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop1", "stop3"}));
+
+    res = make_query(nt::Type_e::StopPoint,
+                     R"(stop_point.has_code_type(code_type_2))",
+                     *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop2", "stop4"}));
+
+    res = make_query(nt::Type_e::StopArea,
+                     R"(stop_area.has_code_type(code_type_1))",
+                     *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"sa_1"}));
+}
+
+
 BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
