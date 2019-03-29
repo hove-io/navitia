@@ -3427,7 +3427,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         return  pb_creator.get_response();
     };
 
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3440,7 +3440,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -3456,7 +3456,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
 
-    new_trip = ntest::make_delay_message("vj_new_trip_2",
+    new_trip = ntest::make_trip_update_message("vj_new_trip_2",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3469,7 +3469,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-2", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -3486,7 +3486,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
 
-    transit_realtime::TripUpdate remove_new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate remove_new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0900"_pts),
@@ -3499,7 +3499,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // trip from A to G is now removed
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
@@ -3517,7 +3517,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
 
     // Send the same GTFS-RT. Have to reject it because id doesn't exist.
-    remove_new_trip = ntest::make_delay_message("vj_new_trip",
+    remove_new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0900"_pts),
@@ -3530,7 +3530,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
@@ -3550,7 +3550,7 @@ BOOST_FIXTURE_TEST_CASE(cant_cancel_trip_that_doesnt_exist, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 1);
 
     // Can't cancel trip that doesn't exist
-    transit_realtime::TripUpdate remove_trip = ntest::make_delay_message("vj_id_doesnt_exist",
+    transit_realtime::TripUpdate remove_trip = ntest::make_trip_update_message("vj_id_doesnt_exist",
         "20190101",
         {
             RTStopTime("stop_point:X", "20190101T0900"_pts),
@@ -3563,7 +3563,7 @@ BOOST_FIXTURE_TEST_CASE(cant_cancel_trip_that_doesnt_exist, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
