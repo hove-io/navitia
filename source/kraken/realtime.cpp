@@ -636,8 +636,13 @@ void handle_realtime(const std::string& id,
             // TODO : pick a meaningful TZ
             meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
         } else {
-            LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
-                    << trip_update.trip().trip_id());
+            LOG4CPLUS_WARN(log, "Cannot perform operation on an unknown Meta VJ (other than adding trip)"
+                    << ", trip id: " << trip_update.trip().trip_id()
+                    << ", effect: " << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
+            if (trip_update.stop_time_update_size()) {
+                LOG4CPLUS_WARN(log, "Meta VJ 1st stop time departure: "
+                    << trip_update.stop_time_update(0).departure().time());
+            }
             return;
         }
     } else {
