@@ -70,6 +70,9 @@ def clean_db():
 
 
 def test_equipments_provider_get(default_config):
+    """
+    Test that the list of providers with their info is correctly returned when queried
+    """
     sytral_provider, sytral2_provider = default_config
     resp = api_get('/v0/equipments_providers')
     assert 'equipments_providers' in resp
@@ -86,6 +89,9 @@ def test_equipments_provider_get(default_config):
 
 
 def test_equipments_provider_put(default_config):
+    """
+    Test that a provider is correctly created/updated in db and the info returned when queried
+    """
 
     # Create new provider
     new_provider = {
@@ -123,6 +129,9 @@ def test_equipments_provider_put(default_config):
 
 
 def test_equipments_provider_delete(default_config):
+    """
+    Test that a 'deleted' provider isn't returned when querying all providers, and that its 'discarded' parameter is set to True
+    """
     resp = api_get('/v0/equipments_providers')
     assert 'equipments_providers' in resp
     assert len(resp['equipments_providers']) == 2
@@ -138,3 +147,39 @@ def test_equipments_provider_delete(default_config):
     assert 'equipments_providers' in resp
     assert len(resp['equipments_providers']) == 1
     assert resp['equipments_providers'][0]['discarded']
+
+
+def test_equipments_provider_schema():
+    """
+    Test that a provider isn't created in db when missing required parameters
+    """
+
+    def send_and_check(json_data, missing_param):
+        resp, status = api_put(
+            'v0/equipments_providers/sytral3',
+            data=ujson.dumps(json_data),
+            content_type='application/json',
+            check=False,
+        )
+        assert status == 400
+        assert 'message' in resp
+        assert resp['message'] == "'{}' is a required property".format(missing_param)
+        assert 'status' in resp
+        assert resp['status'] == "invalid data"
+
+    # 'instances' is missing
+    corrupted_provider = {
+        'class': 'jormungandr.equipments.sytral.SytralProvider',
+        'key': 'sytral',
+        'args': {'url': 'sytral.url', 'fail_max': 5, 'timeout': 1},
+    }
+    send_and_check(corrupted_provider, 'instances')
+
+    # args['url'] is missing
+    corrupted_provider = {
+        'class': 'jormungandr.equipments.sytral.SytralProvider',
+        'key': 'sytral',
+        'instances': ['fr-se-lyon'],
+        'args': {'fail_max': 5, 'timeout': 1},
+    }
+    send_and_check(corrupted_provider, 'url')

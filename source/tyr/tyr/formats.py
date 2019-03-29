@@ -67,20 +67,22 @@ poi_type_conf_format = {
     'required': ['poi_types', 'rules'],
 }
 
-equipments_provider_args_format = {
-    'type': 'object',
-    'properties': {'url': {'type': 'string'}, 'fail_max': {'type': 'number'}, 'timeout': {'type': 'number'}},
-    'required': ['url'],
-}
-
 equipments_provider_format = {
     'type': 'object',
     'properties': {
         'class': {'type': 'string'},
         'key': {'type': 'string'},
         'instances': {'type': 'array', 'items': {'type': 'string'}},
-        'args': {'type': 'object', 'items': equipments_provider_args_format},
+        'args': {
+            'type': 'object',
+            'properties': {
+                'url': {'type': 'string'},
+                'fail_max': {'type': 'number'},
+                'timeout': {'type': 'number'},
+            },
+            'required': ['url'],
+        },
         'discarded': {'type': 'boolean'},
     },
-    'required': ['class', 'instances'],
+    'required': ['class', 'instances', 'args'],
 }

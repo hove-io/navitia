@@ -1822,7 +1822,7 @@ class EquipmentsProvider(flask_restful.Resource):
             try:
                 validate(json_data, equipments_provider_format)
             except ValidationError as e:
-                abort(400, status="error", message='{}'.format(parse_error(e)))
+                abort(400, status="invalid data", message='{}'.format(parse_error(e)))
 
         if not id:
             abort(400, status="error", message='id is required')

@@ -36,7 +36,7 @@ from sqlalchemy.dialects.postgresql.base import ARRAY
 from navitiacommon.models import db, TimestampMixin
 
 
-class EquipmentsProvider(db.Model, TimestampMixin):
+class EquipmentsProvider(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Text, primary_key=True)
     instances = db.Column(ARRAY(db.Text), unique=False, nullable=False)
     klass = db.Column(db.Text, unique=False, nullable=False)
