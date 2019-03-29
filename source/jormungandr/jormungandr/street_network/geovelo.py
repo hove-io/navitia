@@ -31,7 +31,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import requests as requests
 import pybreaker
-import json
+import ujson
+
+import itertools
+import sys
 from navitiacommon import response_pb2
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
@@ -89,7 +92,7 @@ class Geovelo(AbstractStreetNetworkService):
     @classmethod
     def _pt_object_summary_isochrone(cls, pt_object):
         coord = get_pt_object_coord(pt_object)
-        return [coord.lat, coord.lon, getattr(pt_object, 'uri', None)]
+        return [coord.lat, coord.lon, None]
 
     @classmethod
     def _make_request_arguments_bike_details(cls, bike_speed_mps):
@@ -131,7 +134,11 @@ class Geovelo(AbstractStreetNetworkService):
                 url,
                 timeout=self.timeout,
                 data=data,
-                headers={'content-type': 'application/json', 'Api-Key': self.api_key},
+                headers={
+                    'content-type': 'application/json',
+                    'Api-Key': self.api_key,
+                    'Accept-Encoding': 'gzip, br',
+                },
             )
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
@@ -157,14 +164,12 @@ class Geovelo(AbstractStreetNetworkService):
         if json_response[0] != ["start_reference", "end_reference", "duration"]:
             logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
             raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
-        for e in json_response[1:]:
-            routing = row.routing_response.add()
-            if e[2]:
-                routing.duration = e[2]
-                routing.routing_status = response_pb2.reached
-            else:
-                routing.duration = -1
-                routing.routing_status = response_pb2.unknown
+
+        add_ = row.routing_response.add
+        for e in itertools.islice(json_response, 1, sys.maxint):
+            duration, routing_status = (e[2], response_pb2.reached) if e[2] else (-1, response_pb2.unknown)
+            add_(duration=duration, routing_status=routing_status)
+
         return sn_routing_matrix
 
     @classmethod
@@ -198,10 +203,10 @@ class Geovelo(AbstractStreetNetworkService):
 
         data = self._make_request_arguments_isochrone(origins, destinations, request['bike_speed'])
         r = self._call_geovelo(
-            '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, json.dumps(data)
+            '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, ujson.dumps(data)
         )
         self._check_response(r)
-        resp_json = r.json()
+        resp_json = ujson.loads(r.text)
 
         if len(resp_json) - 1 != len(origins) * len(destinations):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
@@ -283,7 +288,9 @@ class Geovelo(AbstractStreetNetworkService):
 
             speed = section.length / section.duration if section.duration != 0 else 0
 
-            for geovelo_instruction in geovelo_section['details']['instructions'][1:]:
+            for geovelo_instruction in itertools.islice(
+                geovelo_section['details']['instructions'], 1, sys.maxint
+            ):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
                 path_item.length = geovelo_instruction[2]
@@ -292,9 +299,7 @@ class Geovelo(AbstractStreetNetworkService):
 
             shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])
             for sh in shape:
-                coord = section.street_network.coordinates.add()
-                coord.lon = sh[0]
-                coord.lat = sh[1]
+                section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
         return resp
 
@@ -320,10 +325,10 @@ class Geovelo(AbstractStreetNetworkService):
                 'objects_as_ids=true&',
             ),
             requests.post,
-            json.dumps(data),
+            ujson.dumps(data),
         )
         self._check_response(r)
-        resp_json = r.json()
+        resp_json = ujson.loads(r.text)
 
         if len(resp_json) != 1:
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')

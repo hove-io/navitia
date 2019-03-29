@@ -324,6 +324,8 @@ class Instance(db.Model):  # type: ignore
 
     car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)
 
+    taxi_speed = db.Column(db.Float, default=default_values.taxi_speed, nullable=False)
+
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
     min_bike = db.Column(db.Integer, default=default_values.min_bike, nullable=False)
@@ -401,6 +403,14 @@ class Instance(db.Model):  # type: ignore
     )
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
+
+    additional_time_after_first_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_after_first_section_taxi, nullable=False
+    )
+
+    additional_time_before_last_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
+    )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name

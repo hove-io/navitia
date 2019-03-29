@@ -223,6 +223,9 @@ def updated_common_journey_request_with_default(request, instance):
     if request['car_no_park_speed'] is None:
         request['car_no_park_speed'] = instance.car_no_park_speed
 
+    if request['taxi_speed'] is None:
+        request['taxi_speed'] = instance.taxi_speed
+
 
 def updated_request_with_default(request, instance):
     updated_common_journey_request_with_default(request, instance)

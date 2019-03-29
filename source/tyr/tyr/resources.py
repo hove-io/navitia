@@ -372,6 +372,13 @@ class Instance(flask_restful.Resource):
             default=instance.car_no_park_speed,
         )
         parser.add_argument(
+            'taxi_speed',
+            type=float,
+            help='the speed of taxi',
+            location=('json', 'values'),
+            default=instance.taxi_speed,
+        )
+        parser.add_argument(
             'min_bike',
             type=int,
             help='minimum duration of bike fallback',
@@ -542,6 +549,38 @@ class Instance(flask_restful.Resource):
             default=instance.autocomplete_backend,
         )
 
+        parser.add_argument(
+            'additional_time_after_first_section_taxi',
+            type=int,
+            help='additionnal time after the taxi section when used as first section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_after_first_section_taxi,
+        )
+
+        parser.add_argument(
+            'additional_time_before_last_section_taxi',
+            type=int,
+            help='additionnal time before the taxi section when used as last section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_before_last_section_taxi,
+        )
+
+        parser.add_argument(
+            'max_additional_connections',
+            type=int,
+            help='maximum number of connections allowed in journeys',
+            location=('json', 'values'),
+            default=instance.max_additional_connections,
+        )
+
+        parser.add_argument(
+            'car_park_provider',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate call to car parking provider',
+            location=('json', 'values'),
+            default=instance.car_park_provider,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -565,6 +604,7 @@ class Instance(flask_restful.Resource):
                     'bss_speed',
                     'car_speed',
                     'car_no_park_speed',
+                    'taxi_speed',
                     'min_bike',
                     'min_bss',
                     'min_car',
@@ -587,6 +627,10 @@ class Instance(flask_restful.Resource):
                     'final_line_filter',
                     'max_extra_second_pass',
                     'autocomplete_backend',
+                    'additional_time_after_first_section_taxi',
+                    'additional_time_before_last_section_taxi',
+                    'max_additional_connections',
+                    'car_park_provider',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')

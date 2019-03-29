@@ -34,7 +34,7 @@ from mock import MagicMock
 from .streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
-import json
+import ujson
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
 
@@ -208,7 +208,7 @@ def pt_object_summary_test():
     summary = Geovelo._pt_object_summary_isochrone(
         make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
     )
-    assert summary == [13.15, 1.12, 'toto']
+    assert summary == [13.15, 1.12, None]
 
 
 def make_data_test():
@@ -218,9 +218,9 @@ def make_data_test():
         make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2'),
     ]
     data = Geovelo._make_request_arguments_isochrone(origins, destinations)
-    assert json.loads(json.dumps(data)) == json.loads(
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{
-            "starts": [[48.2, 2.0, "refStart1"]], "ends": [[48.3, 3.0, "refEnd1"], [48.4, 4.0, "refEnd2"]],
+            "starts": [[48.2, 2.0, null]], "ends": [[48.3, 3.0, null], [48.4, 4.0, null]],
             "transportMode": "BIKE",
             "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL"}}'''
     )
@@ -378,13 +378,13 @@ def make_request_arguments_bike_details_test():
     instance = MagicMock()
     geovelo = Geovelo(instance=instance, service_url='http://bob.com')
     data = geovelo._make_request_arguments_bike_details(bike_speed_mps=3.33)
-    assert json.loads(json.dumps(data)) == json.loads(
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{"profile": "MEDIAN", "averageSpeed": 12,
     "bikeType": "TRADITIONAL"}'''
     )
 
     data = geovelo._make_request_arguments_bike_details(bike_speed_mps=4.1)
-    assert json.loads(json.dumps(data)) == json.loads(
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{"profile": "MEDIAN", "averageSpeed": 15,
     "bikeType": "TRADITIONAL"}'''
     )
