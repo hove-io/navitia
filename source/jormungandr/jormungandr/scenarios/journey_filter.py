@@ -139,8 +139,11 @@ def filter_journeys(responses, instance, request):
         ),
         FilterTooLongWaiting(),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
-        FilterTooLongDirectPath(instance=instance, request=request),
     ]
+
+    # TODO: we should handle this better....
+    if (request.get('_override_scenario') or instance._scenario_name) == 'distributed':
+        filters.append(FilterTooLongDirectPath(instance=instance, request=request))
 
     # we add more filters in some special cases
 
