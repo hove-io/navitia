@@ -304,9 +304,18 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
-def _make_function(mode):
+def _make_function(from_coord, to_coord, mode):
     def test_max_mode_direct_path_duration(self):
-        query = (journey_basic_query + '&first_section_mode[]={mode}' + '&max_duration=0').format(mode=mode)
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]={mode}'
+            '&last_section_mode[]={mode}'
+            '&max_duration=0'
+        ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode)
+
         response = self.query_region(query)
 
         assert len(response['journeys']) == 1
@@ -315,14 +324,9 @@ def _make_function(mode):
 
         direct_path_duration = response['journeys'][0]['duration']
 
-        query = (
-            journey_basic_query
-            + '&first_section_mode[]={mode}'
-            + '&max_{mode}_direct_path_duration={max_dp_duration}'
-            + '&max_duration=0'
-            + '&datetime=20120614T075500'
-            + '&debug=true'
-        ).format(mode=mode, max_dp_duration=direct_path_duration - 1)
+        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}' + '&debug=true').format(
+            mode=mode, max_dp_duration=direct_path_duration - 1
+        )
         response = self.query_region(query)
 
         assert len(response['journeys']) == 1
@@ -333,11 +337,16 @@ def _make_function(mode):
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function(s, r, 'walking')
+    test_max_car_direct_path_duration = _make_function(s, r, 'car')
+    test_max_bss_direct_path_duration = _make_function(s, r, 'bss')
+    test_max_bike_direct_path_duration = _make_function(s, r, 'bike')
 
-    test_max_walking_direct_path_duration = _make_function('walking')
-    test_max_car_direct_path_duration = _make_function('car')
-    test_max_bss_direct_path_duration = _make_function('bss')
-    test_max_bike_direct_path_duration = _make_function('bike')
+    a = '0.001077974378345651;0.0007186495855637672'
+    b = '8.98311981954709e-05;0.0002694935945864127'
+    test_max_taxi_direct_path_duration = _make_function(a, b, 'taxi')
 
 
 @config(
@@ -387,26 +396,7 @@ class TestJourneysRidesharingDistributed(
         pass
 
 
-MOCKED_INSTANCE_CONF_TAXI = {
-    "scenario": "distributed",
-    "instance_config": {
-        "street_network": [
-            {
-                "modes": ["taxi"],
-                "class": "jormungandr.street_network.taxi.Taxi",
-                "args": {
-                    "street_network": {
-                        "class": "jormungandr.street_network.kraken.Kraken",
-                        "args": {"timeout": 10},
-                    }
-                },
-            }
-        ]
-    },
-}
-
-
-@dataset({"main_routing_test": MOCKED_INSTANCE_CONF_TAXI})
+@dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
     def test_first_section_mode_taxi(self):
         query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"

@@ -687,7 +687,7 @@ def make_speed_switcher(req):
         FallbackModes.car.name: req['car_speed'],
         FallbackModes.bss.name: req['bss_speed'],
         FallbackModes.ridesharing.name: req['car_no_park_speed'],
-        FallbackModes.taxi.name: req['car_no_park_speed'],
+        FallbackModes.taxi.name: req['taxi_speed'],
     }
 
 

@@ -123,14 +123,7 @@ class Kraken(AbstractStreetNetworkService):
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
         # TODO: reverse is not handled as so far
-        speed_switcher = {
-            "walking": request['walking_speed'],
-            "bike": request['bike_speed'],
-            "car": request['car_speed'],
-            "bss": request['bss_speed'],
-            "ridesharing": request['car_no_park_speed'],
-            "taxi": request['taxi_speed'],
-        }
+        speed_switcher = utils.make_speed_switcher(request)
 
         # kraken can only manage 1-n request, so we reverse request if needed
         if len(origins) > 1:

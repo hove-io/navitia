@@ -231,14 +231,7 @@ class FallbackDurationsPool(dict):
         self._direct_paths_by_mode = direct_paths_by_mode
         self._request = request
         self._direct_path_type = direct_path_type
-        self._speed_switcher = {
-            "walking": request["walking_speed"],
-            "bike": request["bike_speed"],
-            "car": request["car_speed"],
-            "bss": request["bss_speed"],
-            "ridesharing": request["car_no_park_speed"],
-            "taxi": request["taxi_speed"],
-        }
+        self._speed_switcher = utils.make_speed_switcher(request)
 
         self._value = {}
 

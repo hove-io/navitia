@@ -31,9 +31,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr import utils, new_relic
-from jormungandr.fallback_modes import FallbackModes
 import abc
 from enum import Enum
+from navitiacommon import response_pb2
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
 # http://stackoverflow.com/a/38668373/1614576
@@ -95,7 +95,9 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         if direct_path_type == StreetNetworkPathType.DIRECT and self.is_too_far(
             mode, request, pt_object_origin, pt_object_destination
         ):
-            return None
+            logging.getLogger(__name__).info('the requested journey is too long')
+            # an empty response
+            return response_pb2.Response()
 
         resp = self._direct_path(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type

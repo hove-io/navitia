@@ -50,6 +50,7 @@ from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, memory_cache, app, global_autocomplete, equipment_provider_manager
+from jormungandr import fallback_modes as fm
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -74,8 +75,6 @@ type_to_pttype = {
     "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
 
-STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike', 'ridesharing')
-
 
 @app.before_request
 def _init_g():
@@ -87,14 +86,24 @@ def _init_g():
 def _set_default_street_network_config(street_network_configs):
     if not isinstance(street_network_configs, list):
         street_network_configs = []
-    default_sn_class = 'jormungandr.street_network.kraken.Kraken'
+
+    kraken = {'class': 'jormungandr.street_network.kraken.Kraken', 'args': {'timeout': 10}}
+    taxi = {'class': 'jormungandr.street_network.taxi.Taxi', 'args': {'street_network': kraken}}
+
+    default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
+    # taxi mode's default class is changed to 'taxi' not kraken
+    default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
 
     modes_in_configs = set(
         list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
     )
-    modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
-    if modes_not_set:
-        street_network_configs.append({"modes": list(modes_not_set), "class": default_sn_class})
+    modes_not_set = fm.all_fallback_modes - modes_in_configs
+
+    for mode in modes_not_set:
+        config = {"modes": [mode]}
+        config.update(default_sn_class[mode])
+        street_network_configs.append(copy.deepcopy(config))
+
     return street_network_configs
 
 
@@ -464,23 +473,10 @@ class Instance(object):
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
-    @property
-    def additional_time_after_first_section_taxi(self):
-        # type: () -> int
-        instance_db = self.get_models()
-        return get_value_or_default('additional_time_after_first_section_taxi', instance_db, self.name)
-
-    @property
-    def additional_time_before_last_section_taxi(self):
-        # type: () -> int
-        instance_db = self.get_models()
-        return get_value_or_default('additional_time_before_last_section_taxi', instance_db, self.name)
-
-    @property
-    def taxi_speed(self):
-        # type: () -> float
-        instance_db = self.get_models()
-        return get_value_or_default('taxi_speed', instance_db, self.name)
+    # TODO: refactorise all properties
+    taxi_speed = _make_property_getter('taxi_speed')
+    additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
+    additional_time_before_last_section_taxi = _make_property_getter('additional_time_before_last_section_taxi')
 
     max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')

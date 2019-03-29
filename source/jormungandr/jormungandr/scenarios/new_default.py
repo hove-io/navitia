@@ -626,33 +626,39 @@ def culling_journeys(resp, request):
 
 
 def _tag_journey_by_mode(journey):
-    mode = 'walking'
+    fm = fallback_modes
+    mode = fm.FallbackModes.walking
     for i, section in enumerate(journey.sections):
-        cur_mode = 'walking'
+        cur_mode = mode
         if (section.type == response_pb2.BSS_RENT) or (
             section.type == response_pb2.CROW_FLY and section.street_network.mode == response_pb2.Bss
         ):
-            cur_mode = 'bss'
+            cur_mode = fm.FallbackModes.bss
         elif (
             (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
             and section.street_network.mode == response_pb2.Bike
             and journey.sections[i - 1].type != response_pb2.BSS_RENT
         ):
-            cur_mode = 'bike'
+            cur_mode = fm.FallbackModes.bike
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
         ) and section.street_network.mode == response_pb2.Car:
-            cur_mode = 'car'
+            cur_mode = fm.FallbackModes.car
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
         ) and section.street_network.mode == response_pb2.Ridesharing:
             # When the street network data is missing, the section maybe a crow_fly
-            cur_mode = 'ridesharing'
+            cur_mode = fm.FallbackModes.ridesharing
+        elif (
+            section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
+        ) and section.street_network.mode == response_pb2.Taxi:
+            # When the street network data is missing, the section maybe a crow_fly
+            cur_mode = fm.FallbackModes.taxi
 
         if mode_weight[mode] < mode_weight[cur_mode]:
             mode = cur_mode
 
-    journey.tags.append(mode)
+    journey.tags.append(mode.name)
 
 
 def _tag_by_mode(responses):
