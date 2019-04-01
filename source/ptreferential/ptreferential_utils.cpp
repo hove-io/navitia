@@ -322,7 +322,7 @@ get_indexes_from_code_type(const std::string& key, const Data& data) {
     for (const auto* obj: collection) {
         auto codes = data.pt_data->codes.get_codes<T>(obj);
         if (codes.find(key) == codes.end()) { continue; }
-            indexes.insert(obj->idx);
+        indexes.insert(obj->idx);
     }
     return indexes;
 }
