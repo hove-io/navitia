@@ -349,9 +349,6 @@ class FilterTooLongDirectPath(SingleJourneyFilter):
 
         direct_path_mode = self._get_mode_of_journey(journey)
 
-        # TODO: Add taxi into the protobuf
-        # the try-except is used to cover the case when mode is not (yet) set in protobuf
-        # this line may raise exception if mode is not set
         attr_name = 'max_{}_direct_path_duration'.format(direct_path_mode)
         max_duration = self.request[attr_name]
         return max_duration > journey.duration
