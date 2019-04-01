@@ -595,6 +595,11 @@ BOOST_AUTO_TEST_CASE(code_type_request){
                      R"(stop_area.has_code_type(code_type_1))",
                      *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"sa_1"}));
+
+    BOOST_CHECK_THROW(make_query(nt::Type_e::StopArea,
+                      R"(stop_area.has_code_type(code_type_doesnt_exist))",
+                      *(b.data)),
+                      ptref_error);
 }
 
 
