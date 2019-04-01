@@ -34,26 +34,38 @@ from itertools import chain
 from navitiacommon import type_pb2
 
 import logging
+import datetime
 
 
 class EquipmentProviderManager(object):
-    def __init__(self, equipment_providers_configuration):
+    def __init__(self, equipment_providers_configuration, providers_getter=None, update_interval=60):
         self.logger = logging.getLogger(__name__)
         self.providers_config = equipment_providers_configuration
-        self._equipment_providers_legacy = {}
+        self.providers_keys = []
+        self._providers_getter = providers_getter
         self._equipment_providers = {}
+        self._equipment_providers_legacy = {}
+        self._equipment_providers_last_update = {}
+        self._last_update = datetime.datetime(1970, 1, 1)
+        self._update_interval = update_interval
 
     def init_providers(self, providers_keys):
         """
         Create equipment providers only if defined in the Jormungandr instance and not already created
         :param providers_keys: list of providers defined in the instance
         """
+        self.providers_keys = providers_keys
+
+        # Init legacy providers from config file
         for provider in self.providers_config:
             key = provider['key'].lower()
-            if key in providers_keys and key not in dict(
+            if key in self.providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
                 self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
+
+        # Init providers from db
+        self.update_config()
 
     def _init_class(self, cls, arguments):
         """
@@ -72,6 +84,47 @@ class EquipmentProviderManager(object):
             return attr(**arguments)
         except ImportError:
             self.log.warn('impossible to build, cannot find class: {}'.format(cls))
+
+    def update_config(self):
+        """
+        Update list of equipment providers from db
+        """
+        if (
+            self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
+            or not self._providers_getter
+        ):
+            return
+
+        logger = logging.getLogger(__name__)
+        logger.debug('Updating equipment providers from db')
+        self._last_update = datetime.datetime.utcnow()
+
+        providers = []
+        try:
+            providers = self._providers_getter()
+        except Exception:
+            logger.exception('failure to retrieve equipments providers configuration')
+        if not providers:
+            logger.debug('No providers/All providers disabled in db')
+            self._equipment_providers = {}
+            self._equipment_providers_last_update = {}
+
+            return
+
+        for provider in providers:
+            if provider.id in self.providers_keys and (
+                provider.id not in self._equipment_providers_last_update
+                or provider.last_update() > self._equipment_providers_last_update[provider.id]
+            ):
+                logger.info('updating/adding {} equipment provider'.format(provider.id))
+                try:
+                    self._equipment_providers[provider.id] = self._init_class(provider.klass, provider.args)
+                    self._equipment_providers_last_update[provider.id] = provider.last_update()
+                except Exception:
+                    logger.exception('impossible to initialize equipments provider')
+
+                # If the provider added in db is also defined in legacy, delete it.
+                self._equipment_providers_legacy.pop(provider.id, None)
 
     def manage_equipments(self, response):
         """
@@ -94,6 +147,9 @@ class EquipmentProviderManager(object):
             )
 
         stop_points = get_from_to_stop_points_of_journeys(response.journeys)
+
+        # Update config before calling web-service
+        self.update_config()
 
         for provider in dict(self._equipment_providers, **self._equipment_providers_legacy).values():
             provider.get_informations(stop_points)

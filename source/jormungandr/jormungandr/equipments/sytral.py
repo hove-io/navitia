@@ -49,9 +49,10 @@ class SytralProvider(object):
 
     def __init__(self, url, **kwargs):
         self.url = url
+        self.timeout = kwargs.get('timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S'])
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('fail_max', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
-            reset_timeout=kwargs.get('timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S']),
+            reset_timeout=self.timeout,
         )
 
     def get_informations(self, stop_points_list):
