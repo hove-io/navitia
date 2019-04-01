@@ -316,12 +316,12 @@ typename boost::enable_if<
         nt::CodeContainer::SupportedTypes,
         T>::type,
     Indexes>::type
-get_indexes_from_codes(const std::string& key, const Data& data) {
+get_indexes_from_code_type(const std::string& key, const Data& data) {
     Indexes indexes;
     auto collection = data.pt_data->collection<T>();
     for (const auto* obj: collection) {
         auto codes = data.pt_data->codes.get_codes<T>(obj);
-        if (codes.empty() || codes.find(key) == codes.end()) { continue; }
+        if (codes.find(key) == codes.end()) { continue; }
             indexes.insert(obj->idx);
     }
     return indexes;
@@ -333,19 +333,19 @@ typename boost::disable_if<
         nt::CodeContainer::SupportedTypes,
         T>::type,
     Indexes>::type
-get_indexes_from_codes(const std::string&, const Data&) {
+get_indexes_from_code_type(const std::string&, const Data&) {
     // there is no codes for unsupporded types, thus the result is empty
     return Indexes{};
 }
-type::Indexes get_indexes_from_codes(const type::Type_e type,
+type::Indexes get_indexes_from_code_type(const type::Type_e type,
                                      const std::string& key,
                                      const type::Data& data) {
     switch (type) {
 #define GET_INDEXES(type_name, collection_name) \
-        case Type_e::type_name: return get_indexes_from_codes<type::type_name>(key, data);
+        case Type_e::type_name: return get_indexes_from_code_type<type::type_name>(key, data);
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
 #undef GET_INDEXES
-    default: return Indexes();// no code supported, empty result
+    default: return Indexes{};// no code supported, empty result
     }
 }
 

@@ -290,7 +290,7 @@ struct Eval: boost::static_visitor<Indexes> {
         } else if (f.method == "has_code" && f.args.size() == 2) {
             indexes = get_indexes_from_code(type_by_caption(f.type), f.args.at(0), f.args.at(1), data);
         } else if (f.method == "has_code_type" && f.args.size() == 1) {
-            indexes = get_indexes_from_codes(type_by_caption(f.type), f.args.at(0), data);
+            indexes = get_indexes_from_code_type(type_by_caption(f.type), f.args.at(0), data);
         } else {
             std::stringstream ss;
             ss << "Unknown function: " << f;
