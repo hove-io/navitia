@@ -38,7 +38,7 @@ import datetime
 
 
 class EquipmentProviderManager(object):
-    def __init__(self, equipment_providers_configuration, providers_getter=None, update_interval=60):
+    def __init__(self, equipment_providers_configuration, providers_getter=None, update_interval=600):
         self.logger = logging.getLogger(__name__)
         self.providers_config = equipment_providers_configuration
         self.providers_keys = []

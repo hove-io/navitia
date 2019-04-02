@@ -47,12 +47,14 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, timeout=2, **kwargs):
         self.url = url
-        self.timeout = kwargs.get('timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S'])
+        self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=kwargs.get('fail_max', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
-            reset_timeout=self.timeout,
+            fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
+            reset_timeout=kwargs.get(
+                'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S']
+            ),
         )
 
     def get_informations(self, stop_points_list):
