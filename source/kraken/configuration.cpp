@@ -76,6 +76,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.log_level", po::value<std::string>(), "log level of kraken")
         ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
+        ("GENERAL.enable_request_deadline", po::value<bool>()->default_value(true), "enable deadline of request")
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
@@ -222,6 +223,10 @@ bool Configuration::display_contributors() const{
 
 int Configuration::slow_request_duration() const{
     return vm["GENERAL.slow_request_duration"].as<int>();
+}
+
+bool Configuration::enable_request_deadline() const{
+    return vm["GENERAL.enable_request_deadline"].as<bool>();
 }
 
 size_t Configuration::raptor_cache_size() const{
