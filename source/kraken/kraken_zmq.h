@@ -75,7 +75,7 @@ inline void doWork(zmq::context_t& context,
     zmq::socket_t socket (context, ZMQ_REQ);
     socket.connect("inproc://workers");
     bool run = true;
-    auto enable_deadline = conf.enable_deadline();
+    auto enable_deadline = conf.enable_request_deadline();
     //Here we create the worker
     navitia::Worker w(conf);
     z_send(socket, "READY");
