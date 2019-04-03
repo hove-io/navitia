@@ -334,7 +334,7 @@ typename boost::disable_if<
         T>::type,
     Indexes>::type
 get_indexes_from_code_type(const std::string&, const Data&) {
-    // there is no codes for unsupporded types, thus the result is empty
+    // there is no code for unsupported types, thus the result is empty
     return Indexes{};
 }
 type::Indexes get_indexes_from_code_type(const type::Type_e type,
