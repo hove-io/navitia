@@ -72,6 +72,10 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
         R"#(vehicle_journey . has_code ( external_code , "OIF:42" ) )#",
         R"#(vehicle_journey.has_code("external_code", "OIF:42"))#"
     );
+    assert_expr(
+        R"#(vehicle_journey . has_code_type ( external_code ) )#",
+        R"#(vehicle_journey.has_code_type("external_code"))#"
+    );
     assert_expr(R"#(stop_area . uri ( "OIF:42" ) )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = "OIF:42" )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = OIF:42 )#", R"#(stop_area.uri("OIF:42"))#");
