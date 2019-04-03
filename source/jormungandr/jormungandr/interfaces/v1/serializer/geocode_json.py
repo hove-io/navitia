@@ -263,6 +263,7 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
         map_serializer = {
             'city': GeocodeAdminSerializer,
             'administrative_region': GeocodeAdminSerializer,
+            'zone': GeocodeAdminSerializer,
             'street': GeocodeAddressSerializer,
             'house': GeocodeAddressSerializer,
             'poi': GeocodePoiSerializer,
@@ -273,6 +274,11 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
             type_ = feature.get('properties', {}).get('geocoding', {}).get('type')
             if not type_ or type_ not in map_serializer:
                 logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(feature))
+                continue
+            zone_type = feature.get('properties', {}).get('geocoding', {}).get('zone_type')
+            # TODO: do something smart with other zone type
+            if type_ == 'zone' and zone_type != 'city':
+                logging.getLogger(__name__).error('Place not serialized (invalid zone type): {}'.format(feature))
                 continue
             res.append(map_serializer[type_](feature).data)
         return res
