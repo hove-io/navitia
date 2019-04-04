@@ -462,7 +462,8 @@ create_disruption(const std::string& id,
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
 
     auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
-    const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
+    const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
+                                                                        data.pt_data->get_main_timezone());
 
     delete_disruption(id, *data.pt_data, *data.meta);
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
@@ -631,33 +632,23 @@ void handle_realtime(const std::string& id,
     }
 
     // Get or create meta VJ
-    navitia::type::MetaVehicleJourney* meta_vj = nullptr;
     bool meta_vj_exists = data.pt_data->meta_vjs.exists(trip_update.trip().trip_id());
-    if (! meta_vj_exists) {
-        if (is_added_trip(trip_update)) {
-            LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
-            meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
-            // TODO : pick a meaningful TZ
-            meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
-        } else {
-            LOG4CPLUS_WARN(log, "Cannot perform operation on an unknown Meta VJ (other than adding trip)"
-                    << ", trip id: " << trip_update.trip().trip_id()
-                    << ", effect: " << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
-            if (trip_update.stop_time_update_size()) {
-                LOG4CPLUS_WARN(log, "Meta VJ 1st stop time departure: "
-                    << trip_update.stop_time_update(0).departure().time());
-            }
-            return;
+    if (! meta_vj_exists && !is_added_trip(trip_update)) {
+        LOG4CPLUS_WARN(log, "Cannot perform operation on an unknown Meta VJ (other than adding trip)"
+                << ", trip id: " << trip_update.trip().trip_id()
+                << ", effect: " << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
+        if (trip_update.stop_time_update_size()) {
+            LOG4CPLUS_WARN(log, "Meta VJ 1st stop time departure: "
+                << trip_update.stop_time_update(0).departure().time());
         }
-    } else {
-        LOG4CPLUS_DEBUG(log, "Vehicle journey found : " << trip_update.trip().trip_id());
-        meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
+        return;
     }
 
     const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
     if (! disruption || ! check_disruption(*disruption)) {
-        LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
+        LOG4CPLUS_INFO(log, "disruption " << id << " on " << trip_update.trip().trip_id() <<
+                            " not valid, we do not handle it");
         delete_disruption(id, *data.pt_data, *data.meta);
         return;
     }
