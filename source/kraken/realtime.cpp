@@ -54,7 +54,7 @@ static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update)
         } else {
             return false;
         }
-    } else {
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             return true;
         } else {
@@ -77,7 +77,7 @@ static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
         } else {
             return false;
         }
-    } else {
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
         if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
              trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
             && trip_update.stop_time_update_size()) {
@@ -267,7 +267,7 @@ static bool is_added_trip(const transit_realtime::TripUpdate& trip_update) {
         } else {
             return false;
         }
-    } else {
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED) {
             LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
             return true;
@@ -369,6 +369,7 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     return false;
 }
 
+// TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
 static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTimeUpdate::Status status){
     using nt::disruption::StopTimeUpdate;
     using nt::disruption::Effect;
@@ -502,7 +503,9 @@ create_disruption(const std::string& id,
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
+
         if (is_cancelled_trip(trip_update)) {
+            // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
             // Yeah, that's quite hardcoded...
             trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
@@ -583,6 +586,7 @@ create_disruption(const std::string& id,
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
+            // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
             trip_effect = get_calculated_trip_effect(most_important_stoptime_status);
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");

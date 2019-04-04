@@ -78,65 +78,34 @@ VJ::VJ(builder& b,
 nt::VehicleJourney* VJ::make() {
     if (vj) { return vj; }
 
-    auto it = b.lines.find(line_name);
-    nt::Line* line = nullptr;
-    nt::Route* route = nullptr;
     nt::PT_Data& pt_data = *(b.data->pt_data);
-    if (it == b.lines.end()) {
-        line = new navitia::type::Line();
-        line->idx = pt_data.lines.size();
-        line->uri = line_name;
-        b.lines[line_name] = line;
-        line->name = line_name;
-        pt_data.lines.push_back(line);
+
+    auto network = pt_data.get_or_create_network(network_name, network_name);
+
+    nt::CommercialMode* commercial_mode = nullptr;
+    // Use existing commercial_mode if any (allow minimal pt_data testing)
+    if (!pt_data.commercial_modes.empty()) {
+        commercial_mode = pt_data.commercial_modes[0];
     } else {
-        line = it->second;
-        // Empty route_name, we keep the same route
-        if(_route_name.empty()) {
+        commercial_mode = pt_data.get_or_create_commercial_mode("Bus", "Bus");
+    }
+
+    auto line = pt_data.get_or_create_line(line_name, line_name, network, commercial_mode);
+    b.lines[line_name] = line;
+
+    nt::Route* route = nullptr;
+    // Empty route_name
+    if (_route_name.empty()) {
+        // Keep the same route if existing
+        if (!line->route_list.empty()) {
             route = line->route_list.front();
-        }
-    }
-
-    // Empty route_name, set one based on the name of the line
-    if(!route) {
-        auto search_route = b.routes_by_line[line->uri].find(_route_name);
-        if (search_route == b.routes_by_line[line->uri].end()) {
-            route = new navitia::type::Route();
-            route->idx = pt_data.routes.size();
-            if (_route_name.empty()) {
-                route->name = line_name;
-                route->uri = route->name + ":" + std::to_string(pt_data.routes.size());;
-            } else {
-                route->name = _route_name;
-                route->uri = _route_name;
-            }
-            route->line = line;
-            line->route_list.push_back(route);
-            b.routes_by_line[line->uri][_route_name] = route;
-            pt_data.routes.push_back(route);
-            pt_data.routes_map[route->uri] = route;
         } else {
-            route = search_route->second;
+            // Create a new one based on the name of the line
+            const auto route_uri = line_name + ":" + std::to_string(pt_data.routes.size());
+            route = pt_data.get_or_create_route(route_uri, line_name, line);
         }
-    }
-
-    const auto search_nt = b.nts.find(network_name);
-    if (search_nt == b.nts.end()){
-        navitia::type::Network* network = new navitia::type::Network();
-        network->idx = b.data->pt_data->networks.size();
-        network->uri = network_name;
-        network->name = network_name;
-        b.nts[network_name] = network;
-        b.data->pt_data->networks.push_back(network);
-        route->line->network = network;
-        network->line_list.push_back(route->line);
     } else {
-        route->line->network = search_nt->second;
-        if (boost::find_if(search_nt->second->line_list,
-                           [&](navitia::type::Line* l) { return l->uri == route->line->uri; })
-            == search_nt->second->line_list.end()) {
-            search_nt->second->line_list.push_back(route->line);
-        }
+        route = pt_data.get_or_create_route(_route_name, _route_name, line);
     }
 
     std::string name;
@@ -251,7 +220,7 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     return *this;
 }
 
-VJ& VJ::operator()(const std::string &stopPoint,
+VJ& VJ::operator()(const std::string& stopPoint,
                    const std::string& arrival,
                    const std::string& departure,
                    uint16_t local_traffic_zone,
@@ -671,56 +640,14 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     this->data->pt_data->companies.push_back(company);
 
     const std::string default_network_name = "base_network";
-    if (this->nts.find(default_network_name) == this->nts.end()) {
-        navitia::type::Network *network = new navitia::type::Network();
-        network->idx = this->data->pt_data->networks.size();
-        network->name = default_network_name;
-        network->uri = default_network_name;
-        this->data->pt_data->networks.push_back(network);
-        this->nts.insert({network->uri, network});
-    }
+    this->data->pt_data->get_or_create_network(default_network_name, default_network_name);
 
-    navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Tramway";
-    commercial_mode->uri = "0x0";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
-
-    commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Metro";
-    commercial_mode->uri = "0x1";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
-
-    commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Bss";
-    commercial_mode->uri = "Bss";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
-
-    commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Bike";
-    commercial_mode->uri = "Bike";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
-
-    commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Bus";
-    commercial_mode->uri = "Bus";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
-
-    commercial_mode = new navitia::type::CommercialMode();
-    commercial_mode->idx = this->data->pt_data->commercial_modes.size();
-    commercial_mode->name = "Car";
-    commercial_mode->uri = "Car";
-    this->data->pt_data->commercial_modes.push_back(commercial_mode);
-    this->data->pt_data->commercial_modes_map[commercial_mode->uri] = commercial_mode;
+    this->data->pt_data->get_or_create_commercial_mode("0x0", "Tramway");
+    this->data->pt_data->get_or_create_commercial_mode("0x1", "Metro");
+    this->data->pt_data->get_or_create_commercial_mode("Bss", "Bss");
+    this->data->pt_data->get_or_create_commercial_mode("Bike", "Bike");
+    this->data->pt_data->get_or_create_commercial_mode("Bus", "Bus");
+    this->data->pt_data->get_or_create_commercial_mode("Car", "Car");
 
     for(navitia::type::CommercialMode *mt : this->data->pt_data->commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
@@ -833,15 +760,24 @@ void builder::finish() {
              }
          }
      }
-     data->build_raptor();
+     data->build_raptor(1);
  }
 
- void builder::make() {
+
+void builder::make() {
     generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
     finish();
 }
+
+
+void builder::finalize_disruption_batch() {
+    data->pt_data->build_autocomplete(*(data->geo_ref));
+    data->pt_data->clean_weak_impacts();
+    data->build_raptor(1);
+}
+
 
 /*
 1. Initilise the first admin in the list to all stop_area and way

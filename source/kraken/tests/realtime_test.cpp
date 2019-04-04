@@ -63,15 +63,9 @@ static const pt::ptime timestamp = "20150101T1337"_dt;
 
 static transit_realtime::TripUpdate
 make_cancellation_message(const std::string& vj_uri, const std::string& date) {
-    transit_realtime::TripUpdate trip_update;
-    auto trip = trip_update.mutable_trip();
-    trip->set_trip_id(vj_uri);
-    trip->set_start_date(date);
-    trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
-    trip->SetExtension(kirin::contributor, "cow.owner");
-    trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
-    trip_update.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE);
-    return trip_update;
+    return ntest::make_trip_update_message(vj_uri, date, {},
+                                           transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE,
+                                           "", "", "cow.owner", "cow on the tracks");
 }
 
 static pbnavitia::Response compute_iti(
@@ -253,7 +247,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     b.data->pt_data->companies_map[comp_id_1] = cmp1;
     b.lines["A"]->company_list.push_back(cmp1);
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
@@ -320,7 +314,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 2);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -343,7 +337,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
@@ -361,7 +355,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
 
-    transit_realtime::TripUpdate trip_update_1 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts),
@@ -369,7 +363,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
                     RTStopTime("stop3", "20150928T1001"_pts)
             });
 
-    transit_realtime::TripUpdate trip_update_2 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update_2 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts),
@@ -399,7 +393,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -427,7 +421,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -460,7 +454,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T2330"_pts).delay(30_min),
@@ -499,7 +493,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -522,14 +516,14 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
     b.vj("B", "000001", "", true, "vj:2")("stop3", "22:00"_t)("stop4", "22:30"_t);
 
-    transit_realtime::TripUpdate trip_update_A = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update_A = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T2330"_pts).delay(30_min),
                     RTStopTime("stop2", "20150929T0025"_pts).delay(30_min)
             });
 
-    transit_realtime::TripUpdate trip_update_B = ntest::make_delay_message("vj:2",
+    transit_realtime::TripUpdate trip_update_B = ntest::make_trip_update_message("vj:2",
             "20150928",
             {
                     RTStopTime("stop3", "20150928T2230"_pts).delay(30_min),
@@ -569,7 +563,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     BOOST_CHECK_NE(vj_B->base_validity_pattern(), vj_B->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -600,7 +594,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
 BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    transit_realtime::TripUpdate trip_update_A = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update_A = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(10_min),
@@ -644,7 +638,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
     navitia::apply_disruption(disrup, *b.data->pt_data, *b.data->meta);
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -671,7 +665,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -696,7 +690,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     auto vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t).make();
     b.data->build_uri();
 
-    transit_realtime::TripUpdate wrong_st_order = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate wrong_st_order = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     //stop1 is after stop2, it's not valid
@@ -717,7 +711,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
 
     // we test with a wrongly formated stoptime
-    transit_realtime::TripUpdate dep_before_arr = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate dep_before_arr = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(10_min),
@@ -732,7 +726,7 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 0);
 
     //we test with a first stop time before the day of the disrupted vj
-    transit_realtime::TripUpdate wrong_first_st = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate wrong_first_st = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150926T0800"_pts, "20150927T0200"_pts).arrival_delay(10_min)
@@ -757,7 +751,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0610"_pts).delay(9_min),
@@ -795,7 +789,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -822,7 +816,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T1710"_pts).delay(9_h),
@@ -860,7 +854,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -894,13 +888,13 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0710"_pts).delay(23_h),
                     RTStopTime("stop2", "20150929T0810"_pts).delay(23_h)
             });
-    transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0901"_pts).delay(24_h),
@@ -938,7 +932,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -983,7 +977,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
         return  pb_creator.get_response();
     };
 
-    transit_realtime::TripUpdate delayed = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate delayed = ntest::make_trip_update_message("vj:1",
         "20190101",
         {
             RTStopTime("stop1", "20190101T0900"_pts).delay(1_h),
@@ -992,7 +986,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
         transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
 
     navitia::handle_realtime("feed-1", timestamp, delayed, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     auto res = compute("20190101T073000", "stop1", "stop2");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -1012,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).departure_status(), pbnavitia::StopTimeUpdateStatus::DELAYED);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(1).departure_status(), pbnavitia::StopTimeUpdateStatus::DELAYED);
 
-    transit_realtime::TripUpdate back_to_normal = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate back_to_normal = ntest::make_trip_update_message("vj:1",
         "20190101",
         {
             RTStopTime("stop1", "20190101T0800"_pts),
@@ -1020,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
         transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT);
 
     navitia::handle_realtime("feed-1", timestamp, back_to_normal, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     res = compute("20190101T073000", "stop1", "stop2");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -1046,14 +1040,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0710"_pts).delay(23_h),
                     RTStopTime("stop2", "20150929T0810"_pts).delay(23_h)
             },
             transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
-    transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0801"_pts),
@@ -1092,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1126,13 +1120,13 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0710"_pts).delay(23_h),
                     RTStopTime("stop2", "20150929T0810"_pts).delay(23_h)
             });
-    transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message("vj:1",
             "20150929",
             {
                     RTStopTime("stop1", "20150929T0901"_pts).delay(25_h),
@@ -1170,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1204,7 +1198,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0610"_pts).delay(22_h),
@@ -1241,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1270,7 +1264,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150929T0610"_pts).delay(22_h),
@@ -1308,7 +1302,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1370,7 +1364,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1401,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T1801"_pts).delay(10_h),
@@ -1440,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1470,13 +1464,13 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     ed::builder b("20150928");
     b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0910"_pts).delay(1_h),
                     RTStopTime("stop2", "20150928T1010"_pts).delay(1_h)
             });
-    transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message("vj:1",
             "20150929",
             {
                     RTStopTime("stop1", "20150929T1010"_pts).delay(2_h),
@@ -1540,7 +1534,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
     b.make();
 
-    transit_realtime::TripUpdate trip_update_vj2 = ntest::make_delay_message(
+    transit_realtime::TripUpdate trip_update_vj2 = ntest::make_trip_update_message(
         "vj:2",
         "20150928",
         {
@@ -1566,7 +1560,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.make();
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message(
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1",
         "20150928",
         {
@@ -1591,7 +1585,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
 
-    transit_realtime::TripUpdate bad_trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate bad_trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
@@ -1618,7 +1612,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1650,21 +1644,21 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
 
-    auto trip_update_1 = ntest::make_delay_message("vj:1",
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0801"_pts),
                     RTStopTime("stop2", "20150928T0910"_pts).delay(9_min),
                     RTStopTime("stop3", "20150928T1001"_pts)
             });
-    auto trip_update_2 = ntest::make_delay_message("vj:1",
+    auto trip_update_2 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts),
                     RTStopTime("stop2", "20150928T0920"_pts).delay(19_min),
                     RTStopTime("stop3", "20150928T1001"_pts)
             });
-    auto trip_update_3 = ntest::make_delay_message("vj:1",
+    auto trip_update_3 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("stop1", "20150928T0810"_pts),
@@ -1691,7 +1685,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
 
-    b.make();
+    b.finalize_disruption_batch();
     {
         navitia::routing::RAPTOR raptor(*(b.data));
 
@@ -1744,7 +1738,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
 
     b.make();
 
-    auto trip_update_1 = ntest::make_delay_message("vj:1",
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20170102",
             {
                     RTStopTime("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
@@ -1806,7 +1800,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
 
     b.make();
 
-    auto trip_update_1 = ntest::make_delay_message("vj:1",
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20170102",
             {
                     RTStopTime("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
@@ -1853,7 +1847,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
             ("C", "08:30"_t);
     b.make();
 
-    auto trip_update_1 = ntest::make_delay_message("vj:1",
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20170101",
             {
                     RTStopTime("A", "20170101T081000"_pts),
@@ -1921,7 +1915,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
             ("D", "08:40"_t);
     b.make();
 
-    auto trip_update_1 = ntest::make_delay_message("vj:1",
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1",
             "20170101",
             {
                     RTStopTime("A", "20170101T081000"_pts),
@@ -1931,7 +1925,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
             });
     navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true, true);
 
-    auto trip_update_2 = ntest::make_delay_message("vj:1",
+    auto trip_update_2 = ntest::make_trip_update_message("vj:1",
             "20170101",
             {
                     RTStopTime("A", "20170101T081000"_pts),
@@ -2023,8 +2017,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
         ("C", "10:00"_t)
         ("D", "11:00"_t)
         ("E", "12:00"_t);
+    b.data->build_uri();
 
-    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("A", "20150928T0805"_pts).delay(5_min),
@@ -2034,11 +2029,10 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
                     RTStopTime("E", "20150928T1200"_pts).delay(0_min)
             },
             transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
-    b.data->build_uri();
 
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2103,38 +2097,36 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
     b.vj("1").uri("vj:1")
         ("A", "08:00"_t)
         ("B", "09:00"_t);
+    b.data->build_uri();
 
-    transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update1 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("A", "20150928T0801"_pts).delay(1_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob1", timestamp, trip_update1, *b.data, true, true);
 
-    transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update2 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("A", "20150928T0805"_pts).delay(5_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob2", timestamp, trip_update2, *b.data, true, true);
 
-    transit_realtime::TripUpdate trip_update3 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update3 = ntest::make_trip_update_message("vj:1",
             "20150928",
             {
                     RTStopTime("A", "20150928T0802"_pts).delay(2_min),
                     RTStopTime("B", "20150928T0900"_pts).delay(0_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2165,28 +2157,27 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
         ("A", "08:00"_t)
         ("B", "08:00"_t)
         ("C", "09:00"_t);
+    b.data->build_uri();
 
-    transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update1 = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("A", "20171101T0801"_pts).delay(1_min),
                     RTStopTime("B", "20171101T0801"_pts).delay(1_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("late-01", timestamp, trip_update1, *b.data, true, true);
 
-    transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate trip_update2 = ntest::make_trip_update_message("vj:1",
             "20171102",
             {
                     RTStopTime("A", "20171102T0802"_pts).delay(2_min),
                     RTStopTime("B", "20171102T0802"_pts).delay(2_min)
             });
-    b.data->build_uri();
 
     navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2263,7 +2254,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
 
-    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate just_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2275,7 +2266,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2284,7 +2275,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0900"_pts);
 
-    transit_realtime::TripUpdate delay_and_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate delay_and_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0805"_pts).delay(5_min),
@@ -2297,7 +2288,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     delay_and_new_stop.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, delay_and_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2307,7 +2298,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).severity().name(), "trip modified");
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0905"_pts);
 
-    transit_realtime::TripUpdate new_stop_at_the_end = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate new_stop_at_the_end = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2320,7 +2311,7 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
     new_stop_at_the_end.SetExtension(kirin::effect, transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
     navitia::handle_realtime("add_new_stop_time_in_the_trip", timestamp, new_stop_at_the_end, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:D");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -2381,7 +2372,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
 
     // Add a new stop_time in vj = vj:1 betwen stops B and C with B and C unchanged
-    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate just_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2393,7 +2384,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("feed-1", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the original vj
     auto* vj = b.get<nt::VehicleJourney>("vj:1");
@@ -2424,7 +2415,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_MODIFIED_SERVICE);
 
     // Delete the recently added stop_time in vj = vj:1 B_bis
-    transit_realtime::TripUpdate delete_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate delete_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2436,7 +2427,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     navitia::handle_realtime("feed-2", timestamp, delete_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted
     vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-2");
@@ -2465,7 +2456,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     // Delete the recently deleted stop_time in vj = vj:1 B_bis
     // We should be able to add impact on the stop_time even if it is already deleted.
-    transit_realtime::TripUpdate redelete_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate redelete_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2476,7 +2467,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
             transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE);
 
     navitia::handle_realtime("feed-3", timestamp, redelete_stop, *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted twice
     vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-3");
@@ -2544,7 +2535,7 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
 
     // Delete the stop_time at B (delete_for_detour) followed by a new stop_time
     // added at B_bis (added_for_detour) and C unchanged.
-    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate just_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2555,7 +2546,7 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
             transit_realtime::Alert_Effect::Alert_Effect_DETOUR);
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2631,7 +2622,7 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     // at B_bis (added_for_detour) and C unchanged.
     // the arrival time of newly added stop_time is earlier than deleted, and this
     // feature works well.
-    transit_realtime::TripUpdate just_new_stop = ntest::make_delay_message("vj:1",
+    transit_realtime::TripUpdate just_new_stop = ntest::make_trip_update_message("vj:1",
             "20171101",
             {
                     RTStopTime("stop_point:A", "20171101T0800"_pts),
@@ -2643,7 +2634,7 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
 
     navitia::handle_realtime("add_new_and_delete_existingstop_time_in_the_trip_for_detour", timestamp, just_new_stop, *b.data, true, true);
 
-    b.make();
+    b.finalize_disruption_batch();
 
     // Same verifications as in the test above
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2679,7 +2670,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
         ("stop_point:D", "08:40"_t);
     b.make();
 
-    tr::TripUpdate add_stop = ntest::make_delay_message("vj:1", "20171101", {
+    tr::TripUpdate add_stop = ntest::make_trip_update_message("vj:1", "20171101", {
         RTStopTime("stop_point:A", "20171101T0810"_pts),
         RTStopTime("stop_point:B", "20171101T0820"_pts).added(),
         RTStopTime("stop_point:C", "20171101T0830"_pts),
@@ -2687,7 +2678,7 @@ BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
     });
 
     navitia::handle_realtime("add_new_stop", timestamp, add_stop, *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     auto res = compute_iti(b, "20171101T080000", "A", "D", nt::RTLevel::RealTime);
 
@@ -2750,7 +2741,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
     b.make();
 
     navitia::handle_realtime("add_new_stop", timestamp,
-                             ntest::make_delay_message("vj:1", "20171101", {
+                             ntest::make_trip_update_message("vj:1", "20171101", {
                                 RTStopTime("A", "20171101T0810"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0820"_pts).delay(1_min),
                                 RTStopTime("C", "20171101T0830"_pts).delay(1_min),
@@ -2758,7 +2749,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
                                 RTStopTime("A", "20171101T0850"_pts).delay(1_min),
                              }),
                              *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
 
@@ -2801,7 +2792,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
     b.make();
 
     navitia::handle_realtime("add_new_stop", timestamp,
-                             ntest::make_delay_message("vj:1", "20171101", {
+                             ntest::make_trip_update_message("vj:1", "20171101", {
                                 RTStopTime("A", "20171101T0810"_pts).delay(1_min),
                                 RTStopTime("B", "20171101T0820"_pts).delay(1_min),
                                 RTStopTime("C", "20171101T0830"_pts).delay(1_min),
@@ -2809,7 +2800,7 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
                                 RTStopTime("D", "20171101T0850"_pts).delay(1_min),
                              }),
                              *b.data, true, true);
-    b.make();
+    b.finalize_disruption_batch();
 
     const auto & realtime_vj = vj->meta_vj->get_rt_vj()[0];
 
@@ -2925,7 +2916,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
     auto it_route = pt_data.routes_map.find(route_id);
     BOOST_CHECK(it_route == pt_data.routes_map.end());
 
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -2936,9 +2927,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->pt_data->build_autocomplete(*(b.data->geo_ref));
-    b.data->pt_data->clean_weak_impacts();
-    b.data->build_raptor(1);
+    b.finalize_disruption_batch();
 
     it_network = pt_data.networks_map.find(network_id);
     BOOST_REQUIRE(it_network != pt_data.networks_map.end());
@@ -3025,7 +3014,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
 
 
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3038,7 +3027,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -3115,7 +3104,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
     // The old "new trip" is replace by the new, but the meta VJ is the same (don't create).
     // The old impact is deleted too
     // To show that it is the new GTFS-RT, schedules has changed
-    new_trip = ntest::make_delay_message("vj_new_trip",
+    new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0900"_pts).added(),
@@ -3127,7 +3116,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         comp_uri,
         phy_mode_uri);
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     //Check meta vj (there is no creation)
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 2);
@@ -3175,7 +3164,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
 
 
     // Add new trip with new id
-    transit_realtime::TripUpdate new_trip_2 = ntest::make_delay_message("vj_new_trip_2",
+    transit_realtime::TripUpdate new_trip_2 = ntest::make_trip_update_message("vj_new_trip_2",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3187,7 +3176,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
         comp_uri,
         phy_mode_uri);
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check if meta vj exist
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
@@ -3266,7 +3255,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
         return  pb_creator.get_response();
     };
 
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3281,7 +3270,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false and is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, false);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3291,7 +3280,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, false, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3301,7 +3290,7 @@ BOOST_FIXTURE_TEST_CASE(flags_block_new_trip, AddTripDataset) {
     // call function with is_realtime_add_trip_enabled=false
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, false);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3332,7 +3321,7 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
     };
 
     // If the company id doesn't exist inside the data with ADDED type, we reject the new trip
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3346,7 +3335,7 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3375,7 +3364,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
     };
 
     // If the physical mode id doesn't exist inside the data with ADDED type, we reject the new trip
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3389,7 +3378,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_doesnt_exist_in_new_trip, AddTripDatase
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
     BOOST_CHECK_EQUAL(res.journeys_size(), 0);
@@ -3401,7 +3390,7 @@ BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_
     auto& pt_data = *b.data->pt_data;
 
     // If trip id doesn't exist and the GTFS-RT is not an "Add new trip", we reject
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_id_doesnt_exist",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_id_doesnt_exist",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0809"_pts).delay(9_min),
@@ -3413,7 +3402,7 @@ BOOST_FIXTURE_TEST_CASE(trip_id_that_doesnt_exist_must_be_rejected_in_classical_
 
     // the new trip update with bad id is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
 }
@@ -3438,7 +3427,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         return  pb_creator.get_response();
     };
 
-    transit_realtime::TripUpdate new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3451,7 +3440,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -3467,7 +3456,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
 
-    new_trip = ntest::make_delay_message("vj_new_trip_2",
+    new_trip = ntest::make_trip_update_message("vj_new_trip_2",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
@@ -3480,7 +3469,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-2", timestamp, new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -3497,7 +3486,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 3);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
 
-    transit_realtime::TripUpdate remove_new_trip = ntest::make_delay_message("vj_new_trip",
+    transit_realtime::TripUpdate remove_new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0900"_pts),
@@ -3510,7 +3499,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // trip from A to G is now removed
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
@@ -3528,7 +3517,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
 
     // Send the same GTFS-RT. Have to reject it because id doesn't exist.
-    remove_new_trip = ntest::make_delay_message("vj_new_trip",
+    remove_new_trip = ntest::make_trip_update_message("vj_new_trip",
         "20190101",
         {
             RTStopTime("stop_point:A", "20190101T0900"_pts),
@@ -3541,7 +3530,7 @@ BOOST_FIXTURE_TEST_CASE(cancelled_trip, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_new_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     // Check meta vj table
     BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.size(), 3);
@@ -3561,7 +3550,7 @@ BOOST_FIXTURE_TEST_CASE(cant_cancel_trip_that_doesnt_exist, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 1);
 
     // Can't cancel trip that doesn't exist
-    transit_realtime::TripUpdate remove_trip = ntest::make_delay_message("vj_id_doesnt_exist",
+    transit_realtime::TripUpdate remove_trip = ntest::make_trip_update_message("vj_id_doesnt_exist",
         "20190101",
         {
             RTStopTime("stop_point:X", "20190101T0900"_pts),
@@ -3574,7 +3563,7 @@ BOOST_FIXTURE_TEST_CASE(cant_cancel_trip_that_doesnt_exist, AddTripDataset) {
         phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, remove_trip, *b.data, true, true);
-    b.data->build_raptor();
+    b.finalize_disruption_batch();
 
     BOOST_CHECK(!pt_data.meta_vjs.exists("vj_id_doesnt_exist"));
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
