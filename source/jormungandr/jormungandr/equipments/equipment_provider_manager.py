@@ -76,14 +76,14 @@ class EquipmentProviderManager(object):
         """
         try:
             if '.' not in cls:
-                self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
+                self.logger.warn('impossible to build, wrongly formated class: {}'.format(cls))
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.log.warn('impossible to build, cannot find class: {}'.format(cls))
+            self.logger.warn('impossible to build, cannot find class: {}'.format(cls))
 
     def update_config(self):
         """
@@ -95,17 +95,16 @@ class EquipmentProviderManager(object):
         ):
             return
 
-        logger = logging.getLogger(__name__)
-        logger.debug('Updating equipment providers from db')
+        self.logger.debug('Updating equipment providers from db')
         self._last_update = datetime.datetime.utcnow()
 
         providers = []
         try:
             providers = self._providers_getter()
         except Exception:
-            logger.exception('failure to retrieve equipments providers configuration')
+            self.logger.exception('Failure to retrieve equipments providers configuration')
         if not providers:
-            logger.debug('No providers/All providers disabled in db')
+            self.logger.debug('No providers/All providers disabled in db')
             self._equipment_providers = {}
             self._equipment_providers_last_update = {}
 
@@ -116,12 +115,12 @@ class EquipmentProviderManager(object):
                 provider.id not in self._equipment_providers_last_update
                 or provider.last_update() > self._equipment_providers_last_update[provider.id]
             ):
-                logger.info('updating/adding {} equipment provider'.format(provider.id))
+                self.logger.info('updating/adding {} equipment provider'.format(provider.id))
                 try:
                     self._equipment_providers[provider.id] = self._init_class(provider.klass, provider.args)
                     self._equipment_providers_last_update[provider.id] = provider.last_update()
                 except Exception:
-                    logger.exception('impossible to initialize equipments provider')
+                    self.logger.exception('impossible to initialize equipments provider')
 
                 # If the provider added in db is also defined in legacy, delete it.
                 self._equipment_providers_legacy.pop(provider.id, None)
