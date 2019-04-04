@@ -509,14 +509,8 @@ class LineSerializer(PbGenericSerializer):
 
 
 class StopAreaEquipmentsSerializer(PbGenericSerializer):
-    stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
+    stop_area = StopAreaSerializer(display_none=False)
     equipment_details = EquipmentDetailsSerializer(many=True, display_none=False)
-
-    def get_stop_area(self, obj):
-        if obj.HasField(str('stop_area')):
-            return StopAreaSerializer(obj.stop_area, display_none=False).data
-        else:
-            return None
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
