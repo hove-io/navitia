@@ -33,13 +33,13 @@ import copy
 
 import jormungandr.street_network.utils
 from jormungandr.exceptions import TechnicalError
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, type_pb2, response_pb2
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
     StreetNetworkPathKey,
 )
-from jormungandr import utils
+from jormungandr import utils, fallback_modes as fm
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -87,6 +87,16 @@ class Kraken(AbstractStreetNetworkService):
 
         if should_invert_journey:
             return self._reverse_journeys(response)
+
+        if mode == fm.FallbackModes.ridesharing.name and response:
+            for journey in response.journeys:
+                for section in journey.sections:
+                    section.street_network.mode = fm.FallbackModes.ridesharing.value
+                    journey.durations.ridesharing += section.duration
+                    journey.durations.car -= section.duration
+                    journey.distances.ridesharing += section.length
+                    journey.distances.car -= section.length
+
         return response
 
     def _create_direct_path_request(

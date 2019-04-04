@@ -28,11 +28,8 @@
 # www.navitia.io
 
 import logging
-import copy
-import itertools
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
-from jormungandr import utils
-from jormungandr.utils import get_pt_object_coord, SectionSorter
+from jormungandr import utils, fallback_modes as fm
 
 
 from navitiacommon import response_pb2
@@ -45,9 +42,16 @@ class Ridesharing(AbstractStreetNetworkService):
 
     def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        self.modes = modes or []
+
+        self.modes = modes or [fm.FallbackModes.ridesharing.name]
+
+        assert list(self.modes) == [fm.FallbackModes.ridesharing.name], (
+            'Class: ' + str(self.__class__) + ' can only be used for ridesharing'
+        )
+
         self.sn_system_id = id or 'ridesharing'
-        config = kwargs.get('street_network', None)
+
+        config = kwargs.get('street_network', {})
         if 'service_url' not in config['args']:
             config['args'].update({'service_url': None})
         if 'instance' not in config['args']:
@@ -70,11 +74,6 @@ class Ridesharing(AbstractStreetNetworkService):
         response = self.street_network._direct_path(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )
-
-        if response:
-            for journey in response.journeys:
-                for section in journey.sections:
-                    section.street_network.mode = response_pb2.Ridesharing
 
         return response
 
@@ -101,5 +100,12 @@ class Ridesharing(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
-
+        mode = 'car_no_park'
         return self.street_network.make_path_key(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
+
+    def post_processing(
+        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
+    ):
+        return self.street_network.post_processing(
+            response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
+        )

@@ -31,5 +31,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.street_network import StreetNetwork
+
+from jormungandr.street_network.asgard import Asgard
+from jormungandr.street_network.geovelo import Geovelo
+from jormungandr.street_network.here import Here
+from jormungandr.street_network.kraken import Kraken
+from jormungandr.street_network.ridesharing import Ridesharing
+from jormungandr.street_network.taxi import Taxi
+from jormungandr.street_network.with_parking import WithParking

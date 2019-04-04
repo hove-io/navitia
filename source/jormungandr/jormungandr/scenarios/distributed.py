@@ -107,7 +107,7 @@ class Distributed(object):
             context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
-                future_manager=future_manager, instance=instance
+                future_manager=future_manager, instance=instance, request=request
             )
 
             period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
@@ -222,10 +222,8 @@ class Distributed(object):
         res = []
         if context.partial_response_is_empty:
             for mode in requested_dep_modes:
-                dp = context.direct_paths_by_mode.get(mode).wait_and_get()
+                dp = context.direct_paths_by_mode.wait_and_get(mode)
                 if getattr(dp, "journeys", None):
-                    if mode == "ridesharing":
-                        switch_back_to_ridesharing(dp, True)
                     res.append(dp)
 
         # pt_journeys may contain None and res must be a list of protobuf journey
@@ -248,7 +246,9 @@ class Distributed(object):
         Fallbacks will only be computed for journeys not tagged as 'to_delete'
         """
 
-        streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
+        streetnetwork_path_pool = StreetNetworkPathPool(
+            future_manager=future_manager, instance=instance, request=request
+        )
 
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
         wait_and_complete_pt_journey(

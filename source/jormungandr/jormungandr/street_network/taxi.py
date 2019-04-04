@@ -31,7 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
-from jormungandr import utils
+from jormungandr import utils, fallback_modes as fm
+from jormungandr.utils import get_pt_object_coord, SectionSorter, pb_del_if
 
 
 from navitiacommon import response_pb2
@@ -40,9 +41,14 @@ from navitiacommon import response_pb2
 class Taxi(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        self.modes = modes or []
+        self.modes = modes or [fm.FallbackModes.taxi.name]
+
+        assert list(self.modes) == [fm.FallbackModes.taxi.name], (
+            'Class: ' + str(self.__class__) + ' can only be used for ridesharing'
+        )
+
         self.sn_system_id = id or 'taxi'
-        config = kwargs.get('street_network', None)
+        config = kwargs.get('street_network', {})
         if 'service_url' not in config['args']:
             config['args'].update({'service_url': None})
         if 'instance' not in config['args']:
@@ -50,6 +56,7 @@ class Taxi(AbstractStreetNetworkService):
 
         config['args'].update({'modes': self.modes})
         self.street_network = utils.create_object(config)
+        self.post_processing_func = None
 
     def status(self):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
@@ -73,12 +80,15 @@ class Taxi(AbstractStreetNetworkService):
                 for section in journey.sections:
                     section.street_network.mode = response_pb2.Taxi
 
+            def post_processing_func():
                 # We don't add an additional waiting section for direct_path
                 # Only for fallback
                 if direct_path_type != StreetNetworkPathType.DIRECT:
                     self._add_additional_section_in_fallback(
                         response, pt_object_origin, pt_object_destination, copy_request, direct_path_type
                     )
+
+            self.post_processing_func = None
 
         return response
 
@@ -190,5 +200,17 @@ class Taxi(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
-
+        mode = 'car_no_park'
         return self.street_network.make_path_key(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
+
+    def post_processing(
+        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
+    ):
+        copy_response = response_pb2.Response()
+        copy_response.CopyFrom(response)
+
+        if direct_path_type != StreetNetworkPathType.DIRECT:
+            self._add_additional_section_in_fallback(
+                copy_response, pt_object_origin, pt_object_destination, request, direct_path_type
+            )
+        return self.street_network.post_processing(copy_response, mode)

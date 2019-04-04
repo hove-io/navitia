@@ -242,7 +242,7 @@ class FallbackDurationsPool(dict):
     def _async_request(self):
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.get(mode)
+                self._request, mode, self._direct_paths_by_mode.wait_and_get(mode)
             )
             fallback_durations = FallbackDurations(
                 self._future_manager,

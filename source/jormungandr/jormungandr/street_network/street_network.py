@@ -97,6 +97,12 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         """
         pass
 
+    @abc.abstractmethod
+    def post_processing(
+        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
+    ):
+        pass
+
     def feed_publisher(self):
         return None
 

@@ -74,6 +74,26 @@ class StreetNetworkPath:
 
         self._async_request()
 
+    @property
+    def orig_obj(self):
+        return self._orig_obj
+
+    @property
+    def dest_obj(self):
+        return self._dest_obj
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @property
+    def request(self):
+        return self._request
+
+    @property
+    def path_type(self):
+        return self._path_type
+
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
         try:
@@ -102,8 +122,8 @@ class StreetNetworkPath:
         dp = self._direct_path_with_fp(self._instance)
 
         if getattr(dp, "journeys", None):
-            if self._mode == "ridesharing":
-                switch_back_to_ridesharing(dp, True)
+            # if self._mode == "ridesharing":
+            #     switch_back_to_ridesharing(dp, True)
             dp.journeys[0].internal_id = str(utils.generate_id())
 
         logger.debug(
@@ -130,10 +150,12 @@ class StreetNetworkPathPool:
     According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
 
-    def __init__(self, future_manager, instance):
+    def __init__(self, future_manager, instance, request):
         self._future_manager = future_manager
         self._instance = instance
         self._value = {}
+        self._direct_paths_by_mode = {}
+        self._request = request
 
     def add_async_request(
         self, requested_orig_obj, requested_dest_obj, mode, period_extremity, request, streetnetwork_path_type
@@ -147,28 +169,47 @@ class StreetNetworkPathPool:
             if streetnetwork_service
             else None
         )
-        if key in self._value:
-            return
-        self._value[key] = StreetNetworkPath(
-            self._future_manager,
-            streetnetwork_service,
-            requested_orig_obj,
-            requested_dest_obj,
-            mode,
-            period_extremity,
-            request,
-            streetnetwork_path_type,
-        )
+
+        path = self._value.get(key)
+
+        if not path:
+            path = self._value[key] = StreetNetworkPath(
+                self._future_manager,
+                streetnetwork_service,
+                requested_orig_obj,
+                requested_dest_obj,
+                mode,
+                period_extremity,
+                request,
+                streetnetwork_path_type,
+            )
+
+        if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
+            self._direct_paths_by_mode[mode] = path
 
     def get_all_direct_paths(self):
         """
         Get all streetnetwork path of DIRECT type
         :return: a dictionary of mode vs dp_future
         """
-        streetnetwork_path_type = StreetNetworkPathType.DIRECT
-        return {
-            k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type
-        }
+
+        class _InnerClass(object):
+            def __init__(self, direct_paths_by_mode, instance, request):
+                self._direct_paths_by_mode = direct_paths_by_mode
+                self._instance = instance
+                self._request = request
+
+            def wait_and_get(self, mode):
+                streetnetwork_service = self._instance.get_street_network(mode, self._request)
+                dp = self._direct_paths_by_mode.get(mode)
+                if not dp:
+                    return dp
+
+                return streetnetwork_service.post_processing(
+                    dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+                )
+
+        return _InnerClass(self._direct_paths_by_mode, self._instance, self._request)
 
     def has_valid_direct_paths(self):
         for k in self._value:
@@ -191,4 +232,6 @@ class StreetNetworkPathPool:
             else None
         )
         dp = self._value.get(key)
-        return dp.wait_and_get() if dp else None
+        return streetnetwork_service.post_processing(
+            dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+        )
