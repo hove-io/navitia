@@ -425,6 +425,9 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         taxi_direct = journeys[0]
 
+        assert taxi_direct.get('durations', {}).get('taxi') == 7
+        assert taxi_direct.get('distances', {}).get('taxi') == 87
+
         assert taxi_direct.get('departure_date_time') == '20120614T075000'
         assert taxi_direct.get('arrival_date_time') == '20120614T075007'
         assert taxi_direct.get('duration') == 7
@@ -473,6 +476,12 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         assert taxi_fallback.get('departure_date_time') == '20120614T075355'
         assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
+
+        assert taxi_fallback.get('durations', {}).get('taxi') == 425
+        assert taxi_fallback.get('durations', {}).get('walking') == 80
+
+        assert taxi_fallback.get('distances', {}).get('taxi') == 18
+        assert taxi_fallback.get('distances', {}).get('walking') == 89
 
         sections = taxi_fallback.get('sections')
         assert len(sections) == 4

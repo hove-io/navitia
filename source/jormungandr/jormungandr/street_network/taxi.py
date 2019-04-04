@@ -206,6 +206,8 @@ class Taxi(AbstractStreetNetworkService):
     def post_processing(
         self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
     ):
+        if not response:
+            return response
         copy_response = response_pb2.Response()
         copy_response.CopyFrom(response)
 
@@ -213,4 +215,6 @@ class Taxi(AbstractStreetNetworkService):
             self._add_additional_section_in_fallback(
                 copy_response, pt_object_origin, pt_object_destination, request, direct_path_type
             )
-        return self.street_network.post_processing(copy_response, mode)
+        return self.street_network.post_processing(
+            copy_response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
+        )

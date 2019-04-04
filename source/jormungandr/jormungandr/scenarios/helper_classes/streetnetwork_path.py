@@ -232,6 +232,10 @@ class StreetNetworkPathPool:
             else None
         )
         dp = self._value.get(key)
-        return streetnetwork_service.post_processing(
-            dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+        return (
+            streetnetwork_service.post_processing(
+                dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+            )
+            if dp
+            else None
         )
