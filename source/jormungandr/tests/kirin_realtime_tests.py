@@ -1724,8 +1724,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
     def test_add_new_trip_with_wrong_physical_mode(self):
         """
         1. send a disruption to create a new trip with physical_mode absent in kaken
-        2. test that no journey is possible using this new trip
-        3. test that no PT-Ref objects were created
+        2. check of journey, disruption and PT-Ref objects to verify that no trip is added
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)
@@ -1789,41 +1788,6 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
         response, status = self.query_region(vj_query, check=False)
         assert status == 404
         assert 'vehicle_journeys' not in response
-
-        # Check that no additional line exists
-        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:additional_service', dt='20120614T080000')
-        response, status = self.query_region(line_query, check=False)
-        assert status == 404
-        assert 'lines' not in response
-
-        # Check that PT-Ref filter fails as no object exists
-        vj_filter_query = 'commercial_modes/{cm}/vehicle_journeys?_current_datetime={dt}'.format(
-            cm='commercial_mode:additional_service', dt='20120614T080000'
-        )
-        response, status = self.query_region(vj_filter_query, check=False)
-        assert status == 404
-        assert response['error']['message'] == 'ptref : Filters: Unable to find object'
-
-        network_filter_query = 'vehicle_journeys/{vj}/networks?_current_datetime={dt}'.format(
-            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
-        )
-        response, status = self.query_region(network_filter_query, check=False)
-        assert status == 404
-        assert response['error']['message'] == 'ptref : Filters: Unable to find object'
-
-        # Check that no departure exist on stop_point stop_point:stopC
-        departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
-        departures = self.query_region(departure_query)
-        assert len(departures['departures']) == 0
-
-        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
-        ss_query = (
-            "stop_points/stop_point:stopC/lines/line:additional_service/"
-            "stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
-        )
-        stop_schedules, status = self.query_region(ss_query, check=False)
-        assert status == 404
-        assert len(stop_schedules['stop_schedules']) == 0
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
