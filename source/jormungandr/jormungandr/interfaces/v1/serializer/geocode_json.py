@@ -271,11 +271,12 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
         }
         res = []
         for feature in obj.get('features', []):
-            type_ = feature.get('properties', {}).get('geocoding', {}).get('type')
+            geocoding = feature.get('properties', {}).get('geocoding', {})
+            type_ = geocoding.get('type')
             if not type_ or type_ not in map_serializer:
                 logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(feature))
                 continue
-            zone_type = feature.get('properties', {}).get('geocoding', {}).get('zone_type')
+            zone_type = geocoding.get('zone_type')
             # TODO: do something smart with other zone type
             if type_ == 'zone' and zone_type != 'city':
                 logging.getLogger(__name__).error('Place not serialized (invalid zone type): {}'.format(feature))
