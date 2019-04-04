@@ -116,7 +116,7 @@ BRAGI_MOCK_TYPE_UNKNOWN = {
             "geometry": {"coordinates": [3.1092154, 50.6274528], "type": "Point"},
             "properties": {
                 "geocoding": {
-                    "id": "admin:osm:2643160",
+                    "id": "admin:osm:relation:2643160",
                     "type": "unknown",
                     "label": "Hellemmes-Lille",
                     "name": "Hellemmes-Lille",
