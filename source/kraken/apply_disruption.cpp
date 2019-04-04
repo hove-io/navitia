@@ -290,8 +290,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (!mvj->get_base_vj().empty()) {
                     vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 } else {
-                    // for protection, use the physical_modes[0]
-                    // TODO : Create default physical mode
+                    // for protection, use the physical_modes[0] instead of creating a new one
                     vj->physical_mode = pt_data.physical_modes[0];
                     LOG4CPLUS_WARN(
                         log, "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");

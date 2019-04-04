@@ -1610,6 +1610,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
             ],
             disruption_id='new_trip',
             effect='additional_service',
+            physical_mode_id='physical_mode:Bus',   # this physical mode exists in kraken
         )
 
         # Check new disruption 'additional-trip' to add a new trip
@@ -1640,6 +1641,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
+        assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
 
         # Check /pt_objects after: new objects created
         response = self.query_region(ptobj_query)
@@ -1715,6 +1717,113 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
         assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
         assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
+    def test_add_new_trip_with_wrong_physical_mode(self):
+        """
+        1. send a disruption to create a new trip with physical_mode absent in kaken
+        2. test that no journey is possible using this new trip
+        3. test that no PT-Ref objects were created
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption, a new trip with 2 stop_times in realtime
+        self.send_mock(
+            "additional-trip",
+            "20120614",
+            'added',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id='new_trip',
+            effect='additional_service',
+            physical_mode_id='physical_mode:Toto',   # this physical mode doesn't exist in kraken
+        )
+
+        # Check there is no new disruption
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before == len(disruptions_after['disruptions'])
+
+        # /journeys before (only direct walk)
+        C_B_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "datetime={dt}&_current_datetime={dt}".format(
+                f='stop_point:stopC', to='stop_point:stopB', dt='20120614T080000'
+            )
+        )
+        response = self.query_region(C_B_query)
+        assert not has_the_disruption(response, 'new_trip')
+        self.is_valid_journey_response(response, C_B_query)
+        assert len(response['journeys']) == 1
+        assert 'non_pt_walking' in response['journeys'][0]['tags']
+
+        # /pt_objects before
+        ptobj_query = 'pt_objects?q={q}&_current_datetime={dt}'.format(q='adi', dt='20120614T080000')  # ++typo
+        response = self.query_region(ptobj_query)
+        assert 'pt_objects' not in response
+
+        # Check that no vehicle_journey exists on the future realtime-trip
+        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
+            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
+        )
+        response, status = self.query_region(vj_query, check=False)
+        assert status == 404
+        assert 'vehicle_journeys' not in response
+
+        # Check that no additional line exists
+        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:additional_service', dt='20120614T080000')
+        response, status = self.query_region(line_query, check=False)
+        assert status == 404
+        assert 'lines' not in response
+
+        # Check that PT-Ref filter fails as no object exists
+        vj_filter_query = 'commercial_modes/{cm}/vehicle_journeys?_current_datetime={dt}'.format(
+            cm='commercial_mode:additional_service', dt='20120614T080000'
+        )
+        response, status = self.query_region(vj_filter_query, check=False)
+        assert status == 404
+        assert response['error']['message'] == 'ptref : Filters: Unable to find object'
+
+        network_filter_query = 'vehicle_journeys/{vj}/networks?_current_datetime={dt}'.format(
+            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
+        )
+        response, status = self.query_region(network_filter_query, check=False)
+        assert status == 404
+        assert response['error']['message'] == 'ptref : Filters: Unable to find object'
+
+        # Check that no departure exist on stop_point stop_point:stopC
+        departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
+        departures = self.query_region(departure_query)
+        assert len(departures['departures']) == 0
+
+        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
+        ss_query = (
+            "stop_points/stop_point:stopC/lines/line:additional_service/"
+            "stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        stop_schedules, status = self.query_region(ss_query, check=False)
+        assert status == 404
+        assert len(stop_schedules['stop_schedules']) == 0
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
@@ -1827,7 +1936,8 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         assert len(stop_schedules['stop_schedules']) == 0
 
 
-def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None):
+def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None,
+                         physical_mode_id=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -1841,7 +1951,8 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
     trip.trip_id = vj_id
     trip.start_date = date
     trip.Extensions[kirin_pb2.contributor] = rt_topic
-
+    if physical_mode_id:
+        trip_update.vehicle.Extensions[kirin_pb2.physical_mode_id] = physical_mode_id
     if effect == 'unknown':
         trip_update.Extensions[kirin_pb2.effect] = gtfs_realtime_pb2.Alert.UNKNOWN_EFFECT
     elif effect == 'modified':
