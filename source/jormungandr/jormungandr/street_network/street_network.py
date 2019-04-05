@@ -31,12 +31,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-import jormungandr.street_network.utils
-from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr import utils, new_relic
 import abc
 from enum import Enum
-from navitiacommon import response_pb2
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
 # http://stackoverflow.com/a/38668373/1614576
