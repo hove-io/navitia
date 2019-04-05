@@ -170,6 +170,9 @@ struct PT_Data : boost::noncopyable{
                                      type::Line* line,
                                      type::StopArea* destination = nullptr,
                                      const std::string& direction_type = {});
+    const type::TimeZoneHandler* get_main_timezone();
+    type::MetaVehicleJourney* get_or_create_meta_vehicle_journey(const std::string& uri,
+                                                                 const type::TimeZoneHandler* tz);
 
     void clean_weak_impacts();
 

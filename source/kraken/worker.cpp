@@ -278,7 +278,7 @@ void Worker::metadatas() {
         metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
         metadatas->set_shape(d->meta->shape);
         // we get the first timezone of the dataset
-        const auto* tz = d->pt_data->tz_manager.get_first_timezone();
+        const auto* tz = d->pt_data->get_main_timezone();
         if (tz) {
             metadatas->set_timezone(tz->tz_name);
         }

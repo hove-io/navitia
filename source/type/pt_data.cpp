@@ -127,6 +127,22 @@ type::Route* PT_Data::get_or_create_route(const std::string& uri,
     return route;
 }
 
+const type::TimeZoneHandler* PT_Data::get_main_timezone() {
+    // using TZ already used by MetaVJ as they all use the same when reading base_schedule data
+    if (meta_vjs.size() > 0) {
+        return meta_vjs.begin()->get()->tz_handler;
+    }
+    return tz_manager.get_first_timezone();
+}
+
+type::MetaVehicleJourney* PT_Data::get_or_create_meta_vehicle_journey(const std::string& uri,
+                                                                      const type::TimeZoneHandler* tz) {
+    auto* mvj = meta_vjs.get_or_create(uri);
+    mvj->tz_handler = tz;
+
+    return mvj;
+}
+
 ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
     for (auto vp : validity_patterns) {
         if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
