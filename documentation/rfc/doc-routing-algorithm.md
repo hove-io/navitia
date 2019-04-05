@@ -54,23 +54,25 @@ Connections: only intra stop point, 2 minutes except for F 3 minutes.
 
 ### RAPTOR and the specificities
 
-The routing algorithm is build around RAPTOR, a routing algorithm developped at Microsoft and published in 2012. The paper can be found [here](https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/raptor_alenex.pdf).
+The routing algorithm is built around RAPTOR, a routing algorithm developped at Microsoft and published in 2012. The paper can be found [here](https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/raptor_alenex.pdf).
 
 Basically, you give RAPTOR a set of journey patterns it can use, a set of stop points (for transfers) and date-times to reach the stop points. It gives you, for each stop points and each number of transfers, the earliest arrival date-time.
 
 Our implementation is very close to the original RAPTOR algorithm. There are 2 added functionalities:
  - stay in: they are opportunistic, i.e. using the 'stay in' is not guaranteed to be optimal. Journey patterns don't take 'stay in' into account.
- - ITL: as we have only one zone per stop time, the implementation is quite straightforward: on the first pickup, we set the current zone to the zone of the stop point. If the zone changes, no more drop off is forbidden because we can choose the good pick up afterwards.
+ - ITL (Interdiction de transport local, [local travel restriction](https://github.com/google/transit/issues/117)): as we have only one zone per stop time, the implementation is quite straightforward: on the first pickup, we set the current zone to the zone of the stop point. If the zone changes, no more drop off is forbidden because we can choose the good pick up afterwards.
  
  Journey patterns are generated automatically. They must have the same succession of stop times (except date-times) and must not overtake.
 
-### The first pass on example 1
+### First pass
 
 In this section, you can find raptor results examples. Our implementation doesn't remember the vehicle journeys used, they are chosen by the raptor solution reader, explained later.
 
 The algorithm's input is a set of journey patterns and stop points, along with a starting date-time plus durations to access the reachable stop points. These last 2 inputs are used to compute the first TR0 line.
 
-The PTx lines correspond to the earliest arrival to a stop point using x vehicles (including stay in). The TRx corresponds to the earliest arrival to a stop point after x vehicles plus the connections.
+The PTx (for Public transport level X) lines correspond to the earliest arrival to a stop point using x vehicles (stay in don't increment the level). The TRx (for transfer level X) corresponds to the earliest arrival at a stop point after x vehicles plus the connections.
+
+### The first pass on example 1
 
 Starting from A at 7:45:
 
@@ -96,11 +98,13 @@ Starting from A at 7:55:
 |TR3  |    |    |    |    |    |    |10:02    |
 |PT4  |    |    |    |    |    |    |         |
 
-The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if we target G, starting at 7:45 from A gives G at 10:00using 0 connection, but starting at 7:55 gives 12:00 using 0 connection and 10:00 using 1 connection.
+The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if we target G, starting at 7:45 from A gives G at 10:00 using 0 connection, but starting at 7:55 gives 10:20 using 0 connection and 10:00 using 1 connection.
+
+Note that the TR0 can have several entries, and, in practice, there is a few hundred of them (all the accessible stop point by feet).
 
 ### Second pass
 
-As our main objective is earliest arrival time, and then, at equal earliest arrival time, the latest departure time, We need another optimization as RAPTOR doesn't minimize this. Therefore, we do a second pass on the journey: for each candidate arrivals, we rerun RAPTOR in other way around, minimizing departure times.
+As our main objective is earliest arrival time, and then, at equal earliest arrival time, the latest departure time, We need another optimization as RAPTOR doesn't minimize this. Therefore, we do a second pass on the journey: for each candidate arrivals, we rerun RAPTOR in other way around, maximizing departure times.
 
 The number of second passes can be quite high. To limit this, we compute a bound of the journeys ending to our current second pass initialisation, and check if this bound is dominated by the previously found journeys (found by the previous second passes). Thanks to this optimization, we can avoid a lot of useless second passes. To be safe, we globally bound the number of second passes realized (see the `max_extra_second_pass` parameter of the algorithm).
 
