@@ -206,7 +206,7 @@ class StreetNetworkPathPool:
                     return dp
 
                 return streetnetwork_service.post_processing(
-                    dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+                    dp.wait_and_get(), dp.orig_obj, dp.dest_obj, mode, dp.request, dp.path_type
                 )
 
         return _InnerClass(self._direct_paths_by_mode, self._instance, self._request)

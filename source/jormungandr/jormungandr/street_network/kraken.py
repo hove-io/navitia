@@ -88,15 +88,6 @@ class Kraken(AbstractStreetNetworkService):
         if should_invert_journey:
             return self._reverse_journeys(response)
 
-        # if mode == fm.FallbackModes.ridesharing.name and response:
-        #     for journey in response.journeys:
-        #         for section in journey.sections:
-        #             section.street_network.mode = fm.FallbackModes.ridesharing.value
-        #             journey.durations.ridesharing += section.duration
-        #             journey.durations.car -= section.duration
-        #             journey.distances.ridesharing += section.length
-        #             journey.distances.car -= section.length
-
         return response
 
     def _create_direct_path_request(
@@ -190,6 +181,8 @@ class Kraken(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
+        if mode in (fm.FallbackModes.ridesharing.name, fm.FallbackModes.taxi.name):
+            mode = 'car_no_park'
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
 
     def post_processing(

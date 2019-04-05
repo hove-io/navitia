@@ -147,7 +147,16 @@ class _PtJourneySorter(object):
     ("walking-walking").
     """
 
-    mode_weight = {"walking": 1, "bike": 100, "bss": 500, "car": 1000, "taxi": 1000}
+    from jormungandr.fallback_modes import FallbackModes
+
+    mode_weight = {
+        FallbackModes.walking.name: 1,
+        FallbackModes.bike.name: 100,
+        FallbackModes.bss.name: 500,
+        FallbackModes.car.name: 1000,
+        FallbackModes.ridesharing.name: 1000,
+        FallbackModes.taxi.name: 1000,
+    }
 
     def __call__(self, a, b):
         a_weight = self.mode_weight.get(a.dep_mode) + self.mode_weight.get(a.dep_mode)

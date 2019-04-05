@@ -411,6 +411,41 @@ class TestJourneysRidesharingDistributed(
         pass
 
 
+@dataset(
+    {
+        "main_routing_test": {
+            "scenario": "distributed",
+            "instance_config": {
+                "street_network": [
+                    {"modes": ["ridesharing", "taxi"], "class": "jormungandr.street_network.tests.MockKraken"}
+                ]
+            },
+        }
+    }
+)
+class TestJourneysTaxiAndRidesharingDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_taxi_and_ridesharing_first_section_mode(self):
+        sn_service = i_manager.instances['main_routing_test'].street_network_services[0]
+        sn_service.direct_path_call_count = 0
+        sn_service.routing_matrix_call_count = 0
+
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"
+            "first_section_mode[]=ridesharing&first_section_mode[]=taxi&debug=true"
+        )
+        response = self.query_region(query)
+
+        direct_paht_nb = len([j for j in response.get('journeys', []) if 'non_pt' in j.get('tags', [])])
+        assert direct_paht_nb == 2
+
+        # we've have found two direct path, since taxi and ridesharing are technically same thing for kraken
+        # kraken should have been called only once
+        assert sn_service.direct_path_call_count == 1
+
+        # in principle, the matrix should be called only once too, but this is not possible right now
+        assert sn_service.routing_matrix_call_count == 2
+
+
 @dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
     def test_first_section_mode_taxi(self):

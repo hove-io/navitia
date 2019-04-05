@@ -100,7 +100,6 @@ class Ridesharing(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
-        mode = 'car_no_park'
         return self.street_network.make_path_key(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
 
     def post_processing(
