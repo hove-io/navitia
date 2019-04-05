@@ -119,6 +119,23 @@ def equipments_provider_manager_db_test():
     assert 'sytral' in manager._equipment_providers_last_update
     assert manager._equipment_providers_last_update['sytral'] > sytral_update
 
+    # Long update interval so provider shouldn't be updated
+    manager = EquipmentProviderManager([], providers_getter_ok, 600)
+    manager.init_providers(['sytral'])
+    assert not manager._equipment_providers_legacy
+    assert len(manager._equipment_providers) == 1
+    assert 'sytral' in manager._equipment_providers
+    assert manager._equipment_providers['sytral'].url == 'sytral.url'
+    manager_update = manager._last_update
+
+    manager._providers_getter = provider_getter_update
+    manager.update_config()
+    assert manager._last_update == manager_update
+    assert not manager._equipment_providers_legacy
+    assert len(manager._equipment_providers) == 1
+    assert 'sytral' in manager._equipment_providers
+    assert manager._equipment_providers['sytral'].url == 'sytral.url'
+
 
 def wrong_equipments_provider_test():
     """
