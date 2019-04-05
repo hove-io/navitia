@@ -1610,7 +1610,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
             ],
             disruption_id='new_trip',
             effect='additional_service',
-            physical_mode_id='physical_mode:Bus',   # this physical mode exists in kraken
+            physical_mode_id='physical_mode:Bus',  # this physical mode exists in kraken
         )
 
         # Check new disruption 'additional-trip' to add a new trip
@@ -1756,7 +1756,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
             ],
             disruption_id='new_trip',
             effect='additional_service',
-            physical_mode_id='physical_mode:Toto',   # this physical mode doesn't exist in kraken
+            physical_mode_id='physical_mode:Toto',  # this physical mode doesn't exist in kraken
         )
 
         # Check there is no new disruption
@@ -1900,8 +1900,9 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         assert len(stop_schedules['stop_schedules']) == 0
 
 
-def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None,
-                         physical_mode_id=None):
+def make_mock_kirin_item(
+    vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None, physical_mode_id=None
+):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
