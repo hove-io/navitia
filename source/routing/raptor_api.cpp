@@ -446,6 +446,7 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     durations->set_walking(total_walking_duration);
     durations->set_bike(total_bike_duration);
     durations->set_car(total_car_duration);
+    durations->set_taxi(0);
     durations->set_ridesharing(total_ridesharing_duration);
     durations->set_total(ts_arrival - ts_departure);
 
@@ -453,6 +454,7 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     distances->set_walking(total_walking_distance);
     distances->set_bike(total_bike_distance);
     distances->set_car(total_car_distance);
+    distances->set_taxi(0);
     distances->set_ridesharing(total_ridesharing_distance);
 }
 

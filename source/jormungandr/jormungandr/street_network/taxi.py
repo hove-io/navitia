@@ -67,6 +67,10 @@ class Taxi(AbstractStreetNetworkService):
 
         if response:
             for journey in response.journeys:
+                journey.durations.taxi = journey.durations.car
+                journey.distances.taxi = journey.distances.car
+                journey.durations.car = 0
+                journey.distances.car = 0
                 for section in journey.sections:
                     section.street_network.mode = response_pb2.Taxi
 

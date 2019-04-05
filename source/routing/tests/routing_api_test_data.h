@@ -56,7 +56,8 @@ struct test_speed_provider {
                                                             1, //nt::Mode_e::Walking
                                                             2, //nt::Mode_e::Bike
                                                             5, //nt::Mode_e::Car
-                                                            2 //nt::Mode_e::Vls
+                                                            2, //nt::Mode_e::Vls
+                                                            5 //nt::Mode_e::CarNoPark
                                                         }}
                                                         };
     navitia::time_duration to_duration(float dist, navitia::type::Mode_e mode) {
@@ -291,11 +292,13 @@ struct routing_api_data {
         // A->E
         add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::Walking);
         add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::Car);
+        add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(AA, EE));
         b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(EE, AA));
 
         // E->F
         add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::Car);
+        add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::CarNoPark);
         add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::Walking);
         b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(EE , FF));
         b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(FF , EE));
@@ -303,12 +306,14 @@ struct routing_api_data {
         // F->C
         add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::Walking);
         add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::Car);
+        add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(FF , CC));
         b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC , FF));
 
         // C->B
         add_edges(4, *b.data->geo_ref, BB, CC, B, C, navitia::type::Mode_e::Walking);
         add_edges(4, *b.data->geo_ref, BB, CC, 50, navitia::type::Mode_e::Car);
+        add_edges(4, *b.data->geo_ref, BB, CC, 50, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[4]->edges.push_back(std::make_pair(CC , BB));
         b.data->geo_ref->ways[4]->edges.push_back(std::make_pair(BB , CC));
 
@@ -358,6 +363,7 @@ struct routing_api_data {
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Walking);
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Bike);
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Car);
+        add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(BB, SS));
         b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(SS, BB));
 
@@ -365,6 +371,7 @@ struct routing_api_data {
         add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Walking);
         add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Bike);
         add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Car);
+        add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[13]->edges.emplace_back(BB, DD);
         b.data->geo_ref->ways[13]->edges.emplace_back(DD, BB);
 
@@ -372,6 +379,7 @@ struct routing_api_data {
         add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Walking);
         add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Bike);
         add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::Car);
+        add_edges(14, *b.data->geo_ref, TT, SS, T, S, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[14]->edges.emplace_back(TT, SS);
         b.data->geo_ref->ways[14]->edges.emplace_back(SS, TT);
 
