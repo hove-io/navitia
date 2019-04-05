@@ -30,13 +30,8 @@
 from __future__ import absolute_import
 
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.utils import (
-    PeriodExtremity,
-    SectionSorter,
-    get_pt_object_coord,
-    generate_id,
-    crowfly_distance_between,
-)
+from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord, generate_id
+from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.fallback_modes import FallbackModes
 from .helper_exceptions import *
 import copy

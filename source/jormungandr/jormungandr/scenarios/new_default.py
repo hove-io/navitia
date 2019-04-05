@@ -990,7 +990,7 @@ class Scenario(simple.Scenario):
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
-        self.finalise_journeys(request, responses, distributed_context, instance, api_request['debug'])
+        self.finalise_journeys(api_request, responses, distributed_context, instance, api_request['debug'])
 
         pb_resp = merge_responses(responses, api_request['debug'])
 

@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import
+
+import jormungandr.street_network.utils
 from navitiacommon import response_pb2
 from collections import namedtuple
 from math import sqrt
@@ -231,7 +233,7 @@ class FallbackDurationsPool(dict):
         self._direct_paths_by_mode = direct_paths_by_mode
         self._request = request
         self._direct_path_type = direct_path_type
-        self._speed_switcher = utils.make_speed_switcher(request)
+        self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
 
         self._value = {}
 

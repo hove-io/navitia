@@ -306,6 +306,7 @@ class Scenario(new_default.Scenario):
                 journey_filter.filter_detailed_journeys(responses, request)
 
         except Exception as e:
+            logging.getLogger(__name__).exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
 

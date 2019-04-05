@@ -29,7 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
-import math
 from collections import deque, namedtuple
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
@@ -42,7 +41,6 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
-from six.moves import range
 from six.moves import zip
 from jormungandr.exceptions import TechnicalError
 from flask import request
@@ -676,31 +674,3 @@ def portable_min(*args, **kwargs):
 
 def mps_to_kmph(speed):
     return round(3.6 * speed)
-
-
-def make_speed_switcher(req):
-    from jormungandr.fallback_modes import FallbackModes
-
-    return {
-        FallbackModes.walking.name: req['walking_speed'],
-        FallbackModes.bike.name: req['bike_speed'],
-        FallbackModes.car.name: req['car_speed'],
-        FallbackModes.bss.name: req['bss_speed'],
-        FallbackModes.ridesharing.name: req['car_no_park_speed'],
-        FallbackModes.taxi.name: req['taxi_speed'],
-    }
-
-
-N_DEG_TO_RAD = 0.01745329238
-EARTH_RADIUS_IN_METERS = 6372797.560856
-
-
-def crowfly_distance_between(start_coord, end_coord):
-    lon_arc = (start_coord.lon - end_coord.lon) * N_DEG_TO_RAD
-    lon_h = math.sin(lon_arc * 0.5)
-    lon_h *= lon_h
-    lat_arc = (start_coord.lat - end_coord.lat) * N_DEG_TO_RAD
-    lat_h = math.sin(lat_arc * 0.5)
-    lat_h *= lat_h
-    tmp = math.cos(start_coord.lat * N_DEG_TO_RAD) * math.cos(end_coord.lat * N_DEG_TO_RAD)
-    return EARTH_RADIUS_IN_METERS * 2.0 * math.asin(math.sqrt(lat_h + tmp * lon_h))

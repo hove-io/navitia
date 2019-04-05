@@ -32,7 +32,8 @@ import logging
 from jormungandr.exceptions import TechnicalError
 from jormungandr import app
 from jormungandr.street_network.kraken import Kraken
-from jormungandr.utils import get_pt_object_coord, make_speed_switcher
+from jormungandr.utils import get_pt_object_coord
+from jormungandr.street_network.utils import make_speed_switcher
 
 from contextlib import contextmanager
 import queue

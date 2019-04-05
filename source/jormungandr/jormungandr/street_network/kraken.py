@@ -30,6 +30,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import copy
+
+import jormungandr.street_network.utils
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
@@ -123,7 +125,7 @@ class Kraken(AbstractStreetNetworkService):
         self, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
         # TODO: reverse is not handled as so far
-        speed_switcher = utils.make_speed_switcher(request)
+        speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
 
         # kraken can only manage 1-n request, so we reverse request if needed
         if len(origins) > 1:

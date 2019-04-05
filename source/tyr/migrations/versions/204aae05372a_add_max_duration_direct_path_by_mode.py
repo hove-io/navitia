@@ -1,5 +1,4 @@
 """max_{mode}_direct_path_duration
-these parameters are nullable. When null, there is no limit
 
 Revision ID: 204aae05372a
 Revises: 1c8334cd1997

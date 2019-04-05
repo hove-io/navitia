@@ -30,6 +30,9 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+
+import jormungandr.street_network.utils
+from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr import utils, new_relic
 import abc
 from enum import Enum
@@ -65,40 +68,9 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
     def status(self):
         pass
 
-    def is_too_far(self, mode, request, pt_object_origin, pt_object_destination):
-        """
-        this function tests grossly if the distance between two coords is too far regarding
-        the give parameter (max_{mode}_direct_path_duration)
-
-        here is just a quick and stupid implementation, the actual street network connector may have more
-        information thus compute more specifically, if so, just feel free to overwrite this function
-        in the connector
-
-        :param mode:
-        :param request:
-        :param pt_object_origin:
-        :param pt_object_destination:
-        :return: bool
-        """
-        speed = utils.make_speed_switcher(request)[mode]
-        orig_coord = utils.get_pt_object_coord(pt_object_origin)
-        dest_coord = utils.get_pt_object_coord(pt_object_destination)
-        crowfly_distance = utils.crowfly_distance_between(orig_coord, dest_coord)
-
-        return (crowfly_distance / speed) > request['max_{}_direct_path_duration'.format(mode)]
-
     def direct_path_with_fp(
         self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
     ):
-        # With the max_{mode}_direct_path_duration parameter, we don't compute the direct_path if the
-        # crowfly is already out of the range
-        if direct_path_type == StreetNetworkPathType.DIRECT and self.is_too_far(
-            mode, request, pt_object_origin, pt_object_destination
-        ):
-            logging.getLogger(__name__).info('the requested journey is too long')
-            # an empty response
-            return response_pb2.Response()
-
         resp = self._direct_path(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )

@@ -32,7 +32,8 @@ import six
 from jormungandr import new_relic
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
-from jormungandr.utils import get_pt_object_coord, generate_id, crowfly_distance_between
+from jormungandr.utils import get_pt_object_coord, generate_id
+from jormungandr.street_network.utils import crowfly_distance_between
 from navitiacommon import response_pb2
 from jormungandr.utils import PeriodExtremity
 import logging
