@@ -145,6 +145,17 @@ struct VJ {
     nt::VehicleJourney* make();
 };
 
+struct SP {
+    using StopPointCodes = std::map<std::string, std::vector<std::string>>;
+
+    static navitia::type::StopPoint* create_stop_point(
+            builder& b, navitia::type::StopArea* sa,
+            const std::string& name,
+            const StopPointCodes& codes = {},
+            double x = 0, double y = 0, bool wheelchair_boarding = true,
+            bool bike_accepted = true);
+};
+
 struct SA {
     builder& b;
     navitia::type::StopArea* sa;
@@ -156,6 +167,9 @@ struct SA {
     /// Create a stopPoint in the current stopArea
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true,
                     bool bike_accepted = true);
+
+    SA & operator()(const std::string& sp_name,
+                    const SP::StopPointCodes& codes);
 };
 
 struct DisruptionCreator;
