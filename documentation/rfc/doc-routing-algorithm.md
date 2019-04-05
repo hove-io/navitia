@@ -148,5 +148,12 @@ drawbacks:
 
 ## Some ideas for improvement
 
-* RAPTOR, CSA and others
-* objectives
+If I had to rewrite it, I'd base the algorithm on Connection Scan Algorithm. RAPTOR and CSA are still the simple, flexible and effective algorithms. CSA is simpler, RAPTOR is better when the journey patterns contain a lot of vehicle journeys. Other algorithms try to limit the search space by using the "locality" of the data (in the geographical sense, using contractions or partitionning), but they are much more complicated, much less flexible, and need a complex prepocessing.
+
+As direct objectives, I'd use:
+- minimize arrival time
+- minimize number of transfer
+- minimize walking duration
+- maximize departure time
+
+All of that should allow to do the first, second and reader pass in just one pass. A stopping criterion can be something as the horizon constraint (arrival no more than x*best+y), doing some kind of journey schedule at the same time.
