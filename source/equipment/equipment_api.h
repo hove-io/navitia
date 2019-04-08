@@ -39,16 +39,17 @@ www.navitia.io
 namespace navitia {
 namespace equipment {
 
-using StopAreasPerLines = std::map<type::Line*, std::vector<type::StopArea*>>;
+using StopAreasPerLine = std::vector<std::pair<type::Line*, std::vector<type::StopArea*>>>;
 using ForbiddenUris = std::vector<std::string>;
 
-StopAreasPerLines get_stop_areas_per_lines(const type::Data& data,
-                                           const std::string& filter,
-                                           const ForbiddenUris& forbidden_uris = {});
+StopAreasPerLine get_stop_areas_per_line(const type::Data& data,
+                                         const std::string& filter,
+                                         const ForbiddenUris& forbidden_uris = {});
 
-void equipment_reports(PbCreator& pb_creator, int depth, int start_page,
-                       int count, const std::string& filter,
-                       const ForbiddenUris& forbidden_uris);
+void equipment_reports(PbCreator& pb_creator,
+                       const std::string& filter,
+                       int count, int depth = 0, int start_page = 0,
+                       const ForbiddenUris& forbidden_uris = {});
 
 } // namespace equipment
 } // namespace navitia

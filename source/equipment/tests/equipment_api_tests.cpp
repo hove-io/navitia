@@ -123,22 +123,72 @@ BOOST_FIXTURE_TEST_CASE(test_stop_area_per_line_query, Test_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
     auto filter = "stop_point.has_code_type(CodeType1)";
-    auto sa_per_lines = equipment::get_stop_areas_per_lines(data, filter);
+    auto sa_per_line = equipment::get_stop_areas_per_line(data, filter);
 
     // Convert result from object pointers to uris
-    map<string, set<string>> sa_per_lines_uris;
-    for(const auto & line : sa_per_lines) {
+    map<string, set<string>> sa_per_line_uris;
+    for(const auto & line : sa_per_line) {
         set<string> sa_uris;
         for(const auto & sa : line.second) { sa_uris.insert(sa->uri); }
-        sa_per_lines_uris[line.first->uri] = sa_uris;
+        sa_per_line_uris[line.first->uri] = sa_uris;
     }
 
     map<string, set<string>> expected_uris {
         {"A", {"sa1", "sa3"}},
         {"B", {"sa6"}},
     };
-    BOOST_CHECK_EQUAL_RANGE(sa_per_lines_uris, expected_uris);
+    BOOST_CHECK_EQUAL_RANGE(sa_per_line_uris, expected_uris);
 }
 
+BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, Test_fixture) {
+    const auto filter = "stop_point.has_code_type(CodeType1)";
+    equipment::equipment_reports(pb_creator, filter, 10);
+
+    BOOST_CHECK_EQUAL(pb_creator.equipment_reports_size(), 2);
+    const auto resp = pb_creator.get_response();
+
+    map<string, set<string>> sa_per_line_uris;
+    for(const auto equip_rep : resp.equipment_reports()) {
+        BOOST_REQUIRE(equip_rep.has_line());
+        set<string> stop_area_uris;
+        for(const auto sae : equip_rep.stop_area_equipments()){
+            BOOST_REQUIRE(sae.has_stop_area());
+            stop_area_uris.emplace(sae.stop_area().uri());
+        }
+        sa_per_line_uris[equip_rep.line().uri()] = stop_area_uris;
+    }
+
+     map<string, set<string>> expected_uris {
+        {"A", {"sa1", "sa3"}},
+        {"B", {"sa6"}},
+    };
+    BOOST_CHECK_EQUAL_RANGE(sa_per_line_uris, expected_uris);
+}
+
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_fail_on_bad_filter, Test_fixture) {
+    const auto filter = "this filter is just nonsense";
+    equipment::equipment_reports(pb_creator, filter, 10);
+
+    BOOST_CHECK_NO_THROW();
+    BOOST_CHECK(pb_creator.has_error());
+}
+
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_0, Test_fixture) {
+    const auto filter = "stop_point.has_code_type(CodeType1)";
+    // PAGE 0 - COUNT = 1
+    equipment::equipment_reports(pb_creator, filter, 1, 0, 0);
+    BOOST_REQUIRE_EQUAL(pb_creator.equipment_reports_size(), 1);
+    auto line_A_uri = pb_creator.get_response().equipment_reports(0).line().uri();
+    BOOST_CHECK_EQUAL(line_A_uri, "A");
+}
+
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_1, Test_fixture) {
+    const auto filter = "stop_point.has_code_type(CodeType1)";
+    // PAGE 1 - COUNT = 1
+    equipment::equipment_reports(pb_creator, filter, 1, 0, 1);
+    BOOST_REQUIRE_EQUAL(pb_creator.equipment_reports_size(), 1);
+    auto line_A_uri = pb_creator.get_response().equipment_reports(0).line().uri();
+    BOOST_CHECK_EQUAL(line_A_uri, "B");
+}
 
 } // namespace
