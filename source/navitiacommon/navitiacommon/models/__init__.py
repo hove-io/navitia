@@ -409,6 +409,45 @@ class Instance(db.Model):  # type: ignore
         db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
     )
 
+    max_walking_direct_path_duration = db.Column(
+        db.Integer, default=default_values.max_walking_direct_path_duration, nullable=False
+    )
+
+    max_bike_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bike_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bike_direct_path_duration),
+    )
+
+    max_bss_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bss_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bss_direct_path_duration),
+    )
+
+    max_car_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_direct_path_duration),
+    )
+
+    max_taxi_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_taxi_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_taxi_direct_path_duration),
+    )
+
+    max_ridesharing_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_ridesharing_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_ridesharing_direct_path_duration),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

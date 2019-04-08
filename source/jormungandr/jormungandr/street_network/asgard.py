@@ -33,6 +33,7 @@ from jormungandr.exceptions import TechnicalError
 from jormungandr import app
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
+from jormungandr.street_network.utils import make_speed_switcher
 
 from contextlib import contextmanager
 import queue
@@ -68,12 +69,7 @@ class Asgard(Kraken):
         }
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-        speed_switcher = {
-            "walking": request['walking_speed'],
-            "bike": request['bike_speed'],
-            "car": request['car_speed'],
-            "bss": request['bss_speed'],
-        }
+        speed_switcher = make_speed_switcher(request)
 
         req = self._create_sn_routing_matrix_request(
             origins, destinations, mode, max_duration, speed_switcher, **kwargs

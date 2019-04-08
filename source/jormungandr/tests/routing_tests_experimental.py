@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
+import operator
 
 """
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
@@ -304,6 +305,65 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
+def _make_function(from_coord, to_coord, mode, op):
+    def test_max_mode_direct_path_duration(self):
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]={mode}'
+            '&last_section_mode[]={mode}'
+            '&max_duration=0'
+        ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode)
+
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert mode in response['journeys'][0]['tags']
+        assert 'non_pt' in response['journeys'][0]['tags']
+
+        direct_path_duration = response['journeys'][0]['duration']
+
+        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}' + '&debug=true').format(
+            mode=mode, max_dp_duration=direct_path_duration - 1
+        )
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert op('deleted_because_too_long_direct_path' in response['journeys'][0]['tags'])
+
+    return test_max_mode_direct_path_duration
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.truth)
+    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.truth)
+    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.truth)
+    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.truth)
+
+    a = '0.001077974378345651;0.0007186495855637672'
+    b = '8.98311981954709e-05;0.0002694935945864127'
+    test_max_taxi_direct_path_duration = _make_function(a, b, 'taxi', operator.truth)
+
+
+@dataset({"main_routing_test": {"scenario": "new_default"}})
+class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+    """
+    the max_{mode}_direct_path_duration should be deactivated in new_default
+    """
+
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.not_)
+    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.not_)
+    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.not_)
+    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.not_)
+
+
 @config(
     {
         "scenario": "distributed",
@@ -351,26 +411,7 @@ class TestJourneysRidesharingDistributed(
         pass
 
 
-MOCKED_INSTANCE_CONF_TAXI = {
-    "scenario": "distributed",
-    "instance_config": {
-        "street_network": [
-            {
-                "modes": ["taxi"],
-                "class": "jormungandr.street_network.taxi.Taxi",
-                "args": {
-                    "street_network": {
-                        "class": "jormungandr.street_network.kraken.Kraken",
-                        "args": {"timeout": 10},
-                    }
-                },
-            }
-        ]
-    },
-}
-
-
-@dataset({"main_routing_test": MOCKED_INSTANCE_CONF_TAXI})
+@dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
     def test_first_section_mode_taxi(self):
         query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"

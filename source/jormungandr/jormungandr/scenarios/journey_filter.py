@@ -36,6 +36,7 @@ import six
 from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
+from jormungandr.fallback_modes import FallbackModes
 
 
 def delete_journeys(responses, request):
@@ -139,6 +140,10 @@ def filter_journeys(responses, instance, request):
         FilterTooLongWaiting(),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
     ]
+
+    # TODO: we should handle this better....
+    if (request.get('_override_scenario') or instance._scenario_name) == 'distributed':
+        filters.append(FilterTooLongDirectPath(instance=instance, request=request))
 
     # we add more filters in some special cases
 
@@ -315,6 +320,38 @@ class FilterDirectPath(SingleJourneyFilter):
         elif self.dp == 'only' and 'non_pt' not in journey.tags:
             return False
         return True
+
+
+class FilterTooLongDirectPath(SingleJourneyFilter):
+
+    message = 'too_long_direct_path'
+
+    def __init__(self, instance, request):
+        self.instance = instance
+        self.request = request
+        self.logger = logging.getLogger(__name__)
+
+    def _get_mode_of_journey(self, journey):
+        mode = FallbackModes.modes_str() & set(journey.tags)
+        if len(mode) != 1:
+            self.logger.error('Cannot determine the mode of direct path: {}'.format(mode))
+            return None
+
+        return next(iter(mode))
+
+    def filter_func(self, journey):
+        """
+        eliminates too long direct_path journey
+        """
+        # we filter only direct path
+        if 'non_pt' not in journey.tags:
+            return True
+
+        direct_path_mode = self._get_mode_of_journey(journey)
+
+        attr_name = 'max_{}_direct_path_duration'.format(direct_path_mode)
+        max_duration = self.request[attr_name]
+        return max_duration > journey.duration
 
 
 def get_min_connections(journeys):
