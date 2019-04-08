@@ -44,6 +44,7 @@ www.navitia.io
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
+#include "equipment/equipment_api.h"
 #include <numeric>
 
 namespace nt = navitia::type;
@@ -1096,6 +1097,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::street_network_routing_matrix: street_network_routing_matrix(request.sn_routing_matrix()); break;
     case pbnavitia::odt_stop_points: odt_stop_points(request.coord()); break;
     case pbnavitia::matching_routes: get_matching_routes(request.matching_routes()); break;
+    case pbnavitia::equipment_reports: equipment_reports(request.equipment_reports()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1164,4 +1166,20 @@ void Worker::get_matching_routes(const pbnavitia::MatchingRoute& matching_route)
                                 start,
                                 {matching_route.destination_code_key(), matching_route.destination_code()});
 }
+
+void Worker::equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports) {
+
+    const auto proto_uris = equipment_reports.forbidden_uris();
+    std::vector<std::string> forbidden_uris(proto_uris.cbegin(), proto_uris.cend());
+
+    equipment::equipment_reports(
+        this->pb_creator,
+        equipment_reports.filter(),
+        equipment_reports.count(),
+        equipment_reports.depth(),
+        equipment_reports.start_page(),
+        forbidden_uris
+    );
 }
+
+} // namespace navitia
