@@ -107,6 +107,51 @@ BRAGI_MOCK_RESPONSE = {
     ]
 }
 
+BRAGI_MOCK_ZONE = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [2.3514616, 48.8566969], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": "admin:fr:75056",
+                    "type": "zone",
+                    "zone_type": "city",
+                    "label": "Paris (75000-75116), Île-de-France, France",
+                    "name": "Paris",
+                    "postcode": "75000;75001;75002;75003;75004;75005;75006;75007;75008;75009;75010;75011;75012;75013;75014;75015;75016;75017;75018;75019;75020;75116",
+                    "city": None,
+                    "citycode": "75056",
+                    "level": 8,
+                    "administrative_regions": [],
+                    "codes": [{"name": "ref:FR:MGP", "value": "T1"}, {"name": "ref:INSEE", "value": "75056"}],
+                    "bbox": [2.224122, 48.8155755, 2.4697602, 48.902156],
+                }
+            },
+        },
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [2.374402147020069, 48.84691600012601], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": "admin:fr:7511248",
+                    "type": "zone",
+                    "zone_type": "suburb",
+                    "label": "Quartier des Quinze-Vingts (75012), Paris 12e Arrondissement, Paris, Île-de-France, France",
+                    "name": "Quartier des Quinze-Vingts",
+                    "postcode": "75012",
+                    "city": None,
+                    "citycode": "7511248",
+                    "level": 10,
+                    "administrative_regions": [],
+                    "codes": [{"name": "ref:INSEE", "value": "7511248"}],
+                    "bbox": [2.3644295, 48.8401716, 2.3843422, 48.853255399999995],
+                }
+            },
+        },
+    ]
+}
+
 
 BRAGI_MOCK_TYPE_UNKNOWN = {
     "type": "FeatureCollection",
@@ -855,6 +900,20 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'administrative_region'
             assert r[0]['id'] == 'admin:fr:59350'
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
+
+    def test_feature_zone(self):
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ZONE)
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("v1/places?q=bob")
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            # The suburb is currently ignored, only cities are returned
+            assert len(r) == 1
+            assert r[0]['name'] == 'Paris'
+            assert r[0]['embedded_type'] == 'administrative_region'
+            assert r[0]['id'] == 'admin:fr:75056'
+            assert r[0]['administrative_region']['label'] == 'Paris (75000-75116), Île-de-France, France'
 
     def test_autocomplete_call_with_depth_zero(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ZERO):
