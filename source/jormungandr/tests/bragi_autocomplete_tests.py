@@ -902,8 +902,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
     def test_feature_zone(self):
-        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ZONE)
-        with mock.patch('requests.get', mock_requests.get):
+        with mock_bragi_autocomplete_call(BRAGI_MOCK_ZONE):
             response = self.query("v1/places?q=bob")
 
             is_valid_global_autocomplete(response, depth=1)
