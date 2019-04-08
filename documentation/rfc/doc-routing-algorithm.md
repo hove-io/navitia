@@ -100,7 +100,7 @@ Starting from A at 7:55:
 
 The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if we target G, starting at 7:45 from A gives G at 10:00 using 0 connection, but starting at 7:55 gives 10:20 using 0 connection and 10:00 using 1 connection.
 
-Note that the TR0 can have several entries, and, in practice, there is a few hundred of them (all the accessible stop point by feet).
+Note that the TR0 can have several entries, and, in practice, there is a few hundred of them (all the accessible stop points by feet).
 
 ### Second pass
 
@@ -148,7 +148,7 @@ drawbacks:
 
 ## Some ideas for improvement
 
-If I had to rewrite it, I'd base the algorithm on Connection Scan Algorithm. RAPTOR and CSA are still the simple, flexible and effective algorithms. CSA is simpler, RAPTOR is better when the journey patterns contain a lot of vehicle journeys. Other algorithms try to limit the search space by using the "locality" of the data (in the geographical sense, using contractions or partitionning), but they are much more complicated, much less flexible, and need a complex prepocessing.
+If I had to rewrite it, I'd base the algorithm on Connection Scan Algorithm. RAPTOR and CSA are still the simplest, more flexible and more effective algorithms. CSA is simpler, RAPTOR is better when the journey patterns contain a lot of vehicle journeys. Other algorithms try to limit the search space by using the "locality" of the data (in the geographical sense, using contractions or partitionning), but they are much more complicated, much less flexible, and need a complex prepocessing.
 
 As direct objectives, I'd use:
 - minimize arrival time
