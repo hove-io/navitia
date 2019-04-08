@@ -140,6 +140,16 @@ BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(sa_per_line_uris, expected_uris);
 }
 
+BOOST_FIXTURE_TEST_CASE(equipment_report_should_forbid_uris, Test_fixture) {
+    auto filter = "stop_point.has_code_type(CodeType1)";
+    auto sa_per_line = equipment::get_stop_areas_per_line(data, filter, {"A"});
+
+    // Stop Areas "A" and "B" have cpde "CodeType1", but "A" has been forbidden,
+    // Hense the fact that only "B" is returned
+    BOOST_REQUIRE_EQUAL(sa_per_line.size(), 1);
+    BOOST_REQUIRE_EQUAL(sa_per_line[0].first->uri, "B");
+}
+
 BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, Test_fixture) {
     const auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::equipment_reports(pb_creator, filter, 10);
