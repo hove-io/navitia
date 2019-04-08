@@ -53,6 +53,7 @@ from tests.check_utils import (
     is_valid_graphical_isochrone,
     sub_query,
     has_the_disruption,
+    get_disruptions_by_id,
 )
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 from shapely.geometry import asShape
@@ -1614,16 +1615,20 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         # Check new disruption 'additional-trip' to add a new trip
         disruptions_after = self.query_region(disruption_query)
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
-        assert has_the_disruption(disruptions_after, 'new_trip')
-        last_disrupt = disruptions_after['disruptions'][-1]
-        assert last_disrupt['severity']['effect'] == 'ADDITIONAL_SERVICE'
-        assert len(last_disrupt['impacted_objects'][0]['impacted_stops']) == 2
+        new_trip_disruptions = get_disruptions_by_id(disruptions_after, 'new_trip')
+        assert len(new_trip_disruptions) == 1
+        new_trip_disrupt = new_trip_disruptions[0]
+        assert new_trip_disrupt['id'] == 'new_trip'
+        assert new_trip_disrupt['severity']['effect'] == 'ADDITIONAL_SERVICE'
+        assert len(new_trip_disrupt['impacted_objects'][0]['impacted_stops']) == 2
         assert all(
             [
                 (s['departure_status'] == 'added' and s['arrival_status'] == 'added')
-                for s in last_disrupt['impacted_objects'][0]['impacted_stops']
+                for s in new_trip_disrupt['impacted_objects'][0]['impacted_stops']
             ]
         )
+        assert new_trip_disrupt['application_periods'][0]['begin'] == '20120614T080100'
+        assert new_trip_disrupt['application_periods'][0]['end'] == '20120614T080101'  # last second is excluded
 
         # Check that a PT journey now exists
         response = self.query_region(C_B_query)
