@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from flask import request, g
 from flask_restful import abort
-from jormungandr import i_manager, app
+from jormungandr import i_manager, app, fallback_modes
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
@@ -345,6 +345,12 @@ class Journeys(JourneyCommon):
             help="limit nb of stop points accesible by car crowfly, " "used especially in distributed scenario",
         )
         parser_get.add_argument(
+            "_max_nb_crowfly_by_taxi",
+            type=int,
+            hidden=True,
+            help="limit nb of stop points accesible by taxi crowfly, " "used especially in distributed scenario",
+        )
+        parser_get.add_argument(
             "_max_nb_crowfly_by_bike",
             type=int,
             hidden=True,
@@ -443,7 +449,7 @@ class Journeys(JourneyCommon):
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
-            for mode in ('walking', 'car', 'bike', 'bss'):
+            for mode in fallback_modes.all_fallback_modes:
                 nb_crowfly = args.get('_max_nb_crowfly_by_{}'.format(mode))
                 if nb_crowfly is not None:
                     args['max_nb_crowfly_by_mode'][mode] = nb_crowfly

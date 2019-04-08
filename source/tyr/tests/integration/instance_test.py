@@ -325,8 +325,9 @@ def test_update_max_nb_crowfly_by_mode(create_instance):
     assert resp[0]['max_nb_crowfly_by_mode']['walking'] == 5000
     assert resp[0]['max_nb_crowfly_by_mode']['bike'] == 5000
     assert resp[0]['max_nb_crowfly_by_mode']['bss'] == 5000
+    assert resp[0]['max_nb_crowfly_by_mode']['taxi'] == 5000
 
-    params = {"max_nb_crowfly_by_mode": {'car': 4242, 'walking': 4141}}
+    params = {"max_nb_crowfly_by_mode": {'car': 4242, 'walking': 4141, 'taxi': 2323}}
     resp, status = api_put(
         '/v0/instances/fr', data=json.dumps(params), check=False, content_type='application/json'
     )
@@ -335,6 +336,7 @@ def test_update_max_nb_crowfly_by_mode(create_instance):
     assert resp['max_nb_crowfly_by_mode']['walking'] == 4141
     assert resp['max_nb_crowfly_by_mode']['bike'] == 5000
     assert resp['max_nb_crowfly_by_mode']['bss'] == 5000
+    assert resp['max_nb_crowfly_by_mode']['taxi'] == 2323
 
 
 def test_update_autocomplete_backend(create_instance):
