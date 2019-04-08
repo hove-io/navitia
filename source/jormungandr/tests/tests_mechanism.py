@@ -39,6 +39,7 @@ import mock
 import retrying
 from retrying import RetryError
 import six
+from mock import MagicMock
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = (
@@ -57,6 +58,7 @@ from jormungandr.parking_space_availability import (
     StandsStatus,
     ParkingPlaces,
 )
+from jormungandr.equipments.sytral import SytralProvider
 
 krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
@@ -158,6 +160,13 @@ class AbstractTestFixture(unittest.TestCase):
             # we want to keep the same address for global_autocomplete as others might have references on it
             jormungandr.global_autocomplete.clear()
             jormungandr.global_autocomplete.update(cls.old_global_autocompletes)
+
+    @classmethod
+    def equipment_provider_manager(cls, key):
+        """
+        retrieve corresponding equipment provider manager
+        """
+        return i_manager.instances[key].equipment_provider_manager
 
     @classmethod
     def setup_class(cls):
@@ -530,3 +539,8 @@ def mock_car_park_providers(pois_supported):
         new_callable=mock.PropertyMock,
         return_value=lambda: providers,
     )
+
+
+def mock_equipment_providers(equipment_provider_manager, data):
+    equipment_provider_manager._equipment_providers = {"sytral": SytralProvider(url="fake.url")}
+    equipment_provider_manager._equipment_providers["sytral"]._call_webservice = MagicMock(return_value=data)

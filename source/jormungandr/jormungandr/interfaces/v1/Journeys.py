@@ -41,7 +41,7 @@ from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -549,7 +549,9 @@ class Journeys(JourneyCommon):
             if args['equipment_details']:
                 # Manage equipments in stop points from the journeys sections
                 instance = i_manager.instances.get(self.region)
-                return instance.equipment_provider_manager.manage_equipments(response)
+                return instance.equipment_provider_manager.manage_equipments(
+                    response, type_pb2.API.Value('PLANNER')
+                )
 
             return response
 

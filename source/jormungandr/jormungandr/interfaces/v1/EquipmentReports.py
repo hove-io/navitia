@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
+from navitiacommon import type_pb2
 import six
 
 
@@ -81,5 +82,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
         args["filter"] = self.get_filter(uris, args)
 
         response = i_manager.dispatch(args, "equipment_reports", instance_name=self.region)
-
-        return response
+        instance = i_manager.instances.get(self.region)
+        return instance.equipment_provider_manager.manage_equipments(
+            response, type_pb2.API.Value('equipment_reports')
+        )

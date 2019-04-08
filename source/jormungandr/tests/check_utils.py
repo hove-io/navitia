@@ -928,6 +928,47 @@ def is_valid_pt_object(pt_object, depth_check=1):
         check_embedded_route_label(n, pt_object['route'], depth_check)
 
 
+def is_valid_period(period, depth_check=1):
+    get_not_null(period, "begin")
+    get_not_null(period, "end")
+
+
+def is_valid_current_availability(current_availability, depth_check=1):
+    get_not_null(current_availability, "status")
+    periods = get_not_null(current_availability, 'periods')
+    for period in periods:
+        is_valid_period(period, 0)
+    get_not_null(current_availability, "updated_at")
+    cause = get_not_null(current_availability, "cause")
+    get_not_null(cause, "label")
+    effect = get_not_null(current_availability, "effect")
+    get_not_null(effect, "label")
+
+
+def is_valid_equipment_detail(equipment_detail, depth_check=1):
+    get_not_null(equipment_detail, "id")
+    get_not_null(equipment_detail, "embedded_type")
+    if equipment_detail['current_availability']['status'] != "unknown":
+        get_not_null(equipment_detail, "name")
+        is_valid_current_availability(get_not_null(equipment_detail, 'current_availability'), depth_check - 1)
+
+
+def is_valid_stop_area_equipment(stop_area_equipment, depth_check=1):
+    is_valid_stop_area(get_not_null(stop_area_equipment, 'stop_area'), depth_check - 1)
+    # equipment_details can be empty, if there is not filter into the request
+    if 'equipment_details' in stop_area_equipment:
+        equipment_details = stop_area_equipment['equipment_details']
+        for equipment_detail in equipment_details:
+            is_valid_equipment_detail(equipment_detail, 0)
+
+
+def is_valid_equipment_report(equipment_report, depth_check=1):
+    is_valid_line(get_not_null(equipment_report, 'line'), 1)
+    stop_area_equipments = get_not_null(equipment_report, 'stop_area_equipments')
+    for stop_area_equipment in stop_area_equipments:
+        is_valid_stop_area_equipment(stop_area_equipment, 0)
+
+
 def check_embedded_line_label(label, line, depth_check):
     is_valid_label(label)
     # the label must contains
