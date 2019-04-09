@@ -101,6 +101,23 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
     def post_processing(
         self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
     ):
+        """
+        this method is called every time after the _direct_path is called and before the final get in distributed
+        scenario.
+
+        The reason why we called this, because some times, the direct path may be the same thing for some modes
+        ex. ridesharing and taxi. In these cases, the _direc_path should be called only once then "post processed" when
+        getting them.
+
+        make sure that the response is deep copied when you implement post_pocessing
+        :param response:
+        :param pt_object_origin:
+        :param pt_object_destination:
+        :param mode:
+        :param request:
+        :param direct_path_type:
+        :return:
+        """
         pass
 
     def feed_publisher(self):

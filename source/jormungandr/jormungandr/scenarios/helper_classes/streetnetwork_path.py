@@ -122,8 +122,6 @@ class StreetNetworkPath:
         dp = self._direct_path_with_fp(self._instance)
 
         if getattr(dp, "journeys", None):
-            # if self._mode == "ridesharing":
-            #     switch_back_to_ridesharing(dp, True)
             dp.journeys[0].internal_id = str(utils.generate_id())
 
         logger.debug(
@@ -189,11 +187,19 @@ class StreetNetworkPathPool:
 
     def get_all_direct_paths(self):
         """
-        Get all streetnetwork path of DIRECT type
-        :return: a dictionary of mode vs dp_future
+        Get all streetnetwork path of DIRECT type in a wrapper
+        :return: a wrapper class of a dict mode vs dp
         """
 
         class _InnerClass(object):
+            """
+            This class is a wrapper of the dictionary of mode vs direct path.
+            The goal of this wrapper is to be able to call the post_processing of specified street_network
+            when getting the direct path.
+
+            Using this wrapper won't break the existing code too much.
+            """
+
             def __init__(self, direct_paths_by_mode, instance, request):
                 self._direct_paths_by_mode = direct_paths_by_mode
                 self._instance = instance

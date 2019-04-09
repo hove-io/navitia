@@ -32,7 +32,6 @@ import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils, fallback_modes as fm
-from jormungandr.utils import get_pt_object_coord, SectionSorter, pb_del_if
 
 
 from navitiacommon import response_pb2
