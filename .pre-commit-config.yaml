@@ -11,3 +11,10 @@ repos:
     -   id: check-ast
     -   id: check-merge-conflict
     #-   id: flake8
+-   repo: git://github.com/doublify/pre-commit-clang-format
+    rev: master
+    hooks:
+    -   id: clang-format
+        verbose: true
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx)$
+        args: [-i]
