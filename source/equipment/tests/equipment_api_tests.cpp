@@ -60,13 +60,13 @@ BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 namespace {
 
-class Test_fixture {
+class EquipmentTestFixture {
 public:
     ed::builder b;
     navitia::PbCreator pb_creator;
     const type::Data& data;
 
-    Test_fixture(): b("20190101"), data(*b.data) {
+    EquipmentTestFixture(): b("20190101"), data(*b.data) {
 
         b.sa("sa1")("stop1", {{"CodeType1", {"code1", "code2"}}} );
         b.sa("sa2")("stop2", {{"CodeType3", {"code5"}}} );
@@ -85,7 +85,7 @@ public:
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(test_stop_point_codes_creation, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(test_stop_point_codes_creation, EquipmentTestFixture) {
 
     type::Indexes idx = ptref::make_query(nt::Type_e::StopPoint,
                         "(stop_point.has_code_type(CodeType1))",
@@ -97,7 +97,7 @@ BOOST_FIXTURE_TEST_CASE(test_stop_point_codes_creation, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(stop_points_uris, (set<string>{"stop1", "stop3", "stop6"}));
 }
 
-BOOST_FIXTURE_TEST_CASE(test_stop_area_query, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(test_stop_area_query, EquipmentTestFixture) {
 
     type::Indexes idx = ptref::make_query(nt::Type_e::StopArea,
                         "(stop_point.has_code_type(CodeType1))",
@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(test_stop_area_query, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(stop_area_uris, (set<string>{"sa1", "sa3", "sa6"}));
 }
 
-BOOST_FIXTURE_TEST_CASE(test_stop_area_per_line_query, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(test_stop_area_per_line_query, EquipmentTestFixture) {
 
     type::Indexes idx = ptref::make_query(nt::Type_e::StopArea,
                         "(line.uri=A and stop_point.has_code_type(CodeType1))",
@@ -121,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(test_stop_area_per_line_query, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(stop_area_uris, (set<string>{"sa1", "sa3"}));
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, EquipmentTestFixture) {
     const auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::StopAreasPerLine sas_per_line;
     size_t total_lines = 0;
@@ -144,7 +144,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(sa_per_line_uris, expected_uris);
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_report_should_forbid_uris, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_report_should_forbid_uris, EquipmentTestFixture) {
     auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::StopAreasPerLine sas_per_line;
     std::tie(sas_per_line, std::ignore) = equipment::get_paginated_stop_areas_per_line(data, filter, 10, 0, {"A"});
@@ -155,7 +155,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_report_should_forbid_uris, Test_fixture) {
     BOOST_REQUIRE_EQUAL(sas_per_line[0].first->uri, "B");
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, EquipmentTestFixture) {
     const auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::equipment_reports(pb_creator, filter, 10);
 
@@ -180,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, Test_fixture) {
     BOOST_CHECK_EQUAL_RANGE(sa_per_line_uris, expected_uris);
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_reports_should_fail_on_bad_filter, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_fail_on_bad_filter, EquipmentTestFixture) {
     const auto filter = "this filter is just nonsense";
     equipment::equipment_reports(pb_creator, filter, 10);
 
@@ -188,7 +188,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_should_fail_on_bad_filter, Test_fixtur
     BOOST_CHECK(pb_creator.has_error());
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_0, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_0, EquipmentTestFixture) {
     const auto filter = "stop_point.has_code_type(CodeType1)";
     // PAGE 0 - COUNT = 1
     equipment::equipment_reports(pb_creator, filter, 1, 0, 0);
@@ -197,7 +197,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_0, Test_fixture) 
     BOOST_CHECK_EQUAL(line_A_uri, "A");
 }
 
-BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_1, Test_fixture) {
+BOOST_FIXTURE_TEST_CASE(equipment_reports_should_paginate_page_1, EquipmentTestFixture) {
     const auto filter = "stop_point.has_code_type(CodeType1)";
     // PAGE 1 - COUNT = 1
     equipment::equipment_reports(pb_creator, filter, 1, 0, 1);
