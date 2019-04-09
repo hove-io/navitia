@@ -56,7 +56,6 @@ class Taxi(AbstractStreetNetworkService):
 
         config['args'].update({'modes': self.modes})
         self.street_network = utils.create_object(config)
-        self.post_processing_func = None
 
     def status(self):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
@@ -70,26 +69,6 @@ class Taxi(AbstractStreetNetworkService):
         response = self.street_network._direct_path(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, copy_request, direct_path_type
         )
-
-        if response:
-            for journey in response.journeys:
-                journey.durations.taxi = journey.durations.car
-                journey.distances.taxi = journey.distances.car
-                journey.durations.car = 0
-                journey.distances.car = 0
-                for section in journey.sections:
-                    section.street_network.mode = response_pb2.Taxi
-
-            def post_processing_func():
-                # We don't add an additional waiting section for direct_path
-                # Only for fallback
-                if direct_path_type != StreetNetworkPathType.DIRECT:
-                    self._add_additional_section_in_fallback(
-                        response, pt_object_origin, pt_object_destination, copy_request, direct_path_type
-                    )
-
-            self.post_processing_func = None
-
         return response
 
     def _add_additional_section_in_fallback(
