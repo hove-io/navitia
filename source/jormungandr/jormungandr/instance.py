@@ -475,7 +475,6 @@ class Instance(object):
         d = copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
         # In case we add a new max_nb_crowfly for an other mode than
         # the ones already present in the database.
-        d = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 5000}
         for mode, duration in default_values.max_nb_crowfly_by_mode.items():
             if mode not in d:
                 d[mode] = duration
