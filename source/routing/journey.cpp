@@ -36,21 +36,13 @@ using namespace navitia::routing;
 Journey::Section::Section(const type::StopTime& in,
                           const DateTime in_dt,
                           const type::StopTime& out,
-                          const DateTime out_dt):
-    get_in_st(&in),
-    get_in_dt(in_dt),
-    get_out_st(&out),
-    get_out_dt(out_dt)
-{}
+                          const DateTime out_dt)
+    : get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt) {}
 
-bool Journey::Section::operator==(const Section & rhs) const {
-
-    return get_in_st->order() == rhs.get_in_st->order()
-        && get_in_st->vehicle_journey == rhs.get_in_st->vehicle_journey
-        && get_in_dt == rhs.get_in_dt
-        && get_out_st->order() == rhs.get_out_st->order()
-        && get_out_st->vehicle_journey == rhs.get_out_st->vehicle_journey
-        && get_out_dt == rhs.get_out_dt;
+bool Journey::Section::operator==(const Section& rhs) const {
+    return get_in_st->order() == rhs.get_in_st->order() && get_in_st->vehicle_journey == rhs.get_in_st->vehicle_journey
+           && get_in_dt == rhs.get_in_dt && get_out_st->order() == rhs.get_out_st->order()
+           && get_out_st->vehicle_journey == rhs.get_out_st->vehicle_journey && get_out_dt == rhs.get_out_dt;
 }
 
 bool Journey::is_pt() const {
@@ -59,17 +51,24 @@ bool Journey::is_pt() const {
 
 bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     if (request_clockwise) {
-        if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
-        if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
+        if (arrival_dt != that.arrival_dt) {
+            return arrival_dt <= that.arrival_dt;
+        }
+        if (departure_dt != that.departure_dt) {
+            return departure_dt >= that.departure_dt;
+        }
     } else {
-        if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
-        if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
+        if (departure_dt != that.departure_dt) {
+            return departure_dt >= that.departure_dt;
+        }
+        if (arrival_dt != that.arrival_dt) {
+            return arrival_dt <= that.arrival_dt;
+        }
     }
     // FIXME: I don't like this objective, for me, this is a
     // transfer objective, but then you can return some solutions
     // that we didn't return before.
-    if (! (better_on_transfer(that, request_clockwise) &&
-           that.better_on_transfer(*this, request_clockwise))) {
+    if (!(better_on_transfer(that, request_clockwise) && that.better_on_transfer(*this, request_clockwise))) {
         // if they are not equal on transfer, we don't check min_waiting_dur
         return true;
     }
@@ -84,22 +83,19 @@ bool Journey::better_on_transfer(const Journey& that, bool) const {
 }
 
 bool Journey::better_on_sn(const Journey& that, bool) const {
-    //we consider the transfer sections also as walking sections
+    // we consider the transfer sections also as walking sections
     return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
 }
 
-bool Journey::operator==(const Journey & rhs) const {
-    return departure_dt == rhs.departure_dt
-        && arrival_dt == rhs.arrival_dt
-        && sections == rhs.sections;
+bool Journey::operator==(const Journey& rhs) const {
+    return departure_dt == rhs.departure_dt && arrival_dt == rhs.arrival_dt && sections == rhs.sections;
 }
 
-bool Journey::operator!=(const Journey & rhs) const {
+bool Journey::operator!=(const Journey& rhs) const {
     return !(*this == rhs);
 }
 
 size_t SectionHash::operator()(const Journey::Section& s, size_t seed) const {
-
     boost::hash_combine(seed, s.get_in_st->order());
     boost::hash_combine(seed, s.get_in_st->vehicle_journey);
     boost::hash_combine(seed, s.get_in_dt);
@@ -114,7 +110,7 @@ size_t JourneyHash::operator()(const Journey& j) const {
     size_t seed = 0;
     SectionHash sect_hash;
 
-    for(const auto & s : j.sections)
+    for (const auto& s : j.sections)
         boost::hash_combine(seed, sect_hash(s, seed));
 
     return seed;

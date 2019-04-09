@@ -41,11 +41,12 @@ www.navitia.io
 #include "tz_db_wrapper.h"
 
 /**
-  * Read General Transit Feed Specifications Files
-  *
-  * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
-  */
-namespace ed { namespace connectors {
+ * Read General Transit Feed Specifications Files
+ *
+ * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
+ */
+namespace ed {
+namespace connectors {
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
@@ -57,21 +58,22 @@ nt::RTLevel get_rtlevel_enum(const std::string& str);
  * just used to separate those
  */
 struct TzHandler {
-    TzHandler(): tz_db(ed::utils::fill_tz_db()) {}
+    TzHandler() : tz_db(ed::utils::fill_tz_db()) {}
 
     boost::local_time::tz_database tz_db;
-    //we need to store the tz of the sp because it will be usefull is no parent stop area is found for the stop_point
+    // we need to store the tz of the sp because it will be usefull is no parent stop area is found for the stop_point
     //(and hence the sp is promoted to sa)
     std::unordered_map<ed::types::StopPoint*, std::string> stop_point_tz;
     std::pair<std::string, boost::local_time::time_zone_ptr> get_tz(const std::string&);
 
-    //since a calendar might need to be split over several period because of dst, we need to track the splited calendar (to split also all vj on this calendar)
+    // since a calendar might need to be split over several period because of dst, we need to track the splited calendar
+    // (to split also all vj on this calendar)
     std::multimap<std::string, ed::types::ValidityPattern*> vp_by_name;
     std::multimap<std::string, ed::types::VehicleJourney*> vj_by_name;
 
-    //since 2 files are mandatory to build validity pattern
-    //we need to build first the list of validity pattern,
-    //then split them all by dst
+    // since 2 files are mandatory to build validity pattern
+    // we need to build first the list of validity pattern,
+    // then split them all by dst
     std::map<std::string, ed::types::ValidityPattern> non_split_vp;
 };
 
@@ -91,18 +93,19 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::Network*> network_map;
     ed::types::Network* default_network = nullptr;
     std::unordered_map<std::string, ed::types::Company*> company_map;
-    ed::types::Company* get_or_create_default_company(Data & data);
+    ed::types::Company* get_or_create_default_company(Data& data);
     ed::types::Company* default_company = nullptr;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     std::unordered_map<std::string, ed::types::Dataset*> dataset_map;
 
-    std::unordered_map<std::string, std::vector<ed::types::StopTime*>> stop_time_map; // there may be several stoptimes for one id because of dst
+    std::unordered_map<std::string, std::vector<ed::types::StopTime*>>
+        stop_time_map;  // there may be several stoptimes for one id because of dst
 
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
-    std::set<std::string> vj_uri; //we store all vj_uri not to give twice the same uri (since we split some)
+    std::set<std::string> vj_uri;  // we store all vj_uri not to give twice the same uri (since we split some)
 
-    //for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
+    // for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
     std::unordered_map<std::string, std::string> comments_id_map;
 
     // Store lines linked for each group to avoid duplicates
@@ -116,17 +119,15 @@ struct GtfsData {
     std::unordered_map<std::string, navitia::type::hasProperties> hasProperties_map;
     std::unordered_map<std::string, navitia::type::hasVehicleProperties> hasVehicleProperties_map;
     std::unordered_map<std::string, ed::types::Calendar*> calendars_map;
-    ed::types::CommercialMode* get_or_create_default_commercial_mode(Data & data);
+    ed::types::CommercialMode* get_or_create_default_commercial_mode(Data& data);
     ed::types::CommercialMode* default_commercial_mode = nullptr;
-    ed::types::PhysicalMode* get_or_create_default_physical_mode(Data & data);
+    ed::types::PhysicalMode* get_or_create_default_physical_mode(Data& data);
     ed::types::PhysicalMode* default_physical_mode = nullptr;
 
     ed::types::Network* get_or_create_default_network(ed::Data&);
 };
 
-
 void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data);
-
 
 // Africa/Abidjan is equivalent to utc since there is no dst and 0 offset from utc
 const std::string UTC_TIMEZONE = "Africa/Abidjan";
@@ -145,7 +146,6 @@ inline bool is_valid(int col_idx, const std::vector<std::string>& row) {
 
 std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj);
 
-
 /**
  * Parser used to parse one kind of file
  * The actual parsing is handed to the Handler who need to have 4 methods
@@ -160,11 +160,12 @@ protected:
     CsvReader csv;
     bool fail_if_no_file;
     Handler handler;
+
 public:
-    FileParser(GtfsData& gdata, std::string file_name, bool fail = false) :
-        csv(file_name, ',' , true), fail_if_no_file(fail), handler(gdata, csv) {}
-    FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false) :
-        csv(ss, ',' , true), fail_if_no_file(fail), handler(gdata, csv)  {}
+    FileParser(GtfsData& gdata, std::string file_name, bool fail = false)
+        : csv(file_name, ',', true), fail_if_no_file(fail), handler(gdata, csv) {}
+    FileParser(GtfsData& gdata, std::stringstream& ss, bool fail = false)
+        : csv(ss, ',', true), fail_if_no_file(fail), handler(gdata, csv) {}
 
     bool fill(Data& data);
 };
@@ -184,7 +185,7 @@ struct GenericHandler {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     CsvReader& csv;
 
-    //default definition (not virtual since no dynamic polymorphism will occur)
+    // default definition (not virtual since no dynamic polymorphism will occur)
     const std::vector<std::string> required_headers() const { return {}; }
     void init(Data&) {}
     void finish(Data&) {}
@@ -205,51 +206,35 @@ struct AgencyGtfsHandler : public GenericHandler {
     const std::vector<std::string> required_headers() const { return {"agency_name", "agency_url", "agency_timezone"}; }
 };
 
-//read no file, add a default contributor
+// read no file, add a default contributor
 struct DefaultContributorHandler : public GenericHandler {
     DefaultContributorHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     void init(Data&);
-    void handle_line(Data&, const csv_row&, bool) {} //nothing to do
+    void handle_line(Data&, const csv_row&, bool) {}  // nothing to do
 };
 
 struct StopsGtfsHandler : public GenericHandler {
     StopsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     using stop_point_and_area = std::pair<ed::types::StopPoint*, ed::types::StopArea*>;
 
-    int id_c,
-    code_c,
-    name_c,
-    desc_c,
-    lat_c,
-    lon_c,
-    zone_c,
-    type_c,
-    parent_c,
-    wheelchair_c,
-    platform_c,
-    timezone_c,
-    ext_code_c;
+    int id_c, code_c, name_c, desc_c, lat_c, lon_c, zone_c, type_c, parent_c, wheelchair_c, platform_c, timezone_c,
+        ext_code_c;
 
     int ignored = 0;
     std::vector<types::StopPoint*> wheelchair_heritance;
     void init(Data& data);
     void finish(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"stop_id", "stop_name", "stop_lat", "stop_lon"};
-    }
+    const std::vector<std::string> required_headers() const { return {"stop_id", "stop_name", "stop_lat", "stop_lon"}; }
     template <typename T>
     bool parse_common_data(const csv_row& row, T* stop);
 
-    void handle_stop_point_without_area(Data& data); //might be different between stops parser
+    void handle_stop_point_without_area(Data& data);  // might be different between stops parser
 };
 
 struct RouteGtfsHandler : public GenericHandler {
     RouteGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, short_name_c,
-    long_name_c, type_c,
-    desc_c,
-    color_c, text_color_c, agency_c;
+    int id_c, short_name_c, long_name_c, type_c, desc_c, color_c, text_color_c, agency_c;
     int ignored = 0;
     void init(Data&);
     void finish(Data& data);
@@ -261,35 +246,27 @@ struct RouteGtfsHandler : public GenericHandler {
 
 struct TransfersGtfsHandler : public GenericHandler {
     TransfersGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int from_c,
-    to_c,
-    time_c;
+    int from_c, to_c, time_c;
 
     size_t nblines = 0;
     virtual ~TransfersGtfsHandler() {}
     void init(Data&);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"from_stop_id", "to_stop_id"};
-    }
+    const std::vector<std::string> required_headers() const { return {"from_stop_id", "to_stop_id"}; }
     virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
 };
 
 struct CalendarGtfsHandler : public GenericHandler {
     CalendarGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-        int id_c, monday_c,
-            tuesday_c, wednesday_c,
-            thursday_c, friday_c,
-            saturday_c, sunday_c,
-            start_date_c, end_date_c;
+    int id_c, monday_c, tuesday_c, wednesday_c, thursday_c, friday_c, saturday_c, sunday_c, start_date_c, end_date_c;
     size_t nb_lines = 0;
     void init(Data& data);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
-        return {"service_id" , "monday", "tuesday", "wednesday", "thursday",
-            "friday", "saturday", "sunday", "start_date", "end_date"};
+        return {"service_id", "monday",   "tuesday", "wednesday",  "thursday",
+                "friday",     "saturday", "sunday",  "start_date", "end_date"};
     }
 };
 
@@ -298,12 +275,10 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     int id_c, date_c, e_type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"service_id", "date", "exception_type"};
-    }
+    const std::vector<std::string> required_headers() const { return {"service_id", "date", "exception_type"}; }
 };
 
-struct ShapesGtfsHandler: public GenericHandler {
+struct ShapesGtfsHandler : public GenericHandler {
     ShapesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int shape_id_c = -1, shape_pt_lat_c = -1, shape_pt_lon_c = -1, shape_pt_sequence_c = -1;
     std::map<std::string, std::map<int, navitia::type::GeographicalCoord>> shapes;
@@ -317,11 +292,7 @@ struct ShapesGtfsHandler: public GenericHandler {
 
 struct TripsGtfsHandler : public GenericHandler {
     TripsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, service_c,
-            trip_c, headsign_c,
-            block_id_c, wheelchair_c,
-            bikes_c, shape_id_c,
-            direction_id_c;
+    int id_c, service_c, trip_c, headsign_c, block_id_c, wheelchair_c, bikes_c, shape_id_c, direction_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -329,9 +300,7 @@ struct TripsGtfsHandler : public GenericHandler {
     void init(Data& data);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const {
-        return {"route_id", "service_id", "trip_id"};
-    }
+    const std::vector<std::string> required_headers() const { return {"route_id", "service_id", "trip_id"}; }
 
     using RouteId = std::pair<types::Line*, const std::string>;
     std::map<RouteId, types::Route*> routes;
@@ -340,24 +309,20 @@ struct TripsGtfsHandler : public GenericHandler {
 };
 struct StopTimeGtfsHandler : public GenericHandler {
     StopTimeGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int trip_c, arrival_c,
-    departure_c, stop_c,
-    stop_seq_c, pickup_c,
-    drop_off_c;
+    int trip_c, arrival_c, departure_c, stop_c, stop_seq_c, pickup_c, drop_off_c;
 
     size_t count = 0;
     void init(Data& data);
     void finish(Data& data);
     std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
-        return {"trip_id" , "arrival_time", "departure_time", "stop_id", "stop_sequence"};
+        return {"trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"};
     }
 };
 
 struct FrequenciesGtfsHandler : public GenericHandler {
     FrequenciesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int trip_id_c, start_time_c,
-    end_time_c, headway_secs_c;
+    int trip_id_c, start_time_c, end_time_c, headway_secs_c;
     void init(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
@@ -371,48 +336,48 @@ struct FrequenciesGtfsHandler : public GenericHandler {
  */
 class GenericGtfsParser {
 protected:
-    std::string path;///< Chemin vers les fichiers
+    std::string path;  ///< Chemin vers les fichiers
     log4cplus::Logger logger;
     template <typename Handler>
     bool parse(Data&, std::string file_name, bool fail_if_no_file = false);
     template <typename Handler>
-    void parse(Data&); //some parser do not need a file since they just add default data
+    void parse(Data&);  // some parser do not need a file since they just add default data
 
     virtual void parse_files(Data&, const std::string& beginning_date = "") = 0;
+
 public:
     GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GenericGtfsParser(const std::string & path);
+    GenericGtfsParser(const std::string& path);
     virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string& beginning_date = "");
 
     /// Ajout des objets par défaut
-    void fill_default_modes(Data & data);
+    void fill_default_modes(Data& data);
 
     void manage_production_date(Data& data, const std::string& beginning_date);
     boost::gregorian::date_period complete_production_date(const std::string& beginning_date,
-                                                        boost::gregorian::date start_date,
-                                                        boost::gregorian::date end_date);
-    ///parse le fichier calendar.txt afin de trouver la période de validité des données
-    boost::gregorian::date_period find_production_date(const std::string &beginning_date);
+                                                           boost::gregorian::date start_date,
+                                                           boost::gregorian::date end_date);
+    /// parse le fichier calendar.txt afin de trouver la période de validité des données
+    boost::gregorian::date_period find_production_date(const std::string& beginning_date);
 
-    boost::gregorian::date_period basic_production_date(const std::string &beginning_date);
+    boost::gregorian::date_period basic_production_date(const std::string& beginning_date);
 };
 
 template <typename Handler>
 inline bool GenericGtfsParser::parse(Data& data, std::string file_name, bool fail_if_no_file) {
-    FileParser<Handler> parser (this->gtfs_data, path + "/" + file_name, fail_if_no_file);
+    FileParser<Handler> parser(this->gtfs_data, path + "/" + file_name, fail_if_no_file);
     return parser.fill(data);
 }
 template <typename Handler>
 inline void GenericGtfsParser::parse(Data& data) {
-    FileParser<Handler> parser (this->gtfs_data, "");
+    FileParser<Handler> parser(this->gtfs_data, "");
     parser.fill(data);
 }
-
 
 /**
  * GTFS parser
@@ -420,19 +385,17 @@ inline void GenericGtfsParser::parse(Data& data) {
  */
 struct GtfsParser : public GenericGtfsParser {
     virtual void parse_files(Data&, const std::string& beginning_date);
-    GtfsParser(const std::string & path) : GenericGtfsParser(path) {}
+    GtfsParser(const std::string& path) : GenericGtfsParser(path) {}
 };
 
 /// Normalise les external code des stop_point et stop_areas
-void normalize_extcodes(Data & data);
-
-
+void normalize_extcodes(Data& data);
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
-  *
-  * Retourne -1 s'il y a eu un problème
-  */
-int time_to_int(const std::string & time);
+ *
+ * Retourne -1 s'il y a eu un problème
+ */
+int time_to_int(const std::string& time);
 
 struct FileNotFoundException {
     std::string filename;
@@ -449,8 +412,8 @@ struct InvalidHeaders {
 template <typename Handler>
 inline bool FileParser<Handler>::fill(Data& data) {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (! csv.is_open() && ! csv.filename.empty()) {
-        if ( fail_if_no_file ) {
+    if (!csv.is_open() && !csv.filename.empty()) {
+        if (fail_if_no_file) {
             LOG4CPLUS_FATAL(logger, "Impossible to read " << csv.filename);
             throw FileNotFoundException(csv.filename);
         }
@@ -459,15 +422,15 @@ inline bool FileParser<Handler>::fill(Data& data) {
     }
 
     typename Handler::csv_row headers = handler.required_headers();
-    if(!csv.validate(headers)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename <<
-                        " missing headers : " << csv.missing_headers(headers));
+    if (!csv.validate(headers)) {
+        LOG4CPLUS_FATAL(
+            logger, "Error while reading " << csv.filename << " missing headers : " << csv.missing_headers(headers));
         throw InvalidHeaders(csv.filename);
     }
     handler.init(data);
 
     bool line_read = true;
-    while(!csv.eof()) {
+    while (!csv.eof()) {
         auto row = csv.next();
         if (!row.empty()) {
             handler.handle_line(data, row, line_read);
@@ -479,13 +442,15 @@ inline bool FileParser<Handler>::fill(Data& data) {
     return true;
 }
 
-template<typename T> bool
-empty(const std::pair<T, T>& r) {
+template <typename T>
+bool empty(const std::pair<T, T>& r) {
     return r.first == r.second;
 }
 
-template<typename T> bool more_than_one_elt(const std::pair<T, T>& r) {
-    return ! empty(r) && boost::next(r.first) != r.second;
+template <typename T>
+bool more_than_one_elt(const std::pair<T, T>& r) {
+    return !empty(r) && boost::next(r.first) != r.second;
 }
 
-}} // namespace ed::connectors
+}  // namespace connectors
+}  // namespace ed

@@ -42,8 +42,7 @@ namespace navitia {
  *
  * The disruption is registered in pt_data
  */
-const type::disruption::Disruption&
-make_disruption(const chaos::Disruption& chaos_disruption, type::PT_Data& pt_data);
+const type::disruption::Disruption& make_disruption(const chaos::Disruption& chaos_disruption, type::PT_Data& pt_data);
 
 /*
  * Create a disruption from the chaos protobuf and apply it on the pt_data
@@ -52,10 +51,9 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
                                type::PT_Data& pt_data,
                                const type::MetaData& meta);
 
-boost::optional<type::disruption::LineSection>
-make_line_section(const chaos::PtObject& chaos_section, nt::PT_Data& pt_data);
+boost::optional<type::disruption::LineSection> make_line_section(const chaos::PtObject& chaos_section,
+                                                                 nt::PT_Data& pt_data);
 
-bool is_publishable(transit_realtime::TimeRange publication_period,
-                    boost::posix_time::time_period production_period);
+bool is_publishable(transit_realtime::TimeRange publication_period, boost::posix_time::time_period production_period);
 
-}
+}  // namespace navitia

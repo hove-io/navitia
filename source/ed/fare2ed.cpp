@@ -49,8 +49,7 @@ namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 namespace ed {
 
-int fare2ed(int argc, const char * argv[])
-{
+int fare2ed(int argc, const char* argv[]) {
     std::string connection_string, fare_dir;
     po::options_description desc("Allowed options");
 
@@ -69,31 +68,33 @@ int fare2ed(int argc, const char * argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("fare2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("connection-string")) {
+    if (vm.count("help") || !vm.count("connection-string")) {
         std::cout << "Reads and inserts in ed database fare files" << std::endl;
-        std::cout << desc <<  std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
     po::notify(vm);
@@ -103,9 +104,8 @@ int fare2ed(int argc, const char * argv[])
     ed::Data data;
 
     LOG4CPLUS_INFO(logger, "Fare parsers");
-    ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv",
-                                       fare_dir + "/prices.csv",
-                                       fare_dir + "/od_fares.csv");
+    ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv", fare_dir + "/prices.csv",
+                                           fare_dir + "/od_fares.csv");
     fareParser.load();
 
     auto end_load = pt::microsec_clock::local_time();
@@ -118,10 +118,11 @@ int fare2ed(int argc, const char * argv[])
     p.persist_fare(data);
 
     LOG4CPLUS_INFO(logger, "running time: ");
-    LOG4CPLUS_INFO(logger, "fares loaded in : " << (end_load- start).total_milliseconds() << "ms");
-    LOG4CPLUS_INFO(logger, "\t data writen in " << (pt::microsec_clock::local_time() - start).total_milliseconds() << "ms");
+    LOG4CPLUS_INFO(logger, "fares loaded in : " << (end_load - start).total_milliseconds() << "ms");
+    LOG4CPLUS_INFO(logger,
+                   "\t data writen in " << (pt::microsec_clock::local_time() - start).total_milliseconds() << "ms");
 
     return 0;
 }
 
-} // namespace ed
+}  // namespace ed

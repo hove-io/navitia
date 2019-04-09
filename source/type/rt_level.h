@@ -37,57 +37,55 @@ namespace navitia {
 
 namespace type {
 enum class RTLevel : char {
-    Base = 0, // base schedule (theoretical, from the GTFS)
-    Adapted, // adapted schedule (planned maintenance, strike, ...)
+    Base = 0,  // base schedule (theoretical, from the GTFS)
+    Adapted,   // adapted schedule (planned maintenance, strike, ...)
     RealTime
 };
 
 inline RTLevel get_rt_level_from_string(const std::string& level_str) {
     auto lower_str = boost::algorithm::to_lower_copy(level_str);
-    if (lower_str == "theoric"){
+    if (lower_str == "theoric") {
         return RTLevel::Base;
     }
-    if (lower_str == "adapted"){
+    if (lower_str == "adapted") {
         return RTLevel::Adapted;
     }
-    if (lower_str == "realtime"){
+    if (lower_str == "realtime") {
         return RTLevel::RealTime;
     }
     throw navitia::exception("technical error, vj class for meta vj should be either Theoric, Adapted or RealTime");
 }
 
 inline std::string get_string_from_rt_level(RTLevel level) {
-    if (level == RTLevel::Base){
+    if (level == RTLevel::Base) {
         return "Theoric";
     }
-    if (level == RTLevel::Adapted){
+    if (level == RTLevel::Adapted) {
         return "Adapted";
     }
-    if (level == RTLevel::RealTime){
+    if (level == RTLevel::RealTime) {
         return "RealTime";
     }
     throw navitia::exception("technical error, vj class for meta vj should be either Base, Adapted or RealTime");
 }
-}
+}  // namespace type
 
 template <>
 struct enum_size_trait<type::RTLevel> {
-    static constexpr typename get_enum_type<type::RTLevel>::type size() {
-        return 3;
-    }
+    static constexpr typename get_enum_type<type::RTLevel>::type size() { return 3; }
 };
 
-}
+}  // namespace navitia
 
 inline std::ostream& operator<<(std::ostream& ss, navitia::type::RTLevel l) {
     switch (l) {
-    case navitia::type::RTLevel::Base:
-        return ss << "Base";
-    case navitia::type::RTLevel::Adapted:
-        return ss << "Adapted";
-    case navitia::type::RTLevel::RealTime:
-        return ss << "RealTime";
-    default:
-        return ss;
+        case navitia::type::RTLevel::Base:
+            return ss << "Base";
+        case navitia::type::RTLevel::Adapted:
+            return ss << "Adapted";
+        case navitia::type::RTLevel::RealTime:
+            return ss << "RealTime";
+        default:
+            return ss;
     }
 }

@@ -45,13 +45,14 @@ www.navitia.io
 #include <algorithm>
 #include <boost/range/algorithm.hpp>
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
 IsochroneException::~IsochroneException() noexcept = default;
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
-                                             const double& radius){
+                                             const double& radius) {
     using navitia::type::GeographicalCoord;
     assert(radius > 0);
     double alpha = radius / GeographicalCoord::EARTH_RADIUS_IN_METERS;
@@ -88,7 +89,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
             if (lat == M_PI_2) {
-                delta_lon = (direction == 90 ? 1 : - 1) * alpha;
+                delta_lon = (direction == 90 ? 1 : -1) * alpha;
 #pragma GCC diagnostic pop
             } else {
                 double b = (cos(alpha) - sin(lat) * sin(center_lat_rad)) / (cos(lat) * cos(center_lat_rad));
@@ -109,18 +110,17 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     return type::GeographicalCoord(lon_deg, lat_deg);
 }
 
-static type::GeographicalCoord build_sym (const type::GeographicalCoord& point,
-                                          const type::GeographicalCoord& center,
-                                          const unsigned int& i) {
+static type::GeographicalCoord build_sym(const type::GeographicalCoord& point,
+                                         const type::GeographicalCoord& center,
+                                         const unsigned int& i) {
     if (i % 180 == 0) {
-        return type::GeographicalCoord(2*center.lon() - point.lon(), point.lat());
+        return type::GeographicalCoord(2 * center.lon() - point.lon(), point.lat());
     } else {
-        return type::GeographicalCoord(point.lon(), 2*center.lat() - point.lat());
+        return type::GeographicalCoord(point.lon(), 2 * center.lat() - point.lat());
     }
 }
 
-type::Polygon circle(const type::GeographicalCoord& center,
-                     const double& radius) {
+type::Polygon circle(const type::GeographicalCoord& center, const double& radius) {
     type::Polygon points;
     auto& points_out = points.outer();
     points_out.reserve(180);
@@ -138,13 +138,12 @@ type::Polygon circle(const type::GeographicalCoord& center,
     return points;
 }
 
-static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly,
-                                     const type::Polygon& poly) {
+static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly, const type::Polygon& poly) {
     type::MultiPolygon poly_union;
     try {
         boost::geometry::union_(poly, multi_poly, poly_union);
     } catch (const boost::geometry::exception& e) {
-        //We don't merge the polygons
+        // We don't merge the polygons
         log4cplus::Logger logger = log4cplus::Logger::getInstance("logger");
         LOG4CPLUS_WARN(logger, "impossible to merge polygon: " << e.what());
     }
@@ -154,14 +153,13 @@ static type::MultiPolygon merge_poly(const type::MultiPolygon& multi_poly,
 struct InfoCircle {
     type::GeographicalCoord center;
     int duration_left;
-    InfoCircle(const type::GeographicalCoord& center,
-               const int& duration_left): center(center),
-               duration_left(duration_left) {}
+    InfoCircle(const type::GeographicalCoord& center, const int& duration_left)
+        : center(center), duration_left(duration_left) {}
 };
 
 static bool within_info_circle(const InfoCircle& circle,
-                              const std::vector<InfoCircle>& multi_poly,
-                              const double speed) {
+                               const std::vector<InfoCircle>& multi_poly,
+                               const double speed) {
     auto begin = multi_poly.begin();
     const auto end = multi_poly.end();
     double circle_radius = circle.duration_left * speed;
@@ -172,12 +170,10 @@ static bool within_info_circle(const InfoCircle& circle,
     });
 }
 
-static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> circles,
-                                                     const double speed) {
+static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> circles, const double speed) {
     std::vector<InfoCircle> useful_circles;
-    boost::sort(circles,
-                [](const InfoCircle& a, const InfoCircle& b) {return a.duration_left > b.duration_left;});
-    for (auto& circle: circles) {
+    boost::sort(circles, [](const InfoCircle& a, const InfoCircle& b) { return a.duration_left > b.duration_left; });
+    for (auto& circle : circles) {
         if (!within_info_circle(circle, useful_circles, speed)) {
             useful_circles.push_back(std::move(circle));
         }
@@ -185,9 +181,7 @@ static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> cir
     return useful_circles;
 }
 
-DateTime build_bound(const bool clockwise,
-                     const DateTime duration,
-                     const DateTime init_dt) {
+DateTime build_bound(const bool clockwise, const DateTime duration, const DateTime init_dt) {
     return clockwise ? init_dt + duration : init_dt - duration;
 }
 
@@ -203,27 +197,31 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
     type::MultiPolygon circles;
     circles_classed.push_back(InfoCircle(coord_origin, duration));
     const auto& data_departure = raptor.data.pt_data->stop_points;
-    for (auto it = origin.begin(); it != origin.end(); ++it){
+    for (auto it = origin.begin(); it != origin.end(); ++it) {
         if (it->second.total_seconds() < duration) {
             int duration_left = duration - int(it->second.total_seconds());
-            if (duration_left * speed < MIN_RADIUS) {continue;}
+            if (duration_left * speed < MIN_RADIUS) {
+                continue;
+            }
             const auto& center = data_departure[it->first.val]->coord;
             circles_classed.push_back(InfoCircle(center, duration_left));
         }
     }
-    for(const type::StopPoint* sp: stop_points) {
+    for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
         const auto best_lbl = raptor.best_labels_pts[sp_idx];
         if (in_bound(best_lbl, bound, clockwise)) {
             uint duration_left = abs(int(best_lbl) - int(bound));
-            if (duration_left * speed < MIN_RADIUS) {continue;}
+            if (duration_left * speed < MIN_RADIUS) {
+                continue;
+            }
             const auto& center = sp->coord;
             circles_classed.push_back(InfoCircle(center, duration_left));
         }
     }
     std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);
 
-    for (const auto& c: circles_check) {
+    for (const auto& c : circles_check) {
         type::Polygon circle_to_add = circle(c.center, c.duration_left * speed);
         circles = merge_poly(circles, circle_to_add);
     }
@@ -231,35 +229,34 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
 }
 
 std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
-                           const bool clockwise,
-                           const type::GeographicalCoord& coord_origin,
-                           const map_stop_point_duration& origin,
-                           const double& speed,
-                           const std::vector<DateTime>& boundary_duration,
-                           const DateTime init_dt) {
+                                        const bool clockwise,
+                                        const type::GeographicalCoord& coord_origin,
+                                        const map_stop_point_duration& origin,
+                                        const double& speed,
+                                        const std::vector<DateTime>& boundary_duration,
+                                        const DateTime init_dt) {
     std::vector<Isochrone> isochrone;
     if (!boundary_duration.empty()) {
-        type::MultiPolygon max_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                                  clockwise, coord_origin,
-                                                                  build_bound(clockwise, boundary_duration[0], init_dt),
-                                                                  origin, speed, boundary_duration[0]);
+        type::MultiPolygon max_isochrone = build_single_isochrone(
+            raptor, raptor.data.pt_data->stop_points, clockwise, coord_origin,
+            build_bound(clockwise, boundary_duration[0], init_dt), origin, speed, boundary_duration[0]);
         for (size_t i = 1; i < boundary_duration.size(); i++) {
             type::MultiPolygon output;
             if (boundary_duration[i] > 0) {
-                type::MultiPolygon min_isochrone = build_single_isochrone(raptor, raptor.data.pt_data->stop_points,
-                                                                          clockwise, coord_origin,
-                                                                          build_bound(clockwise, boundary_duration[i], init_dt),
-                                                                          origin, speed, boundary_duration[i]);
+                type::MultiPolygon min_isochrone = build_single_isochrone(
+                    raptor, raptor.data.pt_data->stop_points, clockwise, coord_origin,
+                    build_bound(clockwise, boundary_duration[i], init_dt), origin, speed, boundary_duration[i]);
                 boost::geometry::difference(max_isochrone, min_isochrone, output);
                 max_isochrone = std::move(min_isochrone);
             } else {
                 output = max_isochrone;
             }
-            isochrone.push_back(Isochrone(std::move(output), boundary_duration[i], boundary_duration[i-1]));
+            isochrone.push_back(Isochrone(std::move(output), boundary_duration[i], boundary_duration[i - 1]));
         }
     }
     std::reverse(isochrone.begin(), isochrone.end());
     return isochrone;
 }
 
-}} //namespace navitia::routing
+}  // namespace routing
+}  // namespace navitia

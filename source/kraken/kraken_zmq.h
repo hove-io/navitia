@@ -43,14 +43,11 @@ www.navitia.io
 #include "utils/deadline.h"
 #include <boost/optional/optional_io.hpp>
 
-
-static void respond(zmq::socket_t& socket,
-             const std::string& address,
-             const pbnavitia::Response& response){
+static void respond(zmq::socket_t& socket, const std::string& address, const pbnavitia::Response& response) {
     zmq::message_t reply(response.ByteSize());
-    try{
+    try {
         response.SerializeToArray(reply.data(), response.ByteSize());
-    }catch(const google::protobuf::FatalException& e){
+    } catch (const google::protobuf::FatalException& e) {
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
         pbnavitia::Response error_response;
@@ -69,36 +66,35 @@ inline void doWork(zmq::context_t& context,
                    DataManager<navitia::type::Data>& data_manager,
                    navitia::kraken::Configuration conf,
                    const navitia::Metrics& metrics) {
-
     auto logger = log4cplus::Logger::getInstance("worker");
 
-    zmq::socket_t socket (context, ZMQ_REQ);
+    zmq::socket_t socket(context, ZMQ_REQ);
     socket.connect("inproc://workers");
     bool run = true;
     auto enable_deadline = conf.enable_request_deadline();
-    //Here we create the worker
+    // Here we create the worker
     navitia::Worker w(conf);
     z_send(socket, "READY");
     auto slow_request_duration = pt::milliseconds(conf.slow_request_duration());
-    while(run) {
+    while (run) {
         const std::string address = z_recv(socket);
         {
             std::string empty = z_recv(socket);
             assert(empty.size() == 0);
         }
         zmq::message_t request;
-        try{
+        try {
             // Wait for next request from client
             socket.recv(&request);
-        }catch(zmq::error_t){
-            //on gére le cas du sighup durant un recv
+        } catch (zmq::error_t) {
+            // on gére le cas du sighup durant un recv
             continue;
         }
         navitia::InFlightGuard in_flight_guard(metrics.start_in_flight());
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
-        if(!pb_req.ParseFromArray(request.data(), request.size())){
+        if (!pb_req.ParseFromArray(request.data(), request.size())) {
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
             pbnavitia::Response response;
             auto* error = response.mutable_error();
@@ -110,15 +106,15 @@ inline void doWork(zmq::context_t& context,
 
         api = pb_req.requested_api();
         log4cplus::NDCContextCreator ndc(pb_req.request_id());
-        if(api != pbnavitia::METADATAS){
+        if (api != pbnavitia::METADATAS) {
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
 
         auto deadline = navitia::Deadline();
-        if(enable_deadline && pb_req.has_deadline()){
-            try{
+        if (enable_deadline && pb_req.has_deadline()) {
+            try {
                 deadline.set(boost::posix_time::from_iso_string(pb_req.deadline()));
-            }catch(const std::exception& e){
+            } catch (const std::exception& e) {
                 LOG4CPLUS_WARN(logger, "impossible to parse deadline " << pb_req.deadline() << " : " << e.what());
             }
         }
@@ -128,32 +124,32 @@ inline void doWork(zmq::context_t& context,
         try {
             deadline.check();
             w.dispatch(pb_req, *data);
-            if(api != pbnavitia::METADATAS){
+            if (api != pbnavitia::METADATAS) {
                 LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
         } catch (const navitia::DeadlineExpired& e) {
             LOG4CPLUS_ERROR(logger, "deadline expired, aborting request: " << e.what());
             w.pb_creator.fill_pb_error(pbnavitia::Error::deadline_expired, e.what());
-            //we still respond so this thread become availlable again
+            // we still respond so this thread become availlable again
         } catch (const navitia::recoverable_exception& e) {
-            //on a recoverable an internal server error is returned
+            // on a recoverable an internal server error is returned
             LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());
             LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
             LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
             w.pb_creator.fill_pb_error(pbnavitia::Error::internal_error, e.what());
         }
-        if (! data->loaded){
+        if (!data->loaded) {
             w.pb_creator.set_publication_date(boost::gregorian::not_a_date_time);
         } else {
             w.pb_creator.set_publication_date(data->meta->publication_date);
         }
         respond(socket, address, w.pb_creator.get_response());
         auto duration = pt::microsec_clock::universal_time() - start;
-        metrics.observe_api(api, duration.total_milliseconds()/1000.0);
-        if(duration >= slow_request_duration){
+        metrics.observe_api(api, duration.total_milliseconds() / 1000.0);
+        if (duration >= slow_request_duration) {
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()
-                                << "ms request: " << pb_req.DebugString());
-        }else if(api != pbnavitia::METADATAS){
+                                                              << "ms request: " << pb_req.DebugString());
+        } else if (api != pbnavitia::METADATAS) {
             LOG4CPLUS_DEBUG(logger, "processing time : " << duration.total_milliseconds());
         }
     }

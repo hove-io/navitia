@@ -37,9 +37,10 @@ www.navitia.io
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
-struct MetaData{
+struct MetaData {
     boost::gregorian::date_period production_date;
     boost::posix_time::ptime publication_date;
 
@@ -56,13 +57,13 @@ struct MetaData{
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
-      *
-      * Elle est appelée par boost et pas directement
-      */
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & production_date & publication_date & shape & publisher_name
-            & publisher_url & license & instance_name & dataset_created_at
-            & poi_source & street_network_source;
+     *
+     * Elle est appelée par boost et pas directement
+     */
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& production_date& publication_date& shape& publisher_name& publisher_url& license& instance_name&
+            dataset_created_at& poi_source& street_network_source;
     }
     boost::posix_time::time_period production_period() const {
         namespace pt = boost::posix_time;
@@ -71,4 +72,5 @@ struct MetaData{
         return {begin, end};
     }
 };
-}}
+}  // namespace type
+}  // namespace navitia

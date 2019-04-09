@@ -41,12 +41,10 @@ www.navitia.io
 #include "georef/georef.h"
 #include "type/type.h"
 
-
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
-
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 static pbnavitia::Request create_request(bool wheelchair, const std::string& destination) {
     pbnavitia::Request req;
@@ -75,7 +73,9 @@ static pbnavitia::Request create_request(bool wheelchair, const std::string& des
     return req;
 }
 
-static pbnavitia::Request create_request_for_pt_planner(bool clockwise, const std::string& datetime, const std::string& destination) {
+static pbnavitia::Request create_request_for_pt_planner(bool clockwise,
+                                                        const std::string& datetime,
+                                                        const std::string& destination) {
     pbnavitia::Request req;
     req.set_requested_api(pbnavitia::pt_planner);
     pbnavitia::JourneysRequest* j = req.mutable_journeys();
@@ -84,7 +84,7 @@ static pbnavitia::Request create_request_for_pt_planner(bool clockwise, const st
     j->set_realtime_level(pbnavitia::BASE_SCHEDULE);
     j->set_max_duration(std::numeric_limits<int32_t>::max());
     j->set_max_transfers(42);
-    j->add_datetimes(navitia::test::to_posix_timestamp(datetime));//"20150314T080000"
+    j->add_datetimes(navitia::test::to_posix_timestamp(datetime));  //"20150314T080000"
     auto sn_params = j->mutable_streetnetwork_params();
     sn_params->set_origin_mode("walking");
     sn_params->set_destination_mode("walking");
@@ -102,50 +102,46 @@ static pbnavitia::Request create_request_for_pt_planner(bool clockwise, const st
 }
 
 /**
-  * Accessibility tests
-  *
-  *
-  *          ,                        \/
-  * Note:    |__    means accessible, /\ means not accessible
-  *         ( )o|
-  *
-  *
-  *  ,                    ,
-  *  |__                  |__                   \/
-  * ( )o|                ( )o|                  /\
-  *
-  *  A ------------------- B ------------------- C
-  *
-  *  9h        \/         9h
-  *            /\
-  *
-  *            ,
-  *  8h        |_         10h
-  *           ( )o|
-  *
-  *                       ,
-  * 10h                   |_                    11h
-  *                      ( )o|
-  *
-  * Leaving at 8h with a wheelchair, we should only be able to arrive at B at 10 and it's impossible to go to C
-  *
-  */
+ * Accessibility tests
+ *
+ *
+ *          ,                        \/
+ * Note:    |__    means accessible, /\ means not accessible
+ *         ( )o|
+ *
+ *
+ *  ,                    ,
+ *  |__                  |__                   \/
+ * ( )o|                ( )o|                  /\
+ *
+ *  A ------------------- B ------------------- C
+ *
+ *  9h        \/         9h
+ *            /\
+ *
+ *            ,
+ *  8h        |_         10h
+ *           ( )o|
+ *
+ *                       ,
+ * 10h                   |_                    11h
+ *                      ( )o|
+ *
+ * Leaving at 8h with a wheelchair, we should only be able to arrive at B at 10 and it's impossible to go to C
+ *
+ */
 struct fixture {
-    fixture(): b("20150314"),
-                 w(navitia::kraken::Configuration()){
+    fixture() : b("20150314"), w(navitia::kraken::Configuration()) {
         b.sa("A", 0, 0, true, true);
         b.sa("B", 0, 0, true, true);
-        b.sa("C", 0, 0, true, false); // C is not accessible
-        b.vj("l1", "11111111", "", false)
-                ("stop_point:A", "8:00"_t)("stop_point:B", "9:00"_t);
-        b.vj("l2")
-                ("stop_point:A", "9:00"_t)("stop_point:B", "10:00"_t);
-        b.vj("l3")
-                ("stop_point:A", "10:00"_t)("stop_point:C", "11:00"_t);
+        b.sa("C", 0, 0, true, false);  // C is not accessible
+        b.vj("l1", "11111111", "", false)("stop_point:A", "8:00"_t)("stop_point:B", "9:00"_t);
+        b.vj("l2")("stop_point:A", "9:00"_t)("stop_point:B", "10:00"_t);
+        b.vj("l3")("stop_point:A", "10:00"_t)("stop_point:C", "11:00"_t);
         using coord = navitia::type::GeographicalCoord;
         coord coord_Paris = {2.3522219000000177, 48.856614};
         coord coord_Notre_Dame = {2.35, 48.853};
-        coord coord_Pantheon = {2.3461,48.8463};
+        coord coord_Pantheon = {2.3461, 48.8463};
         b.sps["stop_point:A"]->coord = coord_Paris;
         b.sps["stop_point:B"]->coord = coord_Notre_Dame;
         b.sps["stop_point:C"]->coord = coord_Pantheon;
@@ -190,7 +186,6 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_vj_tests, fixture) {
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20150314T100000"));
 }
 
-
 BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
     const auto no_wheelchair_request = create_request(true, "C");
     const auto d = data_manager.get_data();
@@ -207,18 +202,19 @@ BOOST_AUTO_TEST_CASE(make_sn_entry_point_tests) {
     float speed = 1.12;
     const int max_duration = 1800;
     auto entry_point = navitia::make_sn_entry_point(place, mode, speed, max_duration, *b.data);
-    auto new_speed = entry_point.streetnetwork_params.speed_factor * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
+    auto new_speed = entry_point.streetnetwork_params.speed_factor
+                     * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
     BOOST_CHECK_CLOSE(1.12, new_speed, 1e-5);
 
     speed = 1.00;
     entry_point = navitia::make_sn_entry_point(place, mode, speed, max_duration, *b.data);
-    new_speed = entry_point.streetnetwork_params.speed_factor * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
+    new_speed = entry_point.streetnetwork_params.speed_factor
+                * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
     BOOST_CHECK_CLOSE(1.0, new_speed, 1e-5);
 }
 
-
 BOOST_FIXTURE_TEST_CASE(journey_on_first_day_of_production_tests, fixture) {
-    //request with datetime represents departure(clockwise=true)
+    // request with datetime represents departure(clockwise=true)
     auto dep_after_request = create_request_for_pt_planner(true, "20150314T080000", "stop_point:B");
 
     // we ask for a journey with clockwise=true, we arrive at 9h
@@ -231,7 +227,7 @@ BOOST_FIXTURE_TEST_CASE(journey_on_first_day_of_production_tests, fixture) {
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20150314T100000"));
 
-    //request with datetime represents arrival(clockwise=false)
+    // request with datetime represents arrival(clockwise=false)
     dep_after_request = create_request_for_pt_planner(false, "20150314T100000", "stop_point:B");
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -244,7 +240,7 @@ BOOST_AUTO_TEST_CASE(retrocompat_invalid_coord_creation) {
 
     auto ep = navitia::type::EntryPoint(nt::Type_e::Coord, coord);
 
-    BOOST_REQUIRE(! navitia::type::EntryPoint::is_coord(coord));
+    BOOST_REQUIRE(!navitia::type::EntryPoint::is_coord(coord));
     BOOST_CHECK_CLOSE(ep.coordinates.lon(), 0., 0.0001);
     BOOST_CHECK_CLOSE(ep.coordinates.lat(), 0., 0.0001);
 }
@@ -270,7 +266,7 @@ BOOST_AUTO_TEST_CASE(coord_creation) {
 }
 
 BOOST_AUTO_TEST_CASE(complex_coord_creation) {
-    //lon is a negative integer and lat is in scientific notation, it should work
+    // lon is a negative integer and lat is in scientific notation, it should work
     std::string coord = "-1;12e-3";
 
     auto ep = navitia::type::EntryPoint(nt::Type_e::Coord, coord);
@@ -281,7 +277,7 @@ BOOST_AUTO_TEST_CASE(complex_coord_creation) {
 }
 
 BOOST_AUTO_TEST_CASE(no_dec_coord_creation) {
-    //without any decimal it should also work
+    // without any decimal it should also work
     std::string coord = "5.;6";
 
     auto ep = navitia::type::EntryPoint(nt::Type_e::Coord, coord);
@@ -292,12 +288,11 @@ BOOST_AUTO_TEST_CASE(no_dec_coord_creation) {
 }
 
 BOOST_AUTO_TEST_CASE(empty_coord_creation) {
-    //we should not match an empty coord
+    // we should not match an empty coord
     std::string coord = ";";
 
-    BOOST_REQUIRE(! navitia::type::EntryPoint::is_coord(coord));
+    BOOST_REQUIRE(!navitia::type::EntryPoint::is_coord(coord));
 }
-
 
 BOOST_AUTO_TEST_CASE(invalid_coord_creation_no_semi) {
     // the separator is a ':' it's not valid'
@@ -305,7 +300,7 @@ BOOST_AUTO_TEST_CASE(invalid_coord_creation_no_semi) {
 
     auto ep = navitia::type::EntryPoint(nt::Type_e::Coord, coord);
 
-    BOOST_REQUIRE(! navitia::type::EntryPoint::is_coord(coord));
+    BOOST_REQUIRE(!navitia::type::EntryPoint::is_coord(coord));
     BOOST_CHECK_CLOSE(ep.coordinates.lon(), 0., 0.0001);
     BOOST_CHECK_CLOSE(ep.coordinates.lat(), 0., 0.0001);
 }

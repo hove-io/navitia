@@ -37,14 +37,14 @@ namespace navitia {
 namespace type {
 
 bool ValidityPattern::is_valid(int day) const {
-    if(day < 0) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
-                       << day << " is too early");
+    if (day < 0) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Validity pattern not valid, the day " << day << " is too early");
         return false;
     }
-    if(size_t(day) >= days.size()) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "Validity pattern not valid, the day "
-                       << day << " is late");
+    if (size_t(day) >= days.size()) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "Validity pattern not valid, the day " << day << " is late");
         return false;
     }
     return true;
@@ -54,17 +54,17 @@ int ValidityPattern::slide(boost::gregorian::date day) const {
     return (day - beginning_date).days();
 }
 
-void ValidityPattern::add(boost::gregorian::date day){
+void ValidityPattern::add(boost::gregorian::date day) {
     long duration = slide(day);
     add(duration);
 }
 
-void ValidityPattern::add(int duration){
-    if(is_valid(duration))
+void ValidityPattern::add(int duration) {
+    if (is_valid(duration))
         days[duration] = true;
 }
 
-void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
+void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days) {
     for (auto current_date = start; current_date < end; current_date = current_date + boost::gregorian::days(1)) {
         navitia::weekdays week_day = navitia::get_weekday(current_date);
         if (active_days[week_day]) {
@@ -75,13 +75,13 @@ void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date e
     };
 }
 
-void ValidityPattern::remove(boost::gregorian::date date){
+void ValidityPattern::remove(boost::gregorian::date date) {
     long duration = slide(date);
     remove(duration);
 }
 
-void ValidityPattern::remove(int day){
-    if(is_valid(day))
+void ValidityPattern::remove(int day) {
+    if (is_valid(day))
         days[day] = false;
 }
 
@@ -99,24 +99,24 @@ bool ValidityPattern::check(boost::gregorian::date day) const {
 }
 
 bool ValidityPattern::check(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
+    //    BOOST_ASSERT(is_valid(day));
     return days[day];
 }
 
 bool ValidityPattern::check2(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
-    if(day == 0)
-        return days[day] || days[day+1];
+    //    BOOST_ASSERT(is_valid(day));
+    if (day == 0)
+        return days[day] || days[day + 1];
     else
-        return days[day-1] || days[day] || days[day+1];
+        return days[day - 1] || days[day] || days[day + 1];
 }
 
 bool ValidityPattern::uncheck2(unsigned int day) const {
-//    BOOST_ASSERT(is_valid(day));
-    if(day == 0)
-        return !days[day] && !days[day+1];
+    //    BOOST_ASSERT(is_valid(day));
+    if (day == 0)
+        return !days[day] && !days[day + 1];
     else
-        return !days[day-1] && !days[day] && !days[day+1];
+        return !days[day - 1] && !days[day] && !days[day + 1];
 }
-}
-}
+}  // namespace type
+}  // namespace navitia

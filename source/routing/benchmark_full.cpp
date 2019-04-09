@@ -67,54 +67,53 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(pbnavitia::Journey journey) : duration(journey.duration()), time(-1), arrival(journey.arrival_date_time()), nb_changes(journey.nb_transfers()) {}
+    Result(pbnavitia::Journey journey)
+        : duration(journey.duration()),
+          time(-1),
+          arrival(journey.arrival_date_time()),
+          nb_changes(journey.nb_transfers()) {}
 };
 
 static type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point,
                                                     const navitia::type::Data& data) {
     type::GeographicalCoord result;
     switch (entry_point.type) {
-    case type::Type_e::Address: {
+        case type::Type_e::Address: {
             auto way = data.geo_ref->way_map.find(entry_point.uri);
-            if (way != data.geo_ref->way_map.end()){
+            if (way != data.geo_ref->way_map.end()) {
                 const auto geo_way = data.geo_ref->ways[way->second];
                 return geo_way->nearest_coord(entry_point.house_number, data.geo_ref->graph);
             }
-        }
-        break;
-    case type::Type_e::StopPoint: {
+        } break;
+        case type::Type_e::StopPoint: {
             auto sp_it = data.pt_data->stop_points_map.find(entry_point.uri);
-            if(sp_it != data.pt_data->stop_points_map.end()) {
-                return  sp_it->second->coord;
+            if (sp_it != data.pt_data->stop_points_map.end()) {
+                return sp_it->second->coord;
             }
-        }
-        break;
-    case type::Type_e::StopArea: {
+        } break;
+        case type::Type_e::StopArea: {
             auto sa_it = data.pt_data->stop_areas_map.find(entry_point.uri);
-            if(sa_it != data.pt_data->stop_areas_map.end()) {
-                return  sa_it->second->coord;
+            if (sa_it != data.pt_data->stop_areas_map.end()) {
+                return sa_it->second->coord;
             }
-        }
-        break;
-    case type::Type_e::Coord:
-        return entry_point.coordinates;
-    case type::Type_e::Admin: {
+        } break;
+        case type::Type_e::Coord:
+            return entry_point.coordinates;
+        case type::Type_e::Admin: {
             auto it_admin = data.geo_ref->admin_map.find(entry_point.uri);
             if (it_admin != data.geo_ref->admin_map.end()) {
                 const auto admin = data.geo_ref->admins[it_admin->second];
-                return  admin->coord;
+                return admin->coord;
             }
-        }
-        break;
-    case type::Type_e::POI: {
+        } break;
+        case type::Type_e::POI: {
             auto poi = data.geo_ref->poi_map.find(entry_point.uri);
-            if (poi != data.geo_ref->poi_map.end()){
+            if (poi != data.geo_ref->poi_map.end()) {
                 return poi->second->coord;
             }
-        }
-        break;
-    default:
-        break;
+        } break;
+        default:
+            break;
     }
     std::cout << "coord not found for " << entry_point.uri << std::endl;
     return {};
@@ -125,7 +124,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
     try {
         type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
 
-        //if it is a cached idx, we consider it to be a stop area idx
+        // if it is a cached idx, we consider it to be a stop area idx
         entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
     } catch (boost::bad_lexical_cast) {
         // else we use the same way to identify an entry point as the api
@@ -136,7 +135,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
     return entry;
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output, stop_input_file, start, target;
@@ -186,12 +185,12 @@ int main(int argc, char** argv){
     }
     std::vector<PathDemand> demands;
 
-    if (! stop_input_file.empty()) {
-        //csv file should be the same as the output one
+    if (!stop_input_file.empty()) {
+        // csv file should be the same as the output one
         CsvReader csv(stop_input_file, ',');
         csv.next();
         size_t cpt_not_found = 0;
-        for (auto it = csv.next(); ! csv.eof(); it = csv.next()) {
+        for (auto it = csv.next(); !csv.eof(); it = csv.next()) {
             PathDemand demand;
             demand.start = it[0];
             demand.target = it[1];
@@ -200,8 +199,7 @@ int main(int argc, char** argv){
             demands.push_back(demand);
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
-    }
-    else if(start != "" && target != "" && date != -1 && hour != -1) {
+    } else if (start != "" && target != "" && date != -1 && hour != -1) {
         PathDemand demand;
         demand.start = start;
         demand.target = target;
@@ -213,15 +211,15 @@ int main(int argc, char** argv){
         // Génération des instances
         std::random_device rd;
         std::mt19937 rng(31442);
-        std::uniform_int_distribution<> gen(0,data.pt_data->stop_areas.size()-1);
+        std::uniform_int_distribution<> gen(0, data.pt_data->stop_areas.size() - 1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({date != -1 ? unsigned(date) : 7});
-        if(data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
             days.push_back(days.front() + 1);
         else
             days.push_back(days.front() + 6);
 
-        for(int i = 0; i < iterations; ++i) {
+        for (int i = 0; i < iterations; ++i) {
             PathDemand demand;
             const type::StopArea* sa_start;
             const type::StopArea* sa_dest;
@@ -230,13 +228,11 @@ int main(int argc, char** argv){
                 sa_dest = data.pt_data->stop_areas[gen(rng)];
                 demand.start = sa_start->uri;
                 demand.target = sa_dest->uri;
-            }
-            while(sa_start == sa_dest
-                    || ba::starts_with(sa_dest->uri, "stop_area:SNC:")
-                    || ba::starts_with(sa_start->uri, "stop_area:SNC:"));
+            } while (sa_start == sa_dest || ba::starts_with(sa_dest->uri, "stop_area:SNC:")
+                     || ba::starts_with(sa_start->uri, "stop_area:SNC:"));
 
-            for(auto day : days) {
-                for(auto hour : hours) {
+            for (auto day : days) {
+                for (auto hour : hours) {
                     demand.date = day;
                     demand.hour = hour;
                     demands.push_back(demand);
@@ -254,24 +250,20 @@ int main(int argc, char** argv){
     std::cout << "On lance le benchmark de l'algo " << std::endl;
     boost::progress_display show_progress(demands.size());
     Timer t("Calcul avec l'algorithme ");
-    //ProfilerStart("bench.prof");
+    // ProfilerStart("bench.prof");
     int nb_reponses = 0, nb_journeys = 0;
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_START_INSTRUMENTATION;
 #endif
-    for (auto demand: demands) {
+    for (auto demand : demands) {
         ++show_progress;
         Timer t2;
-        auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1) - boost::gregorian::date(1970, 1, 1);
+        auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1)
+                    - boost::gregorian::date(1970, 1, 1);
         if (verbose) {
-            std::cout << demand.start
-                      << ", " << demand.start
-                      << ", " << demand.target
-                      << ", " << static_cast<int>(demand.start_mode)
-                      << ", " << static_cast<int>(demand.target_mode)
-                      << ", " << date
-                      << ", " << demand.hour
-                      << "\n";
+            std::cout << demand.start << ", " << demand.start << ", " << demand.target << ", "
+                      << static_cast<int>(demand.start_mode) << ", " << static_cast<int>(demand.target_mode) << ", "
+                      << date << ", " << demand.hour << "\n";
         }
 
         type::EntryPoint origin = make_entry_point(demand.start, data);
@@ -279,23 +271,21 @@ int main(int argc, char** argv){
 
         origin.streetnetwork_params.mode = demand.start_mode;
         origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
-        origin.streetnetwork_params.max_duration = navitia::seconds(30*60);
+        origin.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
         origin.streetnetwork_params.speed_factor = 1;
         destination.streetnetwork_params.mode = demand.target_mode;
         destination.streetnetwork_params.offset = data.geo_ref->offsets[demand.target_mode];
-        destination.streetnetwork_params.max_duration = navitia::seconds(30*60);
+        destination.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
         const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
         navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-        make_response(pb_creator, router, origin,
-                      destination, {departure_datetime}, true,
-                      accessibilite_params, {}, {}, georef_worker, type::RTLevel::Base,
-                      2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
+        make_response(pb_creator, router, origin, destination, {departure_datetime}, true, accessibilite_params, {}, {},
+                      georef_worker, type::RTLevel::Base, 2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
         auto resp = pb_creator.get_response();
 
         if (resp.journeys_size() > 0) {
-            ++ nb_reponses;
+            ++nb_reponses;
             nb_journeys += resp.journeys_size();
 
             Result result(resp.journeys(0));
@@ -303,7 +293,7 @@ int main(int argc, char** argv){
             results.push_back(result);
         }
     }
-    //ProfilerStop();
+    // ProfilerStop();
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_STOP_INSTRUMENTATION;
 #endif

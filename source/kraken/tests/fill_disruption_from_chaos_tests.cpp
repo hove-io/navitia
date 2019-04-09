@@ -48,9 +48,9 @@ www.navitia.io
 #include <boost/algorithm/string/classification.hpp>
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
@@ -67,33 +67,38 @@ struct stop_area_finder{
 };
 */
 
-static std::string dump_vj(const nt::VehicleJourney& vj){
+static std::string dump_vj(const nt::VehicleJourney& vj) {
     std::stringstream ss;
     ss << vj.uri << std::endl;
-    for(const auto& st: vj.stop_time_list){
-    ss << "\t" << st.stop_point->uri << ": " << st.arrival_time << " - " << st.departure_time << std::endl;
+    for (const auto& st : vj.stop_time_list) {
+        ss << "\t" << st.stop_point->uri << ": " << st.arrival_time << " - " << st.departure_time << std::endl;
     }
-    ss << "\tvalidity_pattern: " << ba::trim_left_copy_if(vj.base_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
-    ss << "\tadapted_validity_pattern: " << ba::trim_left_copy_if(vj.adapted_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
+    ss << "\tvalidity_pattern: "
+       << ba::trim_left_copy_if(vj.base_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
+    ss << "\tadapted_validity_pattern: "
+       << ba::trim_left_copy_if(vj.adapted_validity_pattern()->days.to_string(), boost::is_any_of("0")) << std::endl;
     return ss.str();
 }
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     ed::builder b("20120614");
-    b.vj("A", "000111", "", true, "vj:1")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60, 8*3600 + 21*60);
-    b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60, 9*3600 + 21*60);
-    b.vj("A", "001101", "", true, "vj:3")("stop_area:stop1", 16*3600 +10*60, 16*3600 + 11 * 60)("stop_area:stop2", 16*3600 + 20 * 60, 16*3600 + 21*60);
+    b.vj("A", "000111", "", true, "vj:1")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)(
+        "stop_area:stop2", 8 * 3600 + 20 * 60, 8 * 3600 + 21 * 60);
+    b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", 9 * 3600 + 10 * 60, 9 * 3600 + 11 * 60)(
+        "stop_area:stop2", 9 * 3600 + 20 * 60, 9 * 3600 + 21 * 60);
+    b.vj("A", "001101", "", true, "vj:3")("stop_area:stop1", 16 * 3600 + 10 * 60, 16 * 3600 + 11 * 60)(
+        "stop_area:stop2", 16 * 3600 + 20 * 60, 16 * 3600 + 21 * 60);
     navitia::type::Data data;
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
-    //we delete the line A for three day, the first two vj start too early for being impacted on the first day
-    //the third vj start too late for being impacted the last day
-
+    // we delete the line A for three day, the first two vj start too early for being impacted on the first day
+    // the third vj start too late for being impacted the last day
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
-    //Add a period with valid start date without end date
+    // Add a period with valid start date without end date
     auto period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
     auto* impact = disruption.add_impacts();
@@ -108,65 +113,73 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     app_period->set_start(ntest::to_posix_timestamp("20120614T153200"));
     app_period->set_end(ntest::to_posix_timestamp("20120616T123200"));
 
-
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
     auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                        vj->base_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:2"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                        vj->base_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:3"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "001100"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "001101"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "001100"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "001101"),
+                        vj->base_validity_pattern()->days);
 
-    //we delete the disruption, all must be as before!
+    // we delete the disruption, all must be as before!
     navitia::delete_disruption("test01", *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
     vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000111"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000111"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                        vj->base_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:2"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000111"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000111"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                        vj->base_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:3"];
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "001101"), vj->adapted_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "001101"), vj->base_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "001101"),
+                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "001101"),
+                        vj->base_validity_pattern()->days);
 }
-
 
 BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     ed::builder b("20120614");
-    b.vj("A", "000111").uri("vj:1")
-            ("stop_area:stop1", "08:10"_t, "08:11"_t)
-            ("stop_area:stop2", "08:20"_t, "08:21"_t)
-            ("stop_area:stop3", "08:30"_t, "08:31"_t)
-            ("stop_area:stop4", "08:40"_t, "08:41"_t);
-    b.vj("A", "000111").uri("vj:2")
-            ("stop_area:stop1", "09:10"_t, "09:11"_t)
-            ("stop_area:stop2", "09:20"_t, "09:21"_t)
-            ("stop_area:stop3", "09:30"_t, "09:31"_t)
-            ("stop_area:stop4", "09:40"_t, "09:41"_t);
+    b.vj("A", "000111")
+        .uri("vj:1")("stop_area:stop1", "08:10"_t, "08:11"_t)("stop_area:stop2", "08:20"_t, "08:21"_t)(
+            "stop_area:stop3", "08:30"_t, "08:31"_t)("stop_area:stop4", "08:40"_t, "08:41"_t);
+    b.vj("A", "000111")
+        .uri("vj:2")("stop_area:stop1", "09:10"_t, "09:11"_t)("stop_area:stop2", "09:20"_t, "09:21"_t)(
+            "stop_area:stop3", "09:30"_t, "09:31"_t)("stop_area:stop4", "09:40"_t, "09:41"_t);
 
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
-    //mostly like the previous test, but we disable the stop_area 1 and 2
-    //some useless journey pattern and vj are created but won't circulate
-    //then we update the disruption (without any change) this way we check all the process (previously there was some segfault)
+    // mostly like the previous test, but we disable the stop_area 1 and 2
+    // some useless journey pattern and vj are created but won't circulate
+    // then we update the disruption (without any change) this way we check all the process (previously there was some
+    // segfault)
 
     chaos::Disruption disruption;
     {
         disruption.set_id("test01");
-        //Add a period with valid start and end date
+        // Add a period with valid start and end date
         auto period = disruption.mutable_publication_period();
         period->set_start(ntest::to_posix_timestamp("20120613T153200"));
         period->set_end(ntest::to_posix_timestamp("20120615T153200"));
@@ -188,27 +201,33 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         object->set_uri("stop_area:stop2");
     }
 
-    auto check = [](const nt::Data& data){
+    auto check = [](const nt::Data& data) {
         BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 1);
 
         auto* vj = data.pt_data->vehicle_journeys_map["vj:1"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"), vj->adapted_validity_pattern()->days);
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"),
+                            vj->adapted_validity_pattern()->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                            vj->base_validity_pattern()->days);
 
         vj = data.pt_data->vehicle_journeys_map["vj:2"];
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"), vj->adapted_validity_pattern()->days);
-        BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"), vj->base_validity_pattern()->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000001"),
+                            vj->adapted_validity_pattern()->days);
+        BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000111"),
+                            vj->base_validity_pattern()->days);
     };
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
     auto vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"), vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        vj->adapted_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:2:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"), vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        vj->adapted_validity_pattern()->days);
     check(*b.data);
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
@@ -216,38 +235,40 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"), vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        vj->adapted_validity_pattern()->days);
 
     vj = b.data->pt_data->vehicle_journeys_map["vj:2:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"), vj->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        vj->adapted_validity_pattern()->days);
 
     check(*b.data);
 
     navitia::delete_disruption(disruption.id(), *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
-    for (const auto* vj: b.data->pt_data->vehicle_journeys) {
-        if (vj->realtime_level == nt::RTLevel::Base){
+    for (const auto* vj : b.data->pt_data->vehicle_journeys) {
+        if (vj->realtime_level == nt::RTLevel::Base) {
             BOOST_CHECK(vj->base_validity_pattern()->days == vj->adapted_validity_pattern()->days);
         }
-        BOOST_CHECK(vj->realtime_level != nt::RTLevel::Adapted); // all adapted vj must have been remove
+        BOOST_CHECK(vj->realtime_level != nt::RTLevel::Adapted);  // all adapted vj must have been remove
     }
-
 }
-
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     ed::builder b("20120614");
-    b.vj("A", "010101", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
+    b.vj("A", "010101", "", true, "vj:1")("stop_area:stop1", 23 * 3600 + 10 * 60, 23 * 3600 + 11 * 60)(
+        "stop_area:stop2", 24 * 3600 + 20 * 60, 24 * 3600 + 21 * 60);
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
-    //same as before but with a vehicle_journey that span on two day
+    // same as before but with a vehicle_journey that span on two day
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
-    //Add a period with valid start and end date
+    // Add a period with valid start and end date
     auto period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
     period->set_end(ntest::to_posix_timestamp("20120615T153200"));
@@ -263,7 +284,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     app_period->set_start(ntest::to_posix_timestamp("20120616T173200"));
     app_period->set_end(ntest::to_posix_timestamp("20120618T123200"));
 
-
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
@@ -274,17 +294,19 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     ed::builder b("20120614");
-    b.vj("A", "010111", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
+    b.vj("A", "010111", "", true, "vj:1")("stop_area:stop1", 23 * 3600 + 10 * 60, 23 * 3600 + 11 * 60)(
+        "stop_area:stop2", 24 * 3600 + 20 * 60, 24 * 3600 + 21 * 60);
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
-    //again a vehicle_journey than span on two day, but this time the disruption only start the second day,
-    //and there is no vj with a starting circulation date for that day.
-    //But the vehicle journey of the first day is impacted since is also circulate on the second day!
+    // again a vehicle_journey than span on two day, but this time the disruption only start the second day,
+    // and there is no vj with a starting circulation date for that day.
+    // But the vehicle journey of the first day is impacted since is also circulate on the second day!
 
     chaos::Disruption disruption;
     disruption.set_id("test01");
-    //Add a period with valid start and end date
+    // Add a period with valid start and end date
     auto period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
     period->set_end(ntest::to_posix_timestamp("20120615T153200"));
@@ -300,7 +322,6 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     app_period->set_start(ntest::to_posix_timestamp("20120615T000000"));
     app_period->set_end(ntest::to_posix_timestamp("20120615T120000"));
 
-
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
@@ -311,30 +332,24 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_section) {
     ed::builder b("20160404");
-    b.vj("line:A", "111111").uri("vj:1")
-            ("stop1", "15:00"_t, "15:10"_t)
-            ("stop2", "16:00"_t, "16:10"_t)
-            ("stop3", "17:00"_t, "17:10"_t)
-            ("stop4", "18:00"_t, "18:10"_t);
-    b.vj("line:A", "011111").uri("vj:2")
-            ("stop1", "17:00"_t, "17:10"_t)
-            ("stop2", "18:00"_t, "18:10"_t)
-            ("stop3", "19:00"_t, "19:10"_t)
-            ("stop4", "20:00"_t, "20:10"_t);
-    b.vj("line:A", "100100").uri("vj:3")
-            ("stop1", "12:00"_t, "12:10"_t)
-            ("stop2", "13:00"_t, "13:10"_t)
-            ("stop3", "14:00"_t, "14:10"_t)
-            ("stop4", "15:00"_t, "15:10"_t);
+    b.vj("line:A", "111111")
+        .uri("vj:1")("stop1", "15:00"_t, "15:10"_t)("stop2", "16:00"_t, "16:10"_t)("stop3", "17:00"_t, "17:10"_t)(
+            "stop4", "18:00"_t, "18:10"_t);
+    b.vj("line:A", "011111")
+        .uri("vj:2")("stop1", "17:00"_t, "17:10"_t)("stop2", "18:00"_t, "18:10"_t)("stop3", "19:00"_t, "19:10"_t)(
+            "stop4", "20:00"_t, "20:10"_t);
+    b.vj("line:A", "100100")
+        .uri("vj:3")("stop1", "12:00"_t, "12:10"_t)("stop2", "13:00"_t, "13:10"_t)("stop3", "14:00"_t, "14:10"_t)(
+            "stop4", "15:00"_t, "15:10"_t);
     navitia::type::Data data;
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2016,4,4), boost::gregorian::days(7));
-
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2016, 4, 4), boost::gregorian::days(7));
 
     // Add a disruption on a section between stop2 and stop3, from the 4th 6am to the 6th 5:30pm
     chaos::Disruption disruption;
     disruption.set_id("dis_ls1");
-    //Add a period with valid start and end date
+    // Add a period with valid start and end date
     auto period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20160403T060000"));
     period->set_end(ntest::to_posix_timestamp("20160406T173000"));
@@ -433,28 +448,25 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section) {
 
 BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
     ed::builder b("20120614");
-    b.vj("A")
-            ("stop1", "15:00"_t)
-            ("stop2", "16:00"_t);
+    b.vj("A")("stop1", "15:00"_t)("stop2", "16:00"_t);
 
     navitia::type::Data data;
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
-                                                                  boost::gregorian::days(7));
-
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
     // we delete the line 1 with a given cause
-    auto create_disruption = [&](const std::string& uri, const std::string& cause,
-            const std::string& severity, const std::string& tag) {
+    auto create_disruption = [&](const std::string& uri, const std::string& cause, const std::string& severity,
+                                 const std::string& tag) {
         chaos::Disruption disruption;
         disruption.set_id(uri);
         auto* pb_cause = disruption.mutable_cause();
-        pb_cause->set_id("cause_id"); // the cause, severity and tag will always have the same ids
+        pb_cause->set_id("cause_id");  // the cause, severity and tag will always have the same ids
         pb_cause->set_wording(cause);
         auto* pb_tag = disruption.add_tags();
         pb_tag->set_id("tag_id");
         pb_tag->set_name(tag);
-        //Add a period with valid start and end date
+        // Add a period with valid start and end date
         auto period = disruption.mutable_publication_period();
         period->set_start(ntest::to_posix_timestamp("20120613T153200"));
         period->set_end(ntest::to_posix_timestamp("20120617T153200"));
@@ -492,10 +504,8 @@ BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
     // we send another disruption that update the cause, the severity and the tag, it should also update the
     // first disruption cause, severity and tag
 
-    navitia::make_and_apply_disruption(create_disruption("dis2", "dead pig",
-                                                         "very important", "an even nicer tag"),
+    navitia::make_and_apply_disruption(create_disruption("dis2", "dead pig", "very important", "an even nicer tag"),
                                        *b.data->pt_data, *b.data->meta);
-
 
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
     const auto* dis2 = b.data->pt_data->disruption_holder.get_disruption("dis2");
@@ -524,8 +534,8 @@ BOOST_AUTO_TEST_CASE(update_properties) {
 
     navitia::type::Data data;
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
-                                                                  boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
     auto create_disruption = [&](const std::vector<std::tuple<std::string, std::string, std::string>>& properties) {
         chaos::Disruption disruption;
@@ -536,7 +546,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
         auto* pb_tag = disruption.add_tags();
         pb_tag->set_id("tag_id");
         pb_tag->set_name("tag");
-        //Add a period with valid start and end date
+        // Add a period with valid start and end date
         auto period = disruption.mutable_publication_period();
         period->set_start(ntest::to_posix_timestamp("20120613T153200"));
         period->set_end(ntest::to_posix_timestamp("20120616T153200"));
@@ -566,8 +576,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     const std::tuple<std::string, std::string, std::string> property2("f", "oo", "bar42");
     std::vector<std::tuple<std::string, std::string, std::string>> properties = {property1, property2};
 
-    navitia::make_and_apply_disruption(create_disruption(properties),
-                                       *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(create_disruption(properties), *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
     const auto* nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
@@ -588,8 +597,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     const std::tuple<std::string, std::string, std::string> property3("f", "b", "4");
     properties = {property3};
 
-    navitia::make_and_apply_disruption(create_disruption(properties),
-                                       *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(create_disruption(properties), *b.data->pt_data, *b.data->meta);
 
     nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
 
@@ -601,8 +609,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     BOOST_CHECK_EQUAL(property.type, "b");
     BOOST_CHECK_EQUAL(property.value, "4");
 
-    navitia::make_and_apply_disruption(create_disruption({}),
-                                       *b.data->pt_data, *b.data->meta);
+    navitia::make_and_apply_disruption(create_disruption({}), *b.data->pt_data, *b.data->meta);
 
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
     nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
@@ -613,19 +620,17 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     ed::builder b("20171127");
 
     navitia::type::Data data;
-    b.vj("A", "000111").uri("vj:1").route("forward")
-            ("stop_area:stop1", "08:10"_t, "08:11"_t)
-            ("stop_area:stop2", "08:20"_t, "08:21"_t)
-            ("stop_area:stop3", "08:30"_t, "08:31"_t)
-            ("stop_area:stop4", "08:40"_t, "08:41"_t);
-    b.vj("A", "000111").uri("vj:2").route("backward")
-            ("stop_area:stop1", "09:10"_t, "09:11"_t)
-            ("stop_area:stop2", "09:20"_t, "09:21"_t)
-            ("stop_area:stop3", "09:30"_t, "09:31"_t)
-            ("stop_area:stop4", "09:40"_t, "09:41"_t);
+    b.vj("A", "000111")
+        .uri("vj:1")
+        .route("forward")("stop_area:stop1", "08:10"_t, "08:11"_t)("stop_area:stop2", "08:20"_t, "08:21"_t)(
+            "stop_area:stop3", "08:30"_t, "08:31"_t)("stop_area:stop4", "08:40"_t, "08:41"_t);
+    b.vj("A", "000111")
+        .uri("vj:2")
+        .route("backward")("stop_area:stop1", "09:10"_t, "09:11"_t)("stop_area:stop2", "09:20"_t, "09:21"_t)(
+            "stop_area:stop3", "09:30"_t, "09:31"_t)("stop_area:stop4", "09:40"_t, "09:41"_t);
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
-                                                                  boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
     chaos::PtObject object;
     object.set_pt_object_type(chaos::PtObject_Type_line_section);
@@ -643,7 +648,7 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     end_stop->set_pt_object_type(chaos::PtObject_Type_stop_area);
     end_stop->set_uri("stop_area:stop3");
 
-    //basic line_section without routes
+    // basic line_section without routes
     auto line_section = navitia::make_line_section(object, *b.data->pt_data);
     BOOST_REQUIRE(line_section);
     BOOST_REQUIRE_EQUAL(line_section->line->uri, "A");
@@ -651,24 +656,24 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     BOOST_REQUIRE_EQUAL(line_section->end_point->uri, "stop_area:stop3");
     BOOST_REQUIRE_EQUAL(line_section->routes.size(), 2);
 
-    //line_section with invalid line
+    // line_section with invalid line
     ls_line->set_uri("B");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
     BOOST_CHECK(!line_section);
 
-    //line_section with invalid start stop_area
+    // line_section with invalid start stop_area
     ls_line->set_uri("A");
     start_stop->set_uri("stop_area:stop10");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
     BOOST_CHECK(!line_section);
 
-    //line_section with invalid end stop_area
+    // line_section with invalid end stop_area
     start_stop->set_uri("stop_area:stop1");
     end_stop->set_uri("stop_area:stop10");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
     BOOST_CHECK(!line_section);
 
-    //line_section filtered on one route
+    // line_section filtered on one route
     end_stop->set_uri("stop_area:stop3");
     auto ls_route = ls->add_routes();
     ls_route->set_pt_object_type(chaos::PtObject_Type_route);
@@ -678,12 +683,12 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     BOOST_REQUIRE_EQUAL(line_section->routes.size(), 1);
     BOOST_CHECK_EQUAL(line_section->routes[0]->uri, "backward");
 
-    //line_section filtered on one route that doesn't exist
+    // line_section filtered on one route that doesn't exist
     ls_route->set_uri("unknown");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
     BOOST_REQUIRE(!line_section);
 
-    //line_section filtered by routes: one exist, the other doesn't
+    // line_section filtered by routes: one exist, the other doesn't
     ls_route = ls->add_routes();
     ls_route->set_pt_object_type(chaos::PtObject_Type_route);
     ls_route->set_uri("forward");
@@ -695,21 +700,19 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
 
 BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     ed::builder b("20120614");
-    b.vj("A")
-            ("stop1", "15:00"_t)
-            ("stop2", "16:00"_t);
+    b.vj("A")("stop1", "15:00"_t)("stop2", "16:00"_t);
 
     navitia::type::Data data;
     b.make();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
-                                                                  boost::gregorian::days(7));
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::days(7));
 
-    auto create_disruption = [&](const std::string& uri, const std::string& cause,
-            const std::string& severity, const std::string& tag) {
+    auto create_disruption = [&](const std::string& uri, const std::string& cause, const std::string& severity,
+                                 const std::string& tag) {
         chaos::Disruption disruption;
         disruption.set_id(uri);
         auto* pb_cause = disruption.mutable_cause();
-        pb_cause->set_id("cause_id"); // the cause, severity and tag will always have the same ids
+        pb_cause->set_id("cause_id");  // the cause, severity and tag will always have the same ids
         pb_cause->set_wording(cause);
         auto* pb_tag = disruption.add_tags();
         pb_tag->set_id("tag_id");
@@ -750,7 +753,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     // create a disruption and associate a period
     disruption = create_disruption("second_dis", "dead cow", "important", "a nice tag");
 
-    //Add a period with valid start and end date
+    // Add a period with valid start and end date
     period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
     period->set_end(ntest::to_posix_timestamp("20120617T123200"));
@@ -769,9 +772,9 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
 
     // Send another disruption with publication period having start > end
     // This disruption should be rejected.
-    disruption = create_disruption("dis2", "dead pig","very important", "an even nicer tag");
+    disruption = create_disruption("dis2", "dead pig", "very important", "an even nicer tag");
 
-    //Add a period with valid start and end date having start > end date
+    // Add a period with valid start and end date having start > end date
     period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120617T123200"));
     period->set_end(ntest::to_posix_timestamp("20120613T153200"));

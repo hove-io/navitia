@@ -45,7 +45,8 @@ www.navitia.io
  * - headsign at a given stop_time for VJ (default value for headsign at a stop_time is vj.name)
  * - metaVJ from given headsign (one of the VJ in metaVJ contains given headsign)
  */
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 struct HeadsignHandler {
     // changes vj's name and registers vj under its new name for headsign-to-vj map
@@ -57,17 +58,16 @@ struct HeadsignHandler {
     std::set<std::string> get_all_headsigns(const VehicleJourney* vj);
     std::vector<const VehicleJourney*> get_vj_from_headsign(const std::string& headsign) const;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & headsign_changes & headsign_mvj;
+        ar& headsign_changes& headsign_mvj;
     }
 
     void forget_vj(const VehicleJourney*);
 
 protected:
     bool has_headsign_or_name(const VehicleJourney& vj, const std::string& headsign) const;
-    void update_headsign_mvj_after_remove(const VehicleJourney& vj,
-                                          const std::string& removed_headsign);
+    void update_headsign_mvj_after_remove(const VehicleJourney& vj, const std::string& removed_headsign);
 
     // for each VJ, map containing index of stop time and the new headsign (until next change)
     // as new stop_time might be added in the future, if map_vj_map_stop_time_headsign_change[vj]
@@ -76,10 +76,10 @@ protected:
     // stop times       : 1 2 3 4 5 6 7 8 (potential 9)
     // headsigns        : A A A B B C B B
     // headsign_changes :       B   C B   A
-    std::unordered_map<const VehicleJourney*, boost::container::flat_map<uint16_t, std::string>>
-        headsign_changes;
+    std::unordered_map<const VehicleJourney*, boost::container::flat_map<uint16_t, std::string>> headsign_changes;
     // headsign to meta-vj map
     std::unordered_map<std::string, std::unordered_set<const MetaVehicleJourney*>> headsign_mvj;
 };
 
-}} //namespace navitia::type
+}  // namespace type
+}  // namespace navitia

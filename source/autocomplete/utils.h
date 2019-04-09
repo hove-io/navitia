@@ -34,7 +34,7 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-    enum class Type_e;
+enum class Type_e;
 }
 
 namespace autocomplete {
@@ -43,5 +43,5 @@ int get_type_e_order(const type::Type_e& type);
 bool compare_type_e(const type::Type_e& a, const type::Type_e& b);
 std::vector<std::vector<type::Type_e>> build_type_groups(std::vector<type::Type_e> filter);
 
-
-}}//namespace navitia::autocomplete
+}  // namespace autocomplete
+}  // namespace navitia

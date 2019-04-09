@@ -53,11 +53,7 @@ BOOST_AUTO_TEST_CASE(code_container_test) {
     BOOST_CHECK_EQUAL(cc.get_codes(vj1), (nt::CodeContainer::Codes{{"bob", {"bobette", "bobitto"}}}));
     BOOST_CHECK_EQUAL(cc.get_objs<VJ>("bob", "bobette"), ObjsVJ{vj1});
     cc.add(vj1, "foo", "bar");
-    BOOST_CHECK_EQUAL(cc.get_codes(vj1),
-                      (nt::CodeContainer::Codes{
-                          {"bob", {"bobette", "bobitto"}},
-                          {"foo", {"bar"}}
-                      }));
+    BOOST_CHECK_EQUAL(cc.get_codes(vj1), (nt::CodeContainer::Codes{{"bob", {"bobette", "bobitto"}}, {"foo", {"bar"}}}));
     cc.add(vj2, "bob", "bobette");
     BOOST_CHECK_EQUAL(cc.get_objs<VJ>("bob", "bobette"), (ObjsVJ{vj1, vj2}));
 }

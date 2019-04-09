@@ -41,15 +41,14 @@ www.navitia.io
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
 
-
 using namespace navitia::ptref;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
-class Params{
+class Params {
 public:
     navitia::type::Data data;
     navitia::type::Company* current_company;
@@ -57,7 +56,7 @@ public:
     navitia::type::Line* current_line;
     navitia::type::Route* current_route;
 
-    void add_network(const std::string& network_name){
+    void add_network(const std::string& network_name) {
         current_network = new navitia::type::Network();
         current_network->uri = network_name;
         current_network->name = network_name;
@@ -65,14 +64,14 @@ public:
         data.pt_data->networks.push_back(current_network);
     }
 
-    void add_company(const std::string& company_name){
+    void add_company(const std::string& company_name) {
         current_company = new navitia::type::Company();
         current_company->uri = company_name;
         current_company->name = company_name;
         current_company->idx = data.pt_data->companies.size();
         data.pt_data->companies.push_back(current_company);
     }
-    void add_line(const std::string& line_name){
+    void add_line(const std::string& line_name) {
         current_line = new navitia::type::Line();
         current_line->uri = line_name;
         current_line->name = line_name;
@@ -80,7 +79,7 @@ public:
         data.pt_data->lines.push_back(current_line);
     }
 
-    void add_route(const std::string& route_name){
+    void add_route(const std::string& route_name) {
         current_route = new navitia::type::Route();
         current_route->uri = route_name;
         current_route->name = route_name;
@@ -88,7 +87,7 @@ public:
         data.pt_data->routes.push_back(current_route);
     }
 
-    Params(){
+    Params() {
         add_network("N1");
         add_company("C1");
         add_line("C1-L1");
@@ -131,7 +130,7 @@ public:
 
         add_network("N3");
         data.pt_data->build_uri();
-        }
+    }
 };
 
 BOOST_FIXTURE_TEST_SUITE(companies_test, Params)
@@ -140,7 +139,6 @@ BOOST_AUTO_TEST_CASE(comanies_list) {
     auto indexes = make_query(navitia::type::Type_e::Company, "", data);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Company>(indexes, data), std::set<std::string>({"C1", "C2"}));
 }
-
 
 BOOST_AUTO_TEST_CASE(comany_by_uri) {
     auto indexes = make_query(navitia::type::Type_e::Company, "company.uri=C1", data);

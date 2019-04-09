@@ -37,16 +37,19 @@ namespace type {
 
 struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
+
 private:
     bool is_valid(int duration) const;
+
 public:
     using year_bitset = std::bitset<366>;
     year_bitset days;
     boost::gregorian::date beginning_date;
 
-    ValidityPattern()  {}
-    ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date){}
-    ValidityPattern(const boost::gregorian::date& beginning_date, const std::string & vp) : days(vp), beginning_date(beginning_date){}
+    ValidityPattern() {}
+    ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date) {}
+    ValidityPattern(const boost::gregorian::date& beginning_date, const std::string& vp)
+        : days(vp), beginning_date(beginning_date) {}
 
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
@@ -57,18 +60,21 @@ public:
     void reset() { days.reset(); }
     bool empty() const { return days.none(); }
     std::string str() const;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & beginning_date & days & idx & uri;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& beginning_date& days& idx& uri;
     }
 
     bool check(boost::gregorian::date day) const;
     bool check(unsigned int day) const;
     bool check2(unsigned int day) const;
     bool uncheck2(unsigned int day) const;
-    //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    bool operator<(const ValidityPattern & other) const { return this < &other; }
-    bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
+    // void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
+    bool operator<(const ValidityPattern& other) const { return this < &other; }
+    bool operator==(const ValidityPattern& other) const {
+        return (this->beginning_date == other.beginning_date) && (this->days == other.days);
+    }
 };
 
-}
-}
+}  // namespace type
+}  // namespace navitia

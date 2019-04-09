@@ -40,7 +40,7 @@ www.navitia.io
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
 namespace bt = boost::posix_time;
-namespace po = boost::program_options ;
+namespace po = boost::program_options;
 namespace pb = pbnavitia;
 
 int main(int argc, char** argv) {

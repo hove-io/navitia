@@ -43,11 +43,10 @@ www.navitia.io
 #include <string>
 #include <type_traits>
 
-
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 namespace nt = navitia::type;
 
@@ -109,18 +108,21 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
     BOOST_CHECK(navitia::contains(headsign_handler.get_vj_from_headsign(vj_vec[4]->name), vj_vec[4]));
 }
 
-struct HeadsignHandlerTest: nt::HeadsignHandler {
+struct HeadsignHandlerTest : nt::HeadsignHandler {
     const std::unordered_map<const nt::VehicleJourney*, boost::container::flat_map<uint16_t, std::string>>&
-    get_headsign_changes() const {return headsign_changes;}
-    const std::unordered_map<std::string, std::unordered_set<const nt::MetaVehicleJourney*>>&
-    get_headsign_mvj() const {return headsign_mvj;}
+    get_headsign_changes() const {
+        return headsign_changes;
+    }
+    const std::unordered_map<std::string, std::unordered_set<const nt::MetaVehicleJourney*>>& get_headsign_mvj() const {
+        return headsign_mvj;
+    }
 };
 
 BOOST_FIXTURE_TEST_CASE(headsign_handler_internal_test, HeadsignFixture) {
     HeadsignHandlerTest headsign_handler;
     auto& vj_vec = b.data->pt_data->vehicle_journeys;
     // done for the "actual" handler in build helper but not on test handler
-    for (const auto& vj: vj_vec) {
+    for (const auto& vj : vj_vec) {
         headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
     }
 

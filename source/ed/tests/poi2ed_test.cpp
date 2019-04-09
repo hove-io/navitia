@@ -36,7 +36,6 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "utils/logger.h"
 
-
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
@@ -46,26 +45,22 @@ BOOST_GLOBAL_FIXTURE(logger_initialized);
 using namespace ed::connectors;
 
 namespace {
-    class ArgsFixture
-    {
-    public:
-        ArgsFixture()
-        {
-            auto& master = boost::unit_test::framework::master_test_suite();
+class ArgsFixture {
+public:
+    ArgsFixture() {
+        auto& master = boost::unit_test::framework::master_test_suite();
 
-            BOOST_REQUIRE_MESSAGE(
-                master.argc > 1,
-                "Missing parameter - The test needs a path to a directory containing your POI's files");
+        BOOST_REQUIRE_MESSAGE(master.argc > 1,
+                              "Missing parameter - The test needs a path to a directory containing your POI's files");
 
-            poi_dir_path = master.argv[1];
-        }
+        poi_dir_path = master.argv[1];
+    }
 
-        std::string poi_dir_path;
-    };
-}
+    std::string poi_dir_path;
+};
+}  // namespace
 
-BOOST_FIXTURE_TEST_CASE(poi_parser_should_create_well_formed_poi_uri, ArgsFixture)
-{
+BOOST_FIXTURE_TEST_CASE(poi_parser_should_create_well_formed_poi_uri, ArgsFixture) {
     PoiParser parser(poi_dir_path);
 
     BOOST_REQUIRE_NO_THROW(parser.fill());

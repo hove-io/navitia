@@ -43,12 +43,10 @@ www.navitia.io
 
 namespace po = boost::program_options;
 
-
 /**
  * Pratically the same behavior as a real kraken, but with already loaded data
  */
 struct mock_kraken {
-
     inline mock_kraken(ed::builder& d, const std::string& name, int argc, const char* const argv[]) {
         DataManager<navitia::type::Data> data_manager;
         data_manager.set_data(d.data.release());
@@ -58,38 +56,32 @@ struct mock_kraken {
         zmq::context_t context(1);
         const std::string zmq_socket = "ipc:///tmp/" + name;
 
-        //we load the conf to have the default values
+        // we load the conf to have the default values
         navitia::kraken::Configuration conf;
-        //we mock a command line load
+        // we mock a command line load
         po::options_description desc = navitia::kraken::get_options_description(
-                    boost::optional<std::string>("default"),
-                    boost::optional<std::string>(zmq_socket),
-                    boost::optional<bool>(true)); //not used
+            boost::optional<std::string>("default"), boost::optional<std::string>(zmq_socket),
+            boost::optional<bool>(true));  // not used
         auto other_options = conf.load_from_command_line(desc, argc, argv);
 
         LoadBalancer lb(context);
         lb.bind(conf.zmq_socket_path(), "inproc://workers");
         navitia::Metrics metric(boost::none, "mock");
 
-        //this option is not parsed by get_options_description because it is used only here
-        if (std::find(other_options.begin(), other_options.end(),
-                      "spawn_maintenance_worker") != other_options.end()) {
+        // this option is not parsed by get_options_description because it is used only here
+        if (std::find(other_options.begin(), other_options.end(), "spawn_maintenance_worker") != other_options.end()) {
             threads.create_thread(navitia::MaintenanceWorker(data_manager, conf, metric));
         }
 
-
         // Launch only one thread for the tests
-        threads.create_thread(std::bind(&doWork,
-                              std::ref(context),
-                              std::ref(data_manager),
-                              conf,
-                              std::ref(metric)));
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metric)));
 
         // Connect work threads to client threads via a queue
         do {
             try {
                 lb.run();
-            } catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
-        } while(true);
+            } catch (zmq::error_t) {
+            }  // lors d'un SIGHUP on restore la queue
+        } while (true);
     }
 };

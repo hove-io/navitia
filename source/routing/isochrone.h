@@ -35,10 +35,11 @@ www.navitia.io
 #include "raptor.h"
 #include <set>
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
-struct IsochroneException: public recoverable_exception {
-    IsochroneException(const std::string& msg): recoverable_exception(msg) {}
+struct IsochroneException : public recoverable_exception {
+    IsochroneException(const std::string& msg) : recoverable_exception(msg) {}
     IsochroneException() = default;
     IsochroneException(const IsochroneException&) = default;
     IsochroneException& operator=(const IsochroneException&) = default;
@@ -47,48 +48,39 @@ struct IsochroneException: public recoverable_exception {
 
 constexpr static double N_RAD_TO_DEG = 57.295779513;
 
-//Delete the circles too small to avoid rounding error in meter
+// Delete the circles too small to avoid rounding error in meter
 constexpr static double MIN_RADIUS = 5;
 
 type::GeographicalCoord project_in_direction(const type::GeographicalCoord& center,
                                              const double& direction,
                                              const double& radius);
 
-//Create a circle
-type::Polygon circle(const type::GeographicalCoord& center,
-                     const double& radius);
+// Create a circle
+type::Polygon circle(const type::GeographicalCoord& center, const double& radius);
 
-template<typename T>
-bool in_bound(const T & begin, const T & end, bool clockwise) {
-    return (clockwise && begin < end) ||
-            (!clockwise && begin > end);
+template <typename T>
+bool in_bound(const T& begin, const T& end, bool clockwise) {
+    return (clockwise && begin < end) || (!clockwise && begin > end);
 }
 
-DateTime build_bound(const bool clockwise,
-                     const DateTime duration,
-                     const DateTime init_dt);
+DateTime build_bound(const bool clockwise, const DateTime duration, const DateTime init_dt);
 
-//Create a multi polygon with circles around all the stop points in the isochrone
+// Create a multi polygon with circles around all the stop points in the isochrone
 type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
-                                const std::vector<type::StopPoint*>& stop_points,
-                                const bool clockwise,
-                                const type::GeographicalCoord& coord_origin,
-                                const DateTime& bound,
-                                const map_stop_point_duration &origine,
-                                const double& speed,
-                                const int& duration);
+                                          const std::vector<type::StopPoint*>& stop_points,
+                                          const bool clockwise,
+                                          const type::GeographicalCoord& coord_origin,
+                                          const DateTime& bound,
+                                          const map_stop_point_duration& origine,
+                                          const double& speed,
+                                          const int& duration);
 
 struct Isochrone {
     type::MultiPolygon shape;
     DateTime min_duration;
     DateTime max_duration;
-    Isochrone(type::MultiPolygon shape,
-              DateTime min_duration,
-              DateTime max_duration): shape(std::move(shape)),
-                                      min_duration(min_duration),
-                                      max_duration(max_duration){
-
-    }
+    Isochrone(type::MultiPolygon shape, DateTime min_duration, DateTime max_duration)
+        : shape(std::move(shape)), min_duration(min_duration), max_duration(max_duration) {}
 };
 
 std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
@@ -99,4 +91,5 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                                         const std::vector<DateTime>& boundary_duration,
                                         const DateTime init_dt);
 
-}} //namespace navitia::routing
+}  // namespace routing
+}  // namespace navitia

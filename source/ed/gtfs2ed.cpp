@@ -45,8 +45,7 @@ www.navitia.io
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char* argv[]) {
     std::string input, date, connection_string;
     double simplify_tolerance;
     po::options_description desc("Allowed options");
@@ -71,31 +70,33 @@ int main(int argc, char * argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("gtfs2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("input")) {
+    if (vm.count("help") || !vm.count("input")) {
         std::cout << "Reads and inserts into a ed database gtfs files" << std::endl;
-        std::cout << desc <<  "\n";
+        std::cout << desc << "\n";
         return 1;
     }
     po::notify(vm);
@@ -111,10 +112,12 @@ int main(int argc, char * argv[])
     ed::connectors::GtfsParser gtfs_parser(input);
     gtfs_parser.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections << " connections "
-                   " because they were too long");
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections << " connections "
-                   " because they had no duration time");
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections
+                                          << " connections "
+                                             " because they were too long");
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections
+                                          << " connections "
+                                             " because they had no duration time");
     start = pt::microsec_clock::local_time();
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();

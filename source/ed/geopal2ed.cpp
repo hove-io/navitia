@@ -44,8 +44,7 @@ www.navitia.io
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char* argv[]) {
     std::string input, connection_string;
     po::options_description desc("Allowed options");
 
@@ -65,29 +64,31 @@ int main(int argc, char * argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("geopal2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()) {
+        if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
         } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("input")) {
+    if (vm.count("help") || !vm.count("input")) {
         std::cout << "Reads and inserts geopal2ed file into a ed database" << std::endl;
         std::cout << desc << std::endl;
         return 1;
@@ -101,7 +102,7 @@ int main(int argc, char * argv[])
 
     try {
         geopal_parser.fill();
-    } catch(const ed::connectors::GeopalParserException& e) {
+    } catch (const ed::connectors::GeopalParserException& e) {
         LOG4CPLUS_FATAL(logger, "Erreur :" << std::string(e.what()) << "  backtrace :" << e.backtrace());
         return -1;
     }

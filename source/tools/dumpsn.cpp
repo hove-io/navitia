@@ -30,7 +30,7 @@ www.navitia.io
 #include <fstream>
 #include <boost/program_options.hpp>
 
-#include "utils/init.h" // init_app()
+#include "utils/init.h"  // init_app()
 #include "type/data.h"
 #include "type/pb_converter.h"
 
@@ -77,21 +77,21 @@ int main(int argc, char** argv) {
 
     LOG4CPLUS_INFO(logger, "writing csv");
     out << std::setprecision(16);
-    for (const auto* way: data.geo_ref->ways) {
+    for (const auto* way : data.geo_ref->ways) {
         if (way->geoms.empty()) {
-            for (const auto& edge: way->edges) {
-                out << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat()
-                       << ", " << g[edge.second].coord.lon() << " " << g[edge.second].coord.lat() << ")" << '\n';
+            for (const auto& edge : way->edges) {
+                out << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat() << ", "
+                    << g[edge.second].coord.lon() << " " << g[edge.second].coord.lat() << ")" << '\n';
             }
         } else {
-            for (const auto& geom: way->geoms) {
+            for (const auto& geom : way->geoms) {
                 out << "LINESTRING(";
                 auto first = true;
-                for (const auto& coord: geom) {
+                for (const auto& coord : geom) {
                     if (not first) {
                         out << ", ";
                     } else {
-                        first =  false;
+                        first = false;
                     }
                     out << coord.lon() << " " << coord.lat();
                 }

@@ -28,7 +28,6 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-
 #include "conf.h"
 #include <iostream>
 #include "ed/connectors/synonym_parser.h"
@@ -45,8 +44,7 @@ www.navitia.io
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char* argv[]) {
     std::string input, connection_string;
     po::options_description desc("Allowed options");
 
@@ -66,31 +64,33 @@ int main(int argc, char * argv[])
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("synonym2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("input")) {
+    if (vm.count("help") || !vm.count("input")) {
         std::cout << "Reads and inserts a synonym file into an ed database" << std::endl;
-        std::cout << desc <<  std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
     po::notify(vm);
@@ -99,16 +99,16 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     ed::connectors::SynonymParser synonym_parser(input);
 
-    try{
+    try {
         synonym_parser.fill();
-    }catch(const ed::connectors::SynonymParserException& e){
-        LOG4CPLUS_FATAL(logger, "Erreur :"+ std::string(e.what()) + "  backtrace :" + e.backtrace());
+    } catch (const ed::connectors::SynonymParserException& e) {
+        LOG4CPLUS_FATAL(logger, "Erreur :" + std::string(e.what()) + "  backtrace :" + e.backtrace());
         return -1;
     }
 
     ed::EdPersistor p(connection_string);
     p.persist_synonym(synonym_parser.synonym_map);
-    LOG4CPLUS_FATAL(logger, "temps :"<<to_simple_string(pt::microsec_clock::local_time() - start));
+    LOG4CPLUS_FATAL(logger, "temps :" << to_simple_string(pt::microsec_clock::local_time() - start));
 
     return 0;
 }

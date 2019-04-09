@@ -42,8 +42,7 @@ static void update_property(nt::disruption::Property& property, const chaos::Dis
     property.value = chaos_property.value();
 }
 
-static nt::disruption::Property
-make_property(const chaos::DisruptionProperty& chaos_property) {
+static nt::disruption::Property make_property(const chaos::DisruptionProperty& chaos_property) {
     nt::disruption::Property property;
     update_property(property, chaos_property);
 
@@ -59,11 +58,11 @@ static void update_tag(nt::disruption::Tag& tag, const chaos::Tag& chaos_tag) {
     tag.updated_at = from_posix(chaos_tag.updated_at());
 }
 
-static boost::shared_ptr<nt::disruption::Tag>
-make_tag(const chaos::Tag& chaos_tag, nt::disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Tag> make_tag(const chaos::Tag& chaos_tag,
+                                                       nt::disruption::DisruptionHolder& holder) {
     auto& weak_tag = holder.tags[chaos_tag.id()];
     auto tag = weak_tag.lock();
-    if (! tag) {
+    if (!tag) {
         tag = boost::make_shared<nt::disruption::Tag>();
         weak_tag = tag;
     }
@@ -84,18 +83,17 @@ static void update_cause(nt::disruption::Cause& cause, const chaos::Cause& chaos
     }
 }
 
-static boost::shared_ptr<nt::disruption::Cause>
-make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Cause> make_cause(const chaos::Cause& chaos_cause,
+                                                           nt::disruption::DisruptionHolder& holder) {
     auto& weak_cause = holder.causes[chaos_cause.id()];
     auto cause = weak_cause.lock();
-    if (! cause) {
+    if (!cause) {
         cause = boost::make_shared<nt::disruption::Cause>();
         weak_cause = cause;
     }
 
     update_cause(*cause, chaos_cause);
     return cause;
-
 }
 
 static void update_severity(nt::disruption::Severity& severity, const chaos::Severity& chaos_severity) {
@@ -110,8 +108,10 @@ static void update_severity(nt::disruption::Severity& severity, const chaos::Sev
     severity.color = chaos_severity.color();
     severity.priority = chaos_severity.priority();
     switch (chaos_severity.effect()) {
-#define EFFECT_ENUM_CONVERSION(e) \
-        case tr::Alert_Effect_##e: severity.effect = new_disr::Effect::e; break
+#define EFFECT_ENUM_CONVERSION(e)              \
+    case tr::Alert_Effect_##e:                 \
+        severity.effect = new_disr::Effect::e; \
+        break
 
         EFFECT_ENUM_CONVERSION(NO_SERVICE);
         EFFECT_ENUM_CONVERSION(REDUCED_SERVICE);
@@ -127,11 +127,11 @@ static void update_severity(nt::disruption::Severity& severity, const chaos::Sev
     }
 }
 
-static boost::shared_ptr<nt::disruption::Severity>
-make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Severity> make_severity(const chaos::Severity& chaos_severity,
+                                                                 nt::disruption::DisruptionHolder& holder) {
     auto& weak_severity = holder.severities[chaos_severity.id()];
     auto severity = weak_severity.lock();
-    if (! severity) {
+    if (!severity) {
         severity = boost::make_shared<nt::disruption::Severity>();
         weak_severity = severity;
     }
@@ -141,12 +141,10 @@ make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionH
     return severity;
 }
 
-boost::optional<nt::disruption::LineSection>
-make_line_section(const chaos::PtObject& chaos_section,
-                  nt::PT_Data& pt_data) {
+boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtObject& chaos_section,
+                                                               nt::PT_Data& pt_data) {
     if (!chaos_section.has_pt_line_section()) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: LineSection invalid!");
         return boost::none;
     }
     const auto& pb_section = chaos_section.pt_line_section();
@@ -156,85 +154,83 @@ make_line_section(const chaos::PtObject& chaos_section,
         line_section.line = line;
     } else {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: line id "
-                       << pb_section.line().uri() << " in LineSection invalid!");
+                       "fill_disruption_from_chaos: line id " << pb_section.line().uri() << " in LineSection invalid!");
         return boost::none;
     }
     if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
         line_section.start_point = start;
     } else {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: start_point id "
-                       << pb_section.start_point().uri() << " in LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: start_point id "
+                                                                  << pb_section.start_point().uri()
+                                                                  << " in LineSection invalid!");
         return boost::none;
     }
     if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
         line_section.end_point = end;
     } else {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: end_point id "
-                       << pb_section.end_point().uri() << " in LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: end_point id "
+                                                                  << pb_section.end_point().uri()
+                                                                  << " in LineSection invalid!");
         return boost::none;
     }
-    if(!pb_section.routes().empty()) {
-        for(const auto& pb_route: pb_section.routes()) {
+    if (!pb_section.routes().empty()) {
+        for (const auto& pb_route : pb_section.routes()) {
             if (auto* route = find_or_default(pb_route.uri(), pt_data.routes_map)) {
                 line_section.routes.push_back(route);
             } else {
                 LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                               "fill_disruption_from_chaos: route id "
-                               << pb_route.uri() << " in LineSection invalid!");
+                               "fill_disruption_from_chaos: route id " << pb_route.uri() << " in LineSection invalid!");
             }
         }
-        if(line_section.routes.empty()){
+        if (line_section.routes.empty()) {
             LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                    "fill_disruption_from_chaos: no valid routes. Linesection ignored");
+                           "fill_disruption_from_chaos: no valid routes. Linesection ignored");
             return boost::none;
         }
     } else {
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("trace"),
-                        "Empty routes for line_section on line" << line_section.line->uri <<
-                        ". Applying disruptions on all routes");
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("trace"), "Empty routes for line_section on line"
+                                                                     << line_section.line->uri
+                                                                     << ". Applying disruptions on all routes");
         line_section.routes = line_section.line->route_list;
     }
 
     return line_section;
 }
 
-static std::vector<nt::disruption::PtObj>
-make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
-                nt::PT_Data& pt_data) {
+static std::vector<nt::disruption::PtObj> make_pt_objects(
+    const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
+    nt::PT_Data& pt_data) {
     using namespace nt::disruption;
 
     std::vector<PtObj> res;
-    for (const auto& chaos_pt_object: chaos_pt_objects) {
+    for (const auto& chaos_pt_object : chaos_pt_objects) {
         switch (chaos_pt_object.pt_object_type()) {
-        case chaos::PtObject_Type_network:
-            res.push_back(make_pt_obj(nt::Type_e::Network, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_stop_area:
-            res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_stop_point:
-            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_line_section:
-            if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
-                res.push_back(*line_section);
-            }
-            break;
-        case chaos::PtObject_Type_line:
-            res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_route:
-            res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_trip:
-            res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data));
-            break;
-        case chaos::PtObject_Type_unkown_type:
-            res.push_back(UnknownPtObj());
-            break;
+            case chaos::PtObject_Type_network:
+                res.push_back(make_pt_obj(nt::Type_e::Network, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_stop_area:
+                res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_stop_point:
+                res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_line_section:
+                if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
+                    res.push_back(*line_section);
+                }
+                break;
+            case chaos::PtObject_Type_line:
+                res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_route:
+                res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_trip:
+                res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data));
+                break;
+            case chaos::PtObject_Type_unkown_type:
+                res.push_back(UnknownPtObj());
+                break;
         }
         // no created_at and updated_at?
     }
@@ -243,50 +239,50 @@ make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos
 
 static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
     std::set<navitia::type::disruption::ChannelType> res;
-    for (const auto channel_type: chaos_channel.types()){
-        switch(channel_type){
-        case chaos::Channel_Type_web:
-            res.insert(nt::disruption::ChannelType::web);
-            break;
-        case chaos::Channel_Type_sms:
-            res.insert(nt::disruption::ChannelType::sms);
-            break;
-        case chaos::Channel_Type_email:
-            res.insert(nt::disruption::ChannelType::email);
-            break;
-        case chaos::Channel_Type_mobile:
-            res.insert(nt::disruption::ChannelType::mobile);
-            break;
-        case chaos::Channel_Type_notification:
-            res.insert(nt::disruption::ChannelType::notification);
-            break;
-        case chaos::Channel_Type_twitter:
-            res.insert(nt::disruption::ChannelType::twitter);
-            break;
-        case chaos::Channel_Type_facebook:
-            res.insert(nt::disruption::ChannelType::facebook);
-            break;
-        case chaos::Channel_Type_unkown_type:
-            res.insert(nt::disruption::ChannelType::unknown_type);
-            break;
-        case chaos::Channel_Type_title:
-            res.insert(nt::disruption::ChannelType::title);
-            break;
-        case chaos::Channel_Type_beacon:
-            res.insert(nt::disruption::ChannelType::beacon);
-            break;
-        default:
-            res.insert(nt::disruption::ChannelType::unknown_type);
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                            "Unhandled ChannelType value in Chaos.Proto: unknown_type used");
+    for (const auto channel_type : chaos_channel.types()) {
+        switch (channel_type) {
+            case chaos::Channel_Type_web:
+                res.insert(nt::disruption::ChannelType::web);
+                break;
+            case chaos::Channel_Type_sms:
+                res.insert(nt::disruption::ChannelType::sms);
+                break;
+            case chaos::Channel_Type_email:
+                res.insert(nt::disruption::ChannelType::email);
+                break;
+            case chaos::Channel_Type_mobile:
+                res.insert(nt::disruption::ChannelType::mobile);
+                break;
+            case chaos::Channel_Type_notification:
+                res.insert(nt::disruption::ChannelType::notification);
+                break;
+            case chaos::Channel_Type_twitter:
+                res.insert(nt::disruption::ChannelType::twitter);
+                break;
+            case chaos::Channel_Type_facebook:
+                res.insert(nt::disruption::ChannelType::facebook);
+                break;
+            case chaos::Channel_Type_unkown_type:
+                res.insert(nt::disruption::ChannelType::unknown_type);
+                break;
+            case chaos::Channel_Type_title:
+                res.insert(nt::disruption::ChannelType::title);
+                break;
+            case chaos::Channel_Type_beacon:
+                res.insert(nt::disruption::ChannelType::beacon);
+                break;
+            default:
+                res.insert(nt::disruption::ChannelType::unknown_type);
+                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                               "Unhandled ChannelType value in Chaos.Proto: unknown_type used");
         }
     }
     return res;
 }
 
-static boost::shared_ptr<nt::disruption::Impact>
-make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
-            const navitia::type::MetaData& meta) {
+static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact& chaos_impact,
+                                                             nt::PT_Data& pt_data,
+                                                             const navitia::type::MetaData& meta) {
     auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
@@ -295,42 +291,34 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
     impact->created_at = from_posix(chaos_impact.created_at());
     auto updated_at = chaos_impact.updated_at();
     impact->updated_at = updated_at ? from_posix(updated_at) : impact->created_at;
-    for (const auto& chaos_ap: chaos_impact.application_periods()) {
+    for (const auto& chaos_ap : chaos_impact.application_periods()) {
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
     }
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
-    for (auto& ptobj: make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
-        nt::disruption::Impact::link_informed_entity(std::move(ptobj),
-                                                     impact, meta.production_date, nt::RTLevel::Adapted);
+    for (auto& ptobj : make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
+        nt::disruption::Impact::link_informed_entity(std::move(ptobj), impact, meta.production_date,
+                                                     nt::RTLevel::Adapted);
     }
-    for (const auto& chaos_message: chaos_impact.messages()) {
+    for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);
-        impact->messages.push_back({
-            chaos_message.text(),
-            channel.id(),
-            channel.name(),
-            channel.content_type(),
-            from_posix(chaos_message.created_at()),
-            from_posix(chaos_message.updated_at()),
-            channel_types
-        });
+        impact->messages.push_back({chaos_message.text(), channel.id(), channel.name(), channel.content_type(),
+                                    from_posix(chaos_message.created_at()), from_posix(chaos_message.updated_at()),
+                                    channel_types});
     }
 
     return impact;
 }
 
-bool is_publishable(transit_realtime::TimeRange publication_period,
-                    boost::posix_time::time_period production_period) {
+bool is_publishable(transit_realtime::TimeRange publication_period, boost::posix_time::time_period production_period) {
     // Publication period should have a valid start date
     if (publication_period.start() == 0) {
         return false;
     }
 
-    bt::time_period tp_publication_period = {
-        navitia::from_posix_timestamp(publication_period.start()),
-        navitia::from_posix_timestamp(publication_period.end())};
+    bt::time_period tp_publication_period = {navitia::from_posix_timestamp(publication_period.start()),
+                                             navitia::from_posix_timestamp(publication_period.end())};
     // if publication period doesn't have a valid end date start date be
     // smaller than production period end date.
     if (publication_period.end() == 0) {
@@ -345,9 +333,9 @@ bool is_publishable(transit_realtime::TimeRange publication_period,
     return true;
 }
 
-static const type::disruption::Disruption&
-make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
-                const navitia::type::MetaData& meta) {
+static const type::disruption::Disruption& make_disruption(const chaos::Disruption& chaos_disruption,
+                                                           nt::PT_Data& pt_data,
+                                                           const navitia::type::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     auto from_posix = navitia::from_posix_timestamp;
@@ -360,19 +348,17 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
     }
 
     disruption.reference = chaos_disruption.reference();
-    disruption.publication_period = {
-        from_posix(chaos_disruption.publication_period().start()),
-        from_posix(chaos_disruption.publication_period().end())
-    };
+    disruption.publication_period = {from_posix(chaos_disruption.publication_period().start()),
+                                     from_posix(chaos_disruption.publication_period().end())};
     disruption.created_at = from_posix(chaos_disruption.created_at());
     disruption.updated_at = from_posix(chaos_disruption.updated_at());
     disruption.cause = make_cause(chaos_disruption.cause(), holder);
-    for (const auto& chaos_impact: chaos_disruption.impacts()) {
+    for (const auto& chaos_impact : chaos_disruption.impacts()) {
         auto impact = make_impact(chaos_impact, pt_data, meta);
         disruption.add_impact(impact, holder);
     }
     disruption.localization = make_pt_objects(chaos_disruption.localization(), pt_data);
-    for (const auto& chaos_tag: chaos_disruption.tags()) {
+    for (const auto& chaos_tag : chaos_disruption.tags()) {
         disruption.tags.push_back(make_tag(chaos_tag, holder));
     }
     for (const auto& chaos_property : chaos_disruption.properties()) {
@@ -386,15 +372,15 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
 }
 
 void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
-                    navitia::type::PT_Data& pt_data,
-                    const navitia::type::MetaData& meta) {
-    //we delete the disruption before adding the new one
+                               navitia::type::PT_Data& pt_data,
+                               const navitia::type::MetaData& meta) {
+    // we delete the disruption before adding the new one
     delete_disruption(chaos_disruption.id(), pt_data, meta);
 
-    //Filter the disruption using data production_period and disruption_publication_period
+    // Filter the disruption using data production_period and disruption_publication_period
     if (is_publishable(chaos_disruption.publication_period(), meta.production_period())) {
         const auto& disruption = make_disruption(chaos_disruption, pt_data, meta);
         apply_disruption(disruption, pt_data, meta);
     }
 }
-}
+}  // namespace navitia

@@ -37,9 +37,9 @@ www.navitia.io
 #include <string>
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 BOOST_AUTO_TEST_CASE(do_not_shift) {
     ed::Data d;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(shift_before_overmidnight) {
 BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
     ed::Data d;
     d.meta.production_date = {boost::gregorian::date(2014, 10, 9), boost::gregorian::date(2015, 10, 9)};
-    for (auto times : {std::pair<int, int>(-50000, -49000), std::pair<int, int>(49000,50000)}) {
+    for (auto times : {std::pair<int, int>(-50000, -49000), std::pair<int, int>(49000, 50000)}) {
         auto vp = new ed::types::ValidityPattern();
         vp->beginning_date = d.meta.production_date.begin();
         vp->add(boost::gregorian::date(2014, 10, 9));
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
 
     d.shift_stop_times();
     {
-        //First vj is shift
+        // First vj is shift
         auto vj = d.vehicle_journeys.front();
         auto st = vj->stop_time_list.front();
         BOOST_CHECK_EQUAL(st->arrival_time, 36400);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
     }
 
     {
-        //Second vj isn't
+        // Second vj isn't
         auto vj = d.vehicle_journeys.back();
         auto st = vj->stop_time_list.front();
         BOOST_CHECK_EQUAL(st->arrival_time, 49000);
@@ -237,9 +237,7 @@ BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
         BOOST_CHECK(!vj->validity_pattern->check(boost::gregorian::date(2014, 10, 10)));
         BOOST_CHECK(vj->validity_pattern->check(boost::gregorian::date(2014, 10, 11)));
     }
-
 }
-
 
 BOOST_AUTO_TEST_CASE(shift_after) {
     ed::Data d;

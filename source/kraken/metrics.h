@@ -42,17 +42,18 @@ www.navitia.io
 #include <prometheus/counter.h>
 #include <prometheus/gauge.h>
 
-//forward declare
-namespace prometheus{
+// forward declare
+namespace prometheus {
 class Registry;
 class Counter;
 class Histogram;
-}
+}  // namespace prometheus
 
 namespace navitia {
 
 class InFlightGuard {
     prometheus::Gauge* gauge;
+
 public:
     explicit InFlightGuard(prometheus::Gauge* gauge);
     InFlightGuard(InFlightGuard& other) = delete;
@@ -62,8 +63,7 @@ public:
     ~InFlightGuard();
 };
 
-
-class Metrics: boost::noncopyable {
+class Metrics : boost::noncopyable {
 protected:
     std::unique_ptr<prometheus::Exposer> exposer;
     std::shared_ptr<prometheus::Registry> registry;
@@ -72,6 +72,7 @@ protected:
     prometheus::Histogram* data_loading_histogram;
     prometheus::Histogram* data_cloning_histogram;
     prometheus::Histogram* handle_rt_histogram;
+
 public:
     Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
     void observe_api(pbnavitia::API api, double duration) const;
@@ -82,4 +83,4 @@ public:
     void observe_handle_rt(double duration) const;
 };
 
-}
+}  // namespace navitia

@@ -56,25 +56,22 @@ struct Demand {
     nt::AccessibiliteParams accessibilite_params;
 };
 
-static void compute(std::vector<Demand> demands, boost::progress_display& show_progress, const type::Data& data){
-
+static void compute(std::vector<Demand> demands, boost::progress_display& show_progress, const type::Data& data) {
     std::random_shuffle(demands.begin(), demands.end());
     std::vector<const CachedNextStopTime*> results;
-    for(auto demand : demands){
+    for (auto demand : demands) {
         ++show_progress;
         auto next_st = data.dataRaptor->cached_next_st_manager->load(DateTimeUtils::set(demand.date + 1, demand.hour),
-                            demand.level,
-                            demand.accessibilite_params
-        );
+                                                                     demand.level, demand.accessibilite_params);
         std::this_thread::yield();
-        //store the pointer to prevent any kind of optimisation from the compiler
+        // store the pointer to prevent any kind of optimisation from the compiler
         // DO NOT USE THIS POINTER!!! it will have been freed
         results.push_back(next_st.get());
     }
     std::cout << "Number of results: " << results.size() << std::endl;
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, profile;
@@ -108,11 +105,11 @@ int main(int argc, char** argv){
     }
     std::vector<Demand> demands;
     std::vector<nt::RTLevel> levels{nt::RTLevel::Base, nt::RTLevel::Adapted, nt::RTLevel::RealTime};
-    for(int day=1; day<nb_days; ++day){
+    for (int day = 1; day < nb_days; ++day) {
         Demand demand;
         demand.date = day;
         demand.hour = 0;
-        for(auto l: levels){
+        for (auto l : levels) {
             demand.level = l;
             demands.push_back(demand);
         }
@@ -120,32 +117,31 @@ int main(int argc, char** argv){
 
     RAPTOR router(data);
 
-    boost::progress_display show_progress(demands.size()*nb_threads);
+    boost::progress_display show_progress(demands.size() * nb_threads);
     {
         Timer t("Build raptor cache ");
         std::vector<std::thread> threads;
 
-        if(!profile.empty()){
+        if (!profile.empty()) {
             ProfilerStart(profile.c_str());
         }
 #ifdef __BENCH_WITH_CALGRIND__
         CALLGRIND_START_INSTRUMENTATION;
 #endif
-        for(int i=0; i<nb_threads; ++i){
+        for (int i = 0; i < nb_threads; ++i) {
             auto t = std::thread(compute, std::ref(demands), std::ref(show_progress), std::ref(data));
             threads.push_back(std::move(t));
         }
-        for(auto& th: threads){
+        for (auto& th : threads) {
             th.join();
         }
-        if(!profile.empty()){
+        if (!profile.empty()) {
             ProfilerStop();
         }
 #ifdef __BENCH_WITH_CALGRIND__
         CALLGRIND_STOP_INSTRUMENTATION;
 #endif
     }
-
 
     std::cout << "Number of requests: " << demands.size() << std::endl;
 }

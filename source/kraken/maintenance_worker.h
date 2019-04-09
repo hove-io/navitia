@@ -37,59 +37,57 @@ www.navitia.io
 
 #include <memory>
 
-
 namespace navitia {
 
 class Metrics;
 
-class MaintenanceWorker{
-    private:
-        DataManager<type::Data>& data_manager;
-        log4cplus::Logger logger;
-        const kraken::Configuration conf;
+class MaintenanceWorker {
+private:
+    DataManager<type::Data>& data_manager;
+    log4cplus::Logger logger;
+    const kraken::Configuration conf;
 
-        const Metrics& metrics;
+    const Metrics& metrics;
 
-        AmqpClient::Channel::ptr_t channel;
-        //nom de la queue créer pour ce worker
-        std::string queue_name_task;
-        std::string queue_name_rt;
+    AmqpClient::Channel::ptr_t channel;
+    // nom de la queue créer pour ce worker
+    std::string queue_name_task;
+    std::string queue_name_rt;
 
-        boost::posix_time::ptime next_try_realtime_loading;
+    boost::posix_time::ptime next_try_realtime_loading;
 
-        void init_rabbitmq();
-        void listen_rabbitmq();
+    void init_rabbitmq();
+    void listen_rabbitmq();
 
-        void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
-        void handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
+    void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
+    void handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
 
-        void load_realtime();
+    void load_realtime();
 
-        /*!
-         * This function will consume message in batch. It calls
-         * AmqpClient::Channel::BasicConsumeMessage(const std::string&, Envelope::ptr_t&, int) to try
-         * to get a message within a given timeout, if BasicConsumeMessage get a message with success,
-         * the message will be push back and acked. This function will loop until it get max_nb messages or
-         * the queue is "empty" (the emptiness is tested by the timeout, if the network doesn't work well,
-         * it'd be better to set a larger timeout).
-         *
-         * Since BasicConsumeMessage is non-blocking, this function is non-blocking neither.
-         * */
-        std::vector<AmqpClient::Envelope::ptr_t>
-        consume_in_batch(const std::string& consume_tag,
-                size_t max_nb,
-                size_t timeout_ms,
-                bool no_ack);
-        bool is_initialized = false;
+    /*!
+     * This function will consume message in batch. It calls
+     * AmqpClient::Channel::BasicConsumeMessage(const std::string&, Envelope::ptr_t&, int) to try
+     * to get a message within a given timeout, if BasicConsumeMessage get a message with success,
+     * the message will be push back and acked. This function will loop until it get max_nb messages or
+     * the queue is "empty" (the emptiness is tested by the timeout, if the network doesn't work well,
+     * it'd be better to set a larger timeout).
+     *
+     * Since BasicConsumeMessage is non-blocking, this function is non-blocking neither.
+     * */
+    std::vector<AmqpClient::Envelope::ptr_t> consume_in_batch(const std::string& consume_tag,
+                                                              size_t max_nb,
+                                                              size_t timeout_ms,
+                                                              bool no_ack);
+    bool is_initialized = false;
 
-    public:
-        MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
+public:
+    MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
 
-        bool load_and_switch();
+    bool load_and_switch();
 
-        void load_data();
+    void load_data();
 
-        void operator()();
+    void operator()();
 };
 
-}
+}  // namespace navitia
