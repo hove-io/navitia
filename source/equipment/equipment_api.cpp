@@ -33,7 +33,7 @@ www.navitia.io
 
 #include "boost/range/algorithm.hpp"
 
-#include <map>
+#include <tuple>
 #include <vector>
 #include <string>
 
@@ -62,18 +62,24 @@ namespace {
     }
 }
 
-StopAreasPerLine get_stop_areas_per_line(const type::Data& data, const std::string& filter,
-                                         const ForbiddenUris& forbidden_uris) {
-    StopAreasPerLine res;
+std::tuple<StopAreasPerLine, size_t> get_paginated_stop_areas_per_line(
+                                        const type::Data& data,
+                                        const std::string& filter,
+                                        int count,
+                                        int start_page,
+                                        const ForbiddenUris& forbidden_uris) {
     const type::Indexes line_indices = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, data);
-    const auto lines = data.get_data<type::Line>(line_indices);
+    const auto paginated_lines = paginate(line_indices, count, start_page);
+    const auto lines = data.get_data<type::Line>(paginated_lines);
+
+    StopAreasPerLine res;
     for(const auto line : lines) {
         const std::string line_filter = build_ptref_line_filter(line->uri, filter);
         const type::Indexes sa_indexes = ptref::make_query(type::Type_e::StopArea, line_filter, forbidden_uris, data);
         res.emplace_back(line, data.get_data<type::StopArea>(sa_indexes));
     }
 
-    return res;
+    return {res, line_indices.size()};
 }
 
 void equipment_reports(PbCreator& pb_creator, const std::string& filter,
@@ -81,10 +87,12 @@ void equipment_reports(PbCreator& pb_creator, const std::string& filter,
                        const ForbiddenUris& forbidden_uris) {
     const type::Data& data = *pb_creator.data;
     try {
-        const auto sas_per_line = get_stop_areas_per_line(data, filter, forbidden_uris);
-        const auto paginated_sas = paginate(sas_per_line, count, start_page);
-        fill_equipment_to_pb(paginated_sas, pb_creator, depth);
-        pb_creator.make_paginate(sas_per_line.size(), start_page, count, paginated_sas.size());
+        StopAreasPerLine sas_per_line;
+        size_t total_lines = 0;
+        std::tie(sas_per_line, total_lines) =
+            get_paginated_stop_areas_per_line(data, filter, count, start_page, forbidden_uris);
+        fill_equipment_to_pb(sas_per_line, pb_creator, depth);
+        pb_creator.make_paginate(sas_per_line.size(), start_page, count, total_lines);
     }
     catch(const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);

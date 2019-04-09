@@ -122,12 +122,16 @@ BOOST_FIXTURE_TEST_CASE(test_stop_area_per_line_query, Test_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
-    auto filter = "stop_point.has_code_type(CodeType1)";
-    auto sa_per_line = equipment::get_stop_areas_per_line(data, filter);
+    const auto filter = "stop_point.has_code_type(CodeType1)";
+    equipment::StopAreasPerLine sas_per_line;
+    size_t total_lines = 0;
+    std::tie(sas_per_line, total_lines) = equipment::get_paginated_stop_areas_per_line(data, filter, 10);
+
+    BOOST_CHECK_EQUAL(total_lines, 2);
 
     // Convert result from object pointers to uris
     map<string, set<string>> sa_per_line_uris;
-    for(const auto & line : sa_per_line) {
+    for(const auto & line : sas_per_line) {
         set<string> sa_uris;
         for(const auto & sa : line.second) { sa_uris.insert(sa->uri); }
         sa_per_line_uris[line.first->uri] = sa_uris;
@@ -142,12 +146,13 @@ BOOST_FIXTURE_TEST_CASE(equipment_report_get_lines, Test_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(equipment_report_should_forbid_uris, Test_fixture) {
     auto filter = "stop_point.has_code_type(CodeType1)";
-    auto sa_per_line = equipment::get_stop_areas_per_line(data, filter, {"A"});
+    equipment::StopAreasPerLine sas_per_line;
+    std::tie(sas_per_line, std::ignore) = equipment::get_paginated_stop_areas_per_line(data, filter, 10, 0, {"A"});
 
     // Stop Areas "A" and "B" have cpde "CodeType1", but "A" has been forbidden,
     // Hense the fact that only "B" is returned
-    BOOST_REQUIRE_EQUAL(sa_per_line.size(), 1);
-    BOOST_REQUIRE_EQUAL(sa_per_line[0].first->uri, "B");
+    BOOST_REQUIRE_EQUAL(sas_per_line.size(), 1);
+    BOOST_REQUIRE_EQUAL(sas_per_line[0].first->uri, "B");
 }
 
 BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, Test_fixture) {

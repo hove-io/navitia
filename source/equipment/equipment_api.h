@@ -42,9 +42,12 @@ namespace equipment {
 using StopAreasPerLine = std::vector<std::pair<type::Line*, std::vector<type::StopArea*>>>;
 using ForbiddenUris = std::vector<std::string>;
 
-StopAreasPerLine get_stop_areas_per_line(const type::Data& data,
-                                         const std::string& filter,
-                                         const ForbiddenUris& forbidden_uris = {});
+std::tuple<StopAreasPerLine, size_t> get_paginated_stop_areas_per_line(
+    const type::Data& data,
+    const std::string& filter,
+    int count,
+    int start_page = 0,
+    const ForbiddenUris& forbidden_uris = {});
 
 void equipment_reports(PbCreator& pb_creator,
                        const std::string& filter,
