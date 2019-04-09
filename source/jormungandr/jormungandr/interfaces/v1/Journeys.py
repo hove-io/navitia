@@ -28,10 +28,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask_restful import abort, inputs
+from flask_restful import abort
 from jormungandr import i_manager, app
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
@@ -42,7 +43,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.v1.serializer import api, base
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
@@ -50,6 +51,8 @@ from jormungandr.parking_space_availability.parking_places_manager import Manage
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
+from jormungandr.scenarios import new_default, distributed
+from jormungandr.fallback_modes import FallbackModes
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -353,7 +356,18 @@ class Journeys(JourneyCommon):
             hidden=True,
             help="limit nb of stop points accesible by bss crowfly, " "used especially in distributed scenario",
         )
-
+        parser_get.add_argument(
+            "equipment_details",
+            default=True,
+            type=BooleanType(),
+            help="enhance response with accessibility equipement details",
+        )
+        for mode in FallbackModes.modes_str():
+            parser_get.add_argument(
+                "max_{}_direct_path_duration".format(mode),
+                type=int,
+                help="limit duration of direct path in {}, used ONLY in distributed scenario".format(mode),
+            )
         args = self.parsers["get"].parse_args()
 
         self.get_decorators.append(complete_links(self))
@@ -422,6 +436,10 @@ class Journeys(JourneyCommon):
                 args['_final_line_filter'] = mod.final_line_filter
             if args.get('_max_extra_second_pass') is None:
                 args['_max_extra_second_pass'] = mod.max_extra_second_pass
+            if args.get('additional_time_after_first_section_taxi') is None:
+                args['additional_time_after_first_section_taxi'] = mod.additional_time_after_first_section_taxi
+            if args.get('additional_time_before_last_section_taxi') is None:
+                args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
@@ -429,6 +447,12 @@ class Journeys(JourneyCommon):
                 nb_crowfly = args.get('_max_nb_crowfly_by_{}'.format(mode))
                 if nb_crowfly is not None:
                     args['max_nb_crowfly_by_mode'][mode] = nb_crowfly
+
+            # activated only for distributed
+            for mode in FallbackModes.modes_str():
+                tmp = 'max_{}_direct_path_duration'.format(mode)
+                if args.get(tmp) is None:
+                    args[tmp] = getattr(mod, tmp)
 
         if region:
             _set_specific_params(i_manager.instances[region])
@@ -475,6 +499,13 @@ class Journeys(JourneyCommon):
                 new_datetime = self.convert_to_utc(original_datetime)
             args['datetime'] = date_to_timestamp(new_datetime)
 
+            scenario_name = i_manager.get_instance_scenario_name(self.region, args.get('_override_scenario'))
+
+            if scenario_name == "new_default" and (
+                "taxi" in args["origin_mode"] or "taxi" in args["destination_mode"]
+            ):
+                abort(400, message="taxi is not available with new_default scenario")
+
             response = i_manager.dispatch(args, api, instance_name=self.region)
 
             # If journeys list is empty and error field not exist, we create
@@ -508,6 +539,11 @@ class Journeys(JourneyCommon):
             ):
                 responses[r] = response
                 continue
+
+            if args['equipment_details']:
+                # Manage equipments in stop points from the journeys sections
+                instance = i_manager.instances.get(self.region)
+                return instance.equipment_provider_manager.manage_equipments(response)
 
             return response
 

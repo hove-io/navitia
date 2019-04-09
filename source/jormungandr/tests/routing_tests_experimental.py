@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
+import operator
 
 """
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
@@ -221,6 +222,7 @@ class TestJourneysDistributed(
             "car": instance.car_speed,
             "bss": instance.bss_speed,
             "ridesharing": instance.car_no_park_speed,
+            "taxi": instance.taxi_speed,
         }
         request = {
             "walking_speed": instance.walking_speed,
@@ -228,6 +230,7 @@ class TestJourneysDistributed(
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
             "car_no_park_speed": instance.car_no_park_speed,
+            "taxi_speed": instance.taxi_speed,
         }
         resp = instance.get_street_network_routing_matrix(
             [origin], [destination], mode, max_duration, request, **kwargs
@@ -302,6 +305,65 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
+def _make_function(from_coord, to_coord, mode, op):
+    def test_max_mode_direct_path_duration(self):
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]={mode}'
+            '&last_section_mode[]={mode}'
+            '&max_duration=0'
+        ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode)
+
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert mode in response['journeys'][0]['tags']
+        assert 'non_pt' in response['journeys'][0]['tags']
+
+        direct_path_duration = response['journeys'][0]['duration']
+
+        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}' + '&debug=true').format(
+            mode=mode, max_dp_duration=direct_path_duration - 1
+        )
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert op('deleted_because_too_long_direct_path' in response['journeys'][0]['tags'])
+
+    return test_max_mode_direct_path_duration
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.truth)
+    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.truth)
+    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.truth)
+    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.truth)
+
+    a = '0.001077974378345651;0.0007186495855637672'
+    b = '8.98311981954709e-05;0.0002694935945864127'
+    test_max_taxi_direct_path_duration = _make_function(a, b, 'taxi', operator.truth)
+
+
+@dataset({"main_routing_test": {"scenario": "new_default"}})
+class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+    """
+    the max_{mode}_direct_path_duration should be deactivated in new_default
+    """
+
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.not_)
+    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.not_)
+    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.not_)
+    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.not_)
+
+
 @config(
     {
         "scenario": "distributed",
@@ -347,3 +409,97 @@ class TestJourneysRidesharingDistributed(
         This feature is not supported
         """
         pass
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_first_section_mode_taxi(self):
+        query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 1
+
+        taxi_direct = journeys[0]
+
+        assert taxi_direct.get('departure_date_time') == '20120614T075000'
+        assert taxi_direct.get('arrival_date_time') == '20120614T075007'
+        assert taxi_direct.get('duration') == 7
+        assert taxi_direct.get('durations').get("car") == 0
+        assert taxi_direct.get('durations').get("taxi") == 7
+        assert taxi_direct.get('durations').get("total") == 7
+        assert taxi_direct.get('distances').get("car") == 0
+        assert taxi_direct.get('distances').get("taxi") == 87
+
+        sections = taxi_direct.get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075000'
+        assert sections[0].get('arrival_date_time') == '20120614T075007'
+        assert sections[0].get('duration') == 7
+        assert sections[0].get('type') == 'street_network'
+
+        query += "&taxi_speed=0.15"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        taxi_direct = journeys[0]
+
+        assert taxi_direct.get('departure_date_time') == '20120614T075000'
+        assert taxi_direct.get('arrival_date_time') == '20120614T080051'
+        assert taxi_direct.get('duration') == 651
+        assert taxi_direct.get('durations').get("car") == 0
+        assert taxi_direct.get('durations').get("taxi") == 651
+        assert taxi_direct.get('durations').get("total") == 651
+        assert taxi_direct.get('distances').get("car") == 0
+        assert taxi_direct.get('distances').get("taxi") == 97
+        sections = taxi_direct.get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075000'
+        assert sections[0].get('arrival_date_time') == '20120614T080051'
+        assert sections[0].get('duration') == 651
+        assert sections[0].get('type') == 'street_network'
+
+        taxi_fallback = journeys[1]
+
+        assert taxi_fallback.get('departure_date_time') == '20120614T075355'
+        assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
+
+        sections = taxi_fallback.get('sections')
+        assert len(sections) == 4
+        assert sections[0].get('mode') == 'taxi'
+        assert sections[0].get('departure_date_time') == '20120614T075355'
+        assert sections[0].get('arrival_date_time') == '20120614T075600'
+        assert sections[0].get('duration') == 125
+        assert sections[0].get('type') == 'street_network'
+
+        assert sections[1].get('departure_date_time') == '20120614T075600'
+        assert sections[1].get('arrival_date_time') == '20120614T080100'
+        assert sections[1].get('duration') == 300
+        assert sections[1].get('type') == 'waiting'
+
+        assert sections[2].get('departure_date_time') == '20120614T080100'
+        assert sections[2].get('arrival_date_time') == '20120614T080102'
+        assert sections[2].get('duration') == 2
+        assert sections[2].get('type') == 'public_transport'
+
+        assert sections[3].get('mode') == 'walking'
+        assert sections[3].get('departure_date_time') == '20120614T080102'
+        assert sections[3].get('arrival_date_time') == '20120614T080222'
+        assert sections[3].get('duration') == 80
+        assert sections[3].get('type') == 'street_network'
+
+        query += "&max_duration=0"
+        response = self.query_region(query)
+        # the pt journey is eliminated
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1

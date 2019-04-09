@@ -309,6 +309,46 @@ type::Indexes get_indexes_from_code(const type::Type_e type,
     }
 }
 
+template<typename T>
+static
+typename boost::enable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    Indexes>::type
+get_indexes_from_code_type(const std::string& key, const Data& data) {
+    Indexes indexes;
+    auto collection = data.pt_data->collection<T>();
+    for (const auto* obj: collection) {
+        auto codes = data.pt_data->codes.get_codes<T>(obj);
+        if (codes.find(key) == codes.end()) { continue; }
+        indexes.insert(obj->idx);
+    }
+    return indexes;
+}
+template<typename T>
+static
+typename boost::disable_if<
+    typename boost::mpl::contains<
+        nt::CodeContainer::SupportedTypes,
+        T>::type,
+    Indexes>::type
+get_indexes_from_code_type(const std::string&, const Data&) {
+    // there is no code for unsupported types, thus the result is empty
+    return Indexes{};
+}
+type::Indexes get_indexes_from_code_type(const type::Type_e type,
+                                     const std::string& key,
+                                     const type::Data& data) {
+    switch (type) {
+#define GET_INDEXES(type_name, collection_name) \
+        case Type_e::type_name: return get_indexes_from_code_type<type::type_name>(key, data);
+        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+#undef GET_INDEXES
+    default: return Indexes{};// no code supported, empty result
+    }
+}
+
 type::Indexes get_indexes_from_id(const type::Type_e type,
                                   const std::string& id,
                                   const type::Data& data) {

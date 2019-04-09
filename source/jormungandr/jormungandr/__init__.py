@@ -80,6 +80,7 @@ rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 
 from navitiacommon.models import db
 
+db.app = app
 db.init_app(app)
 cache = Cache(app, config=app.config[str('CACHE_CONFIGURATION')])  # type: Cache
 memory_cache = Cache(app, config=app.config[str('MEMORY_CACHE_CONFIGURATION')])  # type: Cache
@@ -91,6 +92,10 @@ else:
 
     global_autocomplete = {'kraken': Kraken()}
 
+
+equipment_provider_manager = init.equipments_providers(app)
+
+
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(
@@ -100,11 +105,14 @@ i_manager = InstanceManager(
 )
 i_manager.initialisation()
 
+
 from jormungandr.stat_manager import StatManager
 
 stat_manager = StatManager()
 
 bss_provider_manager = init.bss_providers(app)
+
+
 from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
 
 car_park_provider_manager = CarParkingProviderManager(app.config[str('CAR_PARK_PROVIDER')])

@@ -33,7 +33,7 @@ import six
 
 class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
     """
-    abstract class managing calls to external service providing real-time next passages
+    abstract class managing calls to external service providing real-time parking places info
     """
 
     @abstractmethod

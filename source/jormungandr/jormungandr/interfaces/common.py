@@ -44,6 +44,12 @@ add_poi_infos_types = ('bss_stands', 'car_park', '', 'none')
 
 
 def handle_poi_infos(add_poi_info_param, bss_stands_param):
+    """
+    Check if info about bss stands and/or car parks is needed
+    :param add_poi_info_param: parameter 'add_poi_infos[]' of the query
+    :param bss_stands_param: parameter 'bss_stands' of the query (deprecated but still handled for retrocompatibility)
+    :return: True if info is needed, False otherwise
+    """
     if bss_stands_param and "bss_stands" not in add_poi_info_param:
         add_poi_info_param.append("bss_stands")
 

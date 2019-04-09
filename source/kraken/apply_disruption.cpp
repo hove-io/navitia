@@ -182,6 +182,21 @@ static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
     return impacts_uris.str();
 }
 
+
+static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
+    nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
+    nt::CommercialMode* comm_mode = pt_data.get_or_create_commercial_mode("commercial_mode:additional_service",
+                                                                          "additional service");
+    // TODO: manage line.code when necessary
+    nt::Line* line = pt_data.get_or_create_line("line:additional_service", "additional service", network, comm_mode);
+    // TODO: manage route.direction_type ("0" ?) when necessary
+    //       manage route.destination (StopArea*) when necessary
+    nt::Route* route = pt_data.get_or_create_route("route:additional_service", "additional service", line);
+
+    return route;
+}
+
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
@@ -206,9 +221,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
                                                          meta.production_date);
-            if (! r && ! mvj->get_base_vj().empty()) {
-                r = mvj->get_base_vj().at(0)->route;
+
+            if (! r ) {
+                if (! mvj->get_base_vj().empty()) {
+                    r = mvj->get_base_vj().at(0)->route;
+                } else {
+                    r = get_or_create_route(*impact, pt_data);
+                }
             }
+
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":"
                     + impact->disruption->uri;
@@ -216,18 +237,60 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (const auto& stu: impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
             }
+
+            // Create new VJ
             auto* vj = mvj->create_discrete_vj(new_vj_uri,
                 type::RTLevel::RealTime,
                 canceled_vp,
                 r,
                 std::move(stoptimes),
                 pt_data);
+            LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
+
+            // Add company
             if (!impact->company_id.empty()) {
                 nu::make_map_find(pt_data.companies_map, impact->company_id)
-                    .if_found([&vj](navitia::type::Company* c){ vj->company = c; })
-                    .if_not_found([&](){ LOG4CPLUS_WARN(log, "[disruption] Associate company into new VJ. Company doesn't exist with id : " << impact->company_id); });
+                    .if_found([&](navitia::type::Company* c){
+                        vj->company = c;
+                        LOG4CPLUS_TRACE(log, "[disruption] Associate company into new VJ. Company id : " << impact->company_id); })
+                    .if_not_found([&](){
+                        // for protection, use the companies[0]
+                        // TODO : Create default company
+                        vj->company = pt_data.companies[0];
+                        LOG4CPLUS_WARN(log, "[disruption] Associate random company to new VJ. Company doesn't exist with id : " << impact->company_id); });
+            } else {
+                if (! mvj->get_base_vj().empty()) {
+                    vj->company = mvj->get_base_vj().at(0)->company;
+                } else {
+                    // for protection, use the companies[0]
+                    // TODO : Create default company
+                    vj->company = pt_data.companies[0];
+                    LOG4CPLUS_WARN(log, "[disruption] Associate random company to new VJ because base VJ doesn't exist");
+                }
             }
-            LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
+
+            // Add physical mode
+            if (!impact->physical_mode_id.empty()) {
+                nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
+                    .if_found([&](navitia::type::PhysicalMode* p){
+                        vj->physical_mode = p;
+                        LOG4CPLUS_TRACE(log, "[disruption] Associate physical mode into new VJ. Physical mode id : " << impact->physical_mode_id); })
+                    .if_not_found([&](){
+                        // for protection, use the physical_modes[0]
+                        // TODO : Create default physical mode
+                        vj->physical_mode = pt_data.physical_modes[0];
+                        LOG4CPLUS_WARN(log, "[disruption] Associate random physical mode to new VJ. Physical mode doesn't exist with id : " << impact->physical_mode_id); });
+            } else {
+                if (! mvj->get_base_vj().empty()) {
+                    vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+                } else {
+                    // for protection, use the physical_modes[0]
+                    // TODO : Create default physical mode
+                    vj->physical_mode = pt_data.physical_modes[0];
+                    LOG4CPLUS_WARN(log, "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
+                }
+            }
+
             // Use the corresponding base stop_time for boarding and alighting duration
             for(auto& st: vj->stop_time_list) {
                 const auto base_st = st.get_base_stop_time();
@@ -236,13 +299,17 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     st.alighting_time = st.arrival_time + base_st->get_alighting_duration();
                 }
             }
+
+            // name and dataset
             if (! mvj->get_base_vj().empty()) {
-                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->name = mvj->get_base_vj().at(0)->name;
+                vj->dataset = mvj->get_base_vj().at(0)->dataset;
             } else {
-                // If we set nothing for physical_mode, it'll crash when building raptor
-                vj->physical_mode = pt_data.physical_modes[0];
                 vj->name = new_vj_uri;
+                // for protection, use the datasets[0]
+                // TODO : Create default data set
+                vj->dataset = pt_data.datasets[0];
+                LOG4CPLUS_WARN(log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
@@ -496,10 +563,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 static bool is_modifying_effect(nt::disruption::Effect e) {
     // check if the effect needs to modify the model
     return in(e, {nt::disruption::Effect::NO_SERVICE,
+                  nt::disruption::Effect::UNKNOWN_EFFECT,
                   nt::disruption::Effect::SIGNIFICANT_DELAYS,
                   nt::disruption::Effect::MODIFIED_SERVICE,
                   nt::disruption::Effect::DETOUR,
-                  nt::disruption::Effect::REDUCED_SERVICE});
+                  nt::disruption::Effect::REDUCED_SERVICE,
+                  nt::disruption::Effect::ADDITIONAL_SERVICE});
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
@@ -579,7 +648,23 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
         for(const auto& wptr: modified_by_moved) {
             if (auto share_ptr = wptr.lock()){
-                disruptions_collection.insert(share_ptr);
+                /*
+                 * Do not reapply the same disruption. If we have more than one impact in it
+                 * we would reapply all of its impacts (even the one we are deleting).
+                 * We need to keep the link to remaining impacts of the disruption though, because
+                 * they will be deleted after this one. They must stay in modified_by for that.
+                 *
+                 * /!\ WARNING /!\
+                 * This is working because we never delete a single impact of a disruption.
+                 * delete_impact is only called by delete_disruption which delete every impacts.
+                 * If this was not the case we would need to find a way to reapply part of a
+                 * disruption's impacts, and not all of them, after each deletion of an impact.
+                 */
+                if (share_ptr->disruption->uri != impact->disruption->uri) {
+                    disruptions_collection.insert(share_ptr);
+                } else {
+                    mvj->push_unique_impact(share_ptr);
+                }
             }
         }
         // we check if we now have useless vehicle_journeys to cleanup

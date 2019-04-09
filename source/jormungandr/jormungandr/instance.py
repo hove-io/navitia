@@ -49,7 +49,8 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete
+from jormungandr import cache, memory_cache, app, global_autocomplete, equipment_provider_manager
+from jormungandr import fallback_modes as fm
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -61,6 +62,7 @@ import itertools
 import six
 import time
 from collections import deque
+from datetime import datetime, timedelta
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -73,8 +75,6 @@ type_to_pttype = {
     "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
 
-STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike', 'ridesharing')
-
 
 @app.before_request
 def _init_g():
@@ -86,15 +86,42 @@ def _init_g():
 def _set_default_street_network_config(street_network_configs):
     if not isinstance(street_network_configs, list):
         street_network_configs = []
-    default_sn_class = 'jormungandr.street_network.kraken.Kraken'
+
+    kraken = {'class': 'jormungandr.street_network.kraken.Kraken', 'args': {'timeout': 10}}
+    taxi = {'class': 'jormungandr.street_network.taxi.Taxi', 'args': {'street_network': kraken}}
+
+    default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
+    # taxi mode's default class is changed to 'taxi' not kraken
+    default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
 
     modes_in_configs = set(
         list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
     )
-    modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
-    if modes_not_set:
-        street_network_configs.append({"modes": list(modes_not_set), "class": default_sn_class})
+    modes_not_set = fm.all_fallback_modes - modes_in_configs
+
+    for mode in modes_not_set:
+        config = {"modes": [mode]}
+        config.update(default_sn_class[mode])
+        street_network_configs.append(copy.deepcopy(config))
+
     return street_network_configs
+
+
+# TODO: use this helper function for all properties if possible
+# Warning: it breaks static type deduction
+def _make_property_getter(attr_name):
+    """
+    a helper function.
+
+    return a getter for Instance's attr
+    :param attr_name:
+    :return:
+    """
+
+    def _getter(self):
+        return get_value_or_default(attr_name, self.get_models(), self.name)
+
+    return property(_getter)
 
 
 class Instance(object):
@@ -111,6 +138,7 @@ class Instance(object):
         realtime_proxies_configuration,
         zmq_socket_type,
         autocomplete_type,
+        instance_equipment_providers,  # type: List[Text]
     ):
         self.geom = None
         self._sockets = deque()
@@ -155,6 +183,12 @@ class Instance(object):
             )
 
         self.zmq_socket_type = zmq_socket_type
+
+        self.equipment_providers_ids = instance_equipment_providers
+        self.equipment_provider_manager = equipment_provider_manager
+
+        # Create only equipment providers defined in the instance
+        self.equipment_provider_manager.init_providers(self.equipment_providers_ids)
 
     @property
     def autocomplete(self):
@@ -439,6 +473,18 @@ class Instance(object):
         # the value by default is a dict...
         return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
+    # TODO: refactorise all properties
+    taxi_speed = _make_property_getter('taxi_speed')
+    additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
+    additional_time_before_last_section_taxi = _make_property_getter('additional_time_before_last_section_taxi')
+
+    max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
+    max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
+    max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')
+    max_car_direct_path_duration = _make_property_getter('max_car_direct_path_duration')
+    max_taxi_direct_path_duration = _make_property_getter('max_taxi_direct_path_duration')
+    max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':
@@ -485,6 +531,8 @@ class Instance(object):
         self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
     ):
         logger = logging.getLogger(__name__)
+        deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
+        request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
         with self.socket(self.context) as socket:
             try:
                 request.request_id = flask.request.id

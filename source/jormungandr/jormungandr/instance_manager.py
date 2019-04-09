@@ -108,6 +108,7 @@ class InstanceManager(object):
             config.get('realtime_proxies', []),
             config.get('zmq_socket_type', app.config.get('ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')),
             config.get('default_autocomplete', None),
+            config.get('equipment_details_providers', []),
         )
         self.instances[instance.name] = instance
 
@@ -149,6 +150,15 @@ class InstanceManager(object):
             # each backend has it's own exceptions, so we catch everything :(
             logger = logging.getLogger(__name__)
             logger.exception('there seem to be some kind of problems with the cache')
+
+    def get_instance_scenario_name(self, instance_name, override_scenario):
+        if override_scenario:
+            return override_scenario
+
+        instance = self.instances[instance_name]
+        instance_db = instance.get_models()
+        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        return scenario_name
 
     def dispatch(self, arguments, api, instance_name=None):
         if instance_name not in self.instances:

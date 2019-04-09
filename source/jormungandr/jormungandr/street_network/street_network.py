@@ -30,8 +30,10 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+
 from jormungandr import utils, new_relic
 import abc
+from enum import Enum
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
 # http://stackoverflow.com/a/38668373/1614576
@@ -39,7 +41,7 @@ ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 
 # Regarding to the type of direct path, some special treatments may be done in connector
-class StreetNetworkPathType:
+class StreetNetworkPathType(Enum):
     DIRECT = 0
     BEGINNING_FALLBACK = 1
     ENDING_FALLBACK = 2

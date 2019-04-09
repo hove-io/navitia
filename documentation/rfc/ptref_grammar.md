@@ -63,6 +63,7 @@ In the following table, if the invocation starts with `collection`, any collecti
 | query | signification | note |
 |-------|---------------|------|
 |`collection.has_code(type, value)`|all the objects of type `collection` that have the code `{type: "type", value: "value"}` in `codes[]`|only the `codes[]` field is used|
+|`collection.has_code_type(type)`|all the objects of type `collection` that has a code with the specific type `{type: "type"}` in `codes[]`|only the `codes[]` field is used|
 |`collection.id(id)`|the object of type `collection` that have `id` as identifier (empty if this identifier is not present)|for types without identifier (as `connection`), it is equivalent to `empty`|
 |`collection.uri(id)`|same as `collection.id(id)`|deprecated|
 |`collection.name(name)`|all the objects of type `collection` that have `name` as name|for types without name (as `connection`), it is equivalent to `empty`|

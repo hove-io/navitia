@@ -41,7 +41,6 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
-from six.moves import range
 from six.moves import zip
 from jormungandr.exceptions import TechnicalError
 from flask import request
@@ -139,7 +138,7 @@ def str_to_dt(str):
 
 def date_to_timestamp(date):
     """
-    convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
+    convert a datetime objet to a posix timestamp (number of seconds from 1070/1/1)
     """
     return int(calendar.timegm(date.utctimetuple()))
 

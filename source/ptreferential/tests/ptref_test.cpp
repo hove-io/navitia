@@ -558,6 +558,51 @@ BOOST_AUTO_TEST_CASE(code_request) {
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"A"}));
 }
 
+BOOST_AUTO_TEST_CASE(code_type_request){
+    ed::builder b("20190101");
+    b.sa("sa_1");
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.make();
+
+    // Add codes on stop point
+    const auto* sp = b.get<nt::StopPoint>("stop1");
+    b.data->pt_data->codes.add(sp, "code_type_1", "0");
+    b.data->pt_data->codes.add(sp, "code_type_1", "1");
+    sp = b.get<nt::StopPoint>("stop3");
+    b.data->pt_data->codes.add(sp, "code_type_1", "0");
+    b.data->pt_data->codes.add(sp, "code_type_1", "1");
+    sp = b.get<nt::StopPoint>("stop2");
+    b.data->pt_data->codes.add(sp, "code_type_2", "0");
+    sp = b.get<nt::StopPoint>("stop4");
+    b.data->pt_data->codes.add(sp, "code_type_2", "1");
+
+    // Add codes on stop area
+    const auto* sa = b.get<nt::StopArea>("sa_1");
+    b.data->pt_data->codes.add(sa, "code_type_1", "0");
+
+    auto res = make_query(nt::Type_e::StopPoint,
+                          R"(stop_point.has_code_type(code_type_1))",
+                          *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop1", "stop3"}));
+
+    res = make_query(nt::Type_e::StopPoint,
+                     R"(stop_point.has_code_type(code_type_2))",
+                     *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop2", "stop4"}));
+
+    res = make_query(nt::Type_e::StopArea,
+                     R"(stop_area.has_code_type(code_type_1))",
+                     *(b.data));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"sa_1"}));
+
+    BOOST_CHECK_THROW(make_query(nt::Type_e::StopArea,
+                      R"(stop_area.has_code_type(code_type_doesnt_exist))",
+                      *(b.data)),
+                      ptref_error);
+}
+
+
 BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
@@ -646,7 +691,7 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
     b.vj("A").route("r1")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r2")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r3")("stop2", "09:10"_t)("stop3", "10:10"_t)("stop4", "11:10"_t);
-    b.vj("B").route("r3")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
+    b.vj("B").route("r4")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
 
     b.make();
 
@@ -707,4 +752,18 @@ BOOST_AUTO_TEST_CASE(find_path_example) {
     }
     // the path is Route -> Line -> CommercialMode
     BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
+}
+
+BOOST_AUTO_TEST_CASE(find_path_coord) {
+    ed::builder b("201601011T1739");
+    b.make();
+
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "coord.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "way.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "address.uri=\"42\"", *(b.data)),
+                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "admin.uri=\"42\"", *(b.data)),
+                      ptref_error);
 }

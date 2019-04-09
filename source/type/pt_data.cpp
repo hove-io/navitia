@@ -35,6 +35,114 @@ www.navitia.io
 
 namespace navitia { namespace type {
 
+type::Network* PT_Data::get_or_create_network(const std::string& uri, const std::string& name, int sort) {
+    const auto it = networks_map.find(uri);
+    if (it != networks_map.end()) {
+        return it->second;
+    }
+
+    nt::Network* network = new nt::Network();
+    network->uri = uri;
+    network->name = name;
+    network->sort = sort;
+
+    network->idx = networks.size();
+    networks.push_back(network);
+    networks_map[uri] = network;
+
+    return network;
+}
+
+type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& uri, const std::string& name) {
+    const auto it = commercial_modes_map.find(uri);
+    if (it != commercial_modes_map.end()) {
+        return it->second;
+    }
+
+    nt::CommercialMode* mode = new nt::CommercialMode();
+    mode->uri = uri;
+    mode->name = name;
+
+    mode->idx = commercial_modes.size();
+    commercial_modes.push_back(mode);
+    commercial_modes_map[uri] = mode;
+
+    return mode;
+}
+
+type::Line* PT_Data::get_or_create_line(const std::string& uri,
+                                        const std::string& name,
+                                        type::Network* network,
+                                        type::CommercialMode* commercial_mode,
+                                        int sort,
+                                        const std::string& color,
+                                        const std::string& text_color) {
+    const auto it = lines_map.find(uri);
+    if (it != lines_map.end()) {
+        return it->second;
+    }
+
+    nt::Line* line = new nt::Line();
+    line->uri = uri;
+    line->name = name;
+    line->sort = sort;
+    line->color = color;
+    line->text_color = text_color;
+
+    line->network = network;
+    network->line_list.push_back(line);
+    line->commercial_mode = commercial_mode;
+    commercial_mode->line_list.push_back(line);
+
+    line->idx = lines.size();
+    lines.push_back(line);
+    lines_map[uri] = line;
+
+    return line;
+}
+
+type::Route* PT_Data::get_or_create_route(const std::string& uri,
+                                          const std::string& name,
+                                          type::Line* line,
+                                          type::StopArea* destination,
+                                          const std::string& direction_type) {
+    const auto it = routes_map.find(uri);
+    if (it != routes_map.end()) {
+        return it->second;
+    }
+
+    nt::Route* route = new nt::Route();
+    route->uri = uri;
+    route->name = name;
+    route->destination = destination;
+    route->direction_type = direction_type;
+
+    route->line = line;
+    line->route_list.push_back(route);
+
+    route->idx = routes.size();
+    routes.push_back(route);
+    routes_map[uri] = route;
+
+    return route;
+}
+
+const type::TimeZoneHandler* PT_Data::get_main_timezone() {
+    // using TZ already used by MetaVJ as they all use the same when reading base_schedule data
+    if (meta_vjs.size() > 0) {
+        return meta_vjs.begin()->get()->tz_handler;
+    }
+    return tz_manager.get_first_timezone();
+}
+
+type::MetaVehicleJourney* PT_Data::get_or_create_meta_vehicle_journey(const std::string& uri,
+                                                                      const type::TimeZoneHandler* tz) {
+    auto* mvj = meta_vjs.get_or_create(uri);
+    mvj->tz_handler = tz;
+
+    return mvj;
+}
+
 ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
     for (auto vp : validity_patterns) {
         if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {

@@ -78,6 +78,8 @@ from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr import fallback_modes
+
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
@@ -102,25 +104,11 @@ def get_kraken_calls(request):
     arr_modes = request['destination_mode']
 
     if len(dep_modes) == len(arr_modes) == 1:
-        return [(dep_modes[0], arr_modes[0])]
+        return {(dep_modes[0], arr_modes[0])}
 
-    # this allowed combination is temporary, it does not handle all the use cases at all
-    allowed_combination = [
-        ('bss', 'bss'),
-        ('walking', 'walking'),
-        ('bike', 'walking'),
-        ('car', 'walking'),
-        ('bike', 'bss'),
-        ('car', 'bss'),
-        ('bike', 'bike'),
-        ('ridesharing', 'walking'),
-        ('walking', 'ridesharing'),
-        ('ridesharing', 'bss'),
-        ('bss', 'ridesharing'),
-    ]
+    # this allowed_combinations is temporary, it does not handle all the use cases at all
     # We don't want to do ridesharing - ridesharing journeys
-
-    res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
+    res = {c for c in fallback_modes.allowed_combinations if c in itertools.product(dep_modes, arr_modes)}
 
     if not res:
         abort(
@@ -638,33 +626,39 @@ def culling_journeys(resp, request):
 
 
 def _tag_journey_by_mode(journey):
-    mode = 'walking'
+    fm = fallback_modes
+    mode = fm.FallbackModes.walking
     for i, section in enumerate(journey.sections):
-        cur_mode = 'walking'
+        cur_mode = mode
         if (section.type == response_pb2.BSS_RENT) or (
             section.type == response_pb2.CROW_FLY and section.street_network.mode == response_pb2.Bss
         ):
-            cur_mode = 'bss'
+            cur_mode = fm.FallbackModes.bss
         elif (
             (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
             and section.street_network.mode == response_pb2.Bike
             and journey.sections[i - 1].type != response_pb2.BSS_RENT
         ):
-            cur_mode = 'bike'
+            cur_mode = fm.FallbackModes.bike
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
         ) and section.street_network.mode == response_pb2.Car:
-            cur_mode = 'car'
+            cur_mode = fm.FallbackModes.car
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
         ) and section.street_network.mode == response_pb2.Ridesharing:
             # When the street network data is missing, the section maybe a crow_fly
-            cur_mode = 'ridesharing'
+            cur_mode = fm.FallbackModes.ridesharing
+        elif (
+            section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
+        ) and section.street_network.mode == response_pb2.Taxi:
+            # When the street network data is missing, the section maybe a crow_fly
+            cur_mode = fm.FallbackModes.taxi
 
         if mode_weight[mode] < mode_weight[cur_mode]:
             mode = cur_mode
 
-    journey.tags.append(mode)
+    journey.tags.append(mode.name)
 
 
 def _tag_by_mode(responses):
@@ -996,7 +990,7 @@ class Scenario(simple.Scenario):
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
-        self.finalise_journeys(request, responses, distributed_context, instance, api_request['debug'])
+        self.finalise_journeys(api_request, responses, distributed_context, instance, api_request['debug'])
 
         pb_resp = merge_responses(responses, api_request['debug'])
 

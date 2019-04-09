@@ -41,6 +41,7 @@ class ParametersSerializer(serpy.Serializer):
     bss_speed = Field(schema_type=float)
     car_speed = Field(schema_type=float)
     car_no_park_speed = Field(schema_type=float)
+    taxi_speed = Field(schema_type=float)
     journey_order = Field(schema_type=str)
     max_additional_connections = Field(schema_type=int)
     max_bike_duration_to_pt = Field(schema_type=int)
@@ -66,6 +67,8 @@ class ParametersSerializer(serpy.Serializer):
     max_successive_physical_mode = Field(schema_type=int)
     final_line_filter = Field(schema_type=bool)
     max_extra_second_pass = Field(schema_type=int)
+    additional_time_after_first_section_taxi = Field(schema_type=int)
+    additional_time_before_last_section_taxi = Field(schema_type=int)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

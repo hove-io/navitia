@@ -240,3 +240,13 @@ class TestPlaces(AbstractTestFixture):
         assert len(places) == 1
         is_valid_places(places)
         assert len(response['disruptions']) == 0
+
+    def test_places_has_no_distance(self):
+        """So far, Kraken has no distance returned from its API (as opposed to Bragi)
+        We want to make sure that the distance field isn't returned in the response (as it will be zeroed)"
+        """
+
+        response = self.query_region("places?q=rue ab")
+        places = response['places']
+        assert len(places) == 1
+        assert places[0].has_key('distance') == False

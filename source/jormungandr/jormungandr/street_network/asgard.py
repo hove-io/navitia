@@ -30,15 +30,17 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.exceptions import TechnicalError
-
+from jormungandr import app
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
+from jormungandr.street_network.utils import make_speed_switcher
 
 from contextlib import contextmanager
 import queue
 from navitiacommon import response_pb2
 from zmq import green as zmq
 import six
+import pybreaker
 
 
 class Asgard(Kraken):
@@ -52,6 +54,12 @@ class Asgard(Kraken):
         self.timeout = timeout
         self._sockets = queue.Queue()
 
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_ASGARD_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_ASGARD_TIMEOUT_S'],
+        )
+        self.logger = logging.getLogger(__name__)
+
     def status(self):
         return {
             'id': unicode(self.sn_system_id),
@@ -61,19 +69,13 @@ class Asgard(Kraken):
         }
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-        speed_switcher = {
-            "walking": request['walking_speed'],
-            "bike": request['bike_speed'],
-            "car": request['car_speed'],
-            "bss": request['bss_speed'],
-        }
+        speed_switcher = make_speed_switcher(request)
 
         req = self._create_sn_routing_matrix_request(
             origins, destinations, mode, max_duration, speed_switcher, **kwargs
         )
 
         res = self._call_asgard(req)
-        # TODO handle car park
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
@@ -103,17 +105,28 @@ class Asgard(Kraken):
                 self._sockets.put(socket)
 
     def _call_asgard(self, request):
-        with self.socket(self.instance.context) as socket:
-            socket.send(request.SerializeToString())
-            # timeout is in second, we need it on millisecond
-            if socket.poll(timeout=self.timeout * 1000) > 0:
-                pb = socket.recv()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                return resp
-            else:
-                socket.setsockopt(zmq.LINGER, 0)
-                socket.close()
-                logger = logging.getLogger(__name__)
-                logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
-                raise TechnicalError('asgard on {} failed'.format(self.asgard_socket))
+        def _request():
+            with self.socket(self.instance.context) as socket:
+                socket.send(request.SerializeToString())
+                # timeout is in second, we need it on millisecond
+                if socket.poll(timeout=self.timeout * 1000) > 0:
+                    pb = socket.recv()
+                    resp = response_pb2.Response()
+                    resp.ParseFromString(pb)
+                    return resp
+                else:
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    self.logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
+                    raise TechnicalError('asgard on {} failed'.format(self.asgard_socket))
+
+        try:
+            return self.breaker.call(_request)
+        except pybreaker.CircuitBreakerError as e:
+            self.logger.error('Asgard routing service dead (error: {})'.format(e))
+            self.record_external_failure('circuit breaker open')
+            raise
+        except Exception as e:
+            self.logger.exception('Asgard routing error')
+            self.record_external_failure(str(e))
+            raise

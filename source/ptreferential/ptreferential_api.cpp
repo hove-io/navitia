@@ -191,7 +191,7 @@ get_matching_routes(const type::Data* data,
                                                                                  destination_code.second);
 
     if (possible_stop_points.empty() && possible_stop_areas.empty()) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "no stops matche the code "
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "no stop matching the code "
                        << destination_code.second << " (key = " << destination_code.first << ")"
                        << " impossible to find matching routes");
         return {};

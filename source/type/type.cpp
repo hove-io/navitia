@@ -770,9 +770,6 @@ static_data * static_data::get() {
                 (Type_e::Connection, "connection")
                 (Type_e::JourneyPatternPoint, "journey_pattern_point")
                 (Type_e::Company, "company")
-                (Type_e::Way, "way")
-                (Type_e::Coord, "coord")
-                (Type_e::Address, "address")
                 (Type_e::Route, "route")
                 (Type_e::POI, "poi")
                 (Type_e::POIType, "poi_type")
@@ -780,8 +777,7 @@ static_data * static_data::get() {
                 (Type_e::Calendar, "calendar")
                 (Type_e::MetaVehicleJourney, "trip")
                 (Type_e::Impact, "disruption")
-                (Type_e::Dataset, "dataset")
-                (Type_e::Admin, "admin");
+                (Type_e::Dataset, "dataset");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
@@ -789,7 +785,8 @@ static_data * static_data::get() {
                 (Mode_e::Car, "car")
                 (Mode_e::Bss, "bss")
                 (Mode_e::CarNoPark, "ridesharing")
-                (Mode_e::CarNoPark, "car_no_park");
+                (Mode_e::CarNoPark, "car_no_park")
+                (Mode_e::CarNoPark, "taxi");
         instance = temp;
 
     }

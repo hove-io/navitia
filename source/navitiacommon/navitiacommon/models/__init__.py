@@ -33,14 +33,11 @@ from __future__ import absolute_import
 import uuid
 import re
 from navitiacommon.sqlalchemy import SQLAlchemy
-from geoalchemy2.types import Geography
-from flask import current_app
-from sqlalchemy.orm import load_only, backref, aliased
+from sqlalchemy.orm import backref
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
-from navitiacommon.utils import street_source_types
 
 from navitiacommon import default_values
 import os
@@ -324,6 +321,8 @@ class Instance(db.Model):  # type: ignore
 
     car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)
 
+    taxi_speed = db.Column(db.Float, default=default_values.taxi_speed, nullable=False)
+
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 
     min_bike = db.Column(db.Integer, default=default_values.min_bike, nullable=False)
@@ -401,6 +400,53 @@ class Instance(db.Model):  # type: ignore
     )
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
+
+    additional_time_after_first_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_after_first_section_taxi, nullable=False
+    )
+
+    additional_time_before_last_section_taxi = db.Column(
+        db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
+    )
+
+    max_walking_direct_path_duration = db.Column(
+        db.Integer, default=default_values.max_walking_direct_path_duration, nullable=False
+    )
+
+    max_bike_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bike_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bike_direct_path_duration),
+    )
+
+    max_bss_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bss_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bss_direct_path_duration),
+    )
+
+    max_car_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_direct_path_duration),
+    )
+
+    max_taxi_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_taxi_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_taxi_direct_path_duration),
+    )
+
+    max_ridesharing_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_ridesharing_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_ridesharing_direct_path_duration),
+    )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
@@ -777,3 +823,4 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 
 # import at the end to prevent circular dependencies
 from navitiacommon.models.bss_provider import BssProvider
+from navitiacommon.models.equipments_providers import EquipmentsProvider

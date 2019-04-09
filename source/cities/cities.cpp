@@ -179,7 +179,7 @@ void OSMCache::insert_relations() {
             const auto coord = "POINT(" + std::to_string(relation.second.centre.get<0>())
                 + " " + std::to_string(relation.second.centre.get<1>()) + ")";
 
-            auto uri = "admin:osm:" + std::to_string(relation.first);
+            auto uri = "admin:osm:relation:" + std::to_string(relation.first);
             if ( ! relation.second.insee.empty()) {
                 uri = "admin:fr:" + relation.second.insee;
             }

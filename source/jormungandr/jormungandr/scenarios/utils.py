@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.response_pb2 as response_pb2
 from future.moves.itertools import zip_longest
+from jormungandr.fallback_modes import FallbackModes
 import six
 
 places_type = {
@@ -54,7 +55,14 @@ pt_object_type = {
 
 PSEUDO_DURATION_FACTORS = ((1, -1, 'departure_date_time'), (-1, 1, 'arrival_date_time'))
 
-mode_weight = {'ridesharing': 5, 'car': 4, 'bike': 3, 'bss': 2, 'walking': 1}
+mode_weight = {
+    FallbackModes.taxi: 6,
+    FallbackModes.ridesharing: 5,
+    FallbackModes.car: 4,
+    FallbackModes.bike: 3,
+    FallbackModes.bss: 2,
+    FallbackModes.walking: 1,
+}
 
 
 def compare(obj1, obj2, compare_generator):
@@ -222,6 +230,9 @@ def updated_common_journey_request_with_default(request, instance):
 
     if request['car_no_park_speed'] is None:
         request['car_no_park_speed'] = instance.car_no_park_speed
+
+    if request['taxi_speed'] is None:
+        request['taxi_speed'] = instance.taxi_speed
 
 
 def updated_request_with_default(request, instance):

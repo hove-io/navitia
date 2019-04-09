@@ -167,7 +167,15 @@ class add_pagination_links(object):
 
 class add_coverage_link(generate_links):
     def __init__(self):
-        self.links = ["coverage", "places", "pt_objects", "journeys", "traffic_reports", "line_reports"]
+        self.links = [
+            "coverage",
+            "places",
+            "pt_objects",
+            "journeys",
+            "traffic_reports",
+            "line_reports",
+            "equipment_reports",
+        ]
 
         if app.config['GRAPHICAL_ISOCHRONE']:
             self.links.append("isochrones")

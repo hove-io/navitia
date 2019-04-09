@@ -2,7 +2,7 @@ Line section is a way to impact some routes between 2 stops areas
 
 # Blocking a line section
 
-For each vehicle journey corresponding to the line/route, we get the corresponding base vehicle journey and identify all the smallest sections starting with the first stop and ending with the other.  Then, the new vehicle journey doesn't stop at all corresponding stop points.
+For each vehicle journey corresponding to the line/route, we get the corresponding base vehicle journey and identify **all the smallest sections** starting with the first stop and ending with the other.  Then, the new vehicle journey doesn't stop at all corresponding stop points.
 
 ## Case of a lollipop vehicle journey
 
