@@ -39,52 +39,49 @@ www.navitia.io
 #include "utils/init.h"
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
-#include "utils/functions.h" //navitia::absolute_path function
+#include "utils/functions.h"  //navitia::absolute_path function
 
-static void show_usage(const std::string& name, const boost::program_options::options_description& descr)
-{
+static void show_usage(const std::string& name, const boost::program_options::options_description& descr) {
     std::cerr << "Usage:\n"
               << "\t" << name << " --help\t\tShow this message.\n"
               << "\t" << name << " [config_file]\tSpecify the path of the configuration file "
               << "(default: kraken.ini in the current path) \n\n"
               << "Configuration file (kraken.ini) can have the following parameter: \n"
-              << descr
-              << "\n"
+              << descr << "\n"
               << "Parameters from the configuration file can also be declared by environment variable like: \n"
-              << "\t KRAKEN_GENERAL_instance_name=<inst_name>"
-              << std::endl;
+              << "\t KRAKEN_GENERAL_instance_name=<inst_name>" << std::endl;
 }
 
-int main(int argn, char** argv){
+int main(int argn, char** argv) {
     navitia::init_app();
     navitia::kraken::Configuration conf;
 
-    std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
-    std::string application = std::string(argv[0]).substr(posSlash+1);
+    std::string::size_type posSlash = std::string(argv[0]).find_last_of("\\/");
+    std::string application = std::string(argv[0]).substr(posSlash + 1);
     std::string path = navitia::absolute_path();
     if (path.empty()) {
         return 1;
     }
     std::string conf_file;
-    if(argn > 1){
+    if (argn > 1) {
         std::string arg = argv[1];
-        if(arg == "-h" || arg == "--help"){
+        if (arg == "-h" || arg == "--help") {
             auto opt_desc = navitia::kraken::get_options_description();
             show_usage(argv[0], opt_desc);
             return 0;
-        }else{
+        } else {
             // The first argument is the path to the configuration file
             conf_file = arg;
         }
-    }else{
+    } else {
         conf_file = path + application + ".ini";
     }
     conf.load(conf_file);
     auto log_level = conf.log_level();
     auto log_format = conf.log_format();
-    if(log_level && log_format){
+    if (log_level && log_format) {
         navitia::init_logger("kraken", *log_level, false, *log_format);
-    }else{
+    } else {
         navitia::init_logger(conf_file);
     }
 
@@ -97,18 +94,18 @@ int main(int argn, char** argv){
     zmq::context_t context(1);
     // Catch startup exceptions; without this, startup errors are on stdout
     std::string zmq_socket = conf.zmq_socket_path();
-    //TODO: try/catch
+    // TODO: try/catch
     LoadBalancer lb(context);
 
     const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf, metrics));
     //
-    //Data have been loaded, we can now accept connections
-    try{
+    // Data have been loaded, we can now accept connections
+    try {
         lb.bind(zmq_socket, "inproc://workers");
-    }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind( "<< zmq_socket << " ) failure: " << e.what());
+    } catch (zmq::error_t& e) {
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind( " << zmq_socket << " ) failure: " << e.what());
         threads.interrupt_all();
         threads.join_all();
         return 1;
@@ -117,19 +114,15 @@ int main(int argn, char** argv){
     int nb_threads = conf.nb_threads();
     // Launch pool of worker threads
     LOG4CPLUS_INFO(logger, "starting workers threads");
-    for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-        threads.create_thread(std::bind(&doWork,
-                                        std::ref(context),
-                                        std::ref(data_manager),
-                                        conf,
-                                        std::ref(metrics)));
+    for (int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metrics)));
     }
 
     // Connect worker threads to client threads via a queue
-    do{
-        try{
+    do {
+        try {
             lb.run();
-        }catch(const zmq::error_t&){}//lors d'un SIGHUP on restore la queue
-    }while(true);
+        } catch (const zmq::error_t&) {
+        }  // lors d'un SIGHUP on restore la queue
+    } while (true);
 }
-

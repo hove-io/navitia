@@ -14,7 +14,8 @@
 /*
  * Utilities for tests
  */
-namespace navitia { namespace test {
+namespace navitia {
+namespace test {
 
 inline void handle_realtime_test(const std::string& id,
                                  const boost::posix_time::ptime& timestamp,
@@ -42,32 +43,51 @@ struct RTStopTime {
     bool _is_added = false;
     bool _deleted_for_detour = false;
     bool _added_for_detour = false;
-    RTStopTime(const std::string& n, int arrival_time, int departure_time):
-        _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
-    RTStopTime(const std::string& n, int time):
-        _stop_name(n), _arrival_time(time), _departure_time(time) {}
+    RTStopTime(const std::string& n, int arrival_time, int departure_time)
+        : _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
+    RTStopTime(const std::string& n, int time) : _stop_name(n), _arrival_time(time), _departure_time(time) {}
 
-    RTStopTime& arrival_delay(navitia::time_duration delay) { _arrival_delay = delay; return *this; }
-    RTStopTime& departure_delay(navitia::time_duration delay) { _departure_delay = delay; return *this; }
+    RTStopTime& arrival_delay(navitia::time_duration delay) {
+        _arrival_delay = delay;
+        return *this;
+    }
+    RTStopTime& departure_delay(navitia::time_duration delay) {
+        _departure_delay = delay;
+        return *this;
+    }
     RTStopTime& delay(navitia::time_duration delay) { return arrival_delay(delay).departure_delay(delay); }
-    RTStopTime& arrival_skipped() { _arrival_skipped = true; return *this; }
-    RTStopTime& departure_skipped() { _departure_skipped = true; return *this; }
+    RTStopTime& arrival_skipped() {
+        _arrival_skipped = true;
+        return *this;
+    }
+    RTStopTime& departure_skipped() {
+        _departure_skipped = true;
+        return *this;
+    }
     RTStopTime& skipped() { return arrival_skipped().departure_skipped(); }
-    RTStopTime& added() { _is_added = true; return *this; }
-    RTStopTime& deleted_for_detour() {_deleted_for_detour = true; return * this; }
-    RTStopTime& added_for_detour() {_added_for_detour = true; return * this; }
+    RTStopTime& added() {
+        _is_added = true;
+        return *this;
+    }
+    RTStopTime& deleted_for_detour() {
+        _deleted_for_detour = true;
+        return *this;
+    }
+    RTStopTime& added_for_detour() {
+        _added_for_detour = true;
+        return *this;
+    }
 };
 
-inline transit_realtime::TripUpdate
-make_trip_update_message(const std::string& vj_uri,
-        const std::string& start_date,
-        const std::vector<RTStopTime>& delayed_time_stops,
-        const transit_realtime::Alert_Effect effect = transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS,
-        const std::string& company_id = "",
-        const std::string& physical_mode_id = "",
-        const std::string& contributor = "",
-        const std::string& trip_message = "")
-{
+inline transit_realtime::TripUpdate make_trip_update_message(
+    const std::string& vj_uri,
+    const std::string& start_date,
+    const std::vector<RTStopTime>& delayed_time_stops,
+    const transit_realtime::Alert_Effect effect = transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS,
+    const std::string& company_id = "",
+    const std::string& physical_mode_id = "",
+    const std::string& contributor = "",
+    const std::string& trip_message = "") {
     transit_realtime::TripUpdate trip_update;
     trip_update.SetExtension(kirin::effect, effect);
     auto trip = trip_update.mutable_trip();
@@ -90,7 +110,7 @@ make_trip_update_message(const std::string& vj_uri,
     trip->set_start_date(start_date);
     auto st_update = trip_update.mutable_stop_time_update();
 
-    for (const auto& delayed_st: delayed_time_stops) {
+    for (const auto& delayed_st : delayed_time_stops) {
         auto stop_time = st_update->Add();
         auto arrival = stop_time->mutable_arrival();
         auto departure = stop_time->mutable_departure();
@@ -123,15 +143,17 @@ make_trip_update_message(const std::string& vj_uri,
     return trip_update;
 }
 
-inline const pbnavitia::Impact*
-get_impact(const std::string& uri, const pbnavitia::Response& resp) {
-    for (const auto& impact: resp.impacts()) {
-        if (impact.uri() == uri) { return &impact; }
+inline const pbnavitia::Impact* get_impact(const std::string& uri, const pbnavitia::Response& resp) {
+    for (const auto& impact : resp.impacts()) {
+        if (impact.uri() == uri) {
+            return &impact;
+        }
     }
     return nullptr;
 }
 
-}}// namespace navitia::test
+}  // namespace test
+}  // namespace navitia
 
 inline u_int32_t operator"" _t(const char* str, size_t s) {
     return boost::posix_time::duration_from_string(std::string(str, s)).total_seconds();
@@ -142,38 +164,47 @@ inline u_int64_t operator"" _pts(const char* str, size_t s) {
 }
 
 namespace std {
-template<typename T>
+template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     os << "{";
     auto it = s.cbegin(), end = s.cend();
-    if (it != end) os << *it++;
-    for (; it != end; ++it) os << ", " << *it;
+    if (it != end)
+        os << *it++;
+    for (; it != end; ++it)
+        os << ", " << *it;
     return os << "}";
 }
-template<typename T>
+template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
     os << "[";
     auto it = v.cbegin(), end = v.cend();
-    if (it != end) { os << *it++; }
-    for (; it != end; ++it) { os << ", " << *it; }
+    if (it != end) {
+        os << *it++;
+    }
+    for (; it != end; ++it) {
+        os << ", " << *it;
+    }
     return os << "]";
 }
 
-template<typename T, typename U>
+template <typename T, typename U>
 std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p) {
     return os << "(" << p.first << ", " << p.second << ")";
 }
 
-
-template<typename K, typename V>
+template <typename K, typename V>
 std::ostream& operator<<(std::ostream& os, const std::map<K, V>& m) {
     os << "{";
     auto it = m.cbegin(), end = m.cend();
-    if (it != end) { os << *it++; }
-    for (; it != end; ++it) { os << ", " << *it; }
+    if (it != end) {
+        os << *it++;
+    }
+    for (; it != end; ++it) {
+        os << ", " << *it;
+    }
     return os << "}";
 }
-}// namespace std
+}  // namespace std
 
 // small helper especially usefull for ptref tests
 // get list of pointers from indexes
@@ -181,7 +212,7 @@ template <typename T>
 std::set<const T*> get_objects(const nt::Indexes& indexes, const nt::Data& data) {
     const auto& obj_col = data.get_data<T>();
     std::set<const T*> objs;
-    for (const auto idx: indexes) {
+    for (const auto idx : indexes) {
         objs.insert(obj_col[idx]);
     }
     return objs;
@@ -192,21 +223,20 @@ template <typename T>
 std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data) {
     const auto& objs = get_objects<T>(indexes, data);
     std::set<std::string> uris;
-    for (const auto* obj: objs) {
+    for (const auto* obj : objs) {
         uris.insert(obj->uri);
     }
     return uris;
 }
 
-
 /*
  * BOOST_CHECK_EQUAL_COLLECTIONS does not work well with a temporary collection, thus this macro
  * (and it's easier to use)
  */
-#define BOOST_CHECK_EQUAL_RANGE(range1, range2) \
-    { \
-        const auto& r1 = range1; \
-        const auto& r2 = range2; \
+#define BOOST_CHECK_EQUAL_RANGE(range1, range2)                                                    \
+    {                                                                                              \
+        const auto& r1 = range1;                                                                   \
+        const auto& r2 = range2;                                                                   \
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
 

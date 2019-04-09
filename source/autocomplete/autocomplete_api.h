@@ -38,20 +38,21 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-    class Data;
-    enum class Type_e;
-}
+class Data;
+enum class Type_e;
+}  // namespace type
 
 namespace autocomplete {
 
 /** Trouve tous les objets définis par filter dont le nom contient q */
-void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
-                                 const std::vector<navitia::type::Type_e>& filter,
-                                 uint32_t depth,
-                                 int nbmax,
-                                 const std::vector <std::string> &admins,
-                                 int search_type,
-                                 const type::Data &d,
-                                 float main_stop_area_weight_factor=1.0);
-}
-}
+void autocomplete(navitia::PbCreator& pb_creator,
+                  const std::string& q,
+                  const std::vector<navitia::type::Type_e>& filter,
+                  uint32_t depth,
+                  int nbmax,
+                  const std::vector<std::string>& admins,
+                  int search_type,
+                  const type::Data& d,
+                  float main_stop_area_weight_factor = 1.0);
+}  // namespace autocomplete
+}  // namespace navitia

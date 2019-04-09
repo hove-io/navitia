@@ -64,77 +64,51 @@ int main(int argc, const char* const argv[]) {
     b.sa("F", 0., 6.)("F_1", 0., 6.)("F_2", 0., 6.);
 
     b.vj("line:1")
-            .route("route:line:1:1")
-            .uri("vj:1:1")
-            ("A_1", "08:00"_t)
-            ("B_1", "08:15"_t)
-            ("C_1", "08:45"_t)
-            ("D_1", "09:00"_t)
-            ("D_3", "09:05"_t)
-            ("E_1", "09:15"_t)
-            ("F_1", "09:30"_t);
+        .route("route:line:1:1")
+        .uri("vj:1:1")("A_1", "08:00"_t)("B_1", "08:15"_t)("C_1", "08:45"_t)("D_1", "09:00"_t)("D_3", "09:05"_t)(
+            "E_1", "09:15"_t)("F_1", "09:30"_t);
 
     b.vj("line:1")
-            .route("route:line:1:2")
-            .uri("vj:1:2")
-            ("A_2", "09:00"_t)
-            ("B_2", "09:15"_t)
-            ("C_2", "09:45"_t)
-            ("D_2", "10:00"_t)
-            ("E_2", "10:15"_t)
-            ("F_2", "10:30"_t);
+        .route("route:line:1:2")
+        .uri("vj:1:2")("A_2", "09:00"_t)("B_2", "09:15"_t)("C_2", "09:45"_t)("D_2", "10:00"_t)("E_2", "10:15"_t)(
+            "F_2", "10:30"_t);
 
-    b.vj("line:1")
-            .route("route:line:1:3")
-            .uri("vj:1:3")
-            ("A_1", "10:00"_t)
-            ("B_1", "10:15"_t)
-            ("F_1", "11:30"_t);
+    b.vj("line:1").route("route:line:1:3").uri("vj:1:3")("A_1", "10:00"_t)("B_1", "10:15"_t)("F_1", "11:30"_t);
 
-    b.vj("line:2")
-            .route("route:line:2:1")
-            .uri("vj:2")
-            ("A_1", "11:00"_t)
-            ("B_1", "11:15"_t)
-            ("F_1", "12:30"_t);
+    b.vj("line:2").route("route:line:2:1").uri("vj:2")("A_1", "11:00"_t)("B_1", "11:15"_t)("F_1", "12:30"_t);
 
-    b.vj("line:3")
-            .route("route:line:3:1")
-            .uri("vj:3")
-            ("C_1", "11:00"_t)
-            ("A_1", "12:30"_t);
+    b.vj("line:3").route("route:line:3:1").uri("vj:3")("C_1", "11:00"_t)("A_1", "12:30"_t);
 
-    b.vj_with_network("network:other","line:B","11111111","",true, "")
-            ("C_3", "08:10"_t, "08:11"_t)
-            ("stop_area:other", "08:20"_t, "08:21"_t);
+    b.vj_with_network("network:other", "line:B", "11111111", "", true, "")("C_3", "08:10"_t, "08:11"_t)(
+        "stop_area:other", "08:20"_t, "08:21"_t);
 
     b.make();
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1")
-                              .severity(nt::disruption::Effect::NO_SERVICE)
-                              .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
-                              .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
-                              .on_line_section("line:1", "C", "E", {"route:line:1:1", "route:line:1:3"})
-                              .get_disruption(),
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_line_section("line:1", "C", "E", {"route:line:1:1", "route:line:1:3"})
+                                  .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1_other_effect")
-                              .severity(nt::disruption::Effect::OTHER_EFFECT)
-                              .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
-                              .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
-                              .on_line_section("line:1", "E", "F", {"route:line:1:1", "route:line:1:3"})
-                              .on_line_section("line:1", "F", "E", {"route:line:1:1", "route:line:1:3"})
-                              .get_disruption(),
+                                  .severity(nt::disruption::Effect::OTHER_EFFECT)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_line_section("line:1", "E", "F", {"route:line:1:1", "route:line:1:3"})
+                                  .on_line_section("line:1", "F", "E", {"route:line:1:1", "route:line:1:3"})
+                                  .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_2")
-                              .severity(nt::disruption::Effect::NO_SERVICE)
-                              .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
-                              .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
-                              .on_line_section("line:2", "B", "F", {"route:line:2:1"})
-                              .get_disruption(),
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_line_section("line:2", "B", "F", {"route:line:2:1"})
+                                  .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     mock_kraken kraken(b, "line_sections_test", argc, argv);

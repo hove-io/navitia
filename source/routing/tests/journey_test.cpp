@@ -43,40 +43,32 @@ using namespace routing;
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using boost::posix_time::duration_from_string;
 
-class JourneyTest
-{
+class JourneyTest {
     ed::builder b;
     std::vector<type::StopTime> stop_times;
     std::vector<Journey::Section> sections;
 
 public:
-    JourneyTest():b("20180101")
-    {}
+    JourneyTest() : b("20180101") {}
 
-    Journey::Section make_section(const std::string & vj_name,
-                                  const std::string & departure_time,
-                                  const std::string & arrival_time)
-    {
-        b.vj(vj_name, "11111111", vj_name)
-            ("StopPoint1", departure_time)
-            ("StopPoint2", arrival_time);
+    Journey::Section make_section(const std::string& vj_name,
+                                  const std::string& departure_time,
+                                  const std::string& arrival_time) {
+        b.vj(vj_name, "11111111", vj_name)("StopPoint1", departure_time)("StopPoint2", arrival_time);
 
         auto it = b.block_vjs.find(vj_name);
-        auto & vj = *it->second;
+        auto& vj = *it->second;
 
-        return Journey::Section( vj.stop_time_list[0], 1,
-                                 vj.stop_time_list[1], 2);
-
+        return Journey::Section(vj.stop_time_list[0], 1, vj.stop_time_list[1], 2);
     }
 
-    Journey make_journey(const std::string & vj_name,
-                         const std::string & departure_time,
-                         const std::string & arrival_time)
-    {
+    Journey make_journey(const std::string& vj_name,
+                         const std::string& departure_time,
+                         const std::string& arrival_time) {
         Journey j;
         Journey::Section section = make_section(vj_name, departure_time, arrival_time);
 
@@ -91,17 +83,17 @@ public:
 BOOST_FIXTURE_TEST_SUITE(journey, JourneyTest)
 
 BOOST_AUTO_TEST_CASE(similar_sections_should_be_equal) {
-
     Journey::Section section = make_section("vj1", "09:42:00", "10:00:00");
 
-    Journey j1; j1.sections.push_back(section);
-    Journey j2; j2.sections.push_back(section);
+    Journey j1;
+    j1.sections.push_back(section);
+    Journey j2;
+    j2.sections.push_back(section);
 
     BOOST_CHECK_EQUAL(j1, j2);
 }
 
 BOOST_AUTO_TEST_CASE(similar_sections_should_not_be_equal_with_different_VJ) {
-
     Journey j1 = make_journey("vj1", "09:42:00", "10:00:00");
     Journey j2 = make_journey("vj2", "09:42:00", "10:00:00");
 
@@ -109,18 +101,18 @@ BOOST_AUTO_TEST_CASE(similar_sections_should_not_be_equal_with_different_VJ) {
 }
 
 BOOST_AUTO_TEST_CASE(different_sections_should_NOT_be_equal) {
-
     Journey::Section section = make_section("vj1", "09:42:00", "10:00:00");
-    Journey j1; j1.sections.push_back(section);
+    Journey j1;
+    j1.sections.push_back(section);
 
     std::swap(section.get_in_dt, section.get_out_dt);
-    Journey j2; j2.sections.push_back(section);
+    Journey j2;
+    j2.sections.push_back(section);
 
     BOOST_CHECK_NE(j1, j2);
 }
 
 BOOST_AUTO_TEST_CASE(journeys_should_be_usable_in_a_set) {
-
     Journey j1 = make_journey("vj1", "09:42:00", "10:00:00");
     Journey j2 = make_journey("vj2", "09:55:00", "10:10:00");
 
@@ -137,31 +129,28 @@ BOOST_AUTO_TEST_CASE(journeys_should_be_usable_in_a_set) {
 }
 
 BOOST_AUTO_TEST_CASE(journeys_should_get_best_journey) {
-
     Journey j1 = make_journey("vj1", "09:00:00", "10:00:00");
     Journey j2 = make_journey("vj2", "08:00:00", "09:30:00");
     Journey j3 = make_journey("vj3", "10:00:00", "10:10:00");
 
-    std::vector<Journey> journeys = { j1, j2, j3 };
+    std::vector<Journey> journeys = {j1, j2, j3};
 
     auto best = get_best_journey(journeys, true);
     BOOST_CHECK_EQUAL(best.departure_dt, j2.departure_dt);
 }
 
 BOOST_AUTO_TEST_CASE(journeys_should_get_best_journey_clockwise) {
-
     Journey j1 = make_journey("vj1", "09:00:00", "10:00:00");
     Journey j2 = make_journey("vj2", "08:00:00", "09:30:00");
     Journey j3 = make_journey("vj3", "10:00:00", "10:10:00");
 
-    std::vector<Journey> journeys = { j1, j2, j3 };
+    std::vector<Journey> journeys = {j1, j2, j3};
 
     auto best = get_best_journey(journeys, false);
     BOOST_CHECK_EQUAL(best.arrival_dt, j3.arrival_dt);
 }
 
 BOOST_AUTO_TEST_CASE(get_best_journey_should_throw) {
-
     std::vector<Journey> journeys = {};
     BOOST_CHECK_THROW(get_best_journey(journeys, true), recoverable_exception);
 }

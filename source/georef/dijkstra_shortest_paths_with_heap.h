@@ -31,20 +31,31 @@ www.navitia.io
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace boost {
-  // Call breadth first search
-  // Allow to pass color map so that user deals with the allocation (and white init)
-  template <class Graph, class SourceInputIter, class DijkstraVisitor,
-            class PredecessorMap, class DistanceMap,
-            class WeightMap, class Compare, class Combine,
-            class DistZero, class ColorMap, class IndexInHeapMap>
-  inline void
-  dijkstra_shortest_paths_no_init_with_heap
-    (const Graph& g,
-     SourceInputIter s_begin, SourceInputIter s_end,
-     PredecessorMap predecessor, DistanceMap distance, WeightMap weight,
-     Compare compare, Combine combine, DistZero zero,
-     DijkstraVisitor vis, ColorMap color, IndexInHeapMap index_in_heap)
-  {
+// Call breadth first search
+// Allow to pass color map so that user deals with the allocation (and white init)
+template <class Graph,
+          class SourceInputIter,
+          class DijkstraVisitor,
+          class PredecessorMap,
+          class DistanceMap,
+          class WeightMap,
+          class Compare,
+          class Combine,
+          class DistZero,
+          class ColorMap,
+          class IndexInHeapMap>
+inline void dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
+                                                      SourceInputIter s_begin,
+                                                      SourceInputIter s_end,
+                                                      PredecessorMap predecessor,
+                                                      DistanceMap distance,
+                                                      WeightMap weight,
+                                                      Compare compare,
+                                                      Combine combine,
+                                                      DistZero zero,
+                                                      DijkstraVisitor vis,
+                                                      ColorMap color,
+                                                      IndexInHeapMap index_in_heap) {
     typedef indirect_cmp<DistanceMap, Compare> IndirectCmp;
     IndirectCmp icmp(distance, compare);
 
@@ -52,11 +63,11 @@ namespace boost {
     typedef d_ary_heap_indirect<Vertex, 4, IndexInHeapMap, DistanceMap, Compare> MutableQueue;
     MutableQueue Q(distance, index_in_heap, compare);
 
-    detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap,
-      PredecessorMap, DistanceMap, Combine, Compare>
+    detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap, PredecessorMap, DistanceMap, Combine,
+                                 Compare>
         bfs_vis(vis, Q, weight, predecessor, distance, combine, compare, zero);
 
     breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
-  }
+}
 
-} // namespace boost
+}  // namespace boost

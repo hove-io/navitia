@@ -39,30 +39,30 @@ www.navitia.io
 using namespace ed;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
-//helper for lazyness
+// helper for lazyness
 static boost::gregorian::date date(std::string str) {
     return boost::gregorian::from_undelimited_string(str);
 }
 
 static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
-    boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
+    boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end);  // end is not in the period
     return {start_date, end_date};
 }
 
 struct calendar_fixture {
     calendar_fixture() : b("20140210") {
         cal = new ed::types::Calendar(b.data->meta->production_date.begin());
-        cal->uri="cal1";
+        cal->uri = "cal1";
         boost::gregorian::date start = boost::gregorian::from_undelimited_string("20140210");
-        boost::gregorian::date end = boost::gregorian::from_undelimited_string("20140214"); //end is not in the period
+        boost::gregorian::date end = boost::gregorian::from_undelimited_string("20140214");  // end is not in the period
         cal->period_list.push_back({start, end});
         cal->week_pattern = std::bitset<7>("1111111");
-        //b.data->pt_data->calendars.push_back(cal);
+        // b.data->pt_data->calendars.push_back(cal);
     }
     ed::builder b;
     ed::types::Calendar* cal;
@@ -79,8 +79,8 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test1, calendar_fixture) {
     BOOST_CHECK(cal->validity_pattern.check(date("20140211")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140212")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140213")));
-    BOOST_CHECK(! cal->validity_pattern.check(date("20140214")));
-    BOOST_CHECK(! cal->validity_pattern.check(date("20140514")));
+    BOOST_CHECK(!cal->validity_pattern.check(date("20140214")));
+    BOOST_CHECK(!cal->validity_pattern.check(date("20140514")));
 }
 
 BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test2, calendar_fixture) {
@@ -98,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test2, calendar_fixture) {
 
     BOOST_CHECK(cal->validity_pattern.check(date("20140210")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140211")));
-    BOOST_CHECK(! cal->validity_pattern.check(date("20140212")));
+    BOOST_CHECK(!cal->validity_pattern.check(date("20140212")));
     BOOST_CHECK(cal->validity_pattern.check(date("20140213")));
 }
 
@@ -121,9 +121,9 @@ BOOST_FIXTURE_TEST_CASE(build_validity_pattern_test3, calendar_fixture) {
 }
 
 BOOST_AUTO_TEST_CASE(get_differences_test) {
-    std::bitset<12> cal ("111000111000");
-    std::bitset<12> vj  ("101010101010");
-    //the dif are the differences between cal and vj restricted on the active days of the calendar
+    std::bitset<12> cal("111000111000");
+    std::bitset<12> vj("101010101010");
+    // the dif are the differences between cal and vj restricted on the active days of the calendar
     ed::Data data;
     auto res = data.get_difference(cal, vj);
 
@@ -131,8 +131,8 @@ BOOST_AUTO_TEST_CASE(get_differences_test) {
 }
 
 BOOST_AUTO_TEST_CASE(get_differences_test_empty_cal) {
-    std::bitset<12> cal ("000000000000");
-    std::bitset<12> vj ("101010101010");
+    std::bitset<12> cal("000000000000");
+    std::bitset<12> vj("101010101010");
     ed::Data data;
     auto res = data.get_difference(cal, vj);
 
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(get_differences_test_empty_cal) {
 }
 
 BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
-    std::bitset<12> cal ("111111111111");
-    std::bitset<12> vj ("101010101010");
+    std::bitset<12> cal("111111111111");
+    std::bitset<12> vj("101010101010");
     ed::Data data;
     auto res = data.get_difference(cal, vj);
 
@@ -161,25 +161,26 @@ BOOST_AUTO_TEST_CASE(get_differences_test_full_cal) {
 struct associated_cal_fixture {
     associated_cal_fixture() {
         data.meta.production_date = {"20140101"_d, "20150101"_d};
-        data.tz_wrapper.tz_handler = navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
+        data.tz_wrapper.tz_handler =
+            navitia::type::TimeZoneHandler{"utc", "20140101"_d, {{0, {data.meta.production_date}}}};
 
         // Same vehicleJourney.validity_pattern : Associated vehicle_journey
         always_on_cal = new ed::types::Calendar(data.meta.production_date.begin());
-        always_on_cal->uri="always_on";
+        always_on_cal->uri = "always_on";
         always_on_cal->period_list.push_back(period("20140101", "20140111"));
         always_on_cal->week_pattern = std::bitset<7>{"0111100"};
         data.calendars.push_back(always_on_cal);
 
         // 2 days of period 01/04/2014 - 11/04/2014 : Associated vehicle_journey
         wednesday_cal = new ed::types::Calendar(data.meta.production_date.begin());
-        wednesday_cal->uri="wednesday";
+        wednesday_cal->uri = "wednesday";
         wednesday_cal->period_list.push_back(period("20140101", "20140111"));
         wednesday_cal->week_pattern = std::bitset<7>{"0010000"};
         data.calendars.push_back(wednesday_cal);
 
         // monday where vehiclejourney.validity_pattern not valide for this day : Not Associated vehicle_journey
         monday_cal = new ed::types::Calendar(data.meta.production_date.begin());
-        monday_cal->uri="monday";
+        monday_cal->uri = "monday";
         monday_cal->period_list.push_back(period("20140105", "20140111"));
         monday_cal->week_pattern = std::bitset<7>{"1000000"};
         data.calendars.push_back(monday_cal);
@@ -196,7 +197,7 @@ struct associated_cal_fixture {
         line->network = network;
         data.lines.push_back(line);
 
-        auto *route = new ed::types::Route();
+        auto* route = new ed::types::Route();
         route->idx = data.routes.size();
         route->line = line;
         data.routes.push_back(route);
@@ -216,8 +217,7 @@ struct associated_cal_fixture {
         st2->stop_point = new ed::types::StopPoint();
         data.stop_points.push_back(st2->stop_point);
 
-
-        //b.vj("network:R", "line:A", "", "", true, "vj1")
+        // b.vj("network:R", "line:A", "", "", true, "vj1")
         //        ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
         //        ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
 
@@ -230,7 +230,7 @@ struct associated_cal_fixture {
         vj1->stop_time_list.push_back(st2);
         data.vehicle_journeys.push_back(vj1);
 
-        //b.vj("network:R", "line:A", "", "", true, "vj2", "meta_vj")
+        // b.vj("network:R", "line:A", "", "", true, "vj2", "meta_vj")
         //        ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
         //        ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
 
@@ -243,7 +243,7 @@ struct associated_cal_fixture {
         vj2->stop_time_list.push_back(st2);
         data.vehicle_journeys.push_back(vj2);
 
-        //b.vj("network:R", "line:A", "", "", true, "vj2_bis", "meta_vj")
+        // b.vj("network:R", "line:A", "", "", true, "vj2_bis", "meta_vj")
         //        ("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
         //        ("stop_area:stop2", 11 * 3600 + 10 * 60 ,11 * 3600 + 10 * 60);
 
@@ -281,7 +281,7 @@ struct associated_cal_fixture {
 
         data.validity_patterns.push_back(vj1->validity_pattern);
 
-        //for the meta vj we use the same, but split
+        // for the meta vj we use the same, but split
         vj2->validity_pattern = new ed::types::ValidityPattern();
         vj2->idx = data.validity_patterns.size();
         vj2->validity_pattern->beginning_date = data.meta.production_date.begin();
@@ -308,7 +308,7 @@ struct associated_cal_fixture {
         auto it_associated_always_cal = meta_vj->associated_calendars.find(always_on_cal->uri);
         BOOST_REQUIRE(it_associated_always_cal != meta_vj->associated_calendars.end());
 
-        //no restriction
+        // no restriction
         auto associated_always_cal = it_associated_always_cal->second;
         BOOST_CHECK_EQUAL(associated_always_cal->calendar, always_on_cal);
         BOOST_CHECK(associated_always_cal->exceptions.empty());
@@ -316,7 +316,7 @@ struct associated_cal_fixture {
         auto it_associated_wednesday_cal = meta_vj->associated_calendars.find(wednesday_cal->uri);
         BOOST_REQUIRE(it_associated_wednesday_cal != meta_vj->associated_calendars.end());
 
-        //no restriction
+        // no restriction
         auto associated_wednesday_cal = it_associated_wednesday_cal->second;
         BOOST_CHECK_EQUAL(associated_wednesday_cal->calendar, wednesday_cal);
         BOOST_CHECK(associated_wednesday_cal->exceptions.empty());
@@ -336,8 +336,8 @@ BOOST_FIXTURE_TEST_CASE(associated_val_test1, associated_cal_fixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(meta_vj_association_test, associated_cal_fixture) {
-    //we split the vj under a meta vj (like it's done for dst)
-    //should have the same thing than non split vj
+    // we split the vj under a meta vj (like it's done for dst)
+    // should have the same thing than non split vj
     check_vj(vj2);
     check_vj(vj2_b);
 }

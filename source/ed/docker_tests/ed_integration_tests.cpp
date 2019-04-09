@@ -41,46 +41,49 @@ www.navitia.io
 #include "routing/raptor_utils.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 namespace pt = boost::posix_time;
 namespace nt = navitia::type;
 namespace nr = navitia::routing;
 
 struct ArgsFixture {
-   ArgsFixture() {
-       auto argc = boost::unit_test::framework::master_test_suite().argc;
-       auto argv = boost::unit_test::framework::master_test_suite().argv;
+    ArgsFixture() {
+        auto argc = boost::unit_test::framework::master_test_suite().argc;
+        auto argv = boost::unit_test::framework::master_test_suite().argv;
 
-       //we should have at least more than one arg, the first is the exe name, the rest is the input file paths
-       BOOST_REQUIRE(argc > 1);
+        // we should have at least more than one arg, the first is the exe name, the rest is the input file paths
+        BOOST_REQUIRE(argc > 1);
 
-       for (int i(1); i < argc; ++i) {
-           std::vector<std::string> arg;
+        for (int i(1); i < argc; ++i) {
+            std::vector<std::string> arg;
 
-           std::string raw_arg = argv[i];
-           // dumb method, we erase all '-' not to bother with the '--bob=toto' format
-           boost::erase_all(raw_arg, "-");
-           boost::split(arg, raw_arg, boost::is_any_of("="));
+            std::string raw_arg = argv[i];
+            // dumb method, we erase all '-' not to bother with the '--bob=toto' format
+            boost::erase_all(raw_arg, "-");
+            boost::split(arg, raw_arg, boost::is_any_of("="));
 
-           BOOST_REQUIRE_EQUAL(arg.size(), 2);
-           input_file_paths[arg.at(0)] = arg.at(1);
-       }
-   }
+            BOOST_REQUIRE_EQUAL(arg.size(), 2);
+            input_file_paths[arg.at(0)] = arg.at(1);
+        }
+    }
 
-   std::map<std::string, std::string> input_file_paths;
+    std::map<std::string, std::string> input_file_paths;
 };
 
 // check headsign value for stop times on given vjs
-static void check_headsigns(const nt::Data& data, const std::string& headsign, const std::string& trip_id,
-                            size_t first_it_st = 0, size_t last_it_st = std::numeric_limits<size_t>::max()) {
+static void check_headsigns(const nt::Data& data,
+                            const std::string& headsign,
+                            const std::string& trip_id,
+                            size_t first_it_st = 0,
+                            size_t last_it_st = std::numeric_limits<size_t>::max()) {
     const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     const auto vj_from_headsign = headsigns.get_vj_from_headsign(headsign);
     BOOST_REQUIRE_EQUAL(vj_from_headsign.size(), 2);
 
-    for (const auto dst: {"_dst_1", "_dst_2"}) {
+    for (const auto dst : {"_dst_1", "_dst_2"}) {
         const auto vj_id = "vehicle_journey:" + trip_id + dst;
         const auto* vj = data.pt_data->vehicle_journeys_map.at(vj_id);
         size_t real_last_it_st = vj->stop_time_list.size() - 1;
@@ -95,20 +98,20 @@ static void check_headsigns(const nt::Data& data, const std::string& headsign, c
 }
 
 static void check_unsound_pickup_dropoff(const nt::Data& data) {
-    for (const auto* vj: data.pt_data->vehicle_journeys) {
-        if (! vj->prev_vj) {
-            BOOST_CHECK(! vj->stop_time_list.front().drop_off_allowed());
+    for (const auto* vj : data.pt_data->vehicle_journeys) {
+        if (!vj->prev_vj) {
+            BOOST_CHECK(!vj->stop_time_list.front().drop_off_allowed());
         }
-        if (! vj->next_vj) {
-            BOOST_CHECK(! vj->stop_time_list.back().pick_up_allowed());
+        if (!vj->next_vj) {
+            BOOST_CHECK(!vj->stop_time_list.back().pick_up_allowed());
         }
     }
 }
 
 static void check_ntfs(const nt::Data& data) {
-    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
-                            boost::gregorian::from_undelimited_string("20150325"),
-                            boost::gregorian::from_undelimited_string("20150827")));
+    BOOST_CHECK_EQUAL(data.meta->production_date,
+                      boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20150325"),
+                                                    boost::gregorian::from_undelimited_string("20150827")));
     const auto& tz_manager = data.pt_data->tz_manager;
     BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
     const auto* tz = tz_manager.get("Europe/Paris");
@@ -186,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     data.build_raptor();
@@ -206,7 +209,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     data.build_raptor();
@@ -214,9 +217,9 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     const auto& pt_data = *data.pt_data;
 
-    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
-                            boost::gregorian::from_undelimited_string("20070101"),
-                            boost::gregorian::from_undelimited_string("20080102")));
+    BOOST_CHECK_EQUAL(data.meta->production_date,
+                      boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20070101"),
+                                                    boost::gregorian::from_undelimited_string("20080102")));
 
     const auto& tz_manager = data.pt_data->tz_manager;
     BOOST_CHECK_EQUAL(tz_manager.get_nb_timezones(), 1);
@@ -235,7 +238,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     // check physical/commercial modes
     // for GTFS we got all the default ones
-    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 7); // less physical mode, some are aggregated
+    BOOST_REQUIRE_EQUAL(pt_data.physical_modes.size(), 7);  // less physical mode, some are aggregated
     BOOST_REQUIRE_EQUAL(pt_data.commercial_modes.size(), 8);
     // we check one of each
     const auto* physical_bus = pt_data.physical_modes_map.at("physical_mode:Bus");
@@ -257,7 +260,6 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(commercial_metro->name, "Subway, Metro");
     BOOST_REQUIRE_EQUAL(commercial_metro->uri, "commercial_mode:Metro");
 
-
     BOOST_REQUIRE_EQUAL(pt_data.stop_areas.size(), 9);
     const auto* fur_creek = pt_data.stop_areas_map.at("stop_area:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek->uri, "stop_area:FUR_CREEK_RES");
@@ -265,11 +267,11 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_CHECK_CLOSE(fur_creek->coord.lat(), 36.425288, 0.001);
     BOOST_CHECK_CLOSE(fur_creek->coord.lon(), -117.133162, 0.001);
 
-    for (auto sa: pt_data.stop_areas) {
+    for (auto sa : pt_data.stop_areas) {
         BOOST_CHECK_EQUAL(sa->timezone, "America/Los_Angeles");
     }
 
-    //stop point, and lines should be equals too
+    // stop point, and lines should be equals too
     BOOST_REQUIRE_EQUAL(pt_data.stop_points.size(), 9);
     const auto* fur_creek_sp = pt_data.stop_points_map.at("stop_point:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek_sp->uri, "stop_point:FUR_CREEK_RES");
@@ -300,18 +302,17 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
 
     // we need to also check the number of routes created
     BOOST_REQUIRE_EQUAL(pt_data.routes.size(), 9);
-    for (const auto& r: pt_data.routes) {
+    for (const auto& r : pt_data.routes) {
         BOOST_REQUIRE(r->line);
-        BOOST_CHECK_EQUAL(r->name, r->line->name);//route's name is it's line's name
+        BOOST_CHECK_EQUAL(r->name, r->line->name);  // route's name is it's line's name
     }
 
-    BOOST_CHECK_EQUAL(data.meta->production_date,
-                      boost::gregorian::date_period("20070101"_d, "20080102"_d));
+    BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period("20070101"_d, "20080102"_d));
 
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 11 * 2);
     const auto* vj_ab1_dst1 = pt_data.vehicle_journeys_map.at("vehicle_journey:AB1_dst_1");
     BOOST_CHECK_EQUAL(vj_ab1_dst1->uri, "vehicle_journey:AB1_dst_1");
-    //TODO check all vp
+    // TODO check all vp
     BOOST_CHECK_EQUAL(vj_ab1_dst1->name, "to Bullfrog");
     BOOST_REQUIRE_EQUAL(vj_ab1_dst1->stop_time_list.size(), 2);
     // UTC offset is 8h in winter for LA
@@ -348,7 +349,7 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(vj_stba_freq->start_time, "14:00"_t);
     BOOST_CHECK_EQUAL(vj_stba_freq->end_time, "30:00"_t);
     BOOST_CHECK_EQUAL(vj_stba_freq->headway_secs, 1800);
-    for (const auto& st: vj_stba->stop_time_list) {
+    for (const auto& st : vj_stba->stop_time_list) {
         BOOST_CHECK(st.is_frequency());
     }
     vj_stba = pt_data.vehicle_journeys_map.at("vehicle_journey:STBA_dst_2");
@@ -357,13 +358,12 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(vj_stba_freq->start_time, "13:00"_t);
     BOOST_CHECK_EQUAL(vj_stba_freq->end_time, "29:00"_t);
     BOOST_CHECK_EQUAL(vj_stba_freq->headway_secs, 1800);
-    for (const auto& st: vj_stba->stop_time_list) {
+    for (const auto& st : vj_stba->stop_time_list) {
         BOOST_CHECK(st.is_frequency());
     }
 
     check_unsound_pickup_dropoff(data);
 }
-
 
 BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     const auto input_file = input_file_paths.at("ntfs_v5_file");
@@ -372,7 +372,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     data.build_raptor();
@@ -387,7 +387,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->desc, "dataset_test");
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->uri, "d1");
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->validation_period,
-            boost::gregorian::date_period("20150826"_d, "20150926"_d));
+                      boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
 
@@ -404,41 +404,33 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     check_ntfs(data);
 }
 
-BOOST_FIXTURE_TEST_CASE(osm_pois_id_should_match_mimir_naming, ArgsFixture)
-{
+BOOST_FIXTURE_TEST_CASE(osm_pois_id_should_match_mimir_naming, ArgsFixture) {
     navitia::type::Data data;
     BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("osm_and_gtfs_file")););
     data.build_raptor();
 
-    const auto & pois = data.geo_ref->pois;
+    const auto& pois = data.geo_ref->pois;
     BOOST_REQUIRE_GT(pois.size(), 0);
 
-    BOOST_CHECK(navitia::contains_if(
-            pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:osm:way:551462554";}
-    ));
-    BOOST_CHECK(navitia::contains_if(
-            pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:osm:node:5414687331";}
-    ));
+    BOOST_CHECK(
+        navitia::contains_if(pois, [&](const navitia::georef::POI* p) { return p->uri == "poi:osm:way:551462554"; }));
+    BOOST_CHECK(
+        navitia::contains_if(pois, [&](const navitia::georef::POI* p) { return p->uri == "poi:osm:node:5414687331"; }));
 }
 
-BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture)
-{
+BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture) {
     navitia::type::Data data;
     BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("poi_file")););
     data.build_raptor();
 
-    const auto & pois = data.geo_ref->pois;
+    const auto& pois = data.geo_ref->pois;
     BOOST_REQUIRE_GT(pois.size(), 0);
 
+    BOOST_CHECK(navitia::contains_if(pois, [&](const navitia::georef::POI* p) { return p->uri == "poi:ADM44_100"; }));
+    BOOST_CHECK(
+        navitia::contains_if(pois, [&](const navitia::georef::POI* p) { return p->uri == "poi:CULT44_30021"; }));
     BOOST_CHECK(navitia::contains_if(
-            pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:ADM44_100";}
-    ));
-    BOOST_CHECK(navitia::contains_if(
-            pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:CULT44_30021";}
-    ));
-    BOOST_CHECK(navitia::contains_if(
-            pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:PAIHABIT0000000028850973";}
-    ));
+        pois, [&](const navitia::georef::POI* p) { return p->uri == "poi:PAIHABIT0000000028850973"; }));
 }
 
 BOOST_FIXTURE_TEST_CASE(ntfs_dst_test, ArgsFixture) {
@@ -448,7 +440,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_dst_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     data.build_raptor();
@@ -463,7 +455,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_dst_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->desc, "centre-sncf");
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->uri, "SCF:23");
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->validation_period,
-            boost::gregorian::date_period("20180319"_d, "20180617"_d));
+                      boost::gregorian::date_period("20180319"_d, "20180617"_d));
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "ChouetteV2");
     BOOST_REQUIRE_EQUAL(data.pt_data->vehicle_journeys.size(), 2);

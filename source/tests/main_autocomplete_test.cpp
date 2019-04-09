@@ -59,7 +59,6 @@ Shape and stopAreas
   |-------------------------------------------------------------------------------
 */
 
-
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
@@ -121,20 +120,15 @@ int main(int argc, const char* const argv[]) {
     b.manage_admin();
     b.build_autocomplete();
 
-
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
     std::stringstream ss;
-    ss << "POLYGON((" << 1. << " " << 1.
-              << ", " << 8. << " " << 1.
-              << ", " << 8. << " " << 8.
-              << ", " << 1. << " " << 8.
-              << ", " << 1. << " " << 1. << "))";
+    ss << "POLYGON((" << 1. << " " << 1. << ", " << 8. << " " << 1. << ", " << 8. << " " << 8. << ", " << 1. << " "
+       << 8. << ", " << 1. << " " << 1. << "))";
     b.data->meta->shape = ss.str();
 
     mock_kraken kraken(b, "main_autocomplete_test", argc, argv);
     return 0;
 }
-

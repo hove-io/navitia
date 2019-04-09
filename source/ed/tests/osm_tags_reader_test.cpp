@@ -41,9 +41,9 @@ www.navitia.io
 #include "tests/utils_test.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 /*
  * default poi-types and minimal json should be ok
@@ -127,8 +127,7 @@ BOOST_AUTO_TEST_CASE(undefined_poi_type_ko) {
  */
 BOOST_AUTO_TEST_CASE(ill_json_poi_type_ko) {
     auto json = R"({})";
-    BOOST_CHECK_THROW(const ed::connectors::PoiTypeParams params(json),
-                      boost::property_tree::ptree_bad_path);
+    BOOST_CHECK_THROW(const ed::connectors::PoiTypeParams params(json), boost::property_tree::ptree_bad_path);
     auto ill_json = R"(
         {
           "poi_types":
@@ -142,7 +141,6 @@ BOOST_AUTO_TEST_CASE(ill_json_poi_type_ko) {
     BOOST_CHECK_THROW(const ed::connectors::PoiTypeParams params(ill_json),
                       boost::property_tree::json_parser::json_parser_error);
 }
-
 
 /*
  * default tagging: check that default parameters chooses the good tag
@@ -212,14 +210,10 @@ BOOST_AUTO_TEST_CASE(multiple_match_tagging) {
     CanalTP::Tags velib_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "velib"}};
     CanalTP::Tags bss_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "unknown"}};
 
-    BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id,
-                      "velib");
-    BOOST_CHECK_EQUAL(bss_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id,
-                      "amenity:bicycle_rental");
-    BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(bss_tags)->poi_type_id,
-                      "amenity:bicycle_rental");
-    BOOST_CHECK_EQUAL(bss_prior_params.get_applicable_poi_rule(bss_tags)->poi_type_id,
-                      "amenity:bicycle_rental");
+    BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id, "velib");
+    BOOST_CHECK_EQUAL(bss_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id, "amenity:bicycle_rental");
+    BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(bss_tags)->poi_type_id, "amenity:bicycle_rental");
+    BOOST_CHECK_EQUAL(bss_prior_params.get_applicable_poi_rule(bss_tags)->poi_type_id, "amenity:bicycle_rental");
 }
 
 /*
@@ -252,8 +246,6 @@ BOOST_AUTO_TEST_CASE(colon_tagging) {
     CanalTP::Tags bss_tags = {{"amenity:bicycle_rental", "true"}};
     CanalTP::Tags effia_tags = {{"amenity", "parking:effia"}};
 
-    BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(bss_tags)->poi_type_id,
-                      "amenity:bicycle_rental");
-    BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(effia_tags)->poi_type_id,
-                      "amenity:parking");
+    BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(bss_tags)->poi_type_id, "amenity:bicycle_rental");
+    BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(effia_tags)->poi_type_id, "amenity:parking");
 }

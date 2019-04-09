@@ -45,7 +45,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace navitia::georef;
 using namespace boost;
@@ -63,12 +63,10 @@ static std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const 
 static void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
     std::cout << " coord : " << std::endl;
     for (auto c : coord) {
-        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                  << ", " << c.lat() / navitia::type::GeographicalCoord::N_M_TO_DEG
-                     << std::endl;
+        std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::N_M_TO_DEG << ", "
+                  << c.lat() / navitia::type::GeographicalCoord::N_M_TO_DEG << std::endl;
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(init_test) {
     using namespace navitia::type;
@@ -81,18 +79,19 @@ BOOST_AUTO_TEST_CASE(init_test) {
     b.geo_ref.ways.push_back(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
-    b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
-    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
-    b.geo_ref.graph[b.get("b","c")].way_idx = 0;
-    b.geo_ref.graph[b.get("c","d")].way_idx = 1;
-    b.geo_ref.graph[b.get("d","e")].way_idx = 1;
-    b.geo_ref.graph[b.get("e","d")].way_idx = 1;
+    b("a", "b")("b", "c")("c", "d")("d", "e")("e",
+                                              "d");  // bug ? if no edge leave the vertex, the projection cannot work...
+    b.geo_ref.graph[b.get("a", "b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b", "c")].way_idx = 0;
+    b.geo_ref.graph[b.get("c", "d")].way_idx = 1;
+    b.geo_ref.graph[b.get("d", "e")].way_idx = 1;
+    b.geo_ref.graph[b.get("e", "d")].way_idx = 1;
 
     BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 5);
 
     b.geo_ref.init();
 
-    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15); //one graph for each transportation mode save VLS
+    BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15);  // one graph for each transportation mode save VLS
 
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Walking], 0);
     BOOST_CHECK_EQUAL(b.geo_ref.offsets[Mode_e::Bike], 5);
@@ -102,13 +101,13 @@ BOOST_AUTO_TEST_CASE(init_test) {
 
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
     GraphBuilder builder;
-    Graph & g = builder.geo_ref.graph;
+    Graph& g = builder.geo_ref.graph;
 
     BOOST_CHECK_EQUAL(num_vertices(g), 0);
     BOOST_CHECK_EQUAL(num_edges(g), 0);
 
     // Construction de deux nœuds et d'un arc
-    builder("a",0, 0)("b",1,2)("a", "b", 10_s);
+    builder("a", 0, 0)("b", 1, 2)("a", "b", 10_s);
     BOOST_CHECK_EQUAL(num_vertices(g), 2);
     BOOST_CHECK_EQUAL(num_edges(g), 1);
 
@@ -119,7 +118,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
 
     vertex_t b = builder.vertex_map["b"];
     navitia::type::GeographicalCoord expected;
-    expected.set_xy(1,2);
+    expected.set_xy(1, 2);
     BOOST_CHECK_EQUAL(g[b].coord, expected);
 
     edge_t e = edge(a, b, g).first;
@@ -135,7 +134,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(num_edges(g), 3);
 }
 
-BOOST_AUTO_TEST_CASE(nearest_segment){
+BOOST_AUTO_TEST_CASE(nearest_segment) {
     GraphBuilder b;
 
     /*               a           e
@@ -144,11 +143,11 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
                      |
                      d             */
 
-    b("a", 0,10)("b", -10, 0)("c",10,0)("d",0,-10)("o",0,0)("e", 50,10);
-    b("o", "a")("o","b")("o","c")("o","d")("b","o");
+    b("a", 0, 10)("b", -10, 0)("c", 10, 0)("d", 0, -10)("o", 0, 0)("e", 50, 10);
+    b("o", "a")("o", "b")("o", "c")("o", "d")("b", "o");
     b.geo_ref.init();
 
-    navitia::type::GeographicalCoord c(1,2, false);
+    navitia::type::GeographicalCoord c(1, 2, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "a"));
     c.set_xy(2, 1);
     BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "c"));
@@ -162,7 +161,7 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     BOOST_CHECK_EQUAL(b.geo_ref.nearest_edge(c), b.get("o", "c"));
 }
 
-BOOST_AUTO_TEST_CASE(real_nearest_edge){
+BOOST_AUTO_TEST_CASE(real_nearest_edge) {
     GraphBuilder b;
 
     /*        s
@@ -242,7 +241,6 @@ BOOST_AUTO_TEST_CASE(nearest_edge_with_geometries) {
     BOOST_CHECK(b.geo_ref.nearest_edge(x4) == b.get("a", "c"));
     BOOST_CHECK(b.geo_ref.nearest_edge(x5) == b.get("d", "e"));
 
-
     nt::LineString geom;
     geom.push_back(nt::GeographicalCoord(5, 5, false));
     geom.push_back(nt::GeographicalCoord(5, 7, false));
@@ -291,7 +289,8 @@ BOOST_AUTO_TEST_CASE(nearest_edge_with_geometries) {
 BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     GraphBuilder b;
     b("a", 5, 5)("b", 15, 20)("c", 30, 5)("d", 30, 30)("e", 20, 30);
-    b("a", "b", 200_s, true)("a", "c", 200_s, true)("b", "e", 160_s, true)("c", "d", 100_s, true)("d", "e", 400_s, true);
+    b("a", "b", 200_s, true)("a", "c", 200_s, true)("b", "e", 160_s, true)("c", "d", 100_s, true)("d", "e", 400_s,
+                                                                                                  true);
 
     nt::GeographicalCoord x1(23, 23, false);
     nt::GeographicalCoord x2(37, 17, false);
@@ -356,27 +355,30 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     expectedGeom.push_back(nt::GeographicalCoord(27, 2, false));
     expectedGeom.push_back(nt::GeographicalCoord(23, 2, false));
     // Computing path from x2 to x3. Both of them should be projected on the edge (a,c)
-    path_finder.init(x2, nt::Mode_e::Walking, 1); //starting from x2
-    Path p = compute_path(path_finder, x3); //going to x3
+    path_finder.init(x2, nt::Mode_e::Walking, 1);  // starting from x2
+    Path p = compute_path(path_finder, x3);        // going to x3
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
 
     // Same thing with a reverse geometry
     std::reverse(expectedGeom.begin(), expectedGeom.end());
-    path_finder.init(x3, nt::Mode_e::Walking, 1); //starting from x3
-    p = compute_path(path_finder, x2); //going to x2
+    path_finder.init(x3, nt::Mode_e::Walking, 1);  // starting from x3
+    p = compute_path(path_finder, x2);             // going to x2
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
 
-    path_finder.init(x4, nt::Mode_e::Walking, 1); //starting from x4
-    p = compute_path(path_finder, x5); //going to x5
+    path_finder.init(x4, nt::Mode_e::Walking, 1);  // starting from x4
+    p = compute_path(path_finder, x5);             // going to x5
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
 
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(15, 7, false));
     expectedGeom.push_back(nt::GeographicalCoord(5, 7, false));
     expectedGeom.push_back(nt::GeographicalCoord(5, 5, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
 
     expectedGeom.clear();
     // First coordinate is present twice since in create_path we add the first coordinate of the first edge
@@ -389,7 +391,8 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     expectedGeom.push_back(nt::GeographicalCoord(27, 23, false));
     expectedGeom.push_back(nt::GeographicalCoord(30, 23, false));
     expectedGeom.push_back(nt::GeographicalCoord(30, 5, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(), p.path_items[1].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(),
+                                  p.path_items[1].coordinates.end());
 
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(30, 5, false));
@@ -397,7 +400,8 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     expectedGeom.push_back(nt::GeographicalCoord(50, 20, false));
     expectedGeom.push_back(nt::GeographicalCoord(45, 30, false));
     expectedGeom.push_back(nt::GeographicalCoord(40, 30, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(), p.path_items[2].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(),
+                                  p.path_items[2].coordinates.end());
 }
 
 /*
@@ -447,8 +451,8 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     geom.push_back(nt::GeographicalCoord(0, 0, false));
     geom.push_back(nt::GeographicalCoord(50, 0, false));
     geom.push_back(nt::GeographicalCoord(50, 50, false));
-    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("a"), b.geo_ref.graph)) {
-        if(boost::target(out_edge, b.geo_ref.graph) == b.get("a")) {
+    BOOST_FOREACH (const auto out_edge, boost::out_edges(b.get("a"), b.geo_ref.graph)) {
+        if (boost::target(out_edge, b.geo_ref.graph) == b.get("a")) {
             b.add_geom(out_edge, geom);
             std::reverse(geom.begin(), geom.end());
         }
@@ -462,16 +466,18 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     short_geom_bc.push_back(nt::GeographicalCoord(200, 50, false));
     short_geom_bc.push_back(nt::GeographicalCoord(250, 50, false));
 
-    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("b"), b.geo_ref.graph)) {
-        if(boost::target(out_edge, b.geo_ref.graph) == b.get("c")) {
-            b.add_geom(out_edge, b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
+    BOOST_FOREACH (const auto out_edge, boost::out_edges(b.get("b"), b.geo_ref.graph)) {
+        if (boost::target(out_edge, b.geo_ref.graph) == b.get("c")) {
+            b.add_geom(out_edge,
+                       b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
         }
     }
     std::reverse(long_geom_bc.begin(), long_geom_bc.end());
     std::reverse(short_geom_bc.begin(), short_geom_bc.end());
-    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("c"), b.geo_ref.graph)) {
-        if(boost::target(out_edge, b.geo_ref.graph) == b.get("b")) {
-            b.add_geom(out_edge, b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
+    BOOST_FOREACH (const auto out_edge, boost::out_edges(b.get("c"), b.geo_ref.graph)) {
+        if (boost::target(out_edge, b.geo_ref.graph) == b.get("b")) {
+            b.add_geom(out_edge,
+                       b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
         }
     }
 
@@ -486,7 +492,8 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     BOOST_REQUIRE_EQUAL(b.geo_ref.graph[edge_x4].duration.total_seconds(), 300);
 
     StreetNetwork worker(b.geo_ref);
-    auto origin = nt::EntryPoint();;
+    auto origin = nt::EntryPoint();
+    ;
     auto destination = nt::EntryPoint();
     origin.streetnetwork_params.max_duration = 3600_s;
     destination.streetnetwork_params.max_duration = 3600_s;
@@ -500,12 +507,14 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     nt::LineString expectedGeom;
     expectedGeom.push_back(nt::GeographicalCoord(40, 100, false));
     expectedGeom.push_back(nt::GeographicalCoord(50, 100, false));
-    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // Last point of the start projection
-    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // Returned by build_path, only one coordinate, the vertex
-    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // First part of the end projection
+    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false));  // Last point of the start projection
+    expectedGeom.push_back(
+        nt::GeographicalCoord(50, 50, false));  // Returned by build_path, only one coordinate, the vertex
+    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false));  // First part of the end projection
     expectedGeom.push_back(nt::GeographicalCoord(50, 0, false));
     expectedGeom.push_back(nt::GeographicalCoord(40, 0, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
 
     // x1 to x3, we should use the direct path on the edge
     destination.coordinates = x3;
@@ -516,7 +525,8 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     expectedGeom.push_back(nt::GeographicalCoord(40, 100, false));
     expectedGeom.push_back(nt::GeographicalCoord(0, 100, false));
     expectedGeom.push_back(nt::GeographicalCoord(0, 70, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
 
     // x4 to x5, we should use the shorter parallel edge
     origin.coordinates = x4;
@@ -528,21 +538,24 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(200, 70, false));
     expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
+                                  p.path_items[0].coordinates.end());
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
     expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
     expectedGeom.push_back(nt::GeographicalCoord(250, 50, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(), p.path_items[1].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(),
+                                  p.path_items[1].coordinates.end());
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(250, 50, false));
     expectedGeom.push_back(nt::GeographicalCoord(250, 70, false));
-    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(), p.path_items[2].coordinates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(),
+                                  p.path_items[2].coordinates.end());
 }
 
-//not used for the moment so it is not possible anymore (but it would not be difficult to do again)
+// not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
-//BOOST_AUTO_TEST_CASE(compute_route_n_n){
+// BOOST_AUTO_TEST_CASE(compute_route_n_n){
 //    using namespace navitia::type;
 //    //StreetNetwork sn;
 //    GeoRef sn;
@@ -580,7 +593,6 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
 //    // no throw in no itineraryn but the path should be empty
 //    BOOST_CHECK(p.path_items.empty());
 
-
 //    //we add a way to a, otherwise 2 path item will be created
 //    Way w;
 //    w.name = "Bob"; sn.add_way(w);
@@ -596,7 +608,7 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
 //}
 
 // On teste la prise en compte de la distance initiale au nœud
-//BOOST_AUTO_TEST_CASE(compute_zeros){
+// BOOST_AUTO_TEST_CASE(compute_zeros){
 //    //StreetNetwork sn;
 //    GeoRef sn;
 //    GraphBuilder b(sn);
@@ -627,34 +639,35 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     b.geo_ref.ways.push_back(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
-    b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
-    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
-    b.geo_ref.graph[b.get("b","c")].way_idx = 0;
-    b.geo_ref.graph[b.get("c","d")].way_idx = 1;
-    b.geo_ref.graph[b.get("d","e")].way_idx = 1;
-    b.geo_ref.graph[b.get("e","d")].way_idx = 1;
+    b("a", "b")("b", "c")("c", "d")("d", "e")("e",
+                                              "d");  // bug ? if no edge leave the vertex, the projection cannot work...
+    b.geo_ref.graph[b.get("a", "b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b", "c")].way_idx = 0;
+    b.geo_ref.graph[b.get("c", "d")].way_idx = 1;
+    b.geo_ref.graph[b.get("d", "e")].way_idx = 1;
+    b.geo_ref.graph[b.get("e", "d")].way_idx = 1;
 
     b.geo_ref.init();
 
     PathFinder path_finder(b.geo_ref);
-    path_finder.init({0, 0, true}, Mode_e::Walking, 1); //starting from a
-    Path p = compute_path(path_finder, {4, 4, true}); //going to e
+    path_finder.init({0, 0, true}, Mode_e::Walking, 1);  // starting from a
+    Path p = compute_path(path_finder, {4, 4, true});    // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
-//    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
-//    BOOST_CHECK(p.path_items[0].segments[1] == b.get("b", "c"));
-//    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
-//    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
+    //    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
+    //    BOOST_CHECK(p.path_items[0].segments[1] == b.get("b", "c"));
+    //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
+    //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    path_finder.init({3, 3, true}, Mode_e::Walking, 1); //starting from d
-    p = compute_path(path_finder, {4, 4, true}); //going to e
+    path_finder.init({3, 3, true}, Mode_e::Walking, 1);  // starting from d
+    p = compute_path(path_finder, {4, 4, true});         // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
 
 // On teste le calcul d'itinéraire de coordonnées à coordonnées
-BOOST_AUTO_TEST_CASE(compute_coord){
+BOOST_AUTO_TEST_CASE(compute_coord) {
     using namespace navitia::type;
     GraphBuilder b;
     PathFinder path_finder(b.geo_ref);
@@ -665,13 +678,13 @@ BOOST_AUTO_TEST_CASE(compute_coord){
      *           c+------+d
      */
 
-    b("a",0,0)("b",10,0)("c",0,10)("d",10,10);
-    b("a","b", 10_s)("b","a",10_s)("b","d",10_s)("d","b",10_s)("c","d",10_s)("d","c",10_s);
+    b("a", 0, 0)("b", 10, 0)("c", 0, 10)("d", 10, 10);
+    b("a", "b", 10_s)("b", "a", 10_s)("b", "d", 10_s)("d", "b", 10_s)("c", "d", 10_s)("d", "c", 10_s);
 
     // put lots of edges between a and c to check if we manage that
     // correctly
-    b("a","c",20_s)("a","c",10_s)("a","c",30_s);
-    b("c","a",20_s)("c","a",10_s)("c","a",30_s);
+    b("a", "c", 20_s)("a", "c", 10_s)("a", "c", 30_s);
+    b("c", "a", 20_s)("c", "a", 10_s)("c", "a", 30_s);
 
     auto* w = new Way;
     w->name = "BobAB";
@@ -685,23 +698,27 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     w = new Way;
     w->name = "BobDB";
     b.geo_ref.ways.push_back(w);
-    b.geo_ref.graph[b.get("a","b")].way_idx = 0;
-    b.geo_ref.graph[b.get("b","a")].way_idx = 0;
+    b.geo_ref.graph[b.get("a", "b")].way_idx = 0;
+    b.geo_ref.graph[b.get("b", "a")].way_idx = 0;
 
     auto vertex_a = b.get("a"), vertex_c = b.get("c");
     for (auto range = out_edges(vertex_a, b.geo_ref.graph); range.first != range.second; ++range.first) {
-        if (target(*range.first, b.geo_ref.graph) != vertex_c) { continue; }
+        if (target(*range.first, b.geo_ref.graph) != vertex_c) {
+            continue;
+        }
         b.geo_ref.graph[*range.first].way_idx = 1;
     }
     for (auto range = out_edges(vertex_c, b.geo_ref.graph); range.first != range.second; ++range.first) {
-        if (target(*range.first, b.geo_ref.graph) != vertex_a) { continue; }
+        if (target(*range.first, b.geo_ref.graph) != vertex_a) {
+            continue;
+        }
         b.geo_ref.graph[*range.first].way_idx = 1;
     }
 
-    b.geo_ref.graph[b.get("c","d")].way_idx = 2;
-    b.geo_ref.graph[b.get("d","c")].way_idx = 2;
-    b.geo_ref.graph[b.get("d","b")].way_idx = 3;
-    b.geo_ref.graph[b.get("b","d")].way_idx = 3;
+    b.geo_ref.graph[b.get("c", "d")].way_idx = 2;
+    b.geo_ref.graph[b.get("d", "c")].way_idx = 2;
+    b.geo_ref.graph[b.get("d", "b")].way_idx = 3;
+    b.geo_ref.graph[b.get("b", "d")].way_idx = 3;
 
     GeographicalCoord start;
     start.set_xy(3, -1);
@@ -715,31 +732,30 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
     GeographicalCoord expected;
-    expected.set_xy(3,0);
-    BOOST_CHECK_EQUAL(coords[0], expected );
-    expected.set_xy(0,0);
-    BOOST_CHECK_EQUAL(coords[1], expected );
-    expected.set_xy(0,10);
-    BOOST_CHECK_EQUAL(coords[2], expected );
-    expected.set_xy(4,10);
-    BOOST_CHECK_EQUAL(coords[3], expected );
-    BOOST_CHECK_EQUAL(p.path_items[1].duration, 10_s);// check that the shortest edge is used
+    expected.set_xy(3, 0);
+    BOOST_CHECK_EQUAL(coords[0], expected);
+    expected.set_xy(0, 0);
+    BOOST_CHECK_EQUAL(coords[1], expected);
+    expected.set_xy(0, 10);
+    BOOST_CHECK_EQUAL(coords[2], expected);
+    expected.set_xy(4, 10);
+    BOOST_CHECK_EQUAL(coords[3], expected);
+    BOOST_CHECK_EQUAL(p.path_items[1].duration, 10_s);  // check that the shortest edge is used
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
-    start.set_xy(7,6);
+    start.set_xy(7, 6);
     path_finder.init(start, Mode_e::Walking, 1);
     p = compute_path(path_finder, destination);
     coords = get_coords_from_path(p);
     print_coord(coords);
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);
     BOOST_REQUIRE_EQUAL(coords.size(), 3);
-    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10,6, false) );
-    BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10,10, false) );
-    BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4,10, false) );
+    BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10, 6, false));
+    BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10, 10, false));
+    BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4, 10, false));
 }
 
-
-BOOST_AUTO_TEST_CASE(compute_nearest){
+BOOST_AUTO_TEST_CASE(compute_nearest) {
     using namespace navitia::type;
 
     GraphBuilder b;
@@ -750,11 +766,12 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
      *    a      b      c      d      e
      */
 
-    b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",100_s)("b","a",100_s)("b","c",100_s)("c","b",100_s)("c","d",100_s)("d","c",100_s)("d","e",100_s)("e","d",100_s);
+    b("a", 0, 0)("b", 100, 0)("c", 200, 0)("d", 300, 0)("e", 400, 0);
+    b("a", "b", 100_s)("b", "a", 100_s)("b", "c", 100_s)("c", "b", 100_s)("c", "d", 100_s)("d", "c", 100_s)(
+        "d", "e", 100_s)("e", "d", 100_s);
 
-    GeographicalCoord c1(50,10, false);
-    GeographicalCoord c2(350,20, false);
+    GeographicalCoord c1(50, 10, false);
+    GeographicalCoord c2(350, 20, false);
     navitia::proximitylist::ProximityList<idx_t> pl;
     pl.add(c1, 0);
     pl.add(c2, 1);
@@ -772,20 +789,21 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     stop_points.push_back(sp2);
     b.geo_ref.project_stop_points(stop_points);
 
-    GeographicalCoord o(0,0);
+    GeographicalCoord o(0, 0);
 
     StreetNetwork w(b.geo_ref);
     EntryPoint starting_point;
     starting_point.coordinates = o;
     starting_point.streetnetwork_params.mode = Mode_e::Walking;
-    starting_point.streetnetwork_params.speed_factor = 2; //to have a speed different from the default one (and greater not to have projection problems)
+    starting_point.streetnetwork_params.speed_factor =
+        2;  // to have a speed different from the default one (and greater not to have projection problems)
     w.init(starting_point);
     auto res = w.find_nearest_stop_points(10_s, pl, false);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
+    w.init(starting_point);  // not mandatory, but reinit to clean the distance table to get fresh dijsktra
     res = w.find_nearest_stop_points(100_s, pl, false);
-    //the projection is done with the same mean of transport, at the same speed
+    // the projection is done with the same mean of transport, at the same speed
     navitia::routing::map_stop_point_duration tested_map;
     float_t walk_speed = default_speed[Mode_e::Walking] * 2;
     tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
@@ -793,7 +811,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 
     w.init(starting_point);
     res = w.find_nearest_stop_points(1000_s, pl, false);
-    //1 projections at the arrival, and 3 edges (100s each but at twice the speed)
+    // 1 projections at the arrival, and 3 edges (100s each but at twice the speed)
     tested_map.clear();
     tested_map[navitia::routing::SpIdx(*sp1)] = navitia::seconds(60 / walk_speed);
     tested_map[navitia::routing::SpIdx(*sp2)] = navitia::seconds(50 / walk_speed) + 150_s;
@@ -801,7 +819,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 }
 
 // Récupérer les cordonnées d'un numéro impair :
-BOOST_AUTO_TEST_CASE(numero_impair){
+BOOST_AUTO_TEST_CASE(numero_impair) {
     navitia::georef::Way way;
     navitia::georef::HouseNumber hn;
     navitia::georef::Graph graph;
@@ -809,90 +827,85 @@ BOOST_AUTO_TEST_CASE(numero_impair){
     Vertex v;
     navitia::georef::Edge e1;
 
- /*
-(1,3)       (1,7)       (1,17)       (1,53)
-  3           7           17           53
-*/
+    /*
+   (1,3)       (1,7)       (1,17)       (1,53)
+     3           7           17           53
+   */
 
-    way.name="AA";
-    way.way_type="rue";
-    nt::GeographicalCoord upper(1,53);
-    nt::GeographicalCoord lower(1,3);
+    way.name = "AA";
+    way.way_type = "rue";
+    nt::GeographicalCoord upper(1, 53);
+    nt::GeographicalCoord lower(1, 3);
 
-    hn.coord=lower;
+    hn.coord = lower;
     hn.number = 3;
     way.house_number_left.push_back(hn);
     v.coord = hn.coord;
-    debut = boost::add_vertex(v,graph);
+    debut = boost::add_vertex(v, graph);
 
     hn.coord.set_lon(1.0);
     hn.coord.set_lat(7.0);
     hn.number = 7;
     way.house_number_left.push_back(hn);
     v.coord = hn.coord;
-    fin = boost::add_vertex(v,graph);
+    fin = boost::add_vertex(v, graph);
 
-    boost::add_edge(debut, fin,e1, graph);
-    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    boost::add_edge(fin, debut, e1, graph);
     way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin,debut));
-
+    way.edges.push_back(std::make_pair(fin, debut));
 
     hn.coord.set_lon(1.0);
     hn.coord.set_lat(17.0);
     hn.number = 17;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    debut = boost::add_vertex(v,graph);
+    debut = boost::add_vertex(v, graph);
 
-    boost::add_edge(fin, debut,e1, graph);
-    boost::add_edge(debut, fin,e1, graph);
-    way.edges.push_back(std::make_pair(fin,debut));
+    boost::add_edge(fin, debut, e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    way.edges.push_back(std::make_pair(fin, debut));
     way.edges.push_back(std::make_pair(debut, fin));
 
-
-    hn.coord= upper;
+    hn.coord = upper;
     hn.number = 53;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    fin = boost::add_vertex(v,graph);
+    fin = boost::add_vertex(v, graph);
 
-    boost::add_edge(debut, fin,e1, graph);
-    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    boost::add_edge(fin, debut, e1, graph);
     way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin,debut));
+    way.edges.push_back(std::make_pair(fin, debut));
 
-// Numéro recherché est > au plus grand numéro dans la rue
+    // Numéro recherché est > au plus grand numéro dans la rue
     nt::GeographicalCoord result = way.nearest_coord(55, graph);
     BOOST_CHECK_EQUAL(result, upper);
 
-// Numéro recherché est < au plus petit numéro dans la rue
+    // Numéro recherché est < au plus petit numéro dans la rue
     result = way.nearest_coord(1, graph);
     BOOST_CHECK_EQUAL(result, lower);
 
-// Numéro recherché est = à numéro dans la rue
+    // Numéro recherché est = à numéro dans la rue
     result = way.nearest_coord(17, graph);
-    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1.0,17.0));
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1.0, 17.0));
 
-// Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
+    // Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
     // ==>  Extrapolation des coordonnées
-   result = way.nearest_coord(43, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1.0,43.0));
+    result = way.nearest_coord(43, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1.0, 43.0));
 
-
-
-// liste des numéros pair est vide ==> Calcul du barycentre de la rue
-   result = way.nearest_coord(40, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28)); // 3 + 25
-// les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
-   way.house_number_left.clear();
-   result = way.nearest_coord(9, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28));
-
+    // liste des numéros pair est vide ==> Calcul du barycentre de la rue
+    result = way.nearest_coord(40, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1, 28));  // 3 + 25
+    // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
+    way.house_number_left.clear();
+    result = way.nearest_coord(9, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1, 28));
 }
 
 // Récupérer les cordonnées d'un numéro pair :
-BOOST_AUTO_TEST_CASE(numero_pair){
+BOOST_AUTO_TEST_CASE(numero_pair) {
     navitia::georef::Way way;
     navitia::georef::HouseNumber hn;
     navitia::georef::Graph graph;
@@ -900,102 +913,99 @@ BOOST_AUTO_TEST_CASE(numero_pair){
     Vertex v;
     navitia::georef::Edge e1;
 
- /*
-(2,4)       (2,8)       (2,18)       (2,54)
-  4           8           18           54
-*/
-    way.name="AA";
-    way.way_type="rue";
-    nt::GeographicalCoord upper(2.0,54.0);
-    nt::GeographicalCoord lower(2.0,4.0);
+    /*
+   (2,4)       (2,8)       (2,18)       (2,54)
+     4           8           18           54
+   */
+    way.name = "AA";
+    way.way_type = "rue";
+    nt::GeographicalCoord upper(2.0, 54.0);
+    nt::GeographicalCoord lower(2.0, 4.0);
 
-    hn.coord=lower;
+    hn.coord = lower;
     hn.number = 4;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    debut = boost::add_vertex(v,graph);
+    debut = boost::add_vertex(v, graph);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(8.0);
     hn.number = 8;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    fin = boost::add_vertex(v,graph);
+    fin = boost::add_vertex(v, graph);
 
-    boost::add_edge(debut, fin,e1, graph);
-    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    boost::add_edge(fin, debut, e1, graph);
     way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin,debut));
-
+    way.edges.push_back(std::make_pair(fin, debut));
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(18.0);
     hn.number = 18;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    debut = boost::add_vertex(v,graph);
+    debut = boost::add_vertex(v, graph);
 
-    boost::add_edge(fin, debut,e1, graph);
-    boost::add_edge(debut, fin,e1, graph);
-    way.edges.push_back(std::make_pair(fin,debut));
+    boost::add_edge(fin, debut, e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    way.edges.push_back(std::make_pair(fin, debut));
     way.edges.push_back(std::make_pair(debut, fin));
 
-
-    hn.coord= upper;
+    hn.coord = upper;
     hn.number = 54;
     way.add_house_number(hn);
     v.coord = hn.coord;
-    fin = boost::add_vertex(v,graph);
+    fin = boost::add_vertex(v, graph);
 
-    boost::add_edge(debut, fin,e1, graph);
-    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin, e1, graph);
+    boost::add_edge(fin, debut, e1, graph);
     way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin,debut));
+    way.edges.push_back(std::make_pair(fin, debut));
 
-
-// Numéro recherché est > au plus grand numéro dans la rue
+    // Numéro recherché est > au plus grand numéro dans la rue
     nt::GeographicalCoord result = way.nearest_coord(56, graph);
     BOOST_CHECK_EQUAL(result, upper);
 
-// Numéro recherché est < au plus petit numéro dans la rue
+    // Numéro recherché est < au plus petit numéro dans la rue
     result = way.nearest_coord(2, graph);
     BOOST_CHECK_EQUAL(result, lower);
 
-// Numéro recherché est = à numéro dans la rue
+    // Numéro recherché est = à numéro dans la rue
     result = way.nearest_coord(18, graph);
-    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2.0,18.0));
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2.0, 18.0));
 
-// Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
+    // Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
     // ==>  Extrapolation des coordonnées
-   result = way.nearest_coord(44, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2.0,44.0));
+    result = way.nearest_coord(44, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2.0, 44.0));
 
-// liste des numéros impair est vide ==> Calcul du barycentre de la rue
-   result = way.nearest_coord(41, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29)); // 4+25
+    // liste des numéros impair est vide ==> Calcul du barycentre de la rue
+    result = way.nearest_coord(41, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2, 29));  // 4+25
 
-// les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
-   way.house_number_right.clear();
-   result = way.nearest_coord(10, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29));
+    // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
+    way.house_number_right.clear();
+    result = way.nearest_coord(10, graph);
+    BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2, 29));
 }
 
 // Recherche d'un numéro à partir des coordonnées
-BOOST_AUTO_TEST_CASE(coord){
+BOOST_AUTO_TEST_CASE(coord) {
     navitia::georef::Way way;
     navitia::georef::HouseNumber hn;
 
- /*
-(2,4)       (2,8)       (2,18)       (2,54)
-  4           8           18           54
-*/
+    /*
+   (2,4)       (2,8)       (2,18)       (2,54)
+     4           8           18           54
+   */
 
-    way.name="AA";
-    way.way_type="rue";
-    nt::GeographicalCoord upper(2.0,54.0);
-    nt::GeographicalCoord lower(2.0,4.0);
+    way.name = "AA";
+    way.way_type = "rue";
+    nt::GeographicalCoord upper(2.0, 54.0);
+    nt::GeographicalCoord lower(2.0, 4.0);
 
-    hn.coord=lower;
+    hn.coord = lower;
     hn.number = 4;
     way.add_house_number(hn);
 
@@ -1009,34 +1019,30 @@ BOOST_AUTO_TEST_CASE(coord){
     hn.number = 18;
     way.add_house_number(hn);
 
-    hn.coord= upper;
+    hn.coord = upper;
     hn.number = 54;
     way.add_house_number(hn);
 
-
-
-// les coordonnées sont à l'extérieur de la rue coté supérieur
-    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0)).first;
+    // les coordonnées sont à l'extérieur de la rue coté supérieur
+    int result = way.nearest_number(nt::GeographicalCoord(1.0, 55.0)).first;
     BOOST_CHECK_EQUAL(result, 54);
 
-// les coordonnées sont à l'extérieur de la rue coté inférieur
-    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0)).first;
+    // les coordonnées sont à l'extérieur de la rue coté inférieur
+    result = way.nearest_number(nt::GeographicalCoord(2.0, 3.0)).first;
     BOOST_CHECK_EQUAL(result, 4);
 
-// coordonnées recherchées est = à coordonnées dans la rue
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
+    // coordonnées recherchées est = à coordonnées dans la rue
+    result = way.nearest_number(nt::GeographicalCoord(2.0, 8.0)).first;
     BOOST_CHECK_EQUAL(result, 8);
 
-// les deux listes des numéros sont vides
+    // les deux listes des numéros sont vides
     way.house_number_right.clear();
-    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0)).first;
+    result = way.nearest_number(nt::GeographicalCoord(2.0, 8.0)).first;
     BOOST_CHECK_EQUAL(result, -1);
-
 }
 
-
 // Test de autocomplete
-BOOST_AUTO_TEST_CASE(build_autocomplete_test){
+BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
     ed::builder b = {"20140614"};
     Vertex v;
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
@@ -1060,8 +1066,8 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     way->name = "jean jaures";
     way->way_type = "rue";
     // Ajout des numéros et les noeuds
-    nt::GeographicalCoord upper(2.0,54.0);
-    nt::GeographicalCoord lower(2.0,4.0);
+    nt::GeographicalCoord upper(2.0, 54.0);
+    nt::GeographicalCoord lower(2.0, 4.0);
 
     navitia::georef::HouseNumber hn;
     hn.coord = lower;
@@ -1094,7 +1100,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     way->edges.push_back(std::make_pair(fin, debut));
     way->edges.push_back(std::make_pair(debut, fin));
 
-    hn.coord= upper;
+    hn.coord = upper;
     hn.number = 54;
     way->add_house_number(hn);
     v.coord = hn.coord;
@@ -1118,7 +1124,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     b.manage_admin();
     b.build_autocomplete();
 
-    result = b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
+    result = b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
 
     // we should have found the 10 of the rue jean jaures
     BOOST_REQUIRE_EQUAL(result.size(), 1);
@@ -1127,10 +1133,10 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     BOOST_CHECK_EQUAL(b.data->geo_ref->ways[result[0].idx]->get_label(), "jean jaures (Quimper)");
 
     // when we search only for jean jaures we should have the avenue, the place and the street
-    result = b.data->geo_ref->find_ways("jean jaures", nbmax, false, [](int){return true;}, ghostwords);
+    result = b.data->geo_ref->find_ways("jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(result.size(), 3);
     // and none of the result should have a house number
-    for (const auto& r: result) {
+    for (const auto& r : result) {
         BOOST_CHECK_EQUAL(r.house_number, -1);
     }
 }
@@ -1146,11 +1152,12 @@ BOOST_AUTO_TEST_CASE(two_scc) {
      *    a      b   c   d      e
      */
 
-    b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
-    b("a","b",navitia::seconds(100))("b","a",navitia::seconds(100))("c","d",navitia::seconds(100))("d","c",navitia::seconds(100))("d","e",navitia::seconds(100))("e","d",navitia::seconds(100));
+    b("a", 0, 0)("b", 100, 0)("c", 200, 0)("d", 300, 0)("e", 400, 0);
+    b("a", "b", navitia::seconds(100))("b", "a", navitia::seconds(100))("c", "d", navitia::seconds(100))(
+        "d", "c", navitia::seconds(100))("d", "e", navitia::seconds(100))("e", "d", navitia::seconds(100));
 
-    GeographicalCoord c1(50,10, false);
-    GeographicalCoord c2(350,20, false);
+    GeographicalCoord c1(50, 10, false);
+    GeographicalCoord c2(350, 20, false);
     navitia::proximitylist::ProximityList<idx_t> pl;
     pl.add(c1, 0);
     pl.add(c2, 1);
@@ -1178,7 +1185,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
 }
 
 BOOST_AUTO_TEST_CASE(angle_computation) {
-    //simple case
+    // simple case
 
     /*
      * ----------------
@@ -1187,7 +1194,7 @@ BOOST_AUTO_TEST_CASE(angle_computation) {
      * |
      *
      *=> 90
-      */
+     */
     Path p;
     p.path_items.push_back(PathItem());
     p.path_items.back().coordinates.push_back({1, 1});
@@ -1209,14 +1216,13 @@ BOOST_AUTO_TEST_CASE(angle_computation_2) {
     BOOST_CHECK_EQUAL(1.0 * angle, 113 - 180);
 }
 
-
 BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     Path p;
     p.path_items.push_back(PathItem());
 
-    nt::GeographicalCoord a {48.849143, 2.391776};
-    nt::GeographicalCoord b {48.850456, 2.390596};
-    nt::GeographicalCoord c {48.850428, 2.387356};
+    nt::GeographicalCoord a{48.849143, 2.391776};
+    nt::GeographicalCoord b{48.850456, 2.390596};
+    nt::GeographicalCoord c{48.850428, 2.387356};
     p.path_items.back().coordinates.push_back(a);
     p.path_items.back().coordinates.push_back(b);
 
@@ -1236,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     BOOST_CHECK_CLOSE(1.0 * angle, -1 * val, 1.0);
 }
 
-//small test to make sure the time manipulation works in the SpeedDistanceCombiner
+// small test to make sure the time manipulation works in the SpeedDistanceCombiner
 BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
     navitia::time_duration dur = 10_s;
 
@@ -1245,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test) {
     BOOST_CHECK_EQUAL(dur / 2, 5_s);
 
     navitia::time_duration dur2 = 60_s;
-    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10+60/2));
+    BOOST_CHECK_EQUAL(comb(dur, dur2), navitia::seconds(10 + 60 / 2));
 }
 
 BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
@@ -1259,15 +1265,12 @@ BOOST_AUTO_TEST_CASE(SpeedDistanceCombiner_test2) {
     BOOST_CHECK_EQUAL(comb(dur, dur2), 130_s);
 }
 
-//test allowed mode creation
+// test allowed mode creation
 BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
-
-    const auto allowed_transportation_mode = create_from_allowedlist({{{
-                                                                    {nt::Mode_e::Walking},
-                                                                    {},
-                                                                    {nt::Mode_e::Walking, nt::Mode_e::Car},
-                                                                    {nt::Mode_e::Walking, nt::Mode_e::Bss}
-                                                              }}});
+    const auto allowed_transportation_mode = create_from_allowedlist({{{{nt::Mode_e::Walking},
+                                                                        {},
+                                                                        {nt::Mode_e::Walking, nt::Mode_e::Car},
+                                                                        {nt::Mode_e::Walking, nt::Mode_e::Bss}}}});
 
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Walking], true);
     BOOST_CHECK_EQUAL(allowed_transportation_mode[nt::Mode_e::Walking][nt::Mode_e::Car], false);
@@ -1290,23 +1293,26 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     //        |
     //        |
     //      C + (0,0)
-    using nt::GeographicalCoord;
-    using navitia::georef::HouseNumber;
     using navitia::georef::Edge;
+    using navitia::georef::HouseNumber;
+    using nt::GeographicalCoord;
 
-    const int AA = 0; const GeographicalCoord A = {0, 100, false};
-    const int BB = 1; const GeographicalCoord B = {100, 100, false};
-    const int CC = 2; const GeographicalCoord C = {0, 0, false};
+    const int AA = 0;
+    const GeographicalCoord A = {0, 100, false};
+    const int BB = 1;
+    const GeographicalCoord B = {100, 100, false};
+    const int CC = 2;
+    const GeographicalCoord C = {0, 0, false};
     const GeographicalCoord D = {10, 80, false};
     const GeographicalCoord E = {10, 70, false};
 
     ed::builder b = {"20140828"};
 
-    boost::add_vertex(navitia::georef::Vertex(A),b.data->geo_ref->graph);
-    boost::add_vertex(navitia::georef::Vertex(B),b.data->geo_ref->graph);
-    boost::add_vertex(navitia::georef::Vertex(C),b.data->geo_ref->graph);
-    boost::add_vertex(navitia::georef::Vertex(D),b.data->geo_ref->graph);
-    boost::add_vertex(navitia::georef::Vertex(E),b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(A), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(B), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(C), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(D), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(E), b.data->geo_ref->graph);
     b.data->geo_ref->init();
 
     b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
@@ -1357,7 +1363,6 @@ BOOST_AUTO_TEST_CASE(range_postal_codes) {
     navitia::georef::Admin* admin = new navitia::georef::Admin();
     admin->postal_codes = {"44000", "44100", "44200", "44300"};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "44000-44300");
-
 }
 
 BOOST_AUTO_TEST_CASE(empty_postal_codes) {
@@ -1390,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(list_postal_codes) {
     BOOST_CHECK_EQUAL(admin->postal_codes_to_string(), "44000;44100;44200;44300");
 }
 
-BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
+BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge) {
     using namespace navitia::type;
 
     GraphBuilder b;
@@ -1436,7 +1441,6 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
     stop_points.push_back(sp3);
     b.geo_ref.project_stop_points(stop_points);
 
-
     StreetNetwork w(b.geo_ref);
     EntryPoint starting_point;
     starting_point.coordinates = c3;
@@ -1446,17 +1450,17 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
     auto res = w.find_nearest_stop_points(10_s, pl, false);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    w.init(starting_point);//not mandatory, but reinit to clean the distance table to get fresh dijsktra
+    w.init(starting_point);  // not mandatory, but reinit to clean the distance table to get fresh dijsktra
     res = w.find_nearest_stop_points(180_s, pl, false);
 
-    //if you give the coord of the stop_point, you have to go to the street then go back to the stop_point, too bad!
+    // if you give the coord of the stop_point, you have to go to the street then go back to the stop_point, too bad!
     navitia::routing::map_stop_point_duration tested_map;
     tested_map[navitia::routing::SpIdx(3)] = navitia::seconds(60 / default_speed[Mode_e::Walking]);
     tested_map[navitia::routing::SpIdx(1)] = navitia::seconds(80 / default_speed[Mode_e::Walking]);
     tested_map[navitia::routing::SpIdx(0)] = navitia::seconds(200 / default_speed[Mode_e::Walking]);
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), tested_map.begin(), tested_map.end());
 
-    for (auto& elt: res) {
+    for (auto& elt : res) {
         BOOST_CHECK_EQUAL(elt.second, w.get_path(elt.first.val, false).duration);
     }
 }

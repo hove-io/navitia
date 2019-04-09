@@ -43,11 +43,10 @@ namespace navitia {
 namespace type {
 namespace disruption {
 
-std::vector<ImpactedVJ>
-get_impacted_vehicle_journeys(const LineSection& ls,
-                              const Impact& impact,
-                              const boost::gregorian::date_period& production_period,
-                              type::RTLevel rt_level) {
+std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
+                                                      const Impact& impact,
+                                                      const boost::gregorian::date_period& production_period,
+                                                      type::RTLevel rt_level) {
     auto log = log4cplus::Logger::getInstance("log");
     // Get all impacted VJs and compute the corresponding base_canceled vp
     std::vector<ImpactedVJ> vj_vp_pairs;
@@ -56,7 +55,7 @@ get_impacted_vehicle_journeys(const LineSection& ls,
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
 
     // Loop on impacted routes of the line section
-    for(const auto* route: ls.routes) {
+    for (const auto* route : ls.routes) {
         // Loop on each vj
         route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
             /*
@@ -74,16 +73,16 @@ get_impacted_vehicle_journeys(const LineSection& ls,
             auto section = vj.get_sections_stop_points(ls.start_point, ls.end_point);
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
-            if( ! section.empty()) {
+            if (!section.empty()) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
                 LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
-                for(const auto& period : impact.application_periods) {
+                for (const auto& period : impact.application_periods) {
                     // get the vp of the section
                     new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
                 }
                 // If there is effective days for the adapted vp we're keeping it
-                if(!new_vp.days.none()){
+                if (!new_vp.days.none()) {
                     LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                     new_vp.days >>= vj.shift;
                     vj_vp_pairs.emplace_back(&vj, new_vp, std::move(section));
@@ -95,14 +94,14 @@ get_impacted_vehicle_journeys(const LineSection& ls,
     return vj_vp_pairs;
 }
 
-struct InformedEntitiesLinker: public boost::static_visitor<> {
+struct InformedEntitiesLinker : public boost::static_visitor<> {
     const boost::shared_ptr<Impact>& impact;
     const boost::gregorian::date_period& production_period;
     type::RTLevel rt_level;
     InformedEntitiesLinker(const boost::shared_ptr<Impact>& impact,
                            const boost::gregorian::date_period& production_period,
-                           RTLevel rt_level):
-        impact(impact), production_period(production_period), rt_level(rt_level) {}
+                           RTLevel rt_level)
+        : impact(impact), production_period(production_period), rt_level(rt_level) {}
 
     template <typename NavitiaPTObject>
     void operator()(NavitiaPTObject* bo) const {
@@ -116,8 +115,9 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
         if (impacted_vjs.empty()) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact " << impact->uri
-                        << " does not impact any vj, it will not be linked to anything");
+            LOG4CPLUS_INFO(
+                log4cplus::Logger::getInstance("log"),
+                "line section impact " << impact->uri << " does not impact any vj, it will not be linked to anything");
         }
         for (auto& impacted_vj : impacted_vjs) {
             const auto* vj = impacted_vj.vj;
@@ -125,7 +125,7 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);
             }
-            for (auto* sp: impacted_vj.impacted_stops) {
+            for (auto* sp : impacted_vj.impacted_stops) {
                 if (impacted_stop_points.insert(sp).second) {
                     // it's the first time we see this stoppoint, we add the impact to it
                     sp->add_impact(impact);
@@ -136,32 +136,34 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
     void operator()(const nt::disruption::UnknownPtObj&) const {}
 };
 
-void Impact::link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact,
-                          const boost::gregorian::date_period& production_period, type::RTLevel rt_level) {
+void Impact::link_informed_entity(PtObj ptobj,
+                                  boost::shared_ptr<Impact>& impact,
+                                  const boost::gregorian::date_period& production_period,
+                                  type::RTLevel rt_level) {
     InformedEntitiesLinker v(impact, production_period, rt_level);
     boost::apply_visitor(v, ptobj);
 
     impact->_informed_entities.push_back(std::move(ptobj));
 }
 
-bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
-
-    if(publication_date.is_not_a_date_time() && active_period.is_null()){
+bool Impact::is_valid(const boost::posix_time::ptime& publication_date,
+                      const boost::posix_time::time_period& active_period) const {
+    if (publication_date.is_not_a_date_time() && active_period.is_null()) {
         return false;
     }
 
     // we check if we want to publish the impact
-    if (! disruption->is_publishable(publication_date)) {
+    if (!disruption->is_publishable(publication_date)) {
         return false;
     }
 
-    //if we have a active_period, we check if the impact applies on this period
+    // if we have a active_period, we check if the impact applies on this period
     if (active_period.is_null()) {
         return true;
     }
 
-    for (const auto& period: application_periods) {
-        if (! period.intersection(active_period).is_null()) {
+    for (const auto& period : application_periods) {
+        if (!period.intersection(active_period).is_null()) {
             return true;
         }
     }
@@ -170,37 +172,44 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
 
 bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // No delay on the section
-    if ((severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS ||
-         severity->effect == nt::disruption::Effect::UNKNOWN_EFFECT)
-         && ! aux_info.stop_times.empty()) {
+    if ((severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS
+         || severity->effect == nt::disruption::Effect::UNKNOWN_EFFECT)
+        && !aux_info.stop_times.empty()) {
         // We don't handle removed or added stop, but we already match
         // on SIGNIFICANT_DELAYS, thus we should not have that here
         // (removed and added stop should be a DETOUR)
         const auto nb_aux = aux_info.stop_times.size();
-        for (const auto& st: stop_times) {
+        for (const auto& st : stop_times) {
             const auto base_st = st->get_base_stop_time();
-            if (base_st == nullptr) { return true; }
+            if (base_st == nullptr) {
+                return true;
+            }
             const auto idx = base_st->order();
-            if (idx >= nb_aux) { return true; }
+            if (idx >= nb_aux) {
+                return true;
+            }
             const auto& amended_st = aux_info.stop_times.at(idx).stop_time;
-            if (base_st->arrival_time != amended_st.arrival_time) { return true; }
-            if (base_st->departure_time != amended_st.departure_time) { return true; }
+            if (base_st->arrival_time != amended_st.arrival_time) {
+                return true;
+            }
+            if (base_st->departure_time != amended_st.departure_time) {
+                return true;
+            }
         }
         return false;
     }
 
     // line section not relevant
-    auto line_section_impacted_obj_it = boost::find_if(informed_entities(), [](const PtObj& ptobj) {
-            return boost::get<LineSection>(&ptobj) != nullptr;
-        });
+    auto line_section_impacted_obj_it = boost::find_if(
+        informed_entities(), [](const PtObj& ptobj) { return boost::get<LineSection>(&ptobj) != nullptr; });
     if (line_section_impacted_obj_it != informed_entities().end()) {
         // note in this we take the premise that an impact
         // cannot impact a line section AND a vj
 
         // if the origin or the destination is impacted by the same impact
         // it means the section is impacted
-        for (const auto& st: {stop_times.front(), stop_times.back()}) {
-            for (const auto& sp_message: st->stop_point->get_impacts()) {
+        for (const auto& st : {stop_times.front(), stop_times.back()}) {
+            for (const auto& sp_message : st->stop_point->get_impacts()) {
                 if (sp_message.get() == this) {
                     return true;
                 }
@@ -214,10 +223,11 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
 }
 
 bool Impact::is_only_line_section() const {
-    if (_informed_entities.empty()) { return false; }
-    return boost::algorithm::all_of(informed_entities(), [](const PtObj& entity) {
-        return boost::get<nt::disruption::LineSection>(&entity);
-    });
+    if (_informed_entities.empty()) {
+        return false;
+    }
+    return boost::algorithm::all_of(
+        informed_entities(), [](const PtObj& entity) { return boost::get<nt::disruption::LineSection>(&entity); });
 }
 
 bool Impact::is_line_section_of(const Line& line) const {
@@ -227,54 +237,42 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
-template<class Cont>
+template <class Cont>
 Indexes make_indexes(const Cont& objs) {
-
     using ObjPtrType = typename Cont::value_type;
-    static_assert(std::is_pointer<ObjPtrType>::value,
-                 "objs should be a container of pointers");
+    static_assert(std::is_pointer<ObjPtrType>::value, "objs should be a container of pointers");
 
     using ObjType = typename std::remove_pointer<ObjPtrType>::type;
     static_assert(std::is_base_of<Header, ObjType>::value,
                   "objs be a container of pointers that inherit from navitia::type::Header");
 
     Indexes indexes;
-    for(const auto o : objs) {
+    for (const auto o : objs) {
         indexes.insert(o->idx);
     }
     return indexes;
 }
 
-template<>
+template <>
 Indexes make_indexes(const idx_t& idx) {
     Indexes indexes;
     indexes.insert(idx);
     return indexes;
 }
 
-using pair_indexes = std::pair<Type_e, Indexes> ;
+using pair_indexes = std::pair<Type_e, Indexes>;
 struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     Type_e target = Type_e::Unknown;
     const PT_Data& pt_data;
 
-    ImpactVisitor(Type_e target, const PT_Data& pt_data):
-            target(target), pt_data(pt_data)
-    {}
+    ImpactVisitor(Type_e target, const PT_Data& pt_data) : target(target), pt_data(pt_data) {}
 
-    pair_indexes operator()(const disruption::UnknownPtObj) {
-        return {Type_e::Unknown, Indexes{}};
-    }
-    pair_indexes operator()(const Network* n) {
-        return {Type_e::Network, make_indexes(n->idx)};
-    }
-    pair_indexes operator()(const StopArea* sa) {
-        return {Type_e::StopArea, make_indexes(sa->idx)};
-    }
-    pair_indexes operator()(const StopPoint* sp) {
-        return {Type_e::StopPoint, make_indexes(sp->idx)};
-    }
+    pair_indexes operator()(const disruption::UnknownPtObj) { return {Type_e::Unknown, Indexes{}}; }
+    pair_indexes operator()(const Network* n) { return {Type_e::Network, make_indexes(n->idx)}; }
+    pair_indexes operator()(const StopArea* sa) { return {Type_e::StopArea, make_indexes(sa->idx)}; }
+    pair_indexes operator()(const StopPoint* sp) { return {Type_e::StopPoint, make_indexes(sp->idx)}; }
     pair_indexes operator()(const LineSection& ls) {
-        switch(target) {
+        switch (target) {
             case Type_e::Line:
                 return {target, make_indexes(ls.line->idx)};
             case Type_e::Network:
@@ -282,31 +280,25 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
             case Type_e::Route:
                 return {target, make_indexes(ls.routes)};
             case Type_e::StopPoint: {
-                const auto & sps = ls.get_stop_points_section();
+                const auto& sps = ls.get_stop_points_section();
                 return {target, make_indexes(sps)};
             }
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
-    pair_indexes operator()(const Line* l) {
-        return {Type_e::Line, make_indexes(l->idx)};
-    }
-    pair_indexes operator()(const Route* r) {
-        return {Type_e::Route, make_indexes(r->idx)};
-    }
-    pair_indexes operator()(const MetaVehicleJourney* mvj) {
-        return {Type_e::ValidityPattern, make_indexes(mvj->idx)};
-    }
+    pair_indexes operator()(const Line* l) { return {Type_e::Line, make_indexes(l->idx)}; }
+    pair_indexes operator()(const Route* r) { return {Type_e::Route, make_indexes(r->idx)}; }
+    pair_indexes operator()(const MetaVehicleJourney* mvj) { return {Type_e::ValidityPattern, make_indexes(mvj->idx)}; }
 };
 
 Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
     Indexes result;
     ImpactVisitor visitor(target, pt_data);
 
-    for(const auto& entitie: informed_entities()){
+    for (const auto& entitie : informed_entities()) {
         auto pair_type_indexes = boost::apply_visitor(visitor, entitie);
-        if(target == pair_type_indexes.first){
+        if (target == pair_type_indexes.first) {
             result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
         }
     }
@@ -315,13 +307,15 @@ Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
 }
 
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
-    type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
-    for (const auto& period: this->application_periods) {
+    type::ValidityPattern impact_vp{production_date.begin()};  // bitset are all initialised to 0
+    for (const auto& period : this->application_periods) {
         // For each period of the impact loop from the previous day (for pass midnight services) to the last day
         // If the day is in the production_date add it to the vp
         boost::gregorian::day_iterator it(period.begin().date() - boost::gregorian::days(1));
-        for (; it <= period.end().date() ; ++it) {
-            if (! production_date.contains(*it)) { continue; }
+        for (; it <= period.end().date(); ++it) {
+            if (!production_date.contains(*it)) {
+                continue;
+            }
             auto day = (*it - production_date.begin()).days();
             impact_vp.add(day);
         }
@@ -329,8 +323,8 @@ const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_p
     return impact_vp;
 }
 
-bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const{
-    if(current_time.is_not_a_date_time()){
+bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) const {
+    if (current_time.is_not_a_date_time()) {
         return false;
     }
 
@@ -340,7 +334,7 @@ bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) co
     return false;
 }
 
-void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder){
+void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder) {
     impact->disruption = this;
     impacts.push_back(impact);
     // we register the impact in it's factory
@@ -348,7 +342,7 @@ void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionH
 }
 
 namespace {
-template<typename T>
+template <typename T>
 PtObj transform_pt_object(const std::string& uri, T* o) {
     if (o != nullptr) {
         return o;
@@ -357,37 +351,42 @@ PtObj transform_pt_object(const std::string& uri, T* o) {
         return UnknownPtObj();
     }
 }
-template<typename T>
-PtObj transform_pt_object(const std::string& uri,
-                          const std::unordered_map<std::string, T*>& map) {
+template <typename T>
+PtObj transform_pt_object(const std::string& uri, const std::unordered_map<std::string, T*>& map) {
     return transform_pt_object(uri, find_or_default(uri, map));
 }
-template<typename T>
+template <typename T>
 PtObj transform_pt_object(const std::string& uri, ObjFactory<T>& factory) {
     return transform_pt_object(uri, factory.get_mut(uri));
 }
-}
+}  // namespace
 
-PtObj make_pt_obj(Type_e type,
-                  const std::string& uri,
-                  PT_Data& pt_data) {
+PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data) {
     switch (type) {
-    case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map);
-    case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map);
-    case Type_e::StopPoint: return transform_pt_object(uri, pt_data.stop_points_map);
-    case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map);
-    case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map);
-    case Type_e::MetaVehicleJourney: return transform_pt_object(uri, pt_data.meta_vjs);
-    default: return UnknownPtObj();
+        case Type_e::Network:
+            return transform_pt_object(uri, pt_data.networks_map);
+        case Type_e::StopArea:
+            return transform_pt_object(uri, pt_data.stop_areas_map);
+        case Type_e::StopPoint:
+            return transform_pt_object(uri, pt_data.stop_points_map);
+        case Type_e::Line:
+            return transform_pt_object(uri, pt_data.lines_map);
+        case Type_e::Route:
+            return transform_pt_object(uri, pt_data.routes_map);
+        case Type_e::MetaVehicleJourney:
+            return transform_pt_object(uri, pt_data.meta_vjs);
+        default:
+            return UnknownPtObj();
     }
 }
 
-bool Impact::operator<(const Impact& other){
-    if(this->severity->priority != other.severity->priority){
+bool Impact::operator<(const Impact& other) {
+    if (this->severity->priority != other.severity->priority) {
         return this->severity->priority < other.severity->priority;
-    }if(this->created_at != other.created_at){
+    }
+    if (this->created_at != other.created_at) {
         return this->created_at < other.created_at;
-    }else{
+    } else {
         return this->uri < other.uri;
     }
 }
@@ -396,8 +395,8 @@ Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLe
     auto it = disruptions_by_uri.find(uri);
     if (it != std::end(disruptions_by_uri)) {
         // we cannot just replace the old one, the model needs to be updated accordingly, so we stop
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "disruption " << uri
-                       << " already exists, delete it first");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "disruption " << uri << " already exists, delete it first");
         throw navitia::exception("disruption already exists");
     }
     auto disruption = std::make_unique<Disruption>(uri, lvl);
@@ -432,13 +431,13 @@ void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
     weak_impacts.push_back(weak_impact);
 }
 
-void DisruptionHolder::clean_weak_impacts(){
+void DisruptionHolder::clean_weak_impacts() {
     clean_up_weak_ptr(weak_impacts);
 }
 
 void DisruptionHolder::forget_vj(const VehicleJourney* vj) {
-    for (const auto& impact: vj->meta_vj->get_impacts()) {
-        for (auto& stu: impact->aux_info.stop_times) {
+    for (const auto& impact : vj->meta_vj->get_impacts()) {
+        for (auto& stu : impact->aux_info.stop_times) {
             if (stu.stop_time.vehicle_journey == vj) {
                 stu.stop_time.vehicle_journey = nullptr;
             }
@@ -446,6 +445,6 @@ void DisruptionHolder::forget_vj(const VehicleJourney* vj) {
     }
 }
 
-} // namespace discruption
-} // namespace type
-} // namespace navitia
+}  // namespace disruption
+}  // namespace type
+}  // namespace navitia

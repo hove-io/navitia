@@ -37,14 +37,14 @@ www.navitia.io
 #include "utils/base64_encode.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace navitia::fare;
 using namespace ed::connectors;
 
-BOOST_AUTO_TEST_CASE(parse_state_test){
+BOOST_AUTO_TEST_CASE(parse_state_test) {
     State state;
 
     // * correspond au state vide, toujours vrai
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     // on ignore les espaces
     BOOST_CHECK(parse_state(" mode = Metro  ").mode == navitia::encode_uri("metro"));
     BOOST_CHECK(parse_state("line=L1").line == navitia::encode_uri("l1"));
-    //parse_state("stop_area=chatelet").stop_area;
+    // parse_state("stop_area=chatelet").stop_area;
     std::cout << parse_state("stoparea=chatelet").stop_area << std::endl;
     std::cout << navitia::encode_uri("chatelet") << std::endl;
     BOOST_CHECK(parse_state("stoparea=chatelet").stop_area == navitia::encode_uri("chatelet"));
@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
 
     // On ne respecte pas la grammaire => exception
     BOOST_CHECK_THROW(parse_state("coucou=moo"), invalid_key);
-
 
     // On essaye de parser des choses plus compliquées
     State state2 = parse_state("mode=metro&stoparea=chatelet");
@@ -83,8 +82,7 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     BOOST_CHECK_THROW(parse_state("mode < bli"), invalid_key);
 }
 
-
-BOOST_AUTO_TEST_CASE(parse_condition_test){
+BOOST_AUTO_TEST_CASE(parse_condition_test) {
     BOOST_CHECK_THROW(parse_condition("moo"), invalid_condition);
 
     Condition cond = parse_condition(" key = value ");

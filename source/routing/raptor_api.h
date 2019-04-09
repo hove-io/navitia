@@ -38,18 +38,18 @@ www.navitia.io
 #include "raptor.h"
 #include "routing/routing.h"
 
-namespace navitia{
-    namespace type{
-        struct EntryPoint;
-        struct AccessibiliteParams;
-        class Data;
-    }
-    namespace georef{
-        struct StreetNetwork;
-    }
-    class time_duration;
-    struct PbCreator;
+namespace navitia {
+namespace type {
+struct EntryPoint;
+struct AccessibiliteParams;
+class Data;
+}  // namespace type
+namespace georef {
+struct StreetNetwork;
 }
+class time_duration;
+struct PbCreator;
+}  // namespace navitia
 
 namespace navitia {
 namespace routing {
@@ -57,19 +57,16 @@ namespace routing {
 struct RAPTOR;
 
 struct NightBusFilter {
-
     static constexpr double default_max_factor = 3;
     static constexpr int32_t default_base_factor = 3600; /*seconds*/
 
-    struct Params
-    {
+    struct Params {
         DateTime requested_datetime;
         bool clockwise;
         double max_factor;
         int32_t base_factor;
     };
 };
-
 
 void add_direct_path(PbCreator& pb_creator,
                      const georef::Path& path,
@@ -82,10 +79,10 @@ void add_direct_path(PbCreator& pb_creator,
  * @brief Used for classic Pt request
  */
 void make_response(navitia::PbCreator& pb_creator,
-                   RAPTOR &raptor,
-                   const type::EntryPoint &origin,
-                   const type::EntryPoint &destination,
-                   const std::vector<uint64_t> &datetimes,
+                   RAPTOR& raptor,
+                   const type::EntryPoint& origin,
+                   const type::EntryPoint& destination,
+                   const std::vector<uint64_t>& datetimes,
                    const bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
                    const std::vector<std::string>& forbidden,
@@ -93,8 +90,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
-                   const uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
-                   const uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                   const uint32_t max_duration = std::numeric_limits<uint32_t>::max(),
+                   const uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
                    const uint32_t max_extra_second_pass = 0,
                    const uint32_t free_radius_from = 0,
                    const uint32_t free_radius_to = 0,
@@ -104,24 +101,25 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& timeframe_duration = boost::none);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
-                    RAPTOR &raptor,
+                    RAPTOR& raptor,
                     type::EntryPoint origin,
-                    const uint64_t datetime, bool clockwise,
-                    const type::AccessibiliteParams & accessibilite_params,
+                    const uint64_t datetime,
+                    bool clockwise,
+                    const type::AccessibiliteParams& accessibilite_params,
                     std::vector<std::string> forbidden,
                     std::vector<std::string> allowed,
-                    georef::StreetNetwork & worker,
+                    georef::StreetNetwork& worker,
                     const type::RTLevel rt_level,
                     int max_duration = 3600,
-                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+                    uint32_t max_transfers = std::numeric_limits<uint32_t>::max());
 
 /**
  * @brief Used for Pt with distributed mode
  */
 void make_pt_response(navitia::PbCreator& pb_creator,
-                      RAPTOR &raptor,
-                      const std::vector<type::EntryPoint> &origins,
-                      const std::vector<type::EntryPoint> &destinations,
+                      RAPTOR& raptor,
+                      const std::vector<type::EntryPoint>& origins,
+                      const std::vector<type::EntryPoint>& destinations,
                       const uint64_t timestamp,
                       const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
@@ -129,8 +127,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const std::vector<std::string>& allowed,
                       const type::RTLevel rt_level,
                       const navitia::time_duration& transfer_penalty,
-                      const uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
-                      const uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
+                      const uint32_t max_duration = std::numeric_limits<uint32_t>::max(),
+                      const uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
                       const uint32_t max_extra_second_pass = 0,
                       const boost::optional<navitia::time_duration>& direct_path_duration = boost::none,
                       const boost::optional<uint32_t>& min_nb_journeys = boost::none,
@@ -138,13 +136,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
                       const boost::optional<uint32_t>& timeframe_duration = boost::none);
 
-
-boost::optional<routing::map_stop_point_duration>
-get_stop_points(const type::EntryPoint &ep,
-                const type::Data& data,
-                georef::StreetNetwork & worker,
-                const uint32_t free_radius = 0,
-                bool use_second = false);
+boost::optional<routing::map_stop_point_duration> get_stop_points(const type::EntryPoint& ep,
+                                                                  const type::Data& data,
+                                                                  georef::StreetNetwork& worker,
+                                                                  const uint32_t free_radius = 0,
+                                                                  bool use_second = false);
 
 /**
  * @brief Filtering with free radius constraint
@@ -161,7 +157,7 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         georef::PathFinder& path_finder,
                         const type::EntryPoint& ep,
                         const type::Data& data,
-                        const  uint32_t free_radius);
+                        const uint32_t free_radius);
 
 /**
  * @brief Remove direct path
@@ -171,45 +167,43 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
 void filter_direct_path(RAPTOR::Journeys& journeys);
 
 /**
-* @brief Check if a journey is way later than another journey
-*/
-bool is_way_later(const Journey & j1, const Journey & j2,
-               const NightBusFilter::Params & params);
+ * @brief Check if a journey is way later than another journey
+ */
+bool is_way_later(const Journey& j1, const Journey& j2, const NightBusFilter::Params& params);
 
 /**
-* @brief Remove from the list, the journeys that are
-* way later than the best.
-*
-* @param journeys A container of Journeys
-* @param params the night bus filter parameters
-*/
-void filter_late_journeys(RAPTOR::Journeys & journeys,
-                          const NightBusFilter::Params & params);
-
+ * @brief Remove from the list, the journeys that are
+ * way later than the best.
+ *
+ * @param journeys A container of Journeys
+ * @param params the night bus filter parameters
+ */
+void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Params& params);
 
 /**
-* @brief Prepare the horizon for the next Raptor call
-*
-* @param journeys A container of journeys.
-* @param clockwise Leave after or Arrive before
-*/
+ * @brief Prepare the horizon for the next Raptor call
+ *
+ * @param journeys A container of journeys.
+ * @param clockwise Leave after or Arrive before
+ */
 DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
-                              RAPTOR &raptor_max,
+                              RAPTOR& raptor_max,
                               const type::EntryPoint& origin,
                               const uint64_t departure_datetime,
-                              const std::vector<DateTime>& boundary_duration,uint32_t max_transfers,
+                              const std::vector<DateTime>& boundary_duration,
+                              uint32_t max_transfers,
                               const type::AccessibiliteParams& accessibilite_params,
                               const std::vector<std::string>& forbidden,
                               const std::vector<std::string>& allowed,
                               bool clockwise,
                               const nt::RTLevel rt_level,
-                              georef::StreetNetwork & worker,
+                              georef::StreetNetwork& worker,
                               const double& speed);
 
 void make_heat_map(navitia::PbCreator& pb_creator,
-                   RAPTOR &raptor,
+                   RAPTOR& raptor,
                    const type::EntryPoint& center,
                    const uint64_t departure_datetime,
                    DateTime max_duration,
@@ -219,7 +213,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const std::vector<std::string>& allowed,
                    bool clockwise,
                    const nt::RTLevel rt_level,
-                   georef::StreetNetwork & worker,
+                   georef::StreetNetwork& worker,
                    const double& speed,
                    const navitia::type::Mode_e mode,
                    const uint32_t resolution);
@@ -265,5 +259,5 @@ bool keep_going(const uint32_t total_nb_journeys,
                 const boost::optional<uint32_t>& min_nb_journeys,
                 const boost::optional<DateTime>& timeframe_limit,
                 const uint32_t max_transfers);
-} // namespace routing
-} // namespace navitia
+}  // namespace routing
+}  // namespace navitia

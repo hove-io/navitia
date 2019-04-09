@@ -44,17 +44,18 @@ www.navitia.io
 
 namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point;
-typedef bg::model::polygon<point, false, false> polygon_type; // ccw, open polygon
+typedef bg::model::polygon<point, false, false> polygon_type;  // ccw, open polygon
 typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
 
-namespace navitia { namespace cities {
+namespace navitia {
+namespace cities {
 
 typedef uint64_t OSMId;
 
-struct Rect{
+struct Rect {
     double min[2];
     double max[2];
-    Rect() : min{0,0}, max{0,0} {}
+    Rect() : min{0, 0}, max{0, 0} {}
 
     Rect(double lon, double lat) {
         min[0] = lon;
@@ -63,7 +64,7 @@ struct Rect{
         max[1] = lat;
     }
 
-    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
+    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY) {
         min[0] = a_minX;
         min[1] = a_minY;
 
@@ -77,14 +78,12 @@ struct OSMCache;
 
 struct OSMNode {
     // We use int32_t to save memory, these are coordinates *  factor
-    int32_t ilon = std::numeric_limits<int32_t>::max(),
-            ilat = std::numeric_limits<int32_t>::max();
+    int32_t ilon = std::numeric_limits<int32_t>::max(), ilat = std::numeric_limits<int32_t>::max();
     std::string postal_code;
     static constexpr double factor = 1e6;
 
     bool is_defined() const {
-        return ilon != std::numeric_limits<int32_t>::max() &&
-            ilat != std::numeric_limits<int32_t>::max();
+        return ilon != std::numeric_limits<int32_t>::max() && ilat != std::numeric_limits<int32_t>::max();
     }
 
     void set_coord(double lon, double lat) {
@@ -92,17 +91,13 @@ struct OSMNode {
         this->ilat = lat * factor;
     }
 
-    double lon() const {
-        return double(this->ilon) / factor;
-    }
+    double lon() const { return double(this->ilon) / factor; }
 
-    double lat() const {
-        return double(this->ilat) / factor;
-    }
+    double lat() const { return double(this->ilat) / factor; }
 
     bool almost_equal(const OSMNode& other) const {
         // check if the nodes are quite at the same location
-        auto distance = 10; // about 0.5m
+        auto distance = 10;  // about 0.5m
         return std::abs(this->ilon - other.ilon) < distance && std::abs(this->ilat - other.ilat) < distance;
     }
 
@@ -114,11 +109,9 @@ struct OSMNode {
     std::string to_geographic_point() const;
 };
 
-
 struct OSMRelation {
     CanalTP::References references;
-    const std::string insee = "",
-                      name = "";
+    const std::string insee = "", name = "";
     const uint32_t level = std::numeric_limits<uint32_t>::max();
 
     std::set<std::string> postal_codes;
@@ -127,15 +120,15 @@ struct OSMRelation {
     point centre = point(0.0, 0.0);
 
     OSMRelation(const std::vector<CanalTP::Reference>& refs,
-                const std::string& insee, const std::string postal_code,
-                const std::string& name, const uint32_t level);
+                const std::string& insee,
+                const std::string postal_code,
+                const std::string& name,
+                const uint32_t level);
 
     std::string postal_code() const;
     void add_postal_code(const std::string& postal_code);
 
-    void set_centre(double lon, double lat) {
-        centre = point(lon, lat);
-    }
+    void set_centre(double lon, double lat) { centre = point(lon, lat); }
     void build_geometry(OSMCache& cache, OSMId);
     void build_polygon(OSMCache& cache, OSMId);
 };
@@ -144,14 +137,12 @@ struct OSMWay {
     /// Properties of a way : can we use it
     std::vector<std::unordered_map<OSMId, OSMNode>::const_iterator> nodes;
 
-    void add_node(std::unordered_map<OSMId, OSMNode>::const_iterator node) {
-        nodes.push_back(node);
-    }
+    void add_node(std::unordered_map<OSMId, OSMNode>::const_iterator node) { nodes.push_back(node); }
 
     std::string coord_to_string() const {
         std::stringstream geog;
         geog << std::setprecision(10);
-        for(auto node : nodes) {
+        for (auto node : nodes) {
             geog << node->second.coord_to_string();
         }
         return geog.str();
@@ -185,7 +176,7 @@ struct ReadRelationsVisitor {
     ReadRelationsVisitor(OSMCache& cache) : cache(cache) {}
 
     void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
-    void relation_callback(OSMId, const CanalTP::Tags & tags, const CanalTP::References & refs);
+    void relation_callback(OSMId, const CanalTP::Tags& tags, const CanalTP::References& refs);
     void way_callback(OSMId, const CanalTP::Tags&, const std::vector<OSMId>&) {}
 };
 struct ReadWaysVisitor {
@@ -195,11 +186,10 @@ struct ReadWaysVisitor {
 
     ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(OSMId , double, double, const CanalTP::Tags&) {}
-    void relation_callback(OSMId , const CanalTP::Tags&, const CanalTP::References&) {}
+    void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
+    void relation_callback(OSMId, const CanalTP::Tags&, const CanalTP::References&) {}
     void way_callback(OSMId, const CanalTP::Tags& tags, const std::vector<OSMId>& nodes);
 };
-
 
 struct ReadNodesVisitor {
     // Read references and set if a node is used by a way
@@ -209,8 +199,8 @@ struct ReadNodesVisitor {
     ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
 
     void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tag);
-    void relation_callback(uint64_t , const CanalTP::Tags& , const CanalTP::References& ) {}
-    void way_callback(uint64_t , const CanalTP::Tags& , const std::vector<uint64_t>&) {}
+    void relation_callback(uint64_t, const CanalTP::Tags&, const CanalTP::References&) {}
+    void way_callback(uint64_t, const CanalTP::Tags&, const std::vector<uint64_t>&) {}
 };
-}}
-
+}  // namespace cities
+}  // namespace navitia

@@ -35,13 +35,13 @@ www.navitia.io
 
 #include "kraken/data_manager.h"
 #include "type/data.h"
-#include "utils/functions.h" // absolute_path function
+#include "utils/functions.h"  // absolute_path function
 
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
 // We create a empty data with lz4 format in current directory.
-static void create_fake_data(const std::string& fake_file_name){
+static void create_fake_data(const std::string& fake_file_name) {
     navitia::type::Data data(0);
     data.save(fake_file_name);
 }
@@ -51,7 +51,6 @@ static void create_fake_data(const std::string& fake_file_name){
 // 2. reload good data
 // 3. reload wrong data
 BOOST_AUTO_TEST_CASE(load_success) {
-
     create_fake_data(fake_data_file);
 
     DataManager<navitia::type::Data> data_manager;
@@ -97,7 +96,6 @@ BOOST_AUTO_TEST_CASE(load_success) {
 }
 
 BOOST_AUTO_TEST_CASE(load_failed) {
-
     DataManager<navitia::type::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
     auto first_data = data_manager.get_data();

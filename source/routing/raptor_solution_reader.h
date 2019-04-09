@@ -46,11 +46,10 @@ struct StartingPointSndPhase;
 // by the pool).
 struct Dominates {
     bool request_clockwise;
-    Dominates(bool rc): request_clockwise(rc) {}
+    Dominates(bool rc) : request_clockwise(rc) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise)
-            && lhs.better_on_transfer(rhs, request_clockwise)
-            && lhs.better_on_sn(rhs, request_clockwise);
+        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs, request_clockwise)
+               && lhs.better_on_sn(rhs, request_clockwise);
     }
 };
 
@@ -59,7 +58,7 @@ typedef ParetoFront<Journey, Dominates> Solutions;
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).
 void read_solutions(const RAPTOR& raptor,
-                    Solutions& solutions, //all raptor solutions, modified by side effects
+                    Solutions& solutions,  // all raptor solutions, modified by side effects
                     const bool clockwise,
                     const DateTime& departure_datetime,
                     const routing::map_stop_point_duration& deps,
@@ -71,4 +70,5 @@ void read_solutions(const RAPTOR& raptor,
 
 Path make_path(const Journey& journey, const type::Data& data);
 
-}} // namespace navitia::routing
+}  // namespace routing
+}  // namespace navitia

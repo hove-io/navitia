@@ -30,11 +30,9 @@ www.navitia.io
 
 #pragma once
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
-enum class StopEvent : bool {
-    pick_up,
-    drop_off
-};
-
-}} // namespace navitia::routing
+enum class StopEvent : bool { pick_up, drop_off };
+}
+}  // namespace navitia

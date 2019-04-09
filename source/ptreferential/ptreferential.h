@@ -37,26 +37,22 @@ www.navitia.io
 #include <boost/optional.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-namespace navitia{
-namespace ptref{
+namespace navitia {
+namespace ptref {
 
 struct ptref_error : public navitia::recoverable_exception {
     std::string more;
 
-    ptref_error(const std::string & more) : more(more) {}
+    ptref_error(const std::string& more) : more(more) {}
     virtual const char* what() const noexcept override;
 };
 
-struct parsing_error : public ptref_error{
-    enum error_type {
-        global_error ,
-        partial_error,
-        unknown_object
-    };
+struct parsing_error : public ptref_error {
+    enum error_type { global_error, partial_error, unknown_object };
 
     error_type type;
 
-    parsing_error(error_type type, const std::string & str) : ptref_error(str), type(type) {}
+    parsing_error(error_type type, const std::string& str) : ptref_error(str), type(type) {}
     parsing_error(const parsing_error&) = default;
     parsing_error& operator=(const parsing_error&) = default;
     ~parsing_error() noexcept;
@@ -77,8 +73,7 @@ type::Indexes make_query(const type::Type_e requested_type,
                          const std::vector<std::string>& forbidden_uris,
                          const type::Data& data);
 
-type::Indexes make_query(const type::Type_e requested_type,
-                         const std::string& request,
-                         const type::Data& data);
+type::Indexes make_query(const type::Type_e requested_type, const std::string& request, const type::Data& data);
 
-}} // namespace navitia::ptref
+}  // namespace ptref
+}  // namespace navitia

@@ -1,5 +1,5 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -46,7 +46,7 @@ static void check_vj(const nr::JourneyPatternContainer& jp_container,
                      const nt::VehicleJourney& vj,
                      std::set<const nt::VehicleJourney*>& vjs) {
     // check if each vj is indexed only one time
-    BOOST_CHECK_EQUAL(vjs.count(&vj), 0);// else, same vj in several jp
+    BOOST_CHECK_EQUAL(vjs.count(&vj), 0);  // else, same vj in several jp
     vjs.insert(&vj);
 
     // check jp_from_vj
@@ -55,11 +55,11 @@ static void check_vj(const nr::JourneyPatternContainer& jp_container,
     // jpps checks
     uint16_t order = 0;
     BOOST_REQUIRE_EQUAL(jp.second.jpps.size(), vj.stop_time_list.size());
-    for (const auto& jpp_idx: jp.second.jpps) {
+    for (const auto& jpp_idx : jp.second.jpps) {
         const auto& jpp = jp_container.get(jpp_idx);
-        BOOST_CHECK_EQUAL(jpp.order, order);// order is coherent
-        BOOST_CHECK_EQUAL(jpp.jp_idx, jp.first);// jpp.jp_idx is coherent
-        BOOST_CHECK_EQUAL(jp_container.get_jpp(vj.stop_time_list.at(order)), jpp_idx);// st->jpp
+        BOOST_CHECK_EQUAL(jpp.order, order);                                            // order is coherent
+        BOOST_CHECK_EQUAL(jpp.jp_idx, jp.first);                                        // jpp.jp_idx is coherent
+        BOOST_CHECK_EQUAL(jp_container.get_jpp(vj.stop_time_list.at(order)), jpp_idx);  // st->jpp
 
         // stop point of the jpp is coherent with the vj
         BOOST_CHECK_EQUAL(jpp.sp_idx, nr::SpIdx(*vj.stop_time_list.at(order).stop_point));
@@ -73,40 +73,40 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
     std::set<const nt::VehicleJourney*> vjs;
 
     // check jp coherence
-    for (const auto jp: jp_container.get_jps()) {
+    for (const auto jp : jp_container.get_jps()) {
         // check that the jp getter is coherent
         BOOST_CHECK_EQUAL(jp.second, jp_container.get(jp.first));
 
         // check vj and jp coherence
         jp.second.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                check_vj(jp_container, jp, vj, vjs);
-                return true;
-            });
+            check_vj(jp_container, jp, vj, vjs);
+            return true;
+        });
     }
     // check route coherence
-    for (const auto jps_from_route: jp_container.get_jps_from_route()) {
-        for (const auto& jp_idx: jps_from_route.second) {
+    for (const auto jps_from_route : jp_container.get_jps_from_route()) {
+        for (const auto& jp_idx : jps_from_route.second) {
             const auto& jp = jp_container.get(jp_idx);
-            BOOST_CHECK_EQUAL(jps_from_route.first, jp.route_idx);// jp.route_idx coherence
+            BOOST_CHECK_EQUAL(jps_from_route.first, jp.route_idx);  // jp.route_idx coherence
 
             // vj <-> route coherence
             jp.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                    BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj.route));
-                    return true;
-                });
+                BOOST_CHECK_EQUAL(jps_from_route.first, nr::RouteIdx(*vj.route));
+                return true;
+            });
         }
     }
     // check phy_mode coherence
-    for (const auto jps_from_phy_mode: jp_container.get_jps_from_phy_mode()) {
-        for (const auto& jp_idx: jps_from_phy_mode.second) {
+    for (const auto jps_from_phy_mode : jp_container.get_jps_from_phy_mode()) {
+        for (const auto& jp_idx : jps_from_phy_mode.second) {
             const auto& jp = jp_container.get(jp_idx);
-            BOOST_CHECK_EQUAL(jps_from_phy_mode.first, jp.phy_mode_idx);// jp.phy_mode_idx coherence
+            BOOST_CHECK_EQUAL(jps_from_phy_mode.first, jp.phy_mode_idx);  // jp.phy_mode_idx coherence
 
             // vj <-> phy_mode coherence
             jp.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                    BOOST_CHECK_EQUAL(jps_from_phy_mode.first, nr::PhyModeIdx(*vj.physical_mode));
-                    return true;
-                });
+                BOOST_CHECK_EQUAL(jps_from_phy_mode.first, nr::PhyModeIdx(*vj.physical_mode));
+                return true;
+            });
         }
     }
     return vjs.size();
@@ -246,4 +246,3 @@ BOOST_AUTO_TEST_CASE(lightly_overtaking2) {
     BOOST_CHECK_EQUAL(check_jp_container(jps), 2);
     BOOST_CHECK_EQUAL(jps.nb_jps(), 2);
 }
-

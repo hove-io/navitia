@@ -37,10 +37,9 @@ www.navitia.io
 #include "kraken/worker.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
-
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     routing_api_data<normal_speed_provider> data;
@@ -62,12 +61,12 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     j->mutable_streetnetwork_params()->set_origin_mode("walking");
     j->mutable_streetnetwork_params()->set_destination_mode("walking");
     j->mutable_streetnetwork_params()->set_walking_speed(1.14);
-    j->mutable_streetnetwork_params()->set_max_walking_duration_to_pt(15*60);
+    j->mutable_streetnetwork_params()->set_max_walking_duration_to_pt(15 * 60);
     pbnavitia::LocationContext* from = j->add_origin();
-    from->set_place("coord:0.0000898312;0.0000898312");// coord of S
+    from->set_place("coord:0.0000898312;0.0000898312");  // coord of S
     from->set_access_duration(0);
     pbnavitia::LocationContext* to = j->add_destination();
-    to->set_place("coord:0.00188646;0.00071865");// coord of R
+    to->set_place("coord:0.00188646;0.00071865");  // coord of R
     to->set_access_duration(0);
 
     // we ask for a journey

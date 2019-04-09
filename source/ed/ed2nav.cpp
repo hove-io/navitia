@@ -66,73 +66,78 @@ struct FindAdminWithCities {
     size_t nb_call = 0;
     size_t nb_uninitialized = 0;
     size_t nb_georef = 0;
-    std::map<size_t, size_t> cities_stats;// number of response for size of the result
+    std::map<size_t, size_t> cities_stats;  // number of response for size of the result
 
-    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr):
-        conn(boost::make_shared<pqxx::connection>(connection_string)),
-        georef(gr)
-        {}
+    FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr)
+        : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
     FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
     ~FindAdminWithCities() {
-        if (nb_call == 0) return;
+        if (nb_call == 0)
+            return;
 
         auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_call << " calls");
-        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_uninitialized
-                       << " calls with uninitialized or zeroed coord");
+        LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_uninitialized << " calls with uninitialized or zeroed coord");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_georef << " GeoRef responses");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << added_admins.size() << " admins added using cities");
-        for (const auto& elt: cities_stats) {
-            LOG4CPLUS_INFO(log, "FindAdminWithCities: "
-                           << elt.second << " cities responses with "
-                           << elt.first << " admins.");
+        for (const auto& elt : cities_stats) {
+            LOG4CPLUS_INFO(
+                log, "FindAdminWithCities: " << elt.second << " cities responses with " << elt.first << " admins.");
         }
-        for (const auto& admin: added_admins) {
+        for (const auto& admin : added_admins) {
             LOG4CPLUS_INFO(log, "FindAdminWithCities: "
-                           << "We have added the following admin: "
-                           << admin.second->label << " insee: "
-                           << admin.second->insee << " uri: "
-                           << admin.second->uri);
+                                    << "We have added the following admin: " << admin.second->label
+                                    << " insee: " << admin.second->insee << " uri: " << admin.second->uri);
         }
     }
 
-    void init(){
-        for(auto* admin: georef.admins){
-            if(!admin->insee.empty()){
+    void init() {
+        for (auto* admin : georef.admins) {
+            if (!admin->insee.empty()) {
                 insee_admins_map[admin->insee] = admin;
             }
         }
     }
 
     result_type operator()(const navitia::type::GeographicalCoord& c, navitia::georef::AdminRtree& admin_tree) {
-        if(nb_call == 0){
+        if (nb_call == 0) {
             init();
         }
         ++nb_call;
 
-        if (!c.is_initialized()) {++nb_uninitialized; return {};}
+        if (!c.is_initialized()) {
+            ++nb_uninitialized;
+            return {};
+        }
 
-        const auto &georef_res = georef.find_admins(c, admin_tree);
-        if (!georef_res.empty()) {++nb_georef; return georef_res;}
+        const auto& georef_res = georef.find_admins(c, admin_tree);
+        if (!georef_res.empty()) {
+            ++nb_georef;
+            return georef_res;
+        }
 
         std::stringstream request;
         request << "SELECT uri, name, coalesce(insee, '') as insee, level, coalesce(post_code, '') as post_code, "
                 << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
                 << "FROM administrative_regions "
-                << "WHERE ST_DWithin(ST_GeographyFromText('POINT("
-                << std::setprecision(16) << c.lon() << " " << c.lat() << ")'), boundary, 0.001)";
+                << "WHERE ST_DWithin(ST_GeographyFromText('POINT(" << std::setprecision(16) << c.lon() << " " << c.lat()
+                << ")'), boundary, 0.001)";
         pqxx::work work(*conn);
         pqxx::result result = work.exec(request);
         result_type res;
         for (auto it = result.begin(); it != result.end(); ++it) {
             const std::string uri = it["uri"].as<std::string>();
             const std::string insee = it["insee"].as<std::string>();
-            //we try to find the admin in georef by using it's insee code (only work in France)
+            // we try to find the admin in georef by using it's insee code (only work in France)
             navitia::georef::Admin* admin = nullptr;
-            if (!insee.empty()) { admin = find_or_default(insee, insee_admins_map);}
-            if (!admin) { admin = find_or_default(uri, added_admins);}
+            if (!insee.empty()) {
+                admin = find_or_default(insee, insee_admins_map);
+            }
+            if (!admin) {
+                admin = find_or_default(uri, added_admins);
+            }
             if (!admin) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
@@ -148,7 +153,7 @@ struct FindAdminWithCities {
                 std::string postal_code;
                 it["post_code"].to(postal_code);
 
-                if(!postal_code.empty()){
+                if (!postal_code.empty()) {
                     boost::split(admin->postal_codes, postal_code, boost::is_any_of("-"));
                 }
                 added_admins[uri] = admin;
@@ -160,11 +165,12 @@ struct FindAdminWithCities {
     }
 };
 
-int ed2nav(int argc, const char * argv[])
-{
+int ed2nav(int argc, const char* argv[]) {
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("version,v", "Show version")
@@ -185,36 +191,39 @@ int ed2nav(int argc, const char * argv[])
          "cities database connection parameters: host=localhost user=navitia dbname=cities password=navitia")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     bool export_georef_edges_geometries(vm.count("full_street_network_geometries"));
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("ed2nav", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             throw navitia::exception("Unable to load config file");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("connection-string")) {
+    if (vm.count("help") || !vm.count("connection-string")) {
         std::cout << "Extracts data from a database to a file readable by kraken" << std::endl;
-        std::cout << desc <<  std::endl;
+        std::cout << desc << std::endl;
         return 1;
     }
 
@@ -225,7 +234,7 @@ int ed2nav(int argc, const char * argv[])
 
     navitia::type::Data data;
 
-    //on init now pour le moment à now, à rendre paramétrable pour le debug
+    // on init now pour le moment à now, à rendre paramétrable pour le debug
     now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
@@ -236,10 +245,9 @@ int ed2nav(int argc, const char * argv[])
 
     try {
         reader.fill(data, min_non_connected_graph_ratio, export_georef_edges_geometries);
-    }
-    catch (const navitia::exception& e) {
-        LOG4CPLUS_ERROR(logger, "error while reading the database "  << e.what());
-        LOG4CPLUS_ERROR(logger, "stack: "  << e.backtrace());
+    } catch (const navitia::exception& e) {
+        LOG4CPLUS_ERROR(logger, "error while reading the database " << e.what());
+        LOG4CPLUS_ERROR(logger, "stack: " << e.backtrace());
         throw;
     }
 
@@ -267,7 +275,7 @@ int ed2nav(int argc, const char * argv[])
     start = pt::microsec_clock::local_time();
     try {
         data.save(output);
-    } catch(const navitia::exception &e) {
+    } catch (const navitia::exception& e) {
         LOG4CPLUS_ERROR(logger, "Unable to save");
         LOG4CPLUS_ERROR(logger, e.what());
         return 1;
@@ -282,4 +290,4 @@ int ed2nav(int argc, const char * argv[])
     return 0;
 }
 
-} // namespace ed
+}  // namespace ed
