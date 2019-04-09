@@ -197,8 +197,9 @@ base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJ
     if (running_vj) {
         return running_vj->execution_period(date);
     }
-    // If there is no running vj at this date, we return a null period (begin == end)
-    return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
+    // If there is no running vj at this date, we return a "null", reverted period [infinity; -infinity].
+    // This helps compute the period using min and max.
+    return {boost::gregorian::max_date_time, boost::posix_time::ptime(boost::gregorian::min_date_time)};
 }
 
 static type::disruption::Message create_message(const std::string& str_msg) {
@@ -599,6 +600,7 @@ create_disruption(const std::string& id,
         }
         std::string wording = get_wordings(trip_effect);
 
+        end_app_period = std::max(end_app_period, begin_app_period);  // make sure that start <= end
         impact->application_periods.push_back({begin_app_period, end_app_period});
         impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
         nd::Impact::link_informed_entity(
