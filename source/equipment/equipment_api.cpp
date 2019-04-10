@@ -41,67 +41,100 @@ namespace navitia {
 namespace equipment {
 
 namespace {
-    const std::string build_ptref_line_filter(const std::string& line_uri, const std::string& filter) {
-        std::string line_filter = "line.uri=" + line_uri;
-        if(filter.size()) {
-            line_filter += " and (" + filter + ")";
-        }
-        return line_filter;
+const std::string build_ptref_sa_filter(const std::string& line_uri, const std::string& filter) {
+    std::string sa_filter = "line.uri=" + line_uri;
+    if (filter.size()) {
+        sa_filter += " and (" + filter + ")";
     }
+    return sa_filter;
+}
 
-    void fill_equipment_to_pb(const equipment::StopAreasPerLine& sas_per_line,
-                              PbCreator& pb_creator, int depth) {
-        for(const auto& line : sas_per_line) {
-            auto report = pb_creator.add_equipment_reports();
-            pb_creator.fill(line.first, report->mutable_line(), depth);
-            for(const auto& sa : line.second) {
-                auto sa_equip = report->add_stop_area_equipments();
-                pb_creator.fill(sa, sa_equip->mutable_stop_area(), depth);
+const std::string build_ptref_sp_filter(const std::string& stop_area_uri, const std::string& filter) {
+    std::string sp_filter = "stop_area.uri=" + stop_area_uri;
+    if (filter.size()) {
+        sp_filter += " and (" + filter + ")";
+    }
+    return sp_filter;
+}
+
+void fill_equipment_to_pb(const equipment::EquipmentReportList& reports, PbCreator& pb_creator, int depth) {
+    for (const auto& report : reports) {
+        const type::Line* line = std::get<0>(report);
+        const auto& stop_areas_reports = std::get<1>(report);
+        auto pb_report = pb_creator.add_equipment_reports();
+        pb_creator.fill(line, pb_report->mutable_line(), depth);
+        for (const auto& sa_report : stop_areas_reports) {
+            const type::StopArea* sa = std::get<0>(sa_report);
+            const auto& stop_points = std::get<1>(sa_report);
+            auto sa_equip = pb_report->add_stop_area_equipments();
+            auto pb_sa = sa_equip->mutable_stop_area();
+            pb_creator.fill(sa, pb_sa, depth);
+            for (const type::StopPoint* sp : stop_points) {
+                auto pb_sp = pb_sa->add_stop_points();
+                pb_creator.fill(sp, pb_sp, depth);
             }
         }
     }
 }
+}  // namespace
 
-std::tuple<StopAreasPerLine, size_t> get_paginated_stop_areas_per_line(
-                                        const type::Data& data,
-                                        const std::string& filter,
-                                        int count,
-                                        int start_page,
-                                        const ForbiddenUris& forbidden_uris) {
+EquipmentReports::EquipmentReports(const type::Data& data,
+                                   const std::string& filter,
+                                   int count,
+                                   int start_page,
+                                   const ForbiddenUris& forbidden_uris)
+    : data(data), filter(filter), count(count), start_page(start_page), forbidden_uris(forbidden_uris) {}
+
+EquipmentReportList EquipmentReports::get_paginated_equipment_report_list() {
     const type::Indexes line_indices = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, data);
-    const auto paginated_lines = paginate(line_indices, count, start_page);
-    const auto lines = data.get_data<type::Line>(paginated_lines);
+    const auto lines = data.get_data<type::Line>(line_indices);
 
-    StopAreasPerLine res;
-    for(const auto line : lines) {
-        const std::string line_filter = build_ptref_line_filter(line->uri, filter);
-        const type::Indexes sa_indexes = ptref::make_query(type::Type_e::StopArea, line_filter, forbidden_uris, data);
-        res.emplace_back(line, data.get_data<type::StopArea>(sa_indexes));
+    total_lines = lines.size();
+    const auto paginated_lines = paginate(lines, count, start_page);
+
+    EquipmentReportList res;
+    for (const auto line : paginated_lines) {
+        const std::string sa_filter = build_ptref_sa_filter(line->uri, filter);
+        const type::Indexes sa_indexes = ptref::make_query(type::Type_e::StopArea, sa_filter, forbidden_uris, data);
+        const auto stop_areas = data.get_data<type::StopArea>(sa_indexes);
+
+        std::vector<equipment::StopAreaEquipment> sa_equipments;
+        for (type::StopArea* sa : stop_areas) {
+            const std::string sp_filter = build_ptref_sp_filter(sa->uri, sa_filter);
+            const type::Indexes sp_indexes = ptref::make_query(type::Type_e::StopPoint, sp_filter, data);
+            const auto stop_points = data.get_data<type::StopPoint>(sp_indexes);
+            sa_equipments.emplace_back(sa, stop_points);
+        }
+        res.emplace_back(line, sa_equipments);
     }
 
-    return {res, line_indices.size()};
+    return res;
 }
 
-void equipment_reports(PbCreator& pb_creator, const std::string& filter,
-                       int count, int depth, int start_page,
+void equipment_reports(PbCreator& pb_creator,
+                       const std::string& filter,
+                       int count,
+                       int depth,
+                       int start_page,
                        const ForbiddenUris& forbidden_uris) {
     const type::Data& data = *pb_creator.data;
+    EquipmentReports equipment_reports(data, filter, count, start_page, forbidden_uris);
+
     try {
-        StopAreasPerLine sas_per_line;
-        size_t total_lines = 0;
-        std::tie(sas_per_line, total_lines) =
-            get_paginated_stop_areas_per_line(data, filter, count, start_page, forbidden_uris);
-        fill_equipment_to_pb(sas_per_line, pb_creator, depth);
-        pb_creator.make_paginate(sas_per_line.size(), start_page, count, total_lines);
-    }
-    catch(const ptref::parsing_error& parse_error) {
+        EquipmentReportList reports = equipment_reports.get_paginated_equipment_report_list();
+
+        fill_equipment_to_pb(reports, pb_creator, depth);
+
+        size_t total_lines = equipment_reports.get_total_lines();
+        pb_creator.make_paginate(reports.size(), start_page, count, total_lines);
+    } catch (const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
         return;
-    } catch(const ptref::ptref_error& ptref_error) {
-        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
+    } catch (const ptref::ptref_error& ptref_error) {
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + ptref_error.more);
         return;
     }
 }
 
-} // namespace equipment
-} // namespace navitia
+}  // namespace equipment
+}  // namespace navitia

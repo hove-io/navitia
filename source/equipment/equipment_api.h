@@ -30,31 +30,47 @@ www.navitia.io
 
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "type/type.h"
 #include "type/pb_converter.h"
+
+#include <string>
+#include <vector>
+#include <tuple>
 
 namespace navitia {
 namespace equipment {
 
-using StopAreasPerLine = std::vector<std::pair<type::Line*, std::vector<type::StopArea*>>>;
+using StopAreaEquipment = std::tuple<type::StopArea*, std::vector<type::StopPoint*>>;
+using EquipmentReport = std::tuple<type::Line*, std::vector<StopAreaEquipment>>;
+using EquipmentReportList = std::vector<EquipmentReport>;
 using ForbiddenUris = std::vector<std::string>;
 
-std::tuple<StopAreasPerLine, size_t> get_paginated_stop_areas_per_line(
-    const type::Data& data,
-    const std::string& filter,
-    int count,
-    int start_page = 0,
-    const ForbiddenUris& forbidden_uris = {});
+class EquipmentReports {
+public:
+    EquipmentReports(const type::Data& data,
+                     const std::string& filter,
+                     int count = 25,
+                     int start_page = 0,
+                     const ForbiddenUris& forbidden_uris = {});
+
+    EquipmentReportList get_paginated_equipment_report_list();
+    size_t get_total_lines() const { return total_lines; }
+
+private:
+    const type::Data& data;
+    const std::string filter;
+    const int count;
+    const int start_page;
+    const ForbiddenUris forbidden_uris;
+    size_t total_lines = 0;
+};
 
 void equipment_reports(PbCreator& pb_creator,
                        const std::string& filter,
-                       int count, int depth = 0, int start_page = 0,
+                       int count,
+                       int depth = 0,
+                       int start_page = 0,
                        const ForbiddenUris& forbidden_uris = {});
 
-} // namespace equipment
-} // namespace navitia
-
-
+}  // namespace equipment
+}  // namespace navitia
