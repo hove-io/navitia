@@ -65,3 +65,5 @@
     * ajout du mode physique SuspendedCableCar pour les Téléphérique / télécabine
 * Version 0.7.4 du 21/02/2019
     * modification des propriétés présentes dans le fichier feed_info
+* Version 0.8 du 25/03/2019
+    * Ajout de la gestion des pathways
