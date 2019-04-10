@@ -813,6 +813,7 @@ class TestKirinOnNewStopTimeAtTheEnd(MockKirinDisruptionsFixture):
         assert has_the_disruption(response, 'new_stop_time')
         self.is_valid_journey_response(response, journey_query)
         assert response['journeys'][0]['sections'][1]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][1]['display_informations']['physical_mode'] == 'Tramway'
 
         B_C_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord='stop_point:stopB', to_coord='stop_point:stopC', datetime='20120614T080000'
@@ -1493,7 +1494,12 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         assert response['journeys'][0]['status'] == 'DETOUR'
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+        assert response['journeys'][0]['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
         assert has_the_disruption(response, 'stop_time_with_detour')
+
+        # Tramway is the first physical_mode in NTFS
+        response = self.query_region('physical_modes')
+        assert response['physical_modes'][0]['name'] == 'Tramway'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -1783,6 +1789,70 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
         response, status = self.query_region(vj_query, check=False)
         assert status == 404
         assert 'vehicle_journeys' not in response
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinAddNewTripWithoutPhysicalMode(MockKirinDisruptionsFixture):
+    def test_add_new_trip_without_physical_mode(self):
+        """
+        1. send a disruption to create a new trip with physical_mode absent in kaken
+        2. check physical_mode of journey
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption, a new trip with 2 stop_times in realtime
+        self.send_mock(
+            "additional-trip",
+            "20120614",
+            'added',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id='new_trip',
+            effect='additional_service',
+        )
+
+        # Check that a new disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+
+        # / Journeys: as no trip on pt added, only direct walk.
+        C_B_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "datetime={dt}&_current_datetime={dt}".format(
+                f='stop_point:stopC', to='stop_point:stopB', dt='20120614T080000'
+            )
+        )
+
+        # Check that a PT journey exists with first physical_mode in the NTFS('Tramway')
+        response = self.query_region(C_B_query)
+        assert has_the_disruption(response, 'new_trip')
+        self.is_valid_journey_response(response, C_B_query)
+        assert len(response['journeys']) == 2
+        pt_journey = response['journeys'][0]
+        assert 'non_pt_walking' not in pt_journey['tags']
+        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
+        assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
+        assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
