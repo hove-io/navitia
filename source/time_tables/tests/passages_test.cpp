@@ -37,9 +37,9 @@ www.navitia.io
 #include "time_tables/passages.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace navitia::timetables;
 
@@ -49,21 +49,19 @@ using namespace navitia::timetables;
 BOOST_AUTO_TEST_CASE(passages_boarding_order) {
     ed::builder b("20170101");
 
-    b.vj("L1").uri("vj:0")
-        ("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)
-        ("stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)
-        ("stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+        "stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
+        "stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").uri("vj:1")
-        ("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
-        ("stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)
-        ("stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+    b.vj("L1").uri("vj:1")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+        "stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
+        "stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
 
     // next departures
     navitia::PbCreator pb_creator_ndep(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -84,28 +82,23 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
     BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T081000"_pts);
 }
 
-
 BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
     ed::builder b("20170101");
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20170108");
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
 
-    b.vj("L1", "1111111").uri("vj:0")
-        ("stop1", "8:00"_t, "8:01"_t)
-        ("stop2", "8:05"_t, "8:06"_t)
-        ("stop3", "8:10"_t, "8:11"_t);
+    b.vj("L1", "1111111")
+        .uri("vj:0")("stop1", "8:00"_t, "8:01"_t)("stop2", "8:05"_t, "8:06"_t)("stop3", "8:10"_t, "8:11"_t);
 
-    b.vj("L1", "1111111").uri("vj:1")
-        ("stop1", "9:00"_t, "9:01"_t)
-        ("stop2", "9:05"_t, "9:06"_t)
-        ("stop3", "9:10"_t, "9:11"_t);
+    b.vj("L1", "1111111")
+        .uri("vj:1")("stop1", "9:00"_t, "9:01"_t)("stop2", "9:05"_t, "9:06"_t)("stop3", "9:10"_t, "9:11"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_pdep(data_ptr, bt::second_clock::universal_time(), null_time_period);
     passages(pb_creator_pdep, "stop_point.uri=stop2", {}, "20170107T080000"_dt, 86400, 10, 3,

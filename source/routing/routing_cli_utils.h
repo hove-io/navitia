@@ -34,19 +34,21 @@ www.navitia.io
 #include "routing/raptor_api.h"
 
 namespace nr = navitia::routing;
-namespace po = boost::program_options ;
+namespace po = boost::program_options;
 namespace pb = pbnavitia;
 
-namespace navitia { namespace cli {
+namespace navitia {
+namespace cli {
 
-    struct compute_options {
-        po::options_description desc;
-        std::string start, target, date, first_section_mode, last_section_mode;
-        po::variables_map vm;
-        std::unique_ptr<nr::RAPTOR> raptor;
-        nt::Data data;
+struct compute_options {
+    po::options_description desc;
+    std::string start, target, date, first_section_mode, last_section_mode;
+    po::variables_map vm;
+    std::unique_ptr<nr::RAPTOR> raptor;
+    nt::Data data;
 
-        compute_options() : desc("Simple journey computation"){
+    compute_options() : desc("Simple journey computation") {
+        // clang-format off
             desc.add_options()
             ("start,s", po::value<std::string>(&start), "uri of point to start")
             ("target,t", po::value<std::string>(&target), "uri of point to end")
@@ -55,10 +57,13 @@ namespace navitia { namespace cli {
             ("firstsectionmode,f", po::value<std::string>(&first_section_mode), "can be walking, bike, car, bss")
             ("lastsectionmonde,l", po::value<std::string>(&last_section_mode), "can be walking, bike, car, bss")
             ("protobuf,p", "Full-output");
-        }
-        bool compute();
-        void load(const std::string &file);
-        private:
-        void show_section(const pbnavitia::Section& section);
-    };
-}}
+        // clang-format on
+    }
+    bool compute();
+    void load(const std::string& file);
+
+private:
+    void show_section(const pbnavitia::Section& section);
+};
+}  // namespace cli
+}  // namespace navitia

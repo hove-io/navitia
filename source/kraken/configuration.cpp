@@ -38,12 +38,14 @@ www.navitia.io
 
 namespace po = boost::program_options;
 
-namespace navitia { namespace kraken{
+namespace navitia {
+namespace kraken {
 
 po::options_description get_options_description(const boost::optional<std::string> name,
                                                 const boost::optional<std::string> zmq,
-                                                const boost::optional<bool> display_contributors ){
+                                                const boost::optional<bool> display_contributors) {
     po::options_description desc("Allowed options");
+    // clang-format off
     desc.add_options()
         ("GENERAL.database", po::value<std::string>()->default_value("data.nav.lz4"), "path to the data file")
 
@@ -91,68 +93,69 @@ po::options_description get_options_description(const boost::optional<std::strin
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
 
+    // clang-format on
     return desc;
-
 }
 
-static std::string env_parser(std::string env){
-    if(!boost::algorithm::starts_with(env, "KRAKEN_")){
+static std::string env_parser(std::string env) {
+    if (!boost::algorithm::starts_with(env, "KRAKEN_")) {
         return "";
     }
     boost::algorithm::replace_first(env, "KRAKEN_", "");
     boost::algorithm::replace_first(env, "_", ".");
-    if(!boost::algorithm::starts_with(env, "GENERAL")
-            && !boost::algorithm::starts_with(env, "BROKER")
-            && !boost::algorithm::starts_with(env, "CHAOS")){
-        //it doesn't look like one of our var, we ignore it
-        //docker and kubernetes define a lot of env var starting by kraken when deploying kraken
-        //and boost po will abort startup if unknown var are present
+    if (!boost::algorithm::starts_with(env, "GENERAL") && !boost::algorithm::starts_with(env, "BROKER")
+        && !boost::algorithm::starts_with(env, "CHAOS")) {
+        // it doesn't look like one of our var, we ignore it
+        // docker and kubernetes define a lot of env var starting by kraken when deploying kraken
+        // and boost po will abort startup if unknown var are present
         return "";
     }
     return env;
 }
 
-void Configuration::load(const std::string& filename){
+void Configuration::load(const std::string& filename) {
     po::options_description desc = get_options_description();
 
     po::store(po::parse_environment(desc, env_parser), this->vm);
 
     std::ifstream stream(filename);
-    if(!stream.is_open() || !stream.good()){
+    if (!stream.is_open() || !stream.good()) {
         std::cerr << "no configuration file found, using only environment variables" << std::endl;
-    }else{
-        //we allow unknown option for log4cplus
+    } else {
+        // we allow unknown option for log4cplus
         po::store(po::parse_config_file(stream, desc, true), this->vm);
     }
     po::notify(this->vm);
 }
 
-std::vector<std::string> Configuration::load_from_command_line(const po::options_description& desc, int argc, const char* const argv[]) {
+std::vector<std::string> Configuration::load_from_command_line(const po::options_description& desc,
+                                                               int argc,
+                                                               const char* const argv[]) {
     auto tmp = po::basic_command_line_parser<char>(argc, argv).options(desc).allow_unregistered().run();
     po::store(tmp, vm);
     po::notify(vm);
 
-    //return unparsed options
+    // return unparsed options
     return po::collect_unrecognized(tmp.options, po::include_positional);
 }
 
-std::string Configuration::databases_path() const{
+std::string Configuration::databases_path() const {
     return this->vm["GENERAL.database"].as<std::string>();
 }
-std::string Configuration::zmq_socket_path() const{
+std::string Configuration::zmq_socket_path() const {
     return this->vm["GENERAL.zmq_socket"].as<std::string>();
 }
-std::string Configuration::instance_name() const{
+std::string Configuration::instance_name() const {
     return this->vm["GENERAL.instance_name"].as<std::string>();
 }
-boost::optional<std::string> Configuration::chaos_database() const{
+boost::optional<std::string> Configuration::chaos_database() const {
     boost::optional<std::string> result;
     if (this->vm.count("CHAOS.database") > 0) {
         result = this->vm["CHAOS.database"].as<std::string>();
     }
     return result;
 }
-int Configuration::nb_threads() const{
+int Configuration::nb_threads() const {
     int nb_threads = vm["GENERAL.nb_threads"].as<int>();
     if (nb_threads < 0) {
         throw std::invalid_argument("nb_threads cannot be negative");
@@ -160,38 +163,38 @@ int Configuration::nb_threads() const{
     return size_t(nb_threads);
 }
 
-bool Configuration::is_realtime_enabled() const{
+bool Configuration::is_realtime_enabled() const {
     return this->vm["GENERAL.is_realtime_enabled"].as<bool>();
 }
 
-bool Configuration::is_realtime_add_enabled() const{
+bool Configuration::is_realtime_add_enabled() const {
     return this->vm["GENERAL.is_realtime_add_enabled"].as<bool>();
 }
 
-bool Configuration::is_realtime_add_trip_enabled() const{
+bool Configuration::is_realtime_add_trip_enabled() const {
     return this->vm["GENERAL.is_realtime_add_trip_enabled"].as<bool>();
 }
 
-int Configuration::kirin_timeout() const{
+int Configuration::kirin_timeout() const {
     return this->vm["GENERAL.kirin_timeout"].as<int>();
 }
 
-std::string Configuration::broker_host() const{
+std::string Configuration::broker_host() const {
     return this->vm["BROKER.host"].as<std::string>();
 }
-int Configuration::broker_port() const{
+int Configuration::broker_port() const {
     return this->vm["BROKER.port"].as<int>();
 }
-std::string Configuration::broker_username() const{
+std::string Configuration::broker_username() const {
     return this->vm["BROKER.username"].as<std::string>();
 }
-std::string Configuration::broker_password() const{
+std::string Configuration::broker_password() const {
     return this->vm["BROKER.password"].as<std::string>();
 }
-std::string Configuration::broker_vhost() const{
+std::string Configuration::broker_vhost() const {
     return this->vm["BROKER.vhost"].as<std::string>();
 }
-std::string Configuration::broker_exchange() const{
+std::string Configuration::broker_exchange() const {
     return this->vm["BROKER.exchange"].as<std::string>();
 }
 
@@ -203,34 +206,34 @@ int Configuration::broker_sleeptime() const {
     return vm["BROKER.sleeptime"].as<int>();
 }
 
-std::vector<std::string> Configuration::rt_topics() const{
-    if(! this->vm.count("BROKER.rt_topics")){
+std::vector<std::string> Configuration::rt_topics() const {
+    if (!this->vm.count("BROKER.rt_topics")) {
         return std::vector<std::string>();
     }
     return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
 }
 
-int Configuration::kirin_retry_timeout() const{
+int Configuration::kirin_retry_timeout() const {
     return vm["GENERAL.kirin_retry_timeout"].as<int>();
 }
 
-bool Configuration::display_contributors() const{
-    if(!this->vm.count("GENERAL.display_contributors")){
+bool Configuration::display_contributors() const {
+    if (!this->vm.count("GENERAL.display_contributors")) {
         return false;
     }
     return vm["GENERAL.display_contributors"].as<bool>();
 }
 
-int Configuration::slow_request_duration() const{
+int Configuration::slow_request_duration() const {
     return vm["GENERAL.slow_request_duration"].as<int>();
 }
 
-bool Configuration::enable_request_deadline() const{
+bool Configuration::enable_request_deadline() const {
     return vm["GENERAL.enable_request_deadline"].as<bool>();
 }
 
-size_t Configuration::raptor_cache_size() const{
-    if (! vm.count("GENERAL.raptor_cache_size")) {
+size_t Configuration::raptor_cache_size() const {
+    if (!vm.count("GENERAL.raptor_cache_size")) {
         return 10;
     }
     int raptor_cache_size = vm["GENERAL.raptor_cache_size"].as<int>();
@@ -240,14 +243,14 @@ size_t Configuration::raptor_cache_size() const{
     return size_t(raptor_cache_size);
 }
 
-boost::optional<std::string> Configuration::log_level() const{
+boost::optional<std::string> Configuration::log_level() const {
     boost::optional<std::string> result;
     if (this->vm.count("GENERAL.log_level") > 0) {
         result = this->vm["GENERAL.log_level"].as<std::string>();
     }
     return result;
 }
-boost::optional<std::string> Configuration::log_format() const{
+boost::optional<std::string> Configuration::log_format() const {
     boost::optional<std::string> result;
     if (this->vm.count("GENERAL.log_format") > 0) {
         result = this->vm["GENERAL.log_format"].as<std::string>();
@@ -255,11 +258,12 @@ boost::optional<std::string> Configuration::log_format() const{
     return result;
 }
 
-boost::optional<std::string> Configuration::metrics_binding() const{
+boost::optional<std::string> Configuration::metrics_binding() const {
     boost::optional<std::string> result;
     if (this->vm.count("GENERAL.metrics_binding") > 0) {
         result = this->vm["GENERAL.metrics_binding"].as<std::string>();
     }
     return result;
 }
-}}//namespace
+}  // namespace kraken
+}  // namespace navitia

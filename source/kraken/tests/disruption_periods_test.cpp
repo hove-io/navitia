@@ -28,7 +28,6 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE disruption_periods_test
 #include <boost/test/unit_test.hpp>
@@ -40,9 +39,9 @@ www.navitia.io
 using btp = boost::posix_time::time_period;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 /*
  * Fixture to test when we display a disruption and the status of this disruption
@@ -63,9 +62,8 @@ BOOST_GLOBAL_FIXTURE( logger_initialized );
  the impact is active (application period) from 03/2017 to 04/2017
  */
 struct disruption_periods_fixture {
-    disruption_periods_fixture(): b("20170101"), w(navitia::kraken::Configuration()) {
-        b.vj("1").valid_all_days()
-                ("A", "9:00"_t)("B", "10:00"_t);
+    disruption_periods_fixture() : b("20170101"), w(navitia::kraken::Configuration()) {
+        b.vj("1").valid_all_days()("A", "9:00"_t)("B", "10:00"_t);
 
         b.finish();
         b.data->build_uri();
@@ -73,21 +71,19 @@ struct disruption_periods_fixture {
         b.data->build_raptor();
 
         navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_1_closed")
-                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT) // just an information
-                                  .application_periods(btp("20170301T100000"_dt, "20170401T100000"_dt))
-                                  .publish(btp("20170201T100000"_dt, "20170601T100000"_dt))
-                                  .on(nt::Type_e::Line, "1")
-                                  .get_disruption(),
+                                      .severity(nt::disruption::Effect::UNKNOWN_EFFECT)  // just an information
+                                      .application_periods(btp("20170301T100000"_dt, "20170401T100000"_dt))
+                                      .publish(btp("20170201T100000"_dt, "20170601T100000"_dt))
+                                      .on(nt::Type_e::Line, "1")
+                                      .get_disruption(),
                                   *b.data->pt_data, *b.data->meta);
-
-
     }
 
     std::vector<const pbnavitia::Impact*> get_impacts(const pbnavitia::Request& req) {
         w.dispatch(req, *b.data);
         const auto& resp = w.pb_creator.get_response();
         std::vector<const pbnavitia::Impact*> res;
-        for (const pbnavitia::Impact& i: resp.impacts()) {
+        for (const pbnavitia::Impact& i : resp.impacts()) {
             res.push_back(&i);
         }
         return res;
@@ -95,10 +91,10 @@ struct disruption_periods_fixture {
 
     ed::builder b;
     navitia::Worker w;
-    uint64_t before_publish                    = "20170115T080000"_pts;
+    uint64_t before_publish = "20170115T080000"_pts;
     uint64_t inside_publish_before_application = "20170215T080000"_pts;
     uint64_t inside_publish_inside_application = "20170315T080000"_pts;
-    uint64_t inside_publish_after_application  = "20170415T080000"_pts;
+    uint64_t inside_publish_after_application = "20170415T080000"_pts;
 };
 
 // create a pt ref request for all lines
@@ -165,7 +161,6 @@ BOOST_FIXTURE_TEST_CASE(query_before_pub_period, disruption_periods_fixture) {
     BOOST_REQUIRE_EQUAL(get_impacts(create_journey_request(now, inside_publish_before_application)).size(), 0);
     BOOST_REQUIRE_EQUAL(get_impacts(create_journey_request(now, inside_publish_inside_application)).size(), 0);
     BOOST_REQUIRE_EQUAL(get_impacts(create_journey_request(now, inside_publish_after_application)).size(), 0);
-
 }
 /*
  * for a ptref query made inside the publication period, we should see the impact
@@ -210,7 +205,6 @@ BOOST_FIXTURE_TEST_CASE(journey_inside_pub_period_before_application, disruption
     // same if the journey is for a date after the application period, we should'nt see the impact
     BOOST_REQUIRE_EQUAL(get_impacts(create_journey_request(now, inside_publish_after_application)).size(), 0);
 }
-
 
 /*
  for a journey query made in the publication period for a date inside the application period,
@@ -279,7 +273,6 @@ BOOST_FIXTURE_TEST_CASE(journey_now_inside_pub_period_before_application, disrup
     BOOST_REQUIRE_EQUAL(get_impacts(create_journey_request(now, inside_publish_after_application)).size(), 0);
 }
 
-
 /*
 if the journey is requested the day of the disruption for the day of the disruption, we display the impact
 and it's status is 'active'
@@ -301,7 +294,6 @@ BOOST_FIXTURE_TEST_CASE(journey_inside_pub_period_inside_application, disruption
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
     BOOST_CHECK_EQUAL(impacts[0]->status(), pbnavitia::ActiveStatus::active);
 }
-
 
 /*
 if ptref is queried inside the publication period, but after the application period, we display the impact

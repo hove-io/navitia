@@ -31,10 +31,10 @@ www.navitia.io
 #include "headsign_handler.h"
 #include "utils/functions.h"
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
-void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj,
-                                                           const std::string& new_name) {
+void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj, const std::string& new_name) {
     std::string prev_name = vj.name;
     vj.name = new_name;
     headsign_mvj[vj.name].insert(vj.meta_vj);
@@ -43,16 +43,17 @@ void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj,
     }
 }
 
-void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj,
-                                                       const std::string& removed_headsign) {
+void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj, const std::string& removed_headsign) {
     // unregister meta-vj from headsign only if necessary
     bool need_remove = true;
-    vj.meta_vj->for_all_vjs([&](const VehicleJourney& cur_vj){
-            if (has_headsign_or_name(cur_vj, removed_headsign)) {
-                need_remove = false;
-            }
-        });
-    if (! need_remove) { return; }
+    vj.meta_vj->for_all_vjs([&](const VehicleJourney& cur_vj) {
+        if (has_headsign_or_name(cur_vj, removed_headsign)) {
+            need_remove = false;
+        }
+    });
+    if (!need_remove) {
+        return;
+    }
 
     auto it_headsign_mvj = headsign_mvj.find(removed_headsign);
     if (it_headsign_mvj == headsign_mvj.end()) {
@@ -64,15 +65,14 @@ void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj,
     }
 }
 
-const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) const{
+const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) const {
     // if no headsign map for vj: return name
     if (!navitia::contains(headsign_changes, stop_time.vehicle_journey)) {
         return stop_time.vehicle_journey->name;
     }
 
     // otherwise use headsign change map
-    const auto& map_stop_time_headsign_change =
-            headsign_changes.at(stop_time.vehicle_journey);
+    const auto& map_stop_time_headsign_change = headsign_changes.at(stop_time.vehicle_journey);
     uint16_t order_stop_time = stop_time.order();
 
     // if no headsign change stored: return name
@@ -83,7 +83,7 @@ const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) cons
     // get next change
     auto it_headsign = map_stop_time_headsign_change.upper_bound(order_stop_time);
     // if next change is the first: return name
-    if(it_headsign == map_stop_time_headsign_change.begin()) {
+    if (it_headsign == map_stop_time_headsign_change.begin()) {
         return stop_time.vehicle_journey->name;
     }
 
@@ -100,8 +100,8 @@ std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* v
     if (!vj || it_changes == std::end(headsign_changes)) {
         return res;
     }
-    for (const auto& change: it_changes->second) {
-        //ignore last headsign (vj.name) as it does not concern a stop_time
+    for (const auto& change : it_changes->second) {
+        // ignore last headsign (vj.name) as it does not concern a stop_time
         if (change.first < vj->stop_time_list.size()) {
             res.insert(change.second);
         }
@@ -109,8 +109,7 @@ std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* v
     return res;
 }
 
-bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj,
-                                           const std::string& headsign) const {
+bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj, const std::string& headsign) const {
     if (vj.name == headsign) {
         return true;
     }
@@ -120,25 +119,22 @@ bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj,
         return false;
     }
 
-    auto has_headsign = [&] (const std::pair<uint16_t, std::string>& it_change)
-                        {return it_change.second == headsign;};
+    auto has_headsign = [&](const std::pair<uint16_t, std::string>& it_change) { return it_change.second == headsign; };
     if (navitia::contains_if(it_vj_changes->second, has_headsign)) {
         return true;
     }
     return false;
 }
 
-std::vector<const VehicleJourney*>
-HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
-
+std::vector<const VehicleJourney*> HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
     const auto& it_vj_set = headsign_mvj.find(headsign);
     if (it_vj_set == headsign_mvj.end()) {
         return {};
     }
 
     std::vector<const VehicleJourney*> res;
-    for (const MetaVehicleJourney* mvj: it_vj_set->second) {
-        mvj->for_all_vjs([&](const VehicleJourney& vj){
+    for (const MetaVehicleJourney* mvj : it_vj_set->second) {
+        mvj->for_all_vjs([&](const VehicleJourney& vj) {
             if (has_headsign_or_name(vj, headsign)) {
                 res.push_back(&vj);
             }
@@ -147,8 +143,7 @@ HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
     return res;
 }
 
-void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time,
-                                                   const std::string& headsign) {
+void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, const std::string& headsign) {
     const VehicleJourney* vj = stop_time.vehicle_journey;
     assert(find_or_default(vj->name, headsign_mvj).count(vj->meta_vj));
     std::string prev_headsign_for_stop_time = get_headsign(stop_time);
@@ -172,7 +167,7 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time,
         vj_headsign_changes[order + 1] = prev_headsign_for_stop_time;
     }
     // if next stop_time changed to  headsign: erase mext change to merge
-    else if(vj_headsign_changes[order + 1] == headsign) {
+    else if (vj_headsign_changes[order + 1] == headsign) {
         vj_headsign_changes.erase(order + 1);
     }
     // if map for this vj is empty (all headsigns == vj.name): clean map
@@ -192,4 +187,5 @@ void HeadsignHandler::forget_vj(const VehicleJourney*) {
     // if that change be sure to add the mechanism here to remove the useless VJ before we delete it
 }
 
-}} //namespace navitia::type
+}  // namespace type
+}  // namespace navitia

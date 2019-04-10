@@ -32,9 +32,9 @@ from __future__ import absolute_import
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places
-from jormungandr.tests.utils_test import MockRequests
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+import requests_mock
 
 
 def bragi_house_jaures_feature():
@@ -501,14 +501,12 @@ def bragi_call_test():
             bragi_admin_feature(),
         ]
     }
-    mock_requests = MockRequests(
-        {'http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000': (bragi_response, 200)}
-    )
     from jormungandr import app
 
     with app.app_context():
         # we mock the http call to return the hard coded mock_response
-        with mock.patch('requests.get', mock_requests.get):
+        with requests_mock.Mocker() as m:
+            m.get('http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000', json=bragi_response)
             raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
@@ -516,8 +514,10 @@ def bragi_call_test():
             bragi_house_lefebvre_response_check(places[1])
             bragi_street_response_check(places[2])
             bragi_admin_response_check(places[3])
+            assert m.called
 
-        with mock.patch('requests.post', mock_requests.get):
+        with requests_mock.Mocker() as m:
+            m.post('http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000', json=bragi_response)
             raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
@@ -525,6 +525,7 @@ def bragi_call_test():
             bragi_house_lefebvre_response_check(places[1])
             bragi_street_response_check(places[2])
             bragi_admin_response_check(places[3])
+            assert m.called
 
 
 def bragi_make_params_with_instance_test():

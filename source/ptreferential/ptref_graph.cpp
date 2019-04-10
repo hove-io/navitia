@@ -47,7 +47,7 @@ using navitia::type::Type_e;
  */
 
 Jointures::Jointures() {
-    for (auto p: vertex_map) {
+    for (auto p : vertex_map) {
         p.second = boost::graph_traits<Graph>::null_vertex();
     }
 #define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
@@ -120,11 +120,11 @@ Jointures::Jointures() {
     // D'une connection on a ses deux stop points
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::Connection), g);
 
-    //De poi vers poi type et vice et versa
+    // De poi vers poi type et vice et versa
     boost::add_edge(vertex_map.at(Type_e::POI), vertex_map.at(Type_e::POIType), g);
     boost::add_edge(vertex_map.at(Type_e::POIType), vertex_map.at(Type_e::POI), g);
 
-    //from line to calendar
+    // from line to calendar
     boost::add_edge(vertex_map.at(Type_e::Calendar), vertex_map.at(Type_e::Line), g);
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Calendar), g);
 
@@ -158,9 +158,10 @@ Jointures::Jointures() {
 
     // edges for the impacts. for the moment we only need unilateral links,
     // we don't need from an impact all the impacted objects
-    const auto objects_having_impacts = {Type_e::StopPoint, Type_e::Line, Type_e::Route, Type_e::StopArea,
-            Type_e::Network, Type_e::VehicleJourney, Type_e::MetaVehicleJourney};
-    for (auto object: objects_having_impacts) {
+    const auto objects_having_impacts = {Type_e::StopPoint,         Type_e::Line,    Type_e::Route,
+                                         Type_e::StopArea,          Type_e::Network, Type_e::VehicleJourney,
+                                         Type_e::MetaVehicleJourney};
+    for (auto object : objects_having_impacts) {
         boost::add_edge(vertex_map.at(Type_e::Impact), vertex_map.at(object), g);
     }
 
@@ -177,7 +178,7 @@ Jointures::Jointures() {
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre
 // Si le prédécesseur est égal au type, c'est qu'il n'y a pas de chemin
-std::map<Type_e,Type_e> find_path(Type_e source) {
+std::map<Type_e, Type_e> find_path(Type_e source) {
     // the ptref graph is a graph on types, it does not depend of the data, thus it is a static variable
     static const Jointures j;
 
@@ -187,15 +188,14 @@ std::map<Type_e,Type_e> find_path(Type_e source) {
 
     std::vector<Jointures::vertex_t> predecessors(boost::num_vertices(j.g));
     boost::dijkstra_shortest_paths(j.g, j.vertex_map[source],
-                                   boost::predecessor_map(&predecessors[0]).
-                                   weight_map(boost::get(&Edge::weight, j.g)));
-
+                                   boost::predecessor_map(&predecessors[0]).weight_map(boost::get(&Edge::weight, j.g)));
 
     std::map<Type_e, Type_e> result;
 
-    for(Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
+    for (Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
         result[j.g[u]] = j.g[predecessors[u]];
     return result;
 }
 
-} } //namespace navitia::ptref
+}  // namespace ptref
+}  // namespace navitia

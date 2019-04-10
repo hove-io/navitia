@@ -30,7 +30,8 @@ www.navitia.io
 
 #pragma once
 
-namespace ed { namespace connectors {
+namespace ed {
+namespace connectors {
 
 static const std::string DEFAULT_JSON_POI_TYPES = R"(
 {
@@ -124,5 +125,5 @@ static const std::string DEFAULT_JSON_POI_TYPES = R"(
   ]
 }
 )";
-
-}} //namespace ed::connectors
+}
+}  // namespace ed

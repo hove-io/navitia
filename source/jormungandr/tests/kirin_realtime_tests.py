@@ -53,6 +53,7 @@ from tests.check_utils import (
     is_valid_graphical_isochrone,
     sub_query,
     has_the_disruption,
+    get_disruptions_by_id,
 )
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 from shapely.geometry import asShape
@@ -1505,6 +1506,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         3. test some PT-Ref objects were created
         4. test that /pt_objects returns those objects
         5. test that PT-Ref filters are working
+        6. test /departures and stop_schedules
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)
@@ -1557,6 +1559,31 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert status == 404
         assert response['error']['message'] == 'ptref : Filters: Unable to find object'
 
+        # Check that no departure exist on stop_point stop_point:stopC for neither base_schedule nor realtime
+        departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
+        departures = self.query_region(departure_query + '&data_freshness=base_schedule')
+        assert len(departures['departures']) == 0
+        departures = self.query_region(departure_query + '&data_freshness=realtime')
+        assert len(departures['departures']) == 0
+
+        # Check stop_schedules on stop_point stop_point:stopC for base_schedule and realtime with
+        # Date_times list empty
+        ss_on_sp_query = "stop_points/stop_point:stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+
+        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
+        ss_on_line_query = (
+            "stop_points/stop_point:stopC/lines/line:additional_service/"
+            "stop_schedules?_current_datetime=20120614T080000"
+        )
+        stop_schedules, status = self.query_region(ss_on_line_query + '&data_freshness=realtime', check=False)
+        assert status == 404
+        assert len(stop_schedules['stop_schedules']) == 0
+
         # New disruption, a new trip with 2 stop_times in realtime
         self.send_mock(
             "additional-trip",
@@ -1588,16 +1615,20 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         # Check new disruption 'additional-trip' to add a new trip
         disruptions_after = self.query_region(disruption_query)
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
-        assert has_the_disruption(disruptions_after, 'new_trip')
-        last_disrupt = disruptions_after['disruptions'][-1]
-        assert last_disrupt['severity']['effect'] == 'ADDITIONAL_SERVICE'
-        assert len(last_disrupt['impacted_objects'][0]['impacted_stops']) == 2
+        new_trip_disruptions = get_disruptions_by_id(disruptions_after, 'new_trip')
+        assert len(new_trip_disruptions) == 1
+        new_trip_disrupt = new_trip_disruptions[0]
+        assert new_trip_disrupt['id'] == 'new_trip'
+        assert new_trip_disrupt['severity']['effect'] == 'ADDITIONAL_SERVICE'
+        assert len(new_trip_disrupt['impacted_objects'][0]['impacted_stops']) == 2
         assert all(
             [
                 (s['departure_status'] == 'added' and s['arrival_status'] == 'added')
-                for s in last_disrupt['impacted_objects'][0]['impacted_stops']
+                for s in new_trip_disrupt['impacted_objects'][0]['impacted_stops']
             ]
         )
+        assert new_trip_disrupt['application_periods'][0]['begin'] == '20120614T080100'
+        assert new_trip_disrupt['application_periods'][0]['end'] == '20120614T080101'  # last second is excluded
 
         # Check that a PT journey now exists
         response = self.query_region(C_B_query)
@@ -1641,6 +1672,50 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len(response['networks']) == 1
         assert response['networks'][0]['name'] == 'additional service'
 
+        # Check that no departure exist on stop_point stop_point:stopC for base_schedule
+        departures = self.query_region(departure_query + '&data_freshness=base_schedule')
+        assert len(departures['departures']) == 0
+
+        # Check that departures on stop_point stop_point:stopC exists with disruption
+        departures = self.query_region(departure_query + '&data_freshness=realtime')
+        assert len(departures['disruptions']) == 1
+        assert departures['disruptions'][0]['disruption_uri'] == 'new_trip'
+        assert departures['departures'][0]['display_informations']['name'] == 'additional service'
+
+        # Check that stop_schedule on line "line:additional_service" and stop_point stop_point:stopC
+        # exists with disruption
+        stop_schedules = self.query_region(ss_on_line_query)
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'line:additional_service'
+        assert len(stop_schedules['disruptions']) == 1
+        assert stop_schedules['disruptions'][0]['uri'] == 'new_trip'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # Check stop_schedules on stop_point stop_point:stopC for base_schedule
+        # Date_times list is empty for both stop_schedules
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:additional_service'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 0
+
+        # Check stop_schedules on stop_point stop_point:stopC for realtime
+        # Date_times list is empty for line 'D' but not for the new line added
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:additional_service'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
+
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
 class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
@@ -1652,6 +1727,7 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         3. test that no PT-Ref objects were created
         4. test that /pt_objects doesn't return objects
         5. test that PT-Ref filters find nothing
+        6. test /departures and stop_schedules
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)
@@ -1735,6 +1811,20 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         response, status = self.query_region(network_filter_query, check=False)
         assert status == 404
         assert response['error']['message'] == 'ptref : Filters: Unable to find object'
+
+        # Check that no departure exist on stop_point stop_point:stopC
+        departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
+        departures = self.query_region(departure_query)
+        assert len(departures['departures']) == 0
+
+        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
+        ss_query = (
+            "stop_points/stop_point:stopC/lines/line:additional_service/"
+            "stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        stop_schedules, status = self.query_region(ss_query, check=False)
+        assert status == 404
+        assert len(stop_schedules['stop_schedules']) == 0
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None):

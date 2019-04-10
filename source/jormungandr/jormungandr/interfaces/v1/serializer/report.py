@@ -38,6 +38,11 @@ class LineReportSerializer(PbNestedSerializer):
     pt_objects = pt.PtObjectSerializer(many=True, display_none=True)
 
 
+class EquipmentReportSerializer(PbNestedSerializer):
+    line = pt.LineSerializer()
+    stop_area_equipments = pt.StopAreaEquipmentsSerializer()
+
+
 class TrafficReportSerializer(PbNestedSerializer):
     network = pt.NetworkSerializer()
     lines = pt.LineSerializer(many=True)

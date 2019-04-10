@@ -39,7 +39,8 @@ www.navitia.io
 #include <map>
 #include <vector>
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 struct StopArea;
 struct Network;
@@ -63,32 +64,25 @@ struct Calendar;
 struct CodeContainer {
     using Codes = std::map<std::string, std::vector<std::string>>;
 
-    template<typename T> using Objs = std::vector<const T*>;
+    template <typename T>
+    using Objs = std::vector<const T*>;
 
-    using SupportedTypes = boost::mpl::vector<
-        StopArea,
-        Network,
-        Company,
-        Line,
-        Route,
-        VehicleJourney,
-        StopPoint,
-        Calendar
-        >;
+    using SupportedTypes =
+        boost::mpl::vector<StopArea, Network, Company, Line, Route, VehicleJourney, StopPoint, Calendar>;
 
-    template<typename T>
+    template <typename T>
     const Codes& get_codes(const T* obj) const {
         const auto& m = at_key<T>(obj_map);
         return find_or_default(obj, m);
     }
 
-    template<typename T>
+    template <typename T>
     const Objs<T>& get_objs(const std::string& key, const std::string& val) const {
         const auto& m = at_key<T>(code_map);
         return find_or_default({key, val}, m);
     }
 
-    template<typename T>
+    template <typename T>
     void add(const T* obj, const std::string& key, const std::string& val) {
         assert(obj);
         auto& obj_m = at_key<T>(obj_map);
@@ -98,35 +92,33 @@ struct CodeContainer {
         code_m[{key, val}].push_back(obj);
     }
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & obj_map & code_map;
+        ar& obj_map& code_map;
     }
 
 private:
-    template<typename T>
+    template <typename T>
     using CodesByObjMap = std::map<const T*, Codes>;
 
-    template<typename T>
+    template <typename T>
     struct MakePairByObj {
         using type = typename boost::fusion::result_of::make_pair<T, CodesByObjMap<T>>::type;
     };
     using ObjMap = typename boost::fusion::result_of::as_map<
-        typename boost::mpl::transform<SupportedTypes, MakePairByObj<boost::mpl::_1>>::type
-        >::type;
+        typename boost::mpl::transform<SupportedTypes, MakePairByObj<boost::mpl::_1>>::type>::type;
 
-    template<typename T>
+    template <typename T>
     using ObjsByCodeMap = std::map<std::pair<std::string, std::string>, Objs<T>>;
 
-    template<typename T>
+    template <typename T>
     struct MakePairByCode {
         using type = typename boost::fusion::result_of::make_pair<T, ObjsByCodeMap<T>>::type;
     };
     using CodeMap = typename boost::fusion::result_of::as_map<
-        typename boost::mpl::transform<SupportedTypes, MakePairByCode<boost::mpl::_1>>::type
-        >::type;
+        typename boost::mpl::transform<SupportedTypes, MakePairByCode<boost::mpl::_1>>::type>::type;
 
-    template<typename T>
+    template <typename T>
     using RemoveConstPtr = typename std::remove_const<typename std::remove_pointer<T>::type>::type;
 
     template <typename T, typename Sequence>
@@ -138,4 +130,5 @@ private:
     CodeMap code_map;
 };
 
-}} // namespace navitia::type
+}  // namespace type
+}  // namespace navitia

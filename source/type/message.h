@@ -59,73 +59,99 @@ namespace type {
 namespace disruption {
 
 enum class Effect {
-  NO_SERVICE = 0,
-  REDUCED_SERVICE,
-  SIGNIFICANT_DELAYS,
-  DETOUR,
-  ADDITIONAL_SERVICE,
-  MODIFIED_SERVICE,
-  OTHER_EFFECT,
-  UNKNOWN_EFFECT,
-  STOP_MOVED
+    NO_SERVICE = 0,
+    REDUCED_SERVICE,
+    SIGNIFICANT_DELAYS,
+    DETOUR,
+    ADDITIONAL_SERVICE,
+    MODIFIED_SERVICE,
+    OTHER_EFFECT,
+    UNKNOWN_EFFECT,
+    STOP_MOVED
 };
 
-enum class ChannelType {
-    web = 0,
-    sms,
-    email,
-    mobile,
-    notification,
-    twitter,
-    facebook,
-    unknown_type,
-    title,
-    beacon
-};
+enum class ChannelType { web = 0, sms, email, mobile, notification, twitter, facebook, unknown_type, title, beacon };
 
 inline std::string to_string(Effect effect) {
     switch (effect) {
-    case Effect::NO_SERVICE: return "NO_SERVICE";
-    case Effect::REDUCED_SERVICE: return "REDUCED_SERVICE";
-    case Effect::SIGNIFICANT_DELAYS: return "SIGNIFICANT_DELAYS";
-    case Effect::DETOUR: return "DETOUR";
-    case Effect::ADDITIONAL_SERVICE: return "ADDITIONAL_SERVICE";
-    case Effect::MODIFIED_SERVICE: return "MODIFIED_SERVICE";
-    case Effect::OTHER_EFFECT: return "OTHER_EFFECT";
-    case Effect::UNKNOWN_EFFECT: return "UNKNOWN_EFFECT";
-    case Effect::STOP_MOVED: return "STOP_MOVED";
-    default:
-        throw navitia::exception("unhandled effect case");
+        case Effect::NO_SERVICE:
+            return "NO_SERVICE";
+        case Effect::REDUCED_SERVICE:
+            return "REDUCED_SERVICE";
+        case Effect::SIGNIFICANT_DELAYS:
+            return "SIGNIFICANT_DELAYS";
+        case Effect::DETOUR:
+            return "DETOUR";
+        case Effect::ADDITIONAL_SERVICE:
+            return "ADDITIONAL_SERVICE";
+        case Effect::MODIFIED_SERVICE:
+            return "MODIFIED_SERVICE";
+        case Effect::OTHER_EFFECT:
+            return "OTHER_EFFECT";
+        case Effect::UNKNOWN_EFFECT:
+            return "UNKNOWN_EFFECT";
+        case Effect::STOP_MOVED:
+            return "STOP_MOVED";
+        default:
+            throw navitia::exception("unhandled effect case");
     }
 }
 
 inline Effect from_string(const std::string& str) {
-    if (str == "NO_SERVICE") { return Effect::NO_SERVICE; }
-    if (str == "REDUCED_SERVICE") { return Effect::REDUCED_SERVICE; }
-    if (str == "SIGNIFICANT_DELAYS") { return Effect::SIGNIFICANT_DELAYS; }
-    if (str == "DETOUR") { return Effect::DETOUR; }
-    if (str == "ADDITIONAL_SERVICE") { return Effect::ADDITIONAL_SERVICE; }
-    if (str == "MODIFIED_SERVICE") { return Effect::MODIFIED_SERVICE; }
-    if (str == "OTHER_EFFECT") { return Effect::OTHER_EFFECT; }
-    if (str == "UNKNOWN_EFFECT") { return Effect::UNKNOWN_EFFECT; }
-    if (str == "STOP_MOVED") { return Effect::STOP_MOVED; }
+    if (str == "NO_SERVICE") {
+        return Effect::NO_SERVICE;
+    }
+    if (str == "REDUCED_SERVICE") {
+        return Effect::REDUCED_SERVICE;
+    }
+    if (str == "SIGNIFICANT_DELAYS") {
+        return Effect::SIGNIFICANT_DELAYS;
+    }
+    if (str == "DETOUR") {
+        return Effect::DETOUR;
+    }
+    if (str == "ADDITIONAL_SERVICE") {
+        return Effect::ADDITIONAL_SERVICE;
+    }
+    if (str == "MODIFIED_SERVICE") {
+        return Effect::MODIFIED_SERVICE;
+    }
+    if (str == "OTHER_EFFECT") {
+        return Effect::OTHER_EFFECT;
+    }
+    if (str == "UNKNOWN_EFFECT") {
+        return Effect::UNKNOWN_EFFECT;
+    }
+    if (str == "STOP_MOVED") {
+        return Effect::STOP_MOVED;
+    }
     throw navitia::exception("unhandled effect case");
 }
 
 inline std::string to_string(ChannelType ct) {
     switch (ct) {
-    case ChannelType::web: return "web";
-    case ChannelType::sms: return "sms";
-    case ChannelType::email: return "email";
-    case ChannelType::mobile: return "mobile";
-    case ChannelType::notification: return "notification";
-    case ChannelType::twitter: return "twitter";
-    case ChannelType::facebook: return "facebook";
-    case ChannelType::unknown_type: return "unknown_type";
-    case ChannelType::title: return "title";
-    case ChannelType::beacon: return "beacon";
-    default:
-        throw navitia::exception("unhandled channeltype case");
+        case ChannelType::web:
+            return "web";
+        case ChannelType::sms:
+            return "sms";
+        case ChannelType::email:
+            return "email";
+        case ChannelType::mobile:
+            return "mobile";
+        case ChannelType::notification:
+            return "notification";
+        case ChannelType::twitter:
+            return "twitter";
+        case ChannelType::facebook:
+            return "facebook";
+        case ChannelType::unknown_type:
+            return "unknown_type";
+        case ChannelType::title:
+            return "title";
+        case ChannelType::beacon:
+            return "beacon";
+        default:
+            throw navitia::exception("unhandled channeltype case");
     }
 }
 
@@ -134,15 +160,19 @@ struct Property {
     std::string type;
     std::string value;
 
-    bool operator< (const Property &right) const {
-        if (key != right.key) { return key < right.key; }
-        if (type != right.type) { return type < right.type; }
+    bool operator<(const Property& right) const {
+        if (key != right.key) {
+            return key < right.key;
+        }
+        if (type != right.type) {
+            return type < right.type;
+        }
         return value < right.value;
     }
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & key & type & value;
+        ar& key& type& value;
     }
 };
 
@@ -153,9 +183,9 @@ struct Cause {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & wording & created_at & updated_at & category;
+        ar& uri& wording& created_at& updated_at& category;
     }
 };
 
@@ -170,14 +200,14 @@ struct Severity {
 
     Effect effect = Effect::UNKNOWN_EFFECT;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & wording & created_at & updated_at & color & priority & effect;
+        ar& uri& wording& created_at& updated_at& color& priority& effect;
     }
 };
 
 struct UnknownPtObj {
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive&, const unsigned int) {}
 };
 struct LineSection {
@@ -185,17 +215,17 @@ struct LineSection {
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
     std::vector<Route*> routes;
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & line & start_point & end_point & routes;
+        ar& line& start_point& end_point& routes;
     }
 
     std::set<StopPoint*> get_stop_points_section() const {
         std::set<StopPoint*> res;
-        for(const auto* route: routes) {
+        for (const auto* route : routes) {
             route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
                 res = vj.get_sections_stop_points(start_point, end_point);
-                if(res.empty()) {
+                if (res.empty()) {
                     return true;
                 }
                 return false;
@@ -205,20 +235,10 @@ struct LineSection {
     }
 };
 
-typedef boost::variant<
-    UnknownPtObj,
-    Network*,
-    StopArea*,
-    StopPoint*,
-    LineSection,
-    Line*,
-    Route*,
-    MetaVehicleJourney*
-    > PtObj;
+typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, Line*, Route*, MetaVehicleJourney*>
+    PtObj;
 
-PtObj make_pt_obj(Type_e type,
-                  const std::string &uri,
-                  PT_Data& pt_data);
+PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 
 struct Disruption;
 
@@ -233,16 +253,16 @@ struct Message {
 
     std::set<ChannelType> channel_types;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & text & created_at & updated_at & channel_id & channel_name & channel_content_type& channel_types;
+        ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types;
     }
 };
 
 struct StopTimeUpdate {
     StopTime stop_time;
-    std::string cause; //TODO factorize this cause with a pool
-    enum class Status: uint8_t {
+    std::string cause;  // TODO factorize this cause with a pool
+    enum class Status : uint8_t {
         // Note: status are ordered, from least to most important
         UNCHANGED = 0,
         ADDED,
@@ -254,12 +274,12 @@ struct StopTimeUpdate {
     Status departure_status{Status::UNCHANGED};
     Status arrival_status{Status::UNCHANGED};
     StopTimeUpdate() {}
-    StopTimeUpdate(const StopTime& st, const std::string& c, Status dep_status, Status arr_status):
-        stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
+    StopTimeUpdate(const StopTime& st, const std::string& c, Status dep_status, Status arr_status)
+        : stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & stop_time & cause & departure_status & arrival_status;
+        ar& stop_time& cause& departure_status& arrival_status;
     }
 };
 
@@ -272,12 +292,12 @@ namespace detail {
 struct AuxInfoForMetaVJ {
     std::vector<StopTimeUpdate> stop_times;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & stop_times;
+        ar& stop_times;
     }
 };
-}
+}  // namespace detail
 
 struct Impact {
     using SharedImpact = boost::shared_ptr<Impact>;
@@ -297,16 +317,15 @@ struct Impact {
 
     detail::AuxInfoForMetaVJ aux_info;
 
-    //link to the parent disruption
-    //Note: it is a raw pointer because an Impact is owned by it's disruption
+    // link to the parent disruption
+    // Note: it is a raw pointer because an Impact is owned by it's disruption
     //(even if the impact is stored as a share_ptr in the disruption to allow for weak_ptr towards it)
     Disruption* disruption;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & company_id & physical_mode_id & created_at & updated_at & application_periods
-           & severity & _informed_entities & messages & disruption
-           & aux_info;
+        ar& uri& company_id& physical_mode_id& created_at& updated_at& application_periods& severity&
+            _informed_entities& messages& disruption& aux_info;
     }
 
     boost::iterator_range<std::vector<PtObj>::const_iterator> informed_entities() const {
@@ -318,13 +337,17 @@ struct Impact {
 
     // add the ptobj to the informed entities and make all the needed backref
     // Note: it's a static method because we need the shared_ptr to the impact
-    static void link_informed_entity(PtObj ptobj, SharedImpact& impact, const boost::gregorian::date_period&, type::RTLevel);
+    static void link_informed_entity(PtObj ptobj,
+                                     SharedImpact& impact,
+                                     const boost::gregorian::date_period&,
+                                     type::RTLevel);
 
-    bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
+    bool is_valid(const boost::posix_time::ptime& current_time,
+                  const boost::posix_time::time_period& action_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
     bool is_only_line_section() const;
     bool is_line_section_of(const Line&) const;
-    Indexes get(Type_e target, const PT_Data & pt_data) const;
+    Indexes get(Type_e target, const PT_Data& pt_data) const;
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
@@ -339,9 +362,9 @@ struct Tag {
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & name & created_at & updated_at;
+        ar& uri& name& created_at& updated_at;
     }
 };
 
@@ -349,7 +372,7 @@ class DisruptionHolder;
 
 struct Disruption {
     Disruption() {}
-    Disruption(const std::string u, RTLevel lvl): uri(u), rt_level(lvl) {}
+    Disruption(const std::string u, RTLevel lvl) : uri(u), rt_level(lvl) {}
     Disruption& operator=(const Disruption&) = delete;
     Disruption(const Disruption&) = delete;
 
@@ -363,9 +386,9 @@ struct Disruption {
     // the publication period specify when an information can be displayed to
     // the customer, if a request is made before or after this period the
     // disruption must not be shown
-    boost::posix_time::time_period publication_period {
-        boost::posix_time::not_a_date_time, boost::posix_time::seconds(1)
-    };//no default constructor for time_period, we must provide a value
+    boost::posix_time::time_period publication_period{
+        boost::posix_time::not_a_date_time,
+        boost::posix_time::seconds(1)};  // no default constructor for time_period, we must provide a value
 
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -375,37 +398,36 @@ struct Disruption {
     // the place where the disruption happen, the impacts can be in anothers places
     std::vector<PtObj> localization;
 
-    //additional informations on the disruption
+    // additional informations on the disruption
     std::vector<boost::shared_ptr<Tag>> tags;
 
-    //properties linked to the disruption
+    // properties linked to the disruption
     std::set<Property> properties;
 
     std::string note;
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & reference & rt_level & publication_period
-           & created_at & updated_at & cause & impacts & localization & tags & note & contributor & properties;
+        ar& uri& reference& rt_level& publication_period& created_at& updated_at& cause& impacts& localization& tags&
+            note& contributor& properties;
     }
 
     void add_impact(const Impact::SharedImpact& impact, DisruptionHolder& holder);
-    const std::vector<Impact::SharedImpact>& get_impacts() const {
-        return impacts;
-    }
+    const std::vector<Impact::SharedImpact>& get_impacts() const { return impacts; }
 
     bool is_publishable(const boost::posix_time::ptime& current_time) const;
 
 private:
-    //Disruption have the ownership of the Impacts.  Impacts are
-    //shared_ptr and not unique_ptr because there are weak_ptr
-    //pointing to them in the impacted objects
+    // Disruption have the ownership of the Impacts.  Impacts are
+    // shared_ptr and not unique_ptr because there are weak_ptr
+    // pointing to them in the impacted objects
     std::vector<Impact::SharedImpact> impacts;
 };
 
 class DisruptionHolder {
     std::map<std::string, std::unique_ptr<Disruption>> disruptions_by_uri;
     std::vector<boost::weak_ptr<Impact>> weak_impacts;
+
 public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
@@ -414,30 +436,27 @@ public:
     void add_weak_impact(boost::weak_ptr<Impact>);
     void clean_weak_impacts();
     void forget_vj(const VehicleJourney*);
-    const std::vector<boost::weak_ptr<Impact>>&
-        get_weak_impacts() const{ return weak_impacts;}
+    const std::vector<boost::weak_ptr<Impact>>& get_weak_impacts() const { return weak_impacts; }
     boost::weak_ptr<Impact> get_weak_impact(size_t id) const { return weak_impacts[id]; }
     boost::shared_ptr<Impact> get_impact(size_t id) const { return weak_impacts[id].lock(); }
     // causes, severities and tags are a pool (weak_ptr because the owner ship
     // is in the linked disruption or impact)
-    std::map<std::string, boost::weak_ptr<Cause>> causes; //to be wrapped
-    std::map<std::string, boost::weak_ptr<Severity>> severities; //to be wrapped too
-    std::map<std::string, boost::weak_ptr<Tag>> tags; //to be wrapped too
+    std::map<std::string, boost::weak_ptr<Cause>> causes;         // to be wrapped
+    std::map<std::string, boost::weak_ptr<Severity>> severities;  // to be wrapped too
+    std::map<std::string, boost::weak_ptr<Tag>> tags;             // to be wrapped too
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & disruptions_by_uri & causes & severities & tags & weak_impacts;
+        ar& disruptions_by_uri& causes& severities& tags& weak_impacts;
     }
 };
 
 struct ImpactedVJ {
-    const VehicleJourney* vj; // vj before impact
+    const VehicleJourney* vj;  // vj before impact
     ValidityPattern new_vp;
     std::set<StopPoint*> impacted_stops;
-    ImpactedVJ(const VehicleJourney* vj,
-               ValidityPattern vp,
-               std::set<StopPoint*> r):
-        vj(vj), new_vp(vp), impacted_stops(std::move(r)) {}
+    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<StopPoint*> r)
+        : vj(vj), new_vp(vp), impacted_stops(std::move(r)) {}
 };
 /*
  * return the list of vehicle journey that are impacted by the linesection
@@ -447,6 +466,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection&,
                                                       const boost::gregorian::date_period&,
                                                       type::RTLevel);
 
-}
+}  // namespace disruption
 
-}}//namespace
+}  // namespace type
+}  // namespace navitia

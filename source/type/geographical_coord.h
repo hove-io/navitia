@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -42,51 +42,58 @@ www.navitia.io
 #include <boost/lexical_cast.hpp>
 #include "utils/serialization_vector.h"
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 /** Coordonnées géographiques en WGS84
  */
-struct GeographicalCoord{
+struct GeographicalCoord {
     GeographicalCoord() : _lon(0), _lat(0) {}
     GeographicalCoord(double lon, double lat) : _lon(lon), _lat(lat) {}
     GeographicalCoord(const GeographicalCoord& coord) = default;
     GeographicalCoord& operator=(const GeographicalCoord& coord) = default;
-    GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
+    GeographicalCoord(double x, double y, bool) { set_xy(x, y); }
 
-    double lon() const { return _lon;}
-    double lat() const { return _lat;}
-    std::string uri() const { return boost::lexical_cast<std::string>(_lon) +
-                ";" + boost::lexical_cast<std::string>(_lat);}
+    double lon() const { return _lon; }
+    double lat() const { return _lat; }
+    std::string uri() const {
+        return boost::lexical_cast<std::string>(_lon) + ";" + boost::lexical_cast<std::string>(_lat);
+    }
 
-    void set_lon(double lon) { this->_lon = lon;}
-    void set_lat(double lat) { this->_lat = lat;}
-    void set_xy(double x, double y){this->set_lon(x*N_M_TO_DEG); this->set_lat(y*N_M_TO_DEG);}
+    void set_lon(double lon) { this->_lon = lon; }
+    void set_lat(double lat) { this->_lat = lat; }
+    void set_xy(double x, double y) {
+        this->set_lon(x * N_M_TO_DEG);
+        this->set_lat(y * N_M_TO_DEG);
+    }
 
     constexpr static double coord_epsilon = 1e-15;
     /// Ordre des coordonnées utilisé par ProximityList
-    bool operator<(const GeographicalCoord &other) const {
-        if (lon() < other.lon()) { return true; }
-        if (other.lon() < lon()) { return false; }
+    bool operator<(const GeographicalCoord& other) const {
+        if (lon() < other.lon()) {
+            return true;
+        }
+        if (other.lon() < lon()) {
+            return false;
+        }
         return lat() < other.lat();
     }
-    bool operator != (const GeographicalCoord &other) const {
-        return fabs(lon() - other.lon()) > coord_epsilon
-                || fabs(lat() - other.lat()) > coord_epsilon ;
+    bool operator!=(const GeographicalCoord& other) const {
+        return fabs(lon() - other.lon()) > coord_epsilon || fabs(lat() - other.lat()) > coord_epsilon;
     }
 
     constexpr static double N_DEG_TO_RAD = 0.01745329238;
-    constexpr static double N_M_TO_DEG = 1.0/111319.9;
+    constexpr static double N_M_TO_DEG = 1.0 / 111319.9;
     constexpr static double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
     /** Calculate the distance between two points
-      *
-      * We use the Haversine frmula
-      * http://en.wikipedia.org/wiki/Law_of_haversines
-      *
-      * If the coordinate is not in degree, thus we use euclidean distance
-      */
-    double distance_to(const GeographicalCoord & other) const;
-
+     *
+     * We use the Haversine frmula
+     * http://en.wikipedia.org/wiki/Law_of_haversines
+     *
+     * If the coordinate is not in degree, thus we use euclidean distance
+     */
+    double distance_to(const GeographicalCoord& other) const;
 
     /** Projette un point sur un segment
 
@@ -95,38 +102,40 @@ struct GeographicalCoord{
        htCommercialtp://paulbourke.net/geometry/pointline/
        */
 
-    template<typename F>
+    template <typename F>
     std::pair<GeographicalCoord, float> project_common(GeographicalCoord segment_start,
-                                                                          GeographicalCoord segment_end,
-                                                                          F f) const;
+                                                       GeographicalCoord segment_end,
+                                                       F f) const;
 
-    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
+    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start,
+                                                      GeographicalCoord segment_end) const;
 
-    std::pair<GeographicalCoord, float> approx_project(GeographicalCoord segment_start, GeographicalCoord segment_end, double coslat) const;
+    std::pair<GeographicalCoord, float> approx_project(GeographicalCoord segment_start,
+                                                       GeographicalCoord segment_end,
+                                                       double coslat) const;
 
     /** Calcule la distance au carré grand arc entre deux points de manière approchée
 
-        Cela sert essentiellement lorsqu'il faut faire plein de comparaisons de distances à un point (par exemple pour proximity list)
+        Cela sert essentiellement lorsqu'il faut faire plein de comparaisons de distances à un point (par exemple pour
+       proximity list)
     */
-    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
+    double approx_sqr_distance(const GeographicalCoord& other, double coslat) const {
         static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
         double latitudeArc = (this->lat() - other.lat()) * N_DEG_TO_RAD;
         double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;
         double tmp = coslat * longitudeArc;
-        return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
+        return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc * latitudeArc + tmp * tmp);
     }
 
-    bool is_initialized() const {
-        return distance_to(GeographicalCoord()) > 1;
+    bool is_initialized() const { return distance_to(GeographicalCoord()) > 1; }
+
+    bool is_valid() const {
+        return this->lon() >= -180 && this->lon() <= 180 && this->lat() >= -90 && this->lat() <= 90;
     }
 
-    bool is_valid() const{
-        return this->lon() >= -180 && this->lon() <= 180 &&
-               this->lat() >= -90 && this->lat() <= 90;
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & _lon & _lat;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& _lon& _lat;
     }
 
 private:
@@ -137,7 +146,7 @@ private:
 std::ostream& operator<<(std::ostream&, const GeographicalCoord&);
 
 /** 2 points are considered equals if a.distance_to(b) < 0.1m */
-bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
+bool operator==(const GeographicalCoord& a, const GeographicalCoord& b);
 
 // Used to modelize the shapes of the different objects
 typedef std::vector<GeographicalCoord> LineString;
@@ -150,45 +159,60 @@ GeographicalCoord project(const LineString&, const GeographicalCoord&);
 GeographicalCoord project(const MultiLineString&, const GeographicalCoord&);
 
 // Split a LineString at a certain point which is on the LineString. Return the preceding / following LineString.
-LineString split_line_at_point(const LineString&, const GeographicalCoord&, bool end_of_geom=false);
+LineString split_line_at_point(const LineString&, const GeographicalCoord&, bool end_of_geom = false);
 
 double real_distance_from_extremity(const LineString&, const GeographicalCoord&, bool);
 
-}}// namespace navitia::type
+}  // namespace type
+}  // namespace navitia
 
 // Registering GeographicalCoord as a boost::geometry::point
-BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
+BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord,
+                                         double,
+                                         boost::geometry::cs::cartesian,
+                                         lon,
+                                         lat,
+                                         set_lon,
+                                         set_lat)
 BOOST_GEOMETRY_REGISTER_LINESTRING(navitia::type::LineString)
 BOOST_GEOMETRY_REGISTER_MULTI_LINESTRING(navitia::type::MultiLineString)
 
-namespace navitia { namespace type {
-    typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
-    typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
-}}
-namespace boost { namespace serialization {
-    template<class Archive>
-    void serialize(Archive& ar, navitia::type::Polygon& poly, const unsigned int) {
-        ar & boost::serialization::make_nvp("outer", poly.outer());
-        ar & boost::serialization::make_nvp("inners", poly.inners());
-    }
-    template<class Archive>
-    void serialize(Archive& ar, navitia::type::MultiPolygon& multipoly, const unsigned int) {
-        std::vector<navitia::type::Polygon>& impl = multipoly;
-        ar & boost::serialization::make_nvp("polygon", impl);
-    }
-    template<class Archive>
-    void serialize(Archive& ar, boost::geometry::model::ring<navitia::type::GeographicalCoord>& ring, const unsigned int) {
-        std::vector<navitia::type::GeographicalCoord>& impl = ring;
-        ar & boost::serialization::make_nvp("ring", impl);
-    }
-}}// namespace navitia::type
+namespace navitia {
+namespace type {
+typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
+typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
+}  // namespace type
+}  // namespace navitia
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive& ar, navitia::type::Polygon& poly, const unsigned int) {
+    ar& boost::serialization::make_nvp("outer", poly.outer());
+    ar& boost::serialization::make_nvp("inners", poly.inners());
+}
+template <class Archive>
+void serialize(Archive& ar, navitia::type::MultiPolygon& multipoly, const unsigned int) {
+    std::vector<navitia::type::Polygon>& impl = multipoly;
+    ar& boost::serialization::make_nvp("polygon", impl);
+}
+template <class Archive>
+void serialize(Archive& ar, boost::geometry::model::ring<navitia::type::GeographicalCoord>& ring, const unsigned int) {
+    std::vector<navitia::type::GeographicalCoord>& impl = ring;
+    ar& boost::serialization::make_nvp("ring", impl);
+}
+}  // namespace serialization
+}  // namespace boost
 
 navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat);
 
-namespace boost { namespace geometry { namespace model {
+namespace boost {
+namespace geometry {
+namespace model {
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points);
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons);
 
-}}}//namespace boost::geometry::model
+}  // namespace model
+}  // namespace geometry
+}  // namespace boost

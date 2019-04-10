@@ -508,6 +508,11 @@ class LineSerializer(PbGenericSerializer):
     line_groups = LineGroupSerializer(many=True, display_none=False)
 
 
+class StopAreaEquipmentsSerializer(PbGenericSerializer):
+    stop_area = StopAreaSerializer(display_none=False)
+    equipment_details = EquipmentDetailsSerializer(many=True, display_none=False)
+
+
 class JourneyPatternPointSerializer(PbNestedSerializer):
     id = jsonschema.Field(attr='uri', display_none=True, schema_type=str)
     stop_point = StopPointSerializer(display_none=False)

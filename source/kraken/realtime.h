@@ -47,4 +47,4 @@ void handle_realtime(const std::string& id,
                      const type::Data&,
                      const bool is_realtime_add_enabled = false,
                      const bool is_realtime_add_trip_enabled = false);
-}
+}  // namespace navitia

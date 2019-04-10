@@ -43,7 +43,6 @@ import requests
 import pybreaker
 from jormungandr import app
 from jormungandr.exceptions import UnknownObject
-import re
 
 
 def create_admin_field(geocoding):
@@ -186,6 +185,11 @@ class GeocodeJson(AbstractAutocomplete):
             fail_max=app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_BRAGI_TIMEOUT_S'],
         )
+        # create a session to allow connection pooling via keep alive
+        if kwargs.get('disable_keepalive', False):
+            self.session = requests
+        else:
+            self.session = requests.Session()
 
     def call_bragi(self, url, method, **kwargs):
         try:
@@ -312,10 +316,10 @@ class GeocodeJson(AbstractAutocomplete):
 
         url = self.make_url('autocomplete')
         kwargs = {"params": params, "timeout": self.timeout}
-        method = requests.get
+        method = self.session.get
         if shape:
             kwargs["json"] = {"shape": shape}
-            method = requests.post
+            method = self.session.post
 
         raw_response = self.call_bragi(url, method, **kwargs)
         depth = request.get('depth', 1)
@@ -346,7 +350,7 @@ class GeocodeJson(AbstractAutocomplete):
 
         params.append(("timeout", int(self.fast_timeout * 1000)))
 
-        raw_response = self.call_bragi(url, requests.get, timeout=self.fast_timeout, params=params)
+        raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaler(raw_response, uri)
 
     def status(self):

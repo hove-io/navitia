@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -37,17 +37,15 @@ www.navitia.io
 #include "utils/functions.h"
 #include <pqxx/pqxx>
 
+namespace ed {
 
-namespace ed{
-
-struct EdPersistor{
+struct EdPersistor {
     Lotus lotus;
     log4cplus::Logger logger;
     bool parse_pois = true, is_osm_reader;
 
     std::string poi_source = "";
     std::string street_network_source = "";
-
 
     EdPersistor(const std::string& connection_string, const bool is_osm_reader = true);
 
@@ -97,13 +95,15 @@ private:
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);
-    void insert_line_groups(const std::vector<types::LineGroup*>& groups, const std::vector<types::LineGroupLink>& group_links);
+    void insert_line_groups(const std::vector<types::LineGroup*>& groups,
+                            const std::vector<types::LineGroupLink>& group_links);
     void insert_routes(const std::vector<types::Route*>& routes);
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);
     void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_meta_vj(const std::map<std::string, types::MetaVehicleJourney>& meta_vjs);
-    void insert_object_codes(const std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>>& object_codes);
+    void insert_object_codes(
+        const std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>>& object_codes);
     void insert_shapes(const std::vector<std::shared_ptr<types::Shape>>& shapes);
 
     void insert_stop_times(const std::vector<types::StopTime*>& stop_times);
@@ -113,7 +113,8 @@ private:
 
     void insert_admin_stop_areas(const std::vector<types::AdminStopArea*> admin_stop_areas);
 
-    void insert_object_properties(const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_properties);
+    void insert_object_properties(
+        const std::map<ed::types::pt_object_header, std::map<std::string, std::string>>& object_properties);
 
     void insert_timezones(const navitia::type::TimeZoneHandler&);
 
@@ -139,4 +140,4 @@ private:
     size_t default_timezone_idx = 0;
 };
 
-}
+}  // namespace ed

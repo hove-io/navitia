@@ -40,15 +40,14 @@ www.navitia.io
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
 
-
 using namespace navitia::ptref;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
-class Params{
+class Params {
 public:
     nt::Data data;
     std::vector<std::string> forbidden;
@@ -56,14 +55,14 @@ public:
     nt::Network* current_ntw;
     nt::Line* current_ln;
     nt::Route* current_rt;
-    void add_network(const std::string& ntw_name){
+    void add_network(const std::string& ntw_name) {
         nt::Network* nt = new nt::Network();
         nt->uri = ntw_name;
         nt->name = ntw_name;
         data.pt_data->networks.push_back(nt);
         current_ntw = nt;
     }
-    void add_line(const std::string& ln_name){
+    void add_line(const std::string& ln_name) {
         nt::Line* ln = new nt::Line();
         ln->uri = ln_name;
         ln->name = ln_name;
@@ -71,7 +70,7 @@ public:
         current_ln = ln;
         current_ntw->line_list.push_back(ln);
     }
-    void add_route(const std::string& rt_name){
+    void add_route(const std::string& rt_name) {
         nt::Route* rt = new nt::Route();
         rt->uri = rt_name;
         rt->name = rt_name;
@@ -84,11 +83,7 @@ public:
         std::vector<nt::StopTime> sts;
         sts.emplace_back();
         sts.back().stop_point = data.pt_data->stop_points.at(0);
-        auto vj = mvj->create_discrete_vj(vj_name,
-                                          nt::RTLevel::Base,
-                                          nt::ValidityPattern(),
-                                          current_rt,
-                                          std::move(sts),
+        auto vj = mvj->create_discrete_vj(vj_name, nt::RTLevel::Base, nt::ValidityPattern(), current_rt, std::move(sts),
                                           *data.pt_data);
         vj->name = vj_name;
     }
@@ -100,13 +95,13 @@ public:
             data.pt_data->stop_points.at(1);
     }
     void reset_vj() {
-        for (auto* vj: data.pt_data->vehicle_journeys) {
+        for (auto* vj : data.pt_data->vehicle_journeys) {
             vj->stop_time_list.front().set_date_time_estimated(false);
             vj->stop_time_list.front().stop_point = data.pt_data->stop_points.at(0);
         }
     }
 
-    Params(){
+    Params() {
         auto* normal_sp = new nt::StopPoint();
         normal_sp->uri = "normal";
         normal_sp->name = "normal";
@@ -151,10 +146,8 @@ public:
         data.build_uri();
     }
 
-
-    //helper for the tests
-    nt::Indexes make_query(nt::Type_e requested_type,
-                                        const nt::OdtLevel_e odt_level) {
+    // helper for the tests
+    nt::Indexes make_query(nt::Type_e requested_type, const nt::OdtLevel_e odt_level) {
         return navitia::ptref::make_query(requested_type, "", forbidden, odt_level, boost::none, boost::none, data);
     }
 };
@@ -178,8 +171,7 @@ BOOST_AUTO_TEST_CASE(test1) {
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal), ptref_error);
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::all);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -202,8 +194,7 @@ BOOST_AUTO_TEST_CASE(test2) {
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal), ptref_error);
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::all);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -261,11 +252,9 @@ BOOST_AUTO_TEST_CASE(test4) {
     set_estimated("VJ211");
     set_zonal("VJ211");
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops),
-                      ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::with_stops), ptref_error);
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::zonal);
     BOOST_REQUIRE_EQUAL(final_idx.size(), 2);
@@ -424,4 +413,3 @@ BOOST_AUTO_TEST_CASE(test9) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

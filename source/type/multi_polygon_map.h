@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -35,11 +35,12 @@ www.navitia.io
 #include <boost/geometry.hpp>
 #include <boost/serialization/deque.hpp>
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 namespace bg = boost::geometry;
 
-template<typename T>
+template <typename T>
 struct MultiPolygonMap {
     typedef boost::geometry::model::box<GeographicalCoord> Box;
     typedef std::pair<MultiPolygon, T> Value;
@@ -50,17 +51,20 @@ struct MultiPolygonMap {
         rtree_insert(pool.back());
     }
 
-    template<class Archive> void save(Archive & ar, const unsigned int ) const {
-        ar & pool;
+    template <class Archive>
+    void save(Archive& ar, const unsigned int) const {
+        ar& pool;
     }
-    template<class Archive> void load(Archive & ar, const unsigned int ) {
-        ar & pool;
-        for (const auto& elt: pool) { rtree_insert(elt); }
+    template <class Archive>
+    void load(Archive& ar, const unsigned int) {
+        ar& pool;
+        for (const auto& elt : pool) {
+            rtree_insert(elt);
+        }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    std::vector<T>
-    find(const GeographicalCoord& key) const {
+    std::vector<T> find(const GeographicalCoord& key) const {
         typedef std::vector<T> result_type;
         result_type res;
         typedef std::pair<const GeographicalCoord&, result_type&> context_type;
@@ -86,8 +90,9 @@ private:
         const double max[] = {max_corner.lon(), max_corner.lat()};
         rtree.Insert(min, max, &elt);
     }
-    mutable RT rtree;// RTree::Search is not const!
-    std::deque<Value> pool;// using a deque as there is no iterator invalidation after push_back
+    mutable RT rtree;        // RTree::Search is not const!
+    std::deque<Value> pool;  // using a deque as there is no iterator invalidation after push_back
 };
 
-}} // namespace navitia::type
+}  // namespace type
+}  // namespace navitia

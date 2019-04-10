@@ -47,12 +47,12 @@ www.navitia.io
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-int main(int argc, char * argv[])
-{
-    std::string input, date, connection_string,
-                fare_dir;
+int main(int argc, char* argv[]) {
+    std::string input, date, connection_string, fare_dir;
     double simplify_tolerance;
     po::options_description desc("Allowed options");
+
+    // clang-format off
     desc.add_options()
         ("help,h", "Show this message")
         ("date,d", po::value<std::string>(&date), "Beginning date")
@@ -68,35 +68,38 @@ int main(int argc, char * argv[])
              "user=navitia dbname=navitia password=navitia")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+    // clang-format on
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if(vm.count("version")){
-        std::cout << argv[0] << " " << navitia::config::project_version << " "
-                  << navitia::config::navitia_build_type << std::endl;
+    if (vm.count("version")) {
+        std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
+                  << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
     std::string log_comment = "";
-    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    if (vm.count("log_comment")) {
+        log_comment = vm["log_comment"].as<std::string>();
+    }
     navitia::init_app("fusio2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if(vm.count("config-file")){
+    if (vm.count("config-file")) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
-        if(!stream.is_open()){
+        if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        }else{
+        } else {
             po::store(po::parse_config_file(stream, desc), vm);
         }
     }
 
-    if(vm.count("help") || !vm.count("input")) {
+    if (vm.count("help") || !vm.count("input")) {
         std::cout << "Reads and inserts in database fusio files" << std::endl;
-        std::cout << desc <<  "\n";
+        std::cout << desc << "\n";
         return 1;
     }
     po::notify(vm);
@@ -117,10 +120,12 @@ int main(int argc, char * argv[])
     fusio_parser.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections << " connections "
-                   " because they were too long");
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections << " connections "
-                   " because they had no duration time");
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections
+                                          << " connections "
+                                             " because they were too long");
+    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections
+                                          << " connections "
+                                             " because they had no duration time");
 
     start = pt::microsec_clock::local_time();
     data.complete();
@@ -128,13 +133,16 @@ int main(int argc, char * argv[])
 
     LOG4CPLUS_INFO(logger, "Starting da ugly ODT hack...");
     size_t nb_hacked = 0;
-    for (auto* vj: data.vehicle_journeys) {
-        if (vj->stop_time_list.size() != 2) { continue; }
-        if (vj->stop_time_list[0]->stop_point
-            != vj->stop_time_list[1]->stop_point) {
+    for (auto* vj : data.vehicle_journeys) {
+        if (vj->stop_time_list.size() != 2) {
             continue;
         }
-        if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) { continue; }
+        if (vj->stop_time_list[0]->stop_point != vj->stop_time_list[1]->stop_point) {
+            continue;
+        }
+        if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) {
+            continue;
+        }
 
         // No, teleportation can't exist, even on a null distance!
         // You'll take 10 min, I said!
@@ -160,13 +168,12 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    if(vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
+    if (vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
         start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "loading fare");
 
-        ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv",
-                                           fare_dir + "/prices.csv",
-                                           fare_dir + "/od_fares.csv");
+        ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv", fare_dir + "/prices.csv",
+                                               fare_dir + "/od_fares.csv");
         fareParser.load();
         fare = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }

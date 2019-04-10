@@ -96,7 +96,6 @@ def test_equipments_provider_put(default_config):
     # Create new provider
     new_provider = {
         'class': 'jormungandr.equipments.sytral.SytralProvider',
-        'key': 'sytral3',
         'instances': ['fr-se-lyon'],
         'args': {'url': 'sytral3.url', 'fail_max': 5, 'timeout': 1},
     }
@@ -154,9 +153,9 @@ def test_equipments_provider_schema():
     Test that a provider isn't created in db when missing required parameters
     """
 
-    def send_and_check(json_data, missing_param):
+    def send_and_check(provider_id, json_data, missing_param):
         resp, status = api_put(
-            'v0/equipments_providers/sytral3',
+            url='v0/equipments_providers/{}'.format(provider_id),
             data=ujson.dumps(json_data),
             content_type='application/json',
             check=False,
@@ -170,10 +169,9 @@ def test_equipments_provider_schema():
     # 'instances' is missing
     corrupted_provider = {
         'class': 'jormungandr.equipments.sytral.SytralProvider',
-        'key': 'sytral',
         'args': {'url': 'sytral.url', 'fail_max': 5, 'timeout': 1},
     }
-    send_and_check(corrupted_provider, 'instances')
+    send_and_check('sytral', corrupted_provider, 'instances')
 
     # args['url'] is missing
     corrupted_provider = {
@@ -182,4 +180,4 @@ def test_equipments_provider_schema():
         'instances': ['fr-se-lyon'],
         'args': {'fail_max': 5, 'timeout': 1},
     }
-    send_and_check(corrupted_provider, 'url')
+    send_and_check('sytral', corrupted_provider, 'url')

@@ -37,12 +37,13 @@ using namespace navitia::autocomplete;
 
 using namespace navitia::type;
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 static std::ostream& operator<<(std::ostream& os, const Type_e& type) {
     return os << navitia::type::static_data::get()->captionByType(type);
 }
-}}
-
+}  // namespace type
+}  // namespace navitia
 
 BOOST_AUTO_TEST_CASE(autocomplete_build_type_group) {
     auto result = build_type_groups({Type_e::StopArea});

@@ -40,42 +40,39 @@ using namespace navitia;
 using namespace navitia::routing;
 using navitia::routing::StopEvent;
 
-static std::pair<const JourneyPattern&, const JourneyPatternPoint&>
-get_first_jp_jpp(const ed::builder &b, const std::string& sa) {
+static std::pair<const JourneyPattern&, const JourneyPatternPoint&> get_first_jp_jpp(const ed::builder& b,
+                                                                                     const std::string& sa) {
     const auto sp_idx = SpIdx(*b.data->pt_data->stop_areas_map[sa]->stop_point_list.front());
     const auto& jpp = b.data->dataRaptor->jpps_from_sp[sp_idx].front();
-    return {b.data->dataRaptor->jp_container.get(jpp.jp_idx),
-            b.data->dataRaptor->jp_container.get(jpp.idx)};
+    return {b.data->dataRaptor->jp_container.get(jpp.jp_idx), b.data->dataRaptor->jp_container.get(jpp.idx)};
 }
 
-BOOST_AUTO_TEST_CASE(test1){
+BOOST_AUTO_TEST_CASE(test1) {
     ed::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150)("stop3", 8200, 8250);
+    b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     std::vector<JppIdx> jpps;
-    for (const auto jpp: b.data->dataRaptor->jp_container.get_jpps())
+    for (const auto jpp : b.data->dataRaptor->jp_container.get_jpps())
         jpps.push_back(jpp.first);
 
     auto result = get_stop_times(StopEvent::pick_up, jpps, navitia::DateTimeUtils::min,
                                  navitia::DateTimeUtils::set(1, 0), 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 0;}));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 0; }));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 1; }));
 
     result = get_stop_times(StopEvent::drop_off, jpps, navitia::DateTimeUtils::set(0, 86399),
                             navitia::DateTimeUtils::min, 100, *b.data, nt::RTLevel::Base, {});
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 1;}));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 1; }));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) {return dt_st.second->order() == 2;}));
-
-
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 2; }));
 }
 
 /**
@@ -105,12 +102,11 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     b.vj("A", "1111", "", true, "vj3")(spa1, vj3_departure, vj3_departure)("useless", 12000, 12000);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri="cal1";
-
+    cal->uri = "cal1";
 
     b.finish();
 
-    for (auto vj_name: {"vj1", "vj2"}) {
+    for (auto vj_name : {"vj1", "vj2"}) {
         auto associated_cal = new type::AssociatedCalendar();
         associated_cal->calendar = cal;
         b.data->pt_data->meta_vjs.get_mut(vj_name)->associated_calendars.insert({cal->uri, associated_cal});
@@ -126,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
-    //result are not sorted
+    // result are not sorted
     using p = std::pair<uint32_t, const type::StopTime*>;
     std::sort(res.begin(), res.end(), [](const p& p1, const p& p2) { return p1.first < p2.first; });
 
@@ -142,7 +138,6 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
     BOOST_CHECK_EQUAL(second_elt.second->departure_time, vj2_departure);
     BOOST_CHECK_EQUAL(second_elt.second->stop_point->stop_area->name, spa1);
 }
-
 
 /**
  * Test calendars
@@ -166,8 +161,7 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
     DateTime sp2_arrival = 8100;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
-                             (spa2, sp2_arrival, sp2_arrival);
+    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_uri();
@@ -176,7 +170,7 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
     const std::string calendar = "calendar_bob";
-    //calendar is not associated to stop time => no answer
+    // calendar is not associated to stop time => no answer
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, calendar);
     BOOST_CHECK(res.empty());
 }
@@ -199,14 +193,11 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
     std::string spa1 = "stop1";
     DateTime vj1_departure = 8000;
     size_t headway_sec = 100;
-    b.frequency_vj("A", vj1_departure, 9000, headway_sec,
-                   "default_network", "1010", "", true, "vj1")
-                    (spa1, vj1_departure, vj1_departure)
-                    ("useless_stop", 10000, 10000);
+    b.frequency_vj("A", vj1_departure, 9000, headway_sec, "default_network", "1010", "", true, "vj1")(
+        spa1, vj1_departure, vj1_departure)("useless_stop", 10000, 10000);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri="cal1";
-
+    cal->uri = "cal1";
 
     b.finish();
 
@@ -224,7 +215,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
 
     BOOST_REQUIRE_EQUAL(res.size(), 11);
 
-    //result are not sorted
+    // result are not sorted
     using p = std::pair<uint32_t, const type::StopTime*>;
     std::sort(res.begin(), res.end(), [](const p& p1, const p& p2) { return p1.first < p2.first; });
 
@@ -233,7 +224,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
     BOOST_REQUIRE(first_elt.second != nullptr);
     BOOST_CHECK_EQUAL(first_elt.second->stop_point->stop_area->name, spa1);
 
-    //then all vj1 departures
+    // then all vj1 departures
     for (size_t i = 1; i < res.size(); ++i) {
         auto departure = vj1_departure + headway_sec * i;
         BOOST_CHECK_EQUAL(res[i].first, departure);
@@ -241,7 +232,6 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
         BOOST_CHECK_EQUAL(res[i].second->stop_point->stop_area->name, spa1);
     }
 }
-
 
 /**
  * Test get_all_stop_times for one calendar
@@ -261,12 +251,11 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
     std::string spa1 = "stop1";
     DateTime vj1_departure = 70000;
     size_t headway_sec = 1000;
-    b.frequency_vj("A", vj1_departure, 2001, headway_sec, "default_network", "1010", "", true, "vj1")
-        (spa1, vj1_departure, vj1_departure)
-        ("useless_stop", 87400, 87400);
+    b.frequency_vj("A", vj1_departure, 2001, headway_sec, "default_network", "1010", "", true, "vj1")(
+        spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri="cal1";
+    cal->uri = "cal1";
 
     b.finish();
 
@@ -282,11 +271,9 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
 
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
-    //end of day is 86400, so we have (86400 - 70000) / 1000 + the stop on the morning (2001 / 1000)
+    // end of day is 86400, so we have (86400 - 70000) / 1000 + the stop on the morning (2001 / 1000)
     BOOST_REQUIRE_EQUAL(res.size(),
-                        (DateTimeUtils::SECONDS_PER_DAY - vj1_departure) /headway_sec
-                        + 2001 / headway_sec);
-
+                        (DateTimeUtils::SECONDS_PER_DAY - vj1_departure) / headway_sec + 2001 / headway_sec);
 }
 
 /**
@@ -307,12 +294,11 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
     std::string spa1 = "stop1";
     DateTime vj1_departure = 70000;
     size_t headway_sec = 1000;
-    b.frequency_vj("A", vj1_departure, 90001, headway_sec, "default_network", "1010", "", true, "vj1")
-        (spa1, vj1_departure, vj1_departure)
-        ("useless_stop", 87400, 87400);
+    b.frequency_vj("A", vj1_departure, 90001, headway_sec, "default_network", "1010", "", true, "vj1")(
+        spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri="cal1";
+    cal->uri = "cal1";
 
     b.finish();
 
@@ -328,15 +314,14 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
 
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
-    //end of day is 86400, so we have (90001 - 70000) / 1000 + 1 (for the last second)
-    BOOST_REQUIRE_EQUAL(res.size(), (90001 - 70000) / headway_sec + 1 );
-
+    // end of day is 86400, so we have (90001 - 70000) / 1000 + 1 (for the last second)
+    BOOST_REQUIRE_EQUAL(res.size(), (90001 - 70000) / headway_sec + 1);
 }
 
 struct departure_helper {
-    departure_helper(): b("20150907") {}
-    std::vector<JppIdx> get_jpp_idx (const std::string& stop_point_id) {
-        std::vector<JppIdx>  jpp_stop;
+    departure_helper() : b("20150907") {}
+    std::vector<JppIdx> get_jpp_idx(const std::string& stop_point_id) {
+        std::vector<JppIdx> jpp_stop;
         const auto sp_idx = SpIdx(*b.data->pt_data->stop_points_map.at(stop_point_id));
         const auto& vec_jpp_stop = b.data->dataRaptor->jpps_from_sp[sp_idx];
         for (const auto& jpp : vec_jpp_stop) {
@@ -369,52 +354,51 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_next_arrivals_prev_departures, departure_h
     b.data->build_uri();
     b.data->build_raptor();
 
-    auto result_next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("stop1"),
-                                               today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    auto result_next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("stop1"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_CHECK_EQUAL(result_next_arrivals.size(), 0);
-    auto result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop1"),
-                                                 today, yesterday, 100, *b.data, nt::RTLevel::Base);
+    auto result_prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("stop1"), today, yesterday, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "8:01"_t);
 
-    result_next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("stop2"),
-                                          today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    result_next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("stop2"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "9:00"_t);
-    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"),
-                                            today, yesterday, 100, *b.data, nt::RTLevel::Base);
+    result_prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"), today, yesterday, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 2);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:01"_t);
     BOOST_CHECK_EQUAL(result_prev_departures.at(1).first, "8:31"_t);
-    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"),
-                                            today_8h45, today, 100, *b.data, nt::RTLevel::Base);
+    result_prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"), today_8h45, today, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "24:00"_t + "8:31"_t);
-    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"),
-                                            today_8h45, yesterday_8h45, 100, *b.data, nt::RTLevel::Base);
+    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop2"), today_8h45, yesterday_8h45, 100,
+                                            *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 2);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "24:00"_t + "8:31"_t);
     BOOST_CHECK_EQUAL(result_prev_departures.at(1).first, "9:01"_t);
 
-    result_next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("stop3"),
-                                          today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    result_next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("stop3"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 2);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "09:30"_t);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(1).first, "24:00"_t + "10:00"_t);
-    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop3"),
-                                            today, yesterday, 100, *b.data, nt::RTLevel::Base);
+    result_prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("stop3"), today, yesterday, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_prev_departures.size(), 1);
     BOOST_CHECK_EQUAL(result_prev_departures.at(0).first, "9:31"_t);
 
-    result_next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("stop4"),
-                                          today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    result_next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("stop4"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result_next_arrivals.size(), 1);
     BOOST_CHECK_EQUAL(result_next_arrivals.at(0).first, "24:00"_t + "10:30"_t);
-    result_prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("stop4"),
-                                            today, yesterday, 100, *b.data, nt::RTLevel::Base);
+    result_prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("stop4"), today, yesterday, 100, *b.data, nt::RTLevel::Base);
     BOOST_CHECK_EQUAL(result_prev_departures.size(), 0);
 }
-
 
 /**
  * test departures on lolipop VJ
@@ -427,10 +411,8 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_next_arrivals_prev_departures, departure_h
  *
  */
 BOOST_FIXTURE_TEST_CASE(test_discrete_lolipop, departure_helper) {
-    b.vj("A")("s1", "8:00"_t, "8:01"_t)
-             ("s2", "9:00"_t, "9:01"_t)
-             ("s3", "10:00"_t, "10:01"_t)
-             ("s2", "11:00"_t, "11:01"_t);
+    b.vj("A")("s1", "8:00"_t, "8:01"_t)("s2", "9:00"_t, "9:01"_t)("s3", "10:00"_t, "10:01"_t)("s2", "11:00"_t,
+                                                                                              "11:01"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -438,15 +420,15 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_lolipop, departure_helper) {
     b.data->build_raptor();
 
     // at s2, we have 2 arrivals
-    auto next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("s2"),
-                                               today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    auto next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("s2"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(next_arrivals.size(), 2);
     BOOST_CHECK_EQUAL(next_arrivals.at(0).first, "24:00"_t + "9:00"_t);
     BOOST_CHECK_EQUAL(next_arrivals.at(1).first, "24:00"_t + "11:00"_t);
 
-    //b ut only one departure (the last does not count, it is the terminus)
-    auto next_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("s2"),
-                                                 today, tomorrow, 100, *b.data, nt::RTLevel::Base);
+    // b ut only one departure (the last does not count, it is the terminus)
+    auto next_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("s2"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(next_departures.size(), 1);
     BOOST_CHECK_EQUAL(next_departures.at(0).first, "24:00"_t + "9:01"_t);
 }
@@ -461,7 +443,7 @@ BOOST_AUTO_TEST_CASE(queue_comp_test_clockwise) {
     q.push({JppIdx(1), nullptr, 42});
     q.push({JppIdx(2), nullptr, 6});
 
-    //for clockwise, we want the smallest first
+    // for clockwise, we want the smallest first
     BOOST_CHECK_EQUAL(q.top().dt, 6);
     q.pop();
     BOOST_CHECK_EQUAL(q.top().dt, 12);
@@ -474,7 +456,7 @@ BOOST_AUTO_TEST_CASE(queue_comp_test_anti_clockwise) {
     q.push({JppIdx(1), nullptr, 42});
     q.push({JppIdx(2), nullptr, 6});
 
-    //for clockwise, we want the greatest first
+    // for clockwise, we want the greatest first
     BOOST_CHECK_EQUAL(q.top().dt, 42);
     q.pop();
     BOOST_CHECK_EQUAL(q.top().dt, 12);
@@ -501,34 +483,34 @@ BOOST_AUTO_TEST_CASE(queue_comp_test_anti_clockwise) {
  *
  */
 BOOST_FIXTURE_TEST_CASE(dep_arr_filtering, departure_helper) {
-    b.vj("A", "1111", "", true, "A1")
-            ("x", "08:00"_t, "08:01"_t)("center", "09:00"_t, "09:01"_t)("y", "10:00"_t, "10:01"_t);
-    b.vj("A", "1111", "", true, "A2")
-            ("x", "10:00"_t, "10:01"_t)("center", "10:30"_t, "10:31"_t)("y", "11:00"_t, "11:01"_t);
-    b.vj("A", "1111", "", true, "A3")
-            ("x", "10:30"_t, "10:31"_t)("center", "11:00"_t, "11:01"_t)("y", "11:30"_t, "11:31"_t);
+    b.vj("A", "1111", "", true, "A1")("x", "08:00"_t, "08:01"_t)("center", "09:00"_t, "09:01"_t)("y", "10:00"_t,
+                                                                                                 "10:01"_t);
+    b.vj("A", "1111", "", true, "A2")("x", "10:00"_t, "10:01"_t)("center", "10:30"_t, "10:31"_t)("y", "11:00"_t,
+                                                                                                 "11:01"_t);
+    b.vj("A", "1111", "", true, "A3")("x", "10:30"_t, "10:31"_t)("center", "11:00"_t, "11:01"_t)("y", "11:30"_t,
+                                                                                                 "11:31"_t);
 
-    b.vj("B", "1111", "", true, "B1")
-            ("x", "18:00"_t, "18:01"_t)("center", "19:00"_t, "19:01"_t)("y", "20:00"_t, "20:01"_t);
-    b.vj("B", "1111", "", true, "B2")
-            ("x", "20:00"_t, "20:01"_t)("center", "20:30"_t, "20:31"_t)("y", "21:00"_t, "21:01"_t);
-    b.vj("B", "1111", "", true, "B3")
-            ("x", "20:30"_t, "20:31"_t)("center", "21:00"_t, "21:01"_t)("y", "21:30"_t, "21:31"_t);
+    b.vj("B", "1111", "", true, "B1")("x", "18:00"_t, "18:01"_t)("center", "19:00"_t, "19:01"_t)("y", "20:00"_t,
+                                                                                                 "20:01"_t);
+    b.vj("B", "1111", "", true, "B2")("x", "20:00"_t, "20:01"_t)("center", "20:30"_t, "20:31"_t)("y", "21:00"_t,
+                                                                                                 "21:01"_t);
+    b.vj("B", "1111", "", true, "B3")("x", "20:30"_t, "20:31"_t)("center", "21:00"_t, "21:01"_t)("y", "21:30"_t,
+                                                                                                 "21:31"_t);
 
-    b.vj("C", "1111", "", true, "C1")
-            ("x", "08:00"_t, "08:01"_t)("center", "09:45"_t, "09:46"_t)("y", "10:00"_t, "10:01"_t);
-    b.vj("C", "1111", "", true, "C2")
-            ("x", "08:10"_t, "08:11"_t)("center", "09:55"_t, "09:56"_t)("y", "11:00"_t, "11:01"_t);
-    b.vj("C", "1111", "", true, "C3")
-            ("x", "10:30"_t, "10:31"_t)("center", "23:45"_t, "23:56"_t)("y", "23:55"_t, "23:56"_t);
+    b.vj("C", "1111", "", true, "C1")("x", "08:00"_t, "08:01"_t)("center", "09:45"_t, "09:46"_t)("y", "10:00"_t,
+                                                                                                 "10:01"_t);
+    b.vj("C", "1111", "", true, "C2")("x", "08:10"_t, "08:11"_t)("center", "09:55"_t, "09:56"_t)("y", "11:00"_t,
+                                                                                                 "11:01"_t);
+    b.vj("C", "1111", "", true, "C3")("x", "10:30"_t, "10:31"_t)("center", "23:45"_t, "23:56"_t)("y", "23:55"_t,
+                                                                                                 "23:56"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
 
-    auto next_arrivals = get_stop_times(StopEvent::drop_off, get_jpp_idx("center"),
-                                               today, tomorrow, 5, *b.data, nt::RTLevel::Base);
+    auto next_arrivals =
+        get_stop_times(StopEvent::drop_off, get_jpp_idx("center"), today, tomorrow, 5, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(next_arrivals.size(), 5);
     BOOST_CHECK_EQUAL(next_arrivals.at(0).first, today + "9:00"_t);
     BOOST_CHECK_EQUAL(next_arrivals.at(1).first, today + "9:45"_t);
@@ -536,16 +518,16 @@ BOOST_FIXTURE_TEST_CASE(dep_arr_filtering, departure_helper) {
     BOOST_CHECK_EQUAL(next_arrivals.at(3).first, today + "10:30"_t);
     BOOST_CHECK_EQUAL(next_arrivals.at(4).first, today + "11:00"_t);
 
-    auto next_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("center"),
-                                                 today, tomorrow, 5, *b.data, nt::RTLevel::Base);
+    auto next_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("center"), today, tomorrow, 5, *b.data, nt::RTLevel::Base);
     BOOST_CHECK_EQUAL(next_departures.at(0).first, today + "9:01"_t);
     BOOST_CHECK_EQUAL(next_departures.at(1).first, today + "9:46"_t);
     BOOST_CHECK_EQUAL(next_departures.at(2).first, today + "9:56"_t);
     BOOST_CHECK_EQUAL(next_departures.at(3).first, today + "10:31"_t);
     BOOST_CHECK_EQUAL(next_departures.at(4).first, today + "11:01"_t);
 
-    auto prev_departures = get_stop_times(StopEvent::pick_up, get_jpp_idx("center"),
-                                                 today, yesterday, 5, *b.data, nt::RTLevel::Base);
+    auto prev_departures =
+        get_stop_times(StopEvent::pick_up, get_jpp_idx("center"), today, yesterday, 5, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(prev_departures.size(), 5);
     BOOST_CHECK_EQUAL(prev_departures.at(0).first, "23:56"_t);
     BOOST_CHECK_EQUAL(prev_departures.at(1).first, "21:01"_t);

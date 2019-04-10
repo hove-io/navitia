@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -40,30 +40,29 @@ www.navitia.io
 #include <algorithm>
 #include "utils/functions.h"
 
-namespace ed{
+namespace ed {
 
-struct EdReader{
-
+struct EdReader {
     std::unique_ptr<pqxx::connection> conn;
 
-
-    EdReader(const std::string& connection_string){
-        try{
+    EdReader(const std::string& connection_string) {
+        try {
             conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
-        }catch(const pqxx::pqxx_exception& e){
+        } catch (const pqxx::pqxx_exception& e) {
             throw navitia::exception(e.base().what());
-
         }
     }
 
-    void fill(navitia::type::Data& nav_data, const double min_non_connected_graph_ratio, const bool export_georef_edges_geometries);
+    void fill(navitia::type::Data& nav_data,
+              const double min_non_connected_graph_ratio,
+              const bool export_georef_edges_geometries);
 
-    //for admin main stop areas, we need this temporary map
+    // for admin main stop areas, we need this temporary map
     //(we can't use an index since the link is between georef and navitia, and those modules are loaded separatly)
     std::unordered_map<std::string, navitia::georef::Admin*> admin_by_insee_code;
 
 private:
-    //map d'id en base vers le poiteur de l'objet instancié
+    // map d'id en base vers le poiteur de l'objet instancié
     std::unordered_map<idx_t, navitia::type::Network*> network_map;
     std::unordered_map<idx_t, navitia::type::CommercialMode*> commercial_mode_map;
     std::unordered_map<idx_t, navitia::type::PhysicalMode*> physical_mode_map;
@@ -83,14 +82,14 @@ private:
     // stop_times by vj idx
     std::unordered_map<idx_t, std::vector<navitia::type::StopTime>> sts_from_vj;
 
-    //we need a temporary structure to store the comments on the stop times
+    // we need a temporary structure to store the comments on the stop times
     std::unordered_map<idx_t, std::vector<std::string>> stop_time_comments;
     std::unordered_map<idx_t, std::vector<std::string>> vehicle_journey_comments;
     std::unordered_map<idx_t, std::string> stop_time_headsigns;
-    using StKey = std::pair<idx_t, uint16_t>;// idx ed vj, order stop time
+    using StKey = std::pair<idx_t, uint16_t>;  // idx ed vj, order stop time
     std::unordered_map<idx_t, StKey> id_to_stop_time_key;
 
-    //map d'id en base(osmid) vers l'idx de l'objet
+    // map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;
     std::unordered_map<idx_t, navitia::georef::Way*> way_map;
     std::unordered_map<idx_t, navitia::georef::POI*> poi_map;
@@ -101,7 +100,7 @@ private:
     std::unordered_map<uint64_t, uint64_t> node_map;
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
-    std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
+    std::set<uint64_t> way_to_ignore;  // TODO if bottleneck change to flat_set
     std::unordered_set<uint64_t> node_to_ignore;
     using EdgeId = std::pair<uint64_t, uint64_t>;
     navitia::flat_enum_map<navitia::type::Mode_e, std::set<EdgeId>> edge_to_ignore_by_modes;
@@ -134,7 +133,6 @@ private:
 
     void fill_comments(navitia::type::Data& data, pqxx::work& work);
 
-
     void fill_admins(navitia::type::Data& data, pqxx::work& work);
     void fill_admin_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_admins_postal_codes(navitia::type::Data& data, pqxx::work& work);
@@ -147,16 +145,18 @@ private:
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries);
-    boost::optional<navitia::time_res_traits::sec_type>
-    get_duration (nt::Mode_e mode, double len, uint64_t source, uint64_t target);
+    boost::optional<navitia::time_res_traits::sec_type> get_duration(nt::Mode_e mode,
+                                                                     double len,
+                                                                     uint64_t source,
+                                                                     uint64_t target);
     void fill_vector_to_ignore(pqxx::work& work, const double percent_delete);
     void fill_graph_bss(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_parking(navitia::type::Data& data, pqxx::work& work);
 
-    //Synonyms:
+    // Synonyms:
     void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
 
-    //les tarifs:
+    // les tarifs:
     void fill_prices(navitia::type::Data& data, pqxx::work& work);
     void fill_transitions(navitia::type::Data& data, pqxx::work& work);
     void fill_origin_destinations(navitia::type::Data& data, pqxx::work& work);
@@ -176,4 +176,4 @@ private:
     log4cplus::Logger log = log4cplus::Logger::getInstance("log");
 };
 
-}
+}  // namespace ed

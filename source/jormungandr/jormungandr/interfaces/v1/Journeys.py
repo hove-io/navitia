@@ -52,6 +52,7 @@ import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.scenarios import new_default, distributed
+from jormungandr.fallback_modes import FallbackModes
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -361,7 +362,12 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
-
+        for mode in FallbackModes.modes_str():
+            parser_get.add_argument(
+                "max_{}_direct_path_duration".format(mode),
+                type=int,
+                help="limit duration of direct path in {}, used ONLY in distributed scenario".format(mode),
+            )
         args = self.parsers["get"].parse_args()
 
         self.get_decorators.append(complete_links(self))
@@ -441,6 +447,12 @@ class Journeys(JourneyCommon):
                 nb_crowfly = args.get('_max_nb_crowfly_by_{}'.format(mode))
                 if nb_crowfly is not None:
                     args['max_nb_crowfly_by_mode'][mode] = nb_crowfly
+
+            # activated only for distributed
+            for mode in FallbackModes.modes_str():
+                tmp = 'max_{}_direct_path_duration'.format(mode)
+                if args.get(tmp) is None:
+                    args[tmp] = getattr(mod, tmp)
 
         if region:
             _set_specific_params(i_manager.instances[region])

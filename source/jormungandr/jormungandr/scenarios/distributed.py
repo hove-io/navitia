@@ -288,8 +288,10 @@ class Scenario(new_default.Scenario):
             with FutureManager() as future_manager:
                 return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
         except PtException as e:
+            logger.exception('')
             return [e.get()]
         except EntryPointException as e:
+            logger.exception('')
             return [e.get()]
 
     def finalise_journeys(self, request, responses, context, instance, is_debug):
@@ -304,6 +306,7 @@ class Scenario(new_default.Scenario):
                 journey_filter.filter_detailed_journeys(responses, request)
 
         except Exception as e:
+            logging.getLogger(__name__).exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
 

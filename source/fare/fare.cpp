@@ -39,7 +39,8 @@ www.navitia.io
 
 namespace greg = boost::gregorian;
 
-namespace navitia { namespace fare {
+namespace navitia {
+namespace fare {
 
 static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
     // we save the informations about the last mod used
@@ -47,9 +48,8 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
     label.mode = section.mode;
     label.network = section.network;
 
-
     if (ticket.type == Ticket::ODFare) {
-        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // It's a new OD ticket
+        if (label.stop_area == "" || label.current_type != Ticket::ODFare) {  // It's a new OD ticket
             label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
             label.nb_changes = 0;
@@ -57,7 +57,7 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
 
             ticket.sections.push_back(section);
             label.tickets.push_back(ticket);
-        } else { // We got an old ticket
+        } else {  // We got an old ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
         }
@@ -71,7 +71,8 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
             // we bought a new ticket
             // we save the global cost, and we reset the number of changes and duration
             if (ticket.value.undefined)
-                label.nb_undefined_sub_cost++; //we need to track the number of undefined ticket for the comparison operator
+                label.nb_undefined_sub_cost++;  // we need to track the number of undefined ticket for the comparison
+                                                // operator
             label.cost += ticket.value;
             label.tickets.push_back(ticket);
             label.nb_changes = 0;
@@ -87,41 +88,41 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
     return label;
 }
 
-static bool valid(const State& state, const SectionKey& section){
-    if((state.mode != "" && !boost::iequals(state.mode, section.mode)) ||
-            (state.network != "" && !boost::iequals(state.network, section.network)) ||
-            (state.line != "" && !boost::iequals(state.line, section.line)) )
+static bool valid(const State& state, const SectionKey& section) {
+    if ((state.mode != "" && !boost::iequals(state.mode, section.mode))
+        || (state.network != "" && !boost::iequals(state.network, section.network))
+        || (state.line != "" && !boost::iequals(state.line, section.line)))
         return false;
     return true;
 }
 
-static bool valid(const State& state, const Label& label){
-    if((state.mode != "" && !boost::iequals(state.mode, label.mode)) ||
-            (state.network != "" && !boost::iequals(state.network, label.network)) ||
-            (state.line != "" && !boost::iequals(state.line, label.line))  ||
-            (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)) )
+static bool valid(const State& state, const Label& label) {
+    if ((state.mode != "" && !boost::iequals(state.mode, label.mode))
+        || (state.network != "" && !boost::iequals(state.network, label.network))
+        || (state.line != "" && !boost::iequals(state.line, label.line))
+        || (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)))
         return false;
     return true;
 }
 
 std::string comp_to_string(const Comp_e comp) {
     switch (comp) {
-    case Comp_e::EQ:
-        return "=";
-    case Comp_e::NEQ:
-        return "!=";
-    case Comp_e::LT:
-        return "<";
-    case Comp_e::GT:
-        return ">";
-    case Comp_e::LTE:
-        return "<=";
-    case Comp_e::GTE:
-        return ">=";
-    case Comp_e::True:
-        return "True";
-    default:
-        throw navitia::exception("unhandled Comp case");
+        case Comp_e::EQ:
+            return "=";
+        case Comp_e::NEQ:
+            return "!=";
+        case Comp_e::LT:
+            return "<";
+        case Comp_e::GT:
+            return ">";
+        case Comp_e::LTE:
+            return "<=";
+        case Comp_e::GTE:
+            return ">=";
+        case Comp_e::True:
+            return "True";
+        default:
+            throw navitia::exception("unhandled Comp case");
     }
 }
 
@@ -133,7 +134,7 @@ results Fare::compute_fare(const routing::Path& path) const {
         LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
         return res;
     }
-    std::vector< std::vector<Label> > labels(nb_nodes);
+    std::vector<std::vector<Label>> labels(nb_nodes);
     // Start label
     labels[0].push_back(Label());
     size_t section_idx(0);
@@ -148,34 +149,33 @@ results Fare::compute_fare(const routing::Path& path) const {
 
         std::vector<std::vector<Label>> new_labels(nb_nodes);
         try {
-            BOOST_FOREACH(edge_t e, boost::edges(g)) {
-                vertex_t u = boost::source(e,g);
-                vertex_t v = boost::target(e,g);
-                if (! valid(g[v], section_key))
+            BOOST_FOREACH (edge_t e, boost::edges(g)) {
+                vertex_t u = boost::source(e, g);
+                vertex_t v = boost::target(e, g);
+                if (!valid(g[v], section_key))
                     continue;
 
-                for (const Label& label: labels[u]) {
+                for (const Label& label : labels[u]) {
                     Ticket ticket;
                     const Transition& transition = g[e];
                     if (valid(g[u], label) && transition.valid(section_key, label)) {
                         if (transition.ticket_key != "") {
-                            bool ticket_found = false; //TODO refactor this, optional is way better
+                            bool ticket_found = false;  // TODO refactor this, optional is way better
                             auto it = fare_map.find(transition.ticket_key);
                             try {
                                 if (it != fare_map.end()) {
                                     ticket = it->second.get_fare(section_key.date);
                                     ticket_found = true;
                                 }
+                            } catch (no_ticket) {  // the ticket_found bool is still false
                             }
-                            catch(no_ticket) { //the ticket_found bool is still false
-                            }
-                            if (! ticket_found) {
+                            if (!ticket_found) {
                                 ticket = make_default_ticket();
                             }
                         }
                         if (transition.global_condition == Transition::GlobalCondition::exclusive)
                             throw ticket;
-                        else if(transition.global_condition == Transition::GlobalCondition::with_changes) {
+                        else if (transition.global_condition == Transition::GlobalCondition::with_changes) {
                             ticket.type = Ticket::ODFare;
                         }
                         Label next = next_label(label, ticket, section_key);
@@ -185,7 +185,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                             try {
                                 Ticket ticket_od;
                                 ticket_od = get_od(next, section_key).get_fare(section_key.date);
-                                if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
+                                if (label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
                                     ticket_od.sections = label.tickets.back().sections;
 
                                 ticket_od.sections.push_back(section_key);
@@ -196,13 +196,13 @@ results Fare::compute_fare(const routing::Path& path) const {
 
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
-                                LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA=" << next.stop_area
-                                               << ", zone=" << next.zone
-                                               << ", section start_zone=" << section_key.start_zone
-                                               << ", dest_zone=" << section_key.dest_zone
-                                               << ", start_sa=" << section_key.start_stop_area
-                                               << ", dest_sa=" << section_key.dest_stop_area
-                                               << ", mode=" << section_key.mode);
+                                LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
+                                                            << next.stop_area << ", zone=" << next.zone
+                                                            << ", section start_zone=" << section_key.start_zone
+                                                            << ", dest_zone=" << section_key.dest_zone
+                                                            << ", start_sa=" << section_key.start_stop_area
+                                                            << ", dest_sa=" << section_key.dest_stop_area
+                                                            << ", mode=" << section_key.mode);
                             }
                         } else {
                             new_labels[0].push_back(next);
@@ -213,7 +213,7 @@ results Fare::compute_fare(const routing::Path& path) const {
             }
         }
         // exclusive segment, we have to use that ticket
-        catch(const Ticket& ticket) {
+        catch (const Ticket& ticket) {
             LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
             new_labels.clear();
             new_labels.resize(nb_nodes);
@@ -222,14 +222,13 @@ results Fare::compute_fare(const routing::Path& path) const {
             }
         }
         labels = std::move(new_labels);
-
     }
 
     // We look for the cheapest label
     // if 2 label have the same cost, we take the one with the least number of tickets
     boost::optional<Label> best_label;
-    for(const Label& label : labels.at(0)) {
-        if(!best_label || label < (*best_label)) {
+    for (const Label& label : labels.at(0)) {
+        if (!best_label || label < (*best_label)) {
             res.tickets = label.tickets;
             res.not_found = (label.nb_undefined_sub_cost != 0);
             res.total = label.cost;
@@ -240,8 +239,7 @@ results Fare::compute_fare(const routing::Path& path) const {
     return res;
 }
 
-
-void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket){
+void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket) {
     tickets.push_back(PeriodTicket(greg::date_period(begin, end), ticket));
 }
 
@@ -250,8 +248,8 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::VehicleJourney* vj = path_item.get_vj();
 
-    //TODO, original uri for all
-    network = vj->route->line->network->uri; //uri ?
+    // TODO, original uri for all
+    network = vj->route->line->network->uri;  // uri ?
     start_stop_area = first_sp->stop_area->uri;
     dest_stop_area = last_sp->stop_area->uri;
     line = vj->route->line->uri;
@@ -260,33 +258,47 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     dest_time = path_item.arrival.time_of_day().total_seconds();
     start_zone = first_sp->fare_zone;
     dest_zone = last_sp->fare_zone;
-    mode = vj->physical_mode->uri; //CHECK
+    mode = vj->physical_mode->uri;  // CHECK
 }
 
-template<class T> bool compare(const T& a, const T& b, Comp_e comp) {
-    switch(comp) {
-    case Comp_e::LT: return a < b; break;
-    case Comp_e::GT: return a > b; break;
-    case Comp_e::GTE: return a >= b; break;
-    case Comp_e::LTE: return a <= b; break;
-    case Comp_e::EQ: return a == b; break;
-    case Comp_e::NEQ: return a != b; break;
-    default: return true;
+template <class T>
+bool compare(const T& a, const T& b, Comp_e comp) {
+    switch (comp) {
+        case Comp_e::LT:
+            return a < b;
+            break;
+        case Comp_e::GT:
+            return a > b;
+            break;
+        case Comp_e::GTE:
+            return a >= b;
+            break;
+        case Comp_e::LTE:
+            return a <= b;
+            break;
+        case Comp_e::EQ:
+            return a == b;
+            break;
+        case Comp_e::NEQ:
+            return a != b;
+            break;
+        default:
+            return true;
     }
 }
 
 int SectionKey::duration_at_begin(int ticket_start_time) const {
     if (ticket_start_time < boost::lexical_cast<int>(start_time))
         return start_time - ticket_start_time;
-    else // Passe-minuit
-        return (start_time + 24*3600) - ticket_start_time;
+    else  // Passe-minuit
+        return (start_time + 24 * 3600) - ticket_start_time;
 }
 
 int SectionKey::duration_at_end(int ticket_start_time) const {
     if (ticket_start_time < boost::lexical_cast<int>(dest_time))
         return dest_time - ticket_start_time;
-    else // Passe-minuit
-        return (dest_time + 24*3600) - ticket_start_time;
+    else  // Passe-minuit
+        return (dest_time + 24 * 3600) - ticket_start_time;
 }
 
 Ticket DateTicket::get_fare(boost::gregorian::date date) const {
@@ -298,23 +310,24 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
     throw no_ticket();
 }
 
-DateTicket DateTicket::operator +(const DateTicket& other) const{
+DateTicket DateTicket::operator+(const DateTicket& other) const {
     DateTicket new_ticket = *this;
-    if(this->tickets.size() != other.tickets.size())
+    if (this->tickets.size() != other.tickets.size())
         LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("fare"), "Tickets don't have the same number of dates");
 
-    for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
-        if(this->tickets[i].validity_period != other.tickets[i].validity_period)
+    for (size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
+        if (this->tickets[i].validity_period != other.tickets[i].validity_period)
             LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("fare"),
-                            "Ticket n° " << i << " doesn't have the same dates; " << this->tickets[i].validity_period << " as " << other.tickets[i].validity_period);
+                            "Ticket n° " << i << " doesn't have the same dates; " << this->tickets[i].validity_period
+                                         << " as " << other.tickets[i].validity_period);
         new_ticket.tickets[i].ticket.value = this->tickets[i].ticket.value + other.tickets[i].ticket.value;
     }
     return new_ticket;
 }
 
-bool Transition::valid(const SectionKey& section, const Label& label) const
-{
-    if (label.tickets.size() == 0 && ticket_key == "" && global_condition != Transition::GlobalCondition::with_changes) {
+bool Transition::valid(const SectionKey& section, const Label& label) const {
+    if (label.tickets.size() == 0 && ticket_key == ""
+        && global_condition != Transition::GlobalCondition::with_changes) {
         // the transition is a continuation and we don't have any
         // ticket, thus this transition is not valid
         return false;
@@ -324,34 +337,42 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
         return false;
     }
 
-    for (const Condition& cond: this->start_conditions) {
+    for (const Condition& cond : this->start_conditions) {
         if (cond.key == "zone" && cond.value != section.start_zone) {
             return false;
-        } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)) {
+        } else if (cond.key == "stoparea" && !boost::iequals(cond.value, section.start_stop_area)) {
             return false;
-        } else if(cond.key == "duration") {
+        } else if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_begin(label.start_time);
-            if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }
+            if (!compare(ticket_duration, duration, cond.comparaison)) {
+                return false;
+            }
         } else if (cond.key == "nb_changes") {
             int nb_changes = boost::lexical_cast<int>(cond.value);
-            if (!compare(label.nb_changes, nb_changes, cond.comparaison)) { return false; }
+            if (!compare(label.nb_changes, nb_changes, cond.comparaison)) {
+                return false;
+            }
         } else if (cond.key == "ticket" && label.tickets.size() > 0) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("fare"), label.tickets.back().key << " " << cond.value);
-            if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) { return false; }
+            if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
+                return false;
+            }
         }
     }
-    for (const Condition& cond: this->end_conditions) {
+    for (const Condition& cond : this->end_conditions) {
         if (cond.key == "zone" && cond.value != section.dest_zone) {
             return false;
-        } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
+        } else if (cond.key == "stoparea" && !boost::iequals(cond.value, section.dest_stop_area)) {
             return false;
         } else if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_end(label.start_time);
-            if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }
+            if (!compare(ticket_duration, duration, cond.comparaison)) {
+                return false;
+            }
         }
     }
     return true;
@@ -359,8 +380,10 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
 
 using OD_map = std::map<OD_key, std::vector<std::string>>;
 
-static boost::optional<OD_map::const_iterator>
-get_od_dest(const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
+static boost::optional<OD_map::const_iterator> get_od_dest(const OD_map& od_map,
+                                                           const OD_key& sa,
+                                                           const OD_key& mode,
+                                                           const OD_key& zone) {
     auto od_t = od_map.find(sa);
     if (od_t == od_map.end())
         od_t = od_map.find(mode);
@@ -388,20 +411,20 @@ DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
         od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
     }
     // if we haven't found complete OD-ticket match we search on origin's mode
-    if (! od) {
+    if (!od) {
         start_od_map = od_tickets.find(o_mode);
         if (start_od_map != od_tickets.end()) {
             od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
         }
     }
     // if we haven't found complete OD-ticket match we search on origin's zone
-    if (! od) {
+    if (!od) {
         start_od_map = od_tickets.find(o_zone);
         if (start_od_map != od_tickets.end()) {
             od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
         }
     }
-    if (! od) {
+    if (!od) {
         throw no_ticket();
     }
 
@@ -425,24 +448,24 @@ DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     return ticket;
 }
 
-
 size_t Fare::nb_transitions() const {
     return boost::num_edges(g);
 }
 
 void Fare::add_default_ticket() {
-    State begin; // Start is an empty node
+    State begin;  // Start is an empty node
     begin_v = boost::add_vertex(begin, g);
 
-    //add a default ticket (more expensive than all the other, so it is taken only when no other choices are available)
+    // add a default ticket (more expensive than all the other, so it is taken only when no other choices are available)
     Transition default_transition;
     Ticket default_ticket = make_default_ticket();
     default_transition.ticket_key = default_ticket.key;
     boost::add_edge(begin_v, begin_v, default_transition, g);
     DateTicket dticket;
-    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin), boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
+    dticket.add(boost::gregorian::date(boost::gregorian::neg_infin),
+                boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
     fare_map.insert({default_ticket.key, dticket});
 }
 
-}
-}
+}  // namespace fare
+}  // namespace navitia

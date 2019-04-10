@@ -35,7 +35,8 @@ www.navitia.io
 
 #pragma once
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 /**
  * Comment container
@@ -45,29 +46,26 @@ namespace navitia { namespace type {
 struct Comments {
     template <typename T>
     const std::vector<std::string>& get(const T& obj) const {
-        const auto& c = boost::fusion::at_key<
-                typename std::remove_const<typename std::remove_pointer<T>::type>::type
-                >(map);
+        const auto& c =
+            boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
 
         return find_or_default(get_as_key(obj), c);
     }
 
     template <typename T>
     void add(const T& obj, const std::string& comment) {
-        auto& c = boost::fusion::at_key<
-                typename std::remove_const<typename std::remove_pointer<T>::type>::type
-                >(map);
+        auto& c = boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
 
         c[get_as_key(obj)].push_back(comment);
     }
 
-    template<class Archive>
+    template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & map;
+        ar& map;
     }
 
 private:
-    //using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
+    // using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
     using comment_list = std::vector<std::string>;
 
     template <typename T>
@@ -78,34 +76,33 @@ private:
 
     using stop_time_key = std::pair<const navitia::type::VehicleJourney*, uint16_t>;
 
-
     template <typename T>
     const T* get_as_key(const T& obj) const {
         return &obj;
     }
     template <typename T>
-    const T* get_as_key(T* const & obj) const {
+    const T* get_as_key(T* const& obj) const {
         return obj;
     }
     template <typename T>
-    const T* get_as_key(T const * const & obj) const {
+    const T* get_as_key(T const* const& obj) const {
         return obj;
     }
     const stop_time_key get_as_key(const navitia::type::StopTime& st) const {
         return std::make_pair(st.vehicle_journey, st.order());
     }
 
-    typedef boost::fusion::map<
-            fusion_pair_comment_map<navitia::type::StopArea>,
-            fusion_pair_comment_map<navitia::type::StopPoint>,
-            fusion_pair_comment_map<navitia::type::Line>,
-            fusion_pair_comment_map<navitia::type::Route>,
-            fusion_pair_comment_map<navitia::type::VehicleJourney>,
-            fusion_pair_comment_map<navitia::type::LineGroup>,
-            boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>
-    > comment_map_type;
+    typedef boost::fusion::map<fusion_pair_comment_map<navitia::type::StopArea>,
+                               fusion_pair_comment_map<navitia::type::StopPoint>,
+                               fusion_pair_comment_map<navitia::type::Line>,
+                               fusion_pair_comment_map<navitia::type::Route>,
+                               fusion_pair_comment_map<navitia::type::VehicleJourney>,
+                               fusion_pair_comment_map<navitia::type::LineGroup>,
+                               boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>>
+        comment_map_type;
 
     comment_map_type map;
 };
 
-}}// namespace navitia::type
+}  // namespace type
+}  // namespace navitia

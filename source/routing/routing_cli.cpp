@@ -46,21 +46,21 @@ www.navitia.io
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
 namespace bt = boost::posix_time;
-namespace po = boost::program_options ;
+namespace po = boost::program_options;
 namespace pb = pbnavitia;
 
-static void completion(const char *buf, linenoiseCompletions *lc) {
+static void completion(const char* buf, linenoiseCompletions* lc) {
     if (buf[0] == 'j' || buf[0] == '\0') {
-        linenoiseAddCompletion(lc,"journey");
+        linenoiseAddCompletion(lc, "journey");
     }
     if (buf[0] == 'p' || buf[0] == '\0') {
-        linenoiseAddCompletion(lc,"ptref");
-    } 
+        linenoiseAddCompletion(lc, "ptref");
+    }
 }
 /* This program takes a path to a nav.lz4 navitia's file
  * It will be loaded at the begginning of the program
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "A filename is needed" << std::endl;
         return 1;
@@ -69,11 +69,11 @@ int main(int argc, char **argv) {
     navitia::cli::compute_options compute_opt;
     compute_opt.load(argv[1]);
     po::variables_map vm;
-    char *line;
+    char* line;
     /* Parse options, with --multiline we enable multi line editing. */
     linenoiseSetCompletionCallback(completion);
     linenoiseHistoryLoad("history.txt"); /* Load the history at startup */
-    while((line = linenoise("hello> ")) != nullptr) {
+    while ((line = linenoise("hello> ")) != nullptr) {
         linenoiseHistoryAdd(line);
         linenoiseHistorySave("history.txt");
         std::string str_line(line);
@@ -93,12 +93,13 @@ int main(int argc, char **argv) {
             }
             const std::string id = splitted_line[1];
             navitia::PbCreator pb_creator(&compute_opt.data, pt::not_a_date_time, null_time_period);
-            #define SHOW_ID_CLI(type_name, collection_name) \
-            auto collection_name##_map = compute_opt.data.pt_data->collection_name##_map;\
-            if ( collection_name##_map.find(id) != collection_name##_map.end()) {\
-                pbnavitia::type_name p;\
-                pb_creator.fill(collection_name##_map.at(id), &p, 0);\
-                std::cout << p.DebugString() << std::endl;}
+#define SHOW_ID_CLI(type_name, collection_name)                                   \
+    auto collection_name##_map = compute_opt.data.pt_data->collection_name##_map; \
+    if (collection_name##_map.find(id) != collection_name##_map.end()) {          \
+        pbnavitia::type_name p;                                                   \
+        pb_creator.fill(collection_name##_map.at(id), &p, 0);                     \
+        std::cout << p.DebugString() << std::endl;                                \
+    }
             ITERATE_NAVITIA_PT_TYPES(SHOW_ID_CLI)
         }
     }

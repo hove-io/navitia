@@ -38,7 +38,7 @@ www.navitia.io
 // Std
 #include <string>
 
-#include "utils/functions.h" // absolute_path function
+#include "utils/functions.h"  // absolute_path function
 
 // Data to test
 #include "type/data.h"
@@ -49,24 +49,23 @@ static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
 BOOST_AUTO_TEST_CASE(load_data) {
-
     navitia::type::Data data(0);
     data.save(fake_data_file);
 
     // load .nav
-    std::string fake_data_path =  navitia::absolute_path() + fake_data_file;
+    std::string fake_data_path = navitia::absolute_path() + fake_data_file;
     bool failed = false;
     BOOST_CHECK_EQUAL(data.last_load_succeeded, false);
     try {
         data.load_nav(fake_data_path);
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, false);
     BOOST_CHECK_EQUAL(data.last_load_succeeded, true);
     try {
         data.load_nav("wrong_path");
-    } catch(const navitia::data::data_loading_error&) {
+    } catch (const navitia::data::data_loading_error&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
@@ -83,7 +82,7 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     bool failed = false;
     try {
         data.load_disruptions(fake_disruption_path);
-    } catch(const navitia::data::disruptions_broken_connection&) {
+    } catch (const navitia::data::disruptions_broken_connection&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
