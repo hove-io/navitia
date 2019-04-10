@@ -1763,7 +1763,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
         disruptions_after = self.query_region(disruption_query)
         assert nb_disruptions_before == len(disruptions_after['disruptions'])
 
-        # /journeys before (only direct walk)
+        # / Journeys: as no trip on pt added, only direct walk.
         C_B_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&"
             "datetime={dt}&_current_datetime={dt}".format(
@@ -1775,11 +1775,6 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
         self.is_valid_journey_response(response, C_B_query)
         assert len(response['journeys']) == 1
         assert 'non_pt_walking' in response['journeys'][0]['tags']
-
-        # /pt_objects before
-        ptobj_query = 'pt_objects?q={q}&_current_datetime={dt}'.format(q='adi', dt='20120614T080000')  # ++typo
-        response = self.query_region(ptobj_query)
-        assert 'pt_objects' not in response
 
         # Check that no vehicle_journey exists on the future realtime-trip
         vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
