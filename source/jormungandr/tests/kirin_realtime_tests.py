@@ -1908,13 +1908,10 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
-        # physical_mode of the newly created vehicle_journey should be that of base vehicle_journey (Tramway)
-        # TODO : Modify kraken to use physical_mode of base vehicle_journey for a trip update even if
-        # a physical_mode is present in GTFS-RT
-        # ticket jira pour la correction : https://jira.kisio.org/browse/NAVP-1284
+        # physical_mode of the newly created vehicle_journey is the base vehicle_journey physical mode (Tramway)
         pt_response = self.query_region('vehicle_journeys/vjA:modified:0:vjA_delayed/physical_modes')
         assert len(pt_response['physical_modes']) == 1
-        assert pt_response['physical_modes'][0]['name'] == 'Bus'
+        assert pt_response['physical_modes'][0]['name'] == 'Tramway'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
