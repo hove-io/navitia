@@ -101,7 +101,8 @@ EquipmentReportList EquipmentReports::get_paginated_equipment_report_list() {
         std::vector<equipment::StopAreaEquipment> sa_equipments;
         for (type::StopArea* sa : stop_areas) {
             const std::string sp_filter = build_ptref_sp_filter(sa->uri, sa_filter);
-            const type::Indexes sp_indexes = ptref::make_query(type::Type_e::StopPoint, sp_filter, data);
+            const type::Indexes sp_indexes =
+                ptref::make_query(type::Type_e::StopPoint, sp_filter, forbidden_uris, data);
             const auto stop_points = data.get_data<type::StopPoint>(sp_indexes);
             sa_equipments.emplace_back(sa, stop_points);
         }
