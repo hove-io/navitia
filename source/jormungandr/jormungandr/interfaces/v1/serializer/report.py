@@ -40,7 +40,7 @@ class LineReportSerializer(PbNestedSerializer):
 
 class EquipmentReportSerializer(PbNestedSerializer):
     line = pt.LineSerializer()
-    stop_area_equipments = pt.StopAreaEquipmentsSerializer()
+    stop_area_equipments = pt.StopAreaEquipmentsSerializer(many=True)
 
 
 class TrafficReportSerializer(PbNestedSerializer):
