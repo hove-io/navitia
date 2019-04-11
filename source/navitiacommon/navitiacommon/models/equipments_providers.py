@@ -38,7 +38,6 @@ from navitiacommon.models import db, TimestampMixin
 
 class EquipmentsProvider(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Text, primary_key=True)
-    instances = db.Column(ARRAY(db.Text), unique=False, nullable=False)
     klass = db.Column(db.Text, unique=False, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False, default=False)
     args = db.Column(JSONB, server_default='{}')
@@ -49,7 +48,6 @@ class EquipmentsProvider(db.Model, TimestampMixin):  # type: ignore
             self.from_json(json)
 
     def from_json(self, json):
-        self.instances = json['instances']
         self.klass = json['class']
         self.args = json['args']
         self.discarded = json['discarded'] if 'discarded' in json else self.discarded

@@ -71,7 +71,6 @@ equipments_provider_format = {
     'type': 'object',
     'properties': {
         'class': {'type': 'string'},
-        'instances': {'type': 'array', 'items': {'type': 'string'}},
         'args': {
             'type': 'object',
             'properties': {
@@ -84,5 +83,5 @@ equipments_provider_format = {
         },
         'discarded': {'type': 'boolean'},
     },
-    'required': ['class', 'instances', 'args'],
+    'required': ['class', 'args'],
 }
