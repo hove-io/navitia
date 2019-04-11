@@ -67,7 +67,7 @@ Note that you must have sudo installed
 OPTIONS:
    -h                  Show this message
    -p                  kraken database password
-   -g                  gtfs directory 
+   -g                  gtfs directory
    -o                  osm file
    -n                  do not install dependencies
    -c                  if OS is Debian, clean the APT configuration (repository)
@@ -117,7 +117,7 @@ then
     echo "no gtfs or osm file given, we'll take a default data set, Paris"
 
     echo "getting gtfs paris data from data.navitia.io"
-    # Note, here is a link to a dataset of the paris region. 
+    # Note, here is a link to a dataset of the paris region.
     # You can explore https://navitia.opendatasoft.com if you want another dataset
     wget -P /tmp https://navitia.opendatasoft.com/explore/dataset/fr-idf/files/dde578e47118b8c6f8885d75f18a504a/download/
     unzip -d /tmp/gtfs /tmp/index.html
@@ -144,13 +144,13 @@ git submodule update --init --recursive
 #Building
 #========
 #
-#First you need to install all dependencies. 
+#First you need to install all dependencies.
 #
-#first the system and the c++ dependencies: 
+#first the system and the c++ dependencies:
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-3.5.0
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-3.5.0 clang-format-6.0
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
@@ -166,7 +166,7 @@ then
       postgresql_package='postgresql-9.5'
       postgresql_postgis_package='postgis postgresql-9.5-postgis-2.2 postgresql-9.5-postgis-scripts'
 
-      # there is a bug in the liblog4cplus-dev in ubuntu 16, 
+      # there is a bug in the liblog4cplus-dev in ubuntu 16,
       # https://bugs.launchpad.net/ubuntu/+source/log4cplus/+bug/1578970
       # we grab another version
       wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-1.1-9_1.1.2-3.2_amd64.deb
@@ -217,7 +217,7 @@ kraken_db_name='navitia'
 db_owner='navitia'
 
 # for the default build we give ownership of the base to a 'navitia' user, but you can do whatever you want here
-encap=$(sudo -i -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_owner'")  # we check if there is already a user 
+encap=$(sudo -i -u postgres psql postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$db_owner'")  # we check if there is already a user
 if [ -z "$encap" ]; then
     sudo -i -u postgres psql -c "create user $db_owner;alter user $db_owner password '$kraken_db_user_password';"
 else
@@ -234,7 +234,7 @@ fi
 # Then you need to update it's scheme
 # The database migration is handled by alembic
 # You can edit the alembic.ini file if you want a custom behaviour (or give your own with the alembic -c option)
-# you can give the database url either by setting the sqlalchemy.url parameter in the config file or by giving 
+# you can give the database url either by setting the sqlalchemy.url parameter in the config file or by giving
 # a -x dbname option
 cd "$navitia_dir"/source/sql
 PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
@@ -272,7 +272,7 @@ cd
 # Running
 #========
 
-# * Kraken * 
+# * Kraken *
 echo "** running kraken"
 # we now need to pop the kraken
 
@@ -313,7 +313,7 @@ echo "** running jormungandr"
 mkdir -p "$run_dir"/jormungandr
 
 # For our test we only need one kraken
-cat << EOFJ > "$run_dir"/jormungandr/default.json 
+cat << EOFJ > "$run_dir"/jormungandr/default.json
 {
     "key": "default",
     "socket": "ipc:///tmp/default_kraken"
@@ -326,7 +326,7 @@ sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," "$navitia_dir"/
 #we also don't want to depend on the jormungandr database for this test
 sed -i 's/DISABLE_DATABASE.*/DISABLE_DATABASE=False/' "$run_dir"/jormungandr_settings.py
 
-JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r & 
+JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r &
 
 jormun_pid=$!
 

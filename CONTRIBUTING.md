@@ -62,3 +62,15 @@ pre-commit run black --all
 ```
 You can also [install Black traditionally](https://black.readthedocs.io/en/stable/installation_and_usage.html)
 But bare in mind, it requires python 3.6+ to run.
+
+## C++ formatting
+
+Our pre-commit hooks are running [Clang-format](https://releases.llvm.org/6.0.0/tools/clang/docs/ClangFormat.html) to format our c++ codebase. You'll need version 6.0 in order to pass our CI.
+```sh
+sudo apt  install clang-format-6.0
+```
+
+In case you might want to run Clang-format on the entire codebase, you can do:
+```sh
+pre-commit run clang-format-6.0 --all
+```
