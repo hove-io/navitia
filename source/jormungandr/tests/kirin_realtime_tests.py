@@ -1497,7 +1497,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         assert response['journeys'][0]['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
         assert has_the_disruption(response, 'stop_time_with_detour')
 
-        # Tramway is the first physical_mode in NTFS
+        # Tramway is the first physical_mode in NTFS, but we might pick mode in a smarter way in the future
         response = self.query_region('physical_modes')
         assert response['physical_modes'][0]['name'] == 'Tramway'
 
@@ -1782,7 +1782,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 1
         assert 'non_pt_walking' in response['journeys'][0]['tags']
 
-        # Check that no vehicle_journey exists on the future realtime-trip
+        # Check that no vehicle_journey is added
         vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
             vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
         )
@@ -1795,7 +1795,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
 class TestKirinAddNewTripWithoutPhysicalMode(MockKirinDisruptionsFixture):
     def test_add_new_trip_without_physical_mode(self):
         """
-        1. send a disruption to create a new trip with physical_mode absent in kaken
+        1. send a disruption to create a new trip without physical_mode absent in kaken
         2. check physical_mode of journey
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
@@ -1834,7 +1834,6 @@ class TestKirinAddNewTripWithoutPhysicalMode(MockKirinDisruptionsFixture):
         disruptions_after = self.query_region(disruption_query)
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
 
-        # / Journeys: as no trip on pt added, only direct walk.
         C_B_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&"
             "datetime={dt}&_current_datetime={dt}".format(
@@ -1853,6 +1852,69 @@ class TestKirinAddNewTripWithoutPhysicalMode(MockKirinDisruptionsFixture):
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
+    def test_update_trip_with_physical_mode(self):
+        """
+        1. send a disruption with a physical_mode to update a trip
+        2. check physical_mode of journey
+        """
+        # we have 7 vehicle_jouneys
+        pt_response = self.query_region('vehicle_journeys')
+        initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
+        assert initial_nb_vehicle_journeys == 7
+
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # physical_mode of base vehicle_journey
+        pt_response = self.query_region('vehicle_journeys/vjA/physical_modes?_current_datetime=20120614T1337')
+        assert len(pt_response['physical_modes']) == 1
+        assert pt_response['physical_modes'][0]['name'] == 'Tramway'
+
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120614T080224"),
+                    departure=tstamp("20120614T080225"),
+                    arrival_delay=60 + 24,
+                    departure_delay=60 + 25,
+                    message='cow on tracks',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120614T080400"),
+                    departure=tstamp("20120614T080400"),
+                    arrival_delay=3 * 60 + 58,
+                    departure_delay=3 * 60 + 58,
+                ),
+            ],
+            disruption_id='vjA_delayed',
+            physical_mode_id='physical_mode:Bus',  # this physical mode exists in kraken
+        )
+
+        # Check that a new disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+
+        # A new vj is created
+        pt_response = self.query_region('vehicle_journeys')
+        assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
+
+        # physical_mode of the newly created vehicle_journey should be that of base vehicle_journey (Tramway)
+        # TODO : Modify kraken to use physical_mode of base vehicle_journey for a trip update even if
+        # a physical_mode is present in GTFS-RT
+        # ticket jira pour la correction : https://jira.kisio.org/browse/NAVP-1284
+        pt_response = self.query_region('vehicle_journeys/vjA:modified:0:vjA_delayed/physical_modes')
+        assert len(pt_response['physical_modes']) == 1
+        assert pt_response['physical_modes'][0]['name'] == 'Bus'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
