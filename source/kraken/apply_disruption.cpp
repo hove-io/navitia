@@ -270,7 +270,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             // Add physical mode
-            if (!impact->physical_mode_id.empty() && impact->severity->effect == nt::disruption::Effect::ADDITIONAL_SERVICE) {
+            if (!impact->physical_mode_id.empty()
+                && impact->severity->effect == nt::disruption::Effect::ADDITIONAL_SERVICE) {
                 nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
                     .if_found([&](navitia::type::PhysicalMode* p) {
                         vj->physical_mode = p;

@@ -2619,8 +2619,8 @@ struct AddTripDataset {
         b.sa("I", 0, 0, true, true);
         b.sa("J", 0, 0, true, true);
 
-        b.vj("1").uri("vj:1").physical_mode("physical_mode_uri")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t)(
-            "stop_point:D", "09:30"_t);
+        b.vj("1").uri("vj:1").physical_mode("physical_mode_uri")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)(
+            "stop_point:C", "09:00"_t)("stop_point:D", "09:30"_t);
 
         // Add company
         comp_name = "comp_name";
@@ -3359,15 +3359,15 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
     BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 
-    update_trip = ntest::make_trip_update_message(
-        "vj:1", "20190101",
-        {
-            RTStopTime("stop_point:A", "20190101T0800"_pts).delay(0_min),
-            RTStopTime("stop_point:B", "20190101T0830"_pts).delay(0_min),
-            RTStopTime("stop_point:C", "20190101T0900"_pts).delay(5_min),
-            RTStopTime("stop_point:D", "20190101T0930"_pts).delay(5_min),
-        },
-        transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS, "", "physical_mode_id_that_doesnt_exist");
+    update_trip = ntest::make_trip_update_message("vj:1", "20190101",
+                                                  {
+                                                      RTStopTime("stop_point:A", "20190101T0800"_pts).delay(0_min),
+                                                      RTStopTime("stop_point:B", "20190101T0830"_pts).delay(0_min),
+                                                      RTStopTime("stop_point:C", "20190101T0900"_pts).delay(5_min),
+                                                      RTStopTime("stop_point:D", "20190101T0930"_pts).delay(5_min),
+                                                  },
+                                                  transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS, "",
+                                                  "physical_mode_id_that_doesnt_exist");
 
     navitia::handle_realtime("feed-1", timestamp, update_trip, *b.data, true, true);
     b.finalize_disruption_batch();
@@ -3377,4 +3377,3 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
     BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 }
-
