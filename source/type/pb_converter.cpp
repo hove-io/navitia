@@ -2133,6 +2133,10 @@ pbnavitia::HeatMap* PbCreator::add_heat_maps() {
     return response.add_heat_maps();
 }
 
+pbnavitia::EquipmentReport* PbCreator::add_equipment_reports() {
+    return response.add_equipment_reports();
+}
+
 bool PbCreator::has_error() {
     return response.has_error();
 }
@@ -2178,6 +2182,10 @@ int PbCreator::line_reports_size() {
 
 int PbCreator::calendars_size() {
     return response.calendars_size();
+}
+
+int PbCreator::equipment_reports_size() {
+    return response.equipment_reports_size();
 }
 
 void PbCreator::sort_journeys() {

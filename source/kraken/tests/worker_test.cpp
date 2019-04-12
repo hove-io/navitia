@@ -101,6 +101,24 @@ static pbnavitia::Request create_request_for_pt_planner(bool clockwise,
     return req;
 }
 
+static pbnavitia::Request create_equipment_reports_request(const std::string& filter = "",
+                                                           int count = 10,
+                                                           int depth = 0,
+                                                           int start_page = 0,
+                                                           const std::vector<std::string>& forbidden_uris = {}) {
+    pbnavitia::Request req;
+    req.set_requested_api(pbnavitia::equipment_reports);
+    auto reports_req = req.mutable_equipment_reports();
+    reports_req->set_filter(filter);
+    reports_req->set_count(count);
+    reports_req->set_depth(depth);
+    reports_req->set_start_page(start_page);
+    for (auto forbidden_uri : forbidden_uris) {
+        reports_req->add_forbidden_uris(forbidden_uri);
+    }
+    return req;
+}
+
 /**
  * Accessibility tests
  *
@@ -133,7 +151,7 @@ static pbnavitia::Request create_request_for_pt_planner(bool clockwise,
 struct fixture {
     fixture() : b("20150314"), w(navitia::kraken::Configuration()) {
         b.sa("A", 0, 0, true, true);
-        b.sa("B", 0, 0, true, true);
+        b.sa("B", 0, 0, true, true)("stop_point:B", {{"Name", {"B"}}});
         b.sa("C", 0, 0, true, false);  // C is not accessible
         b.vj("l1", "11111111", "", false)("stop_point:A", "8:00"_t)("stop_point:B", "9:00"_t);
         b.vj("l2")("stop_point:A", "9:00"_t)("stop_point:B", "10:00"_t);
@@ -193,6 +211,18 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
     pbnavitia::Response resp = w.pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
+}
+
+BOOST_FIXTURE_TEST_CASE(equipment_request_tests, fixture) {
+    const auto equipment_reports = create_equipment_reports_request("stop_point.has_code_type(Name)");
+    const auto d = data_manager.get_data();
+    w.dispatch(equipment_reports, *d);
+
+    pbnavitia::Response resp = w.pb_creator.get_response();
+    // only Stop_point B has the code "Name" and is part of line l1 & l2
+    BOOST_REQUIRE_EQUAL(resp.equipment_reports_size(), 2);
+    BOOST_CHECK_EQUAL(resp.equipment_reports(0).line().uri(), "l1");
+    BOOST_CHECK_EQUAL(resp.equipment_reports(1).line().uri(), "l2");
 }
 
 BOOST_AUTO_TEST_CASE(make_sn_entry_point_tests) {

@@ -208,18 +208,7 @@ class TestEndPoint(AbstractTestFixture):
         assert response['context']['timezone'] == 'UTC'
 
     def test_equipment_reports_context(self):
-        # TODO : When Kraken API is ready, replace
-        # raw_response = self.tester.get('/v1/coverage/main_routing_test/equipment_reports')
-        # assert response.status_code == 404
-        # response = json.loads(raw_response.data)
-        # by
-        # response = self.query('/v1/coverage/main_routing_test/equipment_reports', display=True)
-        raw_response = self.tester.get('/v1/coverage/main_routing_test/equipment_reports')
-        assert raw_response.status_code == 404
-        response = json.loads(raw_response.data)
+        response = self.query('/v1/coverage/main_routing_test/equipment_reports', display=True)
         self.check_context(response)
+        assert response.get("equipment_reports", None) is not None
         assert response['context']['timezone'] == 'UTC'
-        # TODO : Remove "error" check after kraken API implementation
-        assert response['error']
-        assert response['error']['id'] == "unknown_object"
-        assert response['error']['message'] == "Unknown API"

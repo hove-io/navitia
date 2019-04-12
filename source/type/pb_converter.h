@@ -312,6 +312,8 @@ struct PbCreator {
     pbnavitia::Trip* add_trips();
     pbnavitia::Impact* add_impacts();
     pbnavitia::RoutePoint* add_route_points();
+    pbnavitia::EquipmentReport* add_equipment_reports();
+
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);
@@ -329,6 +331,7 @@ struct PbCreator {
     int traffic_reports_size();
     int line_reports_size();
     int calendars_size();
+    int equipment_reports_size();
     pbnavitia::GeoStatus* mutable_geo_status();
     pbnavitia::Status* mutable_status();
     pbnavitia::Pagination* mutable_pagination();

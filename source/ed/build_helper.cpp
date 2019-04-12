@@ -319,41 +319,49 @@ SA::SA(builder& b,
     b.sas[sa_name] = sa;
 
     if (create_sp) {
-        auto sp = new navitia::type::StopPoint();
-        sp->idx = b.data->pt_data->stop_points.size();
-        b.data->pt_data->stop_points.push_back(sp);
-        sp->name = "stop_point:" + sa_name;
-        sp->uri = sp->name;
-        if (wheelchair_boarding)
-            sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-        if (bike_accepted)
-            sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
-        sp->coord.set_lon(x);
-        sp->coord.set_lat(y);
-
-        sp->stop_area = sa;
-        b.sps[sp->name] = sp;
-        sa->stop_point_list.push_back(sp);
+        SP::create_stop_point(b, sa, "stop_point:" + sa_name, {}, x, y, wheelchair_boarding, bike_accepted);
     }
 }
 
 SA& SA::operator()(const std::string& sp_name, double x, double y, bool wheelchair_boarding, bool bike_accepted) {
+    SP::create_stop_point(b, sa, sp_name, {}, x, y, wheelchair_boarding, bike_accepted);
+    return *this;
+}
+
+SA& SA::operator()(const std::string& sp_name, const SP::StopPointCodes& codes) {
+    SP::create_stop_point(b, sa, sp_name, codes);
+    return *this;
+}
+
+navitia::type::StopPoint* SP::create_stop_point(builder& b,
+                                                navitia::type::StopArea* sa,
+                                                const std::string& name,
+                                                const StopPointCodes& codes,
+                                                double x,
+                                                double y,
+                                                bool wheelchair_boarding,
+                                                bool bike_accepted) {
     navitia::type::StopPoint* sp = new navitia::type::StopPoint();
     sp->idx = b.data->pt_data->stop_points.size();
     b.data->pt_data->stop_points.push_back(sp);
-    sp->name = sp_name;
-    sp->uri = sp_name;
+    sp->name = name;
+    sp->uri = name;
     if (wheelchair_boarding)
         sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
     if (bike_accepted)
         sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     sp->coord.set_lon(x);
     sp->coord.set_lat(y);
+    sp->stop_area = sa;
+    b.sps[name] = sp;
+    sa->stop_point_list.push_back(sp);
 
-    sp->stop_area = this->sa;
-    this->sa->stop_point_list.push_back(sp);
-    b.sps[sp_name] = sp;
-    return *this;
+    for (auto code : codes) {
+        for (auto value : code.second) {
+            b.data->pt_data->codes.add(sp, code.first, value);
+        }
+    }
+    return sp;
 }
 
 DisruptionCreator::DisruptionCreator(builder& b, const std::string& uri, nt::RTLevel lvl)

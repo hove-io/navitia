@@ -131,6 +131,7 @@ private:
     void odt_stop_points(const pbnavitia::GeographicalCoord& request);
 
     void get_matching_routes(const pbnavitia::MatchingRoute&);
+    void equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,
