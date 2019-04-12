@@ -107,8 +107,8 @@ thursday | entier | Requis | (1)
 friday | entier | Requis | (1)
 saturday | entier | Requis | (1)
 sunday | entier | Requis | (1)
-start_date | date | Requis | Début du calendrier de circulation
-end_date | date | Requis | Fin du calendrier de circulation
+start_date | date | Requis | Date de début du calendrier de circulation
+end_date | date | Requis | Date de fin du calendrier de circulation incluse dans l'intervalle.
 
 (1) Les valeurs possibles sont :
 
