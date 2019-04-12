@@ -1350,8 +1350,12 @@ def new_default_pagination_journey_comparator(clockwise):
     ]
 
 
+def get_disruptions_by_id(response, disrupt_id):
+    return [d for d in response['disruptions'] if d['id'] == disrupt_id]
+
+
 def has_the_disruption(response, disrupt_id):
-    return any([d['id'] for d in response['disruptions'] if d['id'] == disrupt_id])
+    return any(get_disruptions_by_id(response, disrupt_id))
 
 
 def get_departure(dep, sp_uri, line_code):

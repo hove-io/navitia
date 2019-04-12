@@ -35,10 +35,16 @@ www.navitia.io
 
 namespace navitia {
 
+/**
+ * WARNING: this method can add, remove or transform PT-Ref objects in PT_Data
+ * After using it, make sure to rebuild:
+ * - RAPTOR (probably through Data.build_raptor)
+ * - AUTOCOMPLETE on PT-Ref (probably through PT_Data.build_autocomplete)
+ */
 void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate&,
                      const type::Data&,
                      const bool is_realtime_add_enabled = false,
                      const bool is_realtime_add_trip_enabled = false);
-}
+}  // namespace navitia

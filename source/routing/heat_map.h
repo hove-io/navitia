@@ -33,13 +33,17 @@ www.navitia.io
 #include "isochrone.h"
 #include "raptor.h"
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
-template<typename F, typename R>
+template <typename F, typename R>
 void separated_by_coma(std::stringstream& os, F f, const R& range) {
     auto it = std::begin(range);
     const auto end = std::end(range);
-    if (it != end) { f(os, *it); ++it; }
+    if (it != end) {
+        f(os, *it);
+        ++it;
+    }
     for (; it != end; ++it) {
         os << ",";
         f(os, *it);
@@ -49,16 +53,14 @@ void separated_by_coma(std::stringstream& os, F f, const R& range) {
 struct SingleCoord {
     double min_coord;
     double step;
-    SingleCoord(const double min_coord,
-                const double step): min_coord(min_coord), step(step){}
+    SingleCoord(const double min_coord, const double step) : min_coord(min_coord), step(step) {}
 };
 
 struct BoundBox {
     type::GeographicalCoord max = type::GeographicalCoord(-180, -90);
     type::GeographicalCoord min = type::GeographicalCoord(180, 90);
 
-    void set_box(const type::GeographicalCoord& coord,
-                 const double offset) {
+    void set_box(const type::GeographicalCoord& coord, const double offset) {
         const auto lon_max = std::max(coord.lon() + offset, this->max.lon());
         const auto lat_max = std::max(coord.lat() + offset, this->max.lat());
         const auto lon_min = std::min(coord.lon() - offset, this->min.lon());
@@ -68,22 +70,19 @@ struct BoundBox {
     }
 
     bool contains(const type::GeographicalCoord& coord) {
-        return this->max.lon() >= coord.lon() && this->max.lat() >= coord.lat() &&
-               this->min.lon() <= coord.lon() && this->min.lat() <= coord.lat();
+        return this->max.lon() >= coord.lon() && this->max.lat() >= coord.lat() && this->min.lon() <= coord.lon()
+               && this->min.lat() <= coord.lat();
     }
 };
 
 struct HeatMap {
     std::vector<SingleCoord> header;
-    std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>> body;
-    HeatMap(const std::vector <SingleCoord>& header,
-            const std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>>& body):
-        header(header), body(body) {}
+    std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>> body;
+    HeatMap(const std::vector<SingleCoord>& header,
+            const std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>>& body)
+        : header(header), body(body) {}
 
-    HeatMap(const uint step,
-            const BoundBox& box,
-            const double height_step,
-            const double width_step) {
+    HeatMap(const uint step, const BoundBox& box, const double height_step, const double width_step) {
         for (uint i = 0; i < step; i++) {
             auto lon = SingleCoord(box.min.lon() + i * width_step, width_step);
             for (uint j = 0; j < step; j++) {
@@ -96,11 +95,10 @@ struct HeatMap {
     }
 };
 
-constexpr static double N_DEG_TO_DISTANCE = type::GeographicalCoord::N_DEG_TO_RAD *
-        type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
+constexpr static double N_DEG_TO_DISTANCE =
+    type::GeographicalCoord::N_DEG_TO_RAD * type::GeographicalCoord::EARTH_RADIUS_IN_METERS;
 
-
-std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
+std::vector<navitia::time_duration> init_distance(const georef::GeoRef& worker,
                                                   const std::vector<type::StopPoint*>& stop_points,
                                                   const DateTime& init_dt,
                                                   const RAPTOR& raptor,
@@ -133,4 +131,5 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    const DateTime bound,
                                    const uint resolution);
 
-}} //namespace navitia::routing
+}  // namespace routing
+}  // namespace navitia

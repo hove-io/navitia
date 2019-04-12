@@ -40,10 +40,10 @@ www.navitia.io
 #include <boost/range/algorithm/find.hpp>
 #include <string>
 
-using navitia::type::Indexes;
-using navitia::type::Type_e;
 using navitia::type::Data;
+using navitia::type::Indexes;
 using navitia::type::make_indexes;
+using navitia::type::Type_e;
 
 namespace bt = boost::posix_time;
 
@@ -82,37 +82,22 @@ Type_e type_by_caption(const std::string& type) {
     try {
         return static_data->typeByCaption(type);
     } catch (...) {
-        throw parsing_error(parsing_error::error_type::unknown_object,
-                            "Filter Unknown object type: " + type);
+        throw parsing_error(parsing_error::error_type::unknown_object, "Filter Unknown object type: " + type);
     }
 }
 
 typedef std::pair<type::Type_e, Indexes> pair_indexes;
-struct VariantVisitor: boost::static_visitor<pair_indexes>{
+struct VariantVisitor : boost::static_visitor<pair_indexes> {
     const Data& d;
-    VariantVisitor(const Data & d): d(d){}
-    pair_indexes operator()(const type::disruption::UnknownPtObj){
-        return {type::Type_e::Unknown, Indexes{}};
-    }
-    pair_indexes operator()(const type::Network*){
-        return {type::Type_e::Network, Indexes{}};
-    }
-    pair_indexes operator()(const type::StopArea*){
-        return {type::Type_e::StopArea, Indexes{}};
-    }
-    pair_indexes operator()(const type::StopPoint*){
-        return {type::Type_e::StopPoint, Indexes{}};
-    }
-    pair_indexes operator()(const type::disruption::LineSection){
-        return {type::Type_e::Unknown, Indexes{}};
-    }
-    pair_indexes operator()(const type::Line*){
-        return {type::Type_e::Line, Indexes{}};
-    }
-    pair_indexes operator()(const type::Route*){
-        return {type::Type_e::Route, Indexes{}};
-    }
-    pair_indexes operator()(const type::MetaVehicleJourney* meta_vj){
+    VariantVisitor(const Data& d) : d(d) {}
+    pair_indexes operator()(const type::disruption::UnknownPtObj) { return {type::Type_e::Unknown, Indexes{}}; }
+    pair_indexes operator()(const type::Network*) { return {type::Type_e::Network, Indexes{}}; }
+    pair_indexes operator()(const type::StopArea*) { return {type::Type_e::StopArea, Indexes{}}; }
+    pair_indexes operator()(const type::StopPoint*) { return {type::Type_e::StopPoint, Indexes{}}; }
+    pair_indexes operator()(const type::disruption::LineSection) { return {type::Type_e::Unknown, Indexes{}}; }
+    pair_indexes operator()(const type::Line*) { return {type::Type_e::Line, Indexes{}}; }
+    pair_indexes operator()(const type::Route*) { return {type::Type_e::Route, Indexes{}}; }
+    pair_indexes operator()(const type::MetaVehicleJourney* meta_vj) {
         return {type::Type_e::VehicleJourney, meta_vj->get(type::Type_e::VehicleJourney, *d.pt_data)};
     }
 };
@@ -121,7 +106,7 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
     Indexes result;
     VariantVisitor visit(d);
     const auto& impacts = d.pt_data->disruption_holder.get_weak_impacts();
-    for(const auto& impact: impacts){
+    for (const auto& impact : impacts) {
         const auto imp = impact.lock();
         if (!imp) {
             continue;
@@ -129,9 +114,9 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
         if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
             continue;
         }
-        for(const auto& entitie: imp->informed_entities()){
+        for (const auto& entitie : imp->informed_entities()) {
             auto pair_type_indexes = boost::apply_visitor(visit, entitie);
-            if(type_e == pair_type_indexes.first){
+            if (type_e == pair_type_indexes.first) {
                 result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
             }
         }
@@ -139,16 +124,15 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
     return result;
 }
 
-Indexes get_impacts_by_tags(const std::vector<std::string> & tag_name,
-                            const Data& d) {
+Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data& d) {
     Indexes result;
     const auto& w_impacts = d.pt_data->disruption_holder.get_weak_impacts();
 
-    for(size_t i=0; i<w_impacts.size(); i++) {
+    for (size_t i = 0; i < w_impacts.size(); i++) {
         auto impact = w_impacts[i].lock();
-        if(impact && impact->disruption) {
-            for(const auto& tag : impact->disruption->tags) {
-                if(tag && boost::range::find(tag_name, tag->name) != tag_name.end()) {
+        if (impact && impact->disruption) {
+            for (const auto& tag : impact->disruption->tags) {
+                if (tag && boost::range::find(tag_name, tag->name) != tag_name.end()) {
                     result.insert(i);
                 }
             }
@@ -158,55 +142,56 @@ Indexes get_impacts_by_tags(const std::vector<std::string> & tag_name,
     return result;
 }
 
-static bool keep_vj(const type::VehicleJourney* vj,
-                    const bt::time_period& period) {
+static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period) {
     if (vj->stop_time_list.empty()) {
-        return false; //no stop time, so it cannot be valid
+        return false;  // no stop time, so it cannot be valid
     }
 
     const auto& first_departure_dt = vj->earliest_time();
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
-        if (! vj->base_validity_pattern()->check(*it)) { continue; }
+        if (!vj->base_validity_pattern()->check(*it)) {
+            continue;
+        }
         bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
-        if (period.contains(vj_dt)) { return true; }
+        if (period.contains(vj_dt)) {
+            return true;
+        }
     }
 
     return false;
 }
 
-static Indexes
-filter_vj_on_period(const Indexes& indexes,
-                    const  bt::time_period& period,
-                    const type::Data& data) {
-
+static Indexes filter_vj_on_period(const Indexes& indexes, const bt::time_period& period, const type::Data& data) {
     Indexes res;
     bt::time_period production_period = {bt::ptime(data.meta->production_date.begin()),
                                          bt::ptime(data.meta->production_date.end())};
     const auto period_to_check = production_period.intersection(period);
 
-    for (const idx_t idx: indexes) {
+    for (const idx_t idx : indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (! keep_vj(vj, period_to_check)) { continue; }
+        if (!keep_vj(vj, period_to_check)) {
+            continue;
+        }
         res.insert(idx);
     }
     return res;
 }
 
-static Indexes
-filter_impact_on_period(const Indexes& indexes,
-                    const  bt::time_period& period,
-                    const type::Data& data) {
-
+static Indexes filter_impact_on_period(const Indexes& indexes, const bt::time_period& period, const type::Data& data) {
     Indexes res;
-    for (const idx_t idx: indexes) {
+    for (const idx_t idx : indexes) {
         auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
 
-        if (! impact) { continue; }
+        if (!impact) {
+            continue;
+        }
 
         // to keep an impact, we want the intersection between its application periods
         // and the period to be non empy
-        for (const auto& application_period: impact->application_periods) {
-            if (application_period.intersection(period).is_null()) { continue; }
+        for (const auto& application_period : impact->application_periods) {
+            if (application_period.intersection(period).is_null()) {
+                continue;
+            }
             res.insert(idx);
             break;
         }
@@ -214,13 +199,11 @@ filter_impact_on_period(const Indexes& indexes,
     return res;
 }
 
-Indexes
-filter_on_period(const Indexes& indexes,
-                 const navitia::type::Type_e requested_type,
-                 const boost::optional<bt::ptime>& since,
-                 const boost::optional<bt::ptime>& until,
-                 const type::Data& data) {
-
+Indexes filter_on_period(const Indexes& indexes,
+                         const navitia::type::Type_e requested_type,
+                         const boost::optional<bt::ptime>& since,
+                         const boost::optional<bt::ptime>& until,
+                         const type::Data& data) {
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
     }
@@ -233,16 +216,16 @@ filter_on_period(const Indexes& indexes,
     if (until && *until < end) {
         end = *until + bt::seconds(1);
     }
-    bt::time_period period {start, end};
+    bt::time_period period{start, end};
 
     switch (requested_type) {
-    case nt::Type_e::VehicleJourney:
-        return filter_vj_on_period(indexes, period, data);
-    case nt::Type_e::Impact:
-        return filter_impact_on_period(indexes, period, data);
-    default:
-        throw parsing_error(parsing_error::error_type::partial_error,
-                            "cannot filter on validity period for this type");
+        case nt::Type_e::VehicleJourney:
+            return filter_vj_on_period(indexes, period, data);
+        case nt::Type_e::Impact:
+            return filter_impact_on_period(indexes, period, data);
+        default:
+            throw parsing_error(parsing_error::error_type::partial_error,
+                                "cannot filter on validity period for this type");
     }
 }
 
@@ -252,46 +235,40 @@ type::Indexes get_within(const type::Type_e type,
                          const type::Data& data) {
     std::vector<std::pair<idx_t, type::GeographicalCoord> > tmp;
     switch (type) {
-    case Type_e::StopPoint:
-        tmp = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
-        break;
-    case Type_e::StopArea:
-        tmp = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
-        break;
-    case Type_e::POI:
-        tmp = data.geo_ref->poi_proximity_list.find_within(coord, distance);
-        break;
-    default:
-        throw parsing_error(parsing_error::error_type::partial_error,
-                            "The requested object doesn't implement within");
+        case Type_e::StopPoint:
+            tmp = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
+            break;
+        case Type_e::StopArea:
+            tmp = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
+            break;
+        case Type_e::POI:
+            tmp = data.geo_ref->poi_proximity_list.find_within(coord, distance);
+            break;
+        default:
+            throw parsing_error(parsing_error::error_type::partial_error,
+                                "The requested object doesn't implement within");
     }
     Indexes indexes;
-    for (const auto& p: tmp) { indexes.insert(p.first); }
+    for (const auto& p : tmp) {
+        indexes.insert(p.first);
+    }
     return indexes;
 }
 
-template<typename T>
+template <typename T>
 static
-typename boost::enable_if<
-    typename boost::mpl::contains<
-        nt::CodeContainer::SupportedTypes,
-        T>::type,
-    Indexes>::type
-get_indexes_from_code(const std::string& key, const std::string& value, const Data& data) {
+    typename boost::enable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
+    get_indexes_from_code(const std::string& key, const std::string& value, const Data& data) {
     Indexes res;
-    for (const auto* obj: data.pt_data->codes.get_objs<T>(key, value)) {
+    for (const auto* obj : data.pt_data->codes.get_objs<T>(key, value)) {
         res.insert(obj->idx);
     }
     return res;
 }
-template<typename T>
+template <typename T>
 static
-typename boost::disable_if<
-    typename boost::mpl::contains<
-        nt::CodeContainer::SupportedTypes,
-        T>::type,
-    Indexes>::type
-get_indexes_from_code(const std::string&, const std::string&, const Data&) {
+    typename boost::disable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
+    get_indexes_from_code(const std::string&, const std::string&, const Data&) {
     // there is no codes for unsupporded types, thus the result is empty
     return Indexes{};
 }
@@ -302,69 +279,108 @@ type::Indexes get_indexes_from_code(const type::Type_e type,
                                     const type::Data& data) {
     switch (type) {
 #define GET_INDEXES(type_name, collection_name) \
-        case Type_e::type_name: return get_indexes_from_code<type::type_name>(key, value, data);
+    case Type_e::type_name:                     \
+        return get_indexes_from_code<type::type_name>(key, value, data);
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
 #undef GET_INDEXES
-    default: return Indexes();// no code supported, empty result
+        default:
+            return Indexes();  // no code supported, empty result
     }
 }
 
-type::Indexes get_indexes_from_id(const type::Type_e type,
-                                  const std::string& id,
-                                  const type::Data& data) {
+template <typename T>
+static
+    typename boost::enable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
+    get_indexes_from_code_type(const std::string& key, const Data& data) {
+    Indexes indexes;
+    auto collection = data.pt_data->collection<T>();
+    for (const auto* obj : collection) {
+        auto codes = data.pt_data->codes.get_codes<T>(obj);
+        if (codes.find(key) == codes.end()) {
+            continue;
+        }
+        indexes.insert(obj->idx);
+    }
+    return indexes;
+}
+template <typename T>
+static
+    typename boost::disable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
+    get_indexes_from_code_type(const std::string&, const Data&) {
+    // there is no code for unsupported types, thus the result is empty
+    return Indexes{};
+}
+type::Indexes get_indexes_from_code_type(const type::Type_e type, const std::string& key, const type::Data& data) {
     switch (type) {
 #define GET_INDEXES(type_name, collection_name) \
-        case Type_e::type_name: \
-            if (auto elt = find_or_default(id, data.pt_data->collection_name##_map)) { \
-                return make_indexes({elt->idx}); \
-            } \
-            return Indexes();
+    case Type_e::type_name:                     \
+        return get_indexes_from_code_type<type::type_name>(key, data);
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
 #undef GET_INDEXES
-    case Type_e::JourneyPattern:
-        if (const auto jp_idx = data.dataRaptor->jp_container.get_jp_from_id(id)) {
-            return make_indexes({jp_idx->val});
-        }
-        return Indexes();
-    case Type_e::JourneyPatternPoint:
-        if (const auto jpp_idx = data.dataRaptor->jp_container.get_jpp_from_id(id)) {
-            return make_indexes({jpp_idx->val});
-        }
-        return Indexes();
-    case Type_e::POI:
-        if (auto elt = find_or_default(id, data.geo_ref->poi_map)) {
-            return make_indexes({elt->idx});
-        }
-        return Indexes();
-    case Type_e::POIType:
-        if (auto elt = find_or_default(id, data.geo_ref->poitype_map)) {
-            return make_indexes({elt->idx});
-        }
-        return Indexes();
-    case Type_e::MetaVehicleJourney:
-        if (auto elt = find_or_default(id, data.pt_data->meta_vjs)) {
-            return make_indexes({elt->idx});
-        }
-        return Indexes();
-    case Type_e::Impact: {
-        Indexes indexes;
-        const auto& impacts = data.pt_data->disruption_holder.get_weak_impacts();
-        for (size_t i = 0; i < impacts.size(); ++i) {
-            if (auto impact = impacts[i].lock()) {
-                if (impact->uri == id) { indexes.insert(i); }
-            }
-        }
-        return indexes;
-    }
-    default: return Indexes();
+        default:
+            return Indexes{};  // no code supported, empty result
     }
 }
 
-template<typename T>
+type::Indexes get_indexes_from_id(const type::Type_e type, const std::string& id, const type::Data& data) {
+    switch (type) {
+#define GET_INDEXES(type_name, collection_name)                                    \
+    case Type_e::type_name:                                                        \
+        if (auto elt = find_or_default(id, data.pt_data->collection_name##_map)) { \
+            return make_indexes({elt->idx});                                       \
+        }                                                                          \
+        return Indexes();
+        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+#undef GET_INDEXES
+        case Type_e::JourneyPattern:
+            if (const auto jp_idx = data.dataRaptor->jp_container.get_jp_from_id(id)) {
+                return make_indexes({jp_idx->val});
+            }
+            return Indexes();
+        case Type_e::JourneyPatternPoint:
+            if (const auto jpp_idx = data.dataRaptor->jp_container.get_jpp_from_id(id)) {
+                return make_indexes({jpp_idx->val});
+            }
+            return Indexes();
+        case Type_e::POI:
+            if (auto elt = find_or_default(id, data.geo_ref->poi_map)) {
+                return make_indexes({elt->idx});
+            }
+            return Indexes();
+        case Type_e::POIType:
+            if (auto elt = find_or_default(id, data.geo_ref->poitype_map)) {
+                return make_indexes({elt->idx});
+            }
+            return Indexes();
+        case Type_e::MetaVehicleJourney:
+            if (auto elt = find_or_default(id, data.pt_data->meta_vjs)) {
+                return make_indexes({elt->idx});
+            }
+            return Indexes();
+        case Type_e::Impact: {
+            Indexes indexes;
+            const auto& impacts = data.pt_data->disruption_holder.get_weak_impacts();
+            for (size_t i = 0; i < impacts.size(); ++i) {
+                if (auto impact = impacts[i].lock()) {
+                    if (impact->uri == id) {
+                        indexes.insert(i);
+                    }
+                }
+            }
+            return indexes;
+        }
+        default:
+            return Indexes();
+    }
+}
+
+template <typename T>
 static Indexes get_indexes_from_name(const std::string& name, const std::vector<T*>& objs) {
     Indexes indexes;
-    for (const auto* obj: objs) {
-        if (obj->name != name) { continue; }
+    for (const auto* obj : objs) {
+        if (obj->name != name) {
+            continue;
+        }
         indexes.insert(obj->idx);
     }
     return indexes;
@@ -373,22 +389,21 @@ static Indexes get_indexes_from_name(const std::string&, const std::vector<type:
     return Indexes();
 }
 
-type::Indexes get_indexes_from_name(const type::Type_e type,
-                                    const std::string& name,
-                                    const type::Data& data) {
+type::Indexes get_indexes_from_name(const type::Type_e type, const std::string& name, const type::Data& data) {
     switch (type) {
 #define GET_INDEXES(type_name, collection_name) \
-        case Type_e::type_name: \
-            return get_indexes_from_name(name, data.pt_data->collection_name);
+    case Type_e::type_name:                     \
+        return get_indexes_from_name(name, data.pt_data->collection_name);
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
 #undef GET_INDEXES
-    case Type_e::POI:
-        return get_indexes_from_name(name, data.geo_ref->pois);
-    case Type_e::POIType:
-        return get_indexes_from_name(name, data.geo_ref->poitypes);
-    default:
-        return Indexes();
+        case Type_e::POI:
+            return get_indexes_from_name(name, data.geo_ref->pois);
+        case Type_e::POIType:
+            return get_indexes_from_name(name, data.geo_ref->poitypes);
+        default:
+            return Indexes();
     }
 }
 
-}} // navitia::ptref
+}  // namespace ptref
+}  // namespace navitia

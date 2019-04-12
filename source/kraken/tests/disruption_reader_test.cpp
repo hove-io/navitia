@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -40,76 +40,69 @@ struct Const_it {
         Value() {}
         Value(const std::string& value) : value(value) {}
 
-        template<typename T>
+        template <typename T>
         T as() {
             return boost::lexical_cast<T>(value);
         }
 
-
-        bool is_null() {
-            return value == "";
-        }
+        bool is_null() { return value == ""; }
     };
 
     std::map<std::string, Value> values;
 
-    Const_it() { reinit();}
+    Const_it() { reinit(); }
 
-    Value operator[] (const std::string& key) {
-        return values[key];
-    }
+    Value operator[](const std::string& key) { return values[key]; }
 
     void reinit() {
-        values = {
-            {"disruption_id", Value()},
-            {"disruption_created_at", Value()},
-            {"disruption_updated_at", Value()},
-            {"disruption_start_publication_date", Value()},
-            {"disruption_end_publication_date", Value()},
-            {"disruption_note", Value()},
-            {"disruption_reference", Value()},
-            {"cause_id", Value()},
-            {"cause_wording", Value()},
-            {"cause_created_at", Value()},
-            {"cause_updated_at", Value()},
-            {"tag_id", Value()},
-            {"tag_name", Value()},
-            {"tag_created_at", Value()},
-            {"tag_updated_at", Value()},
-            {"impact_id", Value()},
-            {"impact_created_at", Value()},
-            {"impact_updated_at", Value()},
-            {"severity_id", Value()},
-            {"severity_created_at", Value()},
-            {"severity_updated_at", Value()},
-            {"severity_effect", Value()},
-            {"severity_wording", Value()},
-            {"severity_color", Value()},
-            {"severity_priority", Value()},
-            {"application_id", Value()},
-            {"application_start_date", Value()},
-            {"application_end_date", Value()},
-            {"ptobject_id", Value()},
-            {"ptobject_created_at", Value()},
-            {"ptobject_updated_at", Value()},
-            {"ptobject_uri", Value()},
-            {"ptobject_type", Value()},
-            {"property_key", Value()},
-            {"property_type", Value()},
-            {"property_value", Value()},
-            {"message_id", Value()},
-            {"message_text", Value()},
-            {"message_created_at", Value()},
-            {"message_updated_at", Value()},
-            {"channel_id", Value()},
-            {"channel_name", Value()},
-            {"channel_content_type", Value()},
-            {"channel_max_size", Value()},
-            {"channel_created_at", Value()},
-            {"channel_updated_at", Value()},
-            {"channel_type_id", Value()},
-            {"channel_type", Value()}
-        };
+        values = {{"disruption_id", Value()},
+                  {"disruption_created_at", Value()},
+                  {"disruption_updated_at", Value()},
+                  {"disruption_start_publication_date", Value()},
+                  {"disruption_end_publication_date", Value()},
+                  {"disruption_note", Value()},
+                  {"disruption_reference", Value()},
+                  {"cause_id", Value()},
+                  {"cause_wording", Value()},
+                  {"cause_created_at", Value()},
+                  {"cause_updated_at", Value()},
+                  {"tag_id", Value()},
+                  {"tag_name", Value()},
+                  {"tag_created_at", Value()},
+                  {"tag_updated_at", Value()},
+                  {"impact_id", Value()},
+                  {"impact_created_at", Value()},
+                  {"impact_updated_at", Value()},
+                  {"severity_id", Value()},
+                  {"severity_created_at", Value()},
+                  {"severity_updated_at", Value()},
+                  {"severity_effect", Value()},
+                  {"severity_wording", Value()},
+                  {"severity_color", Value()},
+                  {"severity_priority", Value()},
+                  {"application_id", Value()},
+                  {"application_start_date", Value()},
+                  {"application_end_date", Value()},
+                  {"ptobject_id", Value()},
+                  {"ptobject_created_at", Value()},
+                  {"ptobject_updated_at", Value()},
+                  {"ptobject_uri", Value()},
+                  {"ptobject_type", Value()},
+                  {"property_key", Value()},
+                  {"property_type", Value()},
+                  {"property_value", Value()},
+                  {"message_id", Value()},
+                  {"message_text", Value()},
+                  {"message_created_at", Value()},
+                  {"message_updated_at", Value()},
+                  {"channel_id", Value()},
+                  {"channel_name", Value()},
+                  {"channel_content_type", Value()},
+                  {"channel_max_size", Value()},
+                  {"channel_created_at", Value()},
+                  {"channel_updated_at", Value()},
+                  {"channel_type_id", Value()},
+                  {"channel_type", Value()}};
     }
 
     void set_disruption(const std::string& id,
@@ -148,21 +141,19 @@ struct Const_it {
         values["tag_name"] = Value(name);
     }
 
-    void set_impact(const std::string& id,
-                 const std::string& created_at,
-                 const std::string& updated_at = "") {
+    void set_impact(const std::string& id, const std::string& created_at, const std::string& updated_at = "") {
         values["impact_id"] = Value(id);
         values["impact_created_at"] = Value(created_at);
         values["impact_updated_at"] = Value(updated_at);
     }
 
     void set_severity(const std::string& id,
-                 const std::string& wording,
-                 const std::string& created_at,
-                 const std::string& updated_at = "",
-                 const std::string& effect = "",
-                 const std::string& color = "",
-                 const std::string& priority = "") {
+                      const std::string& wording,
+                      const std::string& created_at,
+                      const std::string& updated_at = "",
+                      const std::string& effect = "",
+                      const std::string& color = "",
+                      const std::string& priority = "") {
         values["severity_id"] = Value(id);
         values["severity_created_at"] = Value(created_at);
         values["severity_updated_at"] = Value(updated_at);
@@ -172,38 +163,28 @@ struct Const_it {
         values["severity_priority"] = Value(priority);
     }
 
-    void set_application_period(const std::string& id,
-            const std::string& start,
-            const std::string& end) {
+    void set_application_period(const std::string& id, const std::string& start, const std::string& end) {
         values["application_id"] = id;
         values["application_start_date"] = start;
         values["application_end_date"] = end;
     }
 
-    void set_ptobject(
-            const std::string& id,
-            const std::string& uri,
-            const std::string& type,
-            const std::string& created_at,
-            const std::string& updated_at = ""
-            ) {
-
-            values["ptobject_id"] = id;
-            values["ptobject_created_at"] = created_at;
-            values["ptobject_updated_at"] = updated_at;
-            values["ptobject_uri"] = uri;
-            values["ptobject_type"] = type;
+    void set_ptobject(const std::string& id,
+                      const std::string& uri,
+                      const std::string& type,
+                      const std::string& created_at,
+                      const std::string& updated_at = "") {
+        values["ptobject_id"] = id;
+        values["ptobject_created_at"] = created_at;
+        values["ptobject_updated_at"] = updated_at;
+        values["ptobject_uri"] = uri;
+        values["ptobject_type"] = type;
     }
 
-    void set_property(
-            const std::string& key,
-            const std::string& type,
-            const std::string& value
-            ) {
-
-            values["property_key"] = key;
-            values["property_type"] = type;
-            values["property_value"] = value;
+    void set_property(const std::string& key, const std::string& type, const std::string& value) {
+        values["property_key"] = key;
+        values["property_type"] = type;
+        values["property_value"] = value;
     }
 
     void set_message(const std::string& id,
@@ -230,13 +211,11 @@ struct Const_it {
         values["channel_updated_at"] = updated_at;
     }
 
-    void set_channel_type(const std::string& id,
-                     const std::string& type) {
+    void set_channel_type(const std::string& id, const std::string& type) {
         values["channel_type_id"] = id;
         values["channel_type"] = type;
     }
 };
-
 
 BOOST_AUTO_TEST_CASE(minimal_disruption) {
     navitia::type::PT_Data pt_data;
@@ -254,8 +233,6 @@ BOOST_AUTO_TEST_CASE(minimal_disruption) {
     BOOST_CHECK_EQUAL(reader.disruption->note(), "");
     BOOST_CHECK_EQUAL(reader.disruption->reference(), "");
 }
-
-
 
 BOOST_AUTO_TEST_CASE(full_disruption) {
     navitia::type::PT_Data pt_data;
@@ -366,8 +343,7 @@ BOOST_AUTO_TEST_CASE(full_impact) {
 
     Const_it const_it;
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     reader.fill_impact(const_it);
     BOOST_REQUIRE_EQUAL(reader.disruption->impacts_size(), 1);
     auto impact = reader.disruption->impacts(0);
@@ -437,13 +413,11 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     const_it.set_property("key", "type", "42");
@@ -500,13 +474,11 @@ BOOST_AUTO_TEST_CASE(two_tags) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader(const_it);
@@ -546,13 +518,11 @@ BOOST_AUTO_TEST_CASE(two_impacts) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader(const_it);
@@ -593,13 +563,11 @@ BOOST_AUTO_TEST_CASE(two_application_periods) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader(const_it);
@@ -638,13 +606,11 @@ BOOST_AUTO_TEST_CASE(two_ptobjects) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     reader(const_it);
@@ -683,13 +649,11 @@ BOOST_AUTO_TEST_CASE(two_properties) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55",
-            "note", "reference");
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
     const_it.set_cause("1", "wording", "11", "22");
     const_it.set_tag("1", "name", "11", "22");
     const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33",
-            "blocking", "color", "2");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     const_it.set_property("foo", "bar", "31");
@@ -751,7 +715,7 @@ BOOST_AUTO_TEST_CASE(message_with_channel) {
     BOOST_CHECK_EQUAL(message->text(), "message_text_web");
     BOOST_CHECK_EQUAL(message->created_at(), 1);
     BOOST_CHECK_EQUAL(message->updated_at(), 2);
-    const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id", "channel_name_web", "type", "400", "1", "2");
     auto* channel = message->mutable_channel();
     reader.fill_channel(const_it, channel);
     BOOST_REQUIRE(message->mutable_channel() != nullptr);
@@ -770,7 +734,7 @@ BOOST_AUTO_TEST_CASE(message_with_channel) {
     reader.fill_message(const_it, message);
     BOOST_REQUIRE_EQUAL(reader.impact->messages_size(), 2);
     BOOST_CHECK_EQUAL(message->text(), "message_text_mobile");
-    const_it.set_channel("channel_id_2", "channel_name_mobile", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_2", "channel_name_mobile", "type", "400", "1", "2");
     channel = message->mutable_channel();
     reader.fill_channel(const_it, channel);
     const_it.set_channel_type("id_2", "mobile");
@@ -784,7 +748,7 @@ BOOST_AUTO_TEST_CASE(message_with_channel) {
     reader.fill_message(const_it, message);
     BOOST_REQUIRE_EQUAL(reader.impact->messages_size(), 3);
     BOOST_CHECK_EQUAL(message->text(), "message_text_notification");
-    const_it.set_channel("channel_id_3", "channel_name_notification", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_3", "channel_name_notification", "type", "400", "1", "2");
     channel = message->mutable_channel();
     reader.fill_channel(const_it, channel);
     const_it.set_channel_type("id_3", "notification");
@@ -832,11 +796,11 @@ BOOST_AUTO_TEST_CASE(disruption_well_sorted_informations) {
     const_it.set_application_period("0", "1", "2");
     const_it.set_ptobject("id_1", "uri_1", "line", "1", "2");
     const_it.set_message("m_id_1", "message_text_web", "1", "2");
-    const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id", "channel_name_web", "type", "400", "1", "2");
     const_it.set_channel_type("id_1", "web");
     reader(const_it);
     const_it.set_message("m_id_1", "message_text_web", "1", "2");
-    const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id", "channel_name_web", "type", "400", "1", "2");
     const_it.set_channel_type("id_1", "web");
     reader(const_it);
 
@@ -844,23 +808,23 @@ BOOST_AUTO_TEST_CASE(disruption_well_sorted_informations) {
     const_it.set_application_period("1", "2", "3");
     const_it.set_ptobject("id_2", "uri_2", "line", "1", "2");
     const_it.set_message("m_id_2", "message_text_mobile", "1", "2");
-    const_it.set_channel("channel_id_2", "channel_name_mobile", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_2", "channel_name_mobile", "type", "400", "1", "2");
     const_it.set_channel_type("id_2", "mobile");
     reader(const_it);
     const_it.set_application_period("1", "2", "3");
     const_it.set_ptobject("id_2", "uri_2", "line", "1", "2");
     const_it.set_message("m_id_2", "message_text_mobile", "1", "2");
-    const_it.set_channel("channel_id_2", "channel_name_mobile", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_2", "channel_name_mobile", "type", "400", "1", "2");
     const_it.set_channel_type("id_2", "mobile");
     reader(const_it);
 
     // Third combination of message, channel and channel_type with duplicate values
     const_it.set_message("m_id_3", "message_text_notification", "1", "2");
-    const_it.set_channel("channel_id_3", "channel_name_notification", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_3", "channel_name_notification", "type", "400", "1", "2");
     const_it.set_channel_type("id_3", "notification");
     reader(const_it);
     const_it.set_message("m_id_3", "message_text_notification", "1", "2");
-    const_it.set_channel("channel_id_3", "channel_name_notification", "type","400" ,"1", "2");
+    const_it.set_channel("channel_id_3", "channel_name_notification", "type", "400", "1", "2");
     const_it.set_channel_type("id_3", "notification");
     reader(const_it);
 

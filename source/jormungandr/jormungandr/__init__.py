@@ -80,6 +80,7 @@ rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 
 from navitiacommon.models import db
 
+db.app = app
 db.init_app(app)
 cache = Cache(app, config=app.config[str('CACHE_CONFIGURATION')])  # type: Cache
 memory_cache = Cache(app, config=app.config[str('MEMORY_CACHE_CONFIGURATION')])  # type: Cache
@@ -92,9 +93,7 @@ else:
     global_autocomplete = {'kraken': Kraken()}
 
 
-from jormungandr.equipments.equipment_provider_manager import EquipmentProviderManager
-
-equipment_provider_manager = EquipmentProviderManager(app.config[str('EQUIPMENT_DETAILS_PROVIDERS')])
+equipment_provider_manager = init.equipments_providers(app)
 
 
 from jormungandr.instance_manager import InstanceManager

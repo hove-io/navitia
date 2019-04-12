@@ -39,11 +39,11 @@ www.navitia.io
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
-
     // cache friendly access to the connections
     struct Connections {
         struct Connection {
@@ -64,20 +64,17 @@ struct dataRAPTOR {
     struct JppsFromSp {
         // compressed JourneyPatternPoint
         struct Jpp {
-            JppIdx idx; // index
-            JpIdx jp_idx; // corresponding JourneyPattern index
-            uint16_t order; // order of the jpp in its jp
+            JppIdx idx;      // index
+            JpIdx jp_idx;    // corresponding JourneyPattern index
+            uint16_t order;  // order of the jpp in its jp
         };
-        inline const std::vector<Jpp>& operator[](const SpIdx& sp) const {
-            return jpps_from_sp[sp];
-        }
+        inline const std::vector<Jpp>& operator[](const SpIdx& sp) const { return jpps_from_sp[sp]; }
         void load(const type::PT_Data&, const JourneyPatternContainer&);
         void filter_jpps(const boost::dynamic_bitset<>& valid_jpps);
 
-        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
-        begin() const { return jpps_from_sp.begin(); }
-        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator
-        end() const { return jpps_from_sp.end(); }
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator begin() const { return jpps_from_sp.begin(); }
+        inline IdxMap<type::StopPoint, std::vector<Jpp>>::const_iterator end() const { return jpps_from_sp.end(); }
+
     private:
         IdxMap<type::StopPoint, std::vector<Jpp>> jpps_from_sp;
     };
@@ -91,10 +88,9 @@ struct dataRAPTOR {
             SpIdx sp_idx;
             bool has_freq;
         };
-        inline const std::vector<Jpp>& operator[](const JpIdx& jp) const {
-            return jpps_from_jp[jp];
-        }
+        inline const std::vector<Jpp>& operator[](const JpIdx& jp) const { return jpps_from_jp[jp]; }
         void load(const JourneyPatternContainer&);
+
     private:
         IdxMap<JourneyPattern, std::vector<Jpp>> jpps_from_jp;
     };
@@ -118,5 +114,5 @@ struct dataRAPTOR {
     void warmup(const dataRAPTOR& other);
 };
 
-}}
-
+}  // namespace routing
+}  // namespace navitia

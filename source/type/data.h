@@ -50,29 +50,30 @@ www.navitia.io
 #define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
 #endif
 
-//forward declare
+// forward declare
 namespace navitia {
-    namespace georef {
-        struct GeoRef;
-        struct POI;
-        struct POIType;
-    }
-    namespace fare {
-        struct Fare;
-    }
-    namespace routing {
-        struct dataRAPTOR;
-        struct JourneyPattern;
-        struct JourneyPatternPoint;
-    }
-    namespace type {
-        struct MetaData;
-    }
+namespace georef {
+struct GeoRef;
+struct POI;
+struct POIType;
+}  // namespace georef
+namespace fare {
+struct Fare;
 }
+namespace routing {
+struct dataRAPTOR;
+struct JourneyPattern;
+struct JourneyPatternPoint;
+}  // namespace routing
+namespace type {
+struct MetaData;
+}
+}  // namespace navitia
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
-template<typename T>
+template <typename T>
 struct ContainerTrait {
     typedef std::vector<T*> vect_type;
     typedef std::unordered_map<std::string, T*> associative_type;
@@ -80,7 +81,7 @@ struct ContainerTrait {
 
 // specialization for impact
 // Instead of pure pointer, we can only get a weak_ptr when requesting impacts
-template<>
+template <>
 struct ContainerTrait<type::disruption::Impact> {
     typedef std::vector<boost::weak_ptr<type::disruption::Impact>> vect_type;
     // for impacts, we don't want to have a map, we use the vector as the associative_type
@@ -88,57 +89,56 @@ struct ContainerTrait<type::disruption::Impact> {
 };
 
 // specialization for StopPointConnection, there is no map too
-template<>
+template <>
 struct ContainerTrait<type::StopPointConnection> {
     typedef std::vector<type::StopPointConnection*> vect_type;
     typedef vect_type associative_type;
 };
 
-template<>
+template <>
 struct ContainerTrait<navitia::georef::POIType> {
     typedef std::vector<navitia::georef::POIType*> vect_type;
     typedef std::map<std::string, navitia::georef::POIType*> associative_type;
 };
-template<>
+template <>
 struct ContainerTrait<navitia::georef::POI> {
     typedef std::vector<navitia::georef::POI*> vect_type;
     typedef std::map<std::string, navitia::georef::POI*> associative_type;
 };
-template<>
+template <>
 struct ContainerTrait<navitia::routing::JourneyPattern> {
     typedef std::vector<navitia::routing::JourneyPattern*> vect_type;
     typedef vect_type associative_type;
 };
-template<>
+template <>
 struct ContainerTrait<navitia::routing::JourneyPatternPoint> {
     typedef std::vector<navitia::routing::JourneyPatternPoint*> vect_type;
     typedef vect_type associative_type;
 };
 // specialization for meta-vj
 // Instead of vector, we can only get an objFactory when requesting meta-vj
-template<>
+template <>
 struct ContainerTrait<type::MetaVehicleJourney> {
     typedef ObjFactory<MetaVehicleJourney> vect_type;
     typedef vect_type associative_type;
 };
 
 /** Contains all the Public Transport Referential data (aka. PT-Ref), base-schedule and realtime.
-  *
-  * There are 3 storage formats : text, binary, compressed binary
-  * It is advised to use the compressed binary format (compression has almost no additional overhead and can even
-  * speed up loading from slow disks)
-  */
-class Data : boost::noncopyable{
-
-    static_assert(IS_TRIVIALLY_COPYABLE(navitia::ptime), "ptime isn't is_trivially_copyable and can't be used with std::atomic");
-    mutable std::atomic<navitia::ptime> _last_rt_data_loaded; //datetime of the last Real Time loaded data
+ *
+ * There are 3 storage formats : text, binary, compressed binary
+ * It is advised to use the compressed binary format (compression has almost no additional overhead and can even
+ * speed up loading from slow disks)
+ */
+class Data : boost::noncopyable {
+    static_assert(IS_TRIVIALLY_COPYABLE(navitia::ptime),
+                  "ptime isn't is_trivially_copyable and can't be used with std::atomic");
+    mutable std::atomic<navitia::ptime> _last_rt_data_loaded;  // datetime of the last Real Time loaded data
 public:
-
-    static const unsigned int data_version; //< Data version number. *INCREMENT* in cpp file
-    unsigned int version = 0; //< Version of loaded data
-    std::atomic<bool> loaded; //< have the data been loaded ?
-    std::atomic<bool> loading; //< Is the data being loaded
-    std::atomic<bool> disruption_error; // disruption error flag
+    static const unsigned int data_version;  //< Data version number. *INCREMENT* in cpp file
+    unsigned int version = 0;                //< Version of loaded data
+    std::atomic<bool> loaded;                //< have the data been loaded ?
+    std::atomic<bool> loading;               //< Is the data being loaded
+    std::atomic<bool> disruption_error;      // disruption error flag
     size_t data_identifier = 0;
 
     std::unique_ptr<MetaData> meta;
@@ -160,42 +160,45 @@ public:
     std::function<std::vector<georef::Admin*>(const GeographicalCoord&, georef::AdminRtree&)> find_admins;
 
     /** Return the vector containing all the objects of type T*/
-    template<typename T> const typename ContainerTrait<T>::vect_type& get_data() const;
-    template<typename T> typename ContainerTrait<T>::vect_type& get_data();
+    template <typename T>
+    const typename ContainerTrait<T>::vect_type& get_data() const;
+    template <typename T>
+    typename ContainerTrait<T>::vect_type& get_data();
 
-    template<typename T> const typename ContainerTrait<T>::associative_type& get_assoc_data() const;
+    template <typename T>
+    const typename ContainerTrait<T>::associative_type& get_assoc_data() const;
 
-    template<typename T> typename ContainerTrait<T>::vect_type
-    get_data(const Indexes& indexes) const {
+    template <typename T>
+    typename ContainerTrait<T>::vect_type get_data(const Indexes& indexes) const {
         typename ContainerTrait<T>::vect_type res;
         const auto& objs = get_data<T>();
-        for (const auto& idx: indexes) { res.push_back(objs[idx]); }
+        for (const auto& idx : indexes) {
+            res.push_back(objs[idx]);
+        }
         return res;
     }
 
     /** Returns all indexes of a given type
-      *
-      * In practice, returns an array of elements ranging from 0 to (n-1) where n is the number of elements
-      */
+     *
+     * In practice, returns an array of elements ranging from 0 to (n-1) where n is the number of elements
+     */
     Indexes get_all_index(Type_e type) const;
 
     size_t get_nb_obj(Type_e type) const;
 
     /** Given a list of indexes of 'source' objects
-      * returns a list of indexes of 'target' objects
-      */
+     * returns a list of indexes of 'target' objects
+     */
     Indexes get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const;
 
     /** Given one index of a 'source' object
-      * returns a list of indexes of 'target' objects
-      */
-    Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
-
+     * returns a list of indexes of 'target' objects
+     */
+    Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const;
 
     bool last_load_succeeded;
     // UTC
     boost::posix_time::ptime last_load_at;
-
 
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
@@ -205,36 +208,39 @@ public:
 
     mutable std::atomic<bool> is_realtime_loaded;
 
-    Data(size_t data_identifier=0);
+    Data(size_t data_identifier = 0);
     ~Data();
 
     friend class boost::serialization::access;
-    template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load_succeeded & is_connected_to_rabbitmq
-           & is_realtime_loaded;
+    template <class Archive>
+    void save(Archive& ar, const unsigned int) const {
+        ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
+            is_realtime_loaded;
     }
-    template<class Archive> void load(Archive & ar, const unsigned int version) {
+    template <class Archive>
+    void load(Archive& ar, const unsigned int version) {
         this->version = version;
-        if(this->version != data_version){
-            unsigned int v = data_version; // won't link otherwise...
-            auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
+        if (this->version != data_version) {
+            unsigned int v = data_version;  // won't link otherwise...
+            auto msg = boost::format(
+                           "Warning data version don't match with the data version of kraken %u (current version: %d)")
+                       % version % v;
             throw navitia::data::wrong_version(msg.str());
         }
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load_succeeded & is_connected_to_rabbitmq
-           & is_realtime_loaded;
+        ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
+            is_realtime_loaded;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     // Loading methods
     void load_nav(const std::string& filename);
-    void load_disruptions(const std::string& database,
-                          const std::vector<std::string>& contributors = {});
+    void load_disruptions(const std::string& database, const std::vector<std::string>& contributors = {});
     void build_raptor(size_t cache_size = 10);
 
     void warmup(const Data& other);
 
     /** Save data */
-    void save(const std::string & filename) const;
+    void save(const std::string& filename) const;
 
     /** Build ExternalCode index */
     void build_uri();
@@ -260,13 +266,13 @@ public:
     void compute_labels();
 
     /** Return the type of the id provided */
-    Type_e get_type_of_id(const std::string & id) const;
+    Type_e get_type_of_id(const std::string& id) const;
 
     /** Load data from a binary file compressed using LZ4
-      *
-      * LZ4 compression is super fast but its efficiency is average
-      * The goal is to achieve the same read performance with and without compression
-      */
+     *
+     * LZ4 compression is super fast but its efficiency is average
+     * The goal is to achieve the same read performance with and without compression
+     */
     void load(std::istream& ifs);
 
     /** Save data in a compressed binary file using LZ4*/
@@ -277,29 +283,32 @@ public:
 
     void set_last_rt_data_loaded(const boost::posix_time::ptime&) const;
     const boost::posix_time::ptime last_rt_data_loaded() const;
+
 private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
 };
 
-
 /**
-  * we want the resulting bit set that model the differences between
-  * the calender validity pattern and the vj validity pattern.
-  *
-  * We want to limit this differences for the days the calendar is active.
-  * we thus do a XOR to have the differences between the 2 bitsets and then do a AND on the calendar
-  * to restrict those diff on the calendar
-  */
+ * we want the resulting bit set that model the differences between
+ * the calender validity pattern and the vj validity pattern.
+ *
+ * We want to limit this differences for the days the calendar is active.
+ * we thus do a XOR to have the differences between the 2 bitsets and then do a AND on the calendar
+ * to restrict those diff on the calendar
+ */
 template <size_t N>
 std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<N>& vj) {
     auto res = (calendar ^ vj) & calendar;
     return res;
 }
 
-std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>
-find_matching_calendar(const Data&, const std::string& name, const ValidityPattern& validity_pattern,
-                       const std::vector<Calendar*>& calendar_list, double relative_threshold = 0.1);
+std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>> find_matching_calendar(
+    const Data&,
+    const std::string& name,
+    const ValidityPattern& validity_pattern,
+    const std::vector<Calendar*>& calendar_list,
+    double relative_threshold = 0.1);
 
-
-}} //namespace navitia::type
+}  // namespace type
+}  // namespace navitia

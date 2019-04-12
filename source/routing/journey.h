@@ -38,7 +38,7 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-    struct StopTime;
+struct StopTime;
 }
 
 namespace routing {
@@ -46,15 +46,12 @@ namespace routing {
 struct Journey {
     struct Section {
         Section() = default;
-        Section(const type::StopTime& in,
-                const DateTime in_dt,
-                const type::StopTime& out,
-                const DateTime out_dt);
+        Section(const type::StopTime& in, const DateTime in_dt, const type::StopTime& out, const DateTime out_dt);
         const type::StopTime* get_in_st = nullptr;
         DateTime get_in_dt = 0;
         const type::StopTime* get_out_st = nullptr;
         DateTime get_out_dt = 0;
-        bool operator==(const Section & rhs) const;
+        bool operator==(const Section& rhs) const;
     };
 
     bool is_pt() const;
@@ -62,17 +59,17 @@ struct Journey {
     bool better_on_dt(const Journey& that, bool request_clockwise) const;
     bool better_on_transfer(const Journey& that, bool) const;
     bool better_on_sn(const Journey& that, bool) const;
-    bool operator==(const Journey & rhs) const;
-    bool operator!=(const Journey & rhs) const;
+    bool operator==(const Journey& rhs) const;
+    bool operator!=(const Journey& rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);
 
-    std::vector<Section> sections;// the pt sections, with transfer between them
-    navitia::time_duration sn_dur = 0_s;// street network duration
-    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
-    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
-    DateTime departure_dt = 0;// the departure dt of the journey, including sn
-    DateTime arrival_dt = 0;// the arrival dt of the journey, including sn
-    uint8_t nb_vj_extentions = 0;// number of vehicle journey extentions (I love useless comments!)
+    std::vector<Section> sections;                 // the pt sections, with transfer between them
+    navitia::time_duration sn_dur = 0_s;           // street network duration
+    navitia::time_duration transfer_dur = 0_s;     // walking duration during transfer
+    navitia::time_duration min_waiting_dur = 0_s;  // minimal waiting duration on every transfers
+    DateTime departure_dt = 0;                     // the departure dt of the journey, including sn
+    DateTime arrival_dt = 0;                       // the arrival dt of the journey, including sn
+    uint8_t nb_vj_extentions = 0;                  // number of vehicle journey extentions (I love useless comments!)
 };
 
 struct JourneyHash {
@@ -94,26 +91,20 @@ typedef std::unordered_set<Journey, JourneyHash> JourneySet;
  * @param clokwise Active clockwise or not
  * @return best jouney
  */
-template<class Journeys>
-const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
-{
-    if(journeys.size() == 0)
+template <class Journeys>
+const Journey& get_best_journey(const Journeys& journeys, bool clockwise) {
+    if (journeys.size() == 0)
         throw recoverable_exception("get_best_journey takes a list of at least 1 journey");
 
-    auto earliest_journey = [](const Journey& j1, const Journey& j2) {
-        return j1.departure_dt < j2.departure_dt;
-    };
+    auto earliest_journey = [](const Journey& j1, const Journey& j2) { return j1.departure_dt < j2.departure_dt; };
 
-    auto latest_journey = [](const Journey& j1, const Journey& j2) {
-        return j1.arrival_dt < j2.arrival_dt;
-    };
+    auto latest_journey = [](const Journey& j1, const Journey& j2) { return j1.arrival_dt < j2.arrival_dt; };
 
-    const auto best = clockwise ?
-        std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey):
-        std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
+    const auto best = clockwise ? std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey)
+                                : std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
 
     return *best;
 }
 
-} // namespace routing
-} // namespace navitia
+}  // namespace routing
+}  // namespace navitia

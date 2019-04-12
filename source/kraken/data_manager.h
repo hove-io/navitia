@@ -34,7 +34,7 @@ www.navitia.io
 #include "utils/timer.h"
 #include "type/data_exceptions.h"
 #ifndef NO_FORCE_MEMORY_RELEASE
-//by default we force the release of the memory after the reload of the data
+// by default we force the release of the memory after the reload of the data
 #include "gperftools/malloc_extension.h"
 #endif
 
@@ -44,55 +44,51 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
 
-template<typename Data>
-void data_deleter(const Data* data){
+template <typename Data>
+void data_deleter(const Data* data) {
     delete data;
 #ifndef NO_FORCE_MEMORY_RELEASE
-    //we might want to force the system to release the memory after the destruction of data
-    //to reduce the memory foot print
+    // we might want to force the system to release the memory after the destruction of data
+    // to reduce the memory foot print
     MallocExtension::instance()->ReleaseFreeMemory();
 #endif
 }
 
-template<typename Data>
-class DataManager{
+template <typename Data>
+class DataManager {
     boost::shared_ptr<const Data> current_data;
     std::atomic_size_t data_identifier;
 
-
 private:
-    boost::shared_ptr<Data> create_data(size_t id){
-        return boost::shared_ptr<Data>(new Data(id), data_deleter<Data>);
-    }
+    boost::shared_ptr<Data> create_data(size_t id) { return boost::shared_ptr<Data>(new Data(id), data_deleter<Data>); }
 
-    boost::shared_ptr<const Data> create_ptr(const Data* d){
+    boost::shared_ptr<const Data> create_ptr(const Data* d) {
         return boost::shared_ptr<const Data>(d, data_deleter<Data>);
     }
-    bool load_data_nav(boost::shared_ptr<Data>& data, const std::string& filename){
+    bool load_data_nav(boost::shared_ptr<Data>& data, const std::string& filename) {
         try {
             data->load_nav(filename);
             return true;
-        } catch(const navitia::data::data_loading_error&) {
+        } catch (const navitia::data::data_loading_error&) {
             data->loading = false;
             return false;
         }
     }
 
 public:
-
-    DataManager() : current_data(create_data(0)){
-        data_identifier = 0;
-    }
+    DataManager() : current_data(create_data(0)) { data_identifier = 0; }
 
     void set_data(const Data* d) { set_data(create_ptr(d)); }
     void set_data(boost::shared_ptr<const Data>&& data) {
-        if (!data) { throw navitia::exception("Giving a null Data to DataManager::set_data"); }
+        if (!data) {
+            throw navitia::exception("Giving a null Data to DataManager::set_data");
+        }
         data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
         current_data = std::move(data);
     }
     boost::shared_ptr<const Data> get_data() const { return current_data; }
     boost::shared_ptr<Data> get_data_clone() {
-        ++ data_identifier;
+        ++data_identifier;
         auto data = create_data(data_identifier.load());
         time_it("Clone data: ", [&]() { data->clone_from(*current_data); });
         return std::move(data);
@@ -101,17 +97,17 @@ public:
     bool load(const std::string& filename,
               const boost::optional<std::string>& chaos_database = boost::none,
               const std::vector<std::string>& contributors = {},
-              const size_t raptor_cache_size = 10){
+              const size_t raptor_cache_size = 10) {
         // Add logger
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
         // Create new type::Data
-        ++ data_identifier;
+        ++data_identifier;
         auto data = create_data(data_identifier.load());
         data->loading = true;
 
         // load .nav.lz4
-        if (!load_data_nav(data, filename)){
+        if (!load_data_nav(data, filename)) {
             if (data->last_load_succeeded) {
                 LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
             }
@@ -125,13 +121,14 @@ public:
             // to reload the data
             try {
                 data->load_disruptions(*chaos_database, contributors);
+                data->build_autocomplete();
             } catch (const navitia::data::disruptions_broken_connection&) {
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");
-            } catch(const navitia::data::disruptions_loading_error&) {
+            } catch (const navitia::data::disruptions_loading_error&) {
                 // Reload data .nav.lz4
                 LOG4CPLUS_ERROR(logger, "Reload data without disruptions: " << filename);
                 data = create_data(data_identifier.load());
-                if (!load_data_nav(data, filename)){
+                if (!load_data_nav(data, filename)) {
                     LOG4CPLUS_ERROR(logger, "Reload data without disruptions failed...");
                     return false;
                 }

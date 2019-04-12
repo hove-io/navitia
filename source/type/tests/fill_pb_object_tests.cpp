@@ -43,9 +43,9 @@ www.navitia.io
 using namespace navitia::type;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     ed::builder b("20120614");
@@ -60,12 +60,12 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
     Route* r = b.data->pt_data->routes_map["A:0"];
     r->destination = b.sas.find("stop1")->second;
-    boost::gregorian::date d1(2014,06,14);
-    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
-    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
+    boost::gregorian::date d1(2014, 06, 14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));  // 10 sec after midnight
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));    // 10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
 
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period);
     pb_creator.fill(r, pt_display_info, 0);
 
@@ -89,52 +89,50 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
-    boost::gregorian::date d1(2014,06,14);
-    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
-    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
+    boost::gregorian::date d1(2014, 06, 14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));  // 10 sec after midnight
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));    // 10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period);
     pb_creator.fill(route, pt_display_info, 0);
 
     BOOST_CHECK_EQUAL(pt_display_info->direction(), "");
     pt_display_info->Clear();
-
 }
-
 
 BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     // Physical_mode = Tram
-    b.vj_with_network("Network1", "A", "11110000","", true, "", "", "physical_mode:0x0")("stop1", 8000,8050)
-            ("stop2", 8200,8250);
+    b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
+        "stop2", 8200, 8250);
     // Physical_mode = Metro
-    b.vj("A","11110000", "", true, "", "", "physical_mode:0x1")("stop1", 8000,8050)
-            ("stop2", 8200,8250)("stop3", 8500,8500);
+    b.vj("A", "11110000", "", true, "", "", "physical_mode:0x1")("stop1", 8000, 8050)("stop2", 8200, 8250)("stop3",
+                                                                                                           8500, 8500);
     // Physical_mode = Car
-    b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "physical_mode:Car")("stop4", 8000,8050)
-                      ("stop5", 8200,8250)("stop6", 8500,8500);
+    b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "physical_mode:Car")("stop4", 8000, 8050)(
+        "stop5", 8200, 8250)("stop6", 8500, 8500);
 
-    nt::Line* ln= b.lines.find("A")->second;
-    ln->network = b.nts.find("Network1")->second;
+    nt::Line* ln = b.lines.find("A")->second;
+    ln->network = b.data->pt_data->networks_map["Network1"];
     ln->commercial_mode = b.data->pt_data->commercial_modes_map["0x1"];
 
     ln = b.lines.find("B")->second;
-    ln->network = b.nts.find("Network2")->second;
+    ln->network = b.data->pt_data->networks_map["Network2"];
     ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
 
     b.data->build_relations();
     b.make();
 
     auto stop_area = new pbnavitia::StopArea();
-    boost::gregorian::date d1(2014,06,14);
-    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10)); //10 sec after midnight
-    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10)); //10 hours after midnight
+    boost::gregorian::date d1(2014, 06, 14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));  // 10 sec after midnight
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));    // 10 hours after midnight
     boost::posix_time::time_period period(t1, t2);
-    const nt::StopArea* sa= b.sas.find("stop1")->second;
+    const nt::StopArea* sa = b.sas.find("stop1")->second;
 
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period);
     pb_creator.fill(sa, stop_area, 2);
 
@@ -142,7 +140,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
 
     stop_area->Clear();
-    sa= b.sas.find("stop6")->second;
+    sa = b.sas.find("stop6")->second;
     pb_creator.fill(sa, stop_area, 2);
     BOOST_CHECK_EQUAL(stop_area->physical_modes().size(), 1);
     BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
@@ -157,7 +155,7 @@ BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
 
     Route* r = b.data->pt_data->routes_map["A:0"];
     auto route = new pbnavitia::Route;
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, null_time_period, false);
     pb_creator.fill(r, route, 3);
 
@@ -175,7 +173,7 @@ BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
 template <typename C>
 std::set<std::string> uris(const C& objs) {
     std::set<std::string> uris;
-    for (const auto* obj: objs) {
+    for (const auto* obj : objs) {
         uris.insert(obj->uri);
     }
     return uris;
@@ -257,9 +255,7 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
     b.vj("A great \"uri\" for café");
     b.make();
 
-    auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(
-        b.data->pt_data->lines.front(),
-        *b.data);
+    auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(b.data->pt_data->lines.front(), *b.data);
     BOOST_CHECK_EQUAL(modes.size(), 1);
 }
 
@@ -268,20 +264,17 @@ BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
     b.make();
 
     auto pt_journey = new pbnavitia::Journey();
-    boost::gregorian::date d1(2014,06,14);
+    boost::gregorian::date d1(2014, 06, 14);
     boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));
     boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));
     boost::posix_time::time_period period(t1, t2);
 
-    auto * data_ptr = b.data.get();
+    auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period);
 
     pb_creator.fill_crowfly_section(EntryPoint(Type_e::StopPoint, "Totorigin"),
-                                    EntryPoint(Type_e::StopPoint, "Tatastination"),
-                                    navitia::time_duration(0,0,0),
-                                    Mode_e::Car,
-                                    t1,
-                                    pt_journey);
+                                    EntryPoint(Type_e::StopPoint, "Tatastination"), navitia::time_duration(0, 0, 0),
+                                    Mode_e::Car, t1, pt_journey);
 
     BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().duration(), 0);
     BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().mode(), pbnavitia::Walking);

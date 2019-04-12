@@ -1,3 +1,29 @@
+navitia2 (2.77.0) unstable; urgency=low
+
+  * Kraken: Don't use cbegin() and cend() with RepeatedPtrField (protobuf version < 3)  <https://github.com/CanalTP/navitia/pull/2749>
+  * Kraken: Equipment reports API   <https://github.com/CanalTP/navitia/pull/2742>
+  * Kirin: Attach physical mode to vj: tests of verifications   <https://github.com/CanalTP/navitia/pull/2737>
+  * Doc: Adding pathways and levels to NTFS specs  <https://github.com/CanalTP/navitia/pull/2722>
+  * Clang format  <https://github.com/CanalTP/navitia/pull/2695>
+  * Kraken: New API entry point - equipment_reports  <https://github.com/CanalTP/navitia/pull/2735>
+  * Kraken: correct application period processing for RT added trip  <https://github.com/CanalTP/navitia/pull/2739>
+  * Jormun: Add direct path limit for all modes   <https://github.com/CanalTP/navitia/pull/2721>
+  * Jormun: fix test failing on dev  <https://github.com/CanalTP/navitia/pull/2740>
+  * Jormun: handle zone and zone_type from bragi  <https://github.com/CanalTP/navitia/pull/2732>
+  * Kraken: Add RT route dynamically  <https://github.com/CanalTP/navitia/pull/2724>
+  * Jormun: Handle providers from db  <https://github.com/CanalTP/navitia/pull/2730>
+  * Kraken: Add and use PT_Data::get_or_create_meta_vehicle_journey()   <https://github.com/CanalTP/navitia/pull/2738>
+  * Jormun: enable keepalive on http call to bragi  <https://github.com/CanalTP/navitia/pull/2707>
+  * Kraken: Adding taxi durations and distance in journey response  <https://github.com/CanalTP/navitia/pull/2731>
+  * Ed/cities: change osm's admins id  <https://github.com/CanalTP/navitia/pull/2736>
+  * Kraken: Add new method "has_code_type" in PtRef Grammar  <https://github.com/CanalTP/navitia/pull/2728>
+  * Kraken: Refactor build helper  <https://github.com/CanalTP/navitia/pull/2729>
+  * Kraken: implements deadline on kraken request  <https://github.com/CanalTP/navitia/pull/2710>
+  * Kraken: Skip realtime cancelled trip update on a VJ that doesn't exist + tests  <https://github.com/CanalTP/navitia/pull/2720>
+  * Tyr: New endpoint /equipments_providers + db management  <https://github.com/CanalTP/navitia/pull/2726>
+
+ -- Nonifier <olivier.georget@kisio.org>  Fri, 12 Apr 2019 15:04:08 +0100
+
 navitia2 (2.76.0) unstable; urgency=low
 
   * [doc] Update line_sections.md  <https://github.com/CanalTP/navitia/pull/2727>

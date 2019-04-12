@@ -46,16 +46,16 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
-static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update)
-{
+static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update) {
     if (trip_update.HasExtension(kirin::effect)) {
         if (trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE) {
             return true;
         } else {
             return false;
         }
-    } else {
-        if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
+        if (trip_update.trip().schedule_relationship()
+            == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             return true;
         } else {
             return false;
@@ -63,23 +63,26 @@ static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update)
     }
 }
 
-static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
-{
+static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update) {
     if (trip_update.HasExtension(kirin::effect)) {
-        if ((trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE ||
-             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT ||
-             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS ||
-             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR ||
-             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE ||
-             trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE)
-             && trip_update.stop_time_update_size()) {
+        if ((trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_REDUCED_SERVICE
+             || trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT
+             || trip_update.GetExtension(kirin::effect)
+                    == transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS
+             || trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR
+             || trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE
+             || trip_update.GetExtension(kirin::effect)
+                    == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE)
+            && trip_update.stop_time_update_size()) {
             return true;
         } else {
             return false;
         }
-    } else {
-        if ((trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED ||
-             trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
+        if ((trip_update.trip().schedule_relationship()
+                 == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
+             || trip_update.trip().schedule_relationship()
+                    == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED)
             && trip_update.stop_time_update_size()) {
             return true;
         } else {
@@ -91,7 +94,7 @@ static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
 static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
     if (event.HasExtension(kirin::stop_time_event_status)) {
         return in(event.GetExtension(kirin::stop_time_event_status),
-        {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
+                  {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
     } else {
         return false;
     }
@@ -101,22 +104,22 @@ static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
     if (is_circulating_trip(trip_update)) {
         uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
-        for (const auto& st: trip_update.stop_time_update()) {
+        for (const auto& st : trip_update.stop_time_update()) {
             uint32_t arrival_time = st.arrival().time();
-            if (! is_deleted(st.arrival())) {
+            if (!is_deleted(st.arrival())) {
                 if (last_stop_event_time > arrival_time) {
-                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                        << st.stop_id() << " is not correctly ordered regarding arrival");
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time " << st.stop_id()
+                                                       << " is not correctly ordered regarding arrival");
                     return false;
                 }
                 last_stop_event_time = arrival_time;
             }
 
             uint32_t departure_time = st.departure().time();
-            if (! is_deleted(st.departure())) {
+            if (!is_deleted(st.departure())) {
                 if (last_stop_event_time > departure_time) {
-                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                        << st.stop_id() << " is not correctly ordered regarding departure");
+                    LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time " << st.stop_id()
+                                                       << " is not correctly ordered regarding departure");
                     return false;
                 }
                 last_stop_event_time = departure_time;
@@ -128,36 +131,36 @@ static bool check_trip_update(const transit_realtime::TripUpdate& trip_update) {
 
 static std::ostream& operator<<(std::ostream& s, const nt::StopTime& st) {
     // Note: do not use st.order, as the stoptime might not yet be part of the VJ
-    return s << "ST " << (st.vehicle_journey ? st.vehicle_journey->uri : "Null")
-             << " dep " << st.departure_time << " arr " << st.arrival_time;
+    return s << "ST " << (st.vehicle_journey ? st.vehicle_journey->uri : "Null") << " dep " << st.departure_time
+             << " arr " << st.arrival_time;
 }
 
 /**
-  * Check if a disruption is valid
-  *
-  * We check that all stop times are correctly ordered
-  * And that the departure/arrival are correct too
+ * Check if a disruption is valid
+ *
+ * We check that all stop times are correctly ordered
+ * And that the departure/arrival are correct too
  */
 static bool check_disruption(const nt::disruption::Disruption& disruption) {
     auto log = log4cplus::Logger::getInstance("realtime");
     using nt::disruption::StopTimeUpdate;
-    for (const auto& impact: disruption.get_impacts()) {
+    for (const auto& impact : disruption.get_impacts()) {
         uint32_t last_stop_event_time = std::numeric_limits<uint32_t>::min();
-        for (const auto& stu: impact->aux_info.stop_times) {
+        for (const auto& stu : impact->aux_info.stop_times) {
             const auto& st = stu.stop_time;
 
-            bool arr_deleted = in(stu.arrival_status,
-                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
-            if (! arr_deleted) {
-                if (last_stop_event_time > st.arrival_time)  {
+            bool arr_deleted =
+                in(stu.arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (!arr_deleted) {
+                if (last_stop_event_time > st.arrival_time) {
                     LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding arrival");
                     return false;
                 }
                 last_stop_event_time = st.arrival_time;
             }
-            bool dep_deleted = in(stu.departure_status,
-                    {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
-            if (! dep_deleted) {
+            bool dep_deleted =
+                in(stu.departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            if (!dep_deleted) {
                 if (last_stop_event_time > st.departure_time) {
                     LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding departure");
                     return false;
@@ -169,14 +172,15 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
     return true;
 }
 
-static boost::shared_ptr<nt::disruption::Severity>
-make_severity(const std::string& id,
-              std::string wording,
-              nt::disruption::Effect effect,
-              const boost::posix_time::ptime& timestamp,
-              nt::disruption::DisruptionHolder& holder) {
+static boost::shared_ptr<nt::disruption::Severity> make_severity(const std::string& id,
+                                                                 std::string wording,
+                                                                 nt::disruption::Effect effect,
+                                                                 const boost::posix_time::ptime& timestamp,
+                                                                 nt::disruption::DisruptionHolder& holder) {
     auto& weak_severity = holder.severities[id];
-    if (auto severity = weak_severity.lock()) { return severity; }
+    if (auto severity = weak_severity.lock()) {
+        return severity;
+    }
 
     auto severity = boost::make_shared<nt::disruption::Severity>();
     severity->uri = id;
@@ -191,14 +195,15 @@ make_severity(const std::string& id,
     return severity;
 }
 
-static boost::posix_time::time_period
-base_execution_period(const boost::gregorian::date& date, const nt::MetaVehicleJourney& mvj) {
+static boost::posix_time::time_period base_execution_period(const boost::gregorian::date& date,
+                                                            const nt::MetaVehicleJourney& mvj) {
     auto running_vj = mvj.get_base_vj_circulating_at_date(date);
     if (running_vj) {
         return running_vj->execution_period(date);
     }
-    // If there is no running vj at this date, we return a null period (begin == end)
-    return {boost::posix_time::ptime{date}, boost::posix_time::ptime{date}};
+    // If there is no running vj at this date, we return a "null", reverted period [infinity; -infinity].
+    // This helps compute the period using min and max.
+    return {boost::gregorian::max_date_time, boost::posix_time::ptime(boost::gregorian::min_date_time)};
 }
 
 static type::disruption::Message create_message(const std::string& str_msg) {
@@ -211,9 +216,9 @@ static type::disruption::Message create_message(const std::string& str_msg) {
     return msg;
 }
 
-static transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship
-get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
-                 const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+static transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship get_relationship(
+    const transit_realtime::TripUpdate_StopTimeEvent& event,
+    const transit_realtime::TripUpdate_StopTimeUpdate& st) {
     // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
     if (event.HasExtension(kirin::stop_time_event_relationship)) {
         return event.GetExtension(kirin::stop_time_event_relationship);
@@ -221,35 +226,35 @@ get_relationship(const transit_realtime::TripUpdate_StopTimeEvent& event,
     return st.schedule_relationship();
 }
 
-static nt::disruption::StopTimeUpdate::Status
-get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
-           const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-
+static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
+                                                         const transit_realtime::TripUpdate_StopTimeUpdate& st) {
     if (event.HasExtension(kirin::stop_time_event_status)) {
         const auto event_status = event.GetExtension(kirin::stop_time_event_status);
         switch (event_status) {
-        case kirin::StopTimeEventStatus::ADDED:
-            return nt::disruption::StopTimeUpdate::Status::ADDED;
-        case kirin::StopTimeEventStatus::DELETED:
-            return nt::disruption::StopTimeUpdate::Status::DELETED;
-        case kirin::StopTimeEventStatus::DELETED_FOR_DETOUR:
-            return nt::disruption::StopTimeUpdate::Status::DELETED_FOR_DETOUR;
-        case kirin::StopTimeEventStatus::ADDED_FOR_DETOUR:
-            return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
-        default: break;
+            case kirin::StopTimeEventStatus::ADDED:
+                return nt::disruption::StopTimeUpdate::Status::ADDED;
+            case kirin::StopTimeEventStatus::DELETED:
+                return nt::disruption::StopTimeUpdate::Status::DELETED;
+            case kirin::StopTimeEventStatus::DELETED_FOR_DETOUR:
+                return nt::disruption::StopTimeUpdate::Status::DELETED_FOR_DETOUR;
+            case kirin::StopTimeEventStatus::ADDED_FOR_DETOUR:
+                return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
+            default:
+                break;
         }
     } else {
-        //TODO: to be deleted once this version is deployed in prod.
+        // TODO: to be deleted once this version is deployed in prod.
         auto transit_realtime_status = get_relationship(event, st);
         switch (transit_realtime_status) {
-        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
-            return nt::disruption::StopTimeUpdate::Status::DELETED;
-        case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
-            return nt::disruption::StopTimeUpdate::Status::ADDED;
-        default: break;
+            case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED:
+                return nt::disruption::StopTimeUpdate::Status::DELETED;
+            case transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_ADDED:
+                return nt::disruption::StopTimeUpdate::Status::ADDED;
+            default:
+                break;
         }
     }
-    if (! event.has_delay() || event.delay() != 0) {
+    if (!event.has_delay() || event.delay() != 0) {
         return nt::disruption::StopTimeUpdate::Status::DELAYED;
     } else {
         return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
@@ -261,13 +266,14 @@ static bool is_added_trip(const transit_realtime::TripUpdate& trip_update) {
     auto log = log4cplus::Logger::getInstance("realtime");
 
     if (trip_update.HasExtension(kirin::effect)) {
-        if (trip_update.GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE) {
+        if (trip_update.GetExtension(kirin::effect)
+            == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE) {
             LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
             return true;
         } else {
             return false;
         }
-    } else {
+    } else {  // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_ADDED) {
             LOG4CPLUS_TRACE(log, "Disruption has ADDITIONAL_SERVICE effect");
             return true;
@@ -283,12 +289,12 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
     using nt::disruption::StopTimeUpdate;
 
     if (trip_update.stop_time_update_size()) {
-        for (const auto& st: trip_update.stop_time_update()) {
+        for (const auto& st : trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
             if (in(get_status(st.departure(), st),
-            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR}) ||
-                    in(get_status(st.arrival(), st),
-            {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
+                   {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})
+                || in(get_status(st.arrival(), st),
+                      {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
                 LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
                 return true;
             }
@@ -300,24 +306,22 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
 static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
                           const nt::PT_Data& pt_data,
                           const bool is_realtime_add_enabled,
-                          const bool is_realtime_add_trip_enabled)
-{
+                          const bool is_realtime_add_trip_enabled) {
     namespace bpt = boost::posix_time;
 
     auto log = log4cplus::Logger::getInstance("realtime");
 
     // if is_realtime_add_enabled = false, this disables the adding trip option too
-    if ((! is_realtime_add_enabled && is_added_stop_time(trip_update)) ||
-        (! is_realtime_add_enabled && is_added_trip(trip_update))) {
+    if ((!is_realtime_add_enabled && is_added_stop_time(trip_update))
+        || (!is_realtime_add_enabled && is_added_trip(trip_update))) {
         LOG4CPLUS_DEBUG(log, "Add stop time is disabled: ignoring trip update id "
-                << trip_update.trip().trip_id()
-                << " with ADDED/ADDED_FOR_DETOUR stop times or ADDITIONAL_SERVICE effect");
+                                 << trip_update.trip().trip_id()
+                                 << " with ADDED/ADDED_FOR_DETOUR stop times or ADDITIONAL_SERVICE effect");
         return false;
     }
-    if (! is_realtime_add_trip_enabled && is_added_trip(trip_update)) {
-        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring trip update id "
-                << trip_update.trip().trip_id()
-                << " with ADDITIONAL_SERVICE effect");
+    if (!is_realtime_add_trip_enabled && is_added_trip(trip_update)) {
+        LOG4CPLUS_DEBUG(log, "Add trip is disabled: ignoring trip update id " << trip_update.trip().trip_id()
+                                                                              << " with ADDITIONAL_SERVICE effect");
         return false;
     }
     // Case 1: the trip is cancelled
@@ -328,25 +332,22 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     // departure is brought forward), we check the size of stop_time_update because we can't find a proper
     // enum in gtfs-rt proto to express this idea
     if (is_circulating_trip(trip_update)) {
-
         // check if company id exists
-        if (is_added_trip(trip_update) &&
-            trip_update.trip().HasExtension(kirin::company_id) &&
-            pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id)) == pt_data.companies_map.end()) {
-            LOG4CPLUS_DEBUG(log, "Trip company id "
-                    << trip_update.trip().GetExtension(kirin::company_id)
-                    <<  " doesn't exist: ignoring trip update id "
-                    << trip_update.trip().trip_id());
+        if (is_added_trip(trip_update) && trip_update.trip().HasExtension(kirin::company_id)
+            && pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id))
+                   == pt_data.companies_map.end()) {
+            LOG4CPLUS_DEBUG(log, "Trip company id " << trip_update.trip().GetExtension(kirin::company_id)
+                                                    << " doesn't exist: ignoring trip update id "
+                                                    << trip_update.trip().trip_id());
             return false;
         }
         // check if physical mode id exists
-        if (is_added_trip(trip_update) &&
-            trip_update.vehicle().HasExtension(kirin::physical_mode_id) &&
-            pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id)) == pt_data.physical_modes_map.end()) {
-            LOG4CPLUS_DEBUG(log, "Trip physical mode id "
-                    << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
-                    <<  " doesn't exist: ignoring trip update id "
-                    << trip_update.trip().trip_id());
+        if (is_added_trip(trip_update) && trip_update.vehicle().HasExtension(kirin::physical_mode_id)
+            && pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id))
+                   == pt_data.physical_modes_map.end()) {
+            LOG4CPLUS_DEBUG(log, "Trip physical mode id " << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
+                                                          << " doesn't exist: ignoring trip update id "
+                                                          << trip_update.trip().trip_id());
             return false;
         }
         // WARNING: here trip.start_date is considered UTC, not local
@@ -354,13 +355,12 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
         auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
 
         auto start_first_day_of_impact = bpt::ptime(start_date, bpt::time_duration(0, 0, 0, 0));
-        for (const auto& st: trip_update.stop_time_update()) {
+        for (const auto& st : trip_update.stop_time_update()) {
             auto ptime_arrival = bpt::from_time_t(st.arrival().time());
             auto ptime_departure = bpt::from_time_t(st.departure().time());
-            if (ptime_arrival < start_first_day_of_impact
-                    || ptime_departure < start_first_day_of_impact) {
-                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time "
-                                    << st.stop_id() << " is before the day of impact");
+            if (ptime_arrival < start_first_day_of_impact || ptime_departure < start_first_day_of_impact) {
+                LOG4CPLUS_WARN(log, "Trip Update " << trip_update.trip().trip_id() << ": Stop time " << st.stop_id()
+                                                   << " is before the day of impact");
                 return false;
             }
         }
@@ -369,85 +369,84 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     return false;
 }
 
-static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTimeUpdate::Status status){
-    using nt::disruption::StopTimeUpdate;
+// TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
+static nt::disruption::Effect get_calculated_trip_effect(nt::disruption::StopTimeUpdate::Status status) {
     using nt::disruption::Effect;
+    using nt::disruption::StopTimeUpdate;
 
     switch (status) {
-    case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
-        return Effect::UNKNOWN_EFFECT;
-    case StopTimeUpdate::Status::DELAYED:
-        return Effect::SIGNIFICANT_DELAYS;
-    case StopTimeUpdate::Status::ADDED:
-        return Effect::MODIFIED_SERVICE;
-    case StopTimeUpdate::Status::DELETED:
-        return Effect::REDUCED_SERVICE;
-    case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
-    case StopTimeUpdate::Status::DELETED_FOR_DETOUR:
-        return Effect::DETOUR;
-    default:
-        return Effect::UNKNOWN_EFFECT;
+        case StopTimeUpdate::Status::UNCHANGED:  // it can be a back to normal case
+            return Effect::UNKNOWN_EFFECT;
+        case StopTimeUpdate::Status::DELAYED:
+            return Effect::SIGNIFICANT_DELAYS;
+        case StopTimeUpdate::Status::ADDED:
+            return Effect::MODIFIED_SERVICE;
+        case StopTimeUpdate::Status::DELETED:
+            return Effect::REDUCED_SERVICE;
+        case StopTimeUpdate::Status::ADDED_FOR_DETOUR:
+        case StopTimeUpdate::Status::DELETED_FOR_DETOUR:
+            return Effect::DETOUR;
+        default:
+            return Effect::UNKNOWN_EFFECT;
     }
 }
 
 static nt::disruption::Effect get_trip_effect(transit_realtime::Alert_Effect effect) {
-    using transit_realtime::Alert_Effect;
     using nt::disruption::Effect;
-    switch(effect) {
-    case Alert_Effect::Alert_Effect_NO_SERVICE:
-        return Effect::NO_SERVICE;
-    case Alert_Effect::Alert_Effect_REDUCED_SERVICE:
-        return Effect::REDUCED_SERVICE;
-    case Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS:
-        return Effect::SIGNIFICANT_DELAYS;
-    case Alert_Effect::Alert_Effect_DETOUR:
-        return Effect::DETOUR;
-    case Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE:
-        return Effect::ADDITIONAL_SERVICE;
-    case Alert_Effect::Alert_Effect_MODIFIED_SERVICE:
-        return Effect::MODIFIED_SERVICE;
-    case Alert_Effect::Alert_Effect_OTHER_EFFECT:
-        return Effect::OTHER_EFFECT;
-    case Alert_Effect::Alert_Effect_STOP_MOVED:
-        return Effect::STOP_MOVED;
-    case Alert_Effect::Alert_Effect_UNKNOWN_EFFECT:
-    default:
-        return Effect::UNKNOWN_EFFECT;
+    using transit_realtime::Alert_Effect;
+    switch (effect) {
+        case Alert_Effect::Alert_Effect_NO_SERVICE:
+            return Effect::NO_SERVICE;
+        case Alert_Effect::Alert_Effect_REDUCED_SERVICE:
+            return Effect::REDUCED_SERVICE;
+        case Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS:
+            return Effect::SIGNIFICANT_DELAYS;
+        case Alert_Effect::Alert_Effect_DETOUR:
+            return Effect::DETOUR;
+        case Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE:
+            return Effect::ADDITIONAL_SERVICE;
+        case Alert_Effect::Alert_Effect_MODIFIED_SERVICE:
+            return Effect::MODIFIED_SERVICE;
+        case Alert_Effect::Alert_Effect_OTHER_EFFECT:
+            return Effect::OTHER_EFFECT;
+        case Alert_Effect::Alert_Effect_STOP_MOVED:
+            return Effect::STOP_MOVED;
+        case Alert_Effect::Alert_Effect_UNKNOWN_EFFECT:
+        default:
+            return Effect::UNKNOWN_EFFECT;
     }
 }
 
 static const std::string get_wordings(nt::disruption::Effect effect) {
     using nt::disruption::Effect;
-    switch(effect) {
-    case Effect::NO_SERVICE:
-        return "trip canceled";
-    case Effect::SIGNIFICANT_DELAYS:
-        return "trip delayed";
-    case Effect::DETOUR:
-        return "detour";
-    case Effect::MODIFIED_SERVICE:
-        return  "trip modified";
-    case Effect::REDUCED_SERVICE:
-        return "reduced service";
-    case Effect::ADDITIONAL_SERVICE:
-        return "additional service";
-    case Effect::OTHER_EFFECT:
-        return "other effect";
-    case Effect::STOP_MOVED:
-        return "stop moved";
-    case Effect::UNKNOWN_EFFECT:
-        return "unknown effect";
-    default:
-        return "";
+    switch (effect) {
+        case Effect::NO_SERVICE:
+            return "trip canceled";
+        case Effect::SIGNIFICANT_DELAYS:
+            return "trip delayed";
+        case Effect::DETOUR:
+            return "detour";
+        case Effect::MODIFIED_SERVICE:
+            return "trip modified";
+        case Effect::REDUCED_SERVICE:
+            return "reduced service";
+        case Effect::ADDITIONAL_SERVICE:
+            return "additional service";
+        case Effect::OTHER_EFFECT:
+            return "other effect";
+        case Effect::STOP_MOVED:
+            return "stop moved";
+        case Effect::UNKNOWN_EFFECT:
+            return "unknown effect";
+        default:
+            return "";
     }
 }
 
-static const type::disruption::Disruption*
-create_disruption(const std::string& id,
-                  const boost::posix_time::ptime& timestamp,
-                  const transit_realtime::TripUpdate& trip_update,
-                  const type::Data& data)
-{
+static const type::disruption::Disruption* create_disruption(const std::string& id,
+                                                             const boost::posix_time::ptime& timestamp,
+                                                             const transit_realtime::TripUpdate& trip_update,
+                                                             const type::Data& data) {
     namespace bpt = boost::posix_time;
     namespace trt = transit_realtime;
     auto log = log4cplus::Logger::getInstance("realtime");
@@ -461,7 +460,8 @@ create_disruption(const std::string& id,
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
 
     auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
-    const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
+    const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
+                                                                        data.pt_data->get_main_timezone());
 
     delete_disruption(id, *data.pt_data, *data.meta);
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
@@ -474,7 +474,7 @@ create_disruption(const std::string& id,
     disruption.created_at = timestamp;
     disruption.updated_at = timestamp;
     // cause
-    {// impact
+    {  // impact
         auto impact = boost::make_shared<nt::disruption::Impact>();
 
         // We want the application period to be the span of the
@@ -502,20 +502,23 @@ create_disruption(const std::string& id,
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
+
         if (is_cancelled_trip(trip_update)) {
+            // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
             // Yeah, that's quite hardcoded...
             trip_effect = nt::disruption::Effect::NO_SERVICE;
-        }
-        else if (is_circulating_trip(trip_update)) {
+        } else if (is_circulating_trip(trip_update)) {
             LOG4CPLUS_TRACE(log, "a trip has been changed");
             using nt::disruption::StopTimeUpdate;
             auto most_important_stoptime_status = StopTimeUpdate::Status::UNCHANGED;
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
-            for (const auto& st: trip_update.stop_time_update()) {
+            for (const auto& st : trip_update.stop_time_update()) {
                 auto it = data.pt_data->stop_points_map.find(st.stop_id());
                 if (it == data.pt_data->stop_points_map.cend()) {
-                    LOG4CPLUS_WARN(log, "Disruption: " << disruption.uri << " cannot be handled, because "
-                            "stop point: " << st.stop_id() << " cannot be found");
+                    LOG4CPLUS_WARN(log, "Disruption: " << disruption.uri
+                                                       << " cannot be handled, because "
+                                                          "stop point: "
+                                                       << st.stop_id() << " cannot be found");
                     return nullptr;
                 }
                 auto* stop_point_ptr = it->second;
@@ -533,10 +536,10 @@ create_disruption(const std::string& id,
                      *
                      * TODO: And this check should be done on Kirin's side...
                      * */
-                    if ((! st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()) {
+                    if ((!st.arrival().has_time() || st.arrival().time() == 0) && st.departure().has_time()) {
                         arrival_time = departure_time = st.departure().time();
                     }
-                    if ((! st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()) {
+                    if ((!st.departure().has_time() || st.departure().time() == 0) && st.arrival().has_time()) {
                         departure_time = arrival_time = st.arrival().time();
                     }
                 }
@@ -548,9 +551,9 @@ create_disruption(const std::string& id,
                 auto ptime_departure = departure_pt - start_first_day_of_impact;
 
                 type::StopTime stop_time{uint32_t(ptime_arrival.total_seconds()),
-                                         uint32_t(ptime_departure.total_seconds()),
-                                         stop_point_ptr};
-                // Don't take into account boarding and alighting duration, we'll get the one from the base stop_time later
+                                         uint32_t(ptime_departure.total_seconds()), stop_point_ptr};
+                // Don't take into account boarding and alighting duration, we'll get the one from the base stop_time
+                // later
                 stop_time.boarding_time = stop_time.departure_time;
                 stop_time.alighting_time = stop_time.arrival_time;
                 std::string message;
@@ -569,36 +572,39 @@ create_disruption(const std::string& id,
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (in(departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
+                if (in(departure_status,
+                       {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
                 }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = std::max({most_important_stoptime_status,
-                    departure_status, arrival_status});
+                most_important_stoptime_status =
+                    std::max({most_important_stoptime_status, departure_status, arrival_status});
 
                 StopTimeUpdate st_update{std::move(stop_time), message, departure_status, arrival_status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
+            // TODO: remove this deprecated code (for retrocompatibility with Kirin < 0.8.0 only)
             trip_effect = get_calculated_trip_effect(most_important_stoptime_status);
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
         LOG4CPLUS_DEBUG(log, "Trip effect : " << get_wordings(trip_effect));
 
-        if (trip_update.HasExtension(kirin::effect)){
+        if (trip_update.HasExtension(kirin::effect)) {
             trip_effect = get_trip_effect(trip_update.GetExtension(kirin::effect));
         }
         std::string wording = get_wordings(trip_effect);
 
+        end_app_period = std::max(end_app_period, begin_app_period);  // make sure that start <= end
         impact->application_periods.push_back({begin_app_period, end_app_period});
         impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
         nd::Impact::link_informed_entity(
-                    nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data),
-                    impact, data.meta->production_date, nt::RTLevel::RealTime);
+            nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data), impact,
+            data.meta->production_date, nt::RTLevel::RealTime);
         // messages
         disruption.add_impact(std::move(impact), holder);
     }
@@ -615,40 +621,34 @@ void handle_realtime(const std::string& id,
                      const transit_realtime::TripUpdate& trip_update,
                      const type::Data& data,
                      const bool is_realtime_add_enabled,
-                     const bool is_realtime_add_trip_enabled)
-{
+                     const bool is_realtime_add_trip_enabled) {
     auto log = log4cplus::Logger::getInstance("realtime");
     LOG4CPLUS_TRACE(log, "realtime trip update received");
 
-    if (! is_handleable(trip_update, *data.pt_data, is_realtime_add_enabled, is_realtime_add_trip_enabled)
-            || ! check_trip_update(trip_update)) {
+    if (!is_handleable(trip_update, *data.pt_data, is_realtime_add_enabled, is_realtime_add_trip_enabled)
+        || !check_trip_update(trip_update)) {
         LOG4CPLUS_DEBUG(log, "unhandled real time message");
         return;
     }
 
     // Get or create meta VJ
-    navitia::type::MetaVehicleJourney* meta_vj = nullptr;
     bool meta_vj_exists = data.pt_data->meta_vjs.exists(trip_update.trip().trip_id());
-    if (! meta_vj_exists) {
-        if (is_added_trip(trip_update)) {
-            LOG4CPLUS_DEBUG(log, "unknown vehicle journey, create Meta VJ " << trip_update.trip().trip_id());
-            meta_vj = data.pt_data->meta_vjs.emplace(trip_update.trip().trip_id());
-            // TODO : pick a meaningful TZ
-            meta_vj->tz_handler = data.pt_data->tz_manager.get_first_timezone();
-        } else {
-            LOG4CPLUS_DEBUG(log, "Meta VJ doesn't exist without Added trip type: ignoring trip update id "
-                    << trip_update.trip().trip_id());
-            return;
+    if (!meta_vj_exists && !is_added_trip(trip_update)) {
+        LOG4CPLUS_WARN(log, "Cannot perform operation on an unknown Meta VJ (other than adding trip)"
+                                << ", trip id: " << trip_update.trip().trip_id() << ", effect: "
+                                << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
+        if (trip_update.stop_time_update_size()) {
+            LOG4CPLUS_WARN(log,
+                           "Meta VJ 1st stop time departure: " << trip_update.stop_time_update(0).departure().time());
         }
-    } else {
-        LOG4CPLUS_DEBUG(log, "Vehicle journey found : " << trip_update.trip().trip_id());
-        meta_vj = data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
+        return;
     }
 
     const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
-    if (! disruption || ! check_disruption(*disruption)) {
-        LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");
+    if (!disruption || !check_disruption(*disruption)) {
+        LOG4CPLUS_INFO(
+            log, "disruption " << id << " on " << trip_update.trip().trip_id() << " not valid, we do not handle it");
         delete_disruption(id, *data.pt_data, *data.meta);
         return;
     }
@@ -656,4 +656,4 @@ void handle_realtime(const std::string& id,
     apply_disruption(*disruption, *data.pt_data, *data.meta);
 }
 
-}
+}  // namespace navitia

@@ -39,10 +39,11 @@ namespace timetables {
 
 typedef std::vector<DateTime> vector_datetime;
 typedef std::vector<routing::datetime_stop_time> vector_dt_st;
-typedef std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time>> first_and_last_stop_time;
+typedef std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time>>
+    first_and_last_stop_time;
 
 void departure_board(PbCreator& pb_creator,
-                     const std::string &filter,
+                     const std::string& filter,
                      const boost::optional<const std::string> calendar_id,
                      const std::vector<std::string>& forbidden_uris,
                      const pt::ptime datetime,
@@ -53,17 +54,14 @@ void departure_board(PbCreator& pb_creator,
                      const type::RTLevel rt_level,
                      const size_t items_per_route_point);
 
-bool between_opening_and_closing(const time_duration& me,
-                                 const time_duration& opening,
-                                 const time_duration& closing);
+bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing);
 
-time_duration length_of_time(const time_duration& duration_1,
-                             const time_duration& duration_2);
+time_duration length_of_time(const time_duration& duration_1, const time_duration& duration_2);
 
-bool line_closed (const time_duration& duration,
-                  const time_duration& opening,
-                  const time_duration& closing,
-                  const pt::ptime& date );
+bool line_closed(const time_duration& duration,
+                 const time_duration& opening,
+                 const time_duration& closing,
+                 const pt::ptime& date);
 
 /**
  * @brief Find the new request date time to invoke routing::get_stop_times function,
@@ -97,5 +95,5 @@ first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_st
                                                       const type::RTLevel rt_level,
                                                       const int utc_offset);
 
-} // namespace timetable
-} // namespace navitia
+}  // namespace timetables
+}  // namespace navitia

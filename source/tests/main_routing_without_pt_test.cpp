@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -41,4 +41,3 @@ int main(int argc, const char* const argv[]) {
 
     return 0;
 }
-

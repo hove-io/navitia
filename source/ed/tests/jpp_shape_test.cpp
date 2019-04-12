@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -38,11 +38,13 @@ namespace std {
 static std::ostream& operator<<(std::ostream& os, const navitia::type::LineString& ls) {
     os << "[";
     auto it = ls.begin(), end = ls.end();
-    if (it != end) os << *it++;
-    for (; it != end; ++it) os << ", " << *it;
+    if (it != end)
+        os << *it++;
+    for (; it != end; ++it)
+        os << ", " << *it;
     return os << "]";
 }
-}
+}  // namespace std
 
 //     + A
 // M +
@@ -58,19 +60,19 @@ static std::ostream& operator<<(std::ostream& os, const navitia::type::LineStrin
 //           P +
 //               + G
 // 0.001 ~= 100m
-static const navitia::type::GeographicalCoord M(0.010,0.020);
-static const navitia::type::GeographicalCoord N(0.010,0.015);
-static const navitia::type::GeographicalCoord O(0.015,0.015);
-static const navitia::type::GeographicalCoord P(0.015,0.010);
-static const navitia::type::GeographicalCoord A(0.011,0.021);
-static const navitia::type::GeographicalCoord B(0.012,0.016);
-static const navitia::type::GeographicalCoord Bproj(0.012,0.015);
-static const navitia::type::GeographicalCoord C(0.013,0.016);
-static const navitia::type::GeographicalCoord D(0.016,0.017);
-static const navitia::type::GeographicalCoord E(0.017,0.016);
-static const navitia::type::GeographicalCoord F(0.017,0.011);
-static const navitia::type::GeographicalCoord Fproj(0.015,0.011);
-static const navitia::type::GeographicalCoord G(0.016,0.009);
+static const navitia::type::GeographicalCoord M(0.010, 0.020);
+static const navitia::type::GeographicalCoord N(0.010, 0.015);
+static const navitia::type::GeographicalCoord O(0.015, 0.015);
+static const navitia::type::GeographicalCoord P(0.015, 0.010);
+static const navitia::type::GeographicalCoord A(0.011, 0.021);
+static const navitia::type::GeographicalCoord B(0.012, 0.016);
+static const navitia::type::GeographicalCoord Bproj(0.012, 0.015);
+static const navitia::type::GeographicalCoord C(0.013, 0.016);
+static const navitia::type::GeographicalCoord D(0.016, 0.017);
+static const navitia::type::GeographicalCoord E(0.017, 0.016);
+static const navitia::type::GeographicalCoord F(0.017, 0.011);
+static const navitia::type::GeographicalCoord Fproj(0.015, 0.011);
+static const navitia::type::GeographicalCoord G(0.016, 0.009);
 static const navitia::type::LineString shape = {M, N, O, P};
 static const navitia::type::LineString rshape = {P, O, N, M};
 
@@ -131,7 +133,7 @@ static const navitia::type::GeographicalCoord V(0.00007, 0);
 static const navitia::type::GeographicalCoord W(0.00008, -0.00001);
 static const navitia::type::GeographicalCoord X(0.00009, 0);
 static const navitia::type::GeographicalCoord Y(0.00012, 0);
-static const navitia::type::LineString curved_shape  = {S, T, U, V, W, X, Y};
+static const navitia::type::LineString curved_shape = {S, T, U, V, W, X, Y};
 
 BOOST_AUTO_TEST_CASE(simplify_create_shape) {
     typedef navitia::type::LineString LS;

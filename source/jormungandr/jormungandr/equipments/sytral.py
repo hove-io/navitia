@@ -38,7 +38,6 @@ import pybreaker
 import logging
 import jmespath
 import requests as requests
-import json
 
 SYTRAL_TYPE_PREFIX = "TCL_"
 

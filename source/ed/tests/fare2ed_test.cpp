@@ -36,23 +36,17 @@ www.navitia.io
 #include "utils/logger.h"
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
 
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
-BOOST_AUTO_TEST_CASE(fare2ed_with_no_param_should_start_without_throwing)
-{
-    const char* argv [] = { "fare2ed_test" };
+BOOST_AUTO_TEST_CASE(fare2ed_with_no_param_should_start_without_throwing) {
+    const char* argv[] = {"fare2ed_test"};
     BOOST_CHECK_NO_THROW(ed::fare2ed(1, argv));
 }
 
-BOOST_AUTO_TEST_CASE(should_throw_on_bad_connection_string)
-{
-    const char* argv [] = {
-    	"fare2ed_test",
-    	"--connection-string=\"blahblah\""
-    };
+BOOST_AUTO_TEST_CASE(should_throw_on_bad_connection_string) {
+    const char* argv[] = {"fare2ed_test", "--connection-string=\"blahblah\""};
     BOOST_CHECK_THROW(ed::fare2ed(2, argv), std::exception);
 }
-

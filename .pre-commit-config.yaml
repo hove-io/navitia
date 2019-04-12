@@ -11,3 +11,11 @@ repos:
     -   id: check-ast
     -   id: check-merge-conflict
     #-   id: flake8
+-   repo: https://github.com/CanalTP/navitia-pre-commit
+    rev: master
+    hooks:
+    -   id: clang-format-6.0
+        verbose: true
+        exclude: ^source/third_party/
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx)$
+        args: [-i]

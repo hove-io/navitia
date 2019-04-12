@@ -1,4 +1,4 @@
-NTFS version 0.7
+NTFS version 0.8
 ================
 
 # Introduction
@@ -48,7 +48,7 @@ lines.txt | Requis | Ce fichier contient les lignes
 physical_modes.txt  | Requis | Ce fichier contient les modes physiques (ModeType NAViTiA 1)
 routes.txt | Requis | Ce fichier contient les parcours
 stop_times.txt | Requis | Ce fichier contient les horaires
-stops.txt | Requis | Ce fichier contient les arrêts
+stops.txt | Requis | Ce fichier contient les arrêts, les entrées/sorties et les points utilisés par les pathways.
 trips.txt | Requis | Ce fichier contient les circulations
 calendar.txt | Requis | Ce fichier contient les jours de fonctionnement
 calendar_dates.txt | Optionnel | Ce fichier contient les exceptions sur les jours de fonctionnement décrits dans le fichier calendar.txt
@@ -68,6 +68,8 @@ object_codes.txt | Optionnel | Ce fichier contient la liste des codes d'identifi
 admin_stations.txt | Optionnel | Ce fichier contient la liste des arrêts d'accroche des communes pour les itinéraires au départ ou à l'arrivée d'une commune
 line_groups.txt | Optionnel | Ce fichier contient la définition de groupes de lignes
 line_group_links.txt | Optionnel | Ce fichier contient la liaison entre un groupe de ligne et la liste des lignes qui le compose
+pathways.txt | Optionnel | Ce fichier contient les cheminements au sein d'une zone d'arrêt. Ces cheminements ne sont pas nécessairement géographiques, il peut y avoir des simplifications.
+levels.txt | Optionnel | Ce fichier contient la liste des niveaux au sein d'une zone d'arrêt.
 
 ## Fichiers des calendriers par période
 Fichier | Contrainte | Commentaire
@@ -105,8 +107,8 @@ thursday | entier | Requis | (1)
 friday | entier | Requis | (1)
 saturday | entier | Requis | (1)
 sunday | entier | Requis | (1)
-start_date | date | Requis | Début du calendrier de circulation
-end_date | date | Requis | Fin du calendrier de circulation
+start_date | date | Requis | Date de début du calendrier de circulation
+end_date | date | Requis | Date de fin du calendrier de circulation incluse dans l'intervalle.
 
 (1) Les valeurs possibles sont :
 
@@ -321,19 +323,25 @@ Colonne | Type | Contrainte | Commentaire
 stop_id | chaine | Requis | Identifiant de l'arrêt
 visible | entier | Optionnel | Indique si le stop peut être retourné dans l'autocomplétion (valeur 1) ou s'il est ignoré (valeur 0).
 stop_name | chaine | Requis | Nom de l'arrêt
-stop_lat | décimal | Requis | Latitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
-stop_lon | décimal | Requis | Longitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
-fare_zone_id | chaine | Optionnel | Zone tarifaire de l'arrêt
+stop_code | chaine | Optionnel | Code de l'arrêt connu du voyageur. Dans le cas d'une entrée/sortie, contient le code/le numéro de l'entrée/sortie.
+stop_lat | décimal | Requis (Spécial) | Latitude. Ce champ est obligatoire, sauf pour les noeuds et les zones d'embarquement (location_type = 4 et 5).
+stop_lon | décimal | Requis (Spécial) | Longitude. Ce champ est obligatoire, sauf pour les noeuds et les zones d'embarquement (location_type = 4 et 5).
+fare_zone_id | chaine | Optionnel | Zone tarifaire de l'arrêt. Ce champ ne s'applique que sur les arrêts physiques (location_type = 0)
 location_type | entier (1) | Requis | Type de l'arrêt ou de la zone
 geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geometries.txt qui décrit la géométrie associée à une zone géographique (type 2) afin de permettre au moteur de définir les adresses couvertes en cas de TAD zonal "adresse à adresse". Ce champ peut également être utilisé pour préciser une géométrie pour les zones d'arrêts (type 1) et les communes (type 4) pour enrichir le web service.
-parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
+parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt. Ne doit pas être renseigné pour les zones d'arrêts et les zones géographiques (location_type = 1 ou 2)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
+level_id | chaine | Optionnel | lien vers un niveau décrit dans le fichier levels.txt
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique (objet stop_point)
         1 - Zone d'arrêt (objet stop_area)
         2 - Zone géographique (pour le TAD zonal de type "adressse à adresse", objet stop_zone)
+        3 - Entrée / Sortie
+        4 - Noeud d'interconnexion de pathways
+        5 - Zone d'embarquement (par exemple pour indiquer "milieu du quai")
+
 
 ### stop_times.txt (requis)
 Colonne | Type | Contrainte | Commentaire
@@ -464,6 +472,42 @@ admin_id | chaine | Requis | Identifiant de la commune (ou du quartier) tel que 
 admin_name | chaine | Requis | Nom de la commune (ou quartier).
 stop_id | chaine | Requis | Identifiant de la zone d'arrêt utilisée comme accroche de la commune (lien vers le fichier stops). Stop de type 1 oligatoirement.
 stop_name | chaine | Optionnel | Nom de la zone d'arrêt (pour faciliter la lisibilité du fichier)
+
+### pathways.txt (optionnel)
+Attention, ce fichier décrit une modélisation de la station qui n'est pas nécessairement géographique, et peut également être simplifiée.
+La modélisation des chemins d'une zone d'arrêt ne peut pas être partielle. Dès qu'un chemin est renseigné pour une zone d'arrêt, il est considéré que toute la station est renseignée.
+
+Colonne | Type | Contrainte | Commentaire
+--- | --- | --- | ---
+pathway_id | chaine | Requis | Identifiant du chemin
+from_stop_id | chaine | Requis | Identifiant noeud de début du chemin dans le fichier stops.txt. Ce noeud de départ peut être un point d'arrêt, une entrée/sortie, un noeud générique ou une zone d'embarquement.
+to_stop_id | chaine | Requis | Identifiant noeud de fin du chemin (même contraintes que `from_stop_id`).
+pathway_mode | entier(1) | Requis | Type de chemin. voir ci-dessous pour les valeurs possibles.
+is_bidirectional | booléen | Requis | Indique si le chemin est utilisable dans les deux sens ou uniquement dans le sens from->to.
+length | décimal | Optionnel | Distance en mètres entre les deux extrémités du chemin
+traversal_time | entier | Optionnel | Temps moyen de parcours en secondes.
+stair_count | entier | Optionnel | Nombre de marches (approximatif).
+max_slope | décimal | Optionnel | Ratio maximum de la pente sur ce chemin.
+min_width | décimal | Optionnel | Largeur minimale de ce chemin
+signposted_as | chaine | Optionnel | Texte indiqué au voyageur indiquant ce chemin
+reversed_signposted_as | chaine | Optionnel | Texte indiqué au voyageur dans le sens inverse (si le chemin est indiqué comme bidirectionnel)
+
+    (1) pathway_mode - Les valeurs possibles sont :
+        1 - Couloir
+        2 - Escalier
+        3 - Trottoir roulant / travelator
+        4 - Escalier mécanique
+        5 - Ascenseur
+        6 - Entrée dans une zone payante ("fare gate")
+        7 - Sortie de zone payante ("exit gate")
+
+
+### levels.txt (optionnel)
+Colonne | Type | Contrainte | Commentaire
+--- | --- | --- | ---
+level_id | chaine | Requis | Identifiant du niveau
+level_index | décimal | Requis | Numéro de l'étage, le rez-de-chaussée est indiqué à 0, les étages sous le sol sont avec une valeur négative.
+level_name | chaine | Optionnel | Nom associé au niveau (comme par exemple "Mezzanine").
 
 ### line_groups.txt (optionnel)
 Colonne | Type | Contrainte | Commentaire

@@ -206,3 +206,9 @@ class TestEndPoint(AbstractTestFixture):
         response = self.query('/v1/coverage/main_routing_test/lines', display=True)
         self.check_context(response)
         assert response['context']['timezone'] == 'UTC'
+
+    def test_equipment_reports_context(self):
+        response = self.query('/v1/coverage/main_routing_test/equipment_reports', display=True)
+        self.check_context(response)
+        assert response.get("equipment_reports", None) is not None
+        assert response['context']['timezone'] == 'UTC'

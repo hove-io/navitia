@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+
+import jormungandr.street_network.utils
 from . import helper_future
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from .helper_utils import get_max_fallback_duration
@@ -48,14 +50,7 @@ class ProximitiesByCrowfly:
         self._mode = mode
         self._max_duration = max_duration
         self._max_nb_crowfly = max_nb_crowfly
-        self._speed_switcher = {
-            "walking": request["walking_speed"],
-            "bike": request["bike_speed"],
-            "car": request["car_speed"],
-            "bss": request["bss_speed"],
-            "ridesharing": request["car_no_park_speed"],
-            "taxi": request["taxi_speed"],
-        }
+        self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
         self._value = None
         self._async_request()
 

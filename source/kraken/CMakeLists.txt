@@ -13,7 +13,7 @@ target_link_libraries(rt_handling data pb_lib protobuf)
 add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp metrics.cpp)
 add_dependencies(workers protobuf_files)
 target_link_libraries(workers apply_disruption make_disruption_from_chaos rt_handling ${PQXX_LIB}
-  SimpleAmqpClient disruption_api calendar_api ptreferential autocomplete georef
+  SimpleAmqpClient equipment_api disruption_api calendar_api ptreferential autocomplete georef
   routing time_tables prometheus-cpp-core prometheus-cpp-pull)
 
 add_library(fill_disruption_from_database fill_disruption_from_database.cpp)

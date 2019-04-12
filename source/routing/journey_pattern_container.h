@@ -33,28 +33,28 @@ www.navitia.io
 #include "raptor_utils.h"
 #include <boost/optional.hpp>
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 struct PT_Data;
 struct DiscreteVehicleJourney;
 struct FrequencyVehicleJourney;
 struct StopTime;
 
-}}// namespace navitia::type
+}  // namespace type
+}  // namespace navitia
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPatternPoint {
     JpIdx jp_idx;
     SpIdx sp_idx;
     uint16_t order;
-    bool operator==(const JourneyPatternPoint& other) const {
-        return sp_idx == other.sp_idx && order == other.order;
-    }
+    bool operator==(const JourneyPatternPoint& other) const { return sp_idx == other.sp_idx && order == other.order; }
 };
 std::ostream& operator<<(std::ostream&, const JourneyPatternPoint&);
-
 
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPattern {
@@ -65,19 +65,26 @@ struct JourneyPattern {
     PhyModeIdx phy_mode_idx;
 
     bool operator==(const JourneyPattern& other) const {
-        return jpps == other.jpps
-            && discrete_vjs == other.discrete_vjs
-            && freq_vjs == other.freq_vjs
-            && route_idx == other.route_idx;
+        return jpps == other.jpps && discrete_vjs == other.discrete_vjs && freq_vjs == other.freq_vjs
+               && route_idx == other.route_idx;
     }
-    template<typename VJ> std::vector<const VJ*>& get_vjs();
-    template<typename F> void for_each_vehicle_journey(const F f) const {
-        for (const auto& vj: discrete_vjs) { if (! f(*vj)) { return; } }
-        for (const auto& vj: freq_vjs) { if (! f(*vj)) { return; } }
+    template <typename VJ>
+    std::vector<const VJ*>& get_vjs();
+    template <typename F>
+    void for_each_vehicle_journey(const F f) const {
+        for (const auto& vj : discrete_vjs) {
+            if (!f(*vj)) {
+                return;
+            }
+        }
+        for (const auto& vj : freq_vjs) {
+            if (!f(*vj)) {
+                return;
+            }
+        }
     }
 };
 std::ostream& operator<<(std::ostream&, const JourneyPattern&);
-
 
 struct JourneyPatternContainer {
     using Jps = std::vector<JourneyPattern>;
@@ -99,27 +106,17 @@ struct JourneyPatternContainer {
         return jpps[idx.val];
     }
     JpRange get_jps() const {
-        return boost::make_iterator_range(JpIterator(0, jps.begin()),
-                                          JpIterator(jps.size(), jps.end()));
+        return boost::make_iterator_range(JpIterator(0, jps.begin()), JpIterator(jps.size(), jps.end()));
     }
     const Jps& get_jps_values() const { return jps; }
     JppRange get_jpps() const {
-        return boost::make_iterator_range(JppIterator(0, jpps.begin()),
-                                          JppIterator(jpps.size(), jpps.end()));
+        return boost::make_iterator_range(JppIterator(0, jpps.begin()), JppIterator(jpps.size(), jpps.end()));
     }
     const Jpps& get_jpps_values() const { return jpps; }
-    const IdxMap<type::Route, std::vector<JpIdx>>& get_jps_from_route() const {
-        return jps_from_route;
-    }
-    const IdxMap<type::PhysicalMode, std::vector<JpIdx>>& get_jps_from_phy_mode() const {
-        return jps_from_phy_mode;
-    }
-    const IdxMap<type::PhysicalMode, std::vector<JppIdx>>& get_jpps_from_phy_mode() const {
-        return jpps_from_phy_mode;
-    }
-    const IdxMap<type::VehicleJourney, JpIdx>& get_jp_from_vj() const {
-        return jp_from_vj;
-    }
+    const IdxMap<type::Route, std::vector<JpIdx>>& get_jps_from_route() const { return jps_from_route; }
+    const IdxMap<type::PhysicalMode, std::vector<JpIdx>>& get_jps_from_phy_mode() const { return jps_from_phy_mode; }
+    const IdxMap<type::PhysicalMode, std::vector<JppIdx>>& get_jpps_from_phy_mode() const { return jpps_from_phy_mode; }
+    const IdxMap<type::VehicleJourney, JpIdx>& get_jp_from_vj() const { return jp_from_vj; }
     const JppIdx& get_jpp(const type::StopTime&) const;
     std::string get_id(const JpIdx&) const;
     std::string get_id(const JppIdx&) const;
@@ -128,11 +125,12 @@ struct JourneyPatternContainer {
 
 private:
     struct JppKey {
-        JppKey(const SpIdx& sp, const uint16_t& ltz, const std::bitset<8> p):
-            sp_idx(sp), local_traffic_zone(ltz), properties(p) {
-        }
+        JppKey(const SpIdx& sp, const uint16_t& ltz, const std::bitset<8> p)
+            : sp_idx(sp), local_traffic_zone(ltz), properties(p) {}
         bool operator<(const JppKey& other) const {
-            if (sp_idx != other.sp_idx) { return sp_idx < other.sp_idx; }
+            if (sp_idx != other.sp_idx) {
+                return sp_idx < other.sp_idx;
+            }
             if (local_traffic_zone != other.local_traffic_zone) {
                 return local_traffic_zone < other.local_traffic_zone;
             }
@@ -166,9 +164,15 @@ private:
         bool is_freq = false;
 
         bool operator<(const JpKey& other) const {
-            if (route_idx != other.route_idx) { return route_idx < other.route_idx; }
-            if (phy_mode_idx != other.phy_mode_idx) { return phy_mode_idx < other.phy_mode_idx; }
-            if (is_freq != other.is_freq) { return is_freq < other.is_freq; }
+            if (route_idx != other.route_idx) {
+                return route_idx < other.route_idx;
+            }
+            if (phy_mode_idx != other.phy_mode_idx) {
+                return phy_mode_idx < other.phy_mode_idx;
+            }
+            if (is_freq != other.is_freq) {
+                return is_freq < other.is_freq;
+            }
             return jpp_keys < other.jpp_keys;
         }
     };
@@ -184,12 +188,14 @@ private:
     IdxMap<type::PhysicalMode, std::vector<JpIdx>> jps_from_phy_mode;
     IdxMap<type::PhysicalMode, std::vector<JppIdx>> jpps_from_phy_mode;
 
-    template<typename VJ> void add_vj(const VJ&);
-    template<typename VJ> static JpKey make_key(const VJ&);
+    template <typename VJ>
+    void add_vj(const VJ&);
+    template <typename VJ>
+    static JpKey make_key(const VJ&);
     JpIdx make_jp(const JpKey&);
     JppIdx make_jpp(const JpIdx&, const SpIdx&, uint16_t order);
     JourneyPattern& get_mut(const JpIdx&);
 };
 
-}} // namespace navitia::routing
-
+}  // namespace routing
+}  // namespace navitia

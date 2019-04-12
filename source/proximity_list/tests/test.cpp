@@ -43,14 +43,13 @@ using namespace navitia::type;
 using namespace navitia::proximitylist;
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
-BOOST_AUTO_TEST_CASE(distances_grand_cercle)
-{
-    GeographicalCoord a(0,0);
-    GeographicalCoord b(0,0);
+BOOST_AUTO_TEST_CASE(distances_grand_cercle) {
+    GeographicalCoord a(0, 0);
+    GeographicalCoord b(0, 0);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
     BOOST_CHECK_CLOSE(a.distance_to(b), 0, 1e-6);
@@ -62,35 +61,36 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
     BOOST_CHECK_CLOSE(paris.distance_to(nantes), 340000, 10);
 
     a.set_lon(180);
-    BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000,1);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000,1);
+    BOOST_CHECK_CLOSE(a.distance_to(b), 6371 * 3.14 * 1000, 1);
+    BOOST_CHECK_CLOSE(b.distance_to(a), 6371 * 3.14 * 1000, 1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
-    a.set_lon(84); a.set_lat(89.999);
-    BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/2,1);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/2,1);
+    a.set_lon(84);
+    a.set_lat(89.999);
+    BOOST_CHECK_CLOSE(a.distance_to(b), 6371 * 3.14 * 1000 / 2, 1);
+    BOOST_CHECK_CLOSE(b.distance_to(a), 6371 * 3.14 * 1000 / 2, 1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
-
-    a.set_lon(34); a.set_lat(-89.999);
-    BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/2,1);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/2,1);
+    a.set_lon(34);
+    a.set_lat(-89.999);
+    BOOST_CHECK_CLOSE(a.distance_to(b), 6371 * 3.14 * 1000 / 2, 1);
+    BOOST_CHECK_CLOSE(b.distance_to(a), 6371 * 3.14 * 1000 / 2, 1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
-
-    a.set_lon(0); a.set_lat(45);
-    BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/4,1);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/4,1);
+    a.set_lon(0);
+    a.set_lat(45);
+    BOOST_CHECK_CLOSE(a.distance_to(b), 6371 * 3.14 * 1000 / 4, 1);
+    BOOST_CHECK_CLOSE(b.distance_to(a), 6371 * 3.14 * 1000 / 4, 1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 }
 
-BOOST_AUTO_TEST_CASE(approx_distance){
+BOOST_AUTO_TEST_CASE(approx_distance) {
     GeographicalCoord canaltp(2.3921, 48.8296);
-    GeographicalCoord tour_eiffel(2.29447,48.85834);
+    GeographicalCoord tour_eiffel(2.29447, 48.85834);
     double coslat = ::cos(canaltp.lat() * 0.0174532925199432958);
     BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
     BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
@@ -98,85 +98,112 @@ BOOST_AUTO_TEST_CASE(approx_distance){
     BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
 }
 
-BOOST_AUTO_TEST_CASE(find_nearest){
-    constexpr double M_TO_DEG = 1.0/111320.0;
+BOOST_AUTO_TEST_CASE(find_nearest) {
+    constexpr double M_TO_DEG = 1.0 / 111320.0;
     ProximityList<unsigned int> pl;
 
     GeographicalCoord c;
     std::vector<GeographicalCoord> coords;
 
     // Exemple d'illustration issu de wikipedia
-    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *3); pl.add(c, 1); coords.push_back(c);
-    c.set_lon(M_TO_DEG *5); c.set_lat(M_TO_DEG *4); pl.add(c, 2); coords.push_back(c);
-    c.set_lon(M_TO_DEG *9); c.set_lat(M_TO_DEG *6); pl.add(c, 3); coords.push_back(c);
-    c.set_lon(M_TO_DEG *4); c.set_lat(M_TO_DEG *7); pl.add(c, 4); coords.push_back(c);
-    c.set_lon(M_TO_DEG *8); c.set_lat(M_TO_DEG *1); pl.add(c, 5); coords.push_back(c);
-    c.set_lon(M_TO_DEG *7); c.set_lat(M_TO_DEG *2); pl.add(c, 6); coords.push_back(c);
+    c.set_lon(M_TO_DEG * 2);
+    c.set_lat(M_TO_DEG * 3);
+    pl.add(c, 1);
+    coords.push_back(c);
+    c.set_lon(M_TO_DEG * 5);
+    c.set_lat(M_TO_DEG * 4);
+    pl.add(c, 2);
+    coords.push_back(c);
+    c.set_lon(M_TO_DEG * 9);
+    c.set_lat(M_TO_DEG * 6);
+    pl.add(c, 3);
+    coords.push_back(c);
+    c.set_lon(M_TO_DEG * 4);
+    c.set_lat(M_TO_DEG * 7);
+    pl.add(c, 4);
+    coords.push_back(c);
+    c.set_lon(M_TO_DEG * 8);
+    c.set_lat(M_TO_DEG * 1);
+    pl.add(c, 5);
+    coords.push_back(c);
+    c.set_lon(M_TO_DEG * 7);
+    c.set_lat(M_TO_DEG * 2);
+    pl.add(c, 6);
+    coords.push_back(c);
 
     pl.build();
 
-    std::vector<unsigned int> expected {1,4,2,6,5,3};
-    for(size_t i=0; i < expected.size(); ++i)
+    std::vector<unsigned int> expected{1, 4, 2, 6, 5, 3};
+    for (size_t i = 0; i < expected.size(); ++i)
         BOOST_CHECK_EQUAL(pl.items[i].element, expected[i]);
 
-
-    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *3);
+    c.set_lon(M_TO_DEG * 2);
+    c.set_lat(M_TO_DEG * 3);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 1);
 
-    c.set_lon(M_TO_DEG *7.1); c.set_lat(M_TO_DEG *1.9);
+    c.set_lon(M_TO_DEG * 7.1);
+    c.set_lat(M_TO_DEG * 1.9);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 6);
 
-    c.set_lon(M_TO_DEG *100); c.set_lat(M_TO_DEG *6);
+    c.set_lon(M_TO_DEG * 100);
+    c.set_lat(M_TO_DEG * 6);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 3);
 
-    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *4);
+    c.set_lon(M_TO_DEG * 2);
+    c.set_lat(M_TO_DEG * 4);
 
     expected = {1};
     auto tmp1 = pl.find_within(c, 1.1);
     std::vector<unsigned int> tmp;
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     BOOST_CHECK_EQUAL(tmp1[0].second, coords[0]);
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
-    expected={1,2};
+    expected = {1, 2};
     tmp1 = pl.find_within(c, 3.1);
     tmp.clear();
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
-    expected={1,2,4};
+    expected = {1, 2, 4};
     tmp.clear();
     tmp1 = pl.find_within(c, 3.7);
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
-    expected={1,2,4,6};
+    expected = {1, 2, 4, 6};
     tmp.clear();
     tmp1 = pl.find_within(c, 5.4);
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
-    expected={1,2,4,5,6};
+    expected = {1, 2, 4, 5, 6};
     tmp.clear();
     tmp1 = pl.find_within(c, 6.8);
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
-    expected={1,2,3,4,5,6};
+    expected = {1, 2, 3, 4, 5, 6};
     tmp.clear();
     tmp1 = pl.find_within(c, 7.3);
-    for(auto p : tmp1) tmp.push_back(p.first);
+    for (auto p : tmp1)
+        tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 }
 
 BOOST_AUTO_TEST_CASE(test_api) {
     navitia::type::Data data;
-    //Everything in the range
+    // Everything in the range
     auto sa = new navitia::type::StopArea();
     sa->coord.set_lon(-1.554514);
     sa->coord.set_lat(47.218515);
@@ -193,12 +220,10 @@ BOOST_AUTO_TEST_CASE(test_api) {
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator, c, 200,
-        {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
-         "", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI}, "", 1, 10, 0, data);
     auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
-    //One object out of the range
+    // One object out of the range
     sa = new navitia::type::StopArea();
     sa->coord.set_lon(-1.556949);
     sa->coord.set_lat(47.217231);
@@ -207,22 +232,21 @@ BOOST_AUTO_TEST_CASE(test_api) {
     data.build_proximity_list();
     result.Clear();
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator, c, 200,{navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
-                    "", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI}, "", 1, 10, 0, data);
     result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_api_type) {
     navitia::type::Data data;
-    //One object not in asked type and everything in the range
+    // One object not in asked type and everything in the range
     auto sa = new navitia::type::StopArea();
     sa->coord.set_lon(-1.554514);
     sa->coord.set_lat(47.218515);
     sa->idx = 0;
     data.pt_data->stop_areas.push_back(sa);
 
-    auto poi  = new navitia::georef::POI();
+    auto poi = new navitia::georef::POI();
     poi->coord.set_lon(-1.554514);
     poi->coord.set_lat(47.218515);
     data.geo_ref->pois.push_back(poi);
@@ -239,7 +263,7 @@ BOOST_AUTO_TEST_CASE(test_api_type) {
 
 BOOST_AUTO_TEST_CASE(test_filter) {
     navitia::type::Data data;
-    //One object not in asked type and everything in the range
+    // One object not in asked type and everything in the range
     auto sa = new navitia::type::StopArea();
     sa->coord.set_lon(-1.554514);
     sa->coord.set_lat(47.218515);
@@ -260,7 +284,7 @@ BOOST_AUTO_TEST_CASE(test_filter) {
     result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 
-    //Bad request
+    // Bad request
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
     find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
     result = pb_creator.get_response();
@@ -269,7 +293,7 @@ BOOST_AUTO_TEST_CASE(test_filter) {
 
 BOOST_AUTO_TEST_CASE(test_poi_filter) {
     navitia::type::Data data;
-    //One object not in asked type and everything in the range
+    // One object not in asked type and everything in the range
     auto poitype_1 = new navitia::georef::POIType();
     poitype_1->uri = "poi_type0";
     poitype_1->idx = 0;
@@ -287,16 +311,16 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
         data.pt_data->stop_areas.push_back(sa);
     }
     size_t poi_idx(0);
-    {//a first poi with type 1
-        auto poi  = new navitia::georef::POI();
+    {  // a first poi with type 1
+        auto poi = new navitia::georef::POI();
         poi->poitype_idx = 0;
         poi->idx = poi_idx++;
         poi->coord.set_lon(-1.554514);
         poi->coord.set_lat(47.218515);
         data.geo_ref->pois.push_back(poi);
     }
-    {//a second poi not far with the second poi type
-        auto poi  = new navitia::georef::POI();
+    {  // a second poi not far with the second poi type
+        auto poi = new navitia::georef::POI();
         poi->uri = "bob";
         poi->poitype_idx = 1;
         poi->idx = poi_idx++;
@@ -304,15 +328,15 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
         poi->coord.set_lat(47.218516);
         data.geo_ref->pois.push_back(poi);
     }
-    {//a third one far far away
-        auto poi  = new navitia::georef::POI();
+    {  // a third one far far away
+        auto poi = new navitia::georef::POI();
         poi->coord.set_lon(-1.554514);
         poi->idx = poi_idx++;
         poi->coord.set_lat(50.218515);
         data.geo_ref->pois.push_back(poi);
     }
-    {//a fourth one near and with again the second poi type
-        auto poi  = new navitia::georef::POI();
+    {  // a fourth one near and with again the second poi type
+        auto poi = new navitia::georef::POI();
         poi->uri = "bobette";
         poi->poitype_idx = 1;
         poi->coord.set_lon(-1.554514);
@@ -320,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
         poi->coord.set_lat(47.218513);
         data.geo_ref->pois.push_back(poi);
     }
-    {//a stop area in the same position as the second poi to be sure that it is not taken
+    {  // a stop area in the same position as the second poi to be sure that it is not taken
         auto sa = new navitia::type::StopArea();
         sa->coord.set_lon(-1.554513);
         sa->coord.set_lat(47.218516);
@@ -337,7 +361,7 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
     find(pb_creator, c, 200, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type1", 1, 10, 0, data);
     auto result = pb_creator.get_response();
 
-    //we want the bob and bobette pois
+    // we want the bob and bobette pois
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
     std::set<std::string> poi_names;
     for (int i = 0; i < result.places_nearby().size(); ++i) {

@@ -49,9 +49,9 @@ www.navitia.io
 #include <iostream>
 
 struct logger_initialized {
-    logger_initialized()   { navitia::init_logger(); }
+    logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace navitia::routing;
 
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(print_map_test) {
      *
      */
     std::vector<SingleCoord> header;
-    std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>> body;
-    int length =3;
+    std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>> body;
+    int length = 3;
     for (int i = 0; i < length; i++) {
         header.push_back((SingleCoord(i + length + 1, 1)));
         std::vector<navitia::time_duration> local_duration;
@@ -92,7 +92,6 @@ BOOST_AUTO_TEST_CASE(print_map_test) {
 }
 
 BOOST_AUTO_TEST_CASE(heat_map_test) {
-
     /*
      *
      * A
@@ -122,14 +121,14 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
 
     ed::builder b = {"20120614"};
 
-    boost::add_vertex(ng::Vertex(A),b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(B),b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(C),b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(D),b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(A), b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(B), b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(C), b.data->geo_ref->graph);
+    boost::add_vertex(ng::Vertex(D), b.data->geo_ref->graph);
     b.data->geo_ref->init();
 
     size_t way_idx = 0;
-    for (const auto& name: {"ab", "bc", "ac", "cd"}) {
+    for (const auto& name : {"ab", "bc", "ac", "cd"}) {
         ng::Way* way = new ng::Way();
         way->name = "rue " + std::string(name);
         way->idx = way_idx++;
@@ -138,9 +137,9 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     }
 
     size_t e_idx(0);
-    //we add each edge as a one way street
+    // we add each edge as a one way street
     boost::add_edge(BB, AA, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
-    //B->C is very cheap but will not be used
+    // B->C is very cheap but will not be used
     boost::add_edge(BB, CC, ng::Edge(e_idx++, navitia::seconds(1)), b.data->geo_ref->graph);
     boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
     boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
@@ -150,8 +149,7 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
     b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
     b.data->build_proximity_list();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14),
-                                                                  7_days);
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), 7_days);
     b.vj("A")("stop1", "08:00"_t)("stop2", "08:10"_t)("stop3", "08:20"_t);
     b.vj("B")("stop1", "08:00"_t)("stop4", "08:30"_t)("stop3", "09:00"_t);
     b.connection("stop1", "stop1", 120);
@@ -167,8 +165,7 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     RAPTOR raptor(*b.data);
     navitia::routing::map_stop_point_duration d;
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));
-    raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t),
-                     navitia::DateTimeUtils::set(0, "09:00"_t));
+    raptor.isochrone(d, navitia::DateTimeUtils::set(0, "08:00"_t), navitia::DateTimeUtils::set(0, "09:00"_t));
     const double speed = 0.8;
     const uint resolution = 100;
     auto stop_points = raptor.data.pt_data->stop_points;
@@ -185,9 +182,8 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     auto mode = navitia::type::Mode_e::Walking;
     const auto bound = navitia::DateTimeUtils::set(0, "09:00"_t);
     const auto init_dt = navitia::DateTimeUtils::set(0, "07:00"_t);
-    const auto isochrone= build_raster_isochrone(*b.data->geo_ref, speed, mode,
-                                                 init_dt,raptor, A, max_duration,
-                                                 true, bound, resolution);
+    const auto isochrone = build_raster_isochrone(*b.data->geo_ref, speed, mode, init_dt, raptor, A, max_duration, true,
+                                                  bound, resolution);
     BOOST_CHECK(isochrone.size() > 0);
     const auto header = R"({"line_headers":[{"cell_lat":)";
     std::size_t found_header = isochrone.find(header);
@@ -195,20 +191,19 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     const auto body = R"(],"lines":[{"cell_lon":)";
     std::size_t found_body = isochrone.find(body);
     BOOST_CHECK(found_body != std::string::npos);
-    auto distances = init_distance(*b.data->geo_ref, stop_points, init_dt, raptor,
-                                   mode, E, true, bound, speed);
-    auto heat_map = fill_heat_map(box,  height_step, width_step, *b.data->geo_ref,
-                                  min_dist,  max_duration, speed, distances, step);
+    auto distances = init_distance(*b.data->geo_ref, stop_points, init_dt, raptor, mode, E, true, bound, speed);
+    auto heat_map =
+        fill_heat_map(box, height_step, width_step, *b.data->geo_ref, min_dist, max_duration, speed, distances, step);
     std::vector<navitia::time_duration> result;
-    for (size_t i = 0; i < step; i++){
-        for (size_t j = 0; j < step; j++){
+    for (size_t i = 0; i < step; i++) {
+        for (size_t j = 0; j < step; j++) {
             result.push_back(heat_map.body[i].second[j]);
         }
     }
     BOOST_CHECK_EQUAL(result[0].total_seconds(), 236);
     BOOST_CHECK_EQUAL(result[1].total_seconds(), 194);
     BOOST_CHECK_EQUAL(result[2].total_seconds(), 152);
-    for (size_t i = 3; i < result.size(); i++){
+    for (size_t i = 3; i < result.size(); i++) {
         BOOST_CHECK(result[i].is_pos_infinity());
     }
 }

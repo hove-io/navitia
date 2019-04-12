@@ -38,35 +38,32 @@ www.navitia.io
 
 namespace test {
 
-//mock of Data class
+// mock of Data class
 class Data {
-    public:
+public:
+    void load_nav(const std::string&) {}
+    void load_disruptions(const std::string&, const std::vector<std::string>& = {}) {}
+    void build_raptor(size_t) {}
+    void build_autocomplete() {}
+    mutable std::atomic<bool> loading;
+    mutable std::atomic<bool> is_connected_to_rabbitmq;
+    static bool load_status;
+    static bool last_load_succeeded;
+    static bool destructor_called;
+    size_t data_identifier;
 
-        void load_nav(const std::string&){}
-        void load_disruptions(const std::string&,
-                              const std::vector<std::string>& = {}){}
-        void build_raptor(size_t){}
-        mutable std::atomic<bool> loading;
-        mutable std::atomic<bool> is_connected_to_rabbitmq;
-        static bool load_status;
-        static bool last_load_succeeded;
-        static bool destructor_called;
-        size_t data_identifier;
+    Data(size_t data_identifier = 0) : data_identifier(data_identifier) { is_connected_to_rabbitmq = false; }
 
-        Data(size_t data_identifier=0):
-            data_identifier(data_identifier)
-        {is_connected_to_rabbitmq = false;}
-
-        ~Data(){Data::destructor_called = true;}
+    ~Data() { Data::destructor_called = true; }
 };
 bool Data::load_status = true;
 bool Data::last_load_succeeded = true;
 bool Data::destructor_called = false;
 
-} // namespace test
+}  // namespace test
 
-struct fixture{
-    fixture(){
+struct fixture {
+    fixture() {
         test::Data::load_status = true;
         test::Data::destructor_called = false;
     }

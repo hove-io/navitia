@@ -41,22 +41,16 @@ namespace nt = navitia::type;
 namespace ng = navitia::georef;
 
 // we don't use a boolean to have a more type checks
-enum class DumpMessage: bool {
-    Yes,
-    No
-};
+enum class DumpMessage : bool { Yes, No };
 
-enum class DumpLineSectionMessage: bool {
-    Yes,
-    No
-};
+enum class DumpLineSectionMessage : bool { Yes, No };
 
 struct DumpMessageOptions {
     DumpMessage dump_message;
     DumpLineSectionMessage dump_line_section;
     constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes,
-            DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No):
-                        dump_message(dump_message), dump_line_section(dump_line_section){}
+                                 DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No)
+        : dump_message(dump_message), dump_line_section(dump_line_section) {}
     constexpr bool operator==(const DumpMessageOptions& rhs) const {
         return dump_message == rhs.dump_message && dump_line_section == rhs.dump_line_section;
     }
@@ -64,68 +58,66 @@ struct DumpMessageOptions {
 
 static const auto null_time_period = pt::time_period(pt::not_a_date_time, pt::seconds(0));
 
-//forward declare
+// forward declare
 namespace navitia {
-    namespace routing {
-        struct PathItem;
-        struct JourneyPattern;
-        struct JourneyPatternPoint;
-        using JppIdx = Idx<JourneyPatternPoint>;
-        using JpIdx = Idx<JourneyPattern>;
-    }
-    namespace georef {
-        struct PathItem;
-        struct Way;
-        struct POI;
-        struct Path;
-        struct POIType;
-    }
-    namespace fare {
-        struct results;
-        struct Ticket;
-    }
-    namespace timetables {
-        struct Thermometer;
-    }
+namespace routing {
+struct PathItem;
+struct JourneyPattern;
+struct JourneyPatternPoint;
+using JppIdx = Idx<JourneyPatternPoint>;
+using JpIdx = Idx<JourneyPattern>;
+}  // namespace routing
+namespace georef {
+struct PathItem;
+struct Way;
+struct POI;
+struct Path;
+struct POIType;
+}  // namespace georef
+namespace fare {
+struct results;
+struct Ticket;
+}  // namespace fare
+namespace timetables {
+struct Thermometer;
 }
+}  // namespace navitia
 
 using jp_pair = std::pair<const navitia::routing::JpIdx, const navitia::routing::JourneyPattern&>;
 using jpp_pair = std::pair<const navitia::routing::JppIdx, const navitia::routing::JourneyPatternPoint&>;
 
 namespace navitia {
 
-struct VjOrigDest{
+struct VjOrigDest {
     const nt::VehicleJourney* vj;
     const nt::StopPoint* orig;
     const nt::StopPoint* dest;
-    VjOrigDest(const nt::VehicleJourney*vj, nt::StopPoint* orig, nt::StopPoint* dest):vj(vj),
-        orig(orig), dest(dest) {}
+    VjOrigDest(const nt::VehicleJourney* vj, nt::StopPoint* orig, nt::StopPoint* dest)
+        : vj(vj), orig(orig), dest(dest) {}
 };
 
-struct VjStopTimes{
+struct VjStopTimes {
     const nt::VehicleJourney* vj;
     const std::vector<const nt::StopTime*>& stop_times;
-    VjStopTimes(const nt::VehicleJourney* vj, const std::vector<const nt::StopTime*>& st): vj(vj),
-        stop_times(st){}
+    VjStopTimes(const nt::VehicleJourney* vj, const std::vector<const nt::StopTime*>& st) : vj(vj), stop_times(st) {}
 };
 
-struct StopTimeCalendar{
+struct StopTimeCalendar {
     const nt::StopTime* stop_time;
     const navitia::DateTime& date_time;
     boost::optional<const std::string> calendar_id;
-    StopTimeCalendar(const nt::StopTime* stop_time, const navitia::DateTime& date_time,
-                     boost::optional<const std::string> calendar_id):
-        stop_time(stop_time), date_time(date_time), calendar_id(calendar_id){}
+    StopTimeCalendar(const nt::StopTime* stop_time,
+                     const navitia::DateTime& date_time,
+                     boost::optional<const std::string> calendar_id)
+        : stop_time(stop_time), date_time(date_time), calendar_id(calendar_id) {}
 };
 
-struct WayCoord{
+struct WayCoord {
     const ng::Way* way;
     const nt::GeographicalCoord& coord;
     const int number;
-    WayCoord(const ng::Way* way, const nt::GeographicalCoord& coord,
-             const int number):
-        way(way), coord(coord), number(number){}
-
+    WayCoord(const ng::Way* way, const nt::GeographicalCoord& coord, const int number)
+        : way(way), coord(coord), number(number) {}
 };
 
 /**
@@ -137,44 +129,67 @@ struct WayCoord{
  * long and template resolution takes the best match
  */
 namespace detail {
-template<typename T>
+template <typename T>
 auto get_label_if_exists(const T* v, int) -> decltype(v->label) {
     return v->label;
 }
 
-template<typename T>
+template <typename T>
 auto get_label_if_exists(const T* v, int) -> decltype(v->get_label()) {
     return v->get_label();
 }
 
-template<typename T>
+template <typename T>
 auto get_label_if_exists(const T* v, long) -> decltype(v->name) {
     return v->name;
 }
-}
+}  // namespace detail
 
-template<typename T>
+template <typename T>
 std::string get_label(const T* v) {
     return detail::get_label_if_exists(v, 0);
 }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::Calendar*) { return pbnavitia::CALENDAR; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::VehicleJourney*) { return pbnavitia::VEHICLE_JOURNEY; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::Line*) { return pbnavitia::LINE; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::Route*) { return pbnavitia::ROUTE; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::Company*) { return pbnavitia::COMPANY; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::Network*) { return pbnavitia::NETWORK; }
-inline pbnavitia::NavitiaType get_embedded_type(const ng::POI*) { return pbnavitia::POI; }
-inline pbnavitia::NavitiaType get_embedded_type(const ng::Admin*) { return pbnavitia::ADMINISTRATIVE_REGION; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::StopArea*) { return pbnavitia::STOP_AREA; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::StopPoint*) { return pbnavitia::STOP_POINT; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::CommercialMode*) { return pbnavitia::COMMERCIAL_MODE; }
-inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) { return pbnavitia::TRIP; }
-
+inline pbnavitia::NavitiaType get_embedded_type(const nt::Calendar*) {
+    return pbnavitia::CALENDAR;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::VehicleJourney*) {
+    return pbnavitia::VEHICLE_JOURNEY;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::Line*) {
+    return pbnavitia::LINE;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::Route*) {
+    return pbnavitia::ROUTE;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::Company*) {
+    return pbnavitia::COMPANY;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::Network*) {
+    return pbnavitia::NETWORK;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const ng::POI*) {
+    return pbnavitia::POI;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const ng::Admin*) {
+    return pbnavitia::ADMINISTRATIVE_REGION;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::StopArea*) {
+    return pbnavitia::STOP_AREA;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::StopPoint*) {
+    return pbnavitia::STOP_POINT;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::CommercialMode*) {
+    return pbnavitia::COMMERCIAL_MODE;
+}
+inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
+    return pbnavitia::TRIP;
+}
 
 struct PbCreator {
     std::set<const nt::Contributor*, Less> contributors;
     std::set<boost::shared_ptr<type::disruption::Impact>, Less> impacts;
-    //std::reference_wrapper<const nt::Data> data;
+    // std::reference_wrapper<const nt::Data> data;
     const nt::Data* data = nullptr;
     pt::ptime now;
     pt::time_period action_period = null_time_period;
@@ -185,7 +200,7 @@ struct PbCreator {
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
-    pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
+    pbnavitia::Ticket* unknown_ticket = nullptr;  // we want only one unknown ticket
 
     PbCreator() = default;
 
@@ -194,22 +209,20 @@ struct PbCreator {
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false):
-        data(data),
-        now(now),
-        action_period(action_period),
-        disable_geojson(disable_geojson),
-        disable_feedpublisher(disable_feedpublisher),
-        disable_disruption(disable_disruption)
-        {}
+              const bool disable_disruption = false)
+        : data(data),
+          now(now),
+          action_period(action_period),
+          disable_geojson(disable_geojson),
+          disable_feedpublisher(disable_feedpublisher),
+          disable_disruption(disable_disruption) {}
 
     void init(const nt::Data* data,
               const pt::ptime now,
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false
-            ) {
+              const bool disable_disruption = false) {
         this->data = data;
         this->now = now;
         this->action_period = action_period;
@@ -228,24 +241,26 @@ struct PbCreator {
     PbCreator(const PbCreator&) = delete;
     PbCreator& operator=(const PbCreator&) = delete;
 
-    template<typename N, typename P>
-    void fill(const N& item, P* proto, int depth,
-            const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+    template <typename N, typename P>
+    void fill(const N& item,
+              P* proto,
+              int depth,
+              const DumpMessageOptions& dump_message_options = DumpMessageOptions{}) {
         Filler(depth, dump_message_options, *this).fill_pb_object(item, proto);
     }
 
-    template<typename N>
-    void fill(const N& item, int depth ,
-            const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+    template <typename N>
+    void fill(const N& item, int depth, const DumpMessageOptions& dump_message_options = DumpMessageOptions{}) {
         Filler(depth, dump_message_options, *this).fill_pb_object(item, &response);
     }
 
-    template<typename N>
-    void pb_fill(const std::vector<N*>& nav_list, int depth,
-            const DumpMessageOptions& dump_message_options=DumpMessageOptions{});
+    template <typename N>
+    void pb_fill(const std::vector<N*>& nav_list,
+                 int depth,
+                 const DumpMessageOptions& dump_message_options = DumpMessageOptions{});
 
     template <typename P>
-    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object,int depth) {
+    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object, int depth) {
         Filler(depth, DumpMessageOptions{}, *this).fill_message(impact, pb_object);
     }
 
@@ -254,21 +269,25 @@ struct PbCreator {
     // Raptor api
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
-    std::string get_section_id(pbnavitia::Journey* j, size_t section_idx) ;
+    std::string get_section_id(pbnavitia::Journey* j, size_t section_idx);
     void fill_co2_emission(pbnavitia::Section* pb_section, const type::VehicleJourney* vehicle_journey);
     void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
     void fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare);
 
-    void fill_crowfly_section(const type::EntryPoint& origin, const type::EntryPoint& destination,
-                              const time_duration& crow_fly_duration, type::Mode_e mode,
-                              pt::ptime origin_time, pbnavitia::Journey* pb_journey);
+    void fill_crowfly_section(const type::EntryPoint& origin,
+                              const type::EntryPoint& destination,
+                              const time_duration& crow_fly_duration,
+                              type::Mode_e mode,
+                              pt::ptime origin_time,
+                              pbnavitia::Journey* pb_journey);
 
-    void fill_street_sections(const type::EntryPoint &ori_dest, const georef::Path & path,
-                              pbnavitia::Journey* pb_journey, const pt::ptime departure,
+    void fill_street_sections(const type::EntryPoint& ori_dest,
+                              const georef::Path& path,
+                              pbnavitia::Journey* pb_journey,
+                              const pt::ptime departure,
                               int max_depth = 1);
 
-    void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item, const type::EntryPoint &ori_dest);
-
+    void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item, const type::EntryPoint& ori_dest);
 
     void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
                                       const bool has_datetime_estimated,
@@ -293,6 +312,8 @@ struct PbCreator {
     pbnavitia::Trip* add_trips();
     pbnavitia::Impact* add_impacts();
     pbnavitia::RoutePoint* add_route_points();
+    pbnavitia::EquipmentReport* add_equipment_reports();
+
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
     bool has_response_type(const pbnavitia::ResponseType& resp_type);
@@ -310,6 +331,7 @@ struct PbCreator {
     int traffic_reports_size();
     int line_reports_size();
     int calendars_size();
+    int equipment_reports_size();
     pbnavitia::GeoStatus* mutable_geo_status();
     pbnavitia::Status* mutable_status();
     pbnavitia::Pagination* mutable_pagination();
@@ -319,8 +341,8 @@ struct PbCreator {
     pbnavitia::FeedPublisher* add_feed_publishers();
     void set_publication_date(pt::ptime ptime);
     void set_next_request_date_time(uint32_t next_request_date_time);
-private:
 
+private:
     pbnavitia::Response response;
     struct Filler {
         struct PtObjVisitor;
@@ -328,68 +350,68 @@ private:
         DumpMessageOptions dump_message_options;
         PbCreator& pb_creator;
 
-        Filler(int depth,
-               const DumpMessageOptions& dump_message_options,
-               PbCreator & pb_creator):
-                   depth(depth), dump_message_options(dump_message_options), pb_creator(pb_creator){}
+        Filler(int depth, const DumpMessageOptions& dump_message_options, PbCreator& pb_creator)
+            : depth(depth), dump_message_options(dump_message_options), pb_creator(pb_creator) {}
 
         Filler copy(int, const DumpMessageOptions&);
 
-        template<typename NAV, typename PB>
+        template <typename NAV, typename PB>
         void fill(NAV* nav_object, PB* pb_object);
-        template<typename NAV, typename F>
+        template <typename NAV, typename F>
         void fill_with_creator(NAV* nav_object, F creator);
 
-        template<typename NAV, typename PB>
+        template <typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
-            copy(depth-1, dump_message_options).fill_pb_object(nav_object, pb_object);
+            copy(depth - 1, dump_message_options).fill_pb_object(nav_object, pb_object);
         }
 
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::vector<Nav*>& nav_list,
-                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (const auto* nav_obj: nav_list) {
+        template <typename Nav, typename Pb>
+        void fill_pb_object(const std::vector<Nav*>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (const auto* nav_obj : nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
 
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::vector<Nav>& nav_list,
-                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto& nav_obj: nav_list) {
+        template <typename Nav, typename Pb>
+        void fill_pb_object(const std::vector<Nav>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto& nav_obj : nav_list) {
                 fill_pb_object(&nav_obj, pb_list->Add());
             }
         }
 
-        template<typename Nav, typename Cmp, typename Pb>
-        void fill_pb_object(const std::set<Nav, Cmp>& nav_list,
-                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto& nav_obj: nav_list) {
+        template <typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav, Cmp>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto& nav_obj : nav_list) {
                 fill_pb_object(&nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Cmp, typename Pb>
-        void fill_pb_object(const std::set<Nav*, Cmp>& nav_list,
-                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto* nav_obj: nav_list) {
+        template <typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav*, Cmp>& nav_list, ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto* nav_obj : nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Cmp, typename Pb>
+        template <typename Nav, typename Cmp, typename Pb>
         void fill_pb_object(const std::set<boost::shared_ptr<Nav>, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto& nav_obj: nav_list) {
+            for (auto& nav_obj : nav_list) {
                 fill_pb_object(nav_obj.get(), pb_list->Add());
             }
         }
 
         template <typename P>
-        void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
-            if (nav_obj == nullptr) {return ;}
-            if (dump_message_options.dump_message == DumpMessage::No) { return; }
+        void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj) {
+            if (nav_obj == nullptr) {
+                return;
+            }
+            if (dump_message_options.dump_message == DumpMessage::No) {
+                return;
+            }
             const bool dump_line_sections = dump_message_options.dump_line_section == DumpLineSectionMessage::Yes;
-            for (const auto& message: nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
-                if (!dump_line_sections && message->is_only_line_section()) { continue; }
+            for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+                if (!dump_line_sections && message->is_only_line_section()) {
+                    continue;
+                }
                 fill_message(message, pb_obj);
             }
         }
@@ -399,14 +421,16 @@ private:
         template <typename Target, typename Source>
         std::vector<Target*> ptref_indexes(const Source* nav_obj);
 
-        template<typename T>
+        template <typename T>
         void add_contributor(const T* nav);
 
-        template<typename NT, typename PB>
+        template <typename NT, typename PB>
         void fill_codes(const NT* nt, PB* pb) {
-            if (nt == nullptr) {return ;}
-            for (const auto& code: pb_creator.data->pt_data->codes.get_codes(nt)) {
-                for (const auto& value: code.second) {
+            if (nt == nullptr) {
+                return;
+            }
+            for (const auto& code : pb_creator.data->pt_data->codes.get_codes(nt)) {
+                for (const auto& value : code.second) {
                     auto* pb_code = pb->add_codes();
                     pb_code->set_type(code.first);
                     pb_code->set_value(value);
@@ -414,10 +438,12 @@ private:
             }
         }
 
-        template<typename NT, typename PB>
+        template <typename NT, typename PB>
         void fill_comments(const NT* nt, PB* pb, const std::string& type = "standard") {
-            if (nt == nullptr) {return ;}
-            for (const auto& comment: pb_creator.data->pt_data->comments.get(nt)) {
+            if (nt == nullptr) {
+                return;
+            }
+            for (const auto& comment : pb_creator.data->pt_data->comments.get(nt)) {
                 auto com = pb->add_comments();
                 com->set_value(comment);
                 com->set_type(type);
@@ -452,14 +478,14 @@ private:
         void fill_pb_object(const nt::MultiLineString*, pbnavitia::MultiLineString*);
         void fill_pb_object(const nt::GeographicalCoord*, pbnavitia::Address*);
         void fill_pb_object(const nt::StopPointConnection*, pbnavitia::Connection*);
-        void fill_pb_object(const nt::StopTime* , pbnavitia::StopTime*);
+        void fill_pb_object(const nt::StopTime*, pbnavitia::StopTime*);
         void fill_pb_object(const nt::disruption::StopTimeUpdate*, pbnavitia::StopTime*);
         void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);
-        void fill_pb_object(const nt::StopTime* , pbnavitia::Properties*);
-        void fill_pb_object(const std::string* , pbnavitia::Note*);
+        void fill_pb_object(const nt::StopTime*, pbnavitia::Properties*);
+        void fill_pb_object(const std::string*, pbnavitia::Note*);
         void fill_pb_object(const jp_pair*, pbnavitia::JourneyPattern*);
         void fill_pb_object(const jpp_pair*, pbnavitia::JourneyPatternPoint*);
-        void fill_pb_object(const navitia::vptranslator::BlockPattern* ,pbnavitia::Calendar*);
+        void fill_pb_object(const navitia::vptranslator::BlockPattern*, pbnavitia::Calendar*);
         void fill_pb_object(const nt::Route*, pbnavitia::PtDisplayInfo*);
         void fill_pb_object(const nt::disruption::Impact*, pbnavitia::Impact*);
 
@@ -476,7 +502,7 @@ private:
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);
 
         // Used for place
-        template<typename T>
+        template <typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
     };
     // Raptor api
@@ -488,40 +514,45 @@ private:
     pbnavitia::GeographicalCoord get_coord(const pbnavitia::PtObject& pt_object);
 };
 
-template<typename N>
-pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Data& data, int depth = 0,
-                                 const bool disable_geojson = false, const pt::ptime& now = pt::not_a_date_time,
+template <typename N>
+pbnavitia::Response get_response(const std::vector<N*>& nt_objects,
+                                 const nt::Data& data,
+                                 int depth = 0,
+                                 const bool disable_geojson = false,
+                                 const pt::ptime& now = pt::not_a_date_time,
                                  const pt::time_period& action_period = null_time_period,
-                                 const DumpMessage dump_message = DumpMessage::Yes){
+                                 const DumpMessage dump_message = DumpMessage::Yes) {
     PbCreator creator(&data, now, action_period, disable_geojson);
 
     creator.pb_fill(nt_objects, depth, {dump_message, DumpLineSectionMessage::No});
     return creator.get_response();
 }
 
-void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,
-                    pbnavitia::Error* error, int max_depth = 0 ,
-                    const pt::ptime& now = pt::not_a_date_time,
-                    const pt::time_period& action_period  = null_time_period);
+void fill_pb_error(const pbnavitia::Error::error_id id,
+                   const std::string& comment,
+                   pbnavitia::Error* error,
+                   int max_depth = 0,
+                   const pt::ptime& now = pt::not_a_date_time,
+                   const pt::time_period& action_period = null_time_period);
 
 template <typename Target, typename Source>
 std::vector<Target*> ptref_indexes(const Source* nav_obj, const nt::Data& data) {
     const nt::Type_e type_e = nt::get_type_e<Target>();
     type::Indexes indexes;
     std::string request;
-    try{
+    try {
         std::stringstream ss;
-        ss << nt::static_data::get()->captionByType(nav_obj->type)
-           << ".uri=\"" << boost::replace_all_copy(nav_obj->uri, "\"", "\\\"") << "\"";
+        ss << nt::static_data::get()->captionByType(nav_obj->type) << ".uri=\""
+           << boost::replace_all_copy(nav_obj->uri, "\"", "\\\"") << "\"";
         request = ss.str();
         indexes = navitia::ptref::make_query(type_e, request, data);
-    } catch(const navitia::ptref::parsing_error &parse_error) {
+    } catch (const navitia::ptref::parsing_error& parse_error) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                         "ptref_indexes, Unable to parse :" << parse_error.more << ", request: " << request);
-    } catch(const navitia::ptref::ptref_error &pt_error) {
+    } catch (const navitia::ptref::ptref_error& pt_error) {
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("logger"),
                         "pb_converter::ptref_indexes, " << pt_error.more << ", request: " << request);
     }
     return data.get_data<Target>(indexes);
 }
-}
+}  // namespace navitia

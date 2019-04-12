@@ -50,7 +50,7 @@ class Data;
 struct FrequencyVehicleJourney;
 typedef std::bitset<8> VehicleProperties;
 struct AccessibiliteParams;
-}
+}  // namespace type
 
 namespace routing {
 
@@ -64,8 +64,7 @@ struct NextStopTimeData {
     void load(const JourneyPatternContainer&);
 
     // Returns the range of the stop times in increasing time order
-    inline StopTimeIter stop_time_range_forward(const JppIdx jpp_idx,
-                                                const StopEvent stop_event) const {
+    inline StopTimeIter stop_time_range_forward(const JppIdx jpp_idx, const StopEvent stop_event) const {
         if (stop_event == StopEvent::pick_up) {
             return departure[jpp_idx].stop_time_range();
         } else {
@@ -73,8 +72,7 @@ struct NextStopTimeData {
         }
     }
     // Returns the range of the stop times in decreasing time order
-    inline StopTimeReverseIter stop_time_range_backward(const JppIdx jpp_idx,
-                                                        const StopEvent stop_event) const {
+    inline StopTimeReverseIter stop_time_range_backward(const JppIdx jpp_idx, const StopEvent stop_event) const {
         if (stop_event == StopEvent::pick_up) {
             return departure[jpp_idx].reverse_stop_time_range();
         } else {
@@ -82,7 +80,8 @@ struct NextStopTimeData {
         }
     }
     // Returns the range of the stop times in increasing time order beginning after hour(dt)
-    inline StopTimeIter stop_time_range_after(const JppIdx jpp_idx, const DateTime dt,
+    inline StopTimeIter stop_time_range_after(const JppIdx jpp_idx,
+                                              const DateTime dt,
                                               const StopEvent stop_event) const {
         if (stop_event == StopEvent::pick_up) {
             return departure[jpp_idx].next_stop_time_range(dt);
@@ -91,7 +90,8 @@ struct NextStopTimeData {
         }
     }
     // Returns the range of the stop times in decreasing time order ending before hour(dt)
-    inline StopTimeReverseIter stop_time_range_before(const JppIdx jpp_idx, const DateTime dt,
+    inline StopTimeReverseIter stop_time_range_before(const JppIdx jpp_idx,
+                                                      const DateTime dt,
                                                       const StopEvent stop_event) const {
         if (stop_event == StopEvent::pick_up) {
             return departure[jpp_idx].prev_stop_time_range(dt);
@@ -110,7 +110,8 @@ private:
         bool is_valid(const type::StopTime& st) const;
     };
     // This structure allow to iterate on stop times in the interesting order
-    template<typename Getter> struct TimesStopTimes {
+    template <typename Getter>
+    struct TimesStopTimes {
         // times is sorted according to cmp
         // for all i, cmp.get_time(stop_times[i]) == times[i]
         std::vector<DateTime> times;
@@ -144,7 +145,7 @@ private:
 };
 
 struct NextStopTime {
-    explicit NextStopTime(const type::Data& d): data(d) {}
+    explicit NextStopTime(const type::Data& d) : data(d) {}
 
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
@@ -152,21 +153,19 @@ struct NextStopTime {
     // test frequency vehicle journey, a big improvement in speed if
     // you know your journey pattern don't have frequency vehicle
     // journeys.
-    inline std::pair<const type::StopTime*, DateTime>
-    next_stop_time(const StopEvent stop_event,
-                   const JppIdx jpp_idx,
-                   const DateTime dt,
-                   const bool clockwise,
-                   const type::RTLevel rt_level,
-                   const type::VehicleProperties& vehicle_props,
-                   const bool check_freq = true,
-                   const boost::optional<DateTime>& bound = boost::none) const {
+    inline std::pair<const type::StopTime*, DateTime> next_stop_time(
+        const StopEvent stop_event,
+        const JppIdx jpp_idx,
+        const DateTime dt,
+        const bool clockwise,
+        const type::RTLevel rt_level,
+        const type::VehicleProperties& vehicle_props,
+        const bool check_freq = true,
+        const boost::optional<DateTime>& bound = boost::none) const {
         if (clockwise) {
-            return earliest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
-                                      check_freq, bound);
+            return earliest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props, check_freq, bound);
         } else {
-            return tardiest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
-                                      check_freq, bound);
+            return tardiest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props, check_freq, bound);
         }
     }
 
@@ -174,27 +173,27 @@ struct NextStopTime {
     /// the first stop_time leaving after dt on the journey pattern
     /// point.  Return the stop time and the next departure
     /// hour(datetime).
-    std::pair<const type::StopTime*, DateTime>
-    earliest_stop_time(const StopEvent stop_event,
-                       const JppIdx jpp_idx,
-                       const DateTime dt,
-                       const type::RTLevel rt_level,
-                       const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true,
-                       const boost::optional<DateTime>& bound = boost::none) const;
+    std::pair<const type::StopTime*, DateTime> earliest_stop_time(
+        const StopEvent stop_event,
+        const JppIdx jpp_idx,
+        const DateTime dt,
+        const type::RTLevel rt_level,
+        const type::VehicleProperties& vehicle_props,
+        const bool check_freq = true,
+        const boost::optional<DateTime>& bound = boost::none) const;
 
     /// Next backward stop time for a given datetime (dt).  Look for
     /// the first stop_time arriving before dt on the journey pattern
     /// point.  Return the stop time and the next arrival
     /// hour(datetime).
-    std::pair<const type::StopTime*, DateTime>
-    tardiest_stop_time(const StopEvent stop_event,
-                       const JppIdx jpp_idx,
-                       const DateTime dt,
-                       const type::RTLevel rt_level,
-                       const type::VehicleProperties& vehicle_props,
-                       const bool check_freq = true,
-                       const boost::optional<DateTime>& bound = boost::none) const;
+    std::pair<const type::StopTime*, DateTime> tardiest_stop_time(
+        const StopEvent stop_event,
+        const JppIdx jpp_idx,
+        const DateTime dt,
+        const type::RTLevel rt_level,
+        const type::VehicleProperties& vehicle_props,
+        const bool check_freq = true,
+        const boost::optional<DateTime>& bound = boost::none) const;
 
 private:
     const type::Data& data;
@@ -203,12 +202,11 @@ private:
 struct CachedNextStopTimeKey {
     using Day = size_t;
 
-    Day from; //first day concerned by the cache
-    type::RTLevel rt_level; //RT-level of the cache
-    type::AccessibiliteParams accessibilite_params; //accessibility of the cache
-    CachedNextStopTimeKey(Day from, type::RTLevel rt_level,
-                          const type::AccessibiliteParams& accessibilite_params) :
-        from(from), rt_level(rt_level), accessibilite_params(accessibilite_params) {}
+    Day from;                                        // first day concerned by the cache
+    type::RTLevel rt_level;                          // RT-level of the cache
+    type::AccessibiliteParams accessibilite_params;  // accessibility of the cache
+    CachedNextStopTimeKey(Day from, type::RTLevel rt_level, const type::AccessibiliteParams& accessibilite_params)
+        : from(from), rt_level(rt_level), accessibilite_params(accessibilite_params) {}
 
     bool operator<(const CachedNextStopTimeKey& other) const;
 };
@@ -218,15 +216,14 @@ struct CachedNextStopTime {
     using vDtSt = std::vector<DtSt>;
     using vDtStByJpp = IdxMap<JourneyPatternPoint, vDtSt>;
 
-    CachedNextStopTime(const vDtStByJpp& d, const vDtStByJpp& a): departure(d), arrival(a) {}
+    CachedNextStopTime(const vDtStByJpp& d, const vDtStByJpp& a) : departure(d), arrival(a) {}
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
     // clockwise.
-    std::pair<const type::StopTime*, DateTime>
-    next_stop_time(const StopEvent stop_event,
-                   const JppIdx jpp_idx,
-                   const DateTime dt,
-                   const bool clockwise) const;
+    std::pair<const type::StopTime*, DateTime> next_stop_time(const StopEvent stop_event,
+                                                              const JppIdx jpp_idx,
+                                                              const DateTime dt,
+                                                              const bool clockwise) const;
 
 private:
     // This structure provide the same interface as a vDtStByJpp, but
@@ -267,26 +264,22 @@ private:
 };
 
 struct CachedNextStopTimeManager {
-    explicit CachedNextStopTimeManager(const dataRAPTOR& dataRaptor, size_t max_cache) :
-            lru({dataRaptor}, max_cache) {}
+    explicit CachedNextStopTimeManager(const dataRAPTOR& dataRaptor, size_t max_cache) : lru({dataRaptor}, max_cache) {}
     CachedNextStopTimeManager& operator=(CachedNextStopTimeManager&&) = default;
     ~CachedNextStopTimeManager();
 
-    std::shared_ptr<const CachedNextStopTime>
-    load(const DateTime from,
-         const type::RTLevel rt_level,
-         const type::AccessibiliteParams& accessibilite_params);
+    std::shared_ptr<const CachedNextStopTime> load(const DateTime from,
+                                                   const type::RTLevel rt_level,
+                                                   const type::AccessibiliteParams& accessibilite_params);
 
-    void warmup(const CachedNextStopTimeManager& other){
-        this->lru.warmup(other.lru);
-    }
+    void warmup(const CachedNextStopTimeManager& other) { this->lru.warmup(other.lru); }
 
 private:
     struct CacheCreator {
         typedef CachedNextStopTimeKey const& argument_type;
         typedef CachedNextStopTime result_type;
         const dataRAPTOR& dataRaptor;
-        CacheCreator(const dataRAPTOR& d): dataRaptor(d) {}
+        CacheCreator(const dataRAPTOR& d) : dataRaptor(d) {}
         CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;
     };
 
@@ -304,5 +297,5 @@ DateTime get_previous_stop_time(const StopEvent stop_event,
                                 const type::StopTime& st,
                                 const type::RTLevel rt_level = type::RTLevel::Base);
 
-
-}} // namespace navitia::routing
+}  // namespace routing
+}  // namespace navitia

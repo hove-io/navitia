@@ -26,13 +26,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 import logging
 import copy
-import itertools
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils
-from jormungandr.utils import get_pt_object_coord, SectionSorter
 
 
 from navitiacommon import response_pb2
@@ -67,6 +66,10 @@ class Taxi(AbstractStreetNetworkService):
 
         if response:
             for journey in response.journeys:
+                journey.durations.taxi = journey.durations.car
+                journey.distances.taxi = journey.distances.car
+                journey.durations.car = 0
+                journey.distances.car = 0
                 for section in journey.sections:
                     section.street_network.mode = response_pb2.Taxi
 

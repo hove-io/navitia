@@ -43,26 +43,26 @@ www.navitia.io
 #include <memory>
 
 using namespace navitia::ptref;
-using navitia::type::disruption::Tag;
-using navitia::type::Type_e;
-using navitia::type::OdtLevel_e;
-using navitia::type::make_indexes;
 using boost::posix_time::time_period;
+using navitia::type::make_indexes;
+using navitia::type::OdtLevel_e;
+using navitia::type::Type_e;
+using navitia::type::disruption::Tag;
 
 namespace {
-    static void assert_expr(const std::string& to_parse, const std::string& expected) {
-        const ast::Expr expr = parse(to_parse);
-        std::stringstream ss;
-        ss << expr;
-        BOOST_CHECK_EQUAL(ss.str(), expected);
-    }
+static void assert_expr(const std::string& to_parse, const std::string& expected) {
+    const ast::Expr expr = parse(to_parse);
+    std::stringstream ss;
+    ss << expr;
+    BOOST_CHECK_EQUAL(ss.str(), expected);
+}
 
-    std::string get_disruption_name(navitia::idx_t id, const navitia::type::Data & data) {
-        auto impact = data.pt_data->disruption_holder.get_impact(id);
-        BOOST_REQUIRE(impact && impact->disruption);
-        return impact->disruption->uri;
-    }
-} // namespace
+std::string get_disruption_name(navitia::idx_t id, const navitia::type::Data& data) {
+    auto impact = data.pt_data->disruption_holder.get_impact(id);
+    BOOST_REQUIRE(impact && impact->disruption);
+    return impact->disruption->uri;
+}
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(parse_pred) {
     assert_expr("  all  ", "all");
@@ -70,8 +70,10 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
     assert_expr("line . a ( ) ", "line.a()");
     assert_expr(
         R"#(vehicle_journey . has_code ( external_code , "OIF:42" ) )#",
-        R"#(vehicle_journey.has_code("external_code", "OIF:42"))#"
-    );
+        R"#(vehicle_journey.has_code("external_code", "OIF:42"))#");
+    assert_expr(
+        R"#(vehicle_journey . has_code_type ( external_code ) )#",
+        R"#(vehicle_journey.has_code_type("external_code"))#");
     assert_expr(R"#(stop_area . uri ( "OIF:42" ) )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = "OIF:42" )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = OIF:42 )#", R"#(stop_area.uri("OIF:42"))#");
@@ -80,12 +82,10 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
     assert_expr(R"#(stop_area . uri = 1ee7_: )#", R"#(stop_area.uri("1ee7_:"))#");
     assert_expr(
         R"#(stop_point.within(42, -2.2;4.9e-2))#",
-        R"#(stop_point.within("42", "-2.2;4.9e-2"))#"
-    );
+        R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
     assert_expr(
         R"#(stop_point.coord DWITHIN (-2.2, 4.9e-2, 42))#",
-        R"#(stop_point.within("42", "-2.2;4.9e-2"))#"
-    );
+        R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
 }
 
 BOOST_AUTO_TEST_CASE(parse_expr) {
@@ -93,24 +93,16 @@ BOOST_AUTO_TEST_CASE(parse_expr) {
     assert_expr(" all and empty and all ", "((all AND empty) AND all)");
     assert_expr(" all or empty or all ", "((all OR empty) OR all)");
     assert_expr("all and all or empty and all", "((all AND all) OR (empty AND all))");
-    assert_expr(
-        "all and all or empty and all or empty and all",
-        "(((all AND all) OR (empty AND all)) OR (empty AND all))"
-    );
+    assert_expr("all and all or empty and all or empty and all",
+                "(((all AND all) OR (empty AND all)) OR (empty AND all))");
     assert_expr("all - all and empty - all", "((all - all) AND (empty - all))");
     assert_expr("all - all or empty - all", "((all - all) OR (empty - all))");
-    assert_expr(
-        "all - all and empty - empty or empty - all",
-        "(((all - all) AND (empty - empty)) OR (empty - all))"
-    );
+    assert_expr("all - all and empty - empty or empty - all", "(((all - all) AND (empty - empty)) OR (empty - all))");
     assert_expr(" ( all ) ", "all");
     assert_expr("( all and all ) - ( empty and all )", "((all AND all) - (empty AND all))");
     assert_expr("( all and all ) - ( empty or all ) ", "((all AND all) - (empty OR all))");
     assert_expr("get line <- all", "(GET line <- all)");
-    assert_expr(
-        "get line <- empty and get stop_area <- all",
-        "(GET line <- (empty AND (GET stop_area <- all)))"
-    );
+    assert_expr("get line <- empty and get stop_area <- all", "(GET line <- (empty AND (GET stop_area <- all)))");
 }
 
 BOOST_AUTO_TEST_CASE(parse_str) {
@@ -119,17 +111,14 @@ BOOST_AUTO_TEST_CASE(parse_str) {
     assert_expr(R"#(a.a("\""))#", R"#(a.a("\""))#");
     assert_expr(R"#(a.a("\\"))#", R"#(a.a("\\"))#");
     assert_expr(R"#(a.a("  "))#", R"#(a.a("  "))#");
-    BOOST_CHECK_THROW(parse(R"#(a.a=\"42)#"), parsing_error); // unclosed "
+    BOOST_CHECK_THROW(parse(R"#(a.a=\"42)#"), parsing_error);  // unclosed "
 }
 
 BOOST_AUTO_TEST_CASE(parse_legacy_tests) {
     assert_expr("stop_areas.uri=42", "stop_areas.uri(\"42\")");
     assert_expr("line.code=42", "line.code(\"42\")");
     assert_expr("  stop_areas.uri    =  42    ", "stop_areas.uri(\"42\")");
-    assert_expr(
-        "stop_areas.uri = 42 and  line.name=bus",
-        "(stop_areas.uri(\"42\") AND line.name(\"bus\"))"
-    );
+    assert_expr("stop_areas.uri = 42 and  line.name=bus", "(stop_areas.uri(\"42\") AND line.name(\"bus\"))");
 
     // escaped values
     assert_expr("stop_areas.uri=\"42\"", "stop_areas.uri(\"42\")");
@@ -175,8 +164,7 @@ BOOST_AUTO_TEST_CASE(make_request_odt_level) {
     assert_odt_level(Type_e::VehicleJourney, "", OdtLevel_e::zonal, "all");
     assert_odt_level(Type_e::Line, "", OdtLevel_e::all, "all");
     assert_odt_level(Type_e::Line, "", OdtLevel_e::zonal, "(all AND line.odt_level(\"zonal\"))");
-    assert_odt_level(Type_e::Line, "all or all", OdtLevel_e::zonal,
-                     "((all OR all) AND line.odt_level(\"zonal\"))");
+    assert_odt_level(Type_e::Line, "all or all", OdtLevel_e::zonal, "((all OR all) AND line.odt_level(\"zonal\"))");
 }
 
 static void assert_since_until(const Type_e requested_type,
@@ -185,8 +173,12 @@ static void assert_since_until(const Type_e requested_type,
                                const std::string& until_str,
                                const std::string& expected) {
     boost::optional<boost::posix_time::ptime> since, until;
-    if (!since_str.empty()) { since = boost::posix_time::from_iso_string(since_str); }
-    if (!until_str.empty()) { until = boost::posix_time::from_iso_string(until_str); }
+    if (!since_str.empty()) {
+        since = boost::posix_time::from_iso_string(since_str);
+    }
+    if (!until_str.empty()) {
+        until = boost::posix_time::from_iso_string(until_str);
+    }
     const auto req = make_request(requested_type, request, {}, OdtLevel_e::all, since, until, {});
     assert_expr(req, expected);
 }
@@ -194,34 +186,20 @@ static void assert_since_until(const Type_e requested_type,
 BOOST_AUTO_TEST_CASE(make_request_since_until) {
     assert_since_until(Type_e::Line, "", "", "", "all");
     assert_since_until(Type_e::Line, "", "20180714T1337", "20180714T1338", "all");
-    assert_since_until(
-        Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338",
-        R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z")))"
-    );
-    assert_since_until(
-        Type_e::VehicleJourney, "", "20180714T1337", "",
-        R"((all AND vehicle_journey.since("20180714T133700Z")))"
-    );
-    assert_since_until(
-        Type_e::VehicleJourney, "", "", "20180714T1338",
-        R"((all AND vehicle_journey.until("20180714T133800Z")))"
-    );
-    assert_since_until(
-        Type_e::Impact, "", "20180714T1337", "20180714T1338",
-        R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z")))"
-    );
-    assert_since_until(
-        Type_e::Impact, "", "20180714T1337", "",
-        R"((all AND disruption.since("20180714T133700Z")))"
-    );
-    assert_since_until(
-        Type_e::Impact, "", "", "20180714T1338",
-        R"((all AND disruption.until("20180714T133800Z")))"
-    );
-    assert_since_until(
-        Type_e::Impact, "all or all", "", "20180714T1338",
-        R"(((all OR all) AND disruption.until("20180714T133800Z")))"
-    );
+    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338",
+                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z")))");
+    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "",
+                       R"((all AND vehicle_journey.since("20180714T133700Z")))");
+    assert_since_until(Type_e::VehicleJourney, "", "", "20180714T1338",
+                       R"((all AND vehicle_journey.until("20180714T133800Z")))");
+    assert_since_until(Type_e::Impact, "", "20180714T1337", "20180714T1338",
+                       R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z")))");
+    assert_since_until(Type_e::Impact, "", "20180714T1337", "",
+                       R"((all AND disruption.since("20180714T133700Z")))");
+    assert_since_until(Type_e::Impact, "", "", "20180714T1338",
+                       R"((all AND disruption.until("20180714T133800Z")))");
+    assert_since_until(Type_e::Impact, "all or all", "", "20180714T1338",
+                       R"(((all OR all) AND disruption.until("20180714T133800Z")))");
 }
 
 static void assert_forbidden(const Type_e requested_type,
@@ -249,21 +227,20 @@ BOOST_AUTO_TEST_CASE(make_request_odt_level_forbidden_uris) {
     b.generate_dummy_basis();
     b.finish();
     const auto req = make_request(Type_e::Line, "all or all", {"Bus", "0x1"}, OdtLevel_e::zonal, {}, {}, *b.data);
-    assert_expr(req, R"((((all OR all) AND line.odt_level("zonal")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
+    assert_expr(
+        req,
+        R"((((all OR all) AND line.odt_level("zonal")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
 }
 
 BOOST_AUTO_TEST_CASE(make_request_since_forbidden_uris) {
     ed::builder b("20180710");
     b.generate_dummy_basis();
     b.finish();
-    const auto req = make_request(Type_e::Impact,
-                                  "all or all",
-                                  {"Bus", "0x1"},
-                                  OdtLevel_e::all,
-                                  boost::posix_time::from_iso_string("20180714T1337"),
-                                  {},
-                                  *b.data);
-    assert_expr(req, R"((((all OR all) AND disruption.since("20180714T133700Z")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
+    const auto req = make_request(Type_e::Impact, "all or all", {"Bus", "0x1"}, OdtLevel_e::all,
+                                  boost::posix_time::from_iso_string("20180714T1337"), {}, *b.data);
+    assert_expr(
+        req,
+        R"((((all OR all) AND disruption.since("20180714T133700Z")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
 }
 
 BOOST_AUTO_TEST_CASE(ng_specific_features) {
@@ -273,13 +250,12 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
     b.vj("C")("stop1", 700)("stop3", 800)("stop5", 900);
     b.make();
 
-    auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2",
-                                 {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2", {}, OdtLevel_e::all, {},
+                                 {}, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4}));
 
-    indexes = make_query_ng(Type_e::StopArea,
-                            "(get vehicle_journey <- stop_area.id=stop2) - stop_area.id=stop2",
-                            {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "(get vehicle_journey <- stop_area.id=stop2) - stop_area.id=stop2", {},
+                            OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 3, 4}));
 
     indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, *b.data);
@@ -291,8 +267,8 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
     indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
 
-    indexes = make_query_ng(Type_e::StopArea, "stop_area.id=stop2 or stop_area.id=stop5",
-                            {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "stop_area.id=stop2 or stop_area.id=stop5", {}, OdtLevel_e::all, {}, {},
+                            *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({2, 5}));
 }
 
@@ -304,8 +280,8 @@ BOOST_AUTO_TEST_CASE(get_connection) {
     b.connection("stop2", "stop1", 50);
     b.make();
 
-    auto indexes = make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A",
-                                 {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes =
+        make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A", {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(*indexes.begin())->uri, "B");
 }
@@ -313,58 +289,54 @@ BOOST_AUTO_TEST_CASE(get_connection) {
 BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
     ed::builder b("20180710");
 
-    navitia::apply_disruption(
-        b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
-        .tag("my_tag")
-        .impact()
-        .severity(nt::disruption::Effect::NO_SERVICE)
-        .get_disruption(), *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
+                                  .tag("my_tag")
+                                  .impact()
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
     b.make();
 
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"",
-                                  {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes =
+        make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"", {}, OdtLevel_e::all, {}, {}, *b.data);
 
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
 
     auto idx = *indexes.begin();
-    BOOST_CHECK_EQUAL( get_disruption_name(idx, *b.data), "disrupt_0");
+    BOOST_CHECK_EQUAL(get_disruption_name(idx, *b.data), "disrupt_0");
 }
 
 BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     ed::builder b("20180710");
 
-    navitia::apply_disruption(
-        b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
-        .tag("tag_0")
-        .impact()
-        .severity(nt::disruption::Effect::NO_SERVICE)
-        .get_disruption(), *b.data->pt_data, *b.data->meta);
-    navitia::apply_disruption(
-        b.disrupt(nt::RTLevel::RealTime, "disrupt_1")
-        .tag("tag_1")
-        .impact()
-        .severity(nt::disruption::Effect::NO_SERVICE)
-        .get_disruption(), *b.data->pt_data, *b.data->meta);
-    navitia::apply_disruption(
-        b.disrupt(nt::RTLevel::RealTime, "disrupt_2")
-        .tag("tag_2")
-        .impact()
-        .severity(nt::disruption::Effect::NO_SERVICE)
-        .get_disruption(), *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
+                                  .tag("tag_0")
+                                  .impact()
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.disrupt(nt::RTLevel::RealTime, "disrupt_1")
+                                  .tag("tag_1")
+                                  .impact()
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.disrupt(nt::RTLevel::RealTime, "disrupt_2")
+                                  .tag("tag_2")
+                                  .impact()
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
     b.make();
 
-    auto indexes = make_query_ng(Type_e::Impact,
-                                "disruption.tags(\"tag_0 name\", \"tag_2 name\")",
-                                {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(\"tag_0 name\", \"tag_2 name\")", {}, OdtLevel_e::all,
+                                 {}, {}, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     std::vector<std::string> disruption_names;
     boost::range::transform(indexes, std::back_inserter(disruption_names),
-                            [&b](const navitia::idx_t id) {
-        return get_disruption_name(id, *b.data);
-    });
+                            [&b](const navitia::idx_t id) { return get_disruption_name(id, *b.data); });
 
     auto expected_disruption_names = {"disrupt_0", "disrupt_2"};
     BOOST_CHECK_EQUAL_RANGE(disruption_names, expected_disruption_names);
-
 }

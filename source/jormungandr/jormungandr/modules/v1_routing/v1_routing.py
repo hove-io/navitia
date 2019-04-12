@@ -46,6 +46,7 @@ from jormungandr.interfaces.v1 import (
     GeoStatus,
     JSONSchema,
     LineReports,
+    EquipmentReports,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -259,6 +260,15 @@ class V1Routing(AModule):
             region + '<uri:uri>/line_reports',
             coord + '<uri:uri>/line_reports',
             endpoint='line_reports',
+        )
+
+        self.add_resource(
+            EquipmentReports.EquipmentReports,
+            region + 'equipment_reports',
+            coord + 'equipment_reports',
+            region + '<uri:uri>/equipment_reports',
+            coord + '<uri:uri>/equipment_reports',
+            endpoint='equipment_reports',
         )
 
         self.add_resource(Status.Status, region + 'status', coord + 'status', endpoint='status')

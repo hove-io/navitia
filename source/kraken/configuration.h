@@ -32,47 +32,52 @@ www.navitia.io
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
 
-namespace navitia { namespace kraken{
+namespace navitia {
+namespace kraken {
 
-    class Configuration{
-            boost::program_options::variables_map vm;
-        public:
-            void load(const std::string& file);
-            std::vector<std::string> load_from_command_line(const boost::program_options::options_description&,
-                                        int argc, const char* const argv[]);
+class Configuration {
+    boost::program_options::variables_map vm;
 
-            std::string databases_path() const;
-            std::string zmq_socket_path() const;
-            std::string instance_name() const;
-            boost::optional<std::string> chaos_database() const;
-            int nb_threads() const;
+public:
+    void load(const std::string& file);
+    std::vector<std::string> load_from_command_line(const boost::program_options::options_description&,
+                                                    int argc,
+                                                    const char* const argv[]);
 
-            std::string broker_host() const;
-            int broker_port() const;
-            std::string broker_username() const;
-            std::string broker_password() const;
-            std::string broker_vhost() const;
-            std::string broker_exchange() const;
-            int broker_timeout() const;
-            int broker_sleeptime() const;
-            bool is_realtime_enabled() const;
-            bool is_realtime_add_enabled() const;
-            bool is_realtime_add_trip_enabled() const;
-            int kirin_timeout() const;
-            int kirin_retry_timeout() const;
-            bool display_contributors() const;
-            size_t raptor_cache_size() const;
-            int slow_request_duration() const;
-            boost::optional<std::string> log_level() const;
-            boost::optional<std::string> log_format() const;
-            boost::optional<std::string> metrics_binding() const;
+    std::string databases_path() const;
+    std::string zmq_socket_path() const;
+    std::string instance_name() const;
+    boost::optional<std::string> chaos_database() const;
+    int nb_threads() const;
 
-            std::vector<std::string> rt_topics() const;
-    };
+    std::string broker_host() const;
+    int broker_port() const;
+    std::string broker_username() const;
+    std::string broker_password() const;
+    std::string broker_vhost() const;
+    std::string broker_exchange() const;
+    int broker_timeout() const;
+    int broker_sleeptime() const;
+    bool is_realtime_enabled() const;
+    bool is_realtime_add_enabled() const;
+    bool is_realtime_add_trip_enabled() const;
+    int kirin_timeout() const;
+    int kirin_retry_timeout() const;
+    bool display_contributors() const;
+    size_t raptor_cache_size() const;
+    int slow_request_duration() const;
+    boost::optional<std::string> log_level() const;
+    boost::optional<std::string> log_format() const;
+    boost::optional<std::string> metrics_binding() const;
+    bool enable_request_deadline() const;
 
-    boost::program_options::options_description get_options_description(
-            const boost::optional<std::string> name = {},
-            const boost::optional<std::string> zmq = {},
-            const boost::optional<bool> display_contributors = {});
+    std::vector<std::string> rt_topics() const;
+};
 
-}}//namespace
+boost::program_options::options_description get_options_description(
+    const boost::optional<std::string> name = {},
+    const boost::optional<std::string> zmq = {},
+    const boost::optional<bool> display_contributors = {});
+
+}  // namespace kraken
+}  // namespace navitia

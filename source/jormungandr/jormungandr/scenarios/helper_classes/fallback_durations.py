@@ -28,13 +28,14 @@
 # www.navitia.io
 
 from __future__ import absolute_import
-from . import helper_future
+
+import jormungandr.street_network.utils
 from navitiacommon import response_pb2
 from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr import new_relic
+from jormungandr import new_relic, utils
 import logging
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
@@ -232,14 +233,7 @@ class FallbackDurationsPool(dict):
         self._direct_paths_by_mode = direct_paths_by_mode
         self._request = request
         self._direct_path_type = direct_path_type
-        self._speed_switcher = {
-            "walking": request["walking_speed"],
-            "bike": request["bike_speed"],
-            "car": request["car_speed"],
-            "bss": request["bss_speed"],
-            "ridesharing": request["car_no_park_speed"],
-            "taxi": request["taxi_speed"],
-        }
+        self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
 
         self._value = {}
 
