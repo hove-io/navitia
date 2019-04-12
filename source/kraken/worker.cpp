@@ -1146,7 +1146,7 @@ void Worker::get_matching_routes(const pbnavitia::MatchingRoute& matching_route)
 
 void Worker::equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports) {
     const auto proto_uris = equipment_reports.forbidden_uris();
-    std::vector<std::string> forbidden_uris(proto_uris.cbegin(), proto_uris.cend());
+    std::vector<std::string> forbidden_uris(proto_uris.begin(), proto_uris.end());
 
     equipment::equipment_reports(this->pb_creator, equipment_reports.filter(), equipment_reports.count(),
                                  equipment_reports.depth(), equipment_reports.start_page(), forbidden_uris);
