@@ -118,7 +118,7 @@ final_line_filter = False
 # Maximum number of second pass to get more itineraries
 max_extra_second_pass = 0
 
-max_nb_crowfly_by_mode = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 5000}
+max_nb_crowfly_by_mode = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 5000, 'taxi': 5000}
 
 autocomplete_backend = 'kraken'
 
