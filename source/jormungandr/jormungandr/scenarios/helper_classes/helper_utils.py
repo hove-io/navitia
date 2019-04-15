@@ -32,7 +32,7 @@ from __future__ import absolute_import
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord, generate_id
 from jormungandr.street_network.utils import crowfly_distance_between
-from jormungandr.fallback_modes import FallbackModes
+from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
 from .helper_exceptions import *
 import copy
 import logging
@@ -294,8 +294,7 @@ def _build_fallback(
 
                 # update distances and durations by mode if it's a proper computed streetnetwork fallback
                 if fallback_dp and fallback_dp.journeys:
-                    all_modes = ['walking', 'bike', 'car', 'ridesharing']
-                    for m in all_modes:
+                    for m in all_fallback_modes - {FallbackModes.bss.name}:
                         fb_distance = getattr(fallback_dp.journeys[0].distances, m)
                         main_distance = getattr(pt_journey.distances, m)
                         setattr(pt_journey.distances, m, fb_distance + main_distance)
