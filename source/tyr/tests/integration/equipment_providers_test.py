@@ -41,13 +41,11 @@ import ujson
 def default_config():
     with app.app_context():
         sytral = models.EquipmentsProvider('sytral')
-        sytral.instances = ['sytral_instance']
         sytral.klass = 'sytral.klass'
         sytral.args = {'url': 'http://sytral.url', 'fail_max': 5, 'timeout': 2}
         models.db.session.add(sytral)
 
         sytral2 = models.EquipmentsProvider('sytral2')
-        sytral2.instances = ['sytral_provider']
         sytral2.klass = 'sytral.klass'
         sytral2.args = {'url': 'http://sytral2.url', 'fail_max': 10, 'timeout': 1}
         models.db.session.add(sytral2)
@@ -82,8 +80,6 @@ def test_equipments_provider_get(default_config):
     assert 'equipments_providers' in resp
     assert len(resp['equipments_providers']) == 1
 
-    assert len(resp['equipments_providers'][0]['instances']) == 1
-    assert resp['equipments_providers'][0]['instances'][0] == 'sytral_instance'
     assert resp['equipments_providers'][0]['args'] == sytral_provider.args
     assert not resp['equipments_providers'][0]['discarded']
 
@@ -96,7 +92,6 @@ def test_equipments_provider_put(default_config):
     # Create new provider
     new_provider = {
         'class': 'jormungandr.equipments.sytral.SytralProvider',
-        'instances': ['fr-se-lyon'],
         'args': {'url': 'sytral3.url', 'fail_max': 5, 'timeout': 1},
     }
     resp, status = api_put(
@@ -166,18 +161,14 @@ def test_equipments_provider_schema():
         assert 'status' in resp
         assert resp['status'] == "invalid data"
 
-    # 'instances' is missing
-    corrupted_provider = {
-        'class': 'jormungandr.equipments.sytral.SytralProvider',
-        'args': {'url': 'sytral.url', 'fail_max': 5, 'timeout': 1},
-    }
-    send_and_check('sytral', corrupted_provider, 'instances')
+    # 'class' is missing
+    corrupted_provider = {'args': {'url': 'sytral.url', 'fail_max': 5, 'timeout': 1}}
+    send_and_check('sytral', corrupted_provider, 'class')
 
     # args['url'] is missing
     corrupted_provider = {
         'class': 'jormungandr.equipments.sytral.SytralProvider',
         'key': 'sytral',
-        'instances': ['fr-se-lyon'],
         'args': {'fail_max': 5, 'timeout': 1},
     }
     send_and_check('sytral', corrupted_provider, 'url')
