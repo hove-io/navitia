@@ -2619,8 +2619,8 @@ struct AddTripDataset {
         b.sa("I", 0, 0, true, true);
         b.sa("J", 0, 0, true, true);
 
-        b.vj("1").uri("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t)(
-            "stop_point:D", "09:30"_t);
+        b.vj("1").uri("vj:1").physical_mode("physical_mode_uri")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)(
+            "stop_point:C", "09:00"_t)("stop_point:D", "09:30"_t);
 
         // Add company
         comp_name = "comp_name";
@@ -2635,7 +2635,7 @@ struct AddTripDataset {
         b.lines["1"]->company_list.push_back(cmp1);
 
         // Add physical mode
-        phy_mode_name = "physical_mode_name";
+        phy_mode_name = "name physical_mode_uri";
         phy_mode_uri = "physical_mode_uri";
         navitia::type::PhysicalMode* phy_mode = new navitia::type::PhysicalMode();
         phy_mode->idx = b.data->pt_data->physical_modes.size();
@@ -2645,6 +2645,17 @@ struct AddTripDataset {
         b.data->pt_data->physical_modes.push_back(phy_mode);
         b.data->pt_data->physical_modes_map[phy_mode_uri] = phy_mode;
         b.lines["1"]->physical_mode_list.push_back(phy_mode);
+
+        // Add second physical mode
+        phy_mode_name_2 = "name physical_mode_uri_2";
+        phy_mode_uri_2 = "physical_mode_uri_2";
+        phy_mode = new navitia::type::PhysicalMode();
+        phy_mode->idx = b.data->pt_data->physical_modes.size();
+        phy_mode->name = phy_mode_name_2;
+        phy_mode->uri = phy_mode_uri_2;
+        phy_mode->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys[0]);
+        b.data->pt_data->physical_modes.push_back(phy_mode);
+        b.data->pt_data->physical_modes_map[phy_mode_uri_2] = phy_mode;
 
         // Add contributor
         contributor_name = "contributor_name";
@@ -2676,6 +2687,8 @@ struct AddTripDataset {
     std::string comp_uri;
     std::string phy_mode_name;
     std::string phy_mode_uri;
+    std::string phy_mode_name_2;
+    std::string phy_mode_uri_2;
     std::string contributor_name;
     std::string contributor_uri;
     std::string dataset_name;
@@ -3318,4 +3331,49 @@ BOOST_FIXTURE_TEST_CASE(cant_cancel_trip_that_doesnt_exist, AddTripDataset) {
     BOOST_CHECK_EQUAL(pt_data.meta_vjs.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+
+    // Base VJ
+    auto* vj = pt_data.vehicle_journeys_map["vj:1"];
+    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
+
+    transit_realtime::TripUpdate update_trip = ntest::make_trip_update_message(
+        "vj:1", "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).delay(0_min),
+            RTStopTime("stop_point:B", "20190101T0830"_pts).delay(0_min),
+            RTStopTime("stop_point:C", "20190101T0900"_pts).delay(5_min),
+            RTStopTime("stop_point:D", "20190101T0930"_pts).delay(5_min),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS, "", phy_mode_uri_2);
+
+    navitia::handle_realtime("feed-1", timestamp, update_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+
+    // physical mode =  base VJ physical mode
+    vj = pt_data.vehicle_journeys_map["vj:1:modified:0:feed-1"];
+    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
+
+    update_trip = ntest::make_trip_update_message("vj:1", "20190101",
+                                                  {
+                                                      RTStopTime("stop_point:A", "20190101T0800"_pts).delay(0_min),
+                                                      RTStopTime("stop_point:B", "20190101T0830"_pts).delay(0_min),
+                                                      RTStopTime("stop_point:C", "20190101T0900"_pts).delay(5_min),
+                                                      RTStopTime("stop_point:D", "20190101T0930"_pts).delay(5_min),
+                                                  },
+                                                  transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS, "",
+                                                  "physical_mode_id_that_doesnt_exist");
+
+    navitia::handle_realtime("feed-1", timestamp, update_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+
+    // physical mode =  base VJ physical mode
+    vj = pt_data.vehicle_journeys_map["vj:1:modified:0:feed-1"];
+    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 }

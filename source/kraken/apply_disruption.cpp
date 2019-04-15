@@ -269,8 +269,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            // Add physical mode
-            if (!impact->physical_mode_id.empty()) {
+            // Add physical mode:
+            // Use base-VJ's mode if exists,
+            // fallback on impact's mode
+            // last resort is picking physical_modes[0]
+            if (!mvj->get_base_vj().empty()) {
+                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+            } else if (!impact->physical_mode_id.empty()) {  // fallback on impact's mode
                 nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
                     .if_found([&](navitia::type::PhysicalMode* p) {
                         vj->physical_mode = p;
@@ -287,14 +292,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                                            << impact->physical_mode_id);
                     });
             } else {
-                if (!mvj->get_base_vj().empty()) {
-                    vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                } else {
-                    // for protection, use the physical_modes[0] instead of creating a new one
-                    vj->physical_mode = pt_data.physical_modes[0];
-                    LOG4CPLUS_WARN(
-                        log, "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
-                }
+                // for protection, use the physical_modes[0] instead of creating a new one
+                vj->physical_mode = pt_data.physical_modes[0];
+                LOG4CPLUS_WARN(log,
+                               "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
             }
 
             // Use the corresponding base stop_time for boarding and alighting duration
