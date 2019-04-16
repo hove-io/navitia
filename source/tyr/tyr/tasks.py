@@ -84,6 +84,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
     :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
     :param reload: If True kraken would be reload at the end of the treatment
+    :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
 
     run the whole data import process:
 
