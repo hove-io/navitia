@@ -435,8 +435,18 @@ class TestJourneysTaxiAndRidesharingDistributed(NewDefaultScenarioAbstractTestFi
         )
         response = self.query_region(query)
 
-        direct_paht_nb = len([j for j in response.get('journeys', []) if 'non_pt' in j.get('tags', [])])
-        assert direct_paht_nb == 2
+        direct_path_nb = len([j for j in response.get('journeys', []) if 'non_pt' in j.get('tags', [])])
+        assert direct_path_nb == 2
+
+        taxi_direct = next((j for j in response.get('journeys', []) if 'taxi' in j.get('tags', [])), None)
+        assert taxi_direct.get('durations', {}).get("taxi") == 13
+        assert taxi_direct.get('durations', {}).get("car") == 0
+        assert taxi_direct.get('durations', {}).get("ridesharing") == 0
+
+        rs_direct = next((j for j in response.get('journeys', []) if 'ridesharing' in j.get('tags', [])), None)
+        assert rs_direct.get('durations', {}).get("taxi") == 0
+        assert rs_direct.get('durations', {}).get("car") == 0
+        assert rs_direct.get('durations', {}).get("ridesharing") == 13
 
         # we've have found two direct path, since taxi and ridesharing are technically same thing for kraken
         # kraken should have been called only once
