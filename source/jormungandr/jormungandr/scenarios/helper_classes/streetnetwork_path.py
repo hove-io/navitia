@@ -207,12 +207,17 @@ class StreetNetworkPathPool:
 
             def wait_and_get(self, mode):
                 streetnetwork_service = self._instance.get_street_network(mode, self._request)
-                dp = self._direct_paths_by_mode.get(mode)
-                if not dp:
-                    return dp
+                dp_future = self._direct_paths_by_mode.get(mode)
+                if not dp_future:
+                    return dp_future
 
                 return streetnetwork_service.post_processing(
-                    dp.wait_and_get(), dp.orig_obj, dp.dest_obj, mode, dp.request, dp.path_type
+                    dp_future.wait_and_get(),
+                    dp_future.orig_obj,
+                    dp_future.dest_obj,
+                    mode,
+                    dp_future.request,
+                    dp_future.path_type,
                 )
 
         return _InnerClass(self._direct_paths_by_mode, self._instance, self._request)
@@ -237,11 +242,16 @@ class StreetNetworkPathPool:
             if streetnetwork_service
             else None
         )
-        dp = self._value.get(key)
+        dp_future = self._value.get(key)
         return (
             streetnetwork_service.post_processing(
-                dp.wait_and_get(), dp.orig_obj, dp.dest_obj, dp.mode, dp.request, dp.path_type
+                dp_future.wait_and_get(),
+                dp_future.orig_obj,
+                dp_future.dest_obj,
+                mode,
+                dp_future.request,
+                dp_future.path_type,
             )
-            if dp
+            if dp_future
             else None
         )
