@@ -38,7 +38,6 @@ from navitiacommon.models import db, TimestampMixin
 
 class EquipmentsProvider(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Text, primary_key=True)
-    instances = db.Column(ARRAY(db.Text), unique=False, nullable=True)
     klass = db.Column(db.Text, unique=False, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False, default=False)
     args = db.Column(JSONB, server_default='{}')
