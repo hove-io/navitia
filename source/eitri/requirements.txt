@@ -1,7 +1,7 @@
 future==0.13.1
 docker==3.4.1
 retrying==1.2.3
-psycopg2==2.4.5
+psycopg2
 clingon==0.1.4
 GeoAlchemy2==0.2.4
 SQLAlchemy==1.0.4
