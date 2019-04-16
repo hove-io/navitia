@@ -231,19 +231,18 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_should_have_stop_points_codes, Equipme
     const auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::equipment_reports(pb_creator, filter, 1);
 
-    // with "count = 1", only "sa1" with "stop1" will be returned
-    // hence the expected codes are the one from stop point "stop1"
     BOOST_REQUIRE_EQUAL(pb_creator.equipment_reports_size(), 1);
-    const auto pb_codes =
-        pb_creator.get_response().equipment_reports(0).stop_area_equipments(0).stop_area().stop_points(0).codes();
 
-    vector<pair<string, string>> codes;
-    for (const auto& pb_code : pb_codes) {
-        codes.emplace_back(pb_code.type(), pb_code.value());
+    multiset<string> codes;
+    for (const auto& sae : pb_creator.get_response().equipment_reports(0).stop_area_equipments()) {
+        for (const auto& sp : sae.stop_area().stop_points()) {
+            for (const auto& c : sp.codes()) {
+                codes.emplace(c.value());
+            }
+        }
     }
 
-    vector<pair<string, string>> expected_codes = {{"CodeType1", "code1"}, {"CodeType1", "code2"}};
-
+    multiset<string> expected_codes = {"code1", "code2", "code6"};
     BOOST_CHECK_EQUAL_RANGE(codes, expected_codes);
 }
 
