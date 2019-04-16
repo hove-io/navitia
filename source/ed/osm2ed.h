@@ -223,13 +223,21 @@ struct OSMHouseNumber {
         : number(number), lon(lon), lat(lat), way(way) {}
 };
 
+struct AssociateStreet {
+    uint64_t id;
+    std::string name;
+    const std::vector<uint64_t> way_ids;
+
+    AssociateStreet(uint64_t id, const std::string& name, const std::vector<uint64_t>& way_ids)
+        : id(id), name(name), way_ids(way_ids) {}
+};
+
 struct AssociateStreetRelation {
     const uint64_t osm_id;
     const uint64_t way_id = std::numeric_limits<uint64_t>::max();
-    const std::string streetname = "";
+    /// Ids of the ways part of this street
 
-    AssociateStreetRelation(const uint64_t osm_id, const uint64_t way_id, const std::string& streetname)
-        : osm_id(osm_id), way_id(way_id), streetname(streetname) {}
+    AssociateStreetRelation(const uint64_t osm_id, const uint64_t way_id) : osm_id(osm_id), way_id(way_id) {}
 
     AssociateStreetRelation(const uint64_t osm_id) : osm_id(osm_id) {}
 
@@ -245,7 +253,8 @@ struct OSMCache {
     std::set<OSMRelation> relations;
     std::set<OSMNode> nodes;
     std::set<OSMWay> ways;
-    std::set<AssociateStreetRelation> associated_streets;
+    std::set<AssociateStreetRelation> associated_street_relations;
+    std::vector<AssociateStreet> streets;
     std::unordered_map<std::string, rel_ways> way_admin_map;
     RTree<const OSMRelation*, double, 2> admin_tree;
     RTree<it_way, double, 2> way_tree;

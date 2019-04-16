@@ -105,16 +105,16 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
     } else if (tags.find("type") != tags.end() && tags.at("type") == "associatedStreet") {
         uint64_t way_id = std::numeric_limits<uint64_t>::max();
         std::vector<uint64_t> osm_ids;
+        std::vector<uint64_t> way_ids;
         for (const CanalTP::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                     if (ref.role == "house" || ref.role == "addr:houselink" || ref.role == "address") {
                         osm_ids.push_back(ref.member_id);
                     } else if (ref.role == "street") {
+                        way_ids.push_back(ref.member_id);
                         if (way_id == std::numeric_limits<uint64_t>::max()) {
                             way_id = ref.member_id;
-                        } else {
-                            // The ways should be merged after, thus we just take the first one.
                         }
                     }
                     break;
@@ -130,10 +130,14 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
         if (way_id == std::numeric_limits<uint64_t>::max()) {
             return;
         }
-        auto tag_name = tags.find("streetname");
+        auto tag_name = tags.find("name");
         const std::string name = tag_name != tags.end() ? tag_name->second : "";
-        for (const auto id : osm_ids) {
-            cache.associated_streets.insert(AssociateStreetRelation(id, way_id, name));
+        if (!way_ids.empty()) {
+            cache.streets.push_back(AssociateStreet(osm_id, name, way_ids));
+        }
+
+        for (const auto& id : osm_ids) {
+            cache.associated_street_relations.insert(AssociateStreetRelation(id, way_id));
         }
     }
 }
@@ -234,7 +238,7 @@ const OSMRelation* OSMCache::match_coord_admin(const double lon, const double la
         return true;
     };
     admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
-    for (auto rel : result) {
+    for (const auto* rel : result) {
         if (boost::geometry::within(p, rel->polygon)) {
             return rel;
         }
@@ -456,7 +460,6 @@ void OSMCache::insert_rel_way_admins() {
         }
     }
     lotus.finish_bulk_insert();
-    auto logger = log4cplus::Logger::getInstance("log");
 }
 
 std::string OSMNode::to_geographic_point() const {
@@ -477,11 +480,12 @@ void OSMCache::build_way_map() {
         }
         double max_lon = max_double, max_lat = max_double, min_lon = max_double, min_lat = max_double;
         std::set<const OSMRelation*> admins;
-        for (auto node : way_it->nodes) {
+        std::unordered_map<const OSMRelation*, int> admin_candidate;
+        for (const auto& node : way_it->nodes) {
             if (!node->admin) {
                 continue;
             }
-            admins.insert(node->admin);
+            admin_candidate[node->admin]++;
             if (!node->is_defined()) {
                 continue;
             }
@@ -489,6 +493,19 @@ void OSMCache::build_way_map() {
             max_lat = max_lat >= max_double ? node->lat() : std::max(max_lat, node->lat());
             min_lon = std::min(min_lon, node->lon());
             min_lat = std::min(min_lat, node->lat());
+        }
+        for (const auto& admin_score : admin_candidate) {
+            // we keep the admin that are associated to at least two nodes
+            if (admin_score.second > 1) {
+                admins.insert(admin_score.first);
+            }
+        }
+        // if there is no admin found, we take all of them
+        // this case will happen when a way with 2 node is between two admins
+        if (admins.empty()) {
+            for (const auto& admin_score : admin_candidate) {
+                admins.insert(admin_score.first);
+            }
         }
         way_admin_map[way_it->name][admins].insert(way_it);
         bg::simplify(way_it->ls, way_it->ls, 0.5);
@@ -511,18 +528,53 @@ static const OSMWay* get_way(const OSMWay* w) {
  * We group together ways with the same name in the same admins
  */
 void OSMCache::fusion_ways() {
-    for (auto name_admin_ways : way_admin_map) {
+    // first step handle associatedStreet
+    auto log = log4cplus::Logger::getInstance("log");
+
+    LOG4CPLUS_INFO(log, "found " << this->streets.size() << " associatedStreet");
+    for (const auto& street : this->streets) {
+        LOG4CPLUS_TRACE(log, "building street " << street.name);
+        if (street.way_ids.empty()) {
+            continue;
+        }
+        const OSMWay* base = nullptr;
+        // todo check result of find
+        for (const auto& way_id : street.way_ids) {
+            const auto& way_it = this->ways.find(way_id);
+            if (way_it == this->ways.end() || !way_it->is_street()) {
+                continue;
+            }
+            if (base == nullptr) {
+                base = &*way_it;
+                base->way_ref = base;  // the "parent" way must reference itself
+                LOG4CPLUS_TRACE(log, base->osm_id << " has been elected as base");
+                if (!street.name.empty()) {
+                    LOG4CPLUS_TRACE(log, "rename way into: " << street.name);
+                    base->name = street.name;
+                }
+
+            } else {
+                way_it->way_ref = base;
+                LOG4CPLUS_TRACE(log, way_it->osm_id << " updated");
+            }
+        }
+    }
+
+    // second step: build street by name and city
+    for (const auto& name_admin_ways : way_admin_map) {
         if (name_admin_ways.first == "") {
             continue;
         }
-        for (auto admin_ways : name_admin_ways.second) {
+        for (const auto& admin_ways : name_admin_ways.second) {
             // This shouldn't happen, but... you know ...
             if (admin_ways.second.empty()) {
                 continue;
             }
             const OSMWay* way_ref = &**admin_ways.second.begin();
             for (auto& w : admin_ways.second) {
-                assert(w->way_ref == nullptr);
+                if (w->way_ref != nullptr) {
+                    continue;
+                }
                 w->way_ref = way_ref;
             }
         }
@@ -656,7 +708,7 @@ OSMRelation::OSMRelation(const u_int64_t osm_id,
 }
 
 void OSMRelation::build_geometry(OSMCache& cache) const {
-    for (CanalTP::Reference ref : references) {
+    for (const CanalTP::Reference& ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
@@ -864,8 +916,8 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
         return;
     }
     const OSMWay* candidate_way = nullptr;
-    auto asso_it = cache.associated_streets.find(AssociateStreetRelation(osm_id));
-    if (asso_it != cache.associated_streets.end()) {
+    auto asso_it = cache.associated_street_relations.find(AssociateStreetRelation(osm_id));
+    if (asso_it != cache.associated_street_relations.end()) {
         auto it_cache = cache.ways.find(OSMWay(asso_it->way_id));
         if (it_cache != cache.ways.end()) {
             candidate_way = &*it_cache;
@@ -962,7 +1014,8 @@ int osm2ed(int argc, const char** argv) {
         ("poi-type,p", po::value<std::string>(&json_poi_types),
                        "a json string describing poi_types and rules to build them from OSM tags")
         ("local_syslog", "activate log redirection within local syslog")
-        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name")
+        ("log_level", po::value<std::string>()->default_value("DEBUG"), "verbosity of log. [default=DEBUG]");
     // clang-format on
 
     po::variables_map vm;
@@ -981,7 +1034,7 @@ int osm2ed(int argc, const char** argv) {
     if (vm.count("log_comment")) {
         log_comment = vm["log_comment"].as<std::string>();
     }
-    navitia::init_app("osm2ed", "DEBUG", vm.count("local_syslog"), log_comment);
+    navitia::init_app("osm2ed", vm["log_level"].as<std::string>(), vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
     if (vm.count("help") || (!vm.count("input") && !vm.count("poi-type"))) {
