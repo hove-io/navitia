@@ -187,7 +187,7 @@ static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::
     nt::CommercialMode* comm_mode =
         pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
 
-    //We get the first and last stop_area to create route and line
+    // We get the first and last stop_area to create route and line
     const auto& st_depart = impact.aux_info.stop_times.front();
     const auto& sa_depart = st_depart.stop_time.stop_point->stop_area;
     const auto& st_arrival = impact.aux_info.stop_times.back();

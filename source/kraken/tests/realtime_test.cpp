@@ -2783,14 +2783,14 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
 
     // Update the trip recently added with destination F replaced by J
-    new_trip = ntest::make_trip_update_message(
-        "vj_new_trip", "20190101",
-        {
-            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
-            RTStopTime("stop_point:F", "20190101T0900"_pts).skipped(),
-            RTStopTime("stop_point:J", "20190101T0900"_pts).added(),
-        },
-        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri);
+    new_trip = ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                               {
+                                                   RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                                   RTStopTime("stop_point:F", "20190101T0900"_pts).skipped(),
+                                                   RTStopTime("stop_point:J", "20190101T0900"_pts).added(),
+                                               },
+                                               transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
+                                               comp_uri, phy_mode_uri);
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.finalize_disruption_batch();
