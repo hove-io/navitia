@@ -184,10 +184,10 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_test_api, EquipmentTestFixture) {
     const auto resp = pb_creator.get_response();
 
     map<string, set<string>> sa_per_line_uris;
-    for (const auto equip_rep : resp.equipment_reports()) {
+    for (const auto& equip_rep : resp.equipment_reports()) {
         BOOST_REQUIRE(equip_rep.has_line());
         set<string> stop_area_uris;
-        for (const auto sae : equip_rep.stop_area_equipments()) {
+        for (const auto& sae : equip_rep.stop_area_equipments()) {
             BOOST_REQUIRE(sae.has_stop_area());
             stop_area_uris.emplace(sae.stop_area().uri());
         }
