@@ -162,12 +162,10 @@ class SytralProvider(object):
 
     def _process_for_equipment_reports(self, data, stop_area_equipments_list):
         """
-        For each stop point within journeys response, the structure 'equipment_details' is updated if the corresponding code is present
+        For each stop_area_equipments within equipment_reports response, the structure 'equipment_details' is updated if the corresponding code is present
         :param data: equipments data received from the webservice
-        :param stop_points_list: list of stop_points from the protobuf response
+        :param stop_area_equipments_list: list of stop_area_equipments from the protobuf response
         """
-
-        # stop_points = [sp for er in response.equipment_reports for sae in er.stop_area_equipments for sp in sae.stop_area.stop_points]
         for sae in stop_area_equipments_list:
             for st in sae.stop_area.stop_points:
                 for code in st.codes:

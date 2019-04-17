@@ -45,37 +45,46 @@ class TestEquipment(AbstractTestFixture):
     """
 
     def _check_equipment_report(self, equipment_reports, expected_result):
-        i = 0
+        """
+        Check most important fields into the equipment_reports
+        :equipment_reports: The equipment_reports fields of the response
+        :expected_result: The expected equipment_reports response
+        """
+        eq_r_idx = 0
         for line, stop_points in sorted(expected_result.items()):
-            print("INFO---> ", line)
-            assert equipment_reports[i]['line']['id'] == line
-            j = 0
+            assert equipment_reports[eq_r_idx]['line']['id'] == line
+            st_area_eq_idx = 0
             for stop_point, equipment_details in sorted(stop_points.items()):
-                assert equipment_reports[i]['stop_area_equipments'][j]['stop_area']['id'] == stop_point
-                if 'equipment_details' in equipment_reports[i]['stop_area_equipments'][j]:
+                assert (
+                    equipment_reports[eq_r_idx]['stop_area_equipments'][st_area_eq_idx]['stop_area']['id']
+                    == stop_point
+                )
+                if 'equipment_details' in equipment_reports[eq_r_idx]['stop_area_equipments'][st_area_eq_idx]:
                     eq_d_idx = 0
                     for eq_id, eq_type, eq_status in equipment_details:
                         assert (
-                            equipment_reports[i]['stop_area_equipments'][j]['equipment_details'][eq_d_idx]['id']
+                            equipment_reports[eq_r_idx]['stop_area_equipments'][st_area_eq_idx][
+                                'equipment_details'
+                            ][eq_d_idx]['id']
                             == eq_id
                         )
                         assert (
-                            equipment_reports[i]['stop_area_equipments'][j]['equipment_details'][eq_d_idx][
-                                'embedded_type'
-                            ]
+                            equipment_reports[eq_r_idx]['stop_area_equipments'][st_area_eq_idx][
+                                'equipment_details'
+                            ][eq_d_idx]['embedded_type']
                             == eq_type
                         )
                         assert (
-                            equipment_reports[i]['stop_area_equipments'][j]['equipment_details'][eq_d_idx][
-                                'current_availability'
-                            ]['status']
+                            equipment_reports[eq_r_idx]['stop_area_equipments'][st_area_eq_idx][
+                                'equipment_details'
+                            ][eq_d_idx]['current_availability']['status']
                             == eq_status
                         )
                         eq_d_idx = eq_d_idx + 1
-                j = j + 1
-            i = i + 1
+                st_area_eq_idx = st_area_eq_idx + 1
+            eq_r_idx = eq_r_idx + 1
 
-    def test_equipment_reports_end_point(self):
+    def test_equipment_reports_without_filter(self):
         """
         simple equipment_reports call
         """
