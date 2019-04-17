@@ -1,3 +1,9 @@
+navitia2 (2.77.1) unstable; urgency=low
+
+  * Jormungandr: no db request at equipment_providers init <https://github.com/CanalTP/navitia/pull/2758> 
+
+ -- mbounabi <Mehdi.Bounabi@Kisio.org>  Wed, 17 Apr 2019 14:04:41 +0100
+
 navitia2 (2.77.0) unstable; urgency=low
 
   * Kraken: Don't use cbegin() and cend() with RepeatedPtrField (protobuf version < 3)  <https://github.com/CanalTP/navitia/pull/2749>
