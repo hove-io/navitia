@@ -56,9 +56,6 @@ inline void dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
                                                       DijkstraVisitor vis,
                                                       ColorMap color,
                                                       IndexInHeapMap index_in_heap) {
-    typedef indirect_cmp<DistanceMap, Compare> IndirectCmp;
-    IndirectCmp icmp(distance, compare);
-
     typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
     typedef d_ary_heap_indirect<Vertex, 4, IndexInHeapMap, DistanceMap, Compare> MutableQueue;
     MutableQueue Q(distance, index_in_heap, compare);

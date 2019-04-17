@@ -31,11 +31,14 @@ www.navitia.io
 #pragma once
 #include "georef.h"
 #include "dijkstra_shortest_paths_with_heap.h"
+#include "astar_shortest_paths_with_heap.h"
 #include "routing/raptor_utils.h"
+#include "utils/logger.h"
 #include "type/time_duration.h"
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/two_bit_color_map.hpp>
 #include <boost/format.hpp>
+#include <log4cplus/ndc.h>
 
 namespace bt = boost::posix_time;
 
@@ -130,6 +133,9 @@ struct PathFinder {
     /// Distance array for the Dijkstra
     std::vector<navitia::time_duration> distances;
 
+    /// Distance array for the Astar
+    std::vector<navitia::time_duration> costs;
+
     /// Predecessors array for the Dijkstra
     std::vector<vertex_t> predecessors;
 
@@ -190,6 +196,30 @@ struct PathFinder {
             std::less<navitia::time_duration>(),
             SpeedDistanceCombiner(speed_factor),  // we multiply the edge duration by a speed factor
             navitia::seconds(0), visitor, color, &index_in_heap_map[0]);
+    }
+
+    /**
+     * Launch a astar without initializing the data structure
+     * Warning, it modifies the distances and the predecessors
+     **/
+    template <class Heuristic, class Visitor>
+    void astar(const vertex_t source, const Heuristic& heuristic, const Visitor& visitor) {
+        // Note: the predecessors have been updated in init
+        auto logger = log4cplus::Logger::getInstance("worker");
+        LOG4CPLUS_DEBUG(logger, "astar !!!");
+
+        // Fill color map in white before astar
+        std::fill(color.data.get(),
+                  color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char, 0);
+
+        // we filter the graph to only use certain mean of transport
+        using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
+        boost::astar_shortest_paths_no_init_with_heap(
+            filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), source, &predecessors[0],
+            &costs[0], &distances[0], boost::get(&Edge::duration, geo_ref.graph),  // weigth map
+            std::less<navitia::time_duration>(),
+            SpeedDistanceCombiner(speed_factor),  // we multiply the edge duration by a speed factor
+            navitia::seconds(0), heuristic, visitor, color, &index_in_heap_map[0]);
     }
 
     // shouldn't be used outside of class apart from tests
@@ -425,6 +455,77 @@ struct printer_distance_or_target_visitor : virtual public printer_distance_visi
     }
 };
 #endif
+
+// Visitor who stops (throw a DestinationFound exception) when all targets has been visited
+struct astar_target_all_visitor : virtual public boost::astar_visitor<> {
+    std::vector<vertex_t> destinations;
+    size_t nbFound = 0;
+    astar_target_all_visitor(const std::vector<vertex_t>& destinations)
+        : destinations(destinations.begin(), destinations.end()) {}
+    astar_target_all_visitor(const astar_target_all_visitor& other) = default;
+    template <typename graph_type>
+    void finish_vertex(vertex_t u, const graph_type&) {
+        if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {
+            nbFound++;
+            if (nbFound == destinations.size()) {
+                throw DestinationFound();
+            }
+        }
+    }
+};
+
+// Visitor who stops (throw a DestinationFound exception) when a certain distance is reached
+struct astar_distance_visitor : virtual public boost::astar_visitor<> {
+    navitia::time_duration max_duration;
+    const std::vector<navitia::time_duration>& durations;
+
+    astar_distance_visitor(const time_duration& max_dur, const std::vector<time_duration>& dur)
+        : max_duration(max_dur), durations(dur) {}
+    astar_distance_visitor(const astar_distance_visitor& other) = default;
+
+    /*
+     * stop when we can't find any vertex such that distances[v] <= max_duration
+     */
+    template <typename G>
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G&) {
+        if (durations[u] > max_duration)
+            throw DestinationFound();
+    }
+};
+
+// Visitor who stops when a target has been visited or a certain distance is reached
+struct astar_distance_or_target_visitor : virtual public astar_distance_visitor,
+                                          virtual public astar_target_all_visitor {
+    astar_distance_or_target_visitor(const time_duration& max_dur,
+                                     const std::vector<time_duration>& dur,
+                                     const std::vector<vertex_t>& destinations)
+        : astar_distance_visitor(max_dur, dur), astar_target_all_visitor(destinations) {}
+    astar_distance_or_target_visitor(const astar_distance_or_target_visitor& other) = default;
+    template <typename graph_type>
+    void finish_vertex(vertex_t u, const graph_type& g) {
+        astar_target_all_visitor::finish_vertex(u, g);
+    }
+
+    template <typename G>
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G& g) {
+        astar_distance_visitor::examine_vertex(u, g);
+    }
+};
+
+struct astar_distance_heuristic : public boost::astar_heuristic<Graph, navitia::seconds> {
+    const Graph& g;
+    const vertex_t& destination;
+
+    astar_distance_heuristic(const Graph& graph, const vertex_t& destination) : g(graph), destination(destination) {}
+    navitia::seconds operator()(vertex_t v) {
+        auto const& xa = g[destination].coord.lon();
+        auto const& ya = g[destination].coord.lat();
+        auto const& xb = g[v].coord.lon();
+        auto const& yb = g[v].coord.lat();
+
+        return navitia::seconds(sqrt( pow((xb - xa), 2)  + pow((yb - ya), 2) ));
+    }
+};
 
 }  // namespace georef
 }  // namespace navitia

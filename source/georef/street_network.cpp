@@ -224,6 +224,7 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     // we initialize the distances to the maximum value
     size_t n = boost::num_vertices(geo_ref.graph);
     distances.assign(n, bt::pos_infin);
+    costs.assign(n, bt::pos_infin);
     // for the predecessors no need to clean the values, the important one will be updated during search
     predecessors.resize(n);
     index_in_heap_map.resize(n);
@@ -277,8 +278,8 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
     // We start dijkstra from source and target nodes
     try {
 #ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        dijkstra(starting_edge[source_e], starting_edge[target_e],
-                 distance_or_target_visitor(radius, distances, destinations));
+        astar(starting_edge[source_e], astar_distance_heuristic(geo_ref.graph, starting_edge[target_e]),
+              astar_distance_or_target_visitor(radius, distances, destinations));
 #else
         dijkstra(starting_edge[source_e], starting_edge[target_e],
                  printer_distance_or_target_visitor(radius, distances, destinations, "direct_path_source"));
