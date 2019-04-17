@@ -477,16 +477,33 @@ def load_data(instance_id, data_dirs):
 @celery.task()
 def cities(osm_path):
     """ launch cities """
+    # Create Job and Dataset in db to track progress
+    job = models.Job()
+    job.state = 'running'
+    models.db.session.add(job)
+    dataset = models.DataSet()
+    dataset.type = 'cities'
+    dataset.name = osm_path
+    dataset.family_type = 'cities'
+    models.db.session.add(dataset)
+    job.data_sets.append(dataset)
+    models.db.session.commit()
+
     res = -1
     try:
         res = launch_exec(
             "cities", ['-i', osm_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']], logging
         )
         if res != 0:
+            job.state = 'failed'
             logging.error('cities failed')
+        else:
+            job.state = 'done'
+
     except Exception as e:
         logging.exception('cities exception : {}'.format(e.message))
 
+    models.db.session.commit()
     logging.info('Import of cities finished')
     return res
 
