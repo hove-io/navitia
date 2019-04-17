@@ -32,7 +32,6 @@
 from __future__ import absolute_import
 
 from sqlalchemy.dialects.postgresql.json import JSONB
-from sqlalchemy.dialects.postgresql.base import ARRAY
 from navitiacommon.models import db, TimestampMixin
 
 
