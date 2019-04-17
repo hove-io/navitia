@@ -2748,6 +2748,13 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     it_route = pt_data.routes_map.find(route_id);
     BOOST_REQUIRE(it_route != pt_data.routes_map.end());
     const nt::Route* route = it_route->second;
+    const std::string sa_id = "F";
+    auto it_sa = pt_data.stop_areas_map.find(sa_id);
+    const nt::StopArea* sa = it_sa->second;
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "forward");
+    BOOST_CHECK_EQUAL(route->destination , sa);
 
     // check links
     BOOST_CHECK_EQUAL(network->line_list.front(), line);
@@ -2774,8 +2781,6 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     BOOST_CHECK_EQUAL(cm->name, "additional service");
     BOOST_CHECK_EQUAL(line->name, "line:A_F");
     BOOST_CHECK_EQUAL(route->name, "route:A_F");
-
-    BOOST_CHECK(route->destination == nullptr);  // this will change, but it's not mandatory to have a destination
 
     // Verify that a journey from stop_point:A to stop_point:F exists
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:F");
@@ -2819,6 +2824,10 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     BOOST_CHECK_EQUAL(cm->name, "additional service");
     BOOST_CHECK_EQUAL(line->name, "line:A_F");
     BOOST_CHECK_EQUAL(route->name, "route:A_F");
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "forward");
+    BOOST_CHECK_EQUAL(route->destination , sa);
 
     // Verify that a journey from stop_point:A to stop_point:J exists
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");

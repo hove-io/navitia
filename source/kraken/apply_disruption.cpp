@@ -199,9 +199,7 @@ static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::
 
     // TODO: manage line.code when necessary
     nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
-    // TODO: manage route.direction_type ("0" ?) when necessary
-    //       manage route.destination (StopArea*) when necessary
-    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line);
+    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
 
     return route;
 }
