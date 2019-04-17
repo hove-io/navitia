@@ -80,7 +80,8 @@ rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 
 from navitiacommon.models import db
 
-db.app = app
+# NOTE: no db request should be made outside of a request context
+# Therefore, the db app shouldn't be set here in order not to cause idle_in_transaction deadlock
 db.init_app(app)
 cache = Cache(app, config=app.config[str('CACHE_CONFIGURATION')])  # type: Cache
 memory_cache = Cache(app, config=app.config[str('MEMORY_CACHE_CONFIGURATION')])  # type: Cache

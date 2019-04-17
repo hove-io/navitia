@@ -100,6 +100,7 @@ def equipments_provider_manager_db_test():
     # 2 providers defined in db but only 1 matches the key defined in coverage
     # -> Only 1 provider created
     manager.init_providers(['sytral'])
+    manager.update_config()
     assert not manager._equipment_providers_legacy
     assert len(manager._equipment_providers) == 1
     assert 'sytral' in manager._equipment_providers
@@ -122,6 +123,7 @@ def equipments_provider_manager_db_test():
     # Long update interval so provider shouldn't be updated
     manager = EquipmentProviderManager([], providers_getter_ok, 600)
     manager.init_providers(['sytral'])
+    manager.update_config()
     assert not manager._equipment_providers_legacy
     assert len(manager._equipment_providers) == 1
     assert 'sytral' in manager._equipment_providers
