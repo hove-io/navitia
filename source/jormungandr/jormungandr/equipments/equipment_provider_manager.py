@@ -64,9 +64,6 @@ class EquipmentProviderManager(object):
             ):
                 self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
 
-        # Init providers from db
-        self.update_config()
-
     def _init_class(self, cls, arguments):
         """
         Create an instance of a provider according to config
