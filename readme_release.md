@@ -31,6 +31,7 @@ python ./script_release.py major <canaltp_distant_repo_name>
 ```
 
 ### For hotfix:
+Note: It is preferable but not mandatory to merge the hotfix PR before.
 ```
 python ./script_release.py hotfix <canaltp_distant_repo_name>
 ```
@@ -44,11 +45,11 @@ Then the process is less automated (but still, instructions are given):
 	```
 * Merge the content of the new release branch with the hotfix commits to the 'release' branch:
 	```
-	git checkout release		
+	git checkout release
 	git merge --no-ff <release_x.yy.z>
 	```
 * Tag the new release:
-	``` 
+	```
 	git tag -a vx.yy.z
 	```
     _Minor_: You will have to populate the tag with correct blank lines if you want a nice github changelog:
@@ -57,8 +58,13 @@ Then the process is less automated (but still, instructions are given):
 
         * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>
     ```
-* Push the release branch to the dev branch
-	``` 
+* Merge the 'release' branch to the 'dev' branch:
+	```
+	git checkout dev
+	git merge --ff release
+	```
+* Push the release and dev branches to the repo
+	```
 	git push upstream release dev --tags
 	```
 
