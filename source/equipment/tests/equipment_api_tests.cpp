@@ -231,6 +231,11 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_should_have_stop_points_codes, Equipme
     const auto filter = "stop_point.has_code_type(CodeType1)";
     equipment::equipment_reports(pb_creator, filter, 1);
 
+    /*
+     * With count = 1, we'll only get stop_areas/stop_points from the 1sr line ("A")
+     * This means we'll only populate codes from stop1 and stop3,
+     * as they both have code type "CodeType1"
+     */
     BOOST_REQUIRE_EQUAL(pb_creator.equipment_reports_size(), 1);
 
     multiset<string> codes;
