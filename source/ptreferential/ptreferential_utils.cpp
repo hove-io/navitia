@@ -294,13 +294,13 @@ static
     get_indexes_from_code_type(const std::vector<std::string>& keys, const Data& data) {
     Indexes indexes;
     auto collection = data.pt_data->collection<T>();
-    for (const auto& key : keys) {
-        for (const auto* obj : collection) {
-            auto codes = data.pt_data->codes.get_codes<T>(obj);
-            if (codes.find(key) == codes.end()) {
-                continue;
+    for (const auto* obj : collection) {
+        auto codes = data.pt_data->codes.get_codes<T>(obj);
+        for (const auto& key : keys) {
+            if (codes.find(key) != codes.end()) {
+                indexes.insert(obj->idx);
+                break;
             }
-            indexes.insert(obj->idx);
         }
     }
 
