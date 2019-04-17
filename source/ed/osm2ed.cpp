@@ -492,13 +492,13 @@ void OSMCache::build_way_map() {
             min_lat = std::min(min_lat, node->lat());
         }
         for (const auto& admin_score : admin_candidate) {
-            // we keep the admin that are associated to at least two nodes
+            // keeping the admins that are associated to at least two nodes
             if (admin_score.second > 1) {
                 admins.insert(admin_score.first);
             }
         }
         // if there is no admin found, we take all of them
-        // this case will happen when a way with 2 node is between two admins
+        // this case will happen when a way with 2 nodes is between two admins
         if (admins.empty()) {
             for (const auto& admin_score : admin_candidate) {
                 admins.insert(admin_score.first);
