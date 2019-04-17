@@ -232,7 +232,7 @@ BOOST_FIXTURE_TEST_CASE(equipment_reports_should_have_stop_points_codes, Equipme
     equipment::equipment_reports(pb_creator, filter, 1);
 
     /*
-     * With count = 1, we'll only get stop_areas/stop_points from the 1sr line ("A")
+     * With count = 1, we'll only get stop_areas/stop_points from the 1st line ("A")
      * This means we'll only populate codes from stop1 and stop3,
      * as they both have code type "CodeType1"
      */
