@@ -47,10 +47,11 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, **kwargs):
+    def __init__(self, url, timeout=2, code_types=[], **kwargs):
         self.logger = logging.getLogger(__name__)
         self.url = url
         self.timeout = timeout
+        self.code_types = code_types
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
             reset_timeout=kwargs.get(
@@ -149,7 +150,7 @@ class SytralProvider(object):
         """
         for st in stop_points_list:
             for code in st.codes:
-                if SYTRAL_TYPE_PREFIX in code.type:
+                if code.type in self.code_types:
                     equipments_list = jmespath.search("equipments_details[?id=='{}']".format(code.value), data)
 
                     if equipments_list:
@@ -169,7 +170,7 @@ class SytralProvider(object):
         for sae in stop_area_equipments_list:
             for st in sae.stop_area.stop_points:
                 for code in st.codes:
-                    if SYTRAL_TYPE_PREFIX in code.type:
+                    if code.type in self.code_types:
                         equipments_list = jmespath.search(
                             "equipments_details[?id=='{}']".format(code.value), data
                         )

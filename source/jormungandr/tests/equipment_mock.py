@@ -169,7 +169,7 @@ standard_mock_mixed_data = {
             "name": "equipment_detail_name_2",
             "embedded_type": "elevator",
             "current_availaibity": {
-                "status": "unavailable",
+                "status": "available",
                 "cause": {"label": "cause_message_2"},
                 "effect": {"label": "effect_message_2"},
                 "periods": [{"begin": "2012-07-01T08:10:00+02:00", "end": "2012-09-01T23:30:00+02:00"}],
@@ -181,7 +181,7 @@ standard_mock_mixed_data = {
             "name": "equipment_detail_name_3",
             "embedded_type": "escalator",
             "current_availaibity": {
-                "status": "unknown",
+                "status": "available",
                 "cause": {"label": "cause_message_3"},
                 "effect": {"label": "effect_message_3"},
                 "periods": [{"begin": "2012-07-01T08:10:00+02:00", "end": "2012-09-01T23:30:00+02:00"}],
