@@ -1674,7 +1674,6 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert response['lines'][0]['routes'][0]['direction']['id'] == 'stopB'
         assert response['lines'][0]['routes'][0]['direction_type'] == 'forward'
 
-
         # Check that objects created are linked in PT-Ref filter
         response = self.query_region(vj_filter_query)
         assert has_the_disruption(response, 'new_trip')

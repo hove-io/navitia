@@ -2754,7 +2754,7 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
 
     // Check destination and direction_type of the route
     BOOST_CHECK_EQUAL(route->direction_type, "forward");
-    BOOST_CHECK_EQUAL(route->destination , sa);
+    BOOST_CHECK_EQUAL(route->destination, sa);
 
     // check links
     BOOST_CHECK_EQUAL(network->line_list.front(), line);
@@ -2827,7 +2827,7 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
 
     // Check destination and direction_type of the route
     BOOST_CHECK_EQUAL(route->direction_type, "forward");
-    BOOST_CHECK_EQUAL(route->destination , sa);
+    BOOST_CHECK_EQUAL(route->destination, sa);
 
     // Verify that a journey from stop_point:A to stop_point:J exists
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");
