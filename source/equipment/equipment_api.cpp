@@ -99,9 +99,7 @@ EquipmentReportList EquipmentReports::get_paginated_equipment_report_list() {
 
         std::vector<StopAreaEquipment> sa_equipments;
         std::transform(sa_map.cbegin(), sa_map.cend(), std::back_inserter(sa_equipments),
-                       [](const auto& p) -> StopAreaEquipment {
-                           return {p.first, p.second};
-                       });
+                       [](const auto& p) { return StopAreaEquipment(p.first, p.second); });
 
         res.emplace_back(line, sa_equipments);
     }
