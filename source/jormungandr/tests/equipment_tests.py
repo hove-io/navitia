@@ -34,9 +34,6 @@ from .equipment_mock import *
 from tests.check_utils import get_not_null, is_valid_equipment_report
 
 default_date_filter = '_current_datetime=20120801T000000&'
-TCL_escalator_filter = 'filter=stop_point.has_code_type(TCL_ESCALIER)&'
-TCL_elevator_filter = 'filter=stop_point.has_code_type(TCL_ASCENCEUR)&'
-TCL_combined_filter = 'filter=stop_point.has_code_type(TCL_ASCENCEUR,TCL_ESCALIER)&'
 
 
 @dataset({"main_routing_test": {}})
@@ -85,7 +82,7 @@ class TestEquipment(AbstractTestFixture):
                 st_area_eq_idx = st_area_eq_idx + 1
             eq_r_idx = eq_r_idx + 1
 
-    def test_equipment_reports_without_filter(self):
+    def test_equipment_reports(self):
         """
         simple equipment_reports call
         """
@@ -120,7 +117,7 @@ class TestEquipment(AbstractTestFixture):
             "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
+            "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
@@ -160,7 +157,7 @@ class TestEquipment(AbstractTestFixture):
             "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
+            "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
@@ -200,120 +197,7 @@ class TestEquipment(AbstractTestFixture):
             "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
-            "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-        }
-
-        equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
-        for equipment_report in equipment_reports:
-            is_valid_equipment_report(equipment_report)
-        self._check_equipment_report(equipment_reports, expected_result)
-
-    def test_equipment_reports_with_filter(self):
-        """
-        equipment_reports call with filter
-        """
-
-        # only elevator within received data
-        mock_equipment_providers(
-            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
-            data=standard_mock_elevator_data,
-            code_types_list=["TCL_ASCENCEUR"],
-        )
-        response = self.query_region('equipment_reports?' + default_date_filter + TCL_elevator_filter)
-
-        warnings = get_not_null(response, 'warnings')
-        assert len(warnings) == 1
-        assert warnings[0]['id'] == 'beta_endpoint'
-
-        # Expected response
-        stopA_equipment_details = [("5", "elevator", "unknown")]
-        stopb_equipment_details = [
-            ("6", "elevator", "available"),
-            ("7", "elevator", "unavailable"),
-            ("8", "elevator", "unknown"),
-            ("9", "elevator", "unknown"),
-        ]
-        expected_result = {
-            "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
-            "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-        }
-
-        equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
-        for equipment_report in equipment_reports:
-            is_valid_equipment_report(equipment_report)
-        self._check_equipment_report(equipment_reports, expected_result)
-
-        # only escalator within received data
-        mock_equipment_providers(
-            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
-            data=standard_mock_escalator_data,
-            code_types_list=["TCL_ESCALIER"],
-        )
-        response = self.query_region('equipment_reports?' + default_date_filter + TCL_escalator_filter)
-
-        warnings = get_not_null(response, 'warnings')
-        assert len(warnings) == 1
-        assert warnings[0]['id'] == 'beta_endpoint'
-
-        # Expected response
-        stopA_equipment_details = [
-            ("1", "escalator", "available"),
-            ("2", "escalator", "unavailable"),
-            ("3", "escalator", "unknown"),
-            ("4", "escalator", "unknown"),
-        ]
-        stopb_equipment_details = []
-        expected_result = {
-            "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
-            "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-        }
-
-        equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
-        for equipment_report in equipment_reports:
-            is_valid_equipment_report(equipment_report)
-        self._check_equipment_report(equipment_reports, expected_result)
-
-        # Mixed escalator/elevator within received data
-        mock_equipment_providers(
-            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
-            data=standard_mock_mixed_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
-        )
-        response = self.query_region('equipment_reports?' + default_date_filter + TCL_combined_filter)
-
-        warnings = get_not_null(response, 'warnings')
-        assert len(warnings) == 1
-        assert warnings[0]['id'] == 'beta_endpoint'
-
-        # Expected response
-        stopA_equipment_details = [
-            ("5", "elevator", "unknown"),
-            ("1", "escalator", "available"),
-            ("2", "escalator", "unknown"),
-            ("3", "escalator", "available"),
-            ("4", "escalator", "unknown"),
-        ]
-        stopb_equipment_details = [
-            ("6", "elevator", "available"),
-            ("7", "elevator", "unknown"),
-            ("8", "elevator", "unknown"),
-            ("9", "elevator", "unknown"),
-        ]
-        expected_result = {
-            "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
+            "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
@@ -358,7 +242,7 @@ class TestEquipment(AbstractTestFixture):
             "A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "B": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
-            "D": {"stopA": stopA_equipment_details, "stopC": []},
+            "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
