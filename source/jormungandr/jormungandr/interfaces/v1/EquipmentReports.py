@@ -77,7 +77,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
             for code in provider.code_types
         ]
         if not code_types:
-            logging.getLogger(__name__).warn("No code type exist into equipment provider")
+            logging.getLogger(__name__).warn("No code type exists into equipment provider")
             return "stop_point.has_code_type(no_code_types)"
         filter = "stop_point.has_code_type("
         for c in code_types:
