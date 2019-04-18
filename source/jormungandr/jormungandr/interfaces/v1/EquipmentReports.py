@@ -40,6 +40,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
 from navitiacommon import type_pb2
 import six
+import logging
 
 
 class EquipmentReports(ResourceUri, ResourceUtc):
@@ -75,6 +76,9 @@ class EquipmentReports(ResourceUri, ResourceUtc):
             for provider in instance.equipment_provider_manager._get_providers().values()
             for code in provider.code_types
         ]
+        if not code_types:
+            logging.getLogger(__name__).warn("No code type exist into equipment provider")
+            return "stop_point.has_code_type(no_code_types)"
         filter = "stop_point.has_code_type("
         for c in code_types:
             filter = filter + str(c) + ","
@@ -88,7 +92,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
 
         # create filter
         args["filter"] = self._create_filter_equipment(instance)
-
+        logging.getLogger(__name__).debug("equipment provider filter: {}".format(args["filter"]))
         response = i_manager.dispatch(args, "equipment_reports", instance_name=self.region)
         return instance.equipment_provider_manager.manage_equipments(
             response, type_pb2.API.Value('equipment_reports')
