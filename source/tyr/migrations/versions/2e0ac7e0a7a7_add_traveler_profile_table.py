@@ -16,7 +16,7 @@ from sqlalchemy.dialects.postgresql import ENUM, ARRAY
 
 
 def upgrade():
-    # Managing fallback_mode enum as tested in sqlalchemy's repo:
+    # Managing fallback_mode enum as tested in alembic's repo:
     # https://github.com/sqlalchemy/alembic/blob/7257a5b306385318f19d5d16d2196371bb637d66/tests/test_postgresql.py#L328-L333
     fallback_mode = ENUM('walking', 'car', 'bss', 'bike', name='fallback_mode', create_type=False)
     fallback_mode.create(bind=op.get_bind(), checkfirst=False)
