@@ -2779,8 +2779,8 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     // check names
     BOOST_CHECK_EQUAL(network->name, "additional service");
     BOOST_CHECK_EQUAL(cm->name, "additional service");
-    BOOST_CHECK_EQUAL(line->name, "line:A_F");
-    BOOST_CHECK_EQUAL(route->name, "route:A_F");
+    BOOST_CHECK_EQUAL(line->name, "A - F");
+    BOOST_CHECK_EQUAL(route->name, "A - F");
 
     // Verify that a journey from stop_point:A to stop_point:F exists
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:F");
@@ -2822,8 +2822,8 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     // check names
     BOOST_CHECK_EQUAL(network->name, "additional service");
     BOOST_CHECK_EQUAL(cm->name, "additional service");
-    BOOST_CHECK_EQUAL(line->name, "line:A_F");
-    BOOST_CHECK_EQUAL(route->name, "route:A_F");
+    BOOST_CHECK_EQUAL(line->name, "A - F");
+    BOOST_CHECK_EQUAL(route->name, "A - F");
 
     // Check destination and direction_type of the route
     BOOST_CHECK_EQUAL(route->direction_type, "forward");

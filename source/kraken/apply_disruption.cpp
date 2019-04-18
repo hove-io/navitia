@@ -193,11 +193,9 @@ static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::
     const auto& st_arrival = impact.aux_info.stop_times.back();
     const auto& sa_arrival = st_arrival.stop_time.stop_point->stop_area;
     std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string line_name = "line:" + sa_depart->name + "_" + sa_arrival->name;
+    std::string line_name = sa_depart->name + " - " + sa_arrival->name;
     std::string route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string route_name = "route:" + sa_depart->name + "_" + sa_arrival->name;
-
-    // TODO: manage line.code when necessary
+    std::string route_name = sa_depart->name + " - " + sa_arrival->name;
     nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
     nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
 

@@ -1667,10 +1667,11 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         # Check that the new line has been created with necessary information
         response = self.query_region(line_query)
         assert len(response['lines']) == 1
-        assert response['lines'][0]['name'] == 'line:stopC_stopB'
+        assert response['lines'][0]['name'] == 'stopC - stopB'
         assert response['lines'][0]['network']['id'] == 'network:additional_service'
         assert response['lines'][0]['commercial_mode']['id'] == 'commercial_mode:additional_service'
         assert response['lines'][0]['routes'][0]['id'] == 'route:stopC_stopB'
+        assert response['lines'][0]['routes'][0]['name'] == 'stopC - stopB'
         assert response['lines'][0]['routes'][0]['direction']['id'] == 'stopB'
         assert response['lines'][0]['routes'][0]['direction_type'] == 'forward'
 
@@ -1691,7 +1692,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         departures = self.query_region(departure_query + '&data_freshness=realtime')
         assert len(departures['disruptions']) == 1
         assert departures['disruptions'][0]['disruption_uri'] == 'new_trip'
-        assert departures['departures'][0]['display_informations']['name'] == 'line:stopC_stopB'
+        assert departures['departures'][0]['display_informations']['name'] == 'stopC - stopB'
 
         # Check that stop_schedule on line "line:stopC_stopB" and stop_point stop_point:stopC
         # exists with disruption
