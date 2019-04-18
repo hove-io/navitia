@@ -12,8 +12,7 @@ down_revision = '1414da92b3ca'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ENUM, ARRAY
 
 
 def upgrade():
@@ -49,8 +48,8 @@ def upgrade():
         sa.Column('max_bike_duration_to_pt', sa.Integer(), nullable=False),
         sa.Column('max_bss_duration_to_pt', sa.Integer(), nullable=False),
         sa.Column('max_car_duration_to_pt', sa.Integer(), nullable=False),
-        sa.Column('first_section_mode', postgresql.ARRAY(fallback_mode), nullable=False),
-        sa.Column('last_section_mode', postgresql.ARRAY(fallback_mode), nullable=False),
+        sa.Column('first_section_mode', ARRAY(fallback_mode), nullable=False),
+        sa.Column('last_section_mode', ARRAY(fallback_mode), nullable=False),
         sa.ForeignKeyConstraint(['coverage_id'], ['instance.id']),
         sa.PrimaryKeyConstraint('coverage_id', 'traveler_type'),
     )
