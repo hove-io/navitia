@@ -151,6 +151,10 @@ struct PathFinder {
      *  Update the structure for a given starting point and transportation mode
      *  The init HAS to be called before any other methods
      */
+    void init(const type::GeographicalCoord& start_coord,
+              const type::GeographicalCoord& dest_coord,
+              nt::Mode_e mode,
+              const float speed_factor);
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     void start_distance_dijkstra(const navitia::time_duration& radius);
@@ -218,7 +222,7 @@ struct PathFinder {
             filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), source, &predecessors[0],
             &costs[0], &distances[0], boost::get(&Edge::duration, geo_ref.graph),  // weigth map
             std::less<navitia::time_duration>(),
-            SpeedDistanceCombiner(speed_factor),  // we multiply the edge duration by a speed factor
+            std::plus<navitia::time_duration>(), // we add the distance to the cost (not need to multiply with the speed)
             navitia::seconds(0), heuristic, visitor, color, &index_in_heap_map[0]);
     }
 
@@ -514,17 +518,11 @@ struct astar_distance_or_target_visitor : virtual public astar_distance_visitor,
 
 struct astar_distance_heuristic : public boost::astar_heuristic<Graph, navitia::seconds> {
     const Graph& g;
-    const vertex_t& destination;
+    const type::GeographicalCoord& dest_coord;
+    const double inv_speed;
 
-    astar_distance_heuristic(const Graph& graph, const vertex_t& destination) : g(graph), destination(destination) {}
-    navitia::seconds operator()(vertex_t v) {
-        auto const& xa = g[destination].coord.lon();
-        auto const& ya = g[destination].coord.lat();
-        auto const& xb = g[v].coord.lon();
-        auto const& yb = g[v].coord.lat();
-
-        return navitia::seconds(sqrt( pow((xb - xa), 2)  + pow((yb - ya), 2) ));
-    }
+    astar_distance_heuristic(const Graph& graph, const vertex_t& destination, const double inv_speed);
+    navitia::seconds operator()(vertex_t v);
 };
 
 }  // namespace georef

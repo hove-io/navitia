@@ -196,7 +196,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::
         return Path();
     }
     const auto max_dur = origin.streetnetwork_params.max_duration + destination.streetnetwork_params.max_duration;
-    direct_path_finder.init(origin.coordinates, origin.streetnetwork_params.mode,
+    direct_path_finder.init(origin.coordinates, destination.coordinates, origin.streetnetwork_params.mode,
                             origin.streetnetwork_params.speed_factor);
 
     direct_path_finder.start_distance_or_target_dijkstra(max_dur, {dest_edge[source_e], dest_edge[target_e]});
@@ -209,6 +209,18 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::
 }
 
 PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref), color(boost::num_vertices(geo_ref.graph)) {}
+
+void PathFinder::init(const type::GeographicalCoord& start_coord,
+                      const type::GeographicalCoord& dest_coord,
+                      nt::Mode_e mode,
+                      const float speed_factor) {
+    init(start_coord, mode, speed_factor);
+
+    auto const distance_to_dest = start_coord.distance_to(dest_coord);
+    auto const duration_to_dest = navitia::seconds(distance_to_dest / (default_speed[mode] * speed_factor));
+    costs[starting_edge[source_e]] = distances[starting_edge[source_e]] + duration_to_dest;
+    costs[starting_edge[target_e]] = distances[starting_edge[target_e]] + duration_to_dest;
+}
 
 void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
@@ -278,7 +290,8 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
     // We start dijkstra from source and target nodes
     try {
 #ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        astar(starting_edge[source_e], astar_distance_heuristic(geo_ref.graph, starting_edge[target_e]),
+        astar(starting_edge[source_e],
+              astar_distance_heuristic(geo_ref.graph, destinations.back(), 1. / (default_speed[mode] * speed_factor)),
               astar_distance_or_target_visitor(radius, distances, destinations));
 #else
         dijkstra(starting_edge[source_e], starting_edge[target_e],
@@ -954,5 +967,15 @@ void PathFinder::dump_dijkstra_for_quantum(const ProjectionData& target) {
     }
 }
 #endif
+
+astar_distance_heuristic ::astar_distance_heuristic(const Graph& graph,
+                                                    const vertex_t& destination,
+                                                    const double inv_speed)
+    : g(graph), dest_coord(graph[destination].coord), inv_speed(inv_speed) {}
+
+navitia::seconds astar_distance_heuristic::operator()(vertex_t v) {
+    auto const dist_to_target = dest_coord.distance_to(g[v].coord);
+    return navitia::seconds(dist_to_target * inv_speed);
+}
 }  // namespace georef
 }  // namespace navitia
