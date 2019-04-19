@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr import InstanceManager
@@ -33,11 +34,14 @@ from pytest import fixture
 from pytest_mock import mocker
 
 from jormungandr import app
+from jormungandr.instance_manager import choose_best_instance
 
 
 class FakeInstance:
-    def __init__(self, name):
+    def __init__(self, name, is_free=False, priority=0):
         self.name = name
+        self.is_free = is_free
+        self.priority = priority
 
 
 @fixture
@@ -77,3 +81,20 @@ def get_instances_by_object_id_test(manager, mocker):
         assert len(instances) == 1
         assert 'pdl' == instances[0].name
         assert mock.called
+
+
+def choose_best_instance_test():
+    """
+    Test to choose the best instance according to comparator : priority > is_free=False > is_free=True
+    """
+    instances_list = [
+        FakeInstance('fr-nw', is_free=True, priority=0),
+        FakeInstance('fr-nw-c', is_free=True, priority=0),
+    ]
+    assert choose_best_instance(instances_list).name == 'fr-nw'
+
+    instances_list[1].is_free = False
+    assert choose_best_instance(instances_list).name == 'fr-nw-c'
+
+    instances_list.append(FakeInstance('fr-bre', is_free=True, priority=1000))
+    assert choose_best_instance(instances_list).name == 'fr-bre'

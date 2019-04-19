@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.instance import Instance
-from shapely import wkt, geometry
+from shapely import wkt
 
 
 class FakeInstance(Instance):

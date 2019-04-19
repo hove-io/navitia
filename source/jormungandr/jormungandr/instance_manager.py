@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import json
 
@@ -46,14 +47,16 @@ import os
 
 def instances_comparator(instance1, instance2):
     """
-    compare the instances for journey computation
-
-    we want first the non free instances then the free ones following by priority
+    Compare the instances for journey computation
+    :return :   <0 if instance1 has priority over instance2
+                >0 if instance2 has priority over instance1
+                 1 if instance1 = instance2
     """
-    # Here we choose the instance with greater priority.
+    # Choose the instance with greater priority
     if instance1.priority != instance2.priority:
         return instance2.priority - instance1.priority
 
+    # Choose the non-free instance
     if instance1.is_free != instance2.is_free:
         return instance1.is_free - instance2.is_free
 
@@ -64,11 +67,12 @@ def instances_comparator(instance1, instance2):
 
 def choose_best_instance(instances):
     """
-    get the best instance in term of the instances_comparator
+    Get the best instance in term of the instances_comparator
+    If instances are equals, first instance from the list is returned
     """
     best = None
     for i in instances:
-        if not best or instances_comparator(i, best) > 0:
+        if not best or instances_comparator(i, best) < 0:
             best = i
     return best
 

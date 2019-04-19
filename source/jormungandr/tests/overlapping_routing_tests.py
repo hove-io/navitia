@@ -34,6 +34,22 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
 
+@dataset({"main_routing_test": {'is_free': False}, "empty_routing_test": {'is_free': True}})
+class TestOverlappingBestCoverage(AbstractTestFixture):
+    """
+    Test the answer if 2 coverages are overlapping by choosing the best one according to the instances comparator
+    """
+
+    def test_place_by_coords_id(self):
+        response = self.query("/v1/coverage/0.000001;0.000898311281954/places/0.000001;0.000898311281954")
+        places = get_not_null(response, 'places')
+        assert len(places) == 1
+        assert places[0]['embedded_type'] == 'address'
+        assert places[0]['name'] == '42 rue kb (Condom)'
+        assert places[0]['address']['label'] == "42 rue kb (Condom)"
+        assert places[0]['address']['house_number'] == 42
+
+
 @dataset({"main_routing_test": {'is_free': True}, "empty_routing_test": {'is_free': False}})
 class TestOverlappingCoverage(AbstractTestFixture):
     """
@@ -143,15 +159,6 @@ class TestOverlappingCoverage(AbstractTestFixture):
         response = self.query("/v1/coverage/0.000001;0.000898311281954/coords/0.000001;0.000898311281954")
         is_valid_address(response['address'])
         assert response['address']['label'] == "42 rue kb (Condom)"
-
-    def test_place_by_coords_id(self):
-        response = self.query("/v1/coverage/0.000001;0.000898311281954/places/0.000001;0.000898311281954")
-        places = get_not_null(response, 'places')
-        assert len(places) == 1
-        assert places[0]['embedded_type'] == 'address'
-        assert places[0]['name'] == '42 rue kb (Condom)'
-        assert places[0]['address']['label'] == "42 rue kb (Condom)"
-        assert places[0]['address']['house_number'] == 42
 
     def test_not_found_coord(self):
         """
