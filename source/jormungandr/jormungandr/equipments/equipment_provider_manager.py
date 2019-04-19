@@ -63,6 +63,9 @@ class EquipmentProviderManager(object):
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
                 self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
+            else:
+                self.logger.error('impossible to create provider with key: {}'.format(key))
+
 
     def _init_class(self, cls, arguments):
         """
