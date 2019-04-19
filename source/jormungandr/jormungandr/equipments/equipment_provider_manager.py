@@ -66,7 +66,6 @@ class EquipmentProviderManager(object):
             else:
                 self.logger.error('impossible to create provider with key: {}'.format(key))
 
-
     def _init_class(self, cls, arguments):
         """
         Create an instance of a provider according to config
