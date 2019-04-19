@@ -40,7 +40,7 @@ def equipments_provider_manager_env_test():
     Test that equipments providers are created from env when conditions are met
     """
     manager = EquipmentProviderManager(
-        equipment_providers_configuration=[{'key': 'sytral', 'class': 'Sytral.class', 'args': 'Sytral.args'}]
+        equipment_providers_configuration=[{'key': 'SytralRT', 'class': 'Sytral.class', 'args': 'Sytral.args'}]
     )
     manager._init_class = MagicMock(return_value="Provider")
 
@@ -52,14 +52,14 @@ def equipments_provider_manager_env_test():
 
     # Provider name from instance matches config provider
     # Sytral provider added in providers list
-    manager.init_providers(['sytral'])
+    manager.init_providers(['SytralRT'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
-    assert manager._equipment_providers_legacy.keys()[0] == 'sytral'
+    assert manager._equipment_providers_legacy.keys()[0] == 'SytralRT'
 
     # Provider already created
     # No new provider added in providers list
-    manager.init_providers(['sytral'])
+    manager.init_providers(['SytralRT'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
 

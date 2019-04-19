@@ -58,7 +58,7 @@ class EquipmentProviderManager(object):
 
         # Init legacy providers from config file
         for provider in self.providers_config:
-            key = provider['key'].lower()
+            key = provider['key']
             if key in self.providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
