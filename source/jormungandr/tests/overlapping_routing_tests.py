@@ -37,7 +37,7 @@ from .check_utils import *
 @dataset({"main_routing_test": {'is_free': False}, "empty_routing_test": {'is_free': True}})
 class TestOverlappingBestCoverage(AbstractTestFixture):
     """
-    Test the answer if 2 coverages are overlapping by choosing the best one according to the instances comparator
+    Test the answer if 2 coverages are overlapping by choosing the best one according to the instances comparator (non-free first)
     """
 
     def test_place_by_coords_id(self):

@@ -50,7 +50,6 @@ def instances_comparator(instance1, instance2):
     Compare the instances for journey computation
     :return :   <0 if instance1 has priority over instance2
                 >0 if instance2 has priority over instance1
-                 1 if instance1 = instance2
     """
     # Choose the instance with greater priority
     if instance1.priority != instance2.priority:
@@ -62,7 +61,9 @@ def instances_comparator(instance1, instance2):
 
     # TODO choose the smallest region ?
     # take the origin/destination coords into account and choose the region with the center nearest to those coords ?
-    return 1
+
+    # Sort by alphabetical order
+    return 1 if instance1.name > instance2.name else -1
 
 
 def choose_best_instance(instances):

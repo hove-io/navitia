@@ -199,7 +199,7 @@ class TestMultiCoverage:
         """
         Test that the regions are sorted correctly according to the comparator criteria (priority > is_free=False > is_free=True)
         """
-        # Remove the 2 following instances as there have same configuration as others
+        # Remove the 2 following instances as they have same configuration as others
         self.regions.pop('peru')
         self.regions.pop('bolivia')
 

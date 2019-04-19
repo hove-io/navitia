@@ -90,8 +90,9 @@ def choose_best_instance_test():
     instances_list = [
         FakeInstance('fr-nw', is_free=True, priority=0),
         FakeInstance('fr-nw-c', is_free=True, priority=0),
+        FakeInstance('fr-auv', is_free=True, priority=0),
     ]
-    assert choose_best_instance(instances_list).name == 'fr-nw'
+    assert choose_best_instance(instances_list).name == 'fr-auv'
 
     instances_list[1].is_free = False
     assert choose_best_instance(instances_list).name == 'fr-nw-c'
