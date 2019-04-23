@@ -175,7 +175,7 @@ class Scenario(object):
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.traffic_reports.forbidden_uris.append(forbidden_uri)
+                req.equipment_reports.forbidden_uris.append(forbidden_uri)
 
         resp = instance.send_and_receive(req)
         return resp
