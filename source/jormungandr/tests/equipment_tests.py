@@ -318,9 +318,7 @@ class TestEquipment(AbstractTestFixture):
             ("4", "escalator", "unknown"),
         ]
         # stop B is forbidden and there is only the D line which doesn't have stop point B.
-        expected_result = {
-            "D": {"stopA": stopA_equipment_details},
-        }
+        expected_result = {"D": {"stopA": stopA_equipment_details}}
 
         equipment_reports = get_not_null(response, 'equipment_reports')
         assert len(equipment_reports) == 1
