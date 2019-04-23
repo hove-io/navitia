@@ -34,6 +34,7 @@ from .equipment_mock import *
 from tests.check_utils import get_not_null, is_valid_equipment_report
 
 default_date_filter = '_current_datetime=20120801T000000&'
+default_line_filter = 'filter=line.uri(A)'
 
 
 @dataset({"main_routing_test": {}})
@@ -248,6 +249,46 @@ class TestEquipment(AbstractTestFixture):
 
         equipment_reports = get_not_null(response, 'equipment_reports')
         assert len(equipment_reports) == 5
+        for equipment_report in equipment_reports:
+            is_valid_equipment_report(equipment_report)
+        self._check_equipment_report(equipment_reports, expected_result)
+
+    def test_equipment_reports_with_filter(self):
+        """
+        wrong id test
+        """
+
+        # Bad id inside received data
+        mock_equipment_providers(
+            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
+            data=standard_mock_elevator_data,
+            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+        )
+        response = self.query_region('equipment_reports?' + default_date_filter + default_line_filter)
+
+        warnings = get_not_null(response, 'warnings')
+        assert len(warnings) == 1
+        assert warnings[0]['id'] == 'beta_endpoint'
+
+        # Expected response
+        stopA_equipment_details = [
+            ("5", "elevator", "unknown"),
+            ("1", "escalator", "unknown"),
+            ("2", "escalator", "unknown"),
+            ("3", "escalator", "unknown"),
+            ("4", "escalator", "unknown"),
+        ]
+        stopb_equipment_details = [
+            ("6", "elevator", "available"),
+            ("7", "elevator", "unavailable"),
+            ("8", "elevator", "unknown"),
+            ("9", "elevator", "unknown"),
+        ]
+        # filtered with the line A
+        expected_result = {"A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details}}
+
+        equipment_reports = get_not_null(response, 'equipment_reports')
+        assert len(equipment_reports) == 1
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
