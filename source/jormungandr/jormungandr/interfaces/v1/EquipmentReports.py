@@ -71,18 +71,16 @@ class EquipmentReports(ResourceUri, ResourceUtc):
         return self.api_description(**kwargs)
 
     def _create_filter_equipment(self, instance):
-        code_types = [
-            code
-            for provider in instance.equipment_provider_manager._get_providers().values()
-            for code in provider.code_types
-        ]
+        code_types = ",".join(
+            [
+                code
+                for provider in instance.equipment_provider_manager._get_providers().values()
+                for code in provider.code_types
+            ]
+        )
         if not code_types:
-            logging.getLogger(__name__).warn("No code type exists into equipment provider")
-            return "stop_point.has_code_type(no_code_types)"
-        filter = "stop_point.has_code_type("
-        for c in code_types:
-            filter = filter + str(c) + ","
-        return filter[:-1] + ")"
+            abort(404, message='No code type exists into equipment provider')
+        return "stop_point.has_code_type(" + code_types + ")"
 
     def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
@@ -94,6 +92,4 @@ class EquipmentReports(ResourceUri, ResourceUtc):
         args["filter"] = self._create_filter_equipment(instance)
         logging.getLogger(__name__).debug("equipment provider filter: {}".format(args["filter"]))
         response = i_manager.dispatch(args, "equipment_reports", instance_name=self.region)
-        return instance.equipment_provider_manager.manage_equipments(
-            response, type_pb2.API.Value('equipment_reports')
-        )
+        return instance.equipment_provider_manager.manage_equipments_for_equipment_reports(response)

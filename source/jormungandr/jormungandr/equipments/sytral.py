@@ -39,15 +39,13 @@ import logging
 import jmespath
 import requests as requests
 
-SYTRAL_TYPE_PREFIX = "TCL_"
-
 
 class SytralProvider(object):
     """
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, code_types=[], **kwargs):
+    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENCEUR"], **kwargs):
         self.logger = logging.getLogger(__name__)
         self.url = url
         self.timeout = timeout
@@ -112,10 +110,10 @@ class SytralProvider(object):
         equipment_details.id = equipment_form_web_service['id']
         equipment_details.name = equipment_form_web_service['name']
         equipment_details.embedded_type = type_pb2.EquipmentDetails.EquipmentType.Value(
-            '{}'.format(equipment_form_web_service['embedded_type'])
+            equipment_form_web_service['embedded_type']
         )
         equipment_details.current_availability.status = type_pb2.CurrentAvailability.EquipmentStatus.Value(
-            '{}'.format(equipment_form_web_service['current_availaibity']['status'])
+            equipment_form_web_service['current_availaibity']['status']
         )
         current_availaibity = equipment_form_web_service['current_availaibity']
         for period in current_availaibity['periods']:

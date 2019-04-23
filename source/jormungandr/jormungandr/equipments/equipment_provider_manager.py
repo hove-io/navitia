@@ -124,47 +124,49 @@ class EquipmentProviderManager(object):
                 # If the provider added in db is also defined in legacy, delete it.
                 self._equipment_providers_legacy.pop(provider.id, None)
 
-    def manage_equipments(self, response, api):
+    def manage_equipments_for_journeys(self, response):
         """
         Call equipment details provider to update response
         :param response: the pb response received
-        :param api: the API type
-        :return: response: the pb response updated with equipment details
+        :return: response: the pb journeys response updated with equipment details
         """
-        if api == type_pb2.API.Value('equipment_reports'):
-            stop_area_equipments = [sae for er in response.equipment_reports for sae in er.stop_area_equipments]
 
-            # Update config before calling web-service
-            self.update_config()
+        def get_from_to_stop_points_of_journeys(journeys):
+            """
+            :param journeys: the pb journey response
+            :return: generator of stop points that can be 'origin' or 'destination'
+            """
+            places = chain(*[(s.origin, s.destination) for j in journeys for s in j.sections])
+            return (
+                place.stop_point
+                for place in places
+                if place.embedded_type == type_pb2.NavitiaType.Value('STOP_POINT')
+                and place.HasField('stop_point')
+            )
 
-            for provider in self._get_providers().values():
-                provider.get_informations_for_equipment_reports(stop_area_equipments)
+        stop_points = get_from_to_stop_points_of_journeys(response.journeys)
 
-        elif api == type_pb2.API.Value('PLANNER'):
+        # Update config before calling web-service
+        self.update_config()
 
-            def get_from_to_stop_points_of_journeys(journeys):
-                """
-                :param journeys: the pb journey response
-                :return: generator of stop points that can be 'origin' or 'destination'
-                """
-                places = chain(*[(s.origin, s.destination) for j in journeys for s in j.sections])
-                return (
-                    place.stop_point
-                    for place in places
-                    if place.embedded_type == type_pb2.NavitiaType.Value('STOP_POINT')
-                    and place.HasField('stop_point')
-                )
+        for provider in self._get_providers().values():
+            provider.get_informations_for_journeys(stop_points)
 
-            stop_points = get_from_to_stop_points_of_journeys(response.journeys)
+        return response
 
-            # Update config before calling web-service
-            self.update_config()
+    def manage_equipments_for_equipment_reports(self, response):
+        """
+        Call equipment details provider to update response
+        :param response: the pb response received
+        :return: response: the pb equipment_reports response updated with equipment details
+        """
+        stop_area_equipments = (sae for er in response.equipment_reports for sae in er.stop_area_equipments)
 
-            for provider in self._get_providers().values():
-                provider.get_informations_for_journeys(stop_points)
+        # Update config before calling web-service
+        self.update_config()
 
-        else:
-            self.logger.exception('impossible to use api {} with equipments provider'.format(api))
+        for provider in self._get_providers().values():
+            provider.get_informations_for_equipment_reports(stop_area_equipments)
 
         return response
 

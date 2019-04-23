@@ -549,9 +549,7 @@ class Journeys(JourneyCommon):
             if args['equipment_details']:
                 # Manage equipments in stop points from the journeys sections
                 instance = i_manager.instances.get(self.region)
-                return instance.equipment_provider_manager.manage_equipments(
-                    response, type_pb2.API.Value('PLANNER')
-                )
+                return instance.equipment_provider_manager.manage_equipments_for_journeys(response)
 
             return response
 
