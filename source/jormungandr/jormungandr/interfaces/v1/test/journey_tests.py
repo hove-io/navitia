@@ -26,11 +26,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import pytest
 from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
-from jormungandr.interfaces.v1.journey_common import compute_regions
+from jormungandr.interfaces.v1.journey_common import compute_regions, sort_regions
 from navitiacommon import models
 
 
@@ -193,3 +194,19 @@ class TestMultiCoverage:
         assert regions[1] == self.regions['netherlands'].name
         assert regions[2] == self.regions['france'].name
         assert regions[3] == self.regions['bolivia'].name
+
+    def test_sorted_regions(self):
+        """
+        Test that the regions are sorted correctly according to the comparator criteria (priority > is_free=False > is_free=True)
+        """
+        # Remove the 2 following instances as they have same configuration as others
+        self.regions.pop('peru')
+        self.regions.pop('bolivia')
+
+        regions = sort_regions(self.regions.values())
+        assert len(regions) == 5
+        assert regions[0].name == self.regions['brazil'].name
+        assert regions[1].name == self.regions['germany'].name
+        assert regions[2].name == self.regions['netherlands'].name
+        assert regions[3].name == self.regions['france'].name
+        assert regions[4].name == self.regions['equador'].name

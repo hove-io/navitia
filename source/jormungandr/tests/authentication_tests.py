@@ -249,8 +249,9 @@ class TestIfUserIsNotBlocked(AbstractTestAuthentication):
                 assert self.app.get(request).status_code == status_code
 
 
+# Coverage 'empty_routing_test' is set to free so that 'main_routing_test' is chosen as best coverage
 @dataset(
-    {"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
+    {"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {'is_free': True}},
     global_config={'activate_bragi': True},
 )
 class TestOverlappingAuthentication(AbstractTestAuthentication):
