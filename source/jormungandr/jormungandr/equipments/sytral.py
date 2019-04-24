@@ -39,17 +39,17 @@ import logging
 import jmespath
 import requests as requests
 
-SYTRAL_TYPE_PREFIX = "TCL_"
-
 
 class SytralProvider(object):
     """
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, **kwargs):
+    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENCEUR"], **kwargs):
+        self.logger = logging.getLogger(__name__)
         self.url = url
         self.timeout = timeout
+        self.code_types = code_types
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_SYTRAL_FAIL']),
             reset_timeout=kwargs.get(
@@ -57,14 +57,23 @@ class SytralProvider(object):
             ),
         )
 
-    def get_informations(self, stop_points_list):
+    def get_informations_for_journeys(self, stop_points_list):
         """
         Get equipment information from Sytral webservice and update response accordingly
         """
         data = self._call_webservice()
 
         if data:
-            return self._process_data(data, stop_points_list)
+            return self._process_for_journeys(data, stop_points_list)
+
+    def get_informations_for_equipment_reports(self, stop_area_equipments_list):
+        """
+        Get equipment information from Sytral webservice and update response accordingly
+        """
+        data = self._call_webservice()
+
+        if data:
+            return self._process_for_equipment_reports(data, stop_area_equipments_list)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYTRAL'), 30))
     def _call_webservice(self):
@@ -97,7 +106,41 @@ class SytralProvider(object):
         params.update(kwargs)
         new_relic.record_custom_event('parking_status', params)
 
-    def _process_data(self, data, stop_points_list):
+    def _fill_equipment_details(self, equipment_form_web_service, equipment_details):
+        equipment_details.id = equipment_form_web_service['id']
+        equipment_details.name = equipment_form_web_service['name']
+        equipment_details.embedded_type = type_pb2.EquipmentDetails.EquipmentType.Value(
+            equipment_form_web_service['embedded_type']
+        )
+        equipment_details.current_availability.status = type_pb2.CurrentAvailability.EquipmentStatus.Value(
+            equipment_form_web_service['current_availaibity']['status']
+        )
+        current_availaibity = equipment_form_web_service['current_availaibity']
+        for period in current_availaibity['periods']:
+            p = equipment_details.current_availability.periods.add()
+            p.begin = date_to_timestamp(parser.parse(period['begin']))
+            p.end = date_to_timestamp(parser.parse(period['end']))
+        equipment_details.current_availability.updated_at = current_availaibity['updated_at']
+        equipment_details.current_availability.cause.label = current_availaibity['cause']['label']
+        equipment_details.current_availability.effect.label = current_availaibity['effect']['label']
+
+    def _fill_default_equipment_details(self, id, embedded_type, equipment_details):
+        equipment_details.id = id
+        equipment_details.embedded_type = type_pb2.EquipmentDetails.EquipmentType.Value(embedded_type)
+        equipment_details.current_availability.status = type_pb2.CurrentAvailability.EquipmentStatus.Value(
+            "unknown"
+        )
+
+    def _embedded_type(self, embedded_type_sytral):
+        if embedded_type_sytral == "TCL_ASCENCEUR":
+            return "elevator"
+        elif embedded_type_sytral == "TCL_ESCALIER":
+            return "escalator"
+        else:
+            self.logger.exception('impossible to use {} sytral type'.format(embedded_type_sytral))
+            return ""
+
+    def _process_for_journeys(self, data, stop_points_list):
         """
         For each stop point within journeys response, the structure 'equipment_details' is updated if the corresponding code is present
         :param data: equipments data received from the webservice
@@ -105,26 +148,42 @@ class SytralProvider(object):
         """
         for st in stop_points_list:
             for code in st.codes:
-                if SYTRAL_TYPE_PREFIX in code.type:
+                if code.type in self.code_types:
                     equipments_list = jmespath.search("equipments_details[?id=='{}']".format(code.value), data)
 
                     if equipments_list:
                         equipment = equipments_list[0]
                         # Fill PB
-                        details = st.equipment_details.add()
-                        details.id = equipment['id']
-                        details.name = equipment['name']
-                        details.embedded_type = type_pb2.EquipmentDetails.EquipmentType.Value(
-                            '{}'.format(equipment['embedded_type'])
+                        equipment_details = st.equipment_details.add()
+                        self._fill_equipment_details(
+                            equipment_form_web_service=equipment, equipment_details=equipment_details
                         )
-                        details.current_availability.status = type_pb2.CurrentAvailability.EquipmentStatus.Value(
-                            '{}'.format(equipment['current_availaibity']['status'])
+
+    def _process_for_equipment_reports(self, data, stop_area_equipments_list):
+        """
+        For each stop_area_equipments within equipment_reports response, the structure 'equipment_details' is updated if the corresponding code is present
+        :param data: equipments data received from the webservice
+        :param stop_area_equipments_list: list of stop_area_equipments from the protobuf response
+        """
+        for sae in stop_area_equipments_list:
+            for st in sae.stop_area.stop_points:
+                for code in st.codes:
+                    if code.type in self.code_types:
+                        equipments_list = jmespath.search(
+                            "equipments_details[?id=='{}']".format(code.value), data
                         )
-                        current_availaibity = equipment['current_availaibity']
-                        for period in current_availaibity['periods']:
-                            p = details.current_availability.periods.add()
-                            p.begin = date_to_timestamp(parser.parse(period['begin']))
-                            p.end = date_to_timestamp(parser.parse(period['end']))
-                        details.current_availability.updated_at = current_availaibity['updated_at']
-                        details.current_availability.cause.label = current_availaibity['cause']['label']
-                        details.current_availability.effect.label = current_availaibity['effect']['label']
+
+                        if equipments_list:
+                            equipment = equipments_list[0]
+                            # Fill PB
+                            equipment_details = sae.equipment_details.add()
+                            self._fill_equipment_details(
+                                equipment_form_web_service=equipment, equipment_details=equipment_details
+                            )
+                        else:
+                            equipment_details = sae.equipment_details.add()
+                            self._fill_default_equipment_details(
+                                id=code.value,
+                                embedded_type=self._embedded_type(code.type),
+                                equipment_details=equipment_details,
+                            )
