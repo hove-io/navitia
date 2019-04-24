@@ -411,51 +411,6 @@ class TestJourneysRidesharingDistributed(
         pass
 
 
-@dataset(
-    {
-        "main_routing_test": {
-            "scenario": "distributed",
-            "instance_config": {
-                "street_network": [
-                    {"modes": ["ridesharing", "taxi"], "class": "jormungandr.street_network.tests.MockKraken"}
-                ]
-            },
-        }
-    }
-)
-class TestJourneysTaxiAndRidesharingDistributed(NewDefaultScenarioAbstractTestFixture):
-    def test_taxi_and_ridesharing_first_section_mode(self):
-        sn_service = i_manager.instances['main_routing_test'].street_network_services[0]
-        sn_service.direct_path_call_count = 0
-        sn_service.routing_matrix_call_count = 0
-
-        query = (
-            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"
-            "first_section_mode[]=ridesharing&first_section_mode[]=taxi&debug=true"
-        )
-        response = self.query_region(query)
-
-        direct_path_nb = len([j for j in response.get('journeys', []) if 'non_pt' in j.get('tags', [])])
-        assert direct_path_nb == 2
-
-        taxi_direct = next((j for j in response.get('journeys', []) if 'taxi' in j.get('tags', [])), None)
-        assert taxi_direct.get('durations', {}).get("taxi") == 13
-        assert taxi_direct.get('durations', {}).get("car") == 0
-        assert taxi_direct.get('durations', {}).get("ridesharing") == 0
-
-        rs_direct = next((j for j in response.get('journeys', []) if 'ridesharing' in j.get('tags', [])), None)
-        assert rs_direct.get('durations', {}).get("taxi") == 0
-        assert rs_direct.get('durations', {}).get("car") == 0
-        assert rs_direct.get('durations', {}).get("ridesharing") == 13
-
-        # we've have found two direct path, since taxi and ridesharing are technically same thing for kraken
-        # kraken should have been called only once
-        assert sn_service.direct_path_call_count == 1
-
-        # in principle, the matrix should be called only once too, but this is not possible right now
-        assert sn_service.routing_matrix_call_count == 2
-
-
 @dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
     def test_first_section_mode_taxi(self):
@@ -519,7 +474,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         assert taxi_fallback.get('departure_date_time') == '20120614T075355'
         assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
 
-        assert taxi_fallback.get('durations', {}).get('taxi') == 425
+        assert taxi_fallback.get('durations', {}).get('taxi') == 125
         assert taxi_fallback.get('durations', {}).get('walking') == 80
 
         assert taxi_fallback.get('distances', {}).get('taxi') == 18

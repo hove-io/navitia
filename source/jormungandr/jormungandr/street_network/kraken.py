@@ -181,31 +181,4 @@ class Kraken(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
-        if mode in (fm.FallbackModes.ridesharing.name, fm.FallbackModes.taxi.name):
-            mode = 'car_no_park'
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
-
-    def post_processing(
-        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-    ):
-        if not response:
-            return response
-
-        copy_response = response_pb2.Response()
-        copy_response.CopyFrom(response)
-
-        if copy_response and mode in (fm.FallbackModes.taxi.name, fm.FallbackModes.ridesharing.name):
-            for journey in copy_response.journeys:
-                for section in journey.sections:
-                    section.street_network.mode = fm.FallbackModes[mode].value
-                    if mode == fm.FallbackModes.ridesharing.name:
-                        journey.durations.ridesharing += section.duration
-                        journey.distances.ridesharing += section.length
-
-                    if mode == fm.FallbackModes.taxi.name:
-                        journey.durations.taxi += section.duration
-                        journey.distances.taxi += section.length
-
-                    journey.durations.car -= section.duration
-                    journey.distances.car -= section.length
-        return copy_response

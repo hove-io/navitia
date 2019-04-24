@@ -74,26 +74,6 @@ class StreetNetworkPath:
 
         self._async_request()
 
-    @property
-    def orig_obj(self):
-        return self._orig_obj
-
-    @property
-    def dest_obj(self):
-        return self._dest_obj
-
-    @property
-    def mode(self):
-        return self._mode
-
-    @property
-    def request(self):
-        return self._request
-
-    @property
-    def path_type(self):
-        return self._path_type
-
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
         try:
@@ -148,12 +128,11 @@ class StreetNetworkPathPool:
     According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
 
-    def __init__(self, future_manager, instance, request):
+    def __init__(self, future_manager, instance):
         self._future_manager = future_manager
         self._instance = instance
         self._value = {}
-        self._direct_paths_by_mode = {}
-        self._request = request
+        self._direct_paths_future_by_mode = {}
 
     def add_async_request(
         self, requested_orig_obj, requested_dest_obj, mode, period_extremity, request, streetnetwork_path_type
@@ -183,44 +162,14 @@ class StreetNetworkPathPool:
             )
 
         if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
-            self._direct_paths_by_mode[mode] = path
+            self._direct_paths_future_by_mode[mode] = path
 
     def get_all_direct_paths(self):
         """
         Get all streetnetwork path of DIRECT type in a wrapper
-        :return: a wrapper class of a dict mode vs dp
+        :return: a dict of mode vs direct_path future
         """
-
-        class _InnerClass(object):
-            """
-            This class is a wrapper of the dictionary of mode vs direct path.
-            The goal of this wrapper is to be able to call the post_processing of specified street_network
-            when getting the direct path.
-
-            Using this wrapper won't break the existing code too much.
-            """
-
-            def __init__(self, direct_paths_by_mode, instance, request):
-                self._direct_paths_by_mode = direct_paths_by_mode
-                self._instance = instance
-                self._request = request
-
-            def wait_and_get(self, mode):
-                streetnetwork_service = self._instance.get_street_network(mode, self._request)
-                dp_future = self._direct_paths_by_mode.get(mode)
-                if not dp_future:
-                    return dp_future
-
-                return streetnetwork_service.post_processing(
-                    dp_future.wait_and_get(),
-                    dp_future.orig_obj,
-                    dp_future.dest_obj,
-                    mode,
-                    dp_future.request,
-                    dp_future.path_type,
-                )
-
-        return _InnerClass(self._direct_paths_by_mode, self._instance, self._request)
+        return self._direct_paths_future_by_mode
 
     def has_valid_direct_paths(self):
         for k in self._value:
@@ -243,15 +192,4 @@ class StreetNetworkPathPool:
             else None
         )
         dp_future = self._value.get(key)
-        return (
-            streetnetwork_service.post_processing(
-                dp_future.wait_and_get(),
-                dp_future.orig_obj,
-                dp_future.dest_obj,
-                mode,
-                dp_future.request,
-                dp_future.path_type,
-            )
-            if dp_future
-            else None
-        )
+        return dp_future.wait_and_get() if dp_future else None

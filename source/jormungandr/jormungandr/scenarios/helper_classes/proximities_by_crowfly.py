@@ -143,7 +143,7 @@ class ProximitiesByCrowflyPool:
 
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.wait_and_get(mode)
+                self._request, mode, self._direct_paths_by_mode.get(mode)
             )
             p = ProximitiesByCrowfly(
                 future_manager=self._future_manager,

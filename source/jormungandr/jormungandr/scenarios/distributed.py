@@ -107,7 +107,7 @@ class Distributed(object):
             context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
-                future_manager=future_manager, instance=instance, request=request
+                future_manager=future_manager, instance=instance
             )
 
             period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
@@ -222,7 +222,7 @@ class Distributed(object):
         res = []
         if context.partial_response_is_empty:
             for mode in requested_dep_modes:
-                dp = context.direct_paths_by_mode.wait_and_get(mode)
+                dp = context.direct_paths_by_mode.get(mode).wait_and_get()
                 if getattr(dp, "journeys", None):
                     res.append(dp)
 
@@ -246,9 +246,7 @@ class Distributed(object):
         Fallbacks will only be computed for journeys not tagged as 'to_delete'
         """
 
-        streetnetwork_path_pool = StreetNetworkPathPool(
-            future_manager=future_manager, instance=instance, request=request
-        )
+        streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
 
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
         wait_and_complete_pt_journey(

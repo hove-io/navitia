@@ -346,8 +346,3 @@ class Valhalla(AbstractStreetNetworkService):
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
-
-    def post_processing(
-        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-    ):
-        return response

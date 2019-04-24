@@ -130,10 +130,3 @@ class Asgard(Kraken):
             self.logger.exception('Asgard routing error')
             self.record_external_failure(str(e))
             raise
-
-    def post_processing(
-        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-    ):
-        return super(Asgard, self).post_processing(
-            response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-        )

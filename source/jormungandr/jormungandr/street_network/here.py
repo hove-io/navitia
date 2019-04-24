@@ -339,8 +339,3 @@ class Here(AbstractStreetNetworkService):
 
     def feed_publisher(self):
         return self._feed_publisher
-
-    def post_processing(
-        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-    ):
-        return response

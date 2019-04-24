@@ -327,17 +327,18 @@ def _build_fallback(
     return pt_journey
 
 
-def get_max_fallback_duration(request, mode, dp):
+def get_max_fallback_duration(request, mode, dp_future):
     """
     By knowing the duration of direct path, we can limit the max duration for proximities by crowfly and fallback
     durations
     :param request:
     :param mode:
-    :param dp: proto response
+    :param dp: direct_path future
     :return:  max_fallback_duration
     """
     # 30 minutes by default
     max_duration = request.get('max_{}_duration_to_pt'.format(mode), 1800)
+    dp = dp_future.wait_and_get() if dp_future else None
     dp_duration = dp.journeys[0].durations.total if getattr(dp, 'journeys', None) else max_duration
     return min(max_duration, dp_duration)
 

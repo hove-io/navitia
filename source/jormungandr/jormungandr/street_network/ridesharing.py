@@ -75,6 +75,14 @@ class Ridesharing(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
         )
 
+        for journey in response.journeys:
+            for section in journey.sections:
+                section.street_network.mode = fm.FallbackModes[mode].value
+                journey.durations.ridesharing += section.duration
+                journey.distances.ridesharing += section.length
+                journey.durations.car -= section.duration
+                journey.distances.car -= section.length
+
         return response
 
     def get_street_network_routing_matrix(
@@ -101,10 +109,3 @@ class Ridesharing(AbstractStreetNetworkService):
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
         return self.street_network.make_path_key(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
-
-    def post_processing(
-        self, response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-    ):
-        return self.street_network.post_processing(
-            response, pt_object_origin, pt_object_destination, mode, request, direct_path_type
-        )

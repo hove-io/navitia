@@ -351,6 +351,3 @@ class Geovelo(AbstractStreetNetworkService):
 
     def feed_publisher(self):
         return self._feed_publisher
-
-    def post_processing(self, response, mode):
-        return response
