@@ -33,13 +33,13 @@ import copy
 
 import jormungandr.street_network.utils
 from jormungandr.exceptions import TechnicalError
-from navitiacommon import request_pb2, type_pb2, response_pb2
+from navitiacommon import request_pb2, type_pb2
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
     StreetNetworkPathKey,
 )
-from jormungandr import utils, fallback_modes as fm
+from jormungandr import utils
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -84,7 +84,6 @@ class Kraken(AbstractStreetNetworkService):
         )
 
         response = self.instance.send_and_receive(req)
-
         if should_invert_journey:
             return self._reverse_journeys(response)
 

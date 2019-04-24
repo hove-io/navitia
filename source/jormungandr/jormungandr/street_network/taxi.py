@@ -41,11 +41,9 @@ class Taxi(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.modes = modes or [fm.FallbackModes.taxi.name]
-
         assert list(self.modes) == [fm.FallbackModes.taxi.name], (
             'Class: ' + str(self.__class__) + ' can only be used for taxi'
         )
-
         self.sn_system_id = id or 'taxi'
         config = kwargs.get('street_network', {})
         if 'service_url' not in config['args']:

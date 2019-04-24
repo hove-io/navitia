@@ -146,9 +146,7 @@ class StreetNetworkPathPool:
             if streetnetwork_service
             else None
         )
-
         path = self._value.get(key)
-
         if not path:
             path = self._value[key] = StreetNetworkPath(
                 self._future_manager,
@@ -160,13 +158,11 @@ class StreetNetworkPathPool:
                 request,
                 streetnetwork_path_type,
             )
-
         if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
             self._direct_paths_future_by_mode[mode] = path
 
     def get_all_direct_paths(self):
         """
-        Get all streetnetwork path of DIRECT type in a wrapper
         :return: a dict of mode vs direct_path future
         """
         return self._direct_paths_future_by_mode
