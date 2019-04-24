@@ -56,6 +56,7 @@ def equipments_provider_manager_env_test():
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
     assert manager._equipment_providers_legacy.keys()[0] == 'sytral'
+    assert manager._get_providers() == {'sytral': 'Provider'}
 
     # Provider already created
     # No new provider added in providers list
