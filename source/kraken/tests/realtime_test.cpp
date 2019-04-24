@@ -2695,10 +2695,22 @@ struct AddTripDataset {
     std::string dataset_uri;
 };
 
-BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDataset) {
+BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode_network, AddTripDataset) {
     auto& pt_data = *b.data->pt_data;
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
 
     const std::string network_id = "network:additional_service";
     auto it_network = pt_data.networks_map.find(network_id);
@@ -2706,10 +2718,10 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
     const std::string cm_id = "commercial_mode:additional_service";
     auto it_cm = pt_data.commercial_modes_map.find(cm_id);
     BOOST_CHECK(it_cm == pt_data.commercial_modes_map.end());
-    const std::string line_id = "line:additional_service";
+    const std::string line_id = "line:A_F";
     auto it_line = pt_data.lines_map.find(line_id);
     BOOST_CHECK(it_line == pt_data.lines_map.end());
-    const std::string route_id = "route:additional_service";
+    const std::string route_id = "route:A_F";
     auto it_route = pt_data.routes_map.find(route_id);
     BOOST_CHECK(it_route == pt_data.routes_map.end());
 
@@ -2736,6 +2748,13 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
     it_route = pt_data.routes_map.find(route_id);
     BOOST_REQUIRE(it_route != pt_data.routes_map.end());
     const nt::Route* route = it_route->second;
+    const std::string sa_id = "F";
+    auto it_sa = pt_data.stop_areas_map.find(sa_id);
+    const nt::StopArea* sa = it_sa->second;
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "forward");
+    BOOST_CHECK_EQUAL(route->destination, sa);
 
     // check links
     BOOST_CHECK_EQUAL(network->line_list.front(), line);
@@ -2760,13 +2779,63 @@ BOOST_FIXTURE_TEST_CASE(add_new_route_commercial_mode_network_line, AddTripDatas
     // check names
     BOOST_CHECK_EQUAL(network->name, "additional service");
     BOOST_CHECK_EQUAL(cm->name, "additional service");
-    BOOST_CHECK_EQUAL(line->name, "additional service");
-    BOOST_CHECK_EQUAL(route->name, "additional service");
+    BOOST_CHECK_EQUAL(line->name, "A - F");
+    BOOST_CHECK_EQUAL(route->name, "A - F");
 
-    BOOST_CHECK(route->destination == nullptr);  // this will change, but it's not mandatory to have a destination
+    // Verify that a journey from stop_point:A to stop_point:F exists
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:F");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+
+    // Update the trip recently added with destination F replaced by J
+    new_trip = ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                               {
+                                                   RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                                   RTStopTime("stop_point:F", "20190101T0900"_pts).skipped(),
+                                                   RTStopTime("stop_point:J", "20190101T0900"_pts).added(),
+                                               },
+                                               transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE,
+                                               comp_uri, phy_mode_uri);
+
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+
+    it_network = pt_data.networks_map.find(network_id);
+    BOOST_REQUIRE(it_network != pt_data.networks_map.end());
+    network = it_network->second;
+    it_cm = pt_data.commercial_modes_map.find(cm_id);
+    BOOST_REQUIRE(it_cm != pt_data.commercial_modes_map.end());
+    cm = it_cm->second;
+    it_line = pt_data.lines_map.find(line_id);
+    BOOST_REQUIRE(it_line != pt_data.lines_map.end());
+    line = it_line->second;
+    it_route = pt_data.routes_map.find(route_id);
+    BOOST_REQUIRE(it_route != pt_data.routes_map.end());
+    route = it_route->second;
+
+    // check uris
+    BOOST_CHECK_EQUAL(network->uri, network_id);
+    BOOST_CHECK_EQUAL(cm->uri, cm_id);
+    BOOST_CHECK_EQUAL(line->uri, line_id);
+    BOOST_CHECK_EQUAL(route->uri, route_id);
+
+    // check names
+    BOOST_CHECK_EQUAL(network->name, "additional service");
+    BOOST_CHECK_EQUAL(cm->name, "additional service");
+    BOOST_CHECK_EQUAL(line->name, "A - F");
+    BOOST_CHECK_EQUAL(route->name, "A - F");
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "forward");
+    BOOST_CHECK_EQUAL(route->destination, sa);
+
+    // Verify that a journey from stop_point:A to stop_point:J exists
+    res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
 }
 
-BOOST_FIXTURE_TEST_CASE(add_new_trip, AddTripDataset) {
+BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     using year = navitia::type::ValidityPattern::year_bitset;
     auto& pt_data = *b.data->pt_data;
     navitia::routing::RAPTOR raptor(*(b.data));
