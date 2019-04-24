@@ -70,13 +70,12 @@ class Taxi(AbstractStreetNetworkService):
             return response
 
         for journey in response.journeys:
+            journey.durations.taxi += journey.durations.car
+            journey.distances.taxi += journey.distances.car
+            journey.durations.car = 0
+            journey.distances.car = 0
             for section in journey.sections:
                 section.street_network.mode = fm.FallbackModes[mode].value
-
-                journey.durations.taxi += section.duration
-                journey.distances.taxi += section.length
-                journey.durations.car -= section.duration
-                journey.distances.car -= section.length
 
         if direct_path_type != StreetNetworkPathType.DIRECT:
             self._add_additional_section_in_fallback(
