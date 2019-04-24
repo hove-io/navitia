@@ -36,10 +36,6 @@ from navitiacommon import response_pb2
 
 
 class Ridesharing(AbstractStreetNetworkService):
-    """
-    TODO:
-    """
-
     def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
 
