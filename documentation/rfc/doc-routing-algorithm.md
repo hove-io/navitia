@@ -131,16 +131,16 @@ The second pass find 2 stating candidates: from A at 7:50 with 1 connection, and
 
 ### Solution reader
 
-The goal
+[TODO] The goal
 
-The objectives
+[TODO] The objectives
 
-The search space
+[TODO] The search space
 
-The branching scheme
+[TODO] The branching scheme
 
 The parameter `walking_transfer_penalty` has been added to give an additional walking cost felt when one must do an additional connection.
-So increasing that parameter (default is 120s) would favor walking a bit more to avoid a connection. It does not impact anything else, nor is it reported in the final journey.
+So increasing that parameter (default is `120` s) would favor walking a bit more to avoid a connection. It does not impact anything else, nor is it reported in the final journey.
 
 ### Advantages and drawbacks
 
@@ -152,7 +152,7 @@ Advantages:
 Drawbacks:
 * Not exact walking objective:  
   The first pass does not optimize walking. This can lead to situations where the first pass removes options that would be valid in term of walking optimization.  
-  The second pass is also bound by the `max_extra_second_pass` parameter (default to `0`) which can lead to suboptimal journeys for the walking part.
+  The second pass is also bound by the `max_extra_second_pass` parameter (default to `0`) which can lead to sub-optimal journeys for the walking part.
 * Difficulty to add objectives
 * RAPTOR variants are quite complex and not really combinable
 
@@ -160,7 +160,7 @@ Drawbacks:
 
 **Walking issue impacting the _start_ of the journey**  
 By default, second passes only take walking into consideration at the arrival.
-It is possible to improve that by increasing the `_max_extra_second_pass` parameter (passing it to 10 is an acceptable value).
+It is possible to improve that by increasing the `_max_extra_second_pass` parameter (passing it to `10` is an acceptable value).
 
 **Journey with trade-off using unexpected stop_points in terms of walking**  
 This can be related to the first pass removing options that would be valid for the walking minimization.
