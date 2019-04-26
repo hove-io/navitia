@@ -211,7 +211,7 @@ class TestEndPoint(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data={},
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query('/v1/coverage/main_routing_test/equipment_reports', display=True)
         self.check_context(response)

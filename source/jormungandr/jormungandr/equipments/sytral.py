@@ -45,7 +45,7 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENCEUR"], **kwargs):
+    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENSEUR"], **kwargs):
         self.logger = logging.getLogger(__name__)
         self.url = url
         self.timeout = timeout
@@ -132,7 +132,7 @@ class SytralProvider(object):
         )
 
     def _embedded_type(self, embedded_type_sytral):
-        if embedded_type_sytral == "TCL_ASCENCEUR":
+        if embedded_type_sytral == "TCL_ASCENSEUR":
             return "elevator"
         elif embedded_type_sytral == "TCL_ESCALIER":
             return "escalator"

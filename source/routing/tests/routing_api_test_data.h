@@ -493,12 +493,12 @@ struct routing_api_data {
         b.data->pt_data->codes.add(sp, "TCL_ESCALIER", "2");
         b.data->pt_data->codes.add(sp, "TCL_ESCALIER", "3");
         b.data->pt_data->codes.add(sp, "TCL_ESCALIER", "4");
-        b.data->pt_data->codes.add(sp, "TCL_ASCENCEUR", "5");
+        b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "5");
         sp = b.get<nt::StopPoint>("stop_point:stopB");
-        b.data->pt_data->codes.add(sp, "TCL_ASCENCEUR", "6");
-        b.data->pt_data->codes.add(sp, "TCL_ASCENCEUR", "7");
-        b.data->pt_data->codes.add(sp, "TCL_ASCENCEUR", "8");
-        b.data->pt_data->codes.add(sp, "TCL_ASCENCEUR", "9");
+        b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "6");
+        b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "7");
+        b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "8");
+        b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "9");
 
         // Add a main stop area to our admin
         admin->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["stopC"]);

@@ -93,7 +93,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=standard_mock_elevator_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter)
 
@@ -133,7 +133,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=standard_mock_escalator_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter)
 
@@ -173,7 +173,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=standard_mock_mixed_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter)
 
@@ -218,7 +218,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=wrong_mock_with_bad_id_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter)
 
@@ -262,7 +262,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=standard_mock_elevator_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter + default_line_filter)
 
@@ -301,7 +301,7 @@ class TestEquipment(AbstractTestFixture):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
             data=standard_mock_elevator_data,
-            code_types_list=["TCL_ASCENCEUR", "TCL_ESCALIER"],
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
         )
         response = self.query_region('equipment_reports?' + default_date_filter + default_forbidden_uris_filter)
 
