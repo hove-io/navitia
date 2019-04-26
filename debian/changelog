@@ -1,6 +1,22 @@
+navitia2 (2.78.0) unstable; urgency=low
+
+  * Jormun: Merge systral equipment response with Sytral web service  <https://github.com/CanalTP/navitia/pull/2764>
+  * Jormun: Fix 'choose_best_instance' comparator + tests  <https://github.com/CanalTP/navitia/pull/2765>
+  * Jormun: Remove the lowerisation of the equipment provider key  <https://github.com/CanalTP/navitia/pull/2763>
+  * Kraken: Attach vj to a route and line  <https://github.com/CanalTP/navitia/pull/2759>
+  * Jormun: Update taxi distance and duration in distributed mode  <https://github.com/CanalTP/navitia/pull/2752>
+  * Kraken: Equipment details optimisation  <https://github.com/CanalTP/navitia/pull/2755>
+  * Tyr: 'instances' in 'equipments_provider' is nullable  <https://github.com/CanalTP/navitia/pull/2751>
+  * Eitri: psycopg2 2.4.5 can't work with ubuntu 18.04  <https://github.com/CanalTP/navitia/pull/2753>
+  * Kraken: physical mode id in realtime, only impact additional service  <https://github.com/CanalTP/navitia/pull/2748>
+  * Jormun: Adding max_nb_crowfly_by_taxi  <https://github.com/CanalTP/navitia/pull/2741>
+  * Python: Update Jinja2 requirements  <https://github.com/CanalTP/navitia/pull/2750>
+
+ -- Nonifier <olivier.georget@kisio.org>  Fri, 26 Apr 2019 17:04:35 +0100
+
 navitia2 (2.77.1) unstable; urgency=low
 
-  * Jormungandr: no db request at equipment_providers init <https://github.com/CanalTP/navitia/pull/2758> 
+  * Jormungandr: no db request at equipment_providers init <https://github.com/CanalTP/navitia/pull/2758>
 
  -- mbounabi <Mehdi.Bounabi@Kisio.org>  Wed, 17 Apr 2019 14:04:41 +0100
 
