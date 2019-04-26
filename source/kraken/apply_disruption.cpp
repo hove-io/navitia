@@ -186,11 +186,18 @@ static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::
     nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
     nt::CommercialMode* comm_mode =
         pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
-    // TODO: manage line.code when necessary
-    nt::Line* line = pt_data.get_or_create_line("line:additional_service", "additional service", network, comm_mode);
-    // TODO: manage route.direction_type ("0" ?) when necessary
-    //       manage route.destination (StopArea*) when necessary
-    nt::Route* route = pt_data.get_or_create_route("route:additional_service", "additional service", line);
+
+    // We get the first and last stop_area to create route and line
+    const auto& st_depart = impact.aux_info.stop_times.front();
+    const auto& sa_depart = st_depart.stop_time.stop_point->stop_area;
+    const auto& st_arrival = impact.aux_info.stop_times.back();
+    const auto& sa_arrival = st_arrival.stop_time.stop_point->stop_area;
+    std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
+    std::string line_name = sa_depart->name + " - " + sa_arrival->name;
+    std::string route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
+    std::string route_name = sa_depart->name + " - " + sa_arrival->name;
+    nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
+    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
 
     return route;
 }
@@ -269,8 +276,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            // Add physical mode
-            if (!impact->physical_mode_id.empty()) {
+            // Add physical mode:
+            // Use base-VJ's mode if exists,
+            // fallback on impact's mode
+            // last resort is picking physical_modes[0]
+            if (!mvj->get_base_vj().empty()) {
+                vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
+            } else if (!impact->physical_mode_id.empty()) {  // fallback on impact's mode
                 nu::make_map_find(pt_data.physical_modes_map, impact->physical_mode_id)
                     .if_found([&](navitia::type::PhysicalMode* p) {
                         vj->physical_mode = p;
@@ -287,14 +299,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                                            << impact->physical_mode_id);
                     });
             } else {
-                if (!mvj->get_base_vj().empty()) {
-                    vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
-                } else {
-                    // for protection, use the physical_modes[0] instead of creating a new one
-                    vj->physical_mode = pt_data.physical_modes[0];
-                    LOG4CPLUS_WARN(
-                        log, "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
-                }
+                // for protection, use the physical_modes[0] instead of creating a new one
+                vj->physical_mode = pt_data.physical_modes[0];
+                LOG4CPLUS_WARN(log,
+                               "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
             }
 
             // Use the corresponding base stop_time for boarding and alighting duration

@@ -35,12 +35,13 @@ www.navitia.io
 
 #include <string>
 #include <vector>
+#include <set>
 #include <tuple>
 
 namespace navitia {
 namespace equipment {
 
-using StopAreaEquipment = std::tuple<type::StopArea*, std::vector<type::StopPoint*>>;
+using StopAreaEquipment = std::tuple<type::StopArea*, std::set<type::StopPoint*>>;
 using EquipmentReport = std::tuple<type::Line*, std::vector<StopAreaEquipment>>;
 using EquipmentReportList = std::vector<EquipmentReport>;
 using ForbiddenUris = std::vector<std::string>;

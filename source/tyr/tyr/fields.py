@@ -243,7 +243,6 @@ bss_provider_list_fields = {'bss_providers': fields.List(fields.Nested(bss_provi
 
 equipment_provider_fields = {
     'id': fields.Raw,
-    'instances': fields.List(fields.String),
     'klass': fields.Raw,
     'args': fields.Raw,
     'created_at': FieldDate,

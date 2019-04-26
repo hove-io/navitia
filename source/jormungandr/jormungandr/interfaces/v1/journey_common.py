@@ -28,14 +28,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager, fallback_modes
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
-from flask_restful import reqparse, abort
+from flask_restful import abort
 import logging
 from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key
@@ -66,6 +66,15 @@ class DatetimeRepresents(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str, metadata={'enum': ['arrival', 'departure'], 'default': 'departure'})
+
+
+def sort_regions(regions_list):
+    """
+    Sort the regions according to the instances_comparator (priority > is_free=False > is_free=True)
+    :param regions_list: possible regions for the journeys request
+    :return: sorted list according to the comparator
+    """
+    return sorted(regions_list, key=cmp_to_key(instances_comparator))
 
 
 def compute_regions(args):
@@ -112,13 +121,12 @@ def compute_regions(args):
 
     sorted_regions = list(possible_regions)
 
-    regions = sorted(sorted_regions, key=cmp_to_key(instances_comparator))
+    regions = sort_regions(sorted_regions)
 
     return [r.name for r in regions]
 
 
 def compute_possible_region(region, args):
-
     if region:
         region_obj = i_manager.get_region(region)
 

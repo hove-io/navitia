@@ -1,5 +1,5 @@
 GeoAlchemy2==0.2.4
-Jinja2==2.7.2
+Jinja2==2.10.1
 Mako==0.9.1
 MarkupSafe==0.18
 SQLAlchemy==1.0.4

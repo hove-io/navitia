@@ -268,6 +268,8 @@ class V1Routing(AModule):
             coord + 'equipment_reports',
             region + '<uri:uri>/equipment_reports',
             coord + '<uri:uri>/equipment_reports',
+            '/coord/' + lon_lat + 'equipment_reports',
+            '/coords/' + lon_lat + 'equipment_reports',
             endpoint='equipment_reports',
         )
 

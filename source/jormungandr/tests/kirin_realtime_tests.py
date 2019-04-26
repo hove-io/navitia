@@ -1545,7 +1545,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert 'vehicle_journeys' not in response
 
         # Check that no additional line exists
-        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:additional_service', dt='20120614T080000')
+        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:stopC_stopB', dt='20120614T080000')
         response, status = self.query_region(line_query, check=False)
         assert status == 404
         assert 'lines' not in response
@@ -1581,9 +1581,9 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
         assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
 
-        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
+        # Check that no stop_schedule exist on line:stopC_stopB and stop_point stop_point:stopC
         ss_on_line_query = (
-            "stop_points/stop_point:stopC/lines/line:additional_service/"
+            "stop_points/stop_point:stopC/lines/line:stopC_stopB/"
             "stop_schedules?_current_datetime=20120614T080000"
         )
         stop_schedules, status = self.query_region(ss_on_line_query + '&data_freshness=realtime', check=False)
@@ -1654,8 +1654,8 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len(response['pt_objects']) == 4
         assert len([o for o in response['pt_objects'] if o['id'] == 'network:additional_service']) == 1
         assert len([o for o in response['pt_objects'] if o['id'] == 'commercial_mode:additional_service']) == 1
-        assert len([o for o in response['pt_objects'] if o['id'] == 'line:additional_service']) == 1
-        assert len([o for o in response['pt_objects'] if o['id'] == 'route:additional_service']) == 1
+        assert len([o for o in response['pt_objects'] if o['id'] == 'line:stopC_stopB']) == 1
+        assert len([o for o in response['pt_objects'] if o['id'] == 'route:stopC_stopB']) == 1
 
         # Check that the vehicle_journey has been created
         response = self.query_region(vj_query)
@@ -1664,12 +1664,16 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert response['vehicle_journeys'][0]['disruptions'][0]['id'] == 'new_trip'
         assert len(response['vehicle_journeys'][0]['stop_times']) == 2
 
-        # Check that the new line has been created
+        # Check that the new line has been created with necessary information
         response = self.query_region(line_query)
         assert len(response['lines']) == 1
-        assert response['lines'][0]['name'] == 'additional service'
+        assert response['lines'][0]['name'] == 'stopC - stopB'
         assert response['lines'][0]['network']['id'] == 'network:additional_service'
         assert response['lines'][0]['commercial_mode']['id'] == 'commercial_mode:additional_service'
+        assert response['lines'][0]['routes'][0]['id'] == 'route:stopC_stopB'
+        assert response['lines'][0]['routes'][0]['name'] == 'stopC - stopB'
+        assert response['lines'][0]['routes'][0]['direction']['id'] == 'stopB'
+        assert response['lines'][0]['routes'][0]['direction_type'] == 'forward'
 
         # Check that objects created are linked in PT-Ref filter
         response = self.query_region(vj_filter_query)
@@ -1688,13 +1692,13 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         departures = self.query_region(departure_query + '&data_freshness=realtime')
         assert len(departures['disruptions']) == 1
         assert departures['disruptions'][0]['disruption_uri'] == 'new_trip'
-        assert departures['departures'][0]['display_informations']['name'] == 'additional service'
+        assert departures['departures'][0]['display_informations']['name'] == 'stopC - stopB'
 
-        # Check that stop_schedule on line "line:additional_service" and stop_point stop_point:stopC
+        # Check that stop_schedule on line "line:stopC_stopB" and stop_point stop_point:stopC
         # exists with disruption
         stop_schedules = self.query_region(ss_on_line_query)
         assert len(stop_schedules['stop_schedules']) == 1
-        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'line:additional_service'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'line:stopC_stopB'
         assert len(stop_schedules['disruptions']) == 1
         assert stop_schedules['disruptions'][0]['uri'] == 'new_trip'
         assert len(stop_schedules['stop_schedules'][0]['date_times']) == 1
@@ -1708,7 +1712,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
         assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
         assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
-        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:additional_service'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:stopC_stopB'
         assert len(stop_schedules['stop_schedules'][1]['date_times']) == 0
 
         # Check stop_schedules on stop_point stop_point:stopC for realtime
@@ -1719,7 +1723,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
         assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
         assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
-        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:additional_service'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:stopC_stopB'
         assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
         assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
         assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
@@ -1908,13 +1912,10 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
-        # physical_mode of the newly created vehicle_journey should be that of base vehicle_journey (Tramway)
-        # TODO : Modify kraken to use physical_mode of base vehicle_journey for a trip update even if
-        # a physical_mode is present in GTFS-RT
-        # ticket jira pour la correction : https://jira.kisio.org/browse/NAVP-1284
+        # physical_mode of the newly created vehicle_journey is the base vehicle_journey physical mode (Tramway)
         pt_response = self.query_region('vehicle_journeys/vjA:modified:0:vjA_delayed/physical_modes')
         assert len(pt_response['physical_modes']) == 1
-        assert pt_response['physical_modes'][0]['name'] == 'Bus'
+        assert pt_response['physical_modes'][0]['name'] == 'Tramway'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
@@ -1992,7 +1993,7 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         assert 'vehicle_journeys' not in response
 
         # Check that no additional line exists
-        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:additional_service', dt='20120614T080000')
+        line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:stopC_stopB', dt='20120614T080000')
         response, status = self.query_region(line_query, check=False)
         assert status == 404
         assert 'lines' not in response
@@ -2017,9 +2018,9 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
         departures = self.query_region(departure_query)
         assert len(departures['departures']) == 0
 
-        # Check that no stop_schedule exist on line:additional_service and stop_point stop_point:stopC
+        # Check that no stop_schedule exist on line:stopC_stopB and stop_point stop_point:stopC
         ss_query = (
-            "stop_points/stop_point:stopC/lines/line:additional_service/"
+            "stop_points/stop_point:stopC/lines/line:stopC_stopB/"
             "stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
         stop_schedules, status = self.query_region(ss_query, check=False)
