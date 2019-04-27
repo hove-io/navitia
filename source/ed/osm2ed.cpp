@@ -477,11 +477,12 @@ void OSMCache::build_way_map() {
         }
         double max_lon = max_double, max_lat = max_double, min_lon = max_double, min_lat = max_double;
         std::set<const OSMRelation*> admins;
-        for (auto node : way_it->nodes) {
+        std::unordered_map<const OSMRelation*, int> admin_candidate;
+        for (const auto& node : way_it->nodes) {
             if (!node->admin) {
                 continue;
             }
-            admins.insert(node->admin);
+            admin_candidate[node->admin]++;
             if (!node->is_defined()) {
                 continue;
             }
@@ -489,6 +490,19 @@ void OSMCache::build_way_map() {
             max_lat = max_lat >= max_double ? node->lat() : std::max(max_lat, node->lat());
             min_lon = std::min(min_lon, node->lon());
             min_lat = std::min(min_lat, node->lat());
+        }
+        for (const auto& admin_score : admin_candidate) {
+            // keeping the admins that are associated to at least two nodes
+            if (admin_score.second > 1) {
+                admins.insert(admin_score.first);
+            }
+        }
+        // if there is no admin found, we take all of them
+        // this case will happen when a way with 2 nodes is between two admins
+        if (admins.empty()) {
+            for (const auto& admin_score : admin_candidate) {
+                admins.insert(admin_score.first);
+            }
         }
         way_admin_map[way_it->name][admins].insert(way_it);
         bg::simplify(way_it->ls, way_it->ls, 0.5);
@@ -656,7 +670,7 @@ OSMRelation::OSMRelation(const u_int64_t osm_id,
 }
 
 void OSMRelation::build_geometry(OSMCache& cache) const {
-    for (CanalTP::Reference ref : references) {
+    for (const CanalTP::Reference& ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
