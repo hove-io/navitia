@@ -9,10 +9,8 @@ Create Date: 2015-11-05 13:30:32.460413
 revision = '3e56c7e0a4a4'
 down_revision = '3aaddd5707bd'
 
-from alembic import op, context
+from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.types import Enum
 
 
 def upgrade():
