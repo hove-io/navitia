@@ -38,7 +38,9 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
+from navitiacommon import type_pb2
 import six
+import logging
 
 
 class EquipmentReports(ResourceUri, ResourceUtc):
@@ -50,6 +52,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "count", type=default_count_arg_type, default=25, help="Number of objects per page"
         )
+        parser_get.add_argument("filter", type=six.text_type, default="", help="Filter your objects")
         parser_get.add_argument("start_page", type=int, default=0, help="The current page")
         parser_get.add_argument(
             "forbidden_uris[]",
@@ -68,18 +71,30 @@ class EquipmentReports(ResourceUri, ResourceUtc):
     def options(self, **kwargs):
         return self.api_description(**kwargs)
 
-    def get(self, region=None, lon=None, lat=None, uri=None):
+    def _create_filter_equipment(self, instance):
+        code_types = ",".join(
+            [
+                code
+                for provider in instance.equipment_provider_manager._get_providers().values()
+                for code in provider.code_types
+            ]
+        )
+        if not code_types:
+            abort(404, message='No code type exists into equipment provider')
+        return "stop_point.has_code_type(" + code_types + ")"
+
+    def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
+        instance = i_manager.instances.get(self.region)
 
-        uris = []
-        if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-        args["filter"] = self.get_filter(uris, args)
+        # create filter
+        if args["filter"] != "":
+            args["filter"] += " and " + self._create_filter_equipment(instance)
+        else:
+            args["filter"] = self._create_filter_equipment(instance)
+        logging.getLogger(__name__).debug("equipment provider filter: {}".format(args["filter"]))
 
         response = i_manager.dispatch(args, "equipment_reports", instance_name=self.region)
-
-        return response
+        return instance.equipment_provider_manager.manage_equipments_for_equipment_reports(response)

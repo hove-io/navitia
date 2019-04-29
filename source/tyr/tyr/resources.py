@@ -442,7 +442,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument(
             'priority',
             type=int,
-            help='instance priority',
+            help='instance priority, highest value will be chosen first in instances comparison',
             location=('json', 'values'),
             default=instance.priority,
         )

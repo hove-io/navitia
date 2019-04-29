@@ -28,3 +28,4 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
+from jormungandr.equipments.equipment_provider_manager import EquipmentProviderManager

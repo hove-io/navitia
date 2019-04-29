@@ -547,22 +547,14 @@ BOOST_AUTO_TEST_CASE(code_request) {
 
 BOOST_AUTO_TEST_CASE(code_type_request) {
     ed::builder b("20190101");
-    b.sa("sa_1");
+    b.sa("sa_1")("stop1", {{"code_type_1", {"0", "1"}}});
+    b.sa("sa_1")("stop2", {{"code_type_2", {"0"}}});
+    b.sa("sa_1")("stop3", {{"code_type_1", {"0", "1"}}});
+    b.sa("sa_1")("stop4", {{"code_type_2", {"1"}}});
+
     b.vj("A")("stop1", 8000, 8050)("stop2", 8200, 8250);
     b.vj("B")("stop3", 9000, 9050)("stop4", 9200, 9250);
     b.make();
-
-    // Add codes on stop point
-    const auto* sp = b.get<nt::StopPoint>("stop1");
-    b.data->pt_data->codes.add(sp, "code_type_1", "0");
-    b.data->pt_data->codes.add(sp, "code_type_1", "1");
-    sp = b.get<nt::StopPoint>("stop3");
-    b.data->pt_data->codes.add(sp, "code_type_1", "0");
-    b.data->pt_data->codes.add(sp, "code_type_1", "1");
-    sp = b.get<nt::StopPoint>("stop2");
-    b.data->pt_data->codes.add(sp, "code_type_2", "0");
-    sp = b.get<nt::StopPoint>("stop4");
-    b.data->pt_data->codes.add(sp, "code_type_2", "1");
 
     // Add codes on stop area
     const auto* sa = b.get<nt::StopArea>("sa_1");
@@ -664,6 +656,11 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
 BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
     ed::builder b("201601011T1739");
+    b.sa("sa1")("stop1", {{"code_key", {"stop1 code"}}});
+    b.sa("sa2")("stop2", {{"code_key", {"stop2 code"}}});
+    b.sa("sa3")("stop3", {{"code_key", {"stop3 code", "stoparea3 code"}}});
+    b.sa("sa4")("stop4", {{"code_key", {"stop4 code"}}});
+
     b.vj("A").route("r1")("stop1", "09:00"_t)("stop2", "10:00"_t)("stop3", "11:00"_t);
     b.vj("A").route("r1")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r2")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
@@ -671,12 +668,6 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
     b.vj("B").route("r4")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
 
     b.make();
-
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop1"), "code_key", "stop1 code");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop2"), "code_key", "stop2 code");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop3"), "code_key", "stop3 code");
-    b.data->pt_data->codes.add(b.get<nt::StopArea>("stop3"), "code_key", "stoparea3 code");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop4"), "code_key", "stop4 code");
 
     auto routes_names = [](const std::vector<const nt::Route*> routes) {
         std::set<std::string> res;
@@ -733,4 +724,17 @@ BOOST_AUTO_TEST_CASE(find_path_coord) {
     BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "way.uri=\"42\"", *(b.data)), ptref_error);
     BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "address.uri=\"42\"", *(b.data)), ptref_error);
     BOOST_CHECK_THROW(make_query(nt::Type_e::JourneyPatternPoint, "admin.uri=\"42\"", *(b.data)), ptref_error);
+}
+
+BOOST_AUTO_TEST_CASE(has_code_type_should_take_multiple_values) {
+    ed::builder b("201601011T1739");
+    b.sa("sa1")("stop1", {{"code_1", {"value 1", "value 2"}}});
+    b.sa("sa2")("stop2", {{"code_2", {"value 3", "value 4"}}});
+    b.sa("sa3")("stop3", {{"code_3", {"value 5", "value 6"}}});
+
+    b.make();
+
+    auto indexes = make_query(nt::Type_e::StopArea, "stop_point.has_code_type(code_1, other_code, code_3)", *(b.data));
+    auto stop_areas_uris = get_uris<nt::StopArea>(indexes, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(stop_areas_uris, std::set<std::string>({"sa1", "sa3"}));
 }

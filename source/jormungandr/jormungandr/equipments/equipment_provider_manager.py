@@ -58,14 +58,13 @@ class EquipmentProviderManager(object):
 
         # Init legacy providers from config file
         for provider in self.providers_config:
-            key = provider['key'].lower()
+            key = provider['key']
             if key in self.providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
                 self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
-
-        # Init providers from db
-        self.update_config()
+            else:
+                self.logger.error('impossible to create provider with key: {}'.format(key))
 
     def _init_class(self, cls, arguments):
         """
@@ -125,11 +124,11 @@ class EquipmentProviderManager(object):
                 # If the provider added in db is also defined in legacy, delete it.
                 self._equipment_providers_legacy.pop(provider.id, None)
 
-    def manage_equipments(self, response):
+    def manage_equipments_for_journeys(self, response):
         """
         Call equipment details provider to update response
         :param response: the pb response received
-        :return: response: the pb response updated with equipment details
+        :return: response: the pb journeys response updated with equipment details
         """
 
         def get_from_to_stop_points_of_journeys(journeys):
@@ -150,7 +149,26 @@ class EquipmentProviderManager(object):
         # Update config before calling web-service
         self.update_config()
 
-        for provider in dict(self._equipment_providers, **self._equipment_providers_legacy).values():
-            provider.get_informations(stop_points)
+        for provider in self._get_providers().values():
+            provider.get_informations_for_journeys(stop_points)
 
         return response
+
+    def manage_equipments_for_equipment_reports(self, response):
+        """
+        Call equipment details provider to update response
+        :param response: the pb response received
+        :return: response: the pb equipment_reports response updated with equipment details
+        """
+        stop_area_equipments = (sae for er in response.equipment_reports for sae in er.stop_area_equipments)
+
+        # Update config before calling web-service
+        self.update_config()
+
+        for provider in self._get_providers().values():
+            provider.get_informations_for_equipment_reports(stop_area_equipments)
+
+        return response
+
+    def _get_providers(self):
+        return dict(self._equipment_providers, **self._equipment_providers_legacy)

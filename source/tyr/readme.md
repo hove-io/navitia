@@ -222,7 +222,7 @@ response:
 
 You can also update the config of the instance with a PUT request.
 
-For instance, if you have many instances on the same geographical area, you may want to set the priority property to define which one should be used first when requesting navitia APIs without coverage ($navitia_uri/v1/journeys, $navitia_uri/v1/coord/, etc)
+For instance, if you have many instances on the same geographical area, you may want to set the priority property to define which one should be used first when requesting navitia APIs without coverage ($navitia_uri/v1/journeys, $navitia_uri/v1/coord/, etc), knowing that the highest value will be chosen first when comparing instances.
 ```bash
     curl 'http://localhost:5000/v0/instances/<INSTANCE>?priority=1' -X PUT
 ```

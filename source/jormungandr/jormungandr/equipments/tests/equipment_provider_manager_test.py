@@ -40,7 +40,7 @@ def equipments_provider_manager_env_test():
     Test that equipments providers are created from env when conditions are met
     """
     manager = EquipmentProviderManager(
-        equipment_providers_configuration=[{'key': 'sytral', 'class': 'Sytral.class', 'args': 'Sytral.args'}]
+        equipment_providers_configuration=[{'key': 'SytralRT', 'class': 'Sytral.class', 'args': 'Sytral.args'}]
     )
     manager._init_class = MagicMock(return_value="Provider")
 
@@ -52,14 +52,15 @@ def equipments_provider_manager_env_test():
 
     # Provider name from instance matches config provider
     # Sytral provider added in providers list
-    manager.init_providers(['sytral'])
+    manager.init_providers(['SytralRT'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
-    assert manager._equipment_providers_legacy.keys()[0] == 'sytral'
+    assert manager._equipment_providers_legacy.keys()[0] == 'SytralRT'
+    assert manager._get_providers() == {'SytralRT': 'Provider'}
 
     # Provider already created
     # No new provider added in providers list
-    manager.init_providers(['sytral'])
+    manager.init_providers(['SytralRT'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
 
@@ -100,6 +101,7 @@ def equipments_provider_manager_db_test():
     # 2 providers defined in db but only 1 matches the key defined in coverage
     # -> Only 1 provider created
     manager.init_providers(['sytral'])
+    manager.update_config()
     assert not manager._equipment_providers_legacy
     assert len(manager._equipment_providers) == 1
     assert 'sytral' in manager._equipment_providers
@@ -122,6 +124,7 @@ def equipments_provider_manager_db_test():
     # Long update interval so provider shouldn't be updated
     manager = EquipmentProviderManager([], providers_getter_ok, 600)
     manager.init_providers(['sytral'])
+    manager.update_config()
     assert not manager._equipment_providers_legacy
     assert len(manager._equipment_providers) == 1
     assert 'sytral' in manager._equipment_providers

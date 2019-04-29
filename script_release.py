@@ -355,7 +355,7 @@ class ReleaseManager:
                 )
             )
             print("  git checkout dev")
-            print("  git merge release")
+            print("  git merge --ff release")
             print("  git push {} release dev --tags".format(self.remote_name))
 
             # TODO2 try to script that (put 2 hotfix param, like hotfix init and hotfix publish ?)

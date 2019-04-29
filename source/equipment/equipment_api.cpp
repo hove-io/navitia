@@ -36,25 +36,19 @@ www.navitia.io
 #include <tuple>
 #include <vector>
 #include <string>
+#include <map>
+#include <algorithm>
 
 namespace navitia {
 namespace equipment {
 
 namespace {
-const std::string build_ptref_sa_filter(const std::string& line_uri, const std::string& filter) {
+const std::string build_ptref_line_filter(const std::string& line_uri, const std::string& filter) {
     std::string sa_filter = "line.uri=" + line_uri;
     if (filter.size()) {
         sa_filter += " and (" + filter + ")";
     }
     return sa_filter;
-}
-
-const std::string build_ptref_sp_filter(const std::string& stop_area_uri, const std::string& filter) {
-    std::string sp_filter = "stop_area.uri=" + stop_area_uri;
-    if (filter.size()) {
-        sp_filter += " and (" + filter + ")";
-    }
-    return sp_filter;
 }
 
 void fill_equipment_to_pb(const equipment::EquipmentReportList& reports, PbCreator& pb_creator, int depth) {
@@ -94,18 +88,19 @@ EquipmentReportList EquipmentReports::get_paginated_equipment_report_list() {
 
     EquipmentReportList res;
     for (const auto line : paginated_lines) {
-        const std::string sa_filter = build_ptref_sa_filter(line->uri, filter);
-        const type::Indexes sa_indexes = ptref::make_query(type::Type_e::StopArea, sa_filter, forbidden_uris, data);
-        const auto stop_areas = data.get_data<type::StopArea>(sa_indexes);
+        const std::string line_filter = build_ptref_line_filter(line->uri, filter);
+        const type::Indexes sp_indexes = ptref::make_query(type::Type_e::StopPoint, line_filter, forbidden_uris, data);
+        const auto stop_points = data.get_data<type::StopPoint>(sp_indexes);
 
-        std::vector<equipment::StopAreaEquipment> sa_equipments;
-        for (type::StopArea* sa : stop_areas) {
-            const std::string sp_filter = build_ptref_sp_filter(sa->uri, sa_filter);
-            const type::Indexes sp_indexes =
-                ptref::make_query(type::Type_e::StopPoint, sp_filter, forbidden_uris, data);
-            const auto stop_points = data.get_data<type::StopPoint>(sp_indexes);
-            sa_equipments.emplace_back(sa, stop_points);
+        std::map<type::StopArea*, std::set<type::StopPoint*>> sa_map;
+        for (type::StopPoint* sp : stop_points) {
+            sa_map[sp->stop_area].emplace(sp);
         }
+
+        std::vector<StopAreaEquipment> sa_equipments;
+        std::transform(sa_map.cbegin(), sa_map.cend(), std::back_inserter(sa_equipments),
+                       [](const auto& p) { return StopAreaEquipment(p.first, p.second); });
+
         res.emplace_back(line, sa_equipments);
     }
 

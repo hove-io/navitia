@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from .tests_mechanism import AbstractTestFixture, dataset
+from .tests_mechanism import AbstractTestFixture, dataset, dataset, mock_equipment_providers
 from .check_utils import *
 
 
@@ -208,6 +208,11 @@ class TestEndPoint(AbstractTestFixture):
         assert response['context']['timezone'] == 'UTC'
 
     def test_equipment_reports_context(self):
+        mock_equipment_providers(
+            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
+            data={},
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
+        )
         response = self.query('/v1/coverage/main_routing_test/equipment_reports', display=True)
         self.check_context(response)
         assert response.get("equipment_reports", None) is not None
