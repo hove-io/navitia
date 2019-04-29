@@ -84,9 +84,9 @@ class Kraken(AbstractStreetNetworkService):
         )
 
         response = self.instance.send_and_receive(req)
-
         if should_invert_journey:
             return self._reverse_journeys(response)
+
         return response
 
     def _create_direct_path_request(
