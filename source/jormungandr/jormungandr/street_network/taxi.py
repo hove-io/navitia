@@ -77,6 +77,8 @@ class Taxi(AbstractStreetNetworkService):
             for section in journey.sections:
                 section.street_network.mode = fm.FallbackModes[mode].value
 
+        # We don't add an additional waiting section for direct_path
+        # Only for fallback
         if direct_path_type != StreetNetworkPathType.DIRECT:
             self._add_additional_section_in_fallback(
                 response, pt_object_origin, pt_object_destination, request, direct_path_type
