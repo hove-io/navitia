@@ -693,15 +693,15 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
         // we increment the index to get the vertex in the other graph
         const auto u = pair_coord.first + offset;
 
-        BOOST_FOREACH (edge_t e, boost::out_edges(u, graph)) {
+        BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
             const auto v = target(e, graph);
             if (!is_sn_edge(*this, e)) {
                 continue;
             }
-            const auto edge = graph[e];
+            const auto& edge = graph[e];
             // If there is a geometry for this edge get the projected point to get the distance
             if (edge.geom_idx != nt::invalid_idx) {
-                auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
+                const auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
                 cur_dist = coordinates.approx_sqr_distance(projected, coslat);
             } else {
                 cur_dist = coordinates.approx_project(graph[u].coord, graph[v].coord, coslat).second;
