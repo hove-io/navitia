@@ -51,7 +51,8 @@ def get_tag_name(version):
 
 class ReleaseManager:
     def __init__(self, release_type, remote_name="canalTP"):
-        self.directory = "."
+        self.directory = ".."
+        self.changelog_filename = self.directory + "/debian/changelog"
         self.release_type = release_type
         self.repo = Repo(self.directory)
         self.git = self.repo.git
@@ -243,12 +244,11 @@ class ReleaseManager:
         changelog = self.create_changelog()
 
         f_changelog = None
-        changelog_filename = "debian/changelog"
-        back_filename = changelog_filename + "~"
+        back_filename = self.changelog_filename + "~"
         try:
-            f_changelog = codecs.open(changelog_filename, 'r', 'utf-8')
+            f_changelog = codecs.open(self.changelog_filename, 'r', 'utf-8')
         except IOError:
-            print("Unable to open debian/changelog")
+            print("Unable to open file: " + self.changelog_filename)
             exit(1)
         f_changelogback = codecs.open(back_filename, "w", "utf-8")
 
@@ -269,15 +269,13 @@ class ReleaseManager:
             remove(back_filename)
             exit(2)
 
-        copyfile(back_filename, changelog_filename)
+        copyfile(back_filename, self.changelog_filename)
 
-        self.git.add(changelog_filename)
+        self.git.add(self.changelog_filename)
 
     def get_modified_changelog(self):
         # the changelog might have been modified by the user, so we have to read it again
-        changelog_filename = "debian/changelog"
-
-        f_changelog = codecs.open(changelog_filename, 'r', 'utf-8')
+        f_changelog = codecs.open(self.changelog_filename, 'r', 'utf-8')
 
         lines = []
         nb_version = 0
