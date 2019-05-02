@@ -42,6 +42,7 @@ www.navitia.io
 #include <boost/archive/text_oarchive.hpp>
 #include <string>
 #include <type_traits>
+#include "utils/logger.h"
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }

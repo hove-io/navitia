@@ -40,6 +40,7 @@ www.navitia.io
 #include "utils/functions.h"
 #include "utils/coord_parser.h"
 #include "utils/logger.h"
+#include "type/indexes.h"
 
 // they need to be included for the BOOST_CLASS_EXPORT_GUID macro
 #include <eos_portable_archive/portable_iarchive.hpp>
@@ -801,24 +802,6 @@ Mode_e static_data::modeByCaption(const std::string& mode_str) {
     return it_mode->second;
 }
 
-template <typename T>
-Indexes indexes(const std::vector<T*>& elements) {
-    Indexes result;
-    for (T* element : elements) {
-        result.insert(element->idx);
-    }
-    return result;
-}
-
-template <typename T>
-Indexes indexes(const std::set<T*>& elements) {
-    Indexes result;
-    for (T* element : elements) {
-        result.insert(element->idx);
-    }
-    return result;
-}
-
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
 
 void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
@@ -1145,56 +1128,6 @@ Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
 VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
-
-bool StopPoint::operator<(const StopPoint& other) const {
-    if (this->stop_area != other.stop_area) {
-        return *this->stop_area < *other.stop_area;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopArea:
-            result.insert(stop_area->idx);
-            break;
-        case Type_e::Connection:
-        case Type_e::StopPointConnection:
-            for (const StopPointConnection* stop_cnx : stop_point_connection_list)
-                result.insert(stop_cnx->idx);  // TODO use bulk insert ?
-            break;
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-Indexes StopPointConnection::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            result.insert(this->departure->idx);
-            result.insert(this->destination->idx);
-            break;
-        default:
-            break;
-    }
-    return result;
-}
-bool StopPointConnection::operator<(const StopPointConnection& other) const {
-    if (this->departure != other.departure) {
-        return *this->departure < *other.departure;
-    }
-    return *this->destination < *other.destination;
-}
 
 Indexes Dataset::get(Type_e type, const PT_Data&) const {
     Indexes result;

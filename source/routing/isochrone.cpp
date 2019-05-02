@@ -33,6 +33,7 @@ www.navitia.io
 #include "isochrone.h"
 #include "raptor.h"
 #include "raptor_api.h"
+#include "utils/logger.h"
 
 #include <set>
 #include <assert.h>

@@ -57,6 +57,8 @@ www.navitia.io
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include "type/stop_point.h"
+#include "type/connection.h"
 
 namespace navitia {
 namespace georef {
@@ -88,41 +90,6 @@ int T::*idx_getter() {
     return &T::idx;
 }
 
-struct HasMessages {
-protected:
-    std::vector<boost::weak_ptr<disruption::Impact>> impacts;
-
-public:
-    void add_impact(const boost::shared_ptr<disruption::Impact>& i) { impacts.push_back(i); }
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
-        const boost::posix_time::ptime& current_time,
-        const boost::posix_time::time_period& action_period) const;
-
-    bool has_applicable_message(const boost::posix_time::ptime& current_time,
-                                const boost::posix_time::time_period& action_period,
-                                const Line* line = nullptr) const;
-
-    bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
-        const boost::posix_time::ptime& current_time) const;
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
-
-    void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
-        auto it = std::find_if(impacts.begin(), impacts.end(),
-                               [&impact](const boost::weak_ptr<disruption::Impact>& i) { return i.lock() == impact; });
-        if (it != impacts.end()) {
-            impacts.erase(it);
-        }
-    }
-
-    void clean_weak_impacts();
-};
-
-enum class ConnectionType { StopPoint = 0, StopArea, Walking, VJ, Default, stay_in, undefined };
-
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
 enum class VehicleJourneyType {
     regular = 0,                    // ligne régulière
@@ -135,73 +102,12 @@ enum class VehicleJourneyType {
 
 struct StopArea;
 struct Network;
-struct StopPointConnection;
 struct Line;
 struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
 struct Dataset;
-
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
-
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        // The *_list are not serialized here to avoid stack abuse
-        // during serialization and deserialization.
-        //
-        // stop_point_connection_list is managed by StopPointConnection
-        ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& idx& platform_code& admin_list& _properties&
-            impacts& dataset_list;
-    }
-
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
-};
-
-struct StopPointConnection : public Header, hasProperties {
-    const static Type_e type = Type_e::Connection;
-    StopPoint* departure;
-    StopPoint* destination;
-    int display_duration;
-    int duration;
-    int max_duration;
-    ConnectionType connection_type;
-
-    StopPointConnection()
-        : departure(nullptr), destination(nullptr), display_duration(0), duration(0), max_duration(0) {}
-
-    template <class Archive>
-    void save(Archive& ar, const unsigned int) const {
-        ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
-    }
-    template <class Archive>
-    void load(Archive& ar, const unsigned int) {
-        ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
-
-        // loading manage StopPoint::stop_point_connection_list
-        departure->stop_point_connection_list.push_back(this);
-        destination->stop_point_connection_list.push_back(this);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-    Indexes get(Type_e type, const PT_Data& data) const;
-
-    bool operator<(const StopPointConnection& other) const;
-};
 
 struct ExceptionDate {
     enum class ExceptionType {

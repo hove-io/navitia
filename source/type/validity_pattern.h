@@ -61,9 +61,7 @@ public:
     bool empty() const { return days.none(); }
     std::string str() const;
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& beginning_date& days& idx& uri;
-    }
+    void serialize(Archive& ar, const unsigned int);
 
     bool check(boost::gregorian::date day) const;
     bool check(unsigned int day) const;

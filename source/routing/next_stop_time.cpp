@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "type/type_utils.h"
+#include "utils/logger.h"
 
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>

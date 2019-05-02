@@ -46,6 +46,7 @@ www.navitia.io
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include "utils/logger.h"
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }

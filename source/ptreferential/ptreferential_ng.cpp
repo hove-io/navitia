@@ -32,6 +32,7 @@ www.navitia.io
 #include "ptreferential_utils.h"
 #include "ptreferential.h"
 #include "type/pt_data.h"
+#include "utils/logger.h"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
