@@ -87,7 +87,8 @@ inline transit_realtime::TripUpdate make_trip_update_message(
     const std::string& company_id = "",
     const std::string& physical_mode_id = "",
     const std::string& contributor = "",
-    const std::string& trip_message = "") {
+    const std::string& trip_message = "",
+    const std::string& headsign = "") {
     transit_realtime::TripUpdate trip_update;
     trip_update.SetExtension(kirin::effect, effect);
     auto trip = trip_update.mutable_trip();
@@ -104,6 +105,9 @@ inline transit_realtime::TripUpdate make_trip_update_message(
     }
     if (trip_message != "") {
         trip_update.SetExtension(kirin::trip_message, trip_message);
+    }
+    if (headsign != "") {
+        trip_update.SetExtension(kirin::headsign, headsign);
     }
     // start_date is used to disambiguate trips that are very late, cf:
     // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
