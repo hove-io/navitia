@@ -57,6 +57,19 @@ struct SpeedDistanceCombiner
         return a + b / speed_factor;
     }
 };
+
+struct AstarSpeedDistanceCombiner
+    : public std::binary_function<navitia::time_duration, navitia::time_duration, navitia::time_duration> {
+    /// speed factor compared to the default speed of the transportation mode
+    /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
+    float inv_speed_factor;
+    AstarSpeedDistanceCombiner(float inv_speed_factor_) : inv_speed_factor(inv_speed_factor_) {}
+    inline navitia::time_duration operator()(navitia::time_duration a, navitia::time_duration b) const {
+        if (a == bt::pos_infin || b == bt::pos_infin)
+            return bt::pos_infin;
+        return a + b * inv_speed_factor;
+    }
+};
 template <typename T>
 using map_by_mode = flat_enum_map<type::Mode_e, T>;
 /**
@@ -207,10 +220,12 @@ struct PathFinder {
      * Warning, it modifies the distances and the predecessors
      **/
     template <class Heuristic, class Visitor>
-    void astar(const vertex_t source, const Heuristic& heuristic, const Visitor& visitor) {
+    void astar(const vertex_t source, const vertex_t target, const Heuristic& heuristic, const Visitor& visitor) {
         // Note: the predecessors have been updated in init
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_DEBUG(logger, "astar !!!");
+
+        std::array<georef::vertex_t, 2> vertex{{source, target}};
 
         // Fill color map in white before astar
         std::fill(color.data.get(),
@@ -219,10 +234,10 @@ struct PathFinder {
         // we filter the graph to only use certain mean of transport
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
         boost::astar_shortest_paths_no_init_with_heap(
-            filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), source, &predecessors[0],
+            filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), vertex.cbegin(), vertex.cend(), &predecessors[0],
             &costs[0], &distances[0], boost::get(&Edge::duration, geo_ref.graph),  // weigth map
             std::less<navitia::time_duration>(),
-            std::plus<navitia::time_duration>(), // we add the distance to the cost (not need to multiply with the speed)
+            AstarSpeedDistanceCombiner(1.f / speed_factor),  // we multiply the edge duration by a speed factor
             navitia::seconds(0), heuristic, visitor, color, &index_in_heap_map[0]);
     }
 

@@ -218,8 +218,8 @@ void PathFinder::init(const type::GeographicalCoord& start_coord,
 
     auto const distance_to_dest = start_coord.distance_to(dest_coord);
     auto const duration_to_dest = navitia::seconds(distance_to_dest / (default_speed[mode] * speed_factor));
-    costs[starting_edge[source_e]] = distances[starting_edge[source_e]] + duration_to_dest;
-    costs[starting_edge[target_e]] = distances[starting_edge[target_e]] + duration_to_dest;
+    // costs[starting_edge[source_e]] = duration_to_dest;
+    // costs[starting_edge[target_e]] = duration_to_dest;
 }
 
 void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
@@ -290,7 +290,7 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
     // We start dijkstra from source and target nodes
     try {
 #ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        astar(starting_edge[source_e],
+        astar(starting_edge[source_e], starting_edge[target_e],
               astar_distance_heuristic(geo_ref.graph, destinations.back(), 1. / (default_speed[mode] * speed_factor)),
               astar_distance_or_target_visitor(radius, distances, destinations));
 #else

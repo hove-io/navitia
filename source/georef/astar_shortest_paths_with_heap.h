@@ -48,6 +48,7 @@ template <class Graph,
           class IndexInHeapMap>
 inline void astar_shortest_paths_no_init_with_heap(const Graph& g,
                                                       SourceInputIter s_begin,
+                                                      SourceInputIter s_end,
                                                       PredecessorMap predecessor,
                                                       CostMap cost,
                                                       DistanceMap distance,
@@ -67,7 +68,7 @@ inline void astar_shortest_paths_no_init_with_heap(const Graph& g,
                               WeightMap, ColorMap, Combine, Compare>
         bfs_vis(h, vis, Q, predecessor, cost, distance, weight, color, combine, compare, zero);
 
-    breadth_first_visit(g, s_begin, Q, bfs_vis, color);
+    breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
 }
 
 }  // namespace boost
