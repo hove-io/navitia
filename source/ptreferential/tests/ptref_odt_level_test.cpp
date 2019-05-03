@@ -84,9 +84,8 @@ public:
         std::vector<nt::StopTime> sts;
         sts.emplace_back();
         sts.back().stop_point = data.pt_data->stop_points.at(0);
-        auto vj = mvj->create_discrete_vj(vj_name, nt::RTLevel::Base, nt::ValidityPattern(), current_rt, std::move(sts),
-                                          *data.pt_data);
-        vj->name = vj_name;
+        mvj->create_discrete_vj(vj_name, vj_name, nt::RTLevel::Base, nt::ValidityPattern(), current_rt, std::move(sts),
+                                *data.pt_data);
     }
     void set_estimated(const std::string& vj_name) {
         data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().set_date_time_estimated(true);
