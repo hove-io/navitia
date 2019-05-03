@@ -60,7 +60,6 @@ from tyr.tasks import (
     remove_autocomplete_depot,
     import_autocomplete,
     cities,
-    cosmogony2cities,
     COSMOGONY_REGEXP,
 )
 from tyr.helper import get_instance_logger, save_in_tmp
@@ -1746,6 +1745,7 @@ class Cities(flask_restful.Resource):
         file_name = f.filename
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
         f.save(file_path)
+        logging.info("file received: {}".format(f))
 
         # Create Job and Dataset in db to track progress
         job = models.Job()
@@ -1753,20 +1753,19 @@ class Cities(flask_restful.Resource):
         models.db.session.add(job)
         dataset = models.DataSet()
         dataset.name = file_path
-        dataset.type = 'cities'
         dataset.family_type = 'cities'
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
-        models.db.session.commit()
-
-        logging.info("file: {}".format(f))
 
         if COSMOGONY_REGEXP.match(file_name):
             # it's a cosmogony file, we import it with cosmogony2cities
-            cosmogony2cities.delay(file_path, job.id)
+            dataset.type = exe = 'cosmogony2cities'
         else:
             # we import it the 'old' way, with cities
-            cities.delay(file_path, job.id)
+            dataset.type = exe = 'cities'
+
+        models.db.session.commit()
+        cities.delay(file_path, job.id, exe)
 
         return {'message': 'OK'}, 200
 

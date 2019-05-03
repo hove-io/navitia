@@ -475,50 +475,27 @@ def load_data(instance_id, data_dirs):
 
 
 @celery.task()
-def cities(osm_path, job_id):
-    """ launch cities """
+def cities(file_path, job_id, exe):
+    """ Launch 'cities' or 'cosmogony2cities' """
     job = models.Job.query.get(job_id)
     res = -1
     try:
         res = launch_exec(
-            "cities", ['-i', osm_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']], logging
-        )
-        if res != 0:
-            job.state = 'failed'
-            logging.error('cities failed')
-        else:
-            job.state = 'done'
-
-    except Exception as e:
-        logging.exception('cities exception : {}'.format(e.message))
-
-    models.db.session.commit()
-    logging.info('Import of cities finished')
-    return res
-
-
-@celery.task()
-def cosmogony2cities(cosmogony_path, job_id):
-    """ launch cosmogony2cities """
-    job = models.Job.query.get(job_id)
-    res = -1
-    try:
-        res = launch_exec(
-            "cosmogony2cities",
-            ['--input', cosmogony_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
+            "{}".format(exe),
+            ['-i', file_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
             logging,
         )
         if res != 0:
             job.state = 'failed'
-            logging.error('cosmogony2cities failed')
+            logging.error('{} failed'.format(exe))
         else:
             job.state = 'done'
 
     except Exception as e:
-        logging.exception('cosmogony2cities exception : {}'.format(e.message))
+        logging.exception('{} exception : {}'.format(exe, e.message))
 
     models.db.session.commit()
-    logging.info('Import of cosmogony2cities finished')
+    logging.info('Import of {} finished'.format(exe))
     return res
 
 
