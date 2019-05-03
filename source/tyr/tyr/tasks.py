@@ -475,20 +475,9 @@ def load_data(instance_id, data_dirs):
 
 
 @celery.task()
-def cities(osm_path):
+def cities(osm_path, job_id):
     """ launch cities """
-    # Create Job and Dataset in db to track progress
-    job = models.Job()
-    job.state = 'running'
-    models.db.session.add(job)
-    dataset = models.DataSet()
-    dataset.type = 'cities'
-    dataset.name = osm_path
-    dataset.family_type = 'cities'
-    models.db.session.add(dataset)
-    job.data_sets.append(dataset)
-    models.db.session.commit()
-
+    job = models.Job.query.get(job_id)
     res = -1
     try:
         res = launch_exec(
@@ -509,8 +498,9 @@ def cities(osm_path):
 
 
 @celery.task()
-def cosmogony2cities(cosmogony_path):
+def cosmogony2cities(cosmogony_path, job_id):
     """ launch cosmogony2cities """
+    job = models.Job.query.get(job_id)
     res = -1
     try:
         res = launch_exec(
@@ -519,10 +509,15 @@ def cosmogony2cities(cosmogony_path):
             logging,
         )
         if res != 0:
+            job.state = 'failed'
             logging.error('cosmogony2cities failed')
+        else:
+            job.state = 'done'
+
     except Exception as e:
         logging.exception('cosmogony2cities exception : {}'.format(e.message))
 
+    models.db.session.commit()
     logging.info('Import of cosmogony2cities finished')
     return res
 

@@ -1739,7 +1739,7 @@ class Cities(flask_restful.Resource):
         args = parser.parse_args()
 
         if not args['file']:
-            logging.info("No file provided")
+            logging.error("No file provided")
             return {'message': 'No file provided'}, 400
 
         f = args['file']
@@ -1747,14 +1747,26 @@ class Cities(flask_restful.Resource):
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
         f.save(file_path)
 
+        # Create Job and Dataset in db to track progress
+        job = models.Job()
+        job.state = 'running'
+        models.db.session.add(job)
+        dataset = models.DataSet()
+        dataset.name = file_path
+        dataset.type = 'cities'
+        dataset.family_type = 'cities'
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
+        models.db.session.commit()
+
         logging.info("file: {}".format(f))
 
         if COSMOGONY_REGEXP.match(file_name):
             # it's a cosmogony file, we import it with cosmogony2cities
-            cosmogony2cities.delay(file_path)
+            cosmogony2cities.delay(file_path, job.id)
         else:
             # we import it the 'old' way, with cities
-            cities.delay(file_path)
+            cities.delay(file_path, job.id)
 
         return {'message': 'OK'}, 200
 
