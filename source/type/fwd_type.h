@@ -50,7 +50,7 @@ struct JourneyPattern;
 struct JourneyPatternPoint;
 }  // namespace routing
 namespace type {
-class MetaData;
+struct MetaData;
 
 struct GeographicalCoord;
 struct Line;
