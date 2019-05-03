@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge) {
 }
 
 /// Compute the path from the starting point to the the target geographical coord
-static Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
+static Path compute_path(DijkstraPathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
     ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
 
     auto best_pair = finder.update_path(dest);
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     b.add_geom(b.get("e", "d"), geom);
 
     b.geo_ref.init();
-    PathFinder path_finder(b.geo_ref);
+    DijkstraPathFinder path_finder(b.geo_ref);
 
     nt::LineString expectedGeom;
     expectedGeom.push_back(nt::GeographicalCoord(30, 17, false));
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 
     b.geo_ref.init();
 
-    PathFinder path_finder(b.geo_ref);
+    DijkstraPathFinder path_finder(b.geo_ref);
     path_finder.init({0, 0, true}, Mode_e::Walking, 1);  // starting from a
     Path p = compute_path(path_finder, {4, 4, true});    // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 BOOST_AUTO_TEST_CASE(compute_coord) {
     using namespace navitia::type;
     GraphBuilder b;
-    PathFinder path_finder(b.geo_ref);
+    DijkstraPathFinder path_finder(b.geo_ref);
 
     /*           a+------+b
      *            |      |

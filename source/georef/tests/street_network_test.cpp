@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         }
     }
 
-    PathFinder worker(b.geo_ref);
+    DijkstraPathFinder worker(b.geo_ref);
 
     // we project 2 stations
     type::GeographicalCoord start;

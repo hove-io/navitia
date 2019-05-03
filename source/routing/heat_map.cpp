@@ -35,7 +35,6 @@ www.navitia.io
 #include "raptor_api.h"
 
 #include <vector>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace navitia {
 namespace routing {
@@ -365,7 +364,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
     auto start = init_points.begin();
     auto end = init_points.end();
     float speed_factor = float(speed) / georef::default_speed[mode];
-    auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
+    auto visitor = georef::dijkstra_distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;
     try {
