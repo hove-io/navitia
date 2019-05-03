@@ -1765,7 +1765,11 @@ class Cities(flask_restful.Resource):
             dataset.type = exe = 'cities'
 
         models.db.session.commit()
-        cities.delay(file_path, job.id, exe)
+        try:
+            cities.delay(file_path, job.id, exe)
+        except:
+            job.state = 'failed'
+            models.db.session.commit()
 
         return {'message': 'OK'}, 200
 

@@ -492,6 +492,7 @@ def cities(file_path, job_id, exe):
             job.state = 'done'
 
     except Exception as e:
+        job.state = 'failed'
         logging.exception('{} exception : {}'.format(exe, e.message))
 
     models.db.session.commit()
