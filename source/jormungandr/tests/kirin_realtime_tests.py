@@ -1919,10 +1919,10 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
-class TestKirinUpdateTripWithHeadSign(MockKirinDisruptionsFixture):
-    def test_update_trip_with_headsign(self):
+class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
+    def test_add_trip_with_headsign(self):
         """
-        1. send a disruption with a headsign to update a trip
+        1. send a disruption with a headsign to add a trip
         2. check that headsign is present in journey.section.display_informations
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
