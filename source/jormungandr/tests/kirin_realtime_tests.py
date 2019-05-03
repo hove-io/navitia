@@ -1969,16 +1969,14 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
             )
         )
 
-        # Check that a PT journey exists with first physical_mode in the NTFS('Tramway')
+        # Check that a PT journey exists with trip_headsign in display_informations
         response = self.query_region(C_B_query)
         assert has_the_disruption(response, 'new_trip')
         self.is_valid_journey_response(response, C_B_query)
         assert len(response['journeys']) == 2
         pt_journey = response['journeys'][0]
-        assert 'non_pt_walking' not in pt_journey['tags']
         assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
-        assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
         assert pt_journey['sections'][0]['display_informations']['headsign'] == 'trip_headsign'
 
 
