@@ -802,54 +802,11 @@ Mode_e static_data::modeByCaption(const std::string& mode_str) {
     return it_mode->second;
 }
 
-Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
-
-void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
-    // initialisation of the validity pattern from the active periods and the exceptions
-    for (boost::gregorian::date_period period : this->active_periods) {
-        auto intersection_period = production_period.intersection(period);
-        if (intersection_period.is_null()) {
-            continue;
-        }
-        validity_pattern.add(intersection_period.begin(), intersection_period.end(), week_pattern);
-    }
-    for (navitia::type::ExceptionDate exd : this->exceptions) {
-        if (!production_period.contains(exd.date)) {
-            continue;
-        }
-        if (exd.type == ExceptionDate::ExceptionType::sub) {
-            validity_pattern.remove(exd.date);
-        } else if (exd.type == ExceptionDate::ExceptionType::add) {
-            validity_pattern.add(exd.date);
-        }
-    }
-}
-
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
     if (this->route != other.route) {
         return *this->route < *other.route;
     }
     return this->uri < other.uri;
-}
-
-Indexes Calendar::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line: {
-            // if the method is slow, adding a list of lines in calendar
-            for (Line* line : data.lines) {
-                for (Calendar* cal : line->calendar_list) {
-                    if (cal == this) {
-                        result.insert(line->idx);
-                        break;
-                    }
-                }
-            }
-        } break;
-        default:
-            break;
-    }
-    return result;
 }
 
 bool StopArea::operator<(const StopArea& other) const {
@@ -1152,17 +1109,6 @@ Indexes Contributor::get(Type_e type, const PT_Data&) const {
             break;
     }
     return result;
-}
-
-std::string to_string(ExceptionDate::ExceptionType t) {
-    switch (t) {
-        case ExceptionDate::ExceptionType::add:
-            return "Add";
-        case ExceptionDate::ExceptionType::sub:
-            return "Sub";
-        default:
-            throw navitia::exception("unhandled exception type");
-    }
 }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri, int access_duration)

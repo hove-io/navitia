@@ -59,6 +59,7 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include "type/stop_point.h"
 #include "type/connection.h"
+#include "type/calendar.h"
 
 namespace navitia {
 namespace georef {
@@ -108,52 +109,6 @@ struct Route;
 struct VehicleJourney;
 struct StopTime;
 struct Dataset;
-
-struct ExceptionDate {
-    enum class ExceptionType {
-        sub = 0,  // remove
-        add = 1   // add
-    };
-    ExceptionType type;
-    boost::gregorian::date date;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& type& date;
-    }
-    inline bool operator<(const ExceptionDate& that) const {
-        if (this->type < that.type)
-            return true;
-        if (that.type < this->type)
-            return false;
-        return this->date < that.date;
-    }
-    inline bool operator==(const ExceptionDate& that) const {
-        return this->type == that.type && this->date == that.date;
-    }
-};
-inline std::ostream& operator<<(std::ostream& os, const ExceptionDate& ed) {
-    switch (ed.type) {
-        case ExceptionDate::ExceptionType::add:
-            os << "excl ";
-            break;
-        case ExceptionDate::ExceptionType::sub:
-            os << "incl ";
-            break;
-    }
-    return os << ed.date;
-}
-
-std::string to_string(ExceptionDate::ExceptionType t);
-
-inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
-    if (str == "Add") {
-        return ExceptionDate::ExceptionType::add;
-    }
-    if (str == "Sub") {
-        return ExceptionDate::ExceptionType::sub;
-    }
-    throw navitia::exception("unhandled exception type: " + str);
-}
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopArea;
@@ -563,21 +518,6 @@ struct Route : public Header, Nameable, HasMessages {
     std::string get_label() const;
 };
 
-struct AssociatedCalendar {
-    /// calendar matched
-    const Calendar* calendar;
-
-    /// exceptions to this association (not to be mixed up with the exceptions in the calendar)
-    /// the calendar exceptions change it's validity pattern
-    /// the AssociatedCalendar exceptions are the differences between the vj validity pattern and the calendar's
-    std::vector<ExceptionDate> exceptions;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& calendar& exceptions;
-    }
-};
-
 struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
@@ -670,30 +610,6 @@ struct StopTime {
     void serialize(Archive& ar, const unsigned int) {
         ar& arrival_time& departure_time& boarding_time& alighting_time& vehicle_journey& stop_point& shape_from_prev&
             properties& local_traffic_zone;
-    }
-};
-
-struct Calendar : public Nameable, public Header {
-    const static Type_e type = Type_e::Calendar;
-    typedef std::bitset<7> Week;
-    Week week_pattern;
-    std::vector<boost::gregorian::date_period> active_periods;
-    std::vector<ExceptionDate> exceptions;
-
-    ValidityPattern validity_pattern;  // computed validity pattern
-
-    Calendar() {}
-    Calendar(boost::gregorian::date beginning_date);
-
-    // we limit the validity pattern to the production period
-    void build_validity_pattern(boost::gregorian::date_period production_period);
-
-    bool operator<(const Calendar& other) const { return this->uri < other.uri; }
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& name& idx& uri& week_pattern& active_periods& exceptions& validity_pattern;
     }
 };
 
