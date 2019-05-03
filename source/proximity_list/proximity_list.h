@@ -32,9 +32,18 @@ www.navitia.io
 
 #include "type/type.h"
 #include "utils/exception.h"
+#include <memory>
 #include <vector>
 #include <cmath>
 
+namespace flann {
+template <typename T>
+struct Index;
+
+template <typename T>
+struct L2;
+
+}  // namespace flann
 namespace navitia {
 namespace proximitylist {
 
@@ -70,18 +79,35 @@ struct ProximityList {
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
     std::vector<Item> items;
+    mutable std::vector<float> data;
+    mutable std::shared_ptr<flann::Index<flann::L2<float>>> index = nullptr;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element) { items.push_back(Item(coord, element)); }
-    void clear() { items.clear(); }
+    void clear() {
+        items.clear();
+        data.clear();
+    }
 
     /// Construit l'indexe
     void build() {
         std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) { return a.coord < b.coord; });
+        data.reserve(items.size() * 3);
+        for (const auto& i : items) {
+            const auto& coord = i.coord;
+            float x = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
+                      * sin(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
+            float y = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
+                      * cos(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
+            float z = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(coord.lat() * GeographicalCoord::N_DEG_TO_RAD);
+            data.push_back(x);
+            data.push_back(y);
+            data.push_back(z);
+        }
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance = 500) const;
+    std::vector<std::pair<T, GeographicalCoord>> find_within(GeographicalCoord coord, double distance = 500) const;
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
     T find_nearest(double lon, double lat) const { return find_nearest(GeographicalCoord(lon, lat)); }
@@ -102,7 +128,7 @@ struct ProximityList {
      */
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& items;
+        ar& items& data;
     }
 };
 

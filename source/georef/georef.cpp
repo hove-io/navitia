@@ -607,6 +607,9 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
         const auto& filter = [](const Way& w) { return w.admin_list.empty(); };
+        auto log = log4cplus::Logger::getInstance("find_admins");
+        LOG4CPLUS_DEBUG(log, "find_admins!!!!!!!!!!!!" << coord.lon() << "    " << coord.lat());
+
         return nearest_addr(coord, filter).second->admin_list;
     } catch (proximitylist::NotFound&) {
         return {};
