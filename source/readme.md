@@ -168,11 +168,6 @@ Contains kraken mock executable used in Jormungandr integration tests
 ### third_party
 Various third party libraries
 
-### linenoise
-submodule with a lib made to create prompt.
-
-Used to a a debug cli for kraken
-
 ### lz4_filter
 Module to handle lz4 compression format in boost::serialize
 
