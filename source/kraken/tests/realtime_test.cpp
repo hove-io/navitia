@@ -1627,6 +1627,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
 
     // Check the realtime vj
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
+    BOOST_CHECK_EQUAL(vj->name, "vj:1");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 4 stop_times and kept the boarding_times
