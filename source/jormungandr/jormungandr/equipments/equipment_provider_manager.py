@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from importlib import import_module
 from itertools import chain
-from navitiacommon import type_pb2, models
+from navitiacommon import type_pb2
 
 import logging
 import datetime

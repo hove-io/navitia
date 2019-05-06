@@ -99,7 +99,7 @@ def equipments_provider_manager_db_test():
     manager = EquipmentProviderManager([], providers_getter_ok, -1)
 
     # 2 providers defined in db are associated to the coverage
-    # -> 2 provider created
+    # -> 2 providers created
     manager.init_providers(['sytral'])
     manager.update_config()
     assert not manager._equipment_providers_legacy
