@@ -74,16 +74,3 @@ def bss_providers(app):
         from navitiacommon import models
 
         return BssProviderManager(app.config['BSS_PROVIDER'], models.BssProvider.all)
-
-
-def equipments_providers(app):
-    from jormungandr.equipments.equipment_provider_manager import EquipmentProviderManager
-
-    if app.config['DISABLE_DATABASE']:
-        return EquipmentProviderManager(app.config[str('EQUIPMENT_DETAILS_PROVIDERS')])
-    else:
-        from navitiacommon import models
-
-        return EquipmentProviderManager(
-            app.config[str('EQUIPMENT_DETAILS_PROVIDERS')], models.EquipmentsProvider.all
-        )

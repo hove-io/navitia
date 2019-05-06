@@ -98,14 +98,17 @@ def equipments_provider_manager_db_test():
     """
     manager = EquipmentProviderManager([], providers_getter_ok, -1)
 
-    # 2 providers defined in db but only 1 matches the key defined in coverage
-    # -> Only 1 provider created
+    # 2 providers defined in db are associated to the coverage
+    # -> 2 provider created
     manager.init_providers(['sytral'])
     manager.update_config()
     assert not manager._equipment_providers_legacy
-    assert len(manager._equipment_providers) == 1
+    assert len(manager._equipment_providers) == 2
     assert 'sytral' in manager._equipment_providers
     assert manager._equipment_providers['sytral'].url == 'sytral.url'
+    assert 'sytral2' in manager._equipment_providers
+    assert manager._equipment_providers['sytral2'].url == 'sytral2.url'
+
     manager_update = manager._last_update
     assert 'sytral' in manager._equipment_providers_last_update
     sytral_update = manager._equipment_providers_last_update['sytral']
@@ -115,7 +118,7 @@ def equipments_provider_manager_db_test():
     manager.update_config()
     assert manager._last_update > manager_update
     assert not manager._equipment_providers_legacy
-    assert len(manager._equipment_providers) == 1
+    assert len(manager._equipment_providers) == 2
     assert 'sytral' in manager._equipment_providers
     assert manager._equipment_providers['sytral'].url == 'sytral.url.UPDATE'
     assert 'sytral' in manager._equipment_providers_last_update
@@ -126,7 +129,7 @@ def equipments_provider_manager_db_test():
     manager.init_providers(['sytral'])
     manager.update_config()
     assert not manager._equipment_providers_legacy
-    assert len(manager._equipment_providers) == 1
+    assert len(manager._equipment_providers) == 2
     assert 'sytral' in manager._equipment_providers
     assert manager._equipment_providers['sytral'].url == 'sytral.url'
     manager_update = manager._last_update
@@ -135,7 +138,7 @@ def equipments_provider_manager_db_test():
     manager.update_config()
     assert manager._last_update == manager_update
     assert not manager._equipment_providers_legacy
-    assert len(manager._equipment_providers) == 1
+    assert len(manager._equipment_providers) == 2
     assert 'sytral' in manager._equipment_providers
     assert manager._equipment_providers['sytral'].url == 'sytral.url'
 
@@ -177,5 +180,4 @@ def equipments_provider_manager_env_vs_db_test():
     manager._providers_getter = providers_getter_ok
     manager.update_config()
     assert not manager._equipment_providers_legacy
-    assert len(manager._equipment_providers) == 1
     assert 'sytral' in manager._equipment_providers

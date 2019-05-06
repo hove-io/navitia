@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from importlib import import_module
 from itertools import chain
-from navitiacommon import type_pb2
+from navitiacommon import type_pb2, models
 
 import logging
 import datetime
@@ -84,6 +84,17 @@ class EquipmentProviderManager(object):
         except ImportError:
             self.logger.warn('impossible to build, cannot find class: {}'.format(cls))
 
+    def _update_provider(self, provider):
+        self.logger.info('updating/adding {} equipment provider'.format(provider.id))
+        try:
+            self._equipment_providers[provider.id] = self._init_class(provider.klass, provider.args)
+            self._equipment_providers_last_update[provider.id] = provider.last_update()
+        except Exception:
+            self.logger.exception('impossible to initialize equipments provider')
+
+        # If the provider added in db is also defined in legacy, delete it.
+        self._equipment_providers_legacy.pop(provider.id, None)
+
     def update_config(self):
         """
         Update list of equipment providers from db
@@ -110,19 +121,11 @@ class EquipmentProviderManager(object):
             return
 
         for provider in providers:
-            if provider.id in self.providers_keys and (
+            if (
                 provider.id not in self._equipment_providers_last_update
                 or provider.last_update() > self._equipment_providers_last_update[provider.id]
             ):
-                self.logger.info('updating/adding {} equipment provider'.format(provider.id))
-                try:
-                    self._equipment_providers[provider.id] = self._init_class(provider.klass, provider.args)
-                    self._equipment_providers_last_update[provider.id] = provider.last_update()
-                except Exception:
-                    self.logger.exception('impossible to initialize equipments provider')
-
-                # If the provider added in db is also defined in legacy, delete it.
-                self._equipment_providers_legacy.pop(provider.id, None)
+                self._update_provider(provider)
 
     def manage_equipments_for_journeys(self, response):
         """

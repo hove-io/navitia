@@ -63,7 +63,7 @@ def default_config():
 @pytest.fixture(scope='function', autouse=True)
 def clean_db():
     with app.app_context():
-        models.db.session.execute('truncate equipments_provider;')
+        models.db.session.execute('truncate equipments_provider cascade;')
         models.db.session.commit()
 
 
