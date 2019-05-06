@@ -60,6 +60,7 @@ www.navitia.io
 #include "type/stop_point.h"
 #include "type/connection.h"
 #include "type/calendar.h"
+#include "type/stop_area.h"
 
 namespace navitia {
 namespace georef {
@@ -101,7 +102,6 @@ enum class VehicleJourneyType {
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
 };
 
-struct StopArea;
 struct Network;
 struct Line;
 struct ValidityPattern;
@@ -109,28 +109,6 @@ struct Route;
 struct VehicleJourney;
 struct StopTime;
 struct Dataset;
-
-struct StopArea : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopArea;
-    GeographicalCoord coord;
-    std::string additional_data;
-    std::vector<navitia::georef::Admin*> admin_list;
-    bool wheelchair_boarding = false;
-    std::string label;
-    // name of the time zone of the stop area
-    // the name must respect the format of the tz db, for example "Europe/Paris"
-    std::string timezone;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& label& uri& name& coord& stop_point_list& admin_list& _properties& wheelchair_boarding& impacts&
-            visible& timezone;
-    }
-
-    std::vector<StopPoint*> stop_point_list;
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopArea& other) const;
-};
 
 struct Network : public Header, HasMessages {
     std::string name;

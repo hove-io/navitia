@@ -809,27 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-bool StopArea::operator<(const StopArea& other) const {
-    if (name != other.name) {
-        return name < other.name;
-    }
-    return uri < other.uri;
-}
-
-Indexes StopArea::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            return indexes(this->stop_point_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-
-        default:
-            break;
-    }
-    return result;
-}
-
 bool Network::operator<(const Network& other) const {
     if (this->sort != other.sort) {
         return this->sort < other.sort;

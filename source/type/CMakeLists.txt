@@ -95,7 +95,7 @@ add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
 target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY})
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
-    validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp)
+    validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
 add_dependencies(types protobuf_files)
 
