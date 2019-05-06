@@ -68,7 +68,8 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
     const auto boundary = tags.find("boundary");
 
     std::string insee = "", postal_code = "", name = "";
-    if (tmp_admin_level != tags.end() && boundary != tags.end() && boundary->second == "administrative") {
+    if (!use_cities && tmp_admin_level != tags.end() && boundary != tags.end()
+        && boundary->second == "administrative") {
         // we consider only admin boundaries with level 8, 9 or 10
         std::vector<std::string> accepted_levels{"8", "9", "10"};
         const auto it_level = std::find(accepted_levels.begin(), accepted_levels.end(), tmp_admin_level->second);
@@ -100,8 +101,16 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
         if (tags.find("addr:postcode") != tags.end()) {
             postal_code = tags.at("addr:postcode");
         }
-        cache.relations.insert(OSMRelation(osm_id, refs, insee, postal_code, name,
-                                           boost::lexical_cast<uint32_t>(tmp_admin_level->second)));
+
+        std::string uri;
+        if (insee.empty()) {
+            uri = "admin:osm:relation:" + std::to_string(osm_id);
+        } else {
+            uri = "admin:fr:" + insee;
+        }
+
+        cache.admins[osm_id] = std::make_unique<OSMAdminRelation>(
+            osm_id, uri, refs, insee, postal_code, name, boost::lexical_cast<uint32_t>(tmp_admin_level->second));
     } else if (tags.find("type") != tags.end() && tags.at("type") == "associatedStreet") {
         uint64_t way_id = std::numeric_limits<uint64_t>::max();
         std::vector<uint64_t> osm_ids;
@@ -204,42 +213,101 @@ void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat, co
  *  Builds geometries of relations
  */
 void OSMCache::build_relations_geometries() {
-    for (const auto& relation : relations) {
-        relation.build_geometry(*this);
-        if (relation.polygon.empty()) {
+    for (const auto& id_admin : admins) {
+        const auto& admin = id_admin.second;
+        admin->build_geometry(*this);
+        if (admin->polygon.empty()) {
             continue;
         }
         boost::geometry::model::box<point> box;
-        boost::geometry::envelope(relation.polygon, box);
+        boost::geometry::envelope(admin->polygon, box);
         Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(), box.max_corner().get<0>(),
                box.max_corner().get<1>());
-        admin_tree.Insert(r.min, r.max, &relation);
+        admin_tree.Insert(r.min, r.max, admin.get());
     }
 }
 
 /*
  * Find the admin of coordinates
  */
-const OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
+const Admin* OSMCache::match_coord_admin(const double lon, const double lat) {
     Rect search_rect(lon, lat);
     const auto p = point(lon, lat);
-    using relations = std::vector<const OSMRelation*>;
+    using Admins = std::vector<const Admin*>;
 
-    relations result;
-    auto callback = [](const OSMRelation* rel, void* c) -> bool {
-        if (rel->level == 8) {  // we want to match only cities
-            relations* context = reinterpret_cast<relations*>(c);
+    Admins result;
+    auto callback = [](const Admin* rel, void* c) -> bool {
+        if (rel->is_city()) {  // we want to match only cities
+            Admins* context = reinterpret_cast<Admins*>(c);
             context->push_back(rel);
         }
         return true;
     };
     admin_tree.Search(search_rect.min, search_rect.max, callback, &result);
-    for (auto rel : result) {
-        if (boost::geometry::within(p, rel->polygon)) {
+    for (const auto* rel : result) {
+        if (boost::geometry::covered_by(p, rel->polygon)) {
             return rel;
         }
     }
+    if (this->cities_db) {
+        return find_admin_in_cities(lon, lat);
+    }
     return nullptr;
+}
+
+template <typename T>
+T read_wkt(const std::string& s) {
+    T g;
+    boost::geometry::read_wkt(s, g);
+    return g;
+}
+
+// This method searches for admin around the coord in the 'cities' database
+// It does a bulk search for all the admin in a bounding box around the coord
+// to reduce the number of calls to the datase
+const Admin* OSMCache::find_admin_in_cities(const double lon, const double lat) {
+    const auto p = point(lon, lat);
+    std::stringstream request;
+    request << "SELECT id, uri, name, coalesce(insee, '') as insee, level, coalesce(post_code, '') as post_code, "
+            << "ST_ASTEXT(coord) as center, "
+            << "ST_ASTEXT(boundary) as boundary "
+            << "FROM administrative_regions "
+            << "WHERE ST_Intersects(ST_MakeEnvelope(" << std::setprecision(16) << lon - cities_bbox_to_fetch << ", "
+            << lat - cities_bbox_to_fetch << ", " << lon + cities_bbox_to_fetch << ", " << lat + cities_bbox_to_fetch
+            << ", " << 4326 << "), boundary)";
+
+    this->cities_db_calls++;
+
+    pqxx::work work(*cities_db);
+    pqxx::result result = work.exec(request);
+
+    const Admin* containing_admin = nullptr;
+    for (const auto& it : result) {
+        auto polygon = read_wkt<mpolygon_type>(it["boundary"].as<std::string>());
+        auto center = read_wkt<point>(it["center"].as<std::string>());
+        const auto id = it["id"].as<u_int64_t>();
+
+        if (this->admins.find(id) != this->admins.end()) {
+            continue;
+        }
+        this->admin_from_cities++;
+        auto admin = std::make_unique<Admin>(id, it["uri"].as<std::string>(), it["insee"].as<std::string>(),
+                                             it["post_code"].as<std::string>(), it["name"].as<std::string>(),
+                                             it["level"].as<uint32_t>(), std::move(polygon), std::move(center));
+
+        if (boost::geometry::covered_by(p, admin->polygon)) {
+            containing_admin = admin.get();
+        }
+
+        // we also store the admin for future use
+        boost::geometry::model::box<point> box;
+        boost::geometry::envelope(admin->polygon, box);
+        Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(), box.max_corner().get<0>(),
+               box.max_corner().get<1>());
+        this->admin_tree.Insert(r.min, r.max, admin.get());
+        this->admins[id] = std::move(admin);
+    }
+    return containing_admin;
 }
 
 /*
@@ -389,23 +457,21 @@ void OSMCache::insert_relations() {
     lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0;
     size_t nb_admins = 0;
-    for (auto relation : relations) {
-        if (!relation.polygon.empty()) {
+    for (const auto& id_admin : admins) {
+        const auto& admin = id_admin.second;
+        const auto id = id_admin.first;
+        if (!admin->polygon.empty()) {
             std::stringstream polygon_stream;
-            polygon_stream << bg::wkt<mpolygon_type>(relation.polygon);
+            polygon_stream << bg::wkt<mpolygon_type>(admin->polygon);
             std::string polygon_str = polygon_stream.str();
-            const auto coord = "POINT(" + std::to_string(relation.centre.get<0>()) + " "
-                               + std::to_string(relation.centre.get<1>()) + ")";
-            auto uri = "admin:osm:relation:" + std::to_string(relation.osm_id);
-            if (!relation.insee.empty()) {
-                uri = "admin:fr:" + relation.insee;
-            }
-            lotus.insert({std::to_string(relation.osm_id), relation.name, relation.insee,
-                          std::to_string(relation.level), coord, polygon_str, uri});
+            const auto coord =
+                "POINT(" + std::to_string(admin->center.get<0>()) + " " + std::to_string(admin->center.get<1>()) + ")";
+            lotus.insert({std::to_string(id), admin->name, admin->insee, std::to_string(admin->level), coord,
+                          polygon_str, admin->uri});
             ++nb_admins;
         } else {
-            LOG4CPLUS_WARN(logger, "admin " << relation.name << " id: " << relation.osm_id << " of level "
-                                            << relation.level << " won't be inserted since it has an empty polygon");
+            LOG4CPLUS_WARN(logger, "admin " << admin->name << " id: " << id << " of level " << admin->level
+                                            << " won't be inserted since it has an empty polygon");
             ++nb_empty_polygons;
         }
     }
@@ -420,10 +486,11 @@ void OSMCache::insert_relations() {
 void OSMCache::insert_postal_codes() {
     size_t n_inserted = 0;
     lotus.prepare_bulk_insert("georef.postal_codes", {"admin_id", "postal_code"});
-    for (auto relation : relations) {
-        if ((!relation.polygon.empty()) && (!relation.postal_codes.empty())) {
-            for (std::string& pst_code : relation.postal_codes) {
-                lotus.insert({std::to_string(relation.osm_id), pst_code});
+    for (const auto& id_admin : admins) {
+        const auto& admin = id_admin.second;
+        if ((!admin->polygon.empty()) && (!admin->postal_codes.empty())) {
+            for (const std::string& pst_code : admin->postal_codes) {
+                lotus.insert({std::to_string(admin->id), pst_code});
                 ++n_inserted;
             }
         }
@@ -444,7 +511,7 @@ void OSMCache::insert_rel_way_admins() {
                     continue;
                 }
                 for (const auto& admin : admin_ways.first) {
-                    lotus.insert({std::to_string(admin->osm_id), std::to_string(way->osm_id)});
+                    lotus.insert({std::to_string(admin->id), std::to_string(way->osm_id)});
                     ++n_inserted;
                     if (n_inserted == max_n_inserted) {
                         lotus.finish_bulk_insert();
@@ -476,8 +543,7 @@ void OSMCache::build_way_map() {
             continue;  // it's not a street, we aren't interested by this way
         }
         double max_lon = max_double, max_lat = max_double, min_lon = max_double, min_lat = max_double;
-        std::set<const OSMRelation*> admins;
-        std::unordered_map<const OSMRelation*, int> admin_candidate;
+        std::unordered_map<const Admin*, int> admin_candidate;
         for (const auto& node : way_it->nodes) {
             if (!node->admin) {
                 continue;
@@ -491,6 +557,7 @@ void OSMCache::build_way_map() {
             min_lon = std::min(min_lon, node->lon());
             min_lat = std::min(min_lat, node->lat());
         }
+        std::set<const Admin*> admins;
         for (const auto& admin_score : admin_candidate) {
             // keeping the admins that are associated to at least two nodes
             if (admin_score.second > 1) {
@@ -551,7 +618,7 @@ void OSMCache::fusion_ways() {
  * Ways are supposed to be order, but they're not always.
  * Also we may have to reverse way before adding them into the polygon
  */
-void OSMRelation::build_polygon(OSMCache& cache) const {
+void OSMAdminRelation::build_polygon(OSMCache& cache) {
     std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
@@ -630,7 +697,7 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
                 for (const auto& node : it_way->nodes) {
                     if (node->osm_id != next_node->osm_id && node->almost_equal(*next_node)) {
                         LOG4CPLUS_WARN(log, "Impossible to close the boundary of the admin "
-                                                << name << " (osmid= " << osm_id << "). The end node " << node->osm_id
+                                                << name << " (osmid= " << id << "). The end node " << node->osm_id
                                                 << " is almost the same as " << next_node->osm_id
                                                 << " it's likely that they are wrong duplicate");
                         break;
@@ -652,24 +719,46 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
 #pragma GCC diagnostic pop
         polygon.push_back(tmp_polygon);
     }
-    if ((centre.get<0>() == 0.0 || centre.get<1>() == 0.0) && !polygon.empty()) {
-        bg::centroid(polygon, centre);
+    if ((center.get<0>() == 0.0 || center.get<1>() == 0.0) && !polygon.empty()) {
+        bg::centroid(polygon, center);
     }
 }
 
-OSMRelation::OSMRelation(const u_int64_t osm_id,
-                         const std::vector<CanalTP::Reference>& refs,
-                         const std::string& insee,
-                         const std::string& postal_code,
-                         const std::string& name,
-                         const uint32_t level)
-    : osm_id(osm_id), references(refs), insee(insee), name(name), level(level) {
+Admin::Admin(u_int64_t id,
+             const std::string& uri,
+             const std::string& insee,
+             const std::string& postal_code,
+             const std::string& name,
+             const uint32_t level)
+    : id(id), uri(uri), insee(insee), name(name), level(level) {
     if (!postal_code.empty()) {
         boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
     }
 }
 
-void OSMRelation::build_geometry(OSMCache& cache) const {
+Admin::Admin(u_int64_t id,
+             const std::string& uri,
+             const std::string& insee,
+             const std::string& postal_code,
+             const std::string& name,
+             const uint32_t level,
+             mpolygon_type&& polygon,
+             point&& center)
+    : Admin(id, uri, insee, postal_code, name, level) {
+    this->polygon = polygon;
+    this->center = center;
+}
+
+OSMAdminRelation::OSMAdminRelation(u_int64_t id,
+                                   const std::string& uri,
+                                   const std::vector<CanalTP::Reference>& refs,
+                                   const std::string& insee,
+                                   const std::string& postal_code,
+                                   const std::string& name,
+                                   const uint32_t level)
+    : Admin(id, uri, insee, postal_code, name, level), references(refs) {}
+
+void OSMAdminRelation::build_geometry(OSMCache& cache) {
     for (const CanalTP::Reference& ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
@@ -679,14 +768,15 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
             if (!node_it->is_defined()) {
                 continue;
             }
-            if (ref.role == "admin_centre") {
-                set_centre(node_it->lon(), node_it->lat());
+            if (ref.role == "admin_centre" || ref.role == "admin_center") {
+                this->center = point(node_it->lon(), node_it->lat());
                 break;
             }
         }
     }
     build_polygon(cache);
 }
+
 /*
  * We read another time nodes to insert housenumbers and poi
  */
@@ -727,11 +817,11 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id,
         }
     } else {
         boost::geometry::model::box<point> envelope;
-        point centre(0, 0);
+        point center(0, 0);
         bg::envelope(tmp_polygon, envelope);
-        bg::centroid(tmp_polygon, centre);
-        this->fill_housenumber(osm_id, tags, centre.get<0>(), centre.get<1>());
-        this->fill_poi(osm_id, tags, centre.get<0>(), centre.get<1>(), OsmObjectType::Way);
+        bg::centroid(tmp_polygon, center);
+        this->fill_housenumber(osm_id, tags, center.get<0>(), center.get<1>());
+        this->fill_poi(osm_id, tags, center.get<0>(), center.get<1>(), OsmObjectType::Way);
     }
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
         this->insert_data();
@@ -781,7 +871,7 @@ void PoiHouseNumberVisitor::insert_house_numbers() {
  */
 const OSMWay* PoiHouseNumberVisitor::find_way_without_name(const double lon, const double lat) {
     const OSMWay* result = nullptr;
-    const auto admin = cache.match_coord_admin(lon, lat);
+    const auto* admin = cache.match_coord_admin(lon, lat);
     if (!admin) {
         return result;
     }
@@ -795,8 +885,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way_without_name(const double lon, con
     cache.way_tree.Search(search_rect.min, search_rect.max, callback, &res_tree);
     point p(lon, lat);
     for (auto way_it : res_tree) {
-        auto admins = way_it->admins();
-        if (admins.find(admin) != admins.end()) {
+        if (way_it->contains_admin(admin)) {
             const auto tmp_dist = way_it->distance(p);
             ++cache.NB_PROJ;
             if (tmp_dist < distance) {
@@ -828,7 +917,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
             return nullptr;
         }
         auto ways_it = std::find_if(it_ways->second.begin(), it_ways->second.end(),
-                                    [&](const std::pair<const std::set<const OSMRelation*>, std::set<it_way>>& r) {
+                                    [&](const std::pair<const std::set<const Admin*>, std::set<it_way>>& r) {
                                         std::vector<std::string> postcodes;
                                         for (const auto& admin : r.first) {
                                             postcodes.push_back(boost::algorithm::join(admin->postal_codes, ";"));
@@ -976,7 +1065,9 @@ int osm2ed(int argc, const char** argv) {
         ("poi-type,p", po::value<std::string>(&json_poi_types),
                        "a json string describing poi_types and rules to build them from OSM tags")
         ("local_syslog", "activate log redirection within local syslog")
-        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
+        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name")
+        ("cities-connection-string", po::value<std::string>(), 
+            "cities database connection string, to use admins from cities instead of osm's relations");
     // clang-format on
 
     po::variables_map vm;
@@ -1024,6 +1115,13 @@ int osm2ed(int argc, const char** argv) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
 
+    boost::optional<std::string> cities_cnx = boost::none;
+    if (vm.count("cities-connection-string")) {
+        cities_cnx = {vm["cities-connection-string"].as<std::string>()};
+    }
+
+    const bool use_cities = cities_cnx;
+
     po::notify(vm);
     const ed::connectors::PoiTypeParams poi_params(json_poi_types);
 
@@ -1033,8 +1131,8 @@ int osm2ed(int argc, const char** argv) {
     persistor.clean_georef();
     persistor.clean_poi();
 
-    ed::connectors::OSMCache cache(connection_string);
-    ed::connectors::ReadRelationsVisitor relations_visitor(cache);
+    ed::connectors::OSMCache cache(connection_string, cities_cnx);
+    ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
     CanalTP::read_osm_pbf(input, relations_visitor);
     ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
     CanalTP::read_osm_pbf(input, ways_visitor);
@@ -1059,6 +1157,10 @@ int osm2ed(int argc, const char** argv) {
     LOG4CPLUS_INFO(logger, "compute bounding shape");
     persistor.compute_bounding_shape();
     persistor.insert_metadata_georef();
+    if (use_cities) {
+        LOG4CPLUS_INFO(logger, "admin added from cities: " << cache.admin_from_cities << " (with "
+                                                           << cache.cities_db_calls << " calls to the db)");
+    }
     return 0;
 }
 
