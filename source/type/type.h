@@ -61,6 +61,7 @@ www.navitia.io
 #include "type/connection.h"
 #include "type/calendar.h"
 #include "type/stop_area.h"
+#include "type/network.h"
 
 namespace navitia {
 namespace georef {
@@ -102,38 +103,12 @@ enum class VehicleJourneyType {
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
 };
 
-struct Network;
 struct Line;
 struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
 struct Dataset;
-
-struct Network : public Header, HasMessages {
-    std::string name;
-    const static Type_e type = Type_e::Network;
-    std::string address_name;
-    std::string address_number;
-    std::string address_type_name;
-    std::string phone_number;
-    std::string mail;
-    std::string website;
-    std::string fax;
-    int sort = std::numeric_limits<int>::max();
-
-    std::vector<Line*> line_list;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& address_name& address_number& address_type_name& mail& website& fax& sort& line_list&
-            impacts& dataset_list;
-    }
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Network& other) const;
-};
 
 struct Contributor : public Header, Nameable {
     const static Type_e type = Type_e::Contributor;

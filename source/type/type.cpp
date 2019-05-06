@@ -809,31 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-bool Network::operator<(const Network& other) const {
-    if (this->sort != other.sort) {
-        return this->sort < other.sort;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-Indexes Network::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            return indexes(line_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
 Indexes Company::get(Type_e type, const PT_Data&) const {
     Indexes result;
     switch (type) {
