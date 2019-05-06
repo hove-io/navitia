@@ -84,7 +84,7 @@ Starting from A at 7:45:
 |level| A  | B  | C  | D  | E  | F  |  G      |
 |-----|----|----|----|----|----|----|---------|
 |TR0  |7:45|    |    |    |    |    |         |
-|PT1  |    |8:30 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:33 ![](https://placehold.it/15/010101/ffffff?text=2+)  |8:3 6![](https://placehold.it/15/010101/ffffff?text=2+)  |8:50 ![](https://placehold.it/15/ff9b19/000000?text=1+) |    |         |
+|PT1  |    |8:30 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:33 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:36 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:50 ![](https://placehold.it/15/ff9b19/000000?text=1+) |    |         |
 |TR1  |    |8:32|8:35|8:38|8:52|    |         |
 |PT2  |    |    |    |    |    |9:00 ![](https://placehold.it/15/000af0/ffffff?text=4+)|**10:00** ![](https://placehold.it/15/00aa00/000000?text=5+) |
 |TR2  |    |    |    |    |    |9:03|10:02    |
