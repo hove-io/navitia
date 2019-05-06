@@ -261,7 +261,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vjA:modified:0:vjA_delayed' in vj_ids
+        assert 'vehicle_journey:vjA:modified:0:vjA_delayed' in vj_ids
 
         def _check_train_delay_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
@@ -303,7 +303,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
-        assert get_used_vj(new_response) == [[], ['vjA:modified:0:vjA_delayed']]
+        assert get_used_vj(new_response) == [[], ['vehicle_journey:vjA:modified:0:vjA_delayed']]
 
         pt_journey = new_response['journeys'][1]
 
@@ -555,7 +555,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
+        assert 'vehicle_journey:vjA:modified:0:96231_2015-07-28_0' in vj_ids
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -582,7 +582,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
             '20120615T070436',
             '20120615T070520',
         ]  # pt_walk + rt 07:02:24
-        assert get_used_vj(day_after_response), [[] == ['vjA:modified:0:96231_2015-07-28_0']]
+        assert get_used_vj(day_after_response), [[] == ['vehicle_journey:vjA:modified:0:96231_2015-07-28_0']]
 
         # it should not have changed anything for the theoric the day after
         day_after_base = self.query_region(journey_day_after_query + "&data_freshness=base_schedule")
@@ -1538,7 +1538,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
 
         # Check that no vehicle_journey exists on the future realtime-trip
         vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
-            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
+            vj='vehicle_journey:additional-trip:modified:0:new_trip', dt='20120614T080000'
         )
         response, status = self.query_region(vj_query, check=False)
         assert status == 404
@@ -1559,7 +1559,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert response['error']['message'] == 'ptref : Filters: Unable to find object'
 
         network_filter_query = 'vehicle_journeys/{vj}/networks?_current_datetime={dt}'.format(
-            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
+            vj='vehicle_journey:additional-trip:modified:0:new_trip', dt='20120614T080000'
         )
         response, status = self.query_region(network_filter_query, check=False)
         assert status == 404
@@ -1788,7 +1788,7 @@ class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
 
         # Check that no vehicle_journey is added
         vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
-            vj='additional-trip:modified:0:new_trip', dt='20120614T080000'
+            vj='vehicle_journey:additional-trip:modified:0:new_trip', dt='20120614T080000'
         )
         response, status = self.query_region(vj_query, check=False)
         assert status == 404
@@ -1913,7 +1913,9 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         # physical_mode of the newly created vehicle_journey is the base vehicle_journey physical mode (Tramway)
-        pt_response = self.query_region('vehicle_journeys/vjA:modified:0:vjA_delayed/physical_modes')
+        pt_response = self.query_region(
+            'vehicle_journeys/vehicle_journey:vjA:modified:0:vjA_delayed/physical_modes'
+        )
         assert len(pt_response['physical_modes']) == 1
         assert pt_response['physical_modes'][0]['name'] == 'Tramway'
 

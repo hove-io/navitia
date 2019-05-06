@@ -724,9 +724,9 @@ class TestSchedules(AbstractTestFixture):
                     sp='S1',
                     route='A:0',
                     date_times=[
-                        SchedDT(dt='20160101T090700', vj='A:vj1:modified:0:delay_vj1'),
-                        SchedDT(dt='20160101T100700', vj='A:vj2:modified:0:delay_vj2'),
-                        SchedDT(dt='20160101T110700', vj='A:vj3:modified:0:delay_vj3'),
+                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1'),
+                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:modified:0:delay_vj2'),
+                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:modified:0:delay_vj3'),
                     ],
                 ),
                 StopSchedule(sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')]),
@@ -767,7 +767,7 @@ class TestSchedules(AbstractTestFixture):
                 StopSchedule(
                     sp='S1',
                     route='A:0',
-                    date_times=[SchedDT(dt='20160101T090700', vj='A:vj1:modified:0:delay_vj1')],
+                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1')],
                 ),
                 StopSchedule(sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')]),
             ],

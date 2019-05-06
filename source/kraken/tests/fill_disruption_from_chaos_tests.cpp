@@ -220,12 +220,12 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
-    auto vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:1:test01"];
+    auto vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
                         vj->adapted_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:2:Adapted:1:test01"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:2:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
                         vj->adapted_validity_pattern()->days);
@@ -234,12 +234,12 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:1:test01"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
                         vj->adapted_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:2:Adapted:1:test01"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:2:Adapted:1:test01"];
     BOOST_CHECK(vj->base_validity_pattern()->days.none());
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
                         vj->adapted_validity_pattern()->days);

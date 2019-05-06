@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
                         vj->adapted_validity_pattern()->days);
 
     // Adapted VJ
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey 0:Adapted:1:stop_area_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vehicle_journey 0:Adapted:1:stop_area_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "0000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111100"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:stop_point:20_closed");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:stop_point:20_closed");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000100"), adapted_vp);
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
                         vj->adapted_validity_pattern()->days);
 
     // Adapted VJ
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:stop3_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:0:stop3_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "100111"),
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
                         vj->adapted_validity_pattern()->days);
 
     // Adapted VJ
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:stop3_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:0:stop3_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "100111"),
@@ -655,7 +655,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
                         vj->adapted_validity_pattern()->days);
 
     // Adapted VJ
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:1:stop1_closed:stop2_closed:stop3_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:1:stop1_closed:stop2_closed:stop3_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "111111"),
@@ -695,7 +695,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
                         vj1->rt_validity_pattern()->days);
 
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:0:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
                         vj->rt_validity_pattern()->days);
 
@@ -709,7 +709,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
                         vj1->rt_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:1:bob:stop2_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:RealTime:1:bob:stop2_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
@@ -729,7 +729,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "111011"),
                         vj1->rt_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:0:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
                         vj->rt_validity_pattern()->days);
 
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "000000"),
                         vj1->rt_validity_pattern()->days);
 
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:0:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "0001000"),
                         vj->rt_validity_pattern()->days);
 
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "000000"),
                         vj1->rt_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:1:bob:stop1_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:RealTime:1:bob:stop1_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "010000"),
                         vj->rt_validity_pattern()->days);
 
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:0:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "0001000"),
                         vj->rt_validity_pattern()->days);
 
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "000000"),
                         vj1->rt_validity_pattern()->days);
 
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:0:stop1_closed"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:RealTime:0:stop1_closed"];
 
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "001000"),
                         vj->rt_validity_pattern()->days);
@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "000000"),
                         vj1->rt_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:1:bob"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:1:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "0010000"),
                         vj->rt_validity_pattern()->days);
 
@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vj:1:modified:0:bob"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:modified:0:bob"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->rt_validity_pattern()->days.to_string(), "010000"),
                         vj->rt_validity_pattern()->days);
 
@@ -2038,8 +2038,8 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(1).uri(), "vj:1");
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(2).uri(), "vj:2");
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(3).uri(), "vj:3");
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(4).uri(), "vj:3:Adapted:0:Disruption_C1");
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(5).uri(), "vj:2:Adapted:1:Disruption_C:Disruption_D");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(4).uri(), "vehicle_journey:vj:3:Adapted:0:Disruption_C1");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(5).uri(), "vehicle_journey:vj:2:Adapted:1:Disruption_C:Disruption_D");
 }
 
 BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
@@ -2133,7 +2133,8 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
                         vj1->rt_validity_pattern()->days);
 
-    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:Penguins on fire at Montparnasse"];
+    auto rt_vj1 =
+        b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:0:Penguins on fire at Montparnasse"];
 
     BOOST_CHECK_MESSAGE(ba::ends_with(rt_vj1->base_validity_pattern()->days.to_string(), "00000000"),
                         rt_vj1->rt_validity_pattern()->days);

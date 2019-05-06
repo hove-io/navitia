@@ -1626,7 +1626,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:45"_t);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 4 stop_times and kept the boarding_times
@@ -1675,7 +1675,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
 
@@ -1720,7 +1720,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
     // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().stop_point->uri, "A");
@@ -1795,7 +1795,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000001");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
@@ -2188,7 +2188,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj with a newly added stop_time
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed-1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed-1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
@@ -2225,7 +2225,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
@@ -2266,7 +2266,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted twice
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed-3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-3");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
@@ -2919,7 +2919,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("11111111"));
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("11111111"));
 
-    vj = pt_data.vehicle_journeys_map["vj_new_trip:modified:0:feed-1"];
+    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj_new_trip:modified:0:feed-1"];
     BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
     BOOST_CHECK_EQUAL(vj->company->name, comp_name);
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
@@ -2928,7 +2928,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->dataset->name, dataset_name);
     BOOST_CHECK_EQUAL(vj->dataset->contributor->uri, contributor_uri);
     BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
-    BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip:modified:0:feed-1");
+    BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip:modified:0:feed-1");
     BOOST_CHECK_EQUAL(vj->idx, 1);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
@@ -3056,7 +3056,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
 
     // New VJ
-    vj = pt_data.vehicle_journeys_map["vj_new_trip_2:modified:0:feed-2"];
+    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj_new_trip_2:modified:0:feed-2"];
     BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
     BOOST_CHECK_EQUAL(vj->company->name, comp_name);
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
@@ -3065,7 +3065,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->dataset->name, dataset_name);
     BOOST_CHECK_EQUAL(vj->dataset->contributor->uri, contributor_uri);
     BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
-    BOOST_CHECK_EQUAL(vj->uri, "vj_new_trip_2:modified:0:feed-2");
+    BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip_2:modified:0:feed-2");
     BOOST_CHECK_EQUAL(vj->idx, 2);
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip_2");
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
@@ -3432,7 +3432,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     b.finalize_disruption_batch();
 
     // physical mode =  base VJ physical mode
-    vj = pt_data.vehicle_journeys_map["vj:1:modified:0:feed-1"];
+    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj:1:modified:0:feed-1"];
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
     BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 
@@ -3450,7 +3450,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     b.finalize_disruption_batch();
 
     // physical mode =  base VJ physical mode
-    vj = pt_data.vehicle_journeys_map["vj:1:modified:0:feed-1"];
+    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj:1:modified:0:feed-1"];
     BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
     BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 }
