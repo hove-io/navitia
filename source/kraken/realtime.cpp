@@ -646,6 +646,12 @@ void handle_realtime(const std::string& id,
         }
         return;
     }
+    if (meta_vj_exists && is_added_trip(trip_update)) {
+        LOG4CPLUS_WARN(log, "Cannot add twice a new trip"
+                                << ", trip id: " << trip_update.trip().trip_id() << ", effect: "
+                                << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
+        return;
+    }
 
     const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 

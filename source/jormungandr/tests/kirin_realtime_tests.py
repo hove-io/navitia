@@ -2143,11 +2143,9 @@ class TestKirinAddNewTripPresentInNavitia(MockKirinDisruptionsFixture):
             effect='additional_service',
         )
 
-        # TODO: corrections to be made in kraken to refuse the trip add and update the test below
-        # Ticket NAVP-1298
         # Check that there should not be a new disruption
         disruptions_after = self.query_region(disruption_query)
-        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+        assert nb_disruptions_before == len(disruptions_after['disruptions'])
 
 
 def make_mock_kirin_item(
