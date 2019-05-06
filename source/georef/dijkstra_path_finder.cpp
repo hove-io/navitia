@@ -52,7 +52,7 @@ void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& r
 }
 
 void DijkstraPathFinder::start_distance_or_target_dijkstra(const navitia::time_duration& radius,
-                                                   const std::vector<vertex_t>& destinations) {
+                                                           const std::vector<vertex_t>& destinations) {
     if (!starting_edge.found)
         return;
     computation_launch = true;
@@ -204,9 +204,9 @@ struct ProjectionGetterOnFly {
     }
 };
 
-boost::container::flat_map<DijkstraPathFinder::coord_uri, georef::RoutingElement> DijkstraPathFinder::get_duration_with_dijkstra(
-    const navitia::time_duration& radius,
-    const std::vector<type::GeographicalCoord>& dest_coords) {
+boost::container::flat_map<DijkstraPathFinder::coord_uri, georef::RoutingElement>
+DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
+                                               const std::vector<type::GeographicalCoord>& dest_coords) {
     if (dest_coords.empty()) {
         return {};
     }
@@ -219,11 +219,12 @@ boost::container::flat_map<DijkstraPathFinder::coord_uri, georef::RoutingElement
     }
 
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
-    return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
-        radius, dest_coords, projection_getter);
+    return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord,
+                                                ProjectionGetterOnFly>(radius, dest_coords, projection_getter);
 }
 
-std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder::update_path(const ProjectionData& target) {
+std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder::update_path(
+    const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
     if (!target.found)
         return {max, source_e};

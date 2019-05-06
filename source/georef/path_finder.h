@@ -98,6 +98,20 @@ struct TransportationModeFilter {
     }
 };
 
+struct SpeedDistanceCombiner
+    : public std::binary_function<navitia::time_duration, navitia::time_duration, navitia::time_duration> {
+    // speed factor compared to the default speed of the transportation mode
+    // speed_factor = 2 means the speed is twice the default speed of the given transportation mode
+    // inv_speed_factor = 1 / speed_factor to avoid division
+    float inv_speed_factor;
+    SpeedDistanceCombiner(float speed_) : inv_speed_factor(1.f / speed_) {}
+    inline navitia::time_duration operator()(navitia::time_duration a, navitia::time_duration b) const {
+        if (a == bt::pos_infin || b == bt::pos_infin)
+            return bt::pos_infin;
+        return a + b * inv_speed_factor;
+    }
+};
+
 class PathFinder {
 public:
     const GeoRef& geo_ref;

@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 #include "georef.h"
 #include "dijkstra_path_finder.h"
+#include "astar_path_finder.h"
 #include "type/time_duration.h"
 
 namespace navitia {
@@ -61,7 +62,7 @@ struct StreetNetwork {
     const GeoRef& geo_ref;
     DijkstraPathFinder departure_path_finder;
     DijkstraPathFinder arrival_path_finder;
-    DijkstraPathFinder direct_path_finder;
+    AstarPathFinder direct_path_finder;
 };
 
 }  // namespace georef

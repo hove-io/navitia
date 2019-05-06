@@ -39,22 +39,8 @@ www.navitia.io
 namespace navitia {
 namespace georef {
 
-struct SpeedDistanceCombiner
-    : public std::binary_function<navitia::time_duration, navitia::time_duration, navitia::time_duration> {
-    /// speed factor compared to the default speed of the transportation mode
-    /// speed_factor = 2 means the speed is twice the default speed of the given transportation mode
-    float speed_factor;
-    SpeedDistanceCombiner(float speed_) : speed_factor(speed_) {}
-    inline navitia::time_duration operator()(navitia::time_duration a, navitia::time_duration b) const {
-        if (a == bt::pos_infin || b == bt::pos_infin)
-            return bt::pos_infin;
-        return a + b / speed_factor;
-    }
-};
-
 class DijkstraPathFinder : public PathFinder {
 public:
-
     DijkstraPathFinder(const GeoRef& geo_ref) : PathFinder(geo_ref) {}
 
     void start_distance_dijkstra(const navitia::time_duration& radius);
@@ -86,7 +72,7 @@ public:
 
         // we filter the graph to only use certain mean of transport
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
-        boost::dijkstra_shortest_paths_no_init_with_heap(
+        navitia::dijkstra_shortest_paths_no_init_with_heap(
             filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), vertex.cbegin(), vertex.cend(),
             &predecessors[0], &distances[0], boost::get(&Edge::duration, geo_ref.graph),  // weigth map
             std::less<navitia::time_duration>(),
