@@ -13,21 +13,31 @@ you may also run `make docker_test` for important contributions), and have a wee
 
 ## Build Navitia
 
- If you want to build navitia, please refer to the
- [installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
+If you want to build navitia, please refer to the
+[installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
 
- You can also check the [automated build script](https://github.com/canaltp/navitia/blob/dev/build_navitia.sh)
- which is meant to be a step by step tutorial for compiling and using navitia with ubuntu 16.04.
+You can install a full development environment with helping [scripts](https://github.com/CanalTP/navitia/tree/dev/scripts), depends of your OS.
 
+Therefore, a [automated navitia script](https://github.com/canaltp/navitia/blob/dev/scripts/build_setup_and_run_navitia_demo.sh) is available to build, setup and run a navitia demo. Needs as a prerequisite, a dev environment setup.
+Kraken is build inside navitia_dir/build_release and all files for the demo are inside navitia_dir/run:
+```
+navitia_dir/run/data.nav.lz4
+navitia_dir/run/kraken/kraken
+navitia_dir/run/kraken/kraken.init
+navitia_dir/run/kraken/kraken.log
+navitia_dir/run/jormungandr/default.jon
+navitia_dir/run/jormungandr/jormungandr_settings.jon
+navitia_dir/run/jormungandr/venv_jormungandr/
+```
 
 ## Code Organisation
 
 At the root of the repository, several directories can be found:
 
 1. source: contains the navitia source code (c++ and python)
-2. third_party: third party developped modules
-3. documentation: all the navitia documentation
-4. (debug|release): by convention, the build repositories
+2. documentation: all the navitia documentation
+3. release: constains [script_release.py](https://github.com/canaltp/navitia/blob/dev/release/script_release.py) to run the release process
+4. scripts: different useful scripts
 
 
 ## Tools
@@ -51,7 +61,7 @@ pre-commit install
 
 Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/)
 You should enable the pre-commit git hook to make sure it's being run before commiting your changes, it's
-also the easiest way to run Black.  
+also the easiest way to run Black.
 Otherwise, to only update the files that you've changed, simply run:
 ```
 pre-commit run black

@@ -43,8 +43,9 @@ clean_exit()
 }
 
 kraken_db_user_password=
-navitia_dir="$(dirname $(readlink -f $0))"
-gtfs_data_dir=
+scripts_dir="$(dirname $(readlink -f $0))"
+navitia_dir="$scripts_dir"/..
+ntfs_data_dir=
 osm_file=
 
 install_dependencies=1
@@ -85,7 +86,7 @@ do
              kraken_db_user_password="$OPTARG"
              ;;
          g)
-             gtfs_data_dir="$OPTARG"
+             ntfs_data_dir="$OPTARG"
              ;;
          o)
              osm_file="$OPTARG"
@@ -112,16 +113,16 @@ fi
 #Be sure that basic dependencies are installed
 sudo apt-get install -y unzip wget
 
-if [ -z "$gtfs_data_dir" ] || [ -z "$osm_file" ]
+if [ -z "$ntfs_data_dir" ] || [ -z "$osm_file" ]
 then
-    echo "no gtfs or osm file given, we'll take a default data set, Paris"
+    echo "no ntfs or osm file given, we'll take a default data set, Paris"
 
-    echo "getting gtfs paris data from data.navitia.io"
+    echo "getting ntfs paris data from data.navitia.io"
     # Note, here is a link to a dataset of the paris region.
     # You can explore https://navitia.opendatasoft.com if you want another dataset
     wget -P /tmp https://navitia.opendatasoft.com/explore/dataset/fr-idf/files/dde578e47118b8c6f8885d75f18a504a/download/
-    unzip -d /tmp/gtfs /tmp/index.html
-    gtfs_data_dir=/tmp/gtfs
+    unzip -d /tmp/ntfs /tmp/index.html
+    ntfs_data_dir=/tmp/ntfs
 
     echo "getting paris osm data from metro.teczno.com"
     wget -P /tmp http://osm-extracted-metros.s3.amazonaws.com/paris.osm.pbf
@@ -135,7 +136,7 @@ mkdir -p "$run_dir"
 #for convenience reason, some submodule links are in ssh (easier to push)
 #it is however thus mandatory for the user to have a github access
 #for this script we thus change the ssh links to https
-sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' "$navitia_dir"/.gitmodules
 
 #we need to get the submodules
 git submodule update --init --recursive
@@ -179,7 +180,7 @@ then
     if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
             # on Debian, we must add the APT repository of PostgreSQL project
             # to have the right version of postgis
-            # no magic stuff : https://wiki.postgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
+            # no magic stuff : https://wiki.pestgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
             apt_file='/etc/apt/sources.list.d/postgresql.list'
             sudo /bin/sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main' > $apt_file"
             sudo apt-get -y install wget ca-certificates
@@ -199,7 +200,7 @@ fi
 
 #the build procedure is explained is the install documentation
 echo "** building navitia"
-navitia_build_dir="$navitia_dir"/release
+navitia_build_dir="$navitia_dir"/build_release
 mkdir -p "$navitia_build_dir" && cd "$navitia_build_dir"
 cmake -DCMAKE_BUILD_TYPE=Release ../source
 make -j$(($(grep -c '^processor' /proc/cpuinfo)+1))
@@ -231,6 +232,14 @@ else
     echo "db $kraken_db_name already exists"
 fi
 
+echo "** create temporary virtenv to migrate bdd"
+if [ -d /tmp/venv_navitia_sql ]; then
+    rm -rf /tmp/venv_navitia_sql
+fi
+virtualenv /tmp/venv_navitia_sql
+. /tmp/venv_navitia_sql/bin/activate
+pip install -r "$navitia_dir"/source/sql/requirements.txt
+
 # Then you need to update it's scheme
 # The database migration is handled by alembic
 # You can edit the alembic.ini file if you want a custom behaviour (or give your own with the alembic -c option)
@@ -238,7 +247,9 @@ fi
 # a -x dbname option
 cd "$navitia_dir"/source/sql
 PYTHONPATH=. alembic -x dbname="postgresql://$db_owner:$kraken_db_user_password@localhost/$kraken_db_name" upgrade head
-cd
+deactivate
+rm -rf /tmp/venv_navitia_sql
+cd -
 
 # Install jormungandr database and upgrade it's schema
 # WARNING : default name is "jormungandr", so it should be the same in your SQLALCHEMY_DATABASE_URI on default_settings.py
@@ -249,9 +260,19 @@ else
     echo "db jormungandr already exists"
 fi
 
+echo "** create temporary virtenv to upgrade jormun bdd"
+if [ -d /tmp/venv_tyr ]; then
+    rm -rf /tmp/venvtyr
+fi
+virtualenv /tmp/venv_tyr
+. /tmp/venv_tyr/bin/activate
+pip install -r "$navitia_dir"/source/tyr/requirements_dev.txt
 cd "$navitia_dir"/source/tyr
+
 PYTHONPATH=.:../navitiacommon/ TYR_CONFIG_FILE=default_settings.py ./manage_tyr.py db upgrade
-cd
+deactivate
+rm -rf /tmp/venv_tyr
+cd -
 
 #====================
 # Filling up the data
@@ -259,8 +280,8 @@ cd
 
 # ** filling up the database **
 
-## we need to import the gtfs data
-"$navitia_build_dir"/ed/gtfs2ed -i "$gtfs_data_dir" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
+## we need to import the ntfs data
+"$navitia_build_dir"/ed/fusio2ed -i "$ntfs_data_dir" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
 
 ## we need to import the osm data
 "$navitia_build_dir"/ed/osm2ed -i "$osm_file" --connection-string="host=localhost user=$db_owner dbname=$kraken_db_name password=$kraken_db_user_password"
@@ -316,7 +337,7 @@ mkdir -p "$run_dir"/jormungandr
 cat << EOFJ > "$run_dir"/jormungandr/default.json
 {
     "key": "default",
-    "socket": "ipc:///tmp/default_kraken"
+    "zmq_socket": "ipc:///tmp/default_kraken",
 }
 EOFJ
 
