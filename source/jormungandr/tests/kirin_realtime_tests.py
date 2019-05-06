@@ -1918,6 +1918,68 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         assert pt_response['physical_modes'][0]['name'] == 'Tramway'
 
 
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
+    def test_add_trip_with_headsign(self):
+        """
+        1. send a disruption with a headsign to add a trip
+        2. check that headsign is present in journey.section.display_informations
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption, a new trip with 2 stop_times in realtime
+        self.send_mock(
+            "additional-trip",
+            "20120614",
+            'added',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id='new_trip',
+            effect='additional_service',
+            headsign='trip_headsign',
+        )
+
+        # Check that a new disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+
+        C_B_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "datetime={dt}&_current_datetime={dt}".format(
+                f='stop_point:stopC', to='stop_point:stopB', dt='20120614T080000'
+            )
+        )
+
+        # Check that a PT journey exists with trip_headsign in display_informations
+        response = self.query_region(C_B_query)
+        assert has_the_disruption(response, 'new_trip')
+        self.is_valid_journey_response(response, C_B_query)
+        assert len(response['journeys']) == 2
+        pt_journey = response['journeys'][0]
+        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
+        assert pt_journey['sections'][0]['display_informations']['headsign'] == 'trip_headsign'
+
+
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
 class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
     def test_add_new_trip_blocked(self):
@@ -2029,7 +2091,14 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
 
 
 def make_mock_kirin_item(
-    vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None, effect=None, physical_mode_id=None
+    vj_id,
+    date,
+    status='canceled',
+    new_stop_time_list=[],
+    disruption_id=None,
+    effect=None,
+    physical_mode_id=None,
+    headsign=None,
 ):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
@@ -2044,6 +2113,8 @@ def make_mock_kirin_item(
     trip.trip_id = vj_id
     trip.start_date = date
     trip.Extensions[kirin_pb2.contributor] = rt_topic
+    if headsign:
+        trip_update.Extensions[kirin_pb2.headsign] = headsign
     if physical_mode_id:
         trip_update.vehicle.Extensions[kirin_pb2.physical_mode_id] = physical_mode_id
     if effect == 'unknown':

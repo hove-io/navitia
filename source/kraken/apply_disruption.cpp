@@ -319,7 +319,14 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 vj->name = mvj->get_base_vj().at(0)->name;
                 vj->dataset = mvj->get_base_vj().at(0)->dataset;
             } else {
-                vj->name = new_vj_uri;
+                // Affect the headsign to vj if present in gtfs-rt
+                if (!impact->headsign.empty()) {
+                    vj->name = impact->headsign;
+                    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
+                } else {
+                    vj->name = new_vj_uri;
+                }
+
                 // for protection, use the datasets[0]
                 // TODO : Create default data set
                 vj->dataset = pt_data.datasets[0];
