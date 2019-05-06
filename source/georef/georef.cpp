@@ -236,7 +236,7 @@ type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
     return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
 
-PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
+PathItem::TransportCaracteristic GeoRef::get_caracteristic(const edge_t& edge) const {
     auto source_mode = get_mode(boost::source(edge, graph));
     auto target_mode = get_mode(boost::target(edge, graph));
 
@@ -329,7 +329,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord& coord,
     }
 }
 
-void ProjectionData::init(const type::GeographicalCoord& coord, const GeoRef& sn, edge_t nearest_edge) {
+void ProjectionData::init(const type::GeographicalCoord& coord, const GeoRef& sn, const edge_t& nearest_edge) {
     // We retrieve both vertices of nearest_edge from the graph to get their coordinates
     vertices[Direction::Source] = boost::source(nearest_edge, sn.graph);
     vertices[Direction::Target] = boost::target(nearest_edge, sn.graph);
@@ -607,9 +607,6 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
         const auto& filter = [](const Way& w) { return w.admin_list.empty(); };
-        auto log = log4cplus::Logger::getInstance("find_admins");
-        LOG4CPLUS_DEBUG(log, "find_admins!!!!!!!!!!!!" << coord.lon() << "    " << coord.lat());
-
         return nearest_addr(coord, filter).second->admin_list;
     } catch (proximitylist::NotFound&) {
         return {};
@@ -692,9 +689,9 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    for (const auto& pair_coord : prox.find_within(coordinates, horizon)) {
+    for (const auto& ind : prox.find_within_index_only(coordinates, horizon, 100)) {
         // we increment the index to get the vertex in the other graph
-        const auto u = pair_coord.first + offset;
+        const auto u = ind + offset;
 
         BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
             const auto v = target(e, graph);
@@ -730,8 +727,8 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
                                                 const std::function<bool(const Way&)>& filter) const {
     // first, we collect each ways with its distance to the coord
     std::map<const Way*, double> way_dist;
-    for (const auto& pair_coord : pl.find_within(coord)) {
-        BOOST_FOREACH (edge_t e, boost::out_edges(pair_coord.first, graph)) {
+    for (const auto& ind : pl.find_within_index_only(coord, 500, 100)) {
+        BOOST_FOREACH (const edge_t& e, boost::out_edges(ind, graph)) {
             const Way* w = ways[graph[e].way_idx];
             if (filter(*w)) {
                 continue;

@@ -57,8 +57,8 @@ bool operator==(const GeographicalCoord& a, const GeographicalCoord& b) {
 }
 
 template <typename F>
-std::pair<GeographicalCoord, float> GeographicalCoord::project_common(GeographicalCoord segment_start,
-                                                                      GeographicalCoord segment_end,
+std::pair<GeographicalCoord, float> GeographicalCoord::project_common(const GeographicalCoord& segment_start,
+                                                                      const GeographicalCoord& segment_end,
                                                                       F f) const {
     std::pair<GeographicalCoord, float> result;
     double dlon = segment_end._lon - segment_start._lon;
@@ -90,16 +90,18 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project_common(Geographic
     return result;
 }
 
-std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord segment_start,
-                                                               GeographicalCoord segment_end) const {
-    auto dist = [](GeographicalCoord source, GeographicalCoord target) { return source.distance_to(target); };
+std::pair<GeographicalCoord, float> GeographicalCoord::project(const GeographicalCoord& segment_start,
+                                                               const GeographicalCoord& segment_end) const {
+    auto dist = [](const GeographicalCoord& source, const GeographicalCoord& target) {
+        return source.distance_to(target);
+    };
     return project_common(segment_start, segment_end, dist);
 }
 
-std::pair<GeographicalCoord, float> GeographicalCoord::approx_project(GeographicalCoord segment_start,
-                                                                      GeographicalCoord segment_end,
+std::pair<GeographicalCoord, float> GeographicalCoord::approx_project(const GeographicalCoord& segment_start,
+                                                                      const GeographicalCoord& segment_end,
                                                                       double coslat) const {
-    auto dist = [coslat](GeographicalCoord source, GeographicalCoord target) {
+    auto dist = [coslat](const GeographicalCoord& source, const GeographicalCoord& target) {
         return sqrt(source.approx_sqr_distance(target, coslat));
     };
     return project_common(segment_start, segment_end, dist);
