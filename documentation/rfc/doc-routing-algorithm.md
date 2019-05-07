@@ -8,9 +8,12 @@ This gives a quick overview of the steps of the routing algorithm.
 
 ### Example 1
 
-![transit_map](transit_map.png)
+![transit_map](https://www.lucidchart.com/publicSegments/view/65e14521-5b56-4100-8f93-6efa011e4a7e/image.png)
 
-Line 1 (every 20 minutes):
+[[Edit graph]](https://www.lucidchart.com/invitations/accept/97f0cc55-31c2-433e-b5c6-749c726bc94b)
+
+
+Line 1 ![orange](https://placehold.it/15/ff9b19/000000?text=1+) (every 20 minutes):
 
 | A  | E  |
 |----|----|
@@ -18,7 +21,7 @@ Line 1 (every 20 minutes):
 |8:10|9:10|
 |8:30|9:30|
 
-Line 2 (every 10 minutes):
+Line 2 ![black](https://placehold.it/15/010101/ffffff?text=2+) (every 10 minutes):
 
 | A  | B  | C  | D  |
 |----|----|----|----|
@@ -26,7 +29,7 @@ Line 2 (every 10 minutes):
 |8:10|8:40|8:43|8:46|
 |8:20|8:50|8:53|8:56|
 
-Line 3 (every 5 minutes):
+Line 3 ![red](https://placehold.it/15/ff10010/000000?text=3+) (every 5 minutes):
 
 | D  | C  | B  | E  | F  |
 |----|----|----|----|----|
@@ -34,7 +37,7 @@ Line 3 (every 5 minutes):
 |8:40|8:43|8:46|9:05|9:07|
 |8:45|8:48|8:51|9:10|9:12|
 
-Line 4 (every 5 minutes):
+Line 4 ![blue](https://placehold.it/15/000af0/ffffff?text=4+) (every 5 minutes):
 
 | B  | C  | F  | E  |
 |----|----|----|----|
@@ -42,7 +45,7 @@ Line 4 (every 5 minutes):
 |8:40|8:45|9:05|9:07|
 |8:45|8:50|9:10|9:12|
 
-Line 5 (every 20 minutes):
+Line 5 ![green](https://placehold.it/15/00aa00/000000?text=5+) (every 20 minutes):
 
 | E  | F  |  G  |
 |----|----|-----|
@@ -81,9 +84,9 @@ Starting from A at 7:45:
 |level| A  | B  | C  | D  | E  | F  |  G      |
 |-----|----|----|----|----|----|----|---------|
 |TR0  |7:45|    |    |    |    |    |         |
-|PT1  |    |8:30|8:33|8:36|8:50|    |         |
+|PT1  |    |8:30 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:33 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:36 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:50 ![](https://placehold.it/15/ff9b19/000000?text=1+) |    |         |
 |TR1  |    |8:32|8:35|8:38|8:52|    |         |
-|PT2  |    |    |    |    |    |9:00|**10:00**|
+|PT2  |    |    |    |    |    |9:00 ![](https://placehold.it/15/000af0/ffffff?text=4+)|**10:00** ![](https://placehold.it/15/00aa00/000000?text=5+) |
 |TR2  |    |    |    |    |    |9:03|10:02    |
 |PT3  |    |    |    |    |    |    |         |
 
@@ -92,15 +95,15 @@ Starting from A at 7:55:
 |level| A  | B  | C  | D  | E  | F  |  G      |
 |-----|----|----|----|----|----|----|---------|
 |TR0  |7:55|    |    |    |    |    |         |
-|PT1  |    |8:30|8:33|8:36|9:10|    |         |
+|PT1  |    |8:30 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:33 ![](https://placehold.it/15/010101/ffffff?text=2+) |8:36 ![](https://placehold.it/15/010101/ffffff?text=2+) |9:10 ![](https://placehold.it/15/ff9b19/000000?text=1+) |    |         |
 |TR1  |    |8:32|8:35|8:38|9:12|    |         |
-|PT2  |    |    |    |    |9:00|9:00|**10:20**|
+|PT2  |    |    |    |    |9:00 ![](https://placehold.it/15/ff10010/000000?text=3+) |9:00 ![](https://placehold.it/15/000af0/ffffff?text=4+) |**10:20** ![](https://placehold.it/15/00aa00/000000?text=5+) |
 |TR2  |    |    |    |    |9:02|9:03|10:22    |
-|PT3  |    |    |    |    |    |    |**10:00**|
+|PT3  |    |    |    |    |    |    |**10:00** ![](https://placehold.it/15/00aa00/000000?text=5+) |
 |TR3  |    |    |    |    |    |    |10:02    |
 |PT4  |    |    |    |    |    |    |         |
 
-The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if the target is G, starting at 7:45 from A gives G at 10:00 using 1 connection, but starting at 7:55 gives 10:20 using 1 connection and 10:00 using 2 connections.
+The different PTx on the destination stop points gives the earliest arrival to our destinations for each number of connection. In this case, if the target is G, starting at 7:45 from A gives G at 10:00 using 1 connection, but starting at 7:55 gives 10:20 using 1 connection ![](https://placehold.it/15/ff9b19/000000?text=1+)![](https://placehold.it/15/00aa00/000000?text=5+) and 10:00 using 2 connections ![](https://placehold.it/15/010101/ffffff?text=2+)![](https://placehold.it/15/ff10010/000000?text=3+)![](https://placehold.it/15/00aa00/000000?text=5+) (or ![](https://placehold.it/15/010101/ffffff?text=2+)![](https://placehold.it/15/000af0/ffffff?text=4+)![](https://placehold.it/15/00aa00/000000?text=5+)).
 
 Note that the TR0 can have several entries, and, in practice, there is a few hundred of them (all the accessible stop points by feet).
 
@@ -119,15 +122,15 @@ From the first pass from A at 7:45, there is only one candidate second pass: end
 |level| A      | B  | C  | D  | E  | F  |  G  |
 |-----|--------|----|----|----|----|----|-----|
 |TR0  |        |    |    |    |    |    |10:00|
-|PT1  |        |    |    |    |9:05|9:07|     |
+|PT1  |        |    |    |    |9:05 ![](https://placehold.it/15/00aa00/000000?text=5+)|9:07 ![](https://placehold.it/15/00aa00/000000?text=5+)|     |
 |TR1  |        |    |    |    |9:03|9:04|     |
-|PT2  |**7:50**|8:41|8:40|8:35|    |    |     |
+|PT2  |**7:50** ![](https://placehold.it/15/ff9b19/000000?text=1+)|8:41 ![](https://placehold.it/15/ff10010/000000?text=3+)|8:40 ![](https://placehold.it/15/000af0/ffffff?text=4+)|8:35 ![](https://placehold.it/15/ff10010/000000?text=3+)|    |    |     |
 |TR2  |7:48    |8:39|8:38|8:33|    |    |     |
-|PT3  |**8:00**|    |    |    |    |    |     |
+|PT3  |**8:00** ![](https://placehold.it/15/010101/ffffff?text=2+)|    |    |    |    |    |     |
 |TR3  |7:58    |    |    |    |    |    |     |
 |PT4  |        |    |    |    |    |    |     |
 
-The second pass find 2 stating candidates: from A at 7:50 with 1 connection, and from A at 8:00 with 2 connections.
+The second pass finds 2 candidates: from A at 7:50 with 1 connection, and from A at 8:00 with 2 connections.
 
 ### Solution reader
 
@@ -139,8 +142,8 @@ The second pass find 2 stating candidates: from A at 7:50 with 1 connection, and
 
 [TODO] The branching scheme
 
-The parameter `walking_transfer_penalty` has been added to give an additional walking cost felt when one must do an additional connection.
-So increasing that parameter (default is `120` s) would favor walking a bit more to avoid a connection. It does not impact anything else, nor is it reported in the final journey.
+The parameter `walking_transfer_penalty` has been added to give an additional walking cost on additional connection.
+Hence, increasing that parameter (default is `120` seconds) would favor walking a bit more to avoid a connection. It does not impact anything else and is not reported in the final journey.
 
 ### Advantages and drawbacks
 
@@ -173,7 +176,7 @@ In that case, this is a limitation of the current algorithm :-(
 ## Some ideas for improvement
 
 ### Guillaume P. (@texitoi):
-If I had to rewrite it, I'd base the algorithm on Connection Scan Algorithm. RAPTOR and CSA are still the simplest, more flexible and more effective algorithms. CSA is simpler, RAPTOR is better when the journey patterns contain a lot of vehicle journeys. Other algorithms try to limit the search space by using the "locality" of the data (in the geographical sense, using contractions or partitionning), but they are much more complicated, much less flexible, and need a complex prepocessing.
+If I had to rewrite it, I'd base the algorithm on Connection Scan Algorithm. RAPTOR and CSA are still the simplest, more flexible and more effective algorithms. CSA is simpler, RAPTOR is better when the journey patterns contain a lot of vehicle journeys. Other algorithms try to limit the search space by using the "locality" of the data (in the geographical sense, using contractions or partitionning), but they are much more complex, less flexible and need complex prepocessing.
 
 As direct objectives, I'd use:
 - minimize arrival time
