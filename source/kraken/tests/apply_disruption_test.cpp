@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
-    const auto& vj = pt_data->vehicle_journeys_map.at("vj:A-1");
+    const auto& vj = pt_data->vehicle_journeys_map.at("vehicle_journey:vj:A-1");
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
     apply(disrup);
@@ -205,11 +205,11 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     b.sa("S2")("S2");
     b.sa("S3")("S3");
 
-    const auto* vj1 = b.vj("A").uri("vj1")("S1", "08:00"_t)("S2", "09:00"_t)("S3", "10:00"_t).make();
-    const auto* vj2 = b.vj("A").uri("vj2")("S1", "10:00"_t)("S2", "10:30"_t)("S3", "11:00"_t).make();
-    const auto* vj3 = b.vj("A").uri("vj3")("S1", "10:00"_t)("S3", "11:00"_t).make();
-    const auto* vj4 = b.vj("A").uri("vj4")("S1", "08:00"_t)("S2", "10:00"_t)("S3", "10:30"_t).make();
-    const auto* vj5 = b.vj("A").uri("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
+    const auto* vj1 = b.vj("A").name("vj1")("S1", "08:00"_t)("S2", "09:00"_t)("S3", "10:00"_t).make();
+    const auto* vj2 = b.vj("A").name("vj2")("S1", "10:00"_t)("S2", "10:30"_t)("S3", "11:00"_t).make();
+    const auto* vj3 = b.vj("A").name("vj3")("S1", "10:00"_t)("S3", "11:00"_t).make();
+    const auto* vj4 = b.vj("A").name("vj4")("S1", "08:00"_t)("S2", "10:00"_t)("S3", "10:30"_t).make();
+    const auto* vj5 = b.vj("A").name("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -332,11 +332,11 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
     b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3");
 
     b.vj("A", "111111")
-        .uri("VjA")("A1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
+        .name("VjA")("A1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
             "stop_area:stop2", "10:20"_t, "10:21"_t)("A2", "11:20"_t, "11:21"_t);
 
     b.vj("B", "111111")
-        .uri("VjB")("B1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
+        .name("VjB")("B1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
             "stop_area:stop3", "10:20"_t, "10:21"_t)("B2", "11:20"_t, "11:21"_t);
 
     b.make();
@@ -426,14 +426,14 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
     // Base VJ
-    auto vj = b.data->pt_data->vehicle_journeys_map["vj:A:0"];
+    auto vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:A:0"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "0111111"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0111000"),
                         vj->adapted_validity_pattern()->days);
 
     // Adapted VJ
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vehicle_journey 0:Adapted:1:stop_area_closed"];
+    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj 0:Adapted:1:stop_area_closed"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "0000000"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
     ed::builder b("20160404");
     b.vj("line:A", "111100")
-        .uri("vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:20"_t, "08:21"_t)(
+        .name("vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:20"_t, "08:21"_t)(
             "stop_point:30", "08:30"_t, "08:31"_t)("stop_point:40", "08:40"_t, "08:41"_t);
 
     b.make();
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
     // 2 vj, vj:1 needs to be impacted on the 6th
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111000"), adapted_vp);
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
     navitia::delete_disruption("stop_point:20_closed", *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
-    vj = b.get<nt::VehicleJourney>("vj:1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111100"), adapted_vp);
@@ -515,7 +515,8 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
  * */
 BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     ed::builder b("20120614");
-    b.vj("A").uri("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t)  // <- Only stop3 will be impacted
+    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                   "08:45"_t)  // <- Only stop3 will be impacted
         ("stop4", "09:00"_t);
 
     b.make();
@@ -534,7 +535,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
                               *b.data->pt_data, *b.data->meta);
 
     // Base VJ
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "011000"),
@@ -560,7 +561,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     res = compute(*b.data, nt::RTLevel::RealTime, "stop1", "stop3", "05:00"_t, 4);
     BOOST_REQUIRE_EQUAL(res.size(), 1);  // <-- The result should be the base vj
-    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times[0]->vehicle_journey->uri, "vj:1");
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times[0]->vehicle_journey->uri, "vehicle_journey:vj:1");
 
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
@@ -572,7 +573,8 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
 BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     ed::builder b("20120614");
-    b.vj("A").uri("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t)  // <- Only stop3 will be impacted
+    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                   "08:45"_t)  // <- Only stop3 will be impacted
         ("stop4", "09:00"_t);
 
     b.make();
@@ -594,7 +596,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
     navitia::apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     // Base VJ
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "011000"),
@@ -616,7 +618,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
 
 BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     ed::builder b("20120614");
-    b.vj("A").uri("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t);
+    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t);
 
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
@@ -648,7 +650,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     // Base VJ
-    auto* vj = b.data->pt_data->vehicle_journeys_map["vj:1"];
+    auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
                         vj->base_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000000"),
@@ -678,7 +680,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
+    auto* vj1 = b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
@@ -750,7 +752,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
  * */
 BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A", "00100").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
+    auto* vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
@@ -853,7 +855,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
  * */
 BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A", "00100").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
+    auto* vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
@@ -949,7 +951,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
 BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
     ed::builder b("20120614");
     auto* vj =
-        b.vj("A").uri("vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t)("stop3", "10:00"_t)("stop1", "11:00"_t).make();
+        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t)("stop3", "10:00"_t)("stop1", "11:00"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
@@ -1015,12 +1017,12 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
         "stop_area:stop5")("stop_area:stop6")("stop_area:stop7")("stop_area:stop8");
 
     b.vj("A", "111111")
-        .uri("VjA")("A1", "08:10"_t)("stop_area:stop1", "09:10"_t)("stop_area:stop2", "10:20"_t)(
+        .name("VjA")("A1", "08:10"_t)("stop_area:stop1", "09:10"_t)("stop_area:stop2", "10:20"_t)(
             "stop_area:stop3", "11:10"_t)("stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)(
             "stop_area:stop6", "14:20"_t)("stop_area:stop7", "15:10"_t)("stop_area:stop8", "16:20"_t)("A2", "17:20"_t);
 
     b.vj("B", "111111")
-        .uri("VjB")("B1", "08:10"_t)("stop_area:stop2", "10:20"_t)("stop_area:stop3", "11:10"_t)(
+        .name("VjB")("B1", "08:10"_t)("stop_area:stop2", "10:20"_t)("stop_area:stop3", "11:10"_t)(
             "stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)("stop_area:stop6", "14:20"_t)(
             "stop_area:stop7", "15:10"_t)("B2", "17:20"_t)("B3", "18:20"_t)("B4", "19:20"_t);
 
@@ -1120,26 +1122,26 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 5);
 
     // Check the original vj
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111001"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "101000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "101010"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001100"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "001100"), base_vp);
 
     // Check the adapted vj
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_on_line:A_diverted");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000110"), adapted_vp);
@@ -1151,7 +1153,7 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().arrival_time, "08:40"_t);
 
-    vj = b.get<nt::VehicleJourney>("vj:2:Adapted:0:line_section_on_line:A_diverted");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2:Adapted:0:line_section_on_line:A_diverted");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000010"), adapted_vp);
@@ -1164,7 +1166,7 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
 
     // vj:3 shouldn't be affected by the disruption. On the 6th the disruption stops at 9am but its first
     // stop_time starts at 10am
-    BOOST_CHECK(b.get<nt::VehicleJourney>("vj:3:Adapted:0:line_section_on_line:A_diverted") == nullptr);
+    BOOST_CHECK(b.get<nt::VehicleJourney>("vehicle_journey:vj:3:Adapted:0:line_section_on_line:A_diverted") == nullptr);
 
     // Deleting the disruption
     navitia::delete_disruption("line_section_on_line:A_diverted", *b.data->pt_data, *b.data->meta);
@@ -1172,19 +1174,19 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
     // Wqe are now back to the 'normal' state
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
 
-    vj = b.get<nt::VehicleJourney>("vj:1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "101010"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "101010"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001100"), adapted_vp);
@@ -1193,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
 
 BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     ed::builder b("20160404");
-    b.vj("line:1").uri("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t)("E", "08:50"_t)(
+    b.vj("line:1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t)("E", "08:50"_t)(
         "F", "08:60"_t)("G", "08:70"_t);
 
     b.make();
@@ -1233,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("G")->get_impacts().size(), 0);
 
     // Check the original vjs
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 7);
     auto* meta_vj = vj->meta_vj;
     // this vj should be impacted by the line section, so the impact should be found in it's metavj
@@ -1242,7 +1244,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     // Check adapted vjs
     BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
 
-    const auto* adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C");
+    const auto* adapted_vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:first_ls_B_C");
     BOOST_REQUIRE(adapted_vj);
     BOOST_CHECK(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
     BOOST_CHECK(ba::ends_with(adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
@@ -1282,7 +1284,8 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     // Check adapted vjs, there should be only 1
     BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
 
-    const auto* second_adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F");
+    const auto* second_adapted_vj =
+        b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F");
     BOOST_REQUIRE(second_adapted_vj);
     BOOST_CHECK(ba::ends_with(second_adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
     BOOST_CHECK(ba::ends_with(second_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
@@ -1321,8 +1324,8 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     BOOST_CHECK_EQUAL(meta_vj->get_impacts().size(), 3);
 
     // Check adapted vjs, there should only be the last one
-    const auto* third_adapted_vj =
-        b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F:Adapted:1:third_ls_C_G");
+    const auto* third_adapted_vj = b.get<nt::VehicleJourney>(
+        "vehicle_journey:vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F:Adapted:1:third_ls_C_G");
     BOOST_REQUIRE(third_adapted_vj);
     BOOST_CHECK(ba::ends_with(third_adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
     BOOST_CHECK(ba::ends_with(third_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
@@ -1338,7 +1341,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
     b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
     b.vj("line:A", "001001")
-        .uri("vj:1")("stop_point:10", "23:00"_t, "23:01"_t)("stop_point:20", "24:00"_t, "24:01"_t)(
+        .name("vj:1")("stop_point:10", "23:00"_t, "23:01"_t)("stop_point:20", "24:00"_t, "24:01"_t)(
             "stop_point:30", "25:00"_t, "25:01"_t)("stop_point:40", "26:00"_t, "26:01"_t);
 
     b.make();
@@ -1357,14 +1360,14 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
     // Check the original vj
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "001001"), base_vp);
 
     // Check the adapted vj
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_on_line:A_diverted");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
@@ -1381,7 +1384,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
 
-    vj = b.get<nt::VehicleJourney>("vj:1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001001"), adapted_vp);
@@ -1415,7 +1418,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
 
     // Check the vj
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111000"), adapted_vp);
@@ -1426,7 +1429,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
-    vj = b.get<nt::VehicleJourney>("vj:1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
@@ -1522,7 +1525,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("s6")->get_impacts().size(), 0);
 
     // Check the original vjs
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     // this vj should be impacted by the line section, so the impact should be found in it's metavj
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
     auto adapted_vp = vj->adapted_validity_pattern()->days;
@@ -1530,7 +1533,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1538,7 +1541,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
     // vj3 shouldn't be impacted since there is no section stop_area:2 -> stop_area:5
-    vj = b.get<nt::VehicleJourney>("vj:3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1546,7 +1549,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
     // vj4 shouldn't be impacted too since it's route isn't
-    vj = b.get<nt::VehicleJourney>("vj:4");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:4");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1554,7 +1557,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
     // Check adapted vjs
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1564,7 +1567,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "s1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "s6");
 
-    vj = b.get<nt::VehicleJourney>("vj:2:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1577,9 +1580,11 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     }
 
     // route:A3 shouldn't be impacted, the adapted vj shouldn't exist
-    BOOST_CHECK(b.get<nt::VehicleJourney>("vj:3:Adapted:0:line_section_sa1_sa5_routesA1-2-3") == nullptr);
+    BOOST_CHECK(b.get<nt::VehicleJourney>("vehicle_journey:vj:3:Adapted:0:line_section_sa1_sa5_routesA1-2-3")
+                == nullptr);
     // route:A4 wasn't in the list of impacted route
-    BOOST_CHECK(b.get<nt::VehicleJourney>("vj:4:Adapted:0:line_section_sa1_sa5_routesA1-2-3") == nullptr);
+    BOOST_CHECK(b.get<nt::VehicleJourney>("vehicle_journey:vj:4:Adapted:0:line_section_sa1_sa5_routesA1-2-3")
+                == nullptr);
 
     // Deleting the disruption
     navitia::delete_disruption("line_section_sa1_sa5_routesA1-2-3", *b.data->pt_data, *b.data->meta);
@@ -1597,14 +1602,14 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("s6")->get_impacts().size(), 0);
 
     // Check the original vjs
-    vj = b.get<nt::VehicleJourney>("vj:1");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);  // there shouldn't be any impacts anymore
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1612,14 +1617,14 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
     // vj3 shouldn't be impacted since there is no section stop_area:2 -> stop_area:5
-    vj = b.get<nt::VehicleJourney>("vj:3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:4");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:4");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 0);
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
@@ -1709,51 +1714,53 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
 
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "110000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:2");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "101000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "101110"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:3");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "001100"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_on_line:A_stop:area4-5");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_stop:area4-5");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000011"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:1:line_section_on_line:A_stop:area3-4");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:1:line_section_on_line:A_stop:area3-4");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001000"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
-    vj = b.get<nt::VehicleJourney>("vj:3:Adapted:0:line_section_on_line:A_stop:area3-4");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:3:Adapted:0:line_section_on_line:A_stop:area3-4");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000100"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
     vj = b.get<nt::VehicleJourney>(
-        "vj:1:Adapted:0:line_section_on_line:A_stop:area4-5:Adapted:2:line_section_on_line:A_stop:area3-4");
+        "vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_stop:area4-5:Adapted:2:line_section_on_line:A_stop:"
+        "area3-4");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000100"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
     vj = b.get<nt::VehicleJourney>(
-        "vj:2:Adapted:0:line_section_on_line:A_stop:area4-5:Adapted:1:line_section_on_line:A_stop:area3-4");
+        "vehicle_journey:vj:2:Adapted:0:line_section_on_line:A_stop:area4-5:Adapted:1:line_section_on_line:A_stop:"
+        "area3-4");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000110"), adapted_vp);
@@ -1765,7 +1772,8 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
  * */
 BOOST_AUTO_TEST_CASE(update_impact) {
     ed::builder b("20120614");
-    b.vj("A").uri("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t)  // <- Only stop3 will be impacted
+    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                   "08:45"_t)  // <- Only stop3 will be impacted
         ("stop4", "09:00"_t);
 
     b.make();
@@ -1846,7 +1854,7 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
     // Check the original vj
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "0000001"), adapted_vp);
@@ -1862,7 +1870,7 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:45"_t);
 
     // Check the adapted vj
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_on_line:A_diverted");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "1111110"), adapted_vp);
@@ -1904,7 +1912,7 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
     // Check the original vj
-    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "0000001"), adapted_vp);
@@ -1921,7 +1929,7 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(3).alighting_time, "08:45"_t);
 
     // Check the adapted vj
-    vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:line_section_on_line:A_diverted");
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
     adapted_vp = vj->adapted_validity_pattern()->days;
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "1111110"), adapted_vp);
@@ -1941,7 +1949,7 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
  */
 BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
     ed::builder b("20120614");
-    b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t);
+    b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t);
 
     b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
@@ -1963,8 +1971,8 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
     // no message on the metavj or vj
-    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->get_impacts().size(), 0);
-    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->meta_vj->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vehicle_journey:vj:1")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vehicle_journey:vj:1")->meta_vj->get_impacts().size(), 0);
 }
 
 /**
@@ -1976,11 +1984,11 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
 
     ed::builder b("20170101");
 
-    b.vj("l1").uri("vj:0")("A", "08:10"_t)("B", "08:20"_t);
-    b.vj("l1").uri("vj:1")("A", "09:10"_t)("B", "09:20"_t);
-    b.vj("l1").uri("vj:2")("A", "10:10"_t)("B", "10:20"_t)("C", "10:30"_t)("D", "10:40"_t);
-    b.vj("l1").uri("vj:3")("A", "11:10"_t)("B", "11:20"_t)("C", "11:30"_t)("D", "11:40"_t)("E", "11:50"_t)("F",
-                                                                                                           "11:55"_t);
+    b.vj("l1").name("vj:0")("A", "08:10"_t)("B", "08:20"_t);
+    b.vj("l1").name("vj:1")("A", "09:10"_t)("B", "09:20"_t);
+    b.vj("l1").name("vj:2")("A", "10:10"_t)("B", "10:20"_t)("C", "10:30"_t)("D", "10:40"_t);
+    b.vj("l1").name("vj:3")("A", "11:10"_t)("B", "11:20"_t)("C", "11:30"_t)("D", "11:40"_t)("E", "11:50"_t)("F",
+                                                                                                            "11:55"_t);
 
     const auto it1 = b.sas.find("A");
     b.data->pt_data->routes.front()->destination = it1->second;
@@ -2034,10 +2042,10 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     auto resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys_size(), 6);
 
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(0).uri(), "vj:0");
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(1).uri(), "vj:1");
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(2).uri(), "vj:2");
-    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(3).uri(), "vj:3");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(0).uri(), "vehicle_journey:vj:0");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(1).uri(), "vehicle_journey:vj:1");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(2).uri(), "vehicle_journey:vj:2");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(3).uri(), "vehicle_journey:vj:3");
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(4).uri(), "vehicle_journey:vj:3:Adapted:0:Disruption_C1");
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(5).uri(), "vehicle_journey:vj:2:Adapted:1:Disruption_C:Disruption_D");
 }
@@ -2063,8 +2071,8 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 
 BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
-    auto* vj2 = b.vj("B").uri("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+    auto* vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj2 = b.vj("B").name("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
@@ -2114,7 +2122,7 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
 
 BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
 
     b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
@@ -2176,7 +2184,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
 
     auto dis_builder = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_two_stops_in_two_impacts");
     dis_builder.impact()
@@ -2194,7 +2202,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     // There should be only one more vj
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
     // And the base vj:1 should have 2 impacts
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 2);
 
     const auto* disruption =
         b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_two_stops_in_two_impacts");
@@ -2206,7 +2214,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     // Once again one vj after deletion. This was failing, we were reapplying the disruption and an adapted vj was kept
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
     // No more impacts
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
 
     // Can't reuse the same disruption since the memory has been freed.
     auto dis_builder_update = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_two_stops_in_two_impacts");
@@ -2225,7 +2233,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     // There should be only one more vj again
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
     // This was failing too since the impact was not able to be applied again. We were getting 0.
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 2);
 
     disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_two_stops_in_two_impacts");
     BOOST_REQUIRE(disruption != nullptr);
@@ -2235,7 +2243,7 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
 
     // Once again one vj after deletion. This was failing, we were reapplying the disruption
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
 }
 
 // Same kind of test but applying to two differents VJ
@@ -2259,8 +2267,8 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 0);
 
     auto dis_builder = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_section_in_each_way");
     dis_builder.impact()
@@ -2276,8 +2284,8 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     navitia::apply_disruption(dis_builder.disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 1);
 
     const auto* disruption =
         b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_section_in_each_way");
@@ -2287,8 +2295,8 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     navitia::delete_disruption("line_section_on_line:A_section_in_each_way", *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 0);
 
     // Can't reuse the same disruption since the memory has been freed.
     auto dis_builder_update = b.disrupt(nt::RTLevel::Adapted, "line_section_on_line:A_section_in_each_way");
@@ -2305,8 +2313,8 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     navitia::apply_disruption(dis_builder_update.disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 1);
 
     disruption = b.data->pt_data->disruption_holder.get_disruption("line_section_on_line:A_section_in_each_way");
     BOOST_REQUIRE(disruption != nullptr);
@@ -2315,6 +2323,6 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     navitia::delete_disruption("line_section_on_line:A_section_in_each_way", *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:1")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vj:2")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 0);
 }

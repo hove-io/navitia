@@ -80,7 +80,7 @@ struct RTStopTime {
 };
 
 inline transit_realtime::TripUpdate make_trip_update_message(
-    const std::string& vj_uri,
+    const std::string& mvj_uri,
     const std::string& start_date,
     const std::vector<RTStopTime>& delayed_time_stops,
     const transit_realtime::Alert_Effect effect = transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS,
@@ -92,7 +92,7 @@ inline transit_realtime::TripUpdate make_trip_update_message(
     transit_realtime::TripUpdate trip_update;
     trip_update.SetExtension(kirin::effect, effect);
     auto trip = trip_update.mutable_trip();
-    trip->set_trip_id(vj_uri);
+    trip->set_trip_id(mvj_uri);
     if (company_id != "") {
         trip->SetExtension(kirin::company_id, company_id);
     }

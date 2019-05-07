@@ -49,11 +49,11 @@ using namespace navitia::timetables;
 BOOST_AUTO_TEST_CASE(passages_boarding_order) {
     ed::builder b("20170101");
 
-    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
         "stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
         "stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").uri("vj:1")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+    b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
         "stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
         "stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
@@ -89,10 +89,10 @@ BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
     b.data->meta->production_date = boost::gregorian::date_period(begin, end);
 
     b.vj("L1", "1111111")
-        .uri("vj:0")("stop1", "8:00"_t, "8:01"_t)("stop2", "8:05"_t, "8:06"_t)("stop3", "8:10"_t, "8:11"_t);
+        .name("vj:0")("stop1", "8:00"_t, "8:01"_t)("stop2", "8:05"_t, "8:06"_t)("stop3", "8:10"_t, "8:11"_t);
 
     b.vj("L1", "1111111")
-        .uri("vj:1")("stop1", "9:00"_t, "9:01"_t)("stop2", "9:05"_t, "9:06"_t)("stop3", "9:10"_t, "9:11"_t);
+        .name("vj:1")("stop1", "9:00"_t, "9:01"_t)("stop2", "9:05"_t, "9:06"_t)("stop3", "9:10"_t, "9:11"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();

@@ -84,8 +84,8 @@ public:
         std::vector<nt::StopTime> sts;
         sts.emplace_back();
         sts.back().stop_point = data.pt_data->stop_points.at(0);
-        mvj->create_discrete_vj(vj_name, vj_name, nt::RTLevel::Base, nt::ValidityPattern(), current_rt, std::move(sts),
-                                *data.pt_data);
+        mvj->create_discrete_vj("vehicle_journey:" + vj_name, vj_name, nt::RTLevel::Base, nt::ValidityPattern(),
+                                current_rt, std::move(sts), *data.pt_data);
     }
     void set_estimated(const std::string& vj_name) {
         data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().set_date_time_estimated(true);
@@ -189,7 +189,7 @@ Test 2 :
 
 BOOST_AUTO_TEST_CASE(test2) {
     reset_vj();
-    set_estimated("VJ111");
+    set_estimated("vehicle_journey:VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
@@ -212,11 +212,11 @@ Test 3 :
 
 BOOST_AUTO_TEST_CASE(test3) {
     reset_vj();
-    set_estimated("VJ111");
-    set_zonal("VJ111");
+    set_estimated("vehicle_journey:VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_estimated("VJ112");
-    set_zonal("VJ112");
+    set_estimated("vehicle_journey:VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
@@ -243,14 +243,14 @@ Test 4 :
 
 BOOST_AUTO_TEST_CASE(test4) {
     reset_vj();
-    set_estimated("VJ111");
-    set_zonal("VJ111");
+    set_estimated("vehicle_journey:VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_estimated("VJ112");
-    set_zonal("VJ112");
+    set_estimated("vehicle_journey:VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
-    set_estimated("VJ211");
-    set_zonal("VJ211");
+    set_estimated("vehicle_journey:VJ211");
+    set_zonal("vehicle_journey:VJ211");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
@@ -275,17 +275,17 @@ Test 5 :
 
 BOOST_AUTO_TEST_CASE(test5) {
     reset_vj();
-    set_estimated("VJ111");
-    set_zonal("VJ111");
+    set_estimated("vehicle_journey:VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_estimated("VJ112");
-    set_zonal("VJ112");
+    set_estimated("vehicle_journey:VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
-    set_estimated("VJ211");
-    set_zonal("VJ211");
+    set_estimated("vehicle_journey:VJ211");
+    set_zonal("vehicle_journey:VJ211");
 
-    set_estimated("VJ212");
-    set_zonal("VJ212");
+    set_estimated("vehicle_journey:VJ212");
+    set_zonal("vehicle_journey:VJ212");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
@@ -310,7 +310,7 @@ Test 6 :
 
 BOOST_AUTO_TEST_CASE(test6) {
     reset_vj();
-    set_zonal("VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
@@ -337,9 +337,9 @@ Test 7 :
 
 BOOST_AUTO_TEST_CASE(test7) {
     reset_vj();
-    set_zonal("VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_zonal("VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
     final_idx = make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled);
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(final_idx, data), std::set<std::string>({"Line2"}));
@@ -366,11 +366,11 @@ Test 8 :
 
 BOOST_AUTO_TEST_CASE(test8) {
     reset_vj();
-    set_zonal("VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_zonal("VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
-    set_zonal("VJ211");
+    set_zonal("vehicle_journey:VJ211");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 
@@ -395,13 +395,13 @@ Test 9 :
 
 BOOST_AUTO_TEST_CASE(test9) {
     reset_vj();
-    set_zonal("VJ111");
+    set_zonal("vehicle_journey:VJ111");
 
-    set_zonal("VJ112");
+    set_zonal("vehicle_journey:VJ112");
 
-    set_zonal("VJ211");
+    set_zonal("vehicle_journey:VJ211");
 
-    set_zonal("VJ212");
+    set_zonal("vehicle_journey:VJ212");
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, nt::OdtLevel_e::scheduled), ptref_error);
 

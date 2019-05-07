@@ -3145,7 +3145,7 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fix
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
     }
     {
         nr::RAPTOR::Journeys journeys = {j2, j1};
@@ -3154,7 +3154,7 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fix
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
     }
 }
 
@@ -3169,7 +3169,7 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture) {
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
     }
 
     // With the custom parameters, the max_pseudo_duration is 15h
@@ -3183,9 +3183,9 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture) {
         BOOST_REQUIRE_EQUAL(journeys.size(), 2);
 
         auto vj1 = journeys.front().sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj1->uri, "vj:vj1:0");
+        BOOST_CHECK_EQUAL(vj1->uri, "vehicle_journey:vj1:0");
         auto vj2 = journeys.back().sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj2->uri, "vj:vj2:1");
+        BOOST_CHECK_EQUAL(vj2->uri, "vehicle_journey:vj2:1");
     }
 }
 

@@ -36,7 +36,7 @@ from .check_utils import *
 @dataset({"timezone_cape_verde_test": {}})
 class TestTimezoneCapeVerde(AbstractTestFixture):
     def test_double_pass_midnight(self):
-        r = self.query_region('vehicle_journeys/vj:1:1')
+        r = self.query_region('vehicle_journeys/vehicle_journey:vj:1:1')
 
         assert len(get_not_null(r, 'vehicle_journeys')) == 1
         stop_times = r['vehicle_journeys'][0]['stop_times']
@@ -57,7 +57,7 @@ class TestTimezoneCapeVerde(AbstractTestFixture):
         assert stop_times[6]['departure_time'] == '010000'
 
     def test_local_pass_midnight(self):
-        r = self.query_region('vehicle_journeys/vj:1:2')
+        r = self.query_region('vehicle_journeys/vehicle_journey:vj:1:2')
 
         assert len(get_not_null(r, 'vehicle_journeys')) == 1
         stop_times = r['vehicle_journeys'][0]['stop_times']

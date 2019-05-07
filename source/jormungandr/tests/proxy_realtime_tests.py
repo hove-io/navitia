@@ -358,13 +358,13 @@ class TestDepartures(AbstractTestFixture):
 
         When we set count to 1 we want only one departure (the first one)
         """
-        query = 'vehicle_journeys/C:vj1/departures?from_datetime=20160102T1000&count=100&_current_datetime=20160102T1000'
+        query = 'vehicle_journeys/vehicle_journey:C:vj1/departures?from_datetime=20160102T1000&count=100&_current_datetime=20160102T1000'
         response = self.query_region(query, display=True)
 
         assert "departures" in response
         assert len(response["departures"]) == 2
 
-        query = 'vehicle_journeys/C:vj1/departures?from_datetime=20160102T1000&count=1&_current_datetime=20160102T1000'
+        query = 'vehicle_journeys/vehicle_journey:C:vj1/departures?from_datetime=20160102T1000&count=1&_current_datetime=20160102T1000'
         response_count = self.query_region(query)
 
         assert "departures" in response_count

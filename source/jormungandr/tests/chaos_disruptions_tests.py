@@ -227,7 +227,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
         response = self.query_region('disruptions')
         assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
-        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption')
 
         self.send_mock(
             "bobette_the_disruption",
@@ -249,7 +249,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
 
         # the disruption is linked to the trips of the line and to the stoppoints
         assert has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
-        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -276,7 +276,7 @@ class TestChaosDisruptionsLineSectionOnOneStop(ChaosDisruptionsFixture):
         assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
-        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption')
 
         self.send_mock(
             "bobette_the_disruption",
@@ -306,7 +306,7 @@ class TestChaosDisruptionsLineSectionOnOneStop(ChaosDisruptionsFixture):
         # the disruption is linked to the trips of the line and to the stoppoints
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
         assert has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
-        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -333,7 +333,7 @@ class TestChaosDisruptionsLineSectionOnOneStopWithRoute(ChaosDisruptionsFixture)
         assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
-        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption')
 
         self.send_mock(
             "bobette_the_disruption_with_route",
@@ -365,7 +365,7 @@ class TestChaosDisruptionsLineSectionOnOneStopWithRoute(ChaosDisruptionsFixture)
         # the disruption is linked to the trips of the line and to the stoppoints
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption_with_route')
         assert has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption_with_route')
-        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption_with_route')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vehicle_journey:vjA'), 'bobette_the_disruption_with_route')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

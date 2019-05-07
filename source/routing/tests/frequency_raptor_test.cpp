@@ -553,12 +553,12 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
         "stop3", "23:00"_t, "23:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 600);
 
     b.vj("B", "1111111", "block1")
-        .uri("vj:B1")("stop4", "06:15"_t, "06:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+        .name("vj:B1")("stop4", "06:15"_t, "06:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "stop5", "06:30"_t, "06:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0)(
             "stop4", "06:45"_t, "06:45"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
     b.vj("B", "1111111", "block1")
-        .uri("vj:B2")("stop4", "08:15"_t, "08:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+        .name("vj:B2")("stop4", "08:15"_t, "08:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "stop5", "08:30"_t, "08:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0)(
             "stop4", "08:45"_t, "08:45"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 

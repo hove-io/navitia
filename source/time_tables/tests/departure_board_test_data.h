@@ -39,13 +39,13 @@ struct departure_board_fixture {
     departure_board_fixture() : b("20160101") {
         b.sa("SA1")("S1")("S2");
 
-        b.vj("A").uri("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
-        b.vj("A").uri("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
-        b.vj("A").uri("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
+        b.vj("A").name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
+        b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
+        b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
 
-        b.vj("B").uri("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
+        b.vj("B").name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
-        b.vj("C").uri("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
+        b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
         b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
 
         // J is late
@@ -65,11 +65,11 @@ struct departure_board_fixture {
         b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
 
         b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
-        b.vj("P", "11111").uri("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
-        b.vj("Q", "11111").uri("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
+        b.vj("P", "11111").name("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
+        b.vj("Q", "11111").name("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
 
         b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t)
-            .uri("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            .name("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
                 "stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
                 "stopf3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
@@ -224,10 +224,11 @@ struct calendar_fixture {
                                                                                           "18:10"_t);
 
         // Check partial terminus tag
-        b.vj("A").vp("10111111").uri("vj1")("Tstop1", "10:00"_t, "10:00"_t)("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A").vp("10111111").name("vj1")("Tstop1", "10:00"_t, "10:00"_t)("Tstop2", "10:30"_t, "10:30"_t);
         b.vj("A")
             .vp("00000011")
-            .uri("vj2")("Tstop1", "10:30"_t, "10:30"_t)("Tstop2", "11:00"_t, "11:00"_t)("Tstop3", "11:30"_t, "11:30"_t);
+            .name("vj2")("Tstop1", "10:30"_t, "10:30"_t)("Tstop2", "11:00"_t, "11:00"_t)("Tstop3", "11:30"_t,
+                                                                                         "11:30"_t);
 
         // Check date_time_estimated at stoptime
         b.vj("B", "10111111", "", true, "date_time_estimated", "")("ODTstop1", "10:00"_t, "10:00"_t)(
@@ -277,27 +278,27 @@ struct calendar_fixture {
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1);
 
-        navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["on_demand_transport"];
+        navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
         vj->stop_time_list[0].set_odt(true);
 
-        vj = pt_data.vehicle_journeys_map["date_time_estimated"];
+        vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
         vj->stop_time_list[0].set_date_time_estimated(true);
 
-        vj_week = pt_data.vehicle_journeys_map["week"];
+        vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
         vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        vj_week_bis = pt_data.vehicle_journeys_map["week_bis"];
+        vj_week_bis = pt_data.vehicle_journeys_map["vehicle_journey:week_bis"];
         vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        vj_weekend = pt_data.vehicle_journeys_map["weekend"];
+        vj_weekend = pt_data.vehicle_journeys_map["vehicle_journey:weekend"];
         vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
 
-        r_vj1 = pt_data.vehicle_journeys_map["R:vj1"];
+        r_vj1 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj1"];
         r_vj1->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
-        r_vj2 = pt_data.vehicle_journeys_map["R:vj2"];
+        r_vj2 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj2"];
         r_vj2->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
 
-        vj_all = pt_data.vehicle_journeys_map["all"];
+        vj_all = pt_data.vehicle_journeys_map["vehicle_journey:all"];
         vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
-        vj_wednesday = pt_data.vehicle_journeys_map["wednesday"];
+        vj_wednesday = pt_data.vehicle_journeys_map["vehicle_journey:wednesday"];
         vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
 
         // Check partial terminus for calendar

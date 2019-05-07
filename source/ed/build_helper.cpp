@@ -51,7 +51,7 @@ VJ::VJ(builder& b,
        const std::string& block_id,
        const bool is_frequency,
        const bool wheelchair_boarding,
-       const std::string& uri,
+       const std::string& name,
        const std::string& meta_vj_name,
        const std::string& physical_mode,
        const uint32_t start_time,
@@ -64,7 +64,7 @@ VJ::VJ(builder& b,
       _block_id(block_id),
       is_frequency(is_frequency),
       wheelchair_boarding(wheelchair_boarding),
-      _uri(uri),
+      _name(name),
       _meta_vj_name(meta_vj_name),
       _physical_mode(physical_mode),
       start_time(start_time),
@@ -108,17 +108,17 @@ nt::VehicleJourney* VJ::make() {
         route = pt_data.get_or_create_route(_route_name, _route_name, line);
     }
 
-    std::string name;
+    std::string mvj_name;
     if (!_meta_vj_name.empty()) {
-        name = _meta_vj_name;
-    } else if (!_uri.empty()) {
-        name = _uri;
+        mvj_name = _meta_vj_name;
+    } else if (!_name.empty()) {
+        mvj_name = _name;
     } else {
         auto idx = pt_data.vehicle_journeys.size();
-        name = "vehicle_journey " + std::to_string(idx);
+        mvj_name = "vj " + std::to_string(idx);
     }
     // NOTE: the meta vj name should be the same as the vj's name
-    nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(name);
+    nt::MetaVehicleJourney* mvj = pt_data.meta_vjs.get_or_create(mvj_name);
 
     // we associate the metavj to the default timezone for the moment
     mvj->tz_handler = b.tz_handler;
@@ -146,17 +146,18 @@ nt::VehicleJourney* VJ::make() {
         sts.push_back(st.st);
     }
 
-    const auto uri_str =
-        _uri.empty() ? "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) : _uri;
+    const auto vj_name = _name.empty() ? mvj_name : _name;
+    const auto vj_uri = "vehicle_journey:"
+                        + (_name.empty() ? line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) : _name);
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, uri_str, vj_type, _vp, route, sts, pt_data);
+        auto* fvj = mvj->create_frequency_vj(vj_uri, vj_name, vj_type, _vp, route, sts, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, uri_str, vj_type, _vp, route, sts, pt_data);
+        vj = mvj->create_discrete_vj(vj_uri, vj_name, vj_type, _vp, route, sts, pt_data);
     }
     // default dataset
     if (!vj->dataset) {
@@ -178,18 +179,18 @@ nt::VehicleJourney* VJ::make() {
         if (_physical_mode.empty() && pt_data.physical_modes.size()) {
             vj->physical_mode = pt_data.physical_modes.front();
         } else {
-            const auto name = _physical_mode.empty() ? "physical_mode:0" : _physical_mode;
+            const auto physical_name = _physical_mode.empty() ? "physical_mode:0" : _physical_mode;
             auto* physical_mode = new navitia::type::PhysicalMode();
             physical_mode->idx = pt_data.physical_modes.size();
-            physical_mode->uri = name;
-            physical_mode->name = "name " + name;
+            physical_mode->uri = physical_name;
+            physical_mode->name = "name " + physical_name;
             pt_data.physical_modes.push_back(physical_mode);
             vj->physical_mode = physical_mode;
         }
     }
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, name);
+    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, mvj_name);
 
     if (_block_id != "") {
         b.block_vjs.insert(std::make_pair(_block_id, vj));

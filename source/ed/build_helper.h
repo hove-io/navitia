@@ -69,7 +69,7 @@ struct VJ {
     std::string _route_name;
     const bool is_frequency;
     const bool wheelchair_boarding;
-    std::string _uri;
+    std::string _name;
     std::string _meta_vj_name;
     std::string _physical_mode;
     const uint32_t start_time;
@@ -89,7 +89,7 @@ struct VJ {
        const std::string& block_id,
        const bool is_frequency,
        const bool wheelchair_boarding = true,
-       const std::string& uri = "",
+       const std::string& name = "",
        const std::string& meta_vj_name = "",
        const std::string& physical_mode = "",
        const uint32_t start_time = 0,
@@ -141,8 +141,8 @@ struct VJ {
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
 
-    VJ& uri(const std::string& u) {
-        _uri = u;
+    VJ& name(const std::string& u) {
+        _name = u;
         return *this;
     }
     VJ& valid_all_days() {
