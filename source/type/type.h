@@ -71,15 +71,6 @@ namespace type {
 
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
 
-template <class T>
-std::string T::*name_getter() {
-    return &T::name;
-}
-template <class T>
-int T::*idx_getter() {
-    return &T::idx;
-}
-
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
 enum class VehicleJourneyType {
     regular = 0,                    // ligne régulière
