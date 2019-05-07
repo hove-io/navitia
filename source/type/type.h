@@ -57,6 +57,9 @@ www.navitia.io
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include "type/stop_point.h"
+#include "type/connection.h"
+#include "type/calendar.h"
 
 namespace navitia {
 namespace georef {
@@ -88,41 +91,6 @@ int T::*idx_getter() {
     return &T::idx;
 }
 
-struct HasMessages {
-protected:
-    std::vector<boost::weak_ptr<disruption::Impact>> impacts;
-
-public:
-    void add_impact(const boost::shared_ptr<disruption::Impact>& i) { impacts.push_back(i); }
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
-        const boost::posix_time::ptime& current_time,
-        const boost::posix_time::time_period& action_period) const;
-
-    bool has_applicable_message(const boost::posix_time::ptime& current_time,
-                                const boost::posix_time::time_period& action_period,
-                                const Line* line = nullptr) const;
-
-    bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
-        const boost::posix_time::ptime& current_time) const;
-
-    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
-
-    void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
-        auto it = std::find_if(impacts.begin(), impacts.end(),
-                               [&impact](const boost::weak_ptr<disruption::Impact>& i) { return i.lock() == impact; });
-        if (it != impacts.end()) {
-            impacts.erase(it);
-        }
-    }
-
-    void clean_weak_impacts();
-};
-
-enum class ConnectionType { StopPoint = 0, StopArea, Walking, VJ, Default, stay_in, undefined };
-
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
 enum class VehicleJourneyType {
     regular = 0,                    // ligne régulière
@@ -135,119 +103,12 @@ enum class VehicleJourneyType {
 
 struct StopArea;
 struct Network;
-struct StopPointConnection;
 struct Line;
 struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
 struct Dataset;
-
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
-
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        // The *_list are not serialized here to avoid stack abuse
-        // during serialization and deserialization.
-        //
-        // stop_point_connection_list is managed by StopPointConnection
-        ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& idx& platform_code& admin_list& _properties&
-            impacts& dataset_list;
-    }
-
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
-};
-
-struct StopPointConnection : public Header, hasProperties {
-    const static Type_e type = Type_e::Connection;
-    StopPoint* departure;
-    StopPoint* destination;
-    int display_duration;
-    int duration;
-    int max_duration;
-    ConnectionType connection_type;
-
-    StopPointConnection()
-        : departure(nullptr), destination(nullptr), display_duration(0), duration(0), max_duration(0) {}
-
-    template <class Archive>
-    void save(Archive& ar, const unsigned int) const {
-        ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
-    }
-    template <class Archive>
-    void load(Archive& ar, const unsigned int) {
-        ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
-
-        // loading manage StopPoint::stop_point_connection_list
-        departure->stop_point_connection_list.push_back(this);
-        destination->stop_point_connection_list.push_back(this);
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
-    Indexes get(Type_e type, const PT_Data& data) const;
-
-    bool operator<(const StopPointConnection& other) const;
-};
-
-struct ExceptionDate {
-    enum class ExceptionType {
-        sub = 0,  // remove
-        add = 1   // add
-    };
-    ExceptionType type;
-    boost::gregorian::date date;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& type& date;
-    }
-    inline bool operator<(const ExceptionDate& that) const {
-        if (this->type < that.type)
-            return true;
-        if (that.type < this->type)
-            return false;
-        return this->date < that.date;
-    }
-    inline bool operator==(const ExceptionDate& that) const {
-        return this->type == that.type && this->date == that.date;
-    }
-};
-inline std::ostream& operator<<(std::ostream& os, const ExceptionDate& ed) {
-    switch (ed.type) {
-        case ExceptionDate::ExceptionType::add:
-            os << "excl ";
-            break;
-        case ExceptionDate::ExceptionType::sub:
-            os << "incl ";
-            break;
-    }
-    return os << ed.date;
-}
-
-std::string to_string(ExceptionDate::ExceptionType t);
-
-inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
-    if (str == "Add") {
-        return ExceptionDate::ExceptionType::add;
-    }
-    if (str == "Sub") {
-        return ExceptionDate::ExceptionType::sub;
-    }
-    throw navitia::exception("unhandled exception type: " + str);
-}
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopArea;
@@ -657,21 +518,6 @@ struct Route : public Header, Nameable, HasMessages {
     std::string get_label() const;
 };
 
-struct AssociatedCalendar {
-    /// calendar matched
-    const Calendar* calendar;
-
-    /// exceptions to this association (not to be mixed up with the exceptions in the calendar)
-    /// the calendar exceptions change it's validity pattern
-    /// the AssociatedCalendar exceptions are the differences between the vj validity pattern and the calendar's
-    std::vector<ExceptionDate> exceptions;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& calendar& exceptions;
-    }
-};
-
 struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
@@ -764,30 +610,6 @@ struct StopTime {
     void serialize(Archive& ar, const unsigned int) {
         ar& arrival_time& departure_time& boarding_time& alighting_time& vehicle_journey& stop_point& shape_from_prev&
             properties& local_traffic_zone;
-    }
-};
-
-struct Calendar : public Nameable, public Header {
-    const static Type_e type = Type_e::Calendar;
-    typedef std::bitset<7> Week;
-    Week week_pattern;
-    std::vector<boost::gregorian::date_period> active_periods;
-    std::vector<ExceptionDate> exceptions;
-
-    ValidityPattern validity_pattern;  // computed validity pattern
-
-    Calendar() {}
-    Calendar(boost::gregorian::date beginning_date);
-
-    // we limit the validity pattern to the production period
-    void build_validity_pattern(boost::gregorian::date_period production_period);
-
-    bool operator<(const Calendar& other) const { return this->uri < other.uri; }
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& name& idx& uri& week_pattern& active_periods& exceptions& validity_pattern;
     }
 };
 

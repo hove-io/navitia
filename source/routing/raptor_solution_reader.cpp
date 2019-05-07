@@ -32,6 +32,7 @@ www.navitia.io
 #include "raptor.h"
 #include "raptor_visitors.h"
 #include "journey.h"
+#include "utils/logger.h"
 
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/range/algorithm/find_if.hpp>

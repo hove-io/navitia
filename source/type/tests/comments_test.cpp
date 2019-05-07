@@ -38,9 +38,10 @@ www.navitia.io
 #include "tests/utils_test.h"
 #include "type/comment_container.h"
 #include <memory>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <string>
 #include <type_traits>
+#include "utils/logger.h"
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
@@ -81,6 +82,6 @@ BOOST_AUTO_TEST_CASE(comment_map_test) {
     expected = {"st com"};
     BOOST_CHECK_EQUAL(comments_container.get(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front()), expected);
 
-    boost::archive::text_oarchive oa(std::cout);
+    boost::archive::binary_oarchive oa(std::cout);
     oa& comments_container;
 }

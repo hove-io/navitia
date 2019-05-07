@@ -36,6 +36,7 @@ www.navitia.io
 #include <boost/range/algorithm/fill.hpp>
 #include <boost/functional/hash.hpp>
 #include <chrono>
+#include "utils/logger.h"
 
 namespace bt = boost::posix_time;
 

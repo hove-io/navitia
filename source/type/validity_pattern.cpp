@@ -32,9 +32,18 @@ www.navitia.io
 #include <log4cplus/loggingmacros.h>
 #include "utils/exception.h"
 #include "datetime.h"
+#include <type/serialization.h>
+#include <boost/date_time/gregorian/greg_serialize.hpp>
+#include <boost/serialization/bitset.hpp>
 
 namespace navitia {
 namespace type {
+
+template <class Archive>
+void ValidityPattern::serialize(Archive& ar, const unsigned int) {
+    ar& beginning_date& days& idx& uri;
+}
+SERIALIZABLE(ValidityPattern)
 
 bool ValidityPattern::is_valid(int day) const {
     if (day < 0) {

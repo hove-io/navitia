@@ -40,6 +40,7 @@ www.navitia.io
 #include "routing/heat_map.h"
 #include "utils/init.h"
 #include "routing/tests/routing_api_test_data.h"
+#include "utils/logger.h"
 
 #include <boost/test/unit_test.hpp>
 #include <iomanip>

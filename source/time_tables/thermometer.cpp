@@ -34,6 +34,7 @@ www.navitia.io
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/algorithm/sort.hpp>
+#include "type/type.h"
 
 namespace navitia {
 namespace timetables {
