@@ -237,16 +237,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
-            std::string new_vj_name =
-                mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
-            std::string new_vj_uri = "vehicle_journey:" + new_vj_name;
+            std::string new_vj_uri =
+                "vehicle_journey:" + mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
             for (const auto& stu : impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
             }
 
-            // Create new VJ
-            auto* vj = mvj->create_discrete_vj(new_vj_uri, new_vj_name, type::RTLevel::RealTime, canceled_vp, r,
+            // Create new VJ (default name/headsign is empty)
+            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", type::RTLevel::RealTime, canceled_vp, r,
                                                std::move(stoptimes), pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
