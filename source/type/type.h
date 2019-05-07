@@ -57,32 +57,19 @@ www.navitia.io
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include "type/fwd_type.h"
 #include "type/stop_point.h"
 #include "type/connection.h"
 #include "type/calendar.h"
 #include "type/stop_area.h"
 #include "type/network.h"
-
-namespace navitia {
-namespace georef {
-struct Admin;
-struct GeoRef;
-}  // namespace georef
-}  // namespace navitia
+#include "type/contributor.h"
+#include "type/dataset.h"
 
 namespace navitia {
 namespace type {
 
-struct Message;
-namespace disruption {
-struct Impact;
-}
-
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
-
-struct PT_Data;
-struct MetaData;
-struct Line;
 
 template <class T>
 std::string T::*name_getter() {
@@ -101,44 +88,6 @@ enum class VehicleJourneyType {
     stop_point_to_stop_point = 3,   // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
-};
-
-struct Line;
-struct ValidityPattern;
-struct Route;
-struct VehicleJourney;
-struct StopTime;
-struct Dataset;
-
-struct Contributor : public Header, Nameable {
-    const static Type_e type = Type_e::Contributor;
-    std::string website;
-    std::string license;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& website& license& dataset_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Contributor& other) const { return this->uri < other.uri; }
-};
-
-struct Dataset : public Header, Nameable {
-    const static Type_e type = Type_e::Dataset;
-    Contributor* contributor = nullptr;
-    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
-    boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
-    std::string desc;
-    std::string system;
-    std::set<VehicleJourney*> vehiclejourney_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& uri& contributor& realtime_level& validation_period& desc& system;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Dataset& other) const { return this->uri < other.uri; }
 };
 
 struct Company : public Header, Nameable {
@@ -187,8 +136,6 @@ struct PhysicalMode : public Header, Nameable {
     PhysicalMode() {}
     bool operator<(const PhysicalMode& other) const { return this->uri < other.uri; }
 };
-
-struct Calendar;
 
 typedef std::bitset<2> OdtProperties;
 struct hasOdtProperties {

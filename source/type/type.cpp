@@ -1040,31 +1040,6 @@ VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 
-Indexes Dataset::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Contributor:
-            result.insert(contributor->idx);
-            break;
-        case Type_e::VehicleJourney:
-            return indexes(vehiclejourney_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-Indexes Contributor::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri, int access_duration)
     : type(type), uri(uri), access_duration(access_duration) {
     if (type == Type_e::Address) {
