@@ -207,6 +207,14 @@ class TestEndPoint(AbstractTestFixture):
         self.check_context(response)
         assert response['context']['timezone'] == 'UTC'
 
+    def test_lines_head(self):
+        """
+        check that HEAD request works
+        """
+        response = self.tester.head('/v1/coverage/main_routing_test/lines')
+        assert response.status_code == 200
+        assert len(response.data) == 0
+
     def test_equipment_reports_context(self):
         mock_equipment_providers(
             equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
