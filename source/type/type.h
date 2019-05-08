@@ -57,39 +57,19 @@ www.navitia.io
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
 #include <boost/range/algorithm/for_each.hpp>
+#include "type/fwd_type.h"
 #include "type/stop_point.h"
 #include "type/connection.h"
 #include "type/calendar.h"
-
-namespace navitia {
-namespace georef {
-struct Admin;
-struct GeoRef;
-}  // namespace georef
-}  // namespace navitia
+#include "type/stop_area.h"
+#include "type/network.h"
+#include "type/contributor.h"
+#include "type/dataset.h"
 
 namespace navitia {
 namespace type {
 
-struct Message;
-namespace disruption {
-struct Impact;
-}
-
 std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
-
-struct PT_Data;
-struct MetaData;
-struct Line;
-
-template <class T>
-std::string T::*name_getter() {
-    return &T::name;
-}
-template <class T>
-int T::*idx_getter() {
-    return &T::idx;
-}
 
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
 enum class VehicleJourneyType {
@@ -99,93 +79,6 @@ enum class VehicleJourneyType {
     stop_point_to_stop_point = 3,   // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
-};
-
-struct StopArea;
-struct Network;
-struct Line;
-struct ValidityPattern;
-struct Route;
-struct VehicleJourney;
-struct StopTime;
-struct Dataset;
-
-struct StopArea : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopArea;
-    GeographicalCoord coord;
-    std::string additional_data;
-    std::vector<navitia::georef::Admin*> admin_list;
-    bool wheelchair_boarding = false;
-    std::string label;
-    // name of the time zone of the stop area
-    // the name must respect the format of the tz db, for example "Europe/Paris"
-    std::string timezone;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& label& uri& name& coord& stop_point_list& admin_list& _properties& wheelchair_boarding& impacts&
-            visible& timezone;
-    }
-
-    std::vector<StopPoint*> stop_point_list;
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopArea& other) const;
-};
-
-struct Network : public Header, HasMessages {
-    std::string name;
-    const static Type_e type = Type_e::Network;
-    std::string address_name;
-    std::string address_number;
-    std::string address_type_name;
-    std::string phone_number;
-    std::string mail;
-    std::string website;
-    std::string fax;
-    int sort = std::numeric_limits<int>::max();
-
-    std::vector<Line*> line_list;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& address_name& address_number& address_type_name& mail& website& fax& sort& line_list&
-            impacts& dataset_list;
-    }
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Network& other) const;
-};
-
-struct Contributor : public Header, Nameable {
-    const static Type_e type = Type_e::Contributor;
-    std::string website;
-    std::string license;
-    std::set<Dataset*> dataset_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& website& license& dataset_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Contributor& other) const { return this->uri < other.uri; }
-};
-
-struct Dataset : public Header, Nameable {
-    const static Type_e type = Type_e::Dataset;
-    Contributor* contributor = nullptr;
-    navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
-    boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
-    std::string desc;
-    std::string system;
-    std::set<VehicleJourney*> vehiclejourney_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& uri& contributor& realtime_level& validation_period& desc& system;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Dataset& other) const { return this->uri < other.uri; }
 };
 
 struct Company : public Header, Nameable {
@@ -234,8 +127,6 @@ struct PhysicalMode : public Header, Nameable {
     PhysicalMode() {}
     bool operator<(const PhysicalMode& other) const { return this->uri < other.uri; }
 };
-
-struct Calendar;
 
 typedef std::bitset<2> OdtProperties;
 struct hasOdtProperties {

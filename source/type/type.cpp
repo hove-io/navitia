@@ -809,52 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-bool StopArea::operator<(const StopArea& other) const {
-    if (name != other.name) {
-        return name < other.name;
-    }
-    return uri < other.uri;
-}
-
-Indexes StopArea::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            return indexes(this->stop_point_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-
-        default:
-            break;
-    }
-    return result;
-}
-
-bool Network::operator<(const Network& other) const {
-    if (this->sort != other.sort) {
-        return this->sort < other.sort;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-Indexes Network::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            return indexes(line_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
 Indexes Company::get(Type_e type, const PT_Data&) const {
     Indexes result;
     switch (type) {
@@ -1085,31 +1039,6 @@ Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
 VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
-
-Indexes Dataset::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Contributor:
-            result.insert(contributor->idx);
-            break;
-        case Type_e::VehicleJourney:
-            return indexes(vehiclejourney_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-Indexes Contributor::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
 
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri, int access_duration)
     : type(type), uri(uri), access_duration(access_duration) {
