@@ -65,6 +65,7 @@ www.navitia.io
 #include "type/network.h"
 #include "type/contributor.h"
 #include "type/dataset.h"
+#include "type/company.h"
 
 namespace navitia {
 namespace type {
@@ -79,27 +80,6 @@ enum class VehicleJourneyType {
     stop_point_to_stop_point = 3,   // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
-};
-
-struct Company : public Header, Nameable {
-    const static Type_e type = Type_e::Company;
-    std::string address_name;
-    std::string address_number;
-    std::string address_type_name;
-    std::string phone_number;
-    std::string mail;
-    std::string website;
-    std::string fax;
-
-    std::vector<Line*> line_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& address_name& address_number& address_type_name& phone_number& mail& website& fax&
-            line_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Company& other) const { return this->uri < other.uri; }
 };
 
 struct CommercialMode : public Header, Nameable {

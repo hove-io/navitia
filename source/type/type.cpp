@@ -809,17 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-Indexes Company::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            return indexes(line_list);
-        default:
-            break;
-    }
-    return result;
-}
-
 Indexes CommercialMode::get(Type_e type, const PT_Data&) const {
     Indexes result;
     switch (type) {
