@@ -389,6 +389,33 @@ def purge_instance(instance_id, nb_to_keep):
         shutil.rmtree(path)
 
 
+def purge_cities():
+    """
+    Delete old 'cities' jobs and the associated dataset in db and on disk
+    """
+    nb_datasets_to_keep = current_app.config.get('DATASET_MAX_BACKUPS_TO_KEEP', 1)
+    cities_job = (
+        models.Job.query.join(models.DataSet)
+        .filter(models.DataSet.type == 'cities')
+        .order_by(models.Job.created_at.desc())
+        .all()
+    )
+    cities_job_to_keep = cities_job[:nb_datasets_to_keep]
+    datasets_to_keep = [job.data_sets.first().name for job in cities_job_to_keep]
+
+    for job in cities_job[nb_datasets_to_keep:]:
+        logging.info(" - Remove JOB {}".format(job.id))
+        dataset = job.data_sets.first()
+        logging.info("   Remove associated DATASET {}".format(dataset.id))
+        models.db.session.delete(dataset)
+        if os.path.exists(dataset.name) and dataset.name not in datasets_to_keep:
+            logging.info("    - delete file {}".format(dataset.name))
+            shutil.rmtree('{}'.format(dataset.name))
+        models.db.session.delete(job)
+
+    models.db.session.commit()
+
+
 @celery.task()
 def purge_jobs(days_to_keep=None):
     """
@@ -417,6 +444,9 @@ def purge_jobs(days_to_keep=None):
                     shutil.rmtree('{}'.format(path))
                 else:
                     logger.warning('Folder {} can\'t be found'.format(path))
+
+    # Purge 'cities' jobs (which aren't associated to an instance)
+    purge_cities()
 
 
 @celery.task()
