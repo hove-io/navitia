@@ -516,11 +516,11 @@ VJ builder::vj(const std::string& line_name,
                const std::string& validity_pattern,
                const std::string& block_id,
                const bool wheelchair_boarding,
-               const std::string& uri,
+               const std::string& name,
                const std::string& meta_vj,
                const std::string& physical_mode,
                const nt::RTLevel vj_type) {
-    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj,
+    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, name, meta_vj,
                            physical_mode, false, 0, 0, 0, vj_type);
 }
 
@@ -529,7 +529,7 @@ VJ builder::vj_with_network(const std::string& network_name,
                             const std::string& validity_pattern,
                             const std::string& block_id,
                             const bool wheelchair_boarding,
-                            const std::string& uri,
+                            const std::string& name,
                             const std::string& meta_vj,
                             const std::string& physical_mode,
                             const bool is_frequency,
@@ -537,7 +537,7 @@ VJ builder::vj_with_network(const std::string& network_name,
                             const uint32_t end_time,
                             const uint32_t headway_secs,
                             const nt::RTLevel vj_type) {
-    return VJ(*this, network_name, line_name, validity_pattern, block_id, is_frequency, wheelchair_boarding, uri,
+    return VJ(*this, network_name, line_name, validity_pattern, block_id, is_frequency, wheelchair_boarding, name,
               meta_vj, physical_mode, start_time, end_time, headway_secs, vj_type);
 }
 
@@ -549,9 +549,9 @@ VJ builder::frequency_vj(const std::string& line_name,
                          const std::string& validity_pattern,
                          const std::string& block_id,
                          const bool wheelchair_boarding,
-                         const std::string& uri,
+                         const std::string& name,
                          const std::string& meta_vj) {
-    return vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri, meta_vj, "",
+    return vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, name, meta_vj, "",
                            true, start_time, end_time, headway_secs);
 }
 

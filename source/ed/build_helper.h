@@ -287,7 +287,7 @@ struct builder {
           const std::string& validity_pattern = "11111111",
           const std::string& block_id = "",
           const bool wheelchair_boarding = true,
-          const std::string& uri = "",
+          const std::string& name = "",
           const std::string& meta_vj = "",
           const std::string& physical_mode = "",
           const nt::RTLevel vj_type = nt::RTLevel::Base);
@@ -297,7 +297,7 @@ struct builder {
                        const std::string& validity_pattern = "11111111",
                        const std::string& block_id = "",
                        const bool wheelchair_boarding = true,
-                       const std::string& uri = "",
+                       const std::string& name = "",
                        const std::string& meta_vj = "",
                        const std::string& physical_mode = "",
                        const bool is_frequency = false,
@@ -314,7 +314,7 @@ struct builder {
                     const std::string& validity_pattern = "11111111",
                     const std::string& block_id = "",
                     const bool wheelchair_boarding = true,
-                    const std::string& uri = "",
+                    const std::string& name = "",
                     const std::string& meta_vj = "");
 
     // Create a new stop area
