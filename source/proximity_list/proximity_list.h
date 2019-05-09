@@ -48,6 +48,8 @@ namespace navitia {
 namespace proximitylist {
 
 using type::GeographicalCoord;
+using index_t = flann::Index<flann::L2<float>>;
+
 struct NotFound : public recoverable_exception {
     NotFound() = default;
     NotFound(const NotFound&) = default;
@@ -80,7 +82,7 @@ struct ProximityList {
     /// Contient toutes les coordonnées de manière à trouver rapidement
     std::vector<Item> items;
     mutable std::vector<float> NN_data;
-    mutable std::shared_ptr<flann::Index<flann::L2<float>>> index = nullptr;
+    mutable std::shared_ptr<index_t> index = nullptr;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element) { items.push_back(Item(coord, element)); }
@@ -90,26 +92,12 @@ struct ProximityList {
     }
 
     /// Construit l'indexe
-    void build() {
-        // TODO build the Flann index here
-        NN_data.reserve(items.size() * 3);
-        for (const auto& i : items) {
-            const auto& coord = i.coord;
-            float x = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-                      * sin(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-            float y = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-                      * cos(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-            float z = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(coord.lat() * GeographicalCoord::N_DEG_TO_RAD);
-            NN_data.push_back(x);
-            NN_data.push_back(y);
-            NN_data.push_back(z);
-        }
-    }
+    void build();
 
     /// Retourne tous les éléments dans un rayon de x mètres
     std::vector<std::pair<T, GeographicalCoord>> find_within(const GeographicalCoord& coord,
                                                              double radius,
-                                                             int size) const;
+                                                             int size = -1) const;
 
     std::vector<T> find_within_index_only(const GeographicalCoord& coord, double radius, int size) const;
 
