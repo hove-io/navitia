@@ -291,6 +291,8 @@ class Instance(db.Model):  # type: ignore
 
     import_ntfs_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
+    admins_from_cities_db = db.Column(db.Boolean, default=False, nullable=False)
+
     # ============================================================
     # params for jormungandr
     # ============================================================
