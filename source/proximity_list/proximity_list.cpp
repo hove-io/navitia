@@ -50,7 +50,7 @@ template <class T>
 std::vector<std::pair<T, GeographicalCoord>> ProximityList<T>::find_within(const GeographicalCoord& coord,
                                                                            double radius,
                                                                            int size) const {
-    if (NN_data.empty()) {
+    if (NN_data.empty() || !size || !radius) {
         return {};
     }
 
@@ -93,6 +93,8 @@ std::vector<std::pair<T, GeographicalCoord>> ProximityList<T>::find_within(const
     auto search_param = flann::SearchParams{};
     search_param.max_neighbors = size;  // -1 -> unlimited
     search_param.sorted = true;         // -1 -> unlimited
+
+    radius = std::min(radius, 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS);
 
     float coeff = radius < GeographicalCoord::EARTH_RADIUS_IN_METERS * 0.01
                       ? 1.f
@@ -163,6 +165,7 @@ std::vector<T> ProximityList<T>::find_within_index_only(const GeographicalCoord&
     // fall on opposite poles of a sphere) ex (0, -90)  (0, 90) However, when one coordinate falls on a south pole, and
     // another falls on equator, ex (0, -90, (0, 0) the error is about 5% (1 - sqrt(2) / (PI/2)) In fact, in practice,
     // the error is quite small between two coordiantes situated on the same continent.
+    radius = std::min(radius, 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS);
 
     int nb_found = index->radiusSearch(flann::Matrix<float>{query_data, 1, 3}, indices, distances,
                                        pow((radius * 1.05), 2), search_param);
