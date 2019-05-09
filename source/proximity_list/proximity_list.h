@@ -35,15 +35,8 @@ www.navitia.io
 #include <memory>
 #include <vector>
 #include <cmath>
+#include <flann/flann.hpp>
 
-namespace flann {
-template <typename T>
-struct Index;
-
-template <typename T>
-struct L2;
-
-}  // namespace flann
 namespace navitia {
 namespace proximitylist {
 

@@ -1,7 +1,6 @@
 #include "proximity_list.h"
 #include "type/type.h"
 #include "utils/logger.h"
-#include "flann/flann.hpp"
 
 #include <cmath>
 #include <array>
@@ -38,6 +37,7 @@ void ProximityList<T>::build() {
         NN_data.push_back(y);
         NN_data.push_back(z);
     }
+
     flann::Matrix<float> points{&NN_data[0], NN_data.size() / 3, 3};
 
     // index = std::make_shared<index_t>(points, flann::KDTreeIndexParams(4));

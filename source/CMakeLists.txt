@@ -39,7 +39,6 @@ set(LOG4CPLUS_FIND_REQUIRED true)
 find_package(log4cplus)
 find_package(GoogleTcmalloc)
 find_package(Protoc)
-find_package(lz4 REQUIRED)
 
 # Load in the needed CMake modules
 include(UseBoost)
