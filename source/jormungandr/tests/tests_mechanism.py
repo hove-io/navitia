@@ -64,11 +64,12 @@ krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free, is_open_data, scenario='new_default'):
+    def __init__(self, priority, is_free, is_open_data, scenario='new_default', equipment_details_providers=[]):
         self.priority = priority
         self.is_free = is_free
         self.is_open_data = is_open_data
         self.scenario = scenario
+        self.equipment_details_providers = equipment_details_providers
 
 
 class AbstractTestFixture(unittest.TestCase):
@@ -252,10 +253,10 @@ class AbstractTestFixture(unittest.TestCase):
         assert json_response
         return json_response
 
-    def query_region(self, url, check=True, display=False, version="v1"):
+    def query_region(self, url, check=True, display=False):
         """
-            helper if the test in only one region,
-            to shorten the test url query /v1/coverage/{region}/url
+        helper if the test in only one region,
+        to shorten the test url query /v1/coverage/{region}/url
         """
         assert len(self.krakens_pool) == 1, "the helper can only work with one region"
         str_url = "/v1/coverage"

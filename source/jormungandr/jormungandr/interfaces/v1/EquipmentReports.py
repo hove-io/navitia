@@ -38,7 +38,6 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
-from navitiacommon import type_pb2
 import six
 import logging
 

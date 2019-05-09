@@ -105,7 +105,7 @@ class Job(flask_restful.Resource):
 
         instance = load_instance_config(instance_name)
         if not os.path.exists(instance.source_directory):
-            return ({'error': 'input folder unavailable'}, 500)
+            return {'error': 'input folder unavailable'}, 500
 
         full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
         content.save(full_file_name + ".tmp")
@@ -581,6 +581,15 @@ class Instance(flask_restful.Resource):
             default=instance.car_park_provider,
         )
 
+        parser.add_argument(
+            'equipment_details_providers',
+            type=str,
+            action="append",
+            help='list of ids of equipment providers available for the instance',
+            location=('json', 'values'),
+            default=[],
+        )
+
         args = parser.parse_args()
 
         try:
@@ -639,6 +648,13 @@ class Instance(flask_restful.Resource):
             new = copy.deepcopy(instance.max_nb_crowfly_by_mode)
             new.update(max_nb_crowfly_by_mode)
             instance.max_nb_crowfly_by_mode = new
+
+            instance.equipment_details_providers = []
+            for provider_id in args.equipment_details_providers:
+                equipment_provider = models.EquipmentsProvider.query.get(provider_id)
+                if equipment_provider:
+                    instance.equipment_details_providers.append(equipment_provider)
+
             db.session.commit()
         except Exception:
             logging.exception("fail")

@@ -38,7 +38,7 @@ import ujson
 
 
 @pytest.fixture
-def default_config():
+def default_equipments_config():
     with app.app_context():
         sytral = models.EquipmentsProvider('sytral')
         sytral.klass = 'sytral.klass'
@@ -57,21 +57,25 @@ def default_config():
         models.db.session.expunge(sytral)
         models.db.session.expunge(sytral2)
 
-        return sytral, sytral2
+        yield sytral, sytral2
+
+        models.db.session.delete(sytral)
+        models.db.session.delete(sytral2)
+        models.db.session.commit()
 
 
 @pytest.fixture(scope='function', autouse=True)
 def clean_db():
     with app.app_context():
-        models.db.session.execute('truncate equipments_provider;')
+        models.db.session.execute('truncate equipments_provider cascade;')
         models.db.session.commit()
 
 
-def test_equipments_provider_get(default_config):
+def test_equipments_provider_get(default_equipments_config):
     """
     Test that the list of providers with their info is correctly returned when queried
     """
-    sytral_provider, sytral2_provider = default_config
+    sytral_provider, sytral2_provider = default_equipments_config
     resp = api_get('/v0/equipments_providers')
     assert 'equipments_providers' in resp
     assert len(resp['equipments_providers']) == 2
@@ -84,7 +88,7 @@ def test_equipments_provider_get(default_config):
     assert not resp['equipments_providers'][0]['discarded']
 
 
-def test_equipments_provider_put(default_config):
+def test_equipments_provider_put(default_equipments_config):
     """
     Test that a provider is correctly created/updated in db and the info returned when queried
     """
@@ -122,7 +126,7 @@ def test_equipments_provider_put(default_config):
     assert resp['equipments_providers'][0]['args']['url'] == 'sytral3.url.update'
 
 
-def test_equipments_provider_delete(default_config):
+def test_equipments_provider_delete(default_equipments_config):
     """
     Test that a 'deleted' provider isn't returned when querying all providers, and that its 'discarded' parameter is set to True
     """

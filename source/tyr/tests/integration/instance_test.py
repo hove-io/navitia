@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import, print_function, division
 from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
+from tests.integration.equipment_providers_test import default_equipments_config
 import json
 import pytest
 from navitiacommon import models
@@ -398,3 +399,33 @@ def test_update_taxi_speed(create_instance):
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['taxi_speed'] == 53.23
+
+
+def test_equipments_instance_association(create_instance, default_equipments_config):
+    """
+    Test the association between an instance and equipments providers
+    Note: the fixture 'default_equipments_config' defines 2 providers :'sytral' & 'sytral2'
+    """
+
+    # The equipments provider 'sytral' is associated to the instance 'fr'
+    params = {'equipment_details_providers': ['sytral']}
+
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert 'equipment_details_providers' in resp
+    assert len(resp['equipment_details_providers']) == 1
+    assert resp['equipment_details_providers'][0]['id'] == 'sytral'
+
+    # Only 'sytral2' is associated to the instance 'fr' after update
+    params = {'equipment_details_providers': ['sytral2']}
+
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert 'equipment_details_providers' in resp
+    assert len(resp['equipment_details_providers']) == 1
+    assert resp['equipment_details_providers'][0]['id'] == 'sytral2'
+
+    # 'sytral3' doesn't exist in db, no provider is associated to the instance 'fr' after update
+    params = {'equipment_details_providers': ['sytral3']}
+
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert 'equipment_details_providers' in resp
+    assert len(resp['equipment_details_providers']) == 0
