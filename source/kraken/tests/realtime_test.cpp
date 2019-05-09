@@ -2967,7 +2967,9 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
                       pbnavitia::StopTimeUpdateStatus::ADDED);
 
     // Recall the same new trip.
-    // the new trip is rejected. There is no update
+    // The old "new trip" is replace by the new, but the meta VJ is the same (don't create).
+    // The old impact is deleted too
+    // To show that it is the new GTFS-RT, schedules has changed
     new_trip = ntest::make_trip_update_message("vj_new_trip", "20190101",
                                                {
                                                    RTStopTime("stop_point:A", "20190101T0900"_pts).added(),
@@ -2999,7 +3001,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys_map.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 2);
 
-    // Correspond to the first added trip
+	// New trip added
     res = compute("20190101T073000", "stop_point:A", "stop_point:G");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
