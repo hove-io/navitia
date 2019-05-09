@@ -269,7 +269,7 @@ struct calendar_fixture {
         b.finish();
         b.data->build_uri();
 
-        b.data->pt_data->codes.add(b.get<nt::VehicleJourney>("R:vj1"), "source", "Code-R-vj1");
+        b.data->pt_data->codes.add(b.get<nt::VehicleJourney>("vehicle_journey:R:vj1"), "source", "Code-R-vj1");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR1"), "source", "Code-StopR1");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
