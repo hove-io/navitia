@@ -49,170 +49,18 @@ www.navitia.io
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/range/algorithm/find.hpp>
 #include "type/concerns_base_at_period.h"
+#include "type/serialization.h"
 
 namespace bt = boost::posix_time;
 
 namespace navitia {
 namespace type {
 
-std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_messages(
-    const boost::posix_time::ptime& current_time,
-    const boost::posix_time::time_period& action_period) const {
-    std::vector<boost::shared_ptr<disruption::Impact>> result;
-
-    for (auto impact : this->impacts) {
-        auto impact_acquired = impact.lock();
-        if (!impact_acquired) {
-            continue;  // pointer might still have become invalid
-        }
-        if (impact_acquired->is_valid(current_time, action_period)) {
-            result.push_back(impact_acquired);
-        }
-    }
-
-    return result;
+template <class Archive>
+void MetaVehicleJourney::serialize(Archive& ar, const unsigned int) {
+    ar& idx& uri& rtlevel_to_vjs_map& associated_calendars& impacts& modified_by& tz_handler;
 }
-
-std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_impacts() const {
-    std::vector<boost::shared_ptr<disruption::Impact>> result;
-    for (const auto& impact : impacts) {
-        auto impact_sptr = impact.lock();
-        if (impact_sptr == nullptr) {
-            continue;
-        }
-        result.push_back(impact_sptr);
-    }
-    return result;
-}
-
-std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_messages(
-    const boost::posix_time::ptime& current_time) const {
-    std::vector<boost::shared_ptr<disruption::Impact>> result;
-
-    for (auto impact : this->impacts) {
-        auto impact_acquired = impact.lock();
-        if (!impact_acquired) {
-            continue;  // pointer might still have become invalid
-        }
-        if (impact_acquired->disruption->is_publishable(current_time)) {
-            result.push_back(impact_acquired);
-        }
-    }
-    return result;
-}
-
-bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current_time,
-                                         const boost::posix_time::time_period& action_period,
-                                         const Line* line) const {
-    for (auto i : this->impacts) {
-        auto impact = i.lock();
-        if (!impact) {
-            continue;  // pointer might still have become invalid
-        }
-        if (line && impact->is_only_line_section() && !impact->is_line_section_of(*line)) {
-            continue;
-        }
-        if (impact->is_valid(current_time, action_period)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool HasMessages::has_publishable_message(const boost::posix_time::ptime& current_time) const {
-    for (auto impact : this->impacts) {
-        auto impact_acquired = impact.lock();
-        if (!impact_acquired) {
-            continue;  // pointer might still have become invalid
-        }
-        if (impact_acquired->disruption->is_publishable(current_time)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void HasMessages::clean_weak_impacts() {
-    clean_up_weak_ptr(impacts);
-}
-
-StopTime StopTime::clone() const {
-    StopTime ret{arrival_time, departure_time, stop_point};
-    ret.alighting_time = alighting_time;
-    ret.boarding_time = boarding_time;
-    ret.properties = properties;
-    ret.local_traffic_zone = local_traffic_zone;
-    ret.vehicle_journey = nullptr;
-    ret.shape_from_prev = shape_from_prev;
-    return ret;
-}
-
-bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
-    if ((is_arrival && alighting_time >= DateTimeUtils::SECONDS_PER_DAY)
-        || (!is_arrival && boarding_time >= DateTimeUtils::SECONDS_PER_DAY)) {
-        if (day == 0)
-            return false;
-        --day;
-    }
-    return vehicle_journey->validity_patterns[rt_level]->check(day);
-}
-
-const StopTime* StopTime::get_base_stop_time() const {
-    if (vehicle_journey == nullptr) {
-        return nullptr;
-    }
-
-    auto base_vj = vehicle_journey->get_corresponding_base();
-
-    if (base_vj == nullptr) {
-        return nullptr;
-    }
-
-    if (vehicle_journey == base_vj) {
-        return this;
-    }
-
-    // Partially handle lollipop
-    //
-    // We get the rank of the stop_stime in the current VJ, and
-    // return the one with same rank in the base VJ.
-    // There are limitations if:
-    //   * the lollipop's node (stop_point B) is added before
-    //          ie. Base VJ:     A - B - C - B - D
-    //              RT VJ:   B - A - B - C - B - D
-    //   * the first stop time of the node is deleted
-    //          ie. Base VJ:     A - B - C - B - D
-    //              RT VJ:       A - - - C - B - D
-    // TODO - Use Levenshtein (edit) distance to handle those cases properly
-    size_t rank_current_vj = 0;
-    for (const auto& st : vehicle_journey->stop_time_list) {
-        if (st.is_similar(*this)) {
-            break;
-        }
-        if (stop_point == st.stop_point) {
-            rank_current_vj++;
-        }
-    }
-
-    for (const auto& base_st : base_vj->stop_time_list) {
-        if (stop_point->idx == base_st.stop_point->idx) {
-            if (rank_current_vj == 0) {
-                return &base_st;
-            }
-            rank_current_vj--;
-        }
-    }
-
-    auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time
-                                                 << ": impossible to match exactly one base stop_time");
-    return nullptr;
-}
-
-bool StopTime::is_similar(const StopTime& st) const {
-    return arrival_time == st.arrival_time && departure_time == st.departure_time
-           && stop_point->idx == st.stop_point->idx;
-}
+SERIALIZABLE(MetaVehicleJourney)
 
 namespace {
 
