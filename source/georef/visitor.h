@@ -62,50 +62,6 @@ struct distance_visitor : virtual public Base {
     }
 };
 
-#ifdef _DEBUG_DIJKSTRA_QUANTUM_
-
-struct printer_distance_visitor : public distance_visitor {
-    std::ofstream file_vertex, file_edge;
-    size_t cpt_v = 0, cpt_e = 0;
-    std::string name;
-
-    void init_files() {
-        file_vertex.open((boost::format("vertexes_%s.csv") % name).str());
-        file_vertex << std::setprecision(16) << "idx; lat; lon; vertex_id" << std::endl;
-        file_edge.open((boost::format("edges_%s.csv") % name).str());
-        file_edge << std::setprecision(16) << "idx; lat from; lon from; lat to; long to; wkt; duration; edge"
-                  << std::endl;
-    }
-
-    printer_distance_visitor(time_duration max_dur, const std::vector<time_duration>& dur, const std::string& name)
-        : distance_visitor(max_dur, dur), name(name) {
-        init_files();
-    }
-
-    ~printer_distance_visitor() {
-        file_vertex.close();
-        file_edge.close();
-    }
-
-    printer_distance_visitor(const printer_distance_visitor& o) : distance_visitor(o), name(o.name) { init_files(); }
-
-    template <typename graph_type>
-    void finish_vertex(vertex_t u, const graph_type& g) {
-        file_vertex << cpt_v++ << ";" << g[u].coord << ";" << u << std::endl;
-        distance_visitor::finish_vertex(u, g);
-    }
-
-    template <typename graph_type>
-    void examine_edge(edge_t e, graph_type& g) {
-        distance_visitor::examine_edge(e, g);
-        file_edge << cpt_e++ << ";" << g[boost::source(e, g)].coord << ";" << g[boost::target(e, g)].coord
-                  << ";LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
-                  << ", " << g[boost::target(e, g)].coord.lon() << " " << g[boost::target(e, g)].coord.lat() << ")"
-                  << ";" << this->durations[boost::source(e, g)].total_seconds() << ";" << e << std::endl;
-    }
-};
-#endif
-
 // Visitor who stops (throw a DestinationFound exception) when all targets has been visited
 template <class Base>
 struct target_all_visitor : virtual public Base {
@@ -160,27 +116,6 @@ struct distance_or_target_visitor : virtual public distance_visitor<Base>, virtu
         distance_visitor<Base>::examine_vertex(u, g);
     }
 };
-
-#ifdef _DEBUG_DIJKSTRA_QUANTUM_
-struct printer_distance_or_target_visitor : virtual public printer_distance_visitor, virtual public target_all_visitor {
-    printer_distance_or_target_visitor(const time_duration& max_dur,
-                                       const std::vector<time_duration>& dur,
-                                       const std::vector<vertex_t>& destinations,
-                                       const std::string& name)
-        : printer_distance_visitor(max_dur, dur, name), target_all_visitor(destinations) {}
-    printer_distance_or_target_visitor(const printer_distance_or_target_visitor& other) = default;
-    template <typename graph_type>
-    void finish_vertex(vertex_t u, const graph_type& g) {
-        printer_distance_visitor::finish_vertex(u, g);
-        target_all_visitor::finish_vertex(u, g);
-    }
-
-    template <typename G>
-    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G& g) {
-        printer_distance_visitor::examine_vertex(u, g);
-    }
-};
-#endif
 
 using dijkstra_distance_visitor = distance_visitor<boost::dijkstra_visitor<>>;
 using dijkstra_target_all_visitor = target_all_visitor<boost::dijkstra_visitor<>>;

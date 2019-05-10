@@ -100,10 +100,6 @@ private:
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>> crow_fly_find_nearest_stop_points(
         const navitia::time_duration& radius,
         const proximitylist::ProximityList<type::idx_t>& pl);
-
-#ifdef _DEBUG_DIJKSTRA_QUANTUM_
-    void dump_dijkstra_for_quantum(const ProjectionData& target);
-#endif
 };
 
 }  // namespace georef
