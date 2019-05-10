@@ -809,23 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-Indexes PhysicalMode::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::VehicleJourney:
-            for (const auto* vj : data.vehicle_journeys) {
-                if (vj->physical_mode != this) {
-                    continue;
-                }
-                result.insert(vj->idx);
-            }
-            break;
-        default:
-            break;
-    }
-    return result;
-}
-
 Indexes Line::get(Type_e type, const PT_Data& data) const {
     Indexes result;
     switch (type) {

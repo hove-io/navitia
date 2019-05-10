@@ -67,6 +67,7 @@ www.navitia.io
 #include "type/dataset.h"
 #include "type/company.h"
 #include "type/commercial_mode.h"
+#include "type/physical_mode.h"
 
 namespace navitia {
 namespace type {
@@ -81,21 +82,6 @@ enum class VehicleJourneyType {
     stop_point_to_stop_point = 3,   // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
-};
-
-struct PhysicalMode : public Header, Nameable {
-    const static Type_e type = Type_e::PhysicalMode;
-    boost::optional<double> co2_emission;
-    std::vector<VehicleJourney*> vehicle_journey_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& co2_emission& vehicle_journey_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-
-    PhysicalMode() {}
-    bool operator<(const PhysicalMode& other) const { return this->uri < other.uri; }
 };
 
 typedef std::bitset<2> OdtProperties;
