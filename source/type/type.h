@@ -68,6 +68,7 @@ www.navitia.io
 #include "type/company.h"
 #include "type/commercial_mode.h"
 #include "type/physical_mode.h"
+#include "type/line.h"
 
 namespace navitia {
 namespace type {
@@ -82,85 +83,6 @@ enum class VehicleJourneyType {
     stop_point_to_stop_point = 3,   // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
-};
-
-typedef std::bitset<2> OdtProperties;
-struct hasOdtProperties {
-    static const uint8_t ESTIMATED_ODT = 0;
-    static const uint8_t ZONAL_ODT = 1;
-    OdtProperties odt_properties;
-
-    hasOdtProperties() { odt_properties.reset(); }
-
-    void operator|=(const type::hasOdtProperties& other) { odt_properties |= other.odt_properties; }
-
-    void reset() { odt_properties.reset(); }
-    void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
-    void set_zonal(const bool val = true) { odt_properties.set(ZONAL_ODT, val); }
-
-    bool is_scheduled() const { return odt_properties.none(); }
-    bool is_with_stops() const { return !odt_properties[ZONAL_ODT]; }
-    bool is_estimated() const { return odt_properties[ESTIMATED_ODT]; }
-    bool is_zonal() const { return odt_properties[ZONAL_ODT]; }
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& odt_properties;
-    }
-};
-
-struct LineGroup;
-
-struct Line : public Header, Nameable, HasMessages {
-    const static Type_e type = Type_e::Line;
-    std::string code;
-    std::string forward_name;
-    std::string backward_name;
-
-    std::string additional_data;
-    std::string color;
-    std::string text_color;
-    int sort = std::numeric_limits<int>::max();
-
-    CommercialMode* commercial_mode = nullptr;
-
-    std::vector<Company*> company_list;
-    Network* network = nullptr;
-
-    std::vector<Route*> route_list;
-    std::vector<PhysicalMode*> physical_mode_list;
-    std::vector<Calendar*> calendar_list;
-    MultiLineString shape;
-    boost::optional<boost::posix_time::time_duration> opening_time, closing_time;
-
-    std::map<std::string, std::string> properties;
-
-    std::vector<LineGroup*> line_group_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& code& forward_name& backward_name& additional_data& color& text_color& sort&
-            commercial_mode& company_list& network& route_list& physical_mode_list& impacts& calendar_list& shape&
-                closing_time& opening_time& properties& line_group_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Line& other) const;
-    type::hasOdtProperties get_odt_properties() const;
-    std::string get_label() const;
-};
-
-struct LineGroup : public Header, Nameable {
-    const static Type_e type = Type_e::LineGroup;
-
-    Line* main_line;
-    std::vector<Line*> line_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& main_line& line_list;
-    }
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const LineGroup& other) const { return this < &other; }
 };
 
 struct MetaVehicleJourney;

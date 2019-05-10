@@ -809,81 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-Indexes Line::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::CommercialMode:
-            if (this->commercial_mode) {
-                result.insert(commercial_mode->idx);
-            }
-            break;
-        case Type_e::PhysicalMode:
-            return indexes(physical_mode_list);
-        case Type_e::Company:
-            return indexes(company_list);
-        case Type_e::Network:
-            result.insert(network->idx);
-            break;
-        case Type_e::Route:
-            return indexes(route_list);
-        case Type_e::Calendar:
-            return indexes(calendar_list);
-        case Type_e::LineGroup:
-            return indexes(line_group_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        default:
-            break;
-    }
-    return result;
-}
-
-bool Line::operator<(const Line& other) const {
-    if (this->network != other.network) {
-        return *this->network < *other.network;
-    }
-    if (this->sort != other.sort) {
-        return this->sort < other.sort;
-    }
-    if (this->code != other.code) {
-        return navitia::pseudo_natural_sort()(this->code, other.code);
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-type::hasOdtProperties Line::get_odt_properties() const {
-    type::hasOdtProperties result;
-    if (!this->route_list.empty()) {
-        for (const auto route : this->route_list) {
-            result |= route->get_odt_properties();
-        }
-    }
-    return result;
-}
-
-std::string Line::get_label() const {
-    // LineLabel = NetworkName + ModeName + LineCode
-    //            \__ if different__/      '-> LineName if empty
-    std::stringstream s;
-    if (commercial_mode) {
-        if (network && !boost::iequals(network->name, commercial_mode->name)) {
-            s << network->name << " ";
-        }
-        s << commercial_mode->name << " ";
-    } else if (network) {
-        s << network->name << " ";
-    }
-    if (!code.empty()) {
-        s << code;
-    } else if (!name.empty()) {
-        s << name;
-    }
-    return s.str();
-}
-
 bool Route::operator<(const Route& other) const {
     if (this->line != other.line) {
         return *this->line < *other.line;
@@ -904,17 +829,6 @@ std::string Route::get_label() const {
         s << " (" << name << ")";
     }
     return s.str();
-}
-
-Indexes LineGroup::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            return indexes(line_list);
-        default:
-            break;
-    }
-    return result;
 }
 
 Indexes Route::get(Type_e type, const PT_Data& data) const {
