@@ -69,6 +69,7 @@ www.navitia.io
 #include "type/commercial_mode.h"
 #include "type/physical_mode.h"
 #include "type/line.h"
+#include "type/route.h"
 
 namespace navitia {
 namespace type {
@@ -84,8 +85,6 @@ enum class VehicleJourneyType {
     adress_to_stop_point = 4,       // TAD rabattement adresse à arrêt
     odt_point_to_point = 5          // TAD point à point (Commune à Commune)
 };
-
-struct MetaVehicleJourney;
 
 /**
  * A VehicleJourney is an abstract class with 2 subclasses
@@ -244,47 +243,6 @@ struct FrequencyVehicleJourney : public VehicleJourney {
 
         ar& start_time& end_time& headway_secs;
     }
-};
-
-struct Route : public Header, Nameable, HasMessages {
-    const static Type_e type = Type_e::Route;
-    Line* line = nullptr;
-    StopArea* destination = nullptr;
-    MultiLineString shape;
-    std::string direction_type;
-
-    std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
-    std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
-    std::set<Dataset*> dataset_list;
-
-    type::hasOdtProperties get_odt_properties() const;
-
-    template <typename T>
-    void for_each_vehicle_journey(const T func) const {
-        // call the functor for each vj.
-        // if func return false, we stop
-        for (auto* vj : discrete_vehicle_journey_list) {
-            if (!func(*vj)) {
-                return;
-            }
-        }
-        for (auto* vj : frequency_vehicle_journey_list) {
-            if (!func(*vj)) {
-                return;
-            }
-        }
-    }
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& uri& line& destination& discrete_vehicle_journey_list& frequency_vehicle_journey_list& impacts&
-            shape& direction_type& dataset_list;
-    }
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const Route& other) const;
-
-    std::string get_label() const;
 };
 
 struct StopTime {

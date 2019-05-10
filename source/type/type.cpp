@@ -809,62 +809,6 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-bool Route::operator<(const Route& other) const {
-    if (this->line != other.line) {
-        return *this->line < *other.line;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-std::string Route::get_label() const {
-    // RouteLabel = LineLabel + (RouteName)
-    std::stringstream s;
-    if (line) {
-        s << line->get_label();
-    }
-    if (!name.empty()) {
-        s << " (" << name << ")";
-    }
-    return s.str();
-}
-
-Indexes Route::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            result.insert(line->idx);
-            break;
-        case Type_e::VehicleJourney:
-            for_each_vehicle_journey([&](const VehicleJourney& vj) {
-                result.insert(vj.idx);  // TODO use bulk insert ?
-                return true;
-            });
-            break;
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-type::hasOdtProperties Route::get_odt_properties() const {
-    type::hasOdtProperties result;
-    for_each_vehicle_journey([&](const VehicleJourney& vj) {
-        type::hasOdtProperties cur;
-        cur.set_estimated(vj.has_datetime_estimated());
-        cur.set_zonal(vj.has_zonal_stop_point());
-        result.odt_properties |= cur.odt_properties;
-        return true;
-    });
-    return result;
-}
-
 std::vector<boost::shared_ptr<disruption::Impact>> VehicleJourney::get_impacts() const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
     // considering which impact concerns this vj
