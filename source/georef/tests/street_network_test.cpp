@@ -45,6 +45,8 @@ namespace bt = boost::posix_time;
 
 using dir = ProjectionData::Direction;
 
+namespace {
+
 struct computation_results {
     navitia::time_duration duration;                       // asked duration
     std::vector<navitia::time_duration> durations_matrix;  // duration matrix
@@ -68,21 +70,15 @@ struct computation_results {
     }
 };
 
-static std::string get_name(int i, int j) {
+std::string get_name(int i, int j) {
     std::stringstream ss;
     ss << i << "_" << j;
     return ss.str();
 }
 
-/**
- * The aim of the test is to check that the street network answer give the same answer
- * to multiple get_distance question
- *
- **/
-BOOST_AUTO_TEST_CASE(idempotence) {
+const ProjectionData build_data(GraphBuilder& b, type::StopPoint* sp) {
     // graph creation
     type::Data data;
-    GraphBuilder b;
     size_t square_size(10);
 
     // we build a dumb square graph
@@ -102,13 +98,6 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         }
     }
 
-    DijkstraPathFinder worker(b.geo_ref);
-
-    // we project 2 stations
-    type::GeographicalCoord start;
-    start.set_xy(2., 2.);
-
-    type::StopPoint* sp = new type::StopPoint();
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
     data.pt_data->stop_points.push_back(sp);
@@ -122,10 +111,29 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     b.geo_ref.build_proximity_list();
 
-    type::idx_t target_idx(sp->idx);
+    return proj;
+}
 
+}  // namespace
+
+/**
+ * The aim of the test is to check that the street network answer give the same answer
+ * to multiple get_distance question
+ *
+ **/
+BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
+    GraphBuilder b;
+    auto sp = std::make_unique<type::StopPoint>();
+    auto proj = build_data(b, sp.get());
+
+    // we project 2 stations
+    type::GeographicalCoord start;
+    start.set_xy(2., 2.);
+
+    DijkstraPathFinder worker(b.geo_ref);
     worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
 
+    type::idx_t target_idx(sp->idx);
     auto distance = worker.get_distance(target_idx);
 
     // we have to find a way to get there
@@ -186,4 +194,26 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
         BOOST_CHECK(first_res == other_res);
     }
+}
+
+BOOST_AUTO_TEST_CASE(astar_init) {
+    GraphBuilder b;
+    auto sp = std::make_unique<type::StopPoint>();
+    auto proj_stop_point = build_data(b, sp.get());
+
+    type::GeographicalCoord start;
+    start.set_xy(2., 2.);
+    type::GeographicalCoord destination;
+    start.set_xy(8., 6.);
+
+    AstarPathFinder worker(b.geo_ref);
+    worker.init(start, destination, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
+    auto const speed = georef::default_speed[type::Mode_e::Walking] * georef::default_speed[type::Mode_e::Walking];
+
+    BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Source]], bt::pos_infin);
+    BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Target]], bt::pos_infin);
+
+    // Distance is 10
+    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Source]], navitia::seconds(10 / speed));
+    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], navitia::seconds(10 / speed));
 }
