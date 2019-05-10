@@ -35,6 +35,7 @@ www.navitia.io
 #include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include "type/serialization.h"
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -42,6 +43,76 @@ namespace bg = boost::gregorian;
 namespace navitia {
 namespace type {
 namespace disruption {
+
+template <class Archive>
+void Property::serialize(Archive& ar, const unsigned int) {
+    ar& key& type& value;
+}
+SERIALIZABLE(Property)
+
+template <class Archive>
+void Cause::serialize(Archive& ar, const unsigned int) {
+    ar& uri& wording& created_at& updated_at& category;
+}
+SERIALIZABLE(Cause)
+
+template <class Archive>
+void Severity::serialize(Archive& ar, const unsigned int) {
+    ar& uri& wording& created_at& updated_at& color& priority& effect;
+}
+SERIALIZABLE(Severity)
+
+template <class archive>
+void LineSection::serialize(archive& ar, const unsigned int) {
+    ar& line& start_point& end_point& routes;
+}
+SERIALIZABLE(LineSection)
+
+template <class Archive>
+void StopTimeUpdate::serialize(Archive& ar, const unsigned int) {
+    ar& stop_time& cause& departure_status& arrival_status;
+}
+SERIALIZABLE(StopTimeUpdate)
+
+template <class Archive>
+void Message::serialize(Archive& ar, const unsigned int) {
+    ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types;
+}
+SERIALIZABLE(Message)
+
+namespace detail {
+template <class Archive>
+void AuxInfoForMetaVJ::serialize(Archive& ar, const unsigned int) {
+    ar& stop_times;
+}
+SERIALIZABLE(AuxInfoForMetaVJ)
+}  // namespace detail
+
+template <class Archive>
+void Impact::serialize(Archive& ar, const unsigned int) {
+    ar& uri& company_id& physical_mode_id& headsign& created_at& updated_at& application_periods& severity&
+        _informed_entities& messages& disruption& aux_info;
+}
+SERIALIZABLE(Impact)
+
+template <class Archive>
+void Tag::serialize(Archive& ar, const unsigned int) {
+    ar& uri& name& created_at& updated_at;
+}
+SERIALIZABLE(Tag)
+
+template <class Archive>
+void Disruption::serialize(Archive& ar, const unsigned int) {
+    ar& uri& reference& rt_level& publication_period& created_at& updated_at& cause& impacts& localization& tags& note&
+        contributor& properties;
+}
+SERIALIZABLE(Disruption)
+
+template <class Archive>
+void DisruptionHolder::serialize(Archive& ar, const unsigned int) {
+    ar& disruptions_by_uri& causes& severities& tags& weak_impacts;
+}
+SERIALIZABLE(DisruptionHolder)
 
 std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
                                                       const Impact& impact,
