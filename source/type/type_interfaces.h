@@ -32,6 +32,8 @@ www.navitia.io
 #include <iostream>
 #include "utils/idx_map.h"
 #include <boost/container/flat_set.hpp>
+#include <boost/weak_ptr.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace navitia {
 namespace type {
@@ -241,6 +243,44 @@ struct hasVehicleProperties {
     idx_t to_ulog() { return _vehicle_properties.to_ulong(); }
 
     VehicleProperties _vehicle_properties;
+};
+
+namespace disruption {
+struct Impact;
+}
+struct Line;
+
+struct HasMessages {
+protected:
+    std::vector<boost::weak_ptr<disruption::Impact>> impacts;
+
+public:
+    void add_impact(const boost::shared_ptr<disruption::Impact>& i) { impacts.push_back(i); }
+
+    std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
+        const boost::posix_time::ptime& current_time,
+        const boost::posix_time::time_period& action_period) const;
+
+    bool has_applicable_message(const boost::posix_time::ptime& current_time,
+                                const boost::posix_time::time_period& action_period,
+                                const Line* line = nullptr) const;
+
+    bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
+
+    std::vector<boost::shared_ptr<disruption::Impact>> get_publishable_messages(
+        const boost::posix_time::ptime& current_time) const;
+
+    std::vector<boost::shared_ptr<disruption::Impact>> get_impacts() const;
+
+    void remove_impact(const boost::shared_ptr<disruption::Impact>& impact) {
+        auto it = std::find_if(impacts.begin(), impacts.end(),
+                               [&impact](const boost::weak_ptr<disruption::Impact>& i) { return i.lock() == impact; });
+        if (it != impacts.end()) {
+            impacts.erase(it);
+        }
+    }
+
+    void clean_weak_impacts();
 };
 }  // namespace type
 }  // namespace navitia

@@ -251,6 +251,15 @@ class PoiTypeJson(db.Model):  # type: ignore
         self.instance = instance
 
 
+associate_instance_equipments = db.Table(
+    'associate_instance_equipments',
+    db.metadata,
+    db.Column('instance_id', db.Integer, db.ForeignKey('instance.id')),
+    db.Column('equipments_id', db.Text, db.ForeignKey('equipments_provider.id')),
+    db.PrimaryKeyConstraint('instance_id', 'equipments_id', name='instance_equipments_pk'),
+)
+
+
 class Instance(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
@@ -446,6 +455,10 @@ class Instance(db.Model):  # type: ignore
         default=default_values.max_ridesharing_direct_path_duration,
         nullable=False,
         server_default=str(default_values.max_ridesharing_direct_path_duration),
+    )
+
+    equipment_details_providers = db.relationship(
+        "EquipmentsProvider", secondary=associate_instance_equipments, backref="instances", lazy='joined'
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

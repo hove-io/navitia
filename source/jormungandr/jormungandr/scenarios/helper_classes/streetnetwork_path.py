@@ -102,8 +102,6 @@ class StreetNetworkPath:
         dp = self._direct_path_with_fp(self._instance)
 
         if getattr(dp, "journeys", None):
-            if self._mode == "ridesharing":
-                switch_back_to_ridesharing(dp, True)
             dp.journeys[0].internal_id = str(utils.generate_id())
 
         logger.debug(
@@ -134,6 +132,7 @@ class StreetNetworkPathPool:
         self._future_manager = future_manager
         self._instance = instance
         self._value = {}
+        self._direct_paths_future_by_mode = {}
 
     def add_async_request(
         self, requested_orig_obj, requested_dest_obj, mode, period_extremity, request, streetnetwork_path_type
@@ -147,28 +146,26 @@ class StreetNetworkPathPool:
             if streetnetwork_service
             else None
         )
-        if key in self._value:
-            return
-        self._value[key] = StreetNetworkPath(
-            self._future_manager,
-            streetnetwork_service,
-            requested_orig_obj,
-            requested_dest_obj,
-            mode,
-            period_extremity,
-            request,
-            streetnetwork_path_type,
-        )
+        path = self._value.get(key)
+        if not path:
+            path = self._value[key] = StreetNetworkPath(
+                self._future_manager,
+                streetnetwork_service,
+                requested_orig_obj,
+                requested_dest_obj,
+                mode,
+                period_extremity,
+                request,
+                streetnetwork_path_type,
+            )
+        if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
+            self._direct_paths_future_by_mode[mode] = path
 
     def get_all_direct_paths(self):
         """
-        Get all streetnetwork path of DIRECT type
-        :return: a dictionary of mode vs dp_future
+        :return: a dict of mode vs direct_path future
         """
-        streetnetwork_path_type = StreetNetworkPathType.DIRECT
-        return {
-            k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type
-        }
+        return self._direct_paths_future_by_mode
 
     def has_valid_direct_paths(self):
         for k in self._value:
@@ -190,5 +187,5 @@ class StreetNetworkPathPool:
             if streetnetwork_service
             else None
         )
-        dp = self._value.get(key)
-        return dp.wait_and_get() if dp else None
+        dp_future = self._value.get(key)
+        return dp_future.wait_and_get() if dp_future else None

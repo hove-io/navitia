@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "vptranslator/vptranslator.h"
 #include "ptreferential/ptreferential.h"
+#include "utils/logger.h"
 
 namespace pt = boost::posix_time;
 namespace nt = navitia::type;

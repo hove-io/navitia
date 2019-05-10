@@ -33,6 +33,7 @@ www.navitia.io
 #include "georef.h"
 #include <boost/math/constants/constants.hpp>
 #include <chrono>
+#include "utils/logger.h"
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
 #include <boost/foreach.hpp>
 #endif

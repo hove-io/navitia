@@ -49,7 +49,7 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete, equipment_provider_manager
+from jormungandr import cache, memory_cache, app, global_autocomplete
 from jormungandr import fallback_modes as fm
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
@@ -64,6 +64,7 @@ import time
 from collections import deque
 from datetime import datetime, timedelta
 from navitiacommon import default_values
+from jormungandr.equipments import EquipmentProviderManager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -88,12 +89,14 @@ def _set_default_street_network_config(street_network_configs):
     if not isinstance(street_network_configs, list):
         street_network_configs = []
 
-    kraken = {'class': 'jormungandr.street_network.kraken.Kraken', 'args': {'timeout': 10}}
-    taxi = {'class': 'jormungandr.street_network.taxi.Taxi', 'args': {'street_network': kraken}}
+    kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
+    taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
+    ridesharing = {'class': 'jormungandr.street_network.Ridesharing', 'args': {'street_network': kraken}}
 
     default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
     # taxi mode's default class is changed to 'taxi' not kraken
     default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
+    default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
 
     modes_in_configs = set(
         list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
@@ -185,11 +188,23 @@ class Instance(object):
 
         self.zmq_socket_type = zmq_socket_type
 
-        self.equipment_providers_ids = instance_equipment_providers
-        self.equipment_provider_manager = equipment_provider_manager
+        if app.config[str('DISABLE_DATABASE')]:
+            self.equipment_provider_manager = EquipmentProviderManager(
+                app.config[str('EQUIPMENT_DETAILS_PROVIDERS')]
+            )
+        else:
+            self.equipment_provider_manager = EquipmentProviderManager(
+                app.config[str('EQUIPMENT_DETAILS_PROVIDERS')], self.get_providers_from_db
+            )
 
-        # Create only equipment providers defined in the instance
-        self.equipment_provider_manager.init_providers(self.equipment_providers_ids)
+        # Init equipment providers from config
+        self.equipment_provider_manager.init_providers(instance_equipment_providers)
+
+    def get_providers_from_db(self):
+        """
+        :return: a callable query of equipment providers associated to the current instance in db
+        """
+        return self._get_models().equipment_details_providers
 
     @property
     def autocomplete(self):

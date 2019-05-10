@@ -333,7 +333,7 @@ def get_max_fallback_duration(request, mode, dp_future):
     durations
     :param request:
     :param mode:
-    :param dp_future:
+    :param dp: direct_path future
     :return:  max_fallback_duration
     """
     # 30 minutes by default

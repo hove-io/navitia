@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
-from jormungandr import utils
+from jormungandr import utils, fallback_modes as fm
 
 
 from navitiacommon import response_pb2
@@ -40,9 +40,12 @@ from navitiacommon import response_pb2
 class Taxi(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, modes=None, id=None, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        self.modes = modes or []
+        self.modes = modes or [fm.FallbackModes.taxi.name]
+        assert list(self.modes) == [fm.FallbackModes.taxi.name], (
+            'Class: ' + str(self.__class__) + ' can only be used for taxi'
+        )
         self.sn_system_id = id or 'taxi'
-        config = kwargs.get('street_network', None)
+        config = kwargs.get('street_network', {})
         if 'service_url' not in config['args']:
             config['args'].update({'service_url': None})
         if 'instance' not in config['args']:
@@ -63,22 +66,23 @@ class Taxi(AbstractStreetNetworkService):
         response = self.street_network._direct_path(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, copy_request, direct_path_type
         )
+        if not response:
+            return response
 
-        if response:
-            for journey in response.journeys:
-                journey.durations.taxi = journey.durations.car
-                journey.distances.taxi = journey.distances.car
-                journey.durations.car = 0
-                journey.distances.car = 0
-                for section in journey.sections:
-                    section.street_network.mode = response_pb2.Taxi
+        for journey in response.journeys:
+            journey.durations.taxi += journey.durations.car
+            journey.distances.taxi += journey.distances.car
+            journey.durations.car = 0
+            journey.distances.car = 0
+            for section in journey.sections:
+                section.street_network.mode = fm.FallbackModes[mode].value
 
-                # We don't add an additional waiting section for direct_path
-                # Only for fallback
-                if direct_path_type != StreetNetworkPathType.DIRECT:
-                    self._add_additional_section_in_fallback(
-                        response, pt_object_origin, pt_object_destination, copy_request, direct_path_type
-                    )
+        # We don't add an additional waiting section for direct_path
+        # Only for fallback
+        if direct_path_type != StreetNetworkPathType.DIRECT:
+            self._add_additional_section_in_fallback(
+                response, pt_object_origin, pt_object_destination, request, direct_path_type
+            )
 
         return response
 
@@ -190,5 +194,4 @@ class Taxi(AbstractStreetNetworkService):
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
-
         return self.street_network.make_path_key(mode, orig_uri, dest_uri, streetnetwork_path_type, None)

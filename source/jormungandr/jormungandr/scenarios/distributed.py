@@ -224,8 +224,6 @@ class Distributed(object):
             for mode in requested_dep_modes:
                 dp = context.direct_paths_by_mode.get(mode).wait_and_get()
                 if getattr(dp, "journeys", None):
-                    if mode == "ridesharing":
-                        switch_back_to_ridesharing(dp, True)
                     res.append(dp)
 
         # pt_journeys may contain None and res must be a list of protobuf journey

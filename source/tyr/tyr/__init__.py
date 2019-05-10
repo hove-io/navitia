@@ -38,8 +38,8 @@ from flask_script import Manager
 from tyr.rabbit_mq_handler import RabbitMqHandler
 
 app = Flask(__name__)
-app.config.from_object('tyr.default_settings')
-app.config.from_envvar('TYR_CONFIG_FILE', silent=True)
+app.config.from_object('tyr.default_settings')  # type: ignore
+app.config.from_envvar('TYR_CONFIG_FILE', silent=True)  # type: ignore
 configure_logger(app)
 manager = Manager(app)
 
