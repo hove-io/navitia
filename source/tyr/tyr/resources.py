@@ -63,13 +63,11 @@ from tyr.tasks import (
     cosmogony2cities,
     COSMOGONY_REGEXP,
 )
+from tyr import api
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
-
 import werkzeug
-
-__ALL__ = ['Api', 'Instance', 'User', 'Key']
 
 
 class Api(flask_restful.Resource):
@@ -77,12 +75,29 @@ class Api(flask_restful.Resource):
         pass
 
     def get(self):
-        return marshal(models.Api.query.all(), api_fields)
+        def check_db():
+            tyr_db = sqlalchemy.create_engine(current_app.config['SQLALCHEMY_DATABASE_URI'])
+            try:
+                tyr_db.connect()
+                result = tyr_db.execute("SELECT version_num FROM alembic_version")
+                for row in result:
+                    return row['version_num']
+            except Exception as e:
+                logging.exception("Tyr db not reachable : {}".format(e.message))
+                return None
+
+        return {'db version': check_db(), 'api': marshal(models.Api.query.all(), api_fields)}
 
 
 class Index(flask_restful.Resource):
     def get(self):
-        return {'jobs': {'href': url_for('jobs', _external=True)}}
+        response = {}
+        for endpoint in api.endpoints:
+            try:
+                response[endpoint] = {'href': url_for(endpoint, _external=True)}
+            except werkzeug.routing.BuildError:
+                logging.warning('Could not build url for endpoint \'{}\' '.format(endpoint))
+        return response
 
 
 class Job(flask_restful.Resource):
