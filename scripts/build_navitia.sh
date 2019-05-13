@@ -180,7 +180,7 @@ then
     if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
             # on Debian, we must add the APT repository of PostgreSQL project
             # to have the right version of postgis
-            # no magic stuff : https://wiki.pestgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
+            # no magic stuff : https://wiki.postgresql.org/wiki/Apt#PostgreSQL_packages_for_Debian_and_Ubuntu
             apt_file='/etc/apt/sources.list.d/postgresql.list'
             sudo /bin/sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main' > $apt_file"
             sudo apt-get -y install wget ca-certificates
