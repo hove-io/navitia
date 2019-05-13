@@ -522,8 +522,10 @@ def cities(file_path, job_id, exe):
             job.state = 'done'
 
     except Exception as e:
-        job.state = 'failed'
         logging.exception('{} exception : {}'.format(exe, e.message))
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
 
     models.db.session.commit()
     logging.info('Import of {} finished'.format(exe))
