@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/journey.h"
 #include "tests/utils_test.h"
 #include "ed/build_helper.h"
+#include "utils/logger.h"
 
 #include <boost/test/unit_test.hpp>
 

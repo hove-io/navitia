@@ -2725,13 +2725,14 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     auto it_route = pt_data.routes_map.find(route_id);
     BOOST_CHECK(it_route == pt_data.routes_map.end());
 
-    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message(
-        "vj_new_trip", "20190101",
-        {
-            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
-            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
-        },
-        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri);
+    transit_realtime::TripUpdate new_trip =
+        ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                        {
+                                            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
+                                        },
+                                        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri,
+                                        phy_mode_uri, "", "", "trip_headsign");
 
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
     b.finalize_disruption_batch();
@@ -2786,6 +2787,10 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     auto res = compute("20190101T073000", "stop_point:A", "stop_point:F");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+
+    // Verify that headsign exists in display_informations
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().headsign(), "trip_headsign");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().name(), "A - F");
 
     // Update the trip recently added with destination F replaced by J
     new_trip = ntest::make_trip_update_message("vj_new_trip", "20190101",
@@ -3025,15 +3030,16 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
                       pbnavitia::StopTimeUpdateStatus::ADDED);
 
     // Add new trip with new id
-    transit_realtime::TripUpdate new_trip_2 = ntest::make_trip_update_message(
-        "vj_new_trip_2", "20190101",
-        {
-            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
-            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
-            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
-            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
-        },
-        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri);
+    transit_realtime::TripUpdate new_trip_2 =
+        ntest::make_trip_update_message("vj_new_trip_2", "20190101",
+                                        {
+                                            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+                                            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+                                            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+                                        },
+                                        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri,
+                                        phy_mode_uri, "", "", "trip_headsign");
     navitia::handle_realtime("feed-2", timestamp, new_trip_2, *b.data, true, true);
     b.finalize_disruption_batch();
 
@@ -3066,6 +3072,8 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("00000000"));
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("00000001"));
+    auto st = vj->stop_time_list.front();
+    BOOST_CHECK_EQUAL(pt_data.headsign_handler.get_headsign(st), "trip_headsign");
 
     // New trip added
     res = compute("20190101T073000", "stop_point:A", "stop_point:J");

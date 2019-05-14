@@ -1,7 +1,6 @@
 /source/tyr/.env
 stats
 debug
-release*
 /build
 /documentation/slate/build
 Doc

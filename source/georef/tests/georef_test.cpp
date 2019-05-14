@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include <execinfo.h>
 #include <iostream>
+#include "utils/logger.h"
 
 #include "georef/georef.h"
 #include "tests/utils_test.h"

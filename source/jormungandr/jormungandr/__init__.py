@@ -94,9 +94,6 @@ else:
     global_autocomplete = {'kraken': Kraken()}
 
 
-equipment_provider_manager = init.equipments_providers(app)
-
-
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(

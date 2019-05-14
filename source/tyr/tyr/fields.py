@@ -79,6 +79,16 @@ end_point_fields = {
 
 key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
+equipment_provider_fields = {
+    'id': fields.Raw,
+    'klass': fields.Raw,
+    'args': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'discarded': fields.Raw,
+}
+equipment_provider_list_fields = {'equipments_providers': fields.List(fields.Nested(equipment_provider_fields))}
+
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
@@ -130,6 +140,7 @@ instance_fields = {
     'max_additional_connections': fields.Raw,
     'successive_physical_mode_to_limit_id': fields.Raw,
     'car_park_provider': fields.Raw,
+    'equipment_details_providers': fields.Nested(equipment_provider_fields),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -240,13 +251,3 @@ bss_provider_fields = {
     'discarded': fields.Raw,
 }
 bss_provider_list_fields = {'bss_providers': fields.List(fields.Nested(bss_provider_fields))}
-
-equipment_provider_fields = {
-    'id': fields.Raw,
-    'klass': fields.Raw,
-    'args': fields.Raw,
-    'created_at': FieldDate,
-    'updated_at': FieldDate,
-    'discarded': fields.Raw,
-}
-equipment_provider_list_fields = {'equipments_providers': fields.List(fields.Nested(equipment_provider_fields))}

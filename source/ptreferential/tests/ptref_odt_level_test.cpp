@@ -35,6 +35,7 @@ www.navitia.io
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
+#include "utils/logger.h"
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>

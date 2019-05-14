@@ -30,9 +30,16 @@ www.navitia.io
 
 #include "geographical_coord.h"
 #include <iomanip>
+#include "type/serialization.h"
 
 namespace navitia {
 namespace type {
+
+template <class Archive>
+void GeographicalCoord::serialize(Archive& ar, const unsigned int) {
+    ar& _lon& _lat;
+}
+SERIALIZABLE(GeographicalCoord)
 
 double GeographicalCoord::distance_to(const GeographicalCoord& other) const {
     double longitudeArc = (this->lon() - other.lon()) * N_DEG_TO_RAD;

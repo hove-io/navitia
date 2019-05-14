@@ -499,6 +499,9 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }
+        if (trip_update.HasExtension(kirin::headsign)) {
+            impact->headsign = trip_update.GetExtension(kirin::headsign);
+        }
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;

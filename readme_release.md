@@ -1,10 +1,5 @@
 # HOWTO Release navitia
 
-You should first have a proper python env:
-```
-pip install -r requirements_release.txt -U
-```
-
 ## "Normal" release (minor)
 
 First have a look on github's repo at PRs about to be released https://github.com/CanalTP/navitia/pulls?q=is%3Apr+is%3Aclosed+sort%3Aupdated-desc
@@ -12,11 +7,11 @@ First have a look on github's repo at PRs about to be released https://github.co
 * Check that titles are correct (clear, with the component impacted)
 
 Then the script should take over:
-```
+```sh
 cd <path/to/repo/navitia>
-# to be sure to launch the correct version of the release script
+# to be sure to trigger the correct version of the release script
 git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/dev dev
-python ./script_release.py minor <canaltp_distant_repo_name>
+python ./release_navitia.sh minor <canaltp_distant_repo_name>
 ```
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
@@ -26,14 +21,14 @@ Then follow the instructions given by the script, and also:
 ## Other releases
 
 ### For a major release, same as minor, but major:
-```
-python ./script_release.py major <canaltp_distant_repo_name>
+```sh
+python ./release_navitia.sh major <canaltp_distant_repo_name>
 ```
 
 ### For hotfix:
 Note: It is preferable but not mandatory to merge the hotfix PR before.
-```
-python ./script_release.py hotfix <canaltp_distant_repo_name>
+```sh
+python ./release_navitia.sh hotfix <canaltp_distant_repo_name>
 ```
 A new branch has been created <release_x.yy.z> and the changelog is opened.
 Then the process is less automated (but still, instructions are given):

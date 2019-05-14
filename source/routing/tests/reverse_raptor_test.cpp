@@ -35,6 +35,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
+#include "utils/logger.h"
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }

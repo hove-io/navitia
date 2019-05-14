@@ -40,6 +40,7 @@ www.navitia.io
 #include "utils/functions.h"
 #include "utils/coord_parser.h"
 #include "utils/logger.h"
+#include "type/indexes.h"
 
 // they need to be included for the BOOST_CLASS_EXPORT_GUID macro
 #include <eos_portable_archive/portable_iarchive.hpp>
@@ -801,118 +802,11 @@ Mode_e static_data::modeByCaption(const std::string& mode_str) {
     return it_mode->second;
 }
 
-template <typename T>
-Indexes indexes(const std::vector<T*>& elements) {
-    Indexes result;
-    for (T* element : elements) {
-        result.insert(element->idx);
-    }
-    return result;
-}
-
-template <typename T>
-Indexes indexes(const std::set<T*>& elements) {
-    Indexes result;
-    for (T* element : elements) {
-        result.insert(element->idx);
-    }
-    return result;
-}
-
-Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
-
-void Calendar::build_validity_pattern(boost::gregorian::date_period production_period) {
-    // initialisation of the validity pattern from the active periods and the exceptions
-    for (boost::gregorian::date_period period : this->active_periods) {
-        auto intersection_period = production_period.intersection(period);
-        if (intersection_period.is_null()) {
-            continue;
-        }
-        validity_pattern.add(intersection_period.begin(), intersection_period.end(), week_pattern);
-    }
-    for (navitia::type::ExceptionDate exd : this->exceptions) {
-        if (!production_period.contains(exd.date)) {
-            continue;
-        }
-        if (exd.type == ExceptionDate::ExceptionType::sub) {
-            validity_pattern.remove(exd.date);
-        } else if (exd.type == ExceptionDate::ExceptionType::add) {
-            validity_pattern.add(exd.date);
-        }
-    }
-}
-
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
     if (this->route != other.route) {
         return *this->route < *other.route;
     }
     return this->uri < other.uri;
-}
-
-Indexes Calendar::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line: {
-            // if the method is slow, adding a list of lines in calendar
-            for (Line* line : data.lines) {
-                for (Calendar* cal : line->calendar_list) {
-                    if (cal == this) {
-                        result.insert(line->idx);
-                        break;
-                    }
-                }
-            }
-        } break;
-        default:
-            break;
-    }
-    return result;
-}
-
-bool StopArea::operator<(const StopArea& other) const {
-    if (name != other.name) {
-        return name < other.name;
-    }
-    return uri < other.uri;
-}
-
-Indexes StopArea::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            return indexes(this->stop_point_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-
-        default:
-            break;
-    }
-    return result;
-}
-
-bool Network::operator<(const Network& other) const {
-    if (this->sort != other.sort) {
-        return this->sort < other.sort;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-Indexes Network::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Line:
-            return indexes(line_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
 }
 
 Indexes Company::get(Type_e type, const PT_Data&) const {
@@ -1145,92 +1039,6 @@ Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
 VehicleJourney::~VehicleJourney() {}
 FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
-
-bool StopPoint::operator<(const StopPoint& other) const {
-    if (this->stop_area != other.stop_area) {
-        return *this->stop_area < *other.stop_area;
-    }
-    if (this->name != other.name) {
-        return this->name < other.name;
-    }
-    return this->uri < other.uri;
-}
-
-Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopArea:
-            result.insert(stop_area->idx);
-            break;
-        case Type_e::Connection:
-        case Type_e::StopPointConnection:
-            for (const StopPointConnection* stop_cnx : stop_point_connection_list)
-                result.insert(stop_cnx->idx);  // TODO use bulk insert ?
-            break;
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-Indexes StopPointConnection::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            result.insert(this->departure->idx);
-            result.insert(this->destination->idx);
-            break;
-        default:
-            break;
-    }
-    return result;
-}
-bool StopPointConnection::operator<(const StopPointConnection& other) const {
-    if (this->departure != other.departure) {
-        return *this->departure < *other.departure;
-    }
-    return *this->destination < *other.destination;
-}
-
-Indexes Dataset::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Contributor:
-            result.insert(contributor->idx);
-            break;
-        case Type_e::VehicleJourney:
-            return indexes(vehiclejourney_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-Indexes Contributor::get(Type_e type, const PT_Data&) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::Dataset:
-            return indexes(dataset_list);
-        default:
-            break;
-    }
-    return result;
-}
-
-std::string to_string(ExceptionDate::ExceptionType t) {
-    switch (t) {
-        case ExceptionDate::ExceptionType::add:
-            return "Add";
-        case ExceptionDate::ExceptionType::sub:
-            return "Sub";
-        default:
-            throw navitia::exception("unhandled exception type");
-    }
-}
 
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri, int access_duration)
     : type(type), uri(uri), access_duration(access_duration) {

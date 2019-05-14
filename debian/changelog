@@ -1,3 +1,22 @@
+navitia2 (2.79.0) unstable; urgency=low
+
+  * Jormun-Tyr: Association instance-equipments_provider   <https://github.com/CanalTP/navitia/pull/2777>
+  * Kraken: splitting of type.h Strikes Back  <https://github.com/CanalTP/navitia/pull/2781>
+  * Jormun: handle HEAD request correctly  <https://github.com/CanalTP/navitia/pull/2782>
+  * Doc: Add colours and graph to the doc <https://github.com/CanalTP/navitia/pull/2780>
+  * Kraken: trying to reduce build time and memory  <https://github.com/CanalTP/navitia/pull/2687>
+  * Build: use ccache and gold if available  <https://github.com/CanalTP/navitia/pull/2772>
+  * Jormungandr: add test on trip add with trip existing in navitia  <https://github.com/CanalTP/navitia/pull/2775>
+  * Doc: Documentation of the routing algorithm  <https://github.com/CanalTP/navitia/pull/2688>
+  * Kraken: manage headsign of trip in navitia  <https://github.com/CanalTP/navitia/pull/2771>
+  * Kraken: Remove Cli tools for kraken  <https://github.com/CanalTP/navitia/pull/2770>
+  * Doc: Release process hardenning  <https://github.com/CanalTP/navitia/pull/2769>
+  * Jormun: Use ridesharing connector in distributed  <https://github.com/CanalTP/navitia/pull/2743>
+  * Ed: Osm2ed improve association of Way to Admin  <https://github.com/CanalTP/navitia/pull/2756>
+  * Python: update SQLAlchemy requirements   <https://github.com/CanalTP/navitia/pull/2761>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Fri, 10 May 2019 15:05:37 +0100
+
 navitia2 (2.78.0) unstable; urgency=low
 
   * Jormun: Merge systral equipment response with Sytral web service  <https://github.com/CanalTP/navitia/pull/2764>

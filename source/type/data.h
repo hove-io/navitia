@@ -29,19 +29,20 @@ www.navitia.io
 */
 
 #pragma once
-#include "utils/logger.h"
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <atomic>
-#include "type/type.h"
+#include "type/validity_pattern.h"
 #include "utils/serialization_unique_ptr.h"
 #include "utils/serialization_atomic.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
-#include "georef/adminref.h"
+#include "type/fwd_type.h"
 
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 #if __GNUG__ && __GNUC__ < 5
@@ -49,26 +50,6 @@ www.navitia.io
 #else
 #define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
 #endif
-
-// forward declare
-namespace navitia {
-namespace georef {
-struct GeoRef;
-struct POI;
-struct POIType;
-}  // namespace georef
-namespace fare {
-struct Fare;
-}
-namespace routing {
-struct dataRAPTOR;
-struct JourneyPattern;
-struct JourneyPatternPoint;
-}  // namespace routing
-namespace type {
-struct MetaData;
-}
-}  // namespace navitia
 
 namespace navitia {
 namespace type {
@@ -252,8 +233,6 @@ public:
     void build_proximity_list();
     /** Set admins*/
     void build_administrative_regions();
-
-    void build_associated_calendar();
 
     void aggregate_odt();
     void build_relations();

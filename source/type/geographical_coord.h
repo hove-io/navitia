@@ -134,9 +134,7 @@ struct GeographicalCoord {
     }
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& _lon& _lat;
-    }
+    void serialize(Archive& ar, const unsigned int);
 
 private:
     double _lon;

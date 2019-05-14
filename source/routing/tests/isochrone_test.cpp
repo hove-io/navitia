@@ -37,6 +37,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "routing/routing.h"
 #include "tests/utils_test.h"
+#include "utils/logger.h"
 
 #include <boost/test/unit_test.hpp>
 #include <iomanip>
