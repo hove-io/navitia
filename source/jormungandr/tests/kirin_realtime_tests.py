@@ -2289,7 +2289,6 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
                     is_detour=True,
                     message='deleted for detour',
                 ),
-
                 UpdatedStopTime(
                     "stop_point:stopC",
                     arrival_delay=0,
@@ -2298,9 +2297,8 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
                     departure=tstamp("20120615T003000"),
                     is_added=True,
                     is_detour=True,
-                    message='added for detour'
+                    message='added for detour',
                 ),
-
                 UpdatedStopTime(
                     "stop_point:stopA",
                     tstamp("20120615T010102"),
