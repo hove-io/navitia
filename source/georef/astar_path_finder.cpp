@@ -61,6 +61,7 @@ void AstarPathFinder::astar(const vertex_t source,
                             const astar_distance_heuristic& heuristic,
                             const astar_distance_or_target_visitor& visitor) {
     // Note: the predecessors have been updated in init
+    std::array<georef::vertex_t, 2> vertex{{source, target}};
 
     // Fill color map in white before dijkstra
     std::fill(color.data.get(), color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
@@ -72,7 +73,7 @@ void AstarPathFinder::astar(const vertex_t source,
     auto weight_map = boost::get(&Edge::duration, geo_ref.graph);
     auto combiner = SpeedDistanceCombiner(speed_factor);
 
-    astar_shortest_paths_no_init_with_heap(g, &source, &target, heuristic, visitor, weight_map, combiner);
+    astar_shortest_paths_no_init_with_heap(g, vertex.cbegin(), vertex.cend(), heuristic, visitor, weight_map, combiner);
 }
 
 template <class Graph, class WeightMap, class Compare>
