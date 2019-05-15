@@ -31,28 +31,20 @@ www.navitia.io
 #pragma once
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/serialization/weak_ptr.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
-#include <boost/serialization/bitset.hpp>
-#include "utils/serialization_vector.h"
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/set.hpp>
 #include <boost/variant.hpp>
-#include <boost/serialization/variant.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include <atomic>
 #include <map>
 #include <vector>
 #include <string>
+#include <set>
 
 #include "utils/exception.h"
-#include "utils/serialization_unique_ptr.h"
-#include "utils/serialization_unique_ptr_container.h"
 
-#include "type/type.h"
+#include "type/type_interfaces.h"
+#include "type/fwd_type.h"
+#include "type/stop_time.h"
 
 namespace navitia {
 namespace type {
@@ -212,19 +204,7 @@ struct LineSection {
     template <class archive>
     void serialize(archive& ar, const unsigned int);
 
-    std::set<StopPoint*> get_stop_points_section() const {
-        std::set<StopPoint*> res;
-        for (const auto* route : routes) {
-            route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-                res = vj.get_sections_stop_points(start_point, end_point);
-                if (res.empty()) {
-                    return true;
-                }
-                return false;
-            });
-        }
-        return res;
-    }
+    std::set<StopPoint*> get_stop_points_section() const;
 };
 
 typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, Line*, Route*, MetaVehicleJourney*>
