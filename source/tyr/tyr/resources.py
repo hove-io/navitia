@@ -75,18 +75,7 @@ class Api(flask_restful.Resource):
         pass
 
     def get(self):
-        def check_db():
-            tyr_db = sqlalchemy.create_engine(current_app.config['SQLALCHEMY_DATABASE_URI'])
-            try:
-                tyr_db.connect()
-                result = tyr_db.execute("SELECT version_num FROM alembic_version")
-                for row in result:
-                    return row['version_num']
-            except Exception as e:
-                logging.exception("Tyr db not reachable : {}".format(e.message))
-                return None
-
-        return {'db version': check_db(), 'api': marshal(models.Api.query.all(), api_fields)}
+        return marshal(models.Api.query.all(), api_fields)
 
 
 class Index(flask_restful.Resource):
@@ -98,6 +87,22 @@ class Index(flask_restful.Resource):
             except werkzeug.routing.BuildError:
                 logging.warning('Could not build url for endpoint \'{}\' '.format(endpoint))
         return response
+
+
+class Status(flask_restful.Resource):
+    def get(self):
+        def check_db():
+            tyr_db = sqlalchemy.create_engine(current_app.config['SQLALCHEMY_DATABASE_URI'])
+            try:
+                tyr_db.connect()
+                result = tyr_db.execute("SELECT version_num FROM alembic_version")
+                for row in result:
+                    return row['version_num']
+            except Exception as e:
+                logging.exception("Tyr db not reachable : {}".format(e.message))
+                return None
+
+        return {'db version': check_db()}
 
 
 class Job(flask_restful.Resource):
