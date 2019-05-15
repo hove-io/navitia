@@ -176,7 +176,7 @@ echo "** create {navitia_dir}/run/kraken.ini basic configuration file"
 cat << EOFJ > "$run_dir"/jormungandr/default.json
 {
     "key": "default",
-    "zmq_socket": "ipc:///tmp/default_kraken",
+    "zmq_socket": "ipc:///tmp/default_kraken"
 }
 EOFJ
 

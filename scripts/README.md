@@ -12,7 +12,7 @@ Aftermath the installation, it will be possible to :
 
 Script                                   | OS                | Version                           | Comments
 -----------------------------------------|-------------------|-----------------------------------|--------------------------
-ubuntu_bionic_dev_env_install.sh         | Ubuntu            | Bionic                            | Complete dev environment installation on Ubuntu bionic LTS.
+ubuntu_bionic_disco_dev_env_install.sh   | Ubuntu            | Bionic - disco                    | Complete dev environment installation on Ubuntu bionic LTS and Ubuntu Disco.
 build_navitia.sh                         | Ubuntu<br>Debian  | Vivid - Xenial<br>Jessie          | Old script. Combine dev environment installation and Navitia demo
 
 ## Build, setup and run navitia demo
