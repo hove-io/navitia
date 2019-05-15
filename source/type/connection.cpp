@@ -29,7 +29,8 @@ www.navitia.io
 */
 
 #include "type/connection.h"
-#include "type/type.h"
+#include "type/pt_data.h"
+#include "type/stop_point.h"
 #include "type/indexes.h"
 #include "type/serialization.h"
 
