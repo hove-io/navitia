@@ -111,7 +111,7 @@ int main(int argc, const char* const argv[]) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    mock_kraken kraken(b, "line_sections_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }

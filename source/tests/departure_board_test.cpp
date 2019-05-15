@@ -42,7 +42,7 @@ int main(int argc, const char* const argv[]) {
 
     calendar_fixture data_set;
 
-    mock_kraken kraken(data_set.b, "departure_board_test", argc, argv);
+    mock_kraken kraken(data_set.b, argc, argv);
 
     return 0;
 }

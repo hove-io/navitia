@@ -146,6 +146,6 @@ int main(int argc, const char* const argv[]) {
     b.data->build_uri();
 
     // mock kraken
-    mock_kraken kraken(b, "min_nb_journeys_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
     return 0;
 }

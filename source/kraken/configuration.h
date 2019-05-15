@@ -56,6 +56,8 @@ public:
     std::string broker_password() const;
     std::string broker_vhost() const;
     std::string broker_exchange() const;
+    std::string broker_queue(const std::string& default_queue) const;
+    bool broker_queue_auto_delete() const;
     int broker_timeout() const;
     int broker_sleeptime() const;
     bool is_realtime_enabled() const;

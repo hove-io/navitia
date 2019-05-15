@@ -129,6 +129,6 @@ int main(int argc, const char* const argv[]) {
        << 8. << ", " << 1. << " " << 1. << "))";
     b.data->meta->shape = ss.str();
 
-    mock_kraken kraken(b, "main_autocomplete_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
     return 0;
 }

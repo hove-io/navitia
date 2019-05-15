@@ -106,7 +106,7 @@ int main(int argc, const char* const argv[]) {
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 
-    mock_kraken kraken(b, "timezone_hong_kong_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }
