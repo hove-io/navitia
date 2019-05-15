@@ -2215,7 +2215,7 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 7
 
-        # /journeys from B to A wih departure at 20120614T180100 and arrival at 20120614T180102
+        # /journeys from B to A with departure at 20120614T180100 and arrival at 20120614T180102
         journey_query = (
             "journeys?from={f}&to={to}&data_freshness=base_schedule&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
@@ -2260,7 +2260,7 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
 
-        # /journeys from B to A wih departure at 20120614T180100 and arrival at 20120615T010102
+        # /journeys from B to A with departure at 20120614T180100 and arrival at 20120615T010102
         journey_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
@@ -2319,7 +2319,7 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
 
-        # /journeys from B to A wih departure at 20120615T003000 and arrival at 20120614T230000
+        # /journeys from B to A with departure at 20120615T003000 and arrival at 20120614T230000
         journey_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
