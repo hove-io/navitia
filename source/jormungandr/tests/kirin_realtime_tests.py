@@ -2148,6 +2148,54 @@ class TestKirinAddNewTripPresentInNavitia(MockKirinDisruptionsFixture):
         assert nb_disruptions_before == len(disruptions_after['disruptions'])
 
 
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinAddNewTripPresentInNavitiaWithAShift(MockKirinDisruptionsFixture):
+    def test_add_new_trip_present_in_navitia_with_a_shift(self):
+
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # The vehicle_journey vjA is present in navitia
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+
+        assert len(pt_response['vehicle_journeys']) == 1
+        assert len(pt_response['disruptions']) == 0
+
+        # New disruption, a new trip with vehicle_journey id = vjA and having 2 stop_times in realtime
+        self.send_mock(
+            "vjA",
+            "20120620",
+            'added',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120620T080100"),
+                    departure=tstamp("20120620T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120620T080102"),
+                    departure=tstamp("20120620T080102"),
+                ),
+            ],
+            disruption_id='new_trip',
+            effect='additional_service',
+        )
+
+        # Check that there should not be a new disruption
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before == len(disruptions_after['disruptions'])
+
+
+
 def make_mock_kirin_item(
     vj_id,
     date,
