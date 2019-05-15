@@ -77,6 +77,7 @@ struct PT_Data;
 namespace disruption {
 struct Impact;
 struct Message;
+struct EntryPoint;
 }  // namespace disruption
 }  // namespace type
 }  // namespace navitia

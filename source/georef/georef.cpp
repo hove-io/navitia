@@ -42,6 +42,8 @@ www.navitia.io
 #include <boost/math/constants/constants.hpp>
 #include <array>
 #include <unordered_map>
+#include "type/stop_area.h"
+#include "type/type.h"  //TODO: move get_admin_name and reduce include
 
 using navitia::type::idx_t;
 
