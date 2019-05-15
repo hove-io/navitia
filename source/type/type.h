@@ -44,18 +44,9 @@ www.navitia.io
 #include <vector>
 
 #include <boost/weak_ptr.hpp>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/bitset.hpp>
-#include "utils/serialization_vector.h"
-#include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/optional.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include "type/fwd_type.h"
 #include "type/stop_point.h"

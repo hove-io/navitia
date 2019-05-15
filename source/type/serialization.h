@@ -35,6 +35,15 @@ www.navitia.io
 
 // TODO: should be removed when migration is completed
 #include <boost/serialization/weak_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/bitset.hpp>
+#include "utils/serialization_vector.h"
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/optional.hpp>
+#include <boost/serialization/map.hpp>
+#include "utils/serialization_unordered_map.h"
+#include "utils/serialization_tuple.h"
 
 #define SERIALIZABLE(T)                                                                                                \
     template void T::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive&, const unsigned int); \

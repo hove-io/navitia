@@ -29,16 +29,13 @@ www.navitia.io
 */
 
 #pragma once
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
 #include <boost/utility.hpp>
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <atomic>
 #include "type/validity_pattern.h"
-#include "utils/serialization_unique_ptr.h"
-#include "utils/serialization_atomic.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
@@ -194,23 +191,9 @@ public:
 
     friend class boost::serialization::access;
     template <class Archive>
-    void save(Archive& ar, const unsigned int) const {
-        ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
-            is_realtime_loaded;
-    }
+    void save(Archive& ar, const unsigned int) const;
     template <class Archive>
-    void load(Archive& ar, const unsigned int version) {
-        this->version = version;
-        if (this->version != data_version) {
-            unsigned int v = data_version;  // won't link otherwise...
-            auto msg = boost::format(
-                           "Warning data version don't match with the data version of kraken %u (current version: %d)")
-                       % version % v;
-            throw navitia::data::wrong_version(msg.str());
-        }
-        ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
-            is_realtime_loaded;
-    }
+    void load(Archive& ar, const unsigned int version);
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     // Loading methods
