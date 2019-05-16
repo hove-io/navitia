@@ -3456,7 +3456,7 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
 }
 
-BOOST_FIXTURE_TEST_CASE(cannot_add_new_trip_if_id_corresponds_to_a_base_VJ, AddTripDataset) {
+BOOST_FIXTURE_TEST_CASE(cannot_add_new_trip_if_id_corresponds_to_a_base_VJ_the_same_day, AddTripDataset) {
     auto& pt_data = *b.data->pt_data;
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
