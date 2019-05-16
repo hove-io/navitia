@@ -33,6 +33,7 @@ www.navitia.io
 #include <iostream>
 #include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
+#include "utils/exception.h"
 
 namespace ed {
 namespace connectors {

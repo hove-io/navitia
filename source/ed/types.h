@@ -35,9 +35,15 @@ www.navitia.io
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
+#include <boost/optional.hpp>
 #include "type/datetime.h"
 
-#include "type/type.h"
+#include "type/type_interfaces.h"
+#include "type/connection.h"
+#include "type/validity_pattern.h"
+#include "type/geographical_coord.h"
+#include "type/vehicle_journey.h"
+#include "type/calendar.h"
 #include "limits.h"
 
 namespace nt = navitia::type;
