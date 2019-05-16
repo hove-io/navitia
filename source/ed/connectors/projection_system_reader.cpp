@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "projection_system_reader.h"
 #include <boost/filesystem.hpp>
+#include "utils/exception.h"
 #include "utils/csv.h"
 
 namespace ed {
