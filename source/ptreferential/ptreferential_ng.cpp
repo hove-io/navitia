@@ -36,6 +36,8 @@ www.navitia.io
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
+#include "type/line.h"
+#include "type/type.h"  //TODO: move static_data
 
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;

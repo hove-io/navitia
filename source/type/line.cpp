@@ -31,6 +31,12 @@ www.navitia.io
 #include "type/line.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
+#include "type/commercial_mode.h"
+#include "type/network.h"
+#include "type/calendar.h"
+#include "type/company.h"
+#include "type/route.h"
+#include "type/physical_mode.h"
 #include "type/serialization.h"
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
