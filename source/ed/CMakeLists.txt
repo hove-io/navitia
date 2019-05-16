@@ -36,7 +36,7 @@ target_link_libraries(fare2ed fare2ed_lib transportation_data_import connectors 
 
 add_library(ed2nav_lib ed2nav.cpp ed_reader.cpp)
 add_executable(ed2nav ed2nav_main.cpp)
-target_link_libraries(ed2nav ed2nav_lib types connectors ${PQXX_LIB} data georef routing fare pb_lib utils autocomplete ${BOOST_LIBS} log4cplus protobuf tcmalloc proximitylist)
+target_link_libraries(ed2nav ed2nav_lib types connectors ${PQXX_LIB} data georef routing fare pb_lib utils autocomplete ${BOOST_LIBS} log4cplus protobuf tcmalloc)
 
 add_subdirectory(tests)
 add_subdirectory(connectors)

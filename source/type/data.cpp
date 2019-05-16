@@ -106,6 +106,8 @@ void Data::load_nav(const std::string& filename) {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
+        build_proximity_list();
+        LOG4CPLUS_INFO(logger, "Finish Rebuilding proximity list");
         loaded = true;
         last_load_at = pt::microsec_clock::universal_time();
         last_load_succeeded = true;

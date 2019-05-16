@@ -5,121 +5,157 @@
 #include <cmath>
 #include <array>
 #include <exception>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <eos_portable_archive/portable_iarchive.hpp>
-#include <eos_portable_archive/portable_oarchive.hpp>
+#include <flann/flann.hpp>
 
 namespace navitia {
 namespace proximitylist {
 using type::GeographicalCoord;
 
-constexpr size_t max_node_search_tree = 10;
+static std::array<float, 3> project_coord(const type::GeographicalCoord& coord) {
+    std::array<float, 3> res;
+    float lat_grad = coord.lat() * GeographicalCoord::N_DEG_TO_RAD;
+    float lon_grad = coord.lon() * GeographicalCoord::N_DEG_TO_RAD;
+    res[0] = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(lat_grad) * sin(lon_grad);
+    res[1] = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(lat_grad) * cos(lon_grad);
+    res[2] = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(lat_grad);
+    return res;
+}
+
+/*
+ * This factor is computed depending on the ratio between the search radius and
+ * the earth's radius.
+ *
+ * In theory, mathematically, according the Taylor's theorem, if the search radius is far less than the earth's radius
+ * (1%), the approximation gives quite good result.( sin(0.01) - 0.01 < 1.7e-7 ! )
+ *
+ * The correction factor is computed only when the search radius > 1%*Earth's radius
+ *
+ * */
+static float search_radius_correction_factor(const double& radius) {
+    return radius < GeographicalCoord::EARTH_RADIUS_IN_METERS * 0.01
+               ? 1.f
+               : 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS
+                     * asin(radius / (2.f * GeographicalCoord::EARTH_RADIUS_IN_METERS)) / radius;
+}
+
 template <class T>
 void ProximityList<T>::build() {
     // TODO build the Flann index here
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_INFO(logger, "Building Proximitylist's NN index with " << items.size() << " items");
+
+    // clean NN index
+    NN_data.clear();
+    NN_index.reset();
 
     if (items.empty()) {
         LOG4CPLUS_INFO(logger, "No items for building the index");
         return;
     }
-    NN_data.clear();
-    NN_data.reserve(items.size() * 3);
+
     for (const auto& i : items) {
-        const auto& coord = i.coord;
-        float x = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-                  * sin(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-        float y = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-                  * cos(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-        float z = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(coord.lat() * GeographicalCoord::N_DEG_TO_RAD);
-        NN_data.push_back(x);
-        NN_data.push_back(y);
-        NN_data.push_back(z);
+        auto projected = project_coord(i.coord);
+        std::copy(projected.begin(), projected.end(), std::back_inserter(NN_data));
     }
+    auto points = flann::Matrix<float>{&NN_data[0], NN_data.size() / 3, 3};
+    NN_index = std::make_shared<navitia::proximitylist::index_t>(points, flann::KDTreeSingleIndexParams(10));
+    NN_index->buildIndex();
+}
 
-    flann::Matrix<float> points{&NN_data[0], NN_data.size() / 3, 3};
+// struct IndexAndCoord;
+// struct IndexOnly;
+//
+// template<typename T, typename Tag>
+// struct ReturnTrait;
+//
+// template<typename T>
+// struct ReturnTrait<T, IndexAndCoord> {
+//    typedef std::vector<std::pair<T, GeographicalCoord>> ReturnType;
+//};
+//
+// template<typename T>
+// struct ReturnTrait<T, IndexOnly> {
+//    typedef std::vector<T> ReturnType;
+//};
+//
+// struct AutoResize;
+// struct FixedSize;
+//
+// template<typename T>
+// struct NNQueryTrait;
+//
+// template<>
+// struct NNQueryTrait<AutoResize> {
+//    typedef std::vector<std::vector<int>> IndiceType;
+//    typedef std::vector<std::vector<navitia::proximitylist::index_t::DistanceType>> DistanceType;
+//};
+//
+// template<>
+// struct NNQueryTrait<FixedSize> {
+//    const static std::size_t max_size = 200;
+//    typedef std::array<int, max_size> QueryType;
+//};
 
-    // index = std::make_shared<index_t>(points, flann::KDTreeIndexParams(4));
-    index = std::make_shared<index_t>(points, flann::KDTreeSingleIndexParams(10));
+template <typename IndexType, typename DistanceType>
+int find_within_impl(const std::shared_ptr<index_t>& NN_index,
+                     const GeographicalCoord& coord,
+                     double radius,
+                     int size,
+                     IndexType& indices,
+                     DistanceType& distances) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
-    index->buildIndex();
+    auto query = project_coord(coord);
+
+    auto search_param = flann::SearchParams{};
+    search_param.max_neighbors = size;  // -1 -> unlimited
+
+    radius = std::min(radius, 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS);
+
+    float factor = search_radius_correction_factor(radius);
+    int nb_found = NN_index->radiusSearch(flann::Matrix<float>{&query[0], 1, 3}, indices, distances,
+                                          pow(radius * factor, 2), search_param);
+
+    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                    "" << nb_found << " point found for the coord: " << coord.lon() << " " << coord.lat());
+
+    return nb_found;
 }
 
 template <class T>
 std::vector<std::pair<T, GeographicalCoord>> ProximityList<T>::find_within(const GeographicalCoord& coord,
                                                                            double radius,
                                                                            int size) const {
-    if (NN_data.empty() || !size || !radius) {
-        return {};
-    }
-
     std::vector<std::pair<T, GeographicalCoord>> result;
-
+    if (!NN_index || !size || !radius) {
+        return result;
+    }
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
-    if (!index) {
-        flann::Matrix<float> points{&NN_data[0], NN_data.size() / 3, 3};
-        index = std::make_shared<index_t>(points, flann::KDTreeSingleIndexParams(max_node_search_tree));
+    std::vector<std::vector<int>> indices;
+    std::vector<std::vector<index_t::DistanceType>> distances;
 
-        LOG4CPLUS_INFO(logger, " find_within Building NN Index!!!!!!!!!!");
-
-        index->buildIndex();
-    }
-    float x = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-              * sin(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-    float y = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-              * cos(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-    float z = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(coord.lat() * GeographicalCoord::N_DEG_TO_RAD);
-
-    // TODO: use std::array in c++17?
-    // Acoording to the doc, std::array satisfies the requirements of ContiguousContainer(since C++17)
-
-    //    std::array<int, max_size> indices_data;
-    //    flann::Matrix<int> indices(&indices_data[0], 1, size == -1 ? max_size : size);
-
-    std::vector<std::vector<int>> indices(1);
-    if (size > 0) {
-        indices[0].reserve(size);
-    }
-    //    std::array<float, max_size> distances_data;
-    //    flann::Matrix<index_t::DistanceType> distances(&distances_data[0], 1, size == -1 ? max_size : size);
-    std::vector<std::vector<index_t::DistanceType>> distances(1);
-    if (size > 0) {
-        distances[0].reserve(size);
-    }
-
-    float query_data[3] = {x, y, z};
-    auto search_param = flann::SearchParams{};
-    search_param.max_neighbors = size;  // -1 -> unlimited
-    search_param.sorted = true;         // -1 -> unlimited
-
-    radius = std::min(radius, 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS);
-
-    float coeff = radius < GeographicalCoord::EARTH_RADIUS_IN_METERS * 0.01
-                      ? 1.f
-                      : 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS
-                            * asin(radius / (2.f * GeographicalCoord::EARTH_RADIUS_IN_METERS)) / radius;
-
-    int nb_found = index->radiusSearch(flann::Matrix<float>{query_data, 1, 3}, indices, distances,
-                                       pow(radius * coeff, 2), search_param);
-    LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                    "" << nb_found << " point found for the coord: " << coord.lon() << " " << coord.lat());
+    int nb_found = find_within_impl(NN_index, coord, radius, size, indices, distances);
 
     if (!nb_found) {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "0 point found for the coord: " << coord.lon() << " " << coord.lat());
         return result;
     }
 
+    assert(indices.size() == 1);
+    assert(distances.size() == 1);
+
     for (int i = 0; i < nb_found; ++i) {
         int res_ind = indices[0][i];
-        if (res_ind < 0 || res_ind >= items.size()) {
+        if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
             continue;
         }
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "distances " << distances[0][res_ind]);
-
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Distance for the coord: " << coord.lon() << " "
+                                                                                          << coord.lat() << " is "
+                                                                                          << distances[0][res_ind]);
         result.emplace_back(items[res_ind].element, items[res_ind].coord);
     }
-
     return result;
 }
 
@@ -128,25 +164,10 @@ std::vector<T> ProximityList<T>::find_within_index_only(const GeographicalCoord&
     std::vector<T> result;
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
-    if (NN_data.empty()) {
-        return {};
+    if (!NN_index || !size || !radius) {
+        return result;
     }
-    if (!index) {
-        flann::Matrix<float> points{&NN_data[0], NN_data.size() / 3, 3};
-        index = std::make_shared<index_t>(points, flann::KDTreeSingleIndexParams(max_node_search_tree));
 
-        LOG4CPLUS_INFO(logger, " find_within_index_only Building NN Index!!!!!!!!!!");
-
-        index->buildIndex();
-    }
-    float x = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-              * sin(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-    float y = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(coord.lat() * GeographicalCoord::N_DEG_TO_RAD)
-              * cos(coord.lon() * GeographicalCoord::N_DEG_TO_RAD);
-    float z = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(coord.lat() * GeographicalCoord::N_DEG_TO_RAD);
-
-    // TODO: use std::array in c++17?
-    // Acoording to the doc, std::array satisfies the requirements of ContiguousContainer(since C++17)
     const static std::size_t max_size = 200;
 
     std::array<int, max_size> indices_data;
@@ -155,34 +176,23 @@ std::vector<T> ProximityList<T>::find_within_index_only(const GeographicalCoord&
     std::array<index_t::DistanceType, max_size> distances_data;
     flann::Matrix<index_t::DistanceType> distances(&distances_data[0], 1, size == -1 ? max_size : size);
 
-    float query_data[3] = {x, y, z};
-    auto search_param = flann::SearchParams{};
-    search_param.max_neighbors = size;  // -1 -> unlimited
+    int nb_found = find_within_impl(NN_index, coord, radius, size, indices, distances);
 
-    // Why the search raius is equals to pow((radius * 1.05), 2) ?
-    // Keep in mind that this is an approximate way of calculating distance between to coordinates
-    // In theory the largest error of the real distance and the approximate one is 36% (1- PI/2) (when two coordinates
-    // fall on opposite poles of a sphere) ex (0, -90)  (0, 90) However, when one coordinate falls on a south pole, and
-    // another falls on equator, ex (0, -90, (0, 0) the error is about 5% (1 - sqrt(2) / (PI/2)) In fact, in practice,
-    // the error is quite small between two coordiantes situated on the same continent.
-    radius = std::min(radius, 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS);
-
-    int nb_found = index->radiusSearch(flann::Matrix<float>{query_data, 1, 3}, indices, distances,
-                                       pow((radius * 1.05), 2), search_param);
     if (!nb_found) {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                       "0 point found for the coord: " << coord.lon() << " " << coord.lat());
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "0 point found for the coord: " << coord.lon() << " " << coord.lat());
         return result;
     }
 
     for (int i = 0; i < nb_found; ++i) {
         int res_ind = indices_data[i];
-        if (res_ind < 0 || res_ind >= items.size()) {
+        if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
             continue;
         }
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "Distance for the coord: " << coord.lon() << " " << coord.lat() << " is " << indices_data[i]);
         result.emplace_back(items[res_ind].element);
     }
-
     return result;
 }
 

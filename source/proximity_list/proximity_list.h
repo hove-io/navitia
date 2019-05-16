@@ -35,7 +35,15 @@ www.navitia.io
 #include <memory>
 #include <vector>
 #include <cmath>
-#include <flann/flann.hpp>
+
+// Forward declaration
+namespace flann {
+template <typename T>
+class Index;
+
+template <typename T>
+class L2;
+}  // namespace flann
 
 namespace navitia {
 namespace proximitylist {
@@ -74,8 +82,8 @@ struct ProximityList {
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
     std::vector<Item> items;
-    mutable std::vector<float> NN_data;
-    mutable std::shared_ptr<index_t> index = nullptr;
+    std::vector<float> NN_data;
+    std::shared_ptr<index_t> NN_index = nullptr;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element) { items.push_back(Item(coord, element)); }
@@ -84,7 +92,7 @@ struct ProximityList {
         NN_data.clear();
     }
 
-    /// Construit l'indexe
+    // build the Nearest Neighbours data from items, then the index
     void build();
 
     /// Retourne tous les éléments dans un rayon de x mètres
@@ -92,18 +100,18 @@ struct ProximityList {
                                                              double radius,
                                                              int size = -1) const;
 
-    std::vector<T> find_within_index_only(const GeographicalCoord& coord, double radius, int size) const;
+    std::vector<T> find_within_index_only(const GeographicalCoord& coord, double radius, int size = -1) const;
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
     T find_nearest(double lon, double lat) const { return find_nearest(GeographicalCoord(lon, lat)); }
 
     /// Retourne l'élément le plus proche dans tout l'indexe
-    T find_nearest(GeographicalCoord coord, double max_dist = 500) const {
-        auto temp = find_within(coord, max_dist, 1);
+    T find_nearest(const GeographicalCoord& coord, double max_dist = 500) const {
+        auto temp = find_within_index_only(coord, max_dist, 1);
         if (temp.empty())
             throw NotFound();
         else
-            return temp.front().first;
+            return temp.front();
     }
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
@@ -112,7 +120,7 @@ struct ProximityList {
      */
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& items& NN_data;
+        ar& items;
     }
 };
 

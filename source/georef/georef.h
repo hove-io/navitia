@@ -333,7 +333,7 @@ struct GeoRef {
     bool add_parking_edges(const type::GeographicalCoord&);
 
     /// get the transportation mode of the vertex
-    type::Mode_e get_mode(vertex_t vertex) const;
+    type::Mode_e get_mode(const vertex_t& vertex) const;
     PathItem::TransportCaracteristic get_caracteristic(const edge_t& edge) const;
     ~GeoRef();
     GeoRef() = default;
