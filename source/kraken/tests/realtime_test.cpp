@@ -2966,7 +2966,7 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(3).departure_status(),
                       pbnavitia::StopTimeUpdateStatus::ADDED);
 
-    // Recall the same new trip.
+    // Recall `and completely over-ride` the same new trip `: this is how Kirin updates a trip-add`
     // The old "new trip" is replace by the new, but the meta VJ is the same (don't create).
     // The old impact is deleted too
     // To show that it is the new GTFS-RT, schedules has changed

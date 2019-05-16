@@ -46,10 +46,20 @@ namespace navitia {
 
 namespace nd = type::disruption;
 
-static bool is_realtime_vj(const type::Data& data, const transit_realtime::TripUpdate& trip_update) {
+static bool base_vj_exists_the_same_day(const type::Data& data, const transit_realtime::TripUpdate& trip_update) {
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
                                                                         data.pt_data->get_main_timezone());
-    return mvj.get_base_vj().empty();
+    if (mvj.get_base_vj().empty()) {
+        return false;
+    } else {
+        for (const auto& vj: mvj.get_base_vj()) {
+            const auto* vp = vj->base_validity_pattern();
+            if (vp->check(boost::gregorian::from_undelimited_string(trip_update.trip().start_date()))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 static bool is_cancelled_trip(const transit_realtime::TripUpdate& trip_update) {
@@ -651,7 +661,7 @@ void handle_realtime(const std::string& id,
         }
         return;
     }
-    if (meta_vj_exists && is_added_trip(trip_update) && !is_realtime_vj(data, trip_update)) {
+    if (meta_vj_exists && is_added_trip(trip_update) && base_vj_exists_the_same_day(data, trip_update)) {
         LOG4CPLUS_WARN(log, "cannot add new trip, because trip id corresponds to a base VJ"
                                 << ", trip id: " << trip_update.trip().trip_id() << ", effect: "
                                 << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));

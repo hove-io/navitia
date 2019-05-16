@@ -2190,10 +2190,10 @@ class TestKirinAddNewTripPresentInNavitiaWithAShift(MockKirinDisruptionsFixture)
             effect='additional_service',
         )
 
-        # Check that there should not be a new disruption
+        # The new trip is accepted because, it is not the same day of the base vj
+        # So a disruption is added
         disruptions_after = self.query_region(disruption_query)
-        assert nb_disruptions_before == len(disruptions_after['disruptions'])
-
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
 
 
 def make_mock_kirin_item(
