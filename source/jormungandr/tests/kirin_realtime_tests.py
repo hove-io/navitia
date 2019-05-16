@@ -1872,7 +1872,7 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         1. send a disruption with a physical_mode to update a trip
         2. check physical_mode of journey
         """
-        # we have 7 vehicle_jouneys
+        # we have 7 vehicle_journeys
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 7
@@ -2197,8 +2197,8 @@ class TestKirinAddNewTripPresentInNavitiaWithAShift(MockKirinDisruptionsFixture)
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
-class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
-    def test_delay_pass_midnight_on_first_station(self):
+class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
+    def test_delay_pass_midnight_towards_next_day(self):
         """
         Relates to "test_cots_update_trip_with_delay_pass_midnight_on_first_station" in kirin
         1. Add a disruption with a delay in second station (stop_point:stopA) so that there is a pass midnight
@@ -2210,7 +2210,7 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         initial_nb_disruptions = len(self.query_region(disruption_query)['disruptions'])
 
-        # We have 7 vehicle_jouneys at the begining
+        # We have 7 vehicle_journeys at the beginning
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 7
@@ -2235,15 +2235,15 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
             [
                 UpdatedStopTime(
                     "stop_point:stopB",
-                    tstamp("20120614T180100"),
-                    tstamp("20120614T180100"),
+                    arrival=tstamp("20120614T180100"),
+                    departure=tstamp("20120614T180100"),
                     arrival_delay=0,
                     departure_delay=0,
                 ),
                 UpdatedStopTime(
                     "stop_point:stopA",
-                    tstamp("20120615T010102"),
-                    tstamp("20120615T010102"),
+                    arrival=tstamp("20120615T010102"),
+                    departure=tstamp("20120615T010102"),
                     arrival_delay=7 * 60 * 60,
                     message="Delayed to have pass midnight",
                 ),
@@ -2280,8 +2280,8 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
             [
                 UpdatedStopTime(
                     "stop_point:stopB",
-                    tstamp("20120614T180100"),
-                    tstamp("20120614T180100"),
+                    arrival=tstamp("20120614T180100"),
+                    departure=tstamp("20120614T180100"),
                     arrival_delay=0,
                     departure_delay=0,
                     arrival_skipped=True,
@@ -2301,8 +2301,8 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
                 ),
                 UpdatedStopTime(
                     "stop_point:stopA",
-                    tstamp("20120615T010102"),
-                    tstamp("20120615T010102"),
+                    arrival=tstamp("20120615T010102"),
+                    departure=tstamp("20120615T010102"),
                     arrival_delay=7 * 60 * 60,
                     message="No more pass midnight",
                 ),
@@ -2330,6 +2330,95 @@ class TestKirinDelayPassMidnightOnFirstStation(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T003000'
         assert response['journeys'][0]['arrival_date_time'] == '20120615T010102'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
+    def test_delay_pass_midnight_towards_previous_day(self):
+        """
+        Relates to "test_cots_update_trip_with_advance_pass_midnight_on_first_station" in kirin
+        1. Verify disruption count, vehicle_journeys count and journey
+        2. Add a disruption with a delay in first station (stop_point:stopB) so that there is a pass midnight
+        towards previous day
+        3. Verify disruption count, vehicle_journeys count and journey
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        initial_nb_disruptions = len(self.query_region(disruption_query)['disruptions'])
+
+        # We have 7 vehicle_journeys at the beginning
+        pt_response = self.query_region('vehicle_journeys')
+        initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
+        assert initial_nb_vehicle_journeys == 7
+
+        # /journeys from B to A with departure at 20120614T080100 and arrival at 20120614T080102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=base_schedule&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120615T080000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T080100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120615T080102'
+
+        # A new disruption with a detour on departure station to have  a pass midnight in advance
+        self.send_mock(
+            "vjB",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120615T080100"),
+                    departure=tstamp("20120615T080100"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival_skipped=True,
+                    departure_skipped=True,
+                    is_detour=True,
+                    message='deleted for detour',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    arrival=tstamp("20120614T223000"),
+                    departure=tstamp("20120614T223000"),
+                    is_added=True,
+                    is_detour=True,
+                    message='pass midnight in advance',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120615T080102"),
+                    departure=tstamp("20120615T080102"),
+                    arrival_delay=0,
+                ),
+            ],
+            disruption_id='stop_time_with_detour',
+            effect='detour',
+        )
+
+        # A new disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert initial_nb_disruptions + 1 == len(disruptions_after['disruptions'])
+
+        # Now we have 8 vehicle_journeys
+        pt_response = self.query_region('vehicle_journeys')
+        assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
+
+        # /journeys from C to A with departure at 20120614T223000 and arrival at 20120615T080102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopC', to='stop_point:stopA', dt='20120614T220000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120614T223000'
+        assert response['journeys'][0]['arrival_date_time'] == '20120615T080102'
 
 
 def make_mock_kirin_item(
