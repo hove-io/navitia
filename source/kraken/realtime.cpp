@@ -52,7 +52,7 @@ static bool base_vj_exists_the_same_day(const type::Data& data, const transit_re
     if (mvj.get_base_vj().empty()) {
         return false;
     } else {
-        for (const auto& vj: mvj.get_base_vj()) {
+        for (const auto& vj : mvj.get_base_vj()) {
             const auto* vp = vj->base_validity_pattern();
             if (vp->check(boost::gregorian::from_undelimited_string(trip_update.trip().start_date()))) {
                 return true;
