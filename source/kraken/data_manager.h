@@ -137,6 +137,8 @@ public:
 
         // Build Raptor Data
         data->build_raptor(raptor_cache_size);
+        // Build proximity list NN index
+        data->build_proximity_list();
         data->loading = false;
 
         // Set data

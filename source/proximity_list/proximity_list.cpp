@@ -25,9 +25,9 @@ static std::array<float, 3> project_coord(const type::GeographicalCoord& coord) 
  * the earth's radius.
  *
  * In theory, mathematically, according the Taylor's theorem, if the search radius is far less than the earth's radius
- * (1%), the approximation gives quite good result.( sin(0.01) - 0.01 < 1.7e-7 ! )
+ * (1%), the approximation gives quite good result.( (sin(0.01rad) - 0.01) < 1.7e-7 ! )
  *
- * The correction factor is computed only when the search radius > 1%*Earth's radius
+ * Otherwise, the correction factor is computed (only when the search radius > 1%*Earth's radius)
  *
  * */
 static float search_radius_correction_factor(const double& radius) {
@@ -39,7 +39,6 @@ static float search_radius_correction_factor(const double& radius) {
 
 template <class T>
 void ProximityList<T>::build() {
-    // TODO build the Flann index here
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_INFO(logger, "Building Proximitylist's NN index with " << items.size() << " items");
 

@@ -75,17 +75,18 @@ struct ReturnTypeTrait<T, IndexCoord> {
     typedef std::pair<T, GeographicalCoord> ValueType;
 };
 
-/** Définit un indexe spatial qui permet de retrouver les n éléments les plus proches
+/* A structure allows to find K Nearest Neighbours with a given radius.
  *
- * Le template T est le type que l'on souhaite indexer (typiquement un Idx). L'élément sera copié.
- * On rajoute des élements itérativements et on appelle build pour construire l'indexe.
- * L'implémentation est un bête tableau trié par X.
- * On cherche les bornes inf/sup selon X, puis on itère sur les données et on garde les bonnes
- */
-
+ * The Item contains T(in practice, the Idx of the wanted object) and the coord of the object.
+ *
+ * This structure is used to do projection and find features(POI, stop_points, etc) nearby a wanted place.
+ * An internal structure, KD-tree from flann is used to have a good perfomance.
+ *
+ * The coord is projected into 3D space so that we can performan a euclidean distance which can be highly optimized.
+ *
+ * */
 template <class T>
 struct ProximityList {
-    /// Élement que l'on garde dans le vector
     struct Item {
         GeographicalCoord coord;
         T element;
@@ -112,6 +113,15 @@ struct ProximityList {
     // build the Nearest Neighbours data from items, then the index
     void build();
 
+    /*
+     * This method can return two types of result
+     *
+     * When Tag is IndexCorrd, the method returns a vector of Index and Coord, which is useful for searching
+     * features nearby a wanted place.
+     *
+     * If Tag is IndexOnly, the moethod returns a vector of Index, which is useful for coord projections.
+     *
+     * */
     template <typename Tag = IndexCoord>
     auto find_within(const GeographicalCoord& coord, double radius, int size = -1) const
         -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
