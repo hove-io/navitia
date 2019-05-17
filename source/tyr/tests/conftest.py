@@ -104,3 +104,16 @@ def init_instances_dir():
     yield
 
     shutil.rmtree(instance_dir)
+
+
+@pytest.fixture(scope="function", autouse=False)
+def init_cities_dir():
+    """
+    Create a temp dir of an instance with its config file
+    """
+    cities_dir = tempfile.mkdtemp(prefix='cities_')
+    app.config['CITIES_OSM_FILE_PATH'] = cities_dir
+
+    yield
+
+    shutil.rmtree(cities_dir)

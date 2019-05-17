@@ -60,7 +60,6 @@ from tyr.tasks import (
     remove_autocomplete_depot,
     import_autocomplete,
     cities,
-    cosmogony2cities,
     COSMOGONY_REGEXP,
 )
 from tyr.helper import get_instance_logger, save_in_tmp
@@ -1695,7 +1694,11 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
         return {'action': return_msg}, return_status
 
 
-def check_db():
+def check_cities_db():
+    """
+    Check that the cities db is reachable
+    :return: Alembic version if db is reachable else None
+    """
     cities_db = sqlalchemy.create_engine(current_app.config['CITIES_DATABASE_URI'])
     try:
         cities_db.connect()
@@ -1707,20 +1710,43 @@ def check_db():
         return None
 
 
+@marshal_with(job_fields)
+def check_cities_job():
+    """
+    Check status of cities job in Tyr db
+    :return: the latest cities job
+    """
+    return (
+        models.Job.query.join(models.DataSet)
+        .filter(models.DataSet.type == 'cities')
+        .order_by(models.Job.created_at.desc())
+        .first()
+    )
+
+
 class CitiesStatus(flask_restful.Resource):
     def get(self):
+        response = {}
         if not current_app.config['CITIES_DATABASE_URI']:
             return {'message': 'cities db not configured'}, 404
-        msg = check_db()
-        if msg:
-            return {'message': 'cities db alembic version = {}'.format(msg)}, 200
+        cities_version = check_cities_db()
+        if cities_version:
+            response['cities db version'] = '{}'.format(cities_version)
         else:
             return {'message': 'cities db not reachable'}, 404
+
+        cities_job = check_cities_job()
+        if cities_job and 'instance' in cities_job:
+            # No instance associated to 'cities' job, remove the item
+            cities_job.pop('instance', None)
+            response['latest_job'] = cities_job
+
+        return response, 200
 
 
 class Cities(flask_restful.Resource):
     def post(self):
-        if not check_db():
+        if not check_cities_db():
             return {'message': 'cities db not reachable'}, 404
 
         parser = reqparse.RequestParser()
@@ -1728,22 +1754,38 @@ class Cities(flask_restful.Resource):
         args = parser.parse_args()
 
         if not args['file']:
-            logging.info("No file provided")
+            logging.error("No file provided")
             return {'message': 'No file provided'}, 400
 
         f = args['file']
         file_name = f.filename
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
         f.save(file_path)
+        logging.info("file received: {}".format(f))
 
-        logging.info("file: {}".format(f))
+        # Create Job and Dataset in db to track progress
+        job = models.Job()
+        job.state = 'running'
+        models.db.session.add(job)
+        dataset = models.DataSet()
+        dataset.name = file_path
+        dataset.family_type = 'cities'
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
 
         if COSMOGONY_REGEXP.match(file_name):
             # it's a cosmogony file, we import it with cosmogony2cities
-            cosmogony2cities.delay(file_path)
+            dataset.type = exe = 'cosmogony2cities'
         else:
             # we import it the 'old' way, with cities
-            cities.delay(file_path)
+            dataset.type = exe = 'cities'
+
+        models.db.session.commit()
+        try:
+            cities.delay(file_path, job.id, exe)
+        except:
+            job.state = 'failed'
+            models.db.session.commit()
 
         return {'message': 'OK'}, 200
 

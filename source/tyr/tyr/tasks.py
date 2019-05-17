@@ -389,6 +389,33 @@ def purge_instance(instance_id, nb_to_keep):
         shutil.rmtree(path)
 
 
+def purge_cities():
+    """
+    Delete old 'cities' jobs and the associated dataset in db and on disk
+    """
+    nb_datasets_to_keep = current_app.config.get('DATASET_MAX_BACKUPS_TO_KEEP', 1)
+    cities_job = (
+        models.Job.query.join(models.DataSet)
+        .filter(models.DataSet.type == 'cities')
+        .order_by(models.Job.created_at.desc())
+        .all()
+    )
+    cities_job_to_keep = cities_job[:nb_datasets_to_keep]
+    datasets_to_keep = [job.data_sets.first().name for job in cities_job_to_keep]
+
+    for job in cities_job[nb_datasets_to_keep:]:
+        logging.info(" - Remove JOB {}".format(job.id))
+        dataset = job.data_sets.first()
+        logging.info("   Remove associated DATASET {}".format(dataset.id))
+        models.db.session.delete(dataset)
+        if os.path.exists(dataset.name) and dataset.name not in datasets_to_keep:
+            logging.info("    - delete file {}".format(dataset.name))
+            shutil.rmtree('{}'.format(dataset.name))
+        models.db.session.delete(job)
+
+    models.db.session.commit()
+
+
 @celery.task()
 def purge_jobs(days_to_keep=None):
     """
@@ -417,6 +444,9 @@ def purge_jobs(days_to_keep=None):
                     shutil.rmtree('{}'.format(path))
                 else:
                     logger.warning('Folder {} can\'t be found'.format(path))
+
+    # Purge 'cities' jobs (which aren't associated to an instance)
+    purge_cities()
 
 
 @celery.task()
@@ -475,38 +505,30 @@ def load_data(instance_id, data_dirs):
 
 
 @celery.task()
-def cities(osm_path):
-    """ launch cities """
+def cities(file_path, job_id, exe):
+    """ Launch 'cities' or 'cosmogony2cities' """
+    job = models.Job.query.get(job_id)
     res = -1
     try:
         res = launch_exec(
-            "cities", ['-i', osm_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']], logging
-        )
-        if res != 0:
-            logging.error('cities failed')
-    except Exception as e:
-        logging.exception('cities exception : {}'.format(e.message))
-
-    logging.info('Import of cities finished')
-    return res
-
-
-@celery.task()
-def cosmogony2cities(cosmogony_path):
-    """ launch cosmogony2cities """
-    res = -1
-    try:
-        res = launch_exec(
-            "cosmogony2cities",
-            ['--input', cosmogony_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
+            "{}".format(exe),
+            ['-i', file_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
             logging,
         )
         if res != 0:
-            logging.error('cosmogony2cities failed')
-    except Exception as e:
-        logging.exception('cosmogony2cities exception : {}'.format(e.message))
+            job.state = 'failed'
+            logging.error('{} failed'.format(exe))
+        else:
+            job.state = 'done'
 
-    logging.info('Import of cosmogony2cities finished')
+    except Exception as e:
+        logging.exception('{} exception : {}'.format(exe, e.message))
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+
+    models.db.session.commit()
+    logging.info('Import of {} finished'.format(exe))
     return res
 
 
