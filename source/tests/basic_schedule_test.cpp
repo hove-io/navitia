@@ -60,7 +60,7 @@ int main(int argc, const char* const argv[]) {
 
     departure_board_fixture data_set;
 
-    mock_kraken kraken(data_set.b, "basic_schedule_test", argc, argv);
+    mock_kraken kraken(data_set.b, argc, argv);
 
     return 0;
 }

@@ -300,10 +300,14 @@ void MaintenanceWorker::init_rabbitmq() {
     std::string username = conf.broker_username();
     std::string password = conf.broker_password();
     std::string vhost = conf.broker_vhost();
-
     std::string hostname = get_hostname();
-    this->queue_name_task = (boost::format("kraken_%s_%s_task") % hostname % instance_name).str();
-    this->queue_name_rt = (boost::format("kraken_%s_%s_rt") % hostname % instance_name).str();
+    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+    std::string queue_name = conf.broker_queue(default_queue_name);
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+    queue_name_task = (boost::format("%s_task") % queue_name).str();
+    queue_name_rt = (boost::format("%s_rt") % queue_name).str();
+
     // connection
     LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
     this->channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
@@ -326,13 +330,12 @@ void MaintenanceWorker::init_rabbitmq() {
         bool passive = false;
         bool durable = true;
         bool exclusive = false;
-        bool auto_delete = false;
-        channel->DeclareQueue(this->queue_name_task, passive, durable, exclusive, auto_delete);
+        channel->DeclareQueue(this->queue_name_task, passive, durable, exclusive, auto_delete_queue);
         LOG4CPLUS_INFO(logger, "queue for tasks: " << this->queue_name_task);
         // binding the queue to the exchange for all task for this instance
         channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
 
-        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete);
+        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
         LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
         // binding the queue to the exchange for all task for this instance
         LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");

@@ -224,7 +224,7 @@ int main(int argc, const char* const argv[]) {
 
     data_set data(date, publisher_name, timezone_name, timezones);
 
-    mock_kraken kraken(data.b, "main_ptref_test", argc, argv);
+    mock_kraken kraken(data.b, argc, argv);
 
     return 0;
 }

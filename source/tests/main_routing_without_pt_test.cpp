@@ -37,7 +37,7 @@ int main(int argc, const char* const argv[]) {
 
     routing_api_data<normal_speed_provider> routing_data(200, false);
 
-    mock_kraken kraken(routing_data.b, "main_routing_without_pt_test", argc, argv);
+    mock_kraken kraken(routing_data.b, argc, argv);
 
     return 0;
 }

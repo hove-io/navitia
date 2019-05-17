@@ -42,7 +42,7 @@ import six
 from mock import MagicMock
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
-    os.environ['JORMUNGANDR_CONFIG_FILE'] = (
+    os.environ[str('JORMUNGANDR_CONFIG_FILE')] = str(
         os.path.dirname(os.path.realpath(__file__)) + '/integration_tests_settings.py'
     )
 
@@ -59,8 +59,9 @@ from jormungandr.parking_space_availability import (
     ParkingPlaces,
 )
 from jormungandr.equipments.sytral import SytralProvider
+import uuid
 
-krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
+krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests'
 
 
 class FakeModel(object):
@@ -84,18 +85,26 @@ class AbstractTestFixture(unittest.TestCase):
     """
 
     @classmethod
+    def _get_zmq_socket_name(cls, kraken_name):
+        return "ipc:///tmp/{uid}_{name}".format(uid=cls.uid, name=kraken_name)
+
+    @classmethod
     def launch_all_krakens(cls):
         for (kraken_name, conf) in cls.data_sets.items():
-            additional_args = conf.get('kraken_args', [])
             exe = os.path.join(krakens_dir, kraken_name)
-            logging.debug("spawning " + exe)
-
             assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
 
-            args = [exe] + additional_args
+            kraken_main_args = [
+                "--GENERAL.zmq_socket=" + cls._get_zmq_socket_name(kraken_name),
+                "--BROKER.queue=kraken_" + str(cls.uid),
+                "--BROKER.queue_auto_delete=true",
+            ]
+            kraken_additional_args = conf.get('kraken_args', [])
+            args = [exe] + kraken_main_args + kraken_additional_args
+
+            logging.debug("spawning :" + " ".join(map(str, args)))
 
             kraken = subprocess.Popen(args, stderr=None, stdout=None, close_fds=False)
-
             cls.krakens_pool[kraken_name] = kraken
 
         logging.debug("{} kraken spawned".format(len(cls.krakens_pool)))
@@ -114,10 +123,7 @@ class AbstractTestFixture(unittest.TestCase):
     @classmethod
     def create_dummy_json(cls):
         for name in cls.krakens_pool:
-            instance_config = {
-                "key": name,
-                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name),
-            }
+            instance_config = {"key": name, "zmq_socket": cls._get_zmq_socket_name(name)}
             instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
@@ -173,6 +179,7 @@ class AbstractTestFixture(unittest.TestCase):
     def setup_class(cls):
         cls.tester = app.test_client()
         cls.krakens_pool = {}
+        cls.uid = uuid.uuid1()
         logging.info("Initing the tests {}, let's pop the krakens".format(cls.__name__))
         cls.global_jormun_setup()
         cls.launch_all_krakens()

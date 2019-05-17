@@ -86,7 +86,7 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->codes.add(b.get<nt::Line>("B"), "Kisio数字", "syn_lineB");
     b.data->pt_data->codes.add(b.get<nt::Line>("C"), "Kisio数字", "syn_lineC");
 
-    mock_kraken kraken(b, "multiple_schedules", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }

@@ -37,7 +37,7 @@ int main(int argc, const char* const argv[]) {
     navitia::init_app();
     b.data->loaded = false;
     b.data->loading = false;
-    mock_kraken kraken(b, "null_status_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }
