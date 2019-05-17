@@ -1811,7 +1811,7 @@ const ng::POI* PbCreator::get_nearest_bss_station(const nt::GeographicalCoord& c
 
 const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, const ng::POIType& poi_type) {
     // we loop through all poi near the coord to find a poi of the required type
-    for (const auto& pair : data->geo_ref->poi_proximity_list.find_within(coord, 500, -1)) {
+    for (const auto& pair : data->geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data->geo_ref->pois[poi_idx];
         if (poi->poitype_idx == poi_type.idx) {

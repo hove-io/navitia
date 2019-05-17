@@ -236,13 +236,13 @@ type::Indexes get_within(const type::Type_e type,
     std::vector<std::pair<idx_t, type::GeographicalCoord> > tmp;
     switch (type) {
         case Type_e::StopPoint:
-            tmp = data.pt_data->stop_point_proximity_list.find_within(coord, distance, -1);
+            tmp = data.pt_data->stop_point_proximity_list.find_within(coord, distance);
             break;
         case Type_e::StopArea:
-            tmp = data.pt_data->stop_area_proximity_list.find_within(coord, distance, -1);
+            tmp = data.pt_data->stop_area_proximity_list.find_within(coord, distance);
             break;
         case Type_e::POI:
-            tmp = data.geo_ref->poi_proximity_list.find_within(coord, distance, -1);
+            tmp = data.geo_ref->poi_proximity_list.find_within(coord, distance);
             break;
         default:
             throw parsing_error(parsing_error::error_type::partial_error,

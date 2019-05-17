@@ -90,8 +90,9 @@ static auto make_result(const type::GeographicalCoord& coord,
         if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
             continue;
         }
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "Distance from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances[i]);
+        LOG4CPLUS_TRACE(
+            log4cplus::Logger::getInstance("log"),
+            "Distance(squared) from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances[i]);
 
         res.push_back(std::move(extract<T>(items[res_ind], Tag{})));
     }

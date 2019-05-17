@@ -1124,7 +1124,7 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
 
         // Find stop point list with a free radius constraint
         LOG4CPLUS_DEBUG(logger, "filtering with free radius (" << free_radius << " meters)");
-        auto excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius, -1);
+        auto excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius);
         LOG4CPLUS_DEBUG(logger, "find " << excluded_elements.size() << " stop points in free radius");
 
         // For each excluded stop point
