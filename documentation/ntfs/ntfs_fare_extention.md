@@ -8,25 +8,35 @@ The [old fare extension](./ntfs_fare_extension_fr_deprecated.md) is still in use
 # Data format
 The data format of the files are the same as the core [NTFS ones](./ntfs_fr.md). In short, files are CSV encoded in utf8 and with a comma `,` separator.
 
-# Files list of this extension
+# Extension description
+## Added files of this extension
 
 File | Constraint | Comment
 --- | --- | ---
-tickets.txt | Required | Contains tickets with prices.
+tickets.txt | Required | Contains tickets declaration.
+ticket_prices.txt | Required | Contains prices of a ticket.
 ticket_uses.txt | Required | Contains where the ticket can be used
 ticket_use_perimeters.txt | Required | Defines the networks and lines of a ticket_use
 ticket_use_restrictions.txt | Optionnal | Defines a use of a ticket between zones or stop_areas
 
-# Files descriptions
+## Other modifications
+The `object_properties.txt` and `object_codes.txt` files are extended to enable the reference of a ticket_id.
+
+# Added files descriptions
 
 ## tickets.txt (Required)
 Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_id | Text | Required | Unique ID of the ticket
 ticket_name | Text | Required | Name of the ticket (may be displayed to passengers)
+ticket_comment | Text | Optionnal | Comment on the ticket that may be displayed to the passenger
+
+## ticket_prices.txt (Required)
+Field | Type | Constraint | Description
+--- | --- | --- | ---
+ticket_id | Text | Required | Unique ID of the ticket
 ticket_price | Non-negative Float | Required |
 ticker_currency | Currency Code | Required | An ISO 4217 alphabetical currency code. For the list of current currency, refer to https://en.wikipedia.org/wiki/ISO_4217#Active_codes.
-ticket_comment | Text | Optionnal | Comment on the ticket that may be displayed to the passenger
 ticket_validity_start | Date | Required | First day of usability of the ticket
 ticket_validity_end | Date | Required | Last day of usability of the ticket
 
