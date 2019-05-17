@@ -91,7 +91,7 @@ struct data_set {
 
         // add a line with a unicode name
         b.vj("line:Ça roule")
-            .uri("vj_b")("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)(
+            .name("vj_b")("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)(
                 "stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:Ça roule"]->commercial_mode = nullptr;  // remove commercial_mode to allow label testing
 
@@ -138,7 +138,7 @@ struct data_set {
 
         b.data->build_uri();
 
-        navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vj1"];
+        navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj1"];
         vj->base_validity_pattern()->add(boost::gregorian::from_undelimited_string("20140101"),
                                          boost::gregorian::from_undelimited_string("20140111"),
                                          monday_cal->week_pattern);

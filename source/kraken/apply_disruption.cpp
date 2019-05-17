@@ -66,7 +66,8 @@ static nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     auto odt_message = vj->odt_message;
     auto vehicle_properties = vj->_vehicle_properties;
 
-    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, rt_level, new_vp, vj->route, std::move(new_stop_times), pt_data);
+    auto* new_vj =
+        mvj->create_discrete_vj(new_vj_uri, vj->name, rt_level, new_vp, vj->route, std::move(new_stop_times), pt_data);
     vj = nullptr;  // after create_discrete_vj, the vj can have been deleted
 
     new_vj->company = company;
@@ -80,7 +81,6 @@ static nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     } else {
         // If we set nothing for physical_mode, it'll crash when building raptor
         new_vj->physical_mode = pt_data.physical_modes[0];
-        new_vj->name = new_vj_uri;
     }
     /*
      * Properties manually added to guarantee the good behavior for raptor and consistency.
@@ -237,14 +237,15 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
-            std::string new_vj_uri = mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            std::string new_vj_uri =
+                "vehicle_journey:" + mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
             for (const auto& stu : impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
             }
 
-            // Create new VJ
-            auto* vj = mvj->create_discrete_vj(new_vj_uri, type::RTLevel::RealTime, canceled_vp, r,
+            // Create new VJ (default name/headsign is empty)
+            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", type::RTLevel::RealTime, canceled_vp, r,
                                                std::move(stoptimes), pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
@@ -323,8 +324,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (!impact->headsign.empty()) {
                     vj->name = impact->headsign;
                     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
-                } else {
-                    vj->name = new_vj_uri;
                 }
 
                 // for protection, use the datasets[0]
@@ -540,8 +539,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->push_unique_impact(impact);
 
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = mvj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-                                     + std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
+            std::string new_vj_uri = "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level)
+                                     + ":" + std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 

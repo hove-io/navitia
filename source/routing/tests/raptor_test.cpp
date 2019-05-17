@@ -2738,8 +2738,8 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     b.sa("stop_area:B", 0, 0, false)("stop_point:B1")("stop_point:B0");
     b.sa("stop_area:C", 0, 0, false)("stop_point:C");
 
-    b.vj("A").uri("vj:A").block_id("B1")("stop_point:A", "8:05"_t, "8:05"_t)("stop_point:B0", "08:40"_t, "08:40"_t);
-    b.vj("A").uri("vj:B").block_id("B1")("stop_point:B1", "08:40"_t, "09:05"_t)("stop_point:C", "11:50"_t, "11:50"_t);
+    b.vj("A").name("vj:A").block_id("B1")("stop_point:A", "8:05"_t, "8:05"_t)("stop_point:B0", "08:40"_t, "08:40"_t);
+    b.vj("A").name("vj:B").block_id("B1")("stop_point:B1", "08:40"_t, "09:05"_t)("stop_point:C", "11:50"_t, "11:50"_t);
 
     b.data->pt_data->sort_and_index();
     b.finish();
@@ -2905,15 +2905,15 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_1) {
  */
 BOOST_AUTO_TEST_CASE(with_boarding_alighting_time) {
     ed::builder b("20170101");
-    b.vj("A").uri("vj:A1")("S1", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)(
+    b.vj("A").name("vj:A1")("S1", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)(
         "S2", "09:05"_t, "09:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)(
         "S3", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
         "S4", "09:15"_t, "09:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
 
-    b.vj("B").uri("vj:B1")("S4", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+    b.vj("B").name("vj:B1")("S4", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
         "S5", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
 
-    b.vj("B").uri("vj:B2")("S4", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+    b.vj("B").name("vj:B2")("S4", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
         "S5", "09:40"_t, "09:40"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
 
     b.connection("S4", "S4", 120);
@@ -3013,16 +3013,16 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time) {
 BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in) {
     ed::builder b("20170101");
     b.vj("A", "1111111", "block1")
-        .uri("vj:A1")("S1", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)(
+        .name("vj:A1")("S1", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)(
             "S2", "09:05"_t, "09:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)(
             "S3", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
             "S4", "09:15"_t, "09:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
 
     b.vj("B", "1111111", "block1")
-        .uri("vj:B1")("S4", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+        .name("vj:B1")("S4", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "S5", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
 
-    b.vj("B").uri("vj:B2")("S4", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+    b.vj("B").name("vj:B2")("S4", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
         "S5", "09:40"_t, "09:40"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
 
     b.connection("S4", "S4", 120);
@@ -3056,7 +3056,7 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in) {
 BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings) {
     ed::builder b("20170101");
     b.vj("A", "0111110")
-        .uri("vj:A1")("S1", "00:05"_t, "00:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
+        .name("vj:A1")("S1", "00:05"_t, "00:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
             "S2", "00:15"_t, "00:15"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)(
             "S3", "00:25"_t, "00:25"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
             "S4", "00:35"_t, "00:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
@@ -3094,12 +3094,12 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings) {
 BOOST_AUTO_TEST_CASE(stay_in_pass_midnight) {
     ed::builder b("20170101");
     auto* vj1 = b.vj("A")
-                    .uri("vj:1")
+                    .name("vj:1")
                     .block_id("42")("S1", "23:45"_t, "23:45"_t)("S2", "23:50"_t, "23:50"_t)("S3", "24:00"_t, "24:00"_t)
                     .make();
 
     auto* vj2 = b.vj("A")
-                    .uri("vj:2")
+                    .name("vj:2")
                     .block_id("42")("S3", "24:45"_t, "24:45"_t)("S4", "24:50"_t, "24:50"_t)("S5", "24:55"_t, "24:55"_t)
                     .make();
 

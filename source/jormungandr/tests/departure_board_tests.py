@@ -292,9 +292,9 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["notes"][0]["type"] == "notes"
         assert response["notes"][0]["value"] == "Tstop2"
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["type"] == "vehicle_journey"
-        assert response["stop_schedules"][0]["date_times"][0]["links"][1]["value"] == "vj1"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][1]["value"] == "vehicle_journey:vj1"
         assert response["stop_schedules"][0]["date_times"][1]["links"][0]["type"] == "vehicle_journey"
-        assert response["stop_schedules"][0]["date_times"][1]["links"][0]["value"] == "vj2"
+        assert response["stop_schedules"][0]["date_times"][1]["links"][0]["value"] == "vehicle_journey:vj2"
 
         # Stop_schedules in TStop2: Only VJ2 in response
         response = self.query_region("stop_areas/Tstop2/stop_schedules?" "from_datetime=20120615T080000")
@@ -309,7 +309,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["stop_schedules"][0]["date_times"]) == 1
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
-        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vehicle_journey:vj2"
 
         # vj1 not in response, Tstop2 is partial terminus
         response = self.query_region("stop_areas/Tstop2/stop_schedules?" "from_datetime=20120615T100000")
@@ -325,7 +325,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["stop_schedules"][0]["date_times"]) == 1
         assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "20120615T110000"
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
-        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vehicle_journey:vj2"
 
         # Stop_schedules in TStop2: Partial Terminus
 
@@ -434,7 +434,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
         all_vj = headers_by_vj['all']
         all_vj_links = {(l['type'], l['id']): l for l in get_not_null(all_vj, 'links')}
-        assert ('vehicle_journey', 'all') in all_vj_links
+        assert ('vehicle_journey', 'vehicle_journey:all') in all_vj_links
         assert ('physical_mode', 'physical_mode:0') in all_vj_links
         all_vj_notes = get_real_notes(all_vj, response)
         assert len(all_vj_notes) == 1
@@ -534,7 +534,11 @@ class TestDepartureBoard(AbstractTestFixture):
         for date_time in response["stop_schedules"][0]["date_times"]:
             # Extract links of vehicle_journey and notes type
             # Our comment is on the 'all' vj, it should have one (and only one) note
-            vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+            vj_link = [
+                l
+                for l in date_time["links"]
+                if l["type"] == "vehicle_journey" and l["id"] == "vehicle_journey:all"
+            ]
             notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
             assert len(vj_link) == 0 or len(notes_link) == 1
 
@@ -548,14 +552,20 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["route_schedules"][0]["table"]["headers"]) == 4
 
         for header in response["route_schedules"][0]["table"]["headers"]:
-            vj_link = [l for l in header["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+            vj_link = [
+                l for l in header["links"] if l["type"] == "vehicle_journey" and l["id"] == "vehicle_journey:all"
+            ]
             notes_link = [l for l in header["links"] if l["type"] == "notes"]
             # Assert that if it's the 'all' vj, there is one and only one note
             assert len(vj_link) == 0 or len(notes_link) == 1
 
         for row in response["route_schedules"][0]["table"]["rows"]:
             for date_time in row["date_times"]:
-                vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+                vj_link = [
+                    l
+                    for l in date_time["links"]
+                    if l["type"] == "vehicle_journey" and l["id"] == "vehicle_journey:all"
+                ]
                 notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
                 # assert that if it's the 'all' vj there is no note
                 assert len(vj_link) == 0 or len(notes_link) == 0
@@ -666,12 +676,14 @@ class TestSchedules(AbstractTestFixture):
                     sp='S1',
                     route='A:0',
                     date_times=[
-                        SchedDT(dt='20160101T090000', vj='A:vj1'),
-                        SchedDT(dt='20160101T100000', vj='A:vj2'),
-                        SchedDT(dt='20160101T110000', vj='A:vj3'),
+                        SchedDT(dt='20160101T090000', vj='vehicle_journey:A:vj1'),
+                        SchedDT(dt='20160101T100000', vj='vehicle_journey:A:vj2'),
+                        SchedDT(dt='20160101T110000', vj='vehicle_journey:A:vj3'),
                     ],
                 ),
-                StopSchedule(sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')]),
+                StopSchedule(
+                    sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='vehicle_journey:B:vj1')]
+                ),
             ],
         )
 
@@ -724,12 +736,14 @@ class TestSchedules(AbstractTestFixture):
                     sp='S1',
                     route='A:0',
                     date_times=[
-                        SchedDT(dt='20160101T090700', vj='A:vj1:modified:0:delay_vj1'),
-                        SchedDT(dt='20160101T100700', vj='A:vj2:modified:0:delay_vj2'),
-                        SchedDT(dt='20160101T110700', vj='A:vj3:modified:0:delay_vj3'),
+                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1'),
+                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:modified:0:delay_vj2'),
+                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:modified:0:delay_vj3'),
                     ],
                 ),
-                StopSchedule(sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')]),
+                StopSchedule(
+                    sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='vehicle_journey:B:vj1')]
+                ),
             ],
         )
 
@@ -767,9 +781,11 @@ class TestSchedules(AbstractTestFixture):
                 StopSchedule(
                     sp='S1',
                     route='A:0',
-                    date_times=[SchedDT(dt='20160101T090700', vj='A:vj1:modified:0:delay_vj1')],
+                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1')],
                 ),
-                StopSchedule(sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='B:vj1')]),
+                StopSchedule(
+                    sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='vehicle_journey:B:vj1')]
+                ),
             ],
         )
 

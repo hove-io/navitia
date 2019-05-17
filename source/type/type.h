@@ -538,12 +538,14 @@ struct MetaVehicleJourney : public Header, HasMessages {
     }
 
     FrequencyVehicleJourney* create_frequency_vj(const std::string& uri,
+                                                 const std::string& name,
                                                  const RTLevel,
                                                  const ValidityPattern& canceled_vp,
                                                  Route*,
                                                  std::vector<StopTime>,
                                                  PT_Data&);
     DiscreteVehicleJourney* create_discrete_vj(const std::string& uri,
+                                               const std::string& name,
                                                const RTLevel,
                                                const ValidityPattern& canceled_vp,
                                                Route*,
@@ -592,6 +594,7 @@ struct MetaVehicleJourney : public Header, HasMessages {
 private:
     template <typename VJ>
     VJ* impl_create_vj(const std::string& uri,
+                       const std::string& name,
                        const RTLevel,
                        const ValidityPattern& canceled_vp,
                        Route*,

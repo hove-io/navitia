@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(create_vj_test) {
     vp.days = year(
         "0000100"
         "0000100");
-    const auto* adapted_vj = mvj->create_discrete_vj("adapted", nt::RTLevel::Adapted, vp, base_vj->route, sts, pt_data);
+    const auto* adapted_vj = mvj->create_discrete_vj("vehicle_journey:adapted", "adapted", nt::RTLevel::Adapted, vp,
+                                                     base_vj->route, sts, pt_data);
 
     BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("0011111"
                                                                    "0011111"));
@@ -90,7 +91,8 @@ BOOST_AUTO_TEST_CASE(create_vj_test) {
     vp.days = year(
         "0000000"
         "0000110");
-    const auto* rt_vj = mvj->create_discrete_vj("rt", nt::RTLevel::RealTime, vp, base_vj->route, sts, pt_data);
+    const auto* rt_vj =
+        mvj->create_discrete_vj("vehicle_journey:rt", "rt", nt::RTLevel::RealTime, vp, base_vj->route, sts, pt_data);
 
     BOOST_CHECK_EQUAL(base_vj->base_validity_pattern()->days, year("0011111"
                                                                    "0011111"));

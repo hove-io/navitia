@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
     BOOST_CHECK(stop_schedule.date_times_size() == 2);
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().destination().destination(), "stop2");
-    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj1");
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj1");
 
     {
         // VJ1 not in response, stop2 is terminus
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         stop_schedule = resp.stop_schedules(0);
         BOOST_CHECK(stop_schedule.date_times_size() == 1);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj2");
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj2");
     }
 
     {
@@ -1410,16 +1410,16 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
 
-    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
         "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
         "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-    b.vj("L1").uri("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
+    b.vj("L1").name("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
         "stop2", "23:55"_t, "23:55"_t, std::numeric_limits<uint16_t>::max(), true, true, 600, 1800)(
         "stop3", "24:10"_t, "24:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.frequency_vj("L1", "18:00"_t, "19:00"_t, "00:30"_t)
-        .uri("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+        .name("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "stop2", "18:05"_t, "18:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
             "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
@@ -1476,11 +1476,11 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
 BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
     ed::builder b("20170101");
 
-    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
         "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
         "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").uri("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+    b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
         "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
         "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
@@ -1565,7 +1565,7 @@ BOOST_AUTO_TEST_CASE(stop_schedules_order_by_line_route_stop_point) {
 BOOST_AUTO_TEST_CASE(stop_schedule_on_loop) {
     ed::builder b("20181101");
 
-    b.vj("A", "01").uri("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop1", "8:10"_t, "8:10"_t);
+    b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop1", "8:10"_t, "8:10"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_loop) {
 BOOST_AUTO_TEST_CASE(stop_schedule_on_terminus) {
     ed::builder b("20181101");
 
-    b.vj("A", "01").uri("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
+    b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -1642,7 +1642,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_terminus) {
 BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     ed::builder b("20181101");
 
-    b.vj("A", "01").uri("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
+    b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
     b.sa("real terminus");
 
     b.finish();
