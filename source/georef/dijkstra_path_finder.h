@@ -32,7 +32,6 @@ www.navitia.io
 
 #include "path_finder.h"
 #include "visitor.h"
-#include "dijkstra_shortest_paths_with_heap.h"
 
 #include <boost/graph/filtered_graph.hpp>
 
@@ -61,24 +60,7 @@ public:
      * Warning, it modifies the distances and the predecessors
      **/
     template <class Visitor>
-    void dijkstra(const vertex_t source, const vertex_t target, const Visitor& visitor) {
-        // Note: the predecessors have been updated in init
-
-        std::array<georef::vertex_t, 2> vertex{{source, target}};
-
-        // Fill color map in white before dijkstra
-        std::fill(color.data.get(),
-                  color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char, 0);
-
-        // we filter the graph to only use certain mean of transport
-        using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
-        navitia::dijkstra_shortest_paths_no_init_with_heap(
-            filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)), vertex.cbegin(), vertex.cend(),
-            &predecessors[0], &distances[0], boost::get(&Edge::duration, geo_ref.graph),  // weigth map
-            std::less<navitia::time_duration>(),
-            SpeedDistanceCombiner(speed_factor),  // we multiply the edge duration by a speed factor
-            navitia::seconds(0), visitor, color, &index_in_heap_map[0]);
-    }
+    void dijkstra(const std::array<georef::vertex_t, 2>& origin_vertexes, const Visitor& visitor);
 
     // shouldn't be used outside of class apart from tests
     /** compute the path to the target and update the distances/pred
@@ -100,6 +82,17 @@ private:
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>> crow_fly_find_nearest_stop_points(
         const navitia::time_duration& radius,
         const proximitylist::ProximityList<type::idx_t>& pl);
+
+    // Call breadth first search
+    // Allow to pass color map so that user deals with the allocation (and white init)
+    template <class Graph, class DijkstraVisitor, class WeightMap, class Compare = std::less<navitia::time_duration>>
+    void dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
+                                                   const vertex_t* s_begin,
+                                                   const vertex_t* s_end,
+                                                   const DijkstraVisitor& visitor,
+                                                   const WeightMap& weight,
+                                                   const SpeedDistanceCombiner& combine,
+                                                   const Compare& compare = Compare());
 };
 
 }  // namespace georef
