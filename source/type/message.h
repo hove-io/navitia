@@ -171,9 +171,7 @@ struct Property {
     }
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& key& type& value;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 struct Cause {
@@ -184,9 +182,7 @@ struct Cause {
     boost::posix_time::ptime updated_at;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uri& wording& created_at& updated_at& category;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 struct Severity {
@@ -201,9 +197,7 @@ struct Severity {
     Effect effect = Effect::UNKNOWN_EFFECT;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uri& wording& created_at& updated_at& color& priority& effect;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 struct UnknownPtObj {
@@ -215,10 +209,8 @@ struct LineSection {
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
     std::vector<Route*> routes;
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& line& start_point& end_point& routes;
-    }
+    template <class archive>
+    void serialize(archive& ar, const unsigned int);
 
     std::set<StopPoint*> get_stop_points_section() const {
         std::set<StopPoint*> res;
@@ -254,9 +246,7 @@ struct Message {
     std::set<ChannelType> channel_types;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 struct StopTimeUpdate {
@@ -278,9 +268,7 @@ struct StopTimeUpdate {
         : stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& stop_time& cause& departure_status& arrival_status;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 inline bool operator<(StopTimeUpdate::Status a, StopTimeUpdate::Status b) {
@@ -293,9 +281,7 @@ struct AuxInfoForMetaVJ {
     std::vector<StopTimeUpdate> stop_times;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& stop_times;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 }  // namespace detail
 
@@ -324,10 +310,7 @@ struct Impact {
     Disruption* disruption;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uri& company_id& physical_mode_id& headsign& created_at& updated_at& application_periods& severity&
-            _informed_entities& messages& disruption& aux_info;
-    }
+    void serialize(Archive& ar, const unsigned int);
 
     boost::iterator_range<std::vector<PtObj>::const_iterator> informed_entities() const {
         return boost::make_iterator_range(_informed_entities.begin(), _informed_entities.end());
@@ -364,9 +347,7 @@ struct Tag {
     boost::posix_time::ptime updated_at;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uri& name& created_at& updated_at;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 class DisruptionHolder;
@@ -408,10 +389,7 @@ struct Disruption {
     std::string note;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& uri& reference& rt_level& publication_period& created_at& updated_at& cause& impacts& localization& tags&
-            note& contributor& properties;
-    }
+    void serialize(Archive& ar, const unsigned int);
 
     void add_impact(const Impact::SharedImpact& impact, DisruptionHolder& holder);
     const std::vector<Impact::SharedImpact>& get_impacts() const { return impacts; }
@@ -447,9 +425,7 @@ public:
     std::map<std::string, boost::weak_ptr<Tag>> tags;             // to be wrapped too
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& disruptions_by_uri& causes& severities& tags& weak_impacts;
-    }
+    void serialize(Archive& ar, const unsigned int);
 };
 
 struct ImpactedVJ {
