@@ -662,7 +662,7 @@ void handle_realtime(const std::string& id,
         return;
     }
     if (meta_vj_exists && is_added_trip(trip_update) && base_vj_exists_the_same_day(data, trip_update)) {
-        LOG4CPLUS_WARN(log, "cannot add new trip, because trip id corresponds to a base VJ"
+        LOG4CPLUS_WARN(log, "cannot add new trip, because trip id corresponds to a base VJ the same day"
                                 << ", trip id: " << trip_update.trip().trip_id() << ", effect: "
                                 << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
         return;

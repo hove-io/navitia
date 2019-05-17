@@ -2102,8 +2102,8 @@ class TestKirinAddNewTripBlocked(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
-class TestKirinAddNewTripPresentInNavitia(MockKirinDisruptionsFixture):
-    def test_add_new_trip_present_in_navitia(self):
+class TestKirinAddNewTripPresentInNavitiaTheSameDay(MockKirinDisruptionsFixture):
+    def test_add_new_trip_present_in_navitia_the_same_day(self):
 
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)
