@@ -689,7 +689,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    for (const auto& ind : prox.find_within_index_only(coordinates, horizon, 100)) {
+    for (const auto& ind : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, 100)) {
         // we increment the index to get the vertex in the other graph
         const auto u = ind + offset;
 
@@ -727,7 +727,7 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
                                                 const std::function<bool(const Way&)>& filter) const {
     // first, we collect each ways with its distance to the coord
     std::map<const Way*, double> way_dist;
-    for (const auto& ind : pl.find_within_index_only(coord, 500, 100)) {
+    for (const auto& ind : pl.find_within<proximitylist::IndexOnly>(coord, 500, 100)) {
         BOOST_FOREACH (const edge_t& e, boost::out_edges(ind, graph)) {
             const Way* w = ways[graph[e].way_idx];
             if (filter(*w)) {

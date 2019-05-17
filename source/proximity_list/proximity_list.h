@@ -32,9 +32,9 @@ www.navitia.io
 
 #include "type/type.h"
 #include "utils/exception.h"
+#include "utils/logger.h"
 #include <memory>
 #include <vector>
-#include <cmath>
 
 // Forward declaration
 namespace flann {
@@ -56,6 +56,23 @@ struct NotFound : public recoverable_exception {
     NotFound(const NotFound&) = default;
     NotFound& operator=(const NotFound&) = default;
     virtual ~NotFound() noexcept {};
+};
+
+// find_within Dispatch Tag
+struct IndexOnly {};
+struct IndexCoord {};
+
+template <typename T, typename Tag>
+struct ReturnTypeTrait;
+
+template <typename T>
+struct ReturnTypeTrait<T, IndexOnly> {
+    typedef T ValueType;
+};
+
+template <typename T>
+struct ReturnTypeTrait<T, IndexCoord> {
+    typedef std::pair<T, GeographicalCoord> ValueType;
 };
 
 /** Définit un indexe spatial qui permet de retrouver les n éléments les plus proches
@@ -95,19 +112,20 @@ struct ProximityList {
     // build the Nearest Neighbours data from items, then the index
     void build();
 
-    /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<std::pair<T, GeographicalCoord>> find_within(const GeographicalCoord& coord,
-                                                             double radius,
-                                                             int size = -1) const;
-
-    std::vector<T> find_within_index_only(const GeographicalCoord& coord, double radius, int size = -1) const;
+    template <typename Tag = IndexCoord>
+    auto find_within(const GeographicalCoord& coord, double radius, int size = -1) const
+        -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
+        if (!NN_index || !size || !radius)
+            return {};
+        return find_within_impl(coord, radius, size, Tag{});
+    }
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
     T find_nearest(double lon, double lat) const { return find_nearest(GeographicalCoord(lon, lat)); }
 
     /// Retourne l'élément le plus proche dans tout l'indexe
     T find_nearest(const GeographicalCoord& coord, double max_dist = 500) const {
-        auto temp = find_within_index_only(coord, max_dist, 1);
+        auto temp = find_within<IndexOnly>(coord, max_dist, 1);
         if (temp.empty())
             throw NotFound();
         else
@@ -122,6 +140,28 @@ struct ProximityList {
     void serialize(Archive& ar, const unsigned int) {
         ar& items;
     }
+
+private:
+    /*
+     * This implementation is used for /places_nearby
+     *
+     * Auto-sized container is used, NN_index will return ALL elements meet the criteira
+     *
+     * Note that this implementation returns the indices AND the coords of all the nearest elements
+     * */
+    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
+        -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType>;
+
+    /*
+     * This implementation is used for edge projection
+     *
+     * A small size-fixed std::array container is used to boost the performance, the NN_index will stop when
+     * the small size-fixed container is full.
+     * .
+     * Note that this implementation returns ONLY indices of nearest elements
+     * */
+    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
+        -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType>;
 };
 
 }  // namespace proximitylist

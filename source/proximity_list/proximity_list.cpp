@@ -1,6 +1,5 @@
 #include "proximity_list.h"
 #include "type/type.h"
-#include "utils/logger.h"
 
 #include <cmath>
 #include <array>
@@ -49,7 +48,7 @@ void ProximityList<T>::build() {
     NN_index.reset();
 
     if (items.empty()) {
-        LOG4CPLUS_INFO(logger, "No items for building the index");
+        LOG4CPLUS_WARN(logger, "No items for building the index");
         return;
     }
 
@@ -62,47 +61,51 @@ void ProximityList<T>::build() {
     NN_index->buildIndex();
 }
 
-// struct IndexAndCoord;
-// struct IndexOnly;
-//
-// template<typename T, typename Tag>
-// struct ReturnTrait;
-//
-// template<typename T>
-// struct ReturnTrait<T, IndexAndCoord> {
-//    typedef std::vector<std::pair<T, GeographicalCoord>> ReturnType;
-//};
-//
-// template<typename T>
-// struct ReturnTrait<T, IndexOnly> {
-//    typedef std::vector<T> ReturnType;
-//};
-//
-// struct AutoResize;
-// struct FixedSize;
-//
-// template<typename T>
-// struct NNQueryTrait;
-//
-// template<>
-// struct NNQueryTrait<AutoResize> {
-//    typedef std::vector<std::vector<int>> IndiceType;
-//    typedef std::vector<std::vector<navitia::proximitylist::index_t::DistanceType>> DistanceType;
-//};
-//
-// template<>
-// struct NNQueryTrait<FixedSize> {
-//    const static std::size_t max_size = 200;
-//    typedef std::array<int, max_size> QueryType;
-//};
+template <typename T, typename Item>
+static auto extract(const Item& item, IndexCoord) -> typename ReturnTypeTrait<T, IndexCoord>::ValueType {
+    return std::make_pair(item.element, item.coord);
+}
+
+template <typename T, typename Item>
+static auto extract(const Item& item, IndexOnly) -> typename ReturnTypeTrait<T, IndexOnly>::ValueType {
+    return item.element;
+}
+
+template <typename T, typename Items, typename Indices, typename Distances, typename Tag>
+static auto make_result(const type::GeographicalCoord& coord,
+                        const Items& items,
+                        const Indices& indices,
+                        const Distances& distances,
+                        const int nb_found,
+                        Tag) -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+
+    std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> res;
+    if (!nb_found) {
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "0 point found for the coord: " << coord.lon() << " " << coord.lat());
+        return {};
+    }
+    for (int i = 0; i < nb_found; ++i) {
+        int res_ind = indices[i];
+        if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
+            continue;
+        }
+        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
+                        "Distance from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances[i]);
+
+        res.push_back(std::move(extract<T>(items[res_ind], Tag{})));
+    }
+    return res;
+}
 
 template <typename IndexType, typename DistanceType>
-int find_within_impl(const std::shared_ptr<index_t>& NN_index,
-                     const GeographicalCoord& coord,
-                     double radius,
-                     int size,
-                     IndexType& indices,
-                     DistanceType& distances) {
+static int radius_search(const std::shared_ptr<index_t>& NN_index,
+                         const GeographicalCoord& coord,
+                         double radius,
+                         int size,
+                         IndexType& indices,
+                         DistanceType& distances) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
     auto query = project_coord(coord);
@@ -123,115 +126,33 @@ int find_within_impl(const std::shared_ptr<index_t>& NN_index,
 }
 
 template <class T>
-std::vector<std::pair<T, GeographicalCoord>> ProximityList<T>::find_within(const GeographicalCoord& coord,
-                                                                           double radius,
-                                                                           int size) const {
-    std::vector<std::pair<T, GeographicalCoord>> result;
-    if (!NN_index || !size || !radius) {
-        return result;
-    }
-    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
-
+auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
+    -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType> {
+    // Containers are auto-sized by NN_index
     std::vector<std::vector<int>> indices;
     std::vector<std::vector<index_t::DistanceType>> distances;
-
-    int nb_found = find_within_impl(NN_index, coord, radius, size, indices, distances);
-
-    if (!nb_found) {
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "0 point found for the coord: " << coord.lon() << " " << coord.lat());
-        return result;
-    }
-
+    int nb_found = radius_search(NN_index, coord, radius, size, indices, distances);
     assert(indices.size() == 1);
     assert(distances.size() == 1);
-
-    for (int i = 0; i < nb_found; ++i) {
-        int res_ind = indices[0][i];
-        if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
-            continue;
-        }
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Distance for the coord: " << coord.lon() << " "
-                                                                                          << coord.lat() << " is "
-                                                                                          << distances[0][res_ind]);
-        result.emplace_back(items[res_ind].element, items[res_ind].coord);
-    }
-    return result;
+    return make_result<T>(coord, items, indices[0], distances[0], nb_found, IndexCoord{});
 }
 
-template <typename T>
-std::vector<T> ProximityList<T>::find_within_index_only(const GeographicalCoord& coord, double radius, int size) const {
-    std::vector<T> result;
-    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
-
-    if (!NN_index || !size || !radius) {
-        return result;
-    }
-
-    const static std::size_t max_size = 200;
-
+template <class T>
+auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
+    -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType> {
+    // Using small sized std::array will avoid heap allocation and limit the research
+    const static std::size_t max_size = 150;
     std::array<int, max_size> indices_data;
     flann::Matrix<int> indices(&indices_data[0], 1, size == -1 ? max_size : size);
-
     std::array<index_t::DistanceType, max_size> distances_data;
     flann::Matrix<index_t::DistanceType> distances(&distances_data[0], 1, size == -1 ? max_size : size);
-
-    int nb_found = find_within_impl(NN_index, coord, radius, size, indices, distances);
-
-    if (!nb_found) {
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "0 point found for the coord: " << coord.lon() << " " << coord.lat());
-        return result;
-    }
-
-    for (int i = 0; i < nb_found; ++i) {
-        int res_ind = indices_data[i];
-        if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
-            continue;
-        }
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
-                        "Distance for the coord: " << coord.lon() << " " << coord.lat() << " is " << indices_data[i]);
-        result.emplace_back(items[res_ind].element);
-    }
-    return result;
+    int nb_found = radius_search(NN_index, coord, radius, size, indices, distances);
+    return make_result<T>(coord, items, indices_data, distances_data, nb_found, IndexOnly{});
 }
-
-///** Fonction qui permet de sérialiser (aka binariser la structure de données
-// *
-// * Elle est appelée par boost et pas directement
-// */
-// template<typename T>
-// template <class Archive>
-// void ProximityList<T>::serialize(Archive& ar, const unsigned int) {
-//    ar& items & NN_data;
-//}
 
 template class ProximityList<unsigned int>;
 
-// template <> template<>
-// void ProximityList<unsigned int>::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive& ar ,
-// const unsigned int) {
-//    ar& items & NN_data & index;
-//};
-// template <> template<>
-// void ProximityList<unsigned int>::serialize<eos::portable_iarchive>(eos::portable_iarchive&, const unsigned int);
-// template <> template<>
-// void ProximityList<unsigned int>::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive&, const
-// unsigned int);
-//
-//
 template class ProximityList<unsigned long>;
-//
-// template <> template<>
-// void ProximityList<unsigned long>::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive& ar,
-// const unsigned int) {
-//    ar& items & NN_data & index;
-//};
-// template <> template<>
-// void ProximityList<unsigned long>::serialize<eos::portable_iarchive>(eos::portable_iarchive&, const unsigned int);
-// template <> template<>
-// void ProximityList<unsigned long>::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive&, const
-// unsigned int);
 
 }  // namespace proximitylist
 }  // namespace navitia
