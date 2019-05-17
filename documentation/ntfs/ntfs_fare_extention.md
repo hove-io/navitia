@@ -2,11 +2,11 @@ NTFS - Fare extension
 ======================================
 
 # Introduction
-This document describe an extension of the core [NTFS (fr)](./ntfs_fr.md) data format to add fares and tickets informations into Navitia.
-The [old fare extension](./ntfs_fare_extension_fr_deprecated.md) is still in use in conjunction with the files described here for retrocompability matters.
+This document describes an extension of the core [NTFS (fr)](./ntfs_fr.md) data format to add fares and tickets informations into Navitia.
+The [old fare extension](./ntfs_fare_extension_fr_deprecated.md) is still in use in conjunction with the files described here for backward compatibility matters.
 
 # Data format
-The data format of the files are the same as the core (NTFS ones](./ntfs_fr.md). In short, files are CSV encoded in utf8 and with a comma `,` separator.
+The data format of the files are the same as the core [NTFS ones](./ntfs_fr.md). In short, files are CSV encoded in utf8 and with a comma `,` separator.
 
 # Files list of this extension
 
@@ -55,5 +55,5 @@ Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_use_id | Text | Required | Unique ID of the ticket use
 restriction_type | Text | Required | either `zone` to specify a restriction based on `fare_zone_id` of stops or `OD` for a stop_area id use.
-use_origin | Text | Required | Specification of the starting fare zone or stop_area of the ticket use.
-use_destination | Text | Required | Specification of the ending fare zone or stop_area of the ticket use.
+use_origin | Text | Required | Specification of the starting fare zone or stop_area of the ticket in use.
+use_destination | Text | Required | Specification of the ending fare zone or stop_area of the ticket in use.
