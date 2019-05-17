@@ -92,15 +92,11 @@ class Index(flask_restful.Resource):
 class Status(flask_restful.Resource):
     def get(self):
         def check_db():
-            tyr_db = sqlalchemy.create_engine(current_app.config['SQLALCHEMY_DATABASE_URI'])
             try:
-                tyr_db.connect()
-                result = tyr_db.execute("SELECT version_num FROM alembic_version")
-                for row in result:
-                    return row['version_num']
+                return db.engine.scalar('select version_num from alembic_version;')
             except Exception as e:
                 logging.exception("Tyr db not reachable : {}".format(e.message))
-                return None
+                raise
 
         return {'db version': check_db()}
 
