@@ -246,6 +246,7 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode = 0;
+    float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
 
@@ -256,7 +257,8 @@ struct GeoRef {
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
-            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
+            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode&
+                inversed_nb_vertex_by_mode;
     }
 
     template <class Archive>
@@ -265,7 +267,8 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
-            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
+            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode&
+                inversed_nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 

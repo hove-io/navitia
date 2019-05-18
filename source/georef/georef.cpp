@@ -233,7 +233,7 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
 }
 
 type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
-    return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
+    return static_cast<type::Mode_e>(vertex * inversed_nb_vertex_by_mode);
 }
 
 PathItem::TransportCaracteristic GeoRef::get_caracteristic(const edge_t& edge) const {
@@ -370,7 +370,7 @@ void GeoRef::init() {
 
     // each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);
-
+    inversed_nb_vertex_by_mode = 1.f / nb_vertex_by_mode;
     // we dupplicate the graph for the bike and the car
     for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
         offsets[mode] = boost::num_vertices(graph);
