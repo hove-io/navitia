@@ -233,8 +233,7 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
 }
 
 type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
-    const static float inversed = 1 / nb_vertex_by_mode;
-    return static_cast<type::Mode_e>(vertex * inversed);
+    return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
 
 PathItem::TransportCaracteristic GeoRef::get_caracteristic(const edge_t& edge) const {
