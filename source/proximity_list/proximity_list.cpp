@@ -1,5 +1,5 @@
 #include "proximity_list.h"
-#include "type/type.h"
+#include "type/geographical_coord.h"
 
 #include <cmath>
 #include <array>
@@ -128,7 +128,7 @@ static int radius_search(const std::shared_ptr<index_t>& NN_index,
 template <class T>
 auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
     -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType> {
-    // Containers are auto-sized by NN_index
+    // Containers are auto-sized by NN_index, Flann will return all objects inside of the given radius
     std::vector<std::vector<int>> indices;
     std::vector<std::vector<index_t::DistanceType>> distances;
     int nb_found = radius_search(NN_index, coord, radius, size, indices, distances);
