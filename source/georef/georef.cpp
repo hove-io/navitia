@@ -370,7 +370,9 @@ void GeoRef::init() {
 
     // each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);
-    inversed_nb_vertex_by_mode = 1.f / nb_vertex_by_mode;
+    // a math trick to handle the round error:
+    // use (N + 0.1)/N^2 instead of 1/N
+    inversed_nb_vertex_by_mode = (nb_vertex_by_mode + .1) / pow(nb_vertex_by_mode, 2);
     // we dupplicate the graph for the bike and the car
     for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
         offsets[mode] = boost::num_vertices(graph);
