@@ -2396,6 +2396,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['departure_date_time'] == '20120616T003000'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
 
+
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
     def test_delay_pass_midnight_towards_previous_day(self):
