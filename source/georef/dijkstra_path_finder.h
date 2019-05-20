@@ -87,8 +87,8 @@ private:
     // Allow to pass color map so that user deals with the allocation (and white init)
     template <class Graph, class DijkstraVisitor, class WeightMap, class Compare = std::less<navitia::time_duration>>
     void dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
-                                                   const vertex_t* s_begin,
-                                                   const vertex_t* s_end,
+                                                   const vertex_t& s_begin,
+                                                   const vertex_t& s_end,
                                                    const DijkstraVisitor& visitor,
                                                    const WeightMap& weight,
                                                    const SpeedDistanceCombiner& combine,
