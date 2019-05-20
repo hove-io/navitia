@@ -15,7 +15,12 @@ plus some Slate widgets (such as notices).
 
 Once some changes have been done, Slate needs to build HTML sources from Markdown files.
 
-First, install bundler using `apt-get install bundler` or `gem install bundler`.
+First, install bundler using `apt-get install bundler` or `gem install bundler`. Make sure you've also installed ruby's header to build the json package.
+On ubuntu 18:
+```
+sudo apt install ruby-bundler ruby2.5-dev
+```
+
 Then check that Slate dependencies are installed:
 
 ``` bash
