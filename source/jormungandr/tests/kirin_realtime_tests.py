@@ -2215,9 +2215,23 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 7
 
-        # /journeys from B to A with departure at 20120614T180100 and arrival at 20120614T180102
+        # Check journeys for 20120615, the day of the future disruption
+        # /journeys from B to A with departure at 20120615T180100 and arrival at 20120615T180102
         journey_query = (
-            "journeys?from={f}&to={to}&data_freshness=base_schedule&"
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120615T180000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T180100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120615T180102'
+
+        # Also check journeys for 20120614 and 20120616
+        # /journeys on 20120614 from B to A with departure at 20120614T180100 and arrival at 20120614T180102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
                 f='stop_point:stopB', to='stop_point:stopA', dt='20120614T180000'
             )
@@ -2227,23 +2241,35 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['departure_date_time'] == '20120614T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120614T180102'
 
+        # /journeys on 20120616 from B to A with departure at 20120616T180100 and arrival at 20120616T180102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120616T180000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120616T180100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T180102'
+
         # A new disruption with a delay on arrival station to have  a pass midnight
         self.send_mock(
             "vjB",
-            "20120614",
+            "20120615",
             'modified',
             [
                 UpdatedStopTime(
                     "stop_point:stopB",
-                    arrival=tstamp("20120614T180100"),
-                    departure=tstamp("20120614T180100"),
+                    arrival=tstamp("20120615T180100"),
+                    departure=tstamp("20120615T180100"),
                     arrival_delay=0,
                     departure_delay=0,
                 ),
                 UpdatedStopTime(
                     "stop_point:stopA",
-                    arrival=tstamp("20120615T010102"),
-                    departure=tstamp("20120615T010102"),
+                    arrival=tstamp("20120616T010102"),
+                    departure=tstamp("20120616T010102"),
                     arrival_delay=7 * 60 * 60,
                     message="Delayed to have pass midnight",
                 ),
@@ -2260,9 +2286,23 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
 
-        # /journeys from B to A with departure at 20120614T180100 and arrival at 20120615T010102
+        # Check journeys for 20120615, the day of the disruption
+        # /journeys from B to A with departure at 20120615T180100 and arrival at 20120616T010102
         journey_query = (
-            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120615T180000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T180100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
+
+        # Also check journeys for 20120614 and 20120616
+        # /journeys on 20120614 from B to A with departure at 20120614T180100 and arrival at 20120614T180102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
                 f='stop_point:stopB', to='stop_point:stopA', dt='20120614T180000'
             )
@@ -2270,18 +2310,30 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         response = self.query_region(journey_query)
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120614T180100'
-        assert response['journeys'][0]['arrival_date_time'] == '20120615T010102'
+        assert response['journeys'][0]['arrival_date_time'] == '20120614T180102'
+
+        # /journeys on 20120616 from B to A with departure at 20120616T180100 and arrival at 20120616T180102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120616T180000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120616T180100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T180102'
 
         # Disruption is modified with first station on detour and delay so that there is no more pass midnight
         self.send_mock(
             "vjB",
-            "20120614",
+            "20120615",
             'modified',
             [
                 UpdatedStopTime(
                     "stop_point:stopB",
-                    arrival=tstamp("20120614T180100"),
-                    departure=tstamp("20120614T180100"),
+                    arrival=tstamp("20120615T180100"),
+                    departure=tstamp("20120615T180100"),
                     arrival_delay=0,
                     departure_delay=0,
                     arrival_skipped=True,
@@ -2293,16 +2345,16 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
                     "stop_point:stopC",
                     arrival_delay=0,
                     departure_delay=0,
-                    arrival=tstamp("20120615T003000"),
-                    departure=tstamp("20120615T003000"),
+                    arrival=tstamp("20120616T003000"),
+                    departure=tstamp("20120616T003000"),
                     is_added=True,
                     is_detour=True,
                     message='added for detour',
                 ),
                 UpdatedStopTime(
                     "stop_point:stopA",
-                    arrival=tstamp("20120615T010102"),
-                    departure=tstamp("20120615T010102"),
+                    arrival=tstamp("20120616T010102"),
+                    departure=tstamp("20120616T010102"),
                     arrival_delay=7 * 60 * 60,
                     message="No more pass midnight",
                 ),
@@ -2321,22 +2373,34 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
 
         # /journeys from B to A with departure at 20120615T003000 and arrival at 20120614T230000
         journey_query = (
-            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
-                f='stop_point:stopC', to='stop_point:stopA', dt='20120614T230000'
+                f='stop_point:stopC', to='stop_point:stopA', dt='20120615T230000'
             )
         )
         response = self.query_region(journey_query)
         assert len(response['journeys']) == 1
-        assert response['journeys'][0]['departure_date_time'] == '20120615T003000'
-        assert response['journeys'][0]['arrival_date_time'] == '20120615T010102'
+        assert response['journeys'][0]['departure_date_time'] == '20120616T003000'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
 
+        # Query for 20120615T180000 makes wait till 003000 the next day
+        # /journeys from B to A with departure at 20120615T003000 and arrival at 20120614T230000
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopC', to='stop_point:stopA', dt='20120615T180000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120616T003000'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
     def test_delay_pass_midnight_towards_previous_day(self):
         """
-        Relates to "test_cots_update_trip_with_advance_pass_midnight_on_first_station" in kirin
+        Relates to "test_cots_add_first_stop_with_advance_pass_midnight" in kirin
         1. Verify disruption count, vehicle_journeys count and journey
         2. Add a disruption with a delay in first station (stop_point:stopB) so that there is a pass midnight
         towards previous day
@@ -2350,9 +2414,10 @@ class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 7
 
-        # /journeys from B to A with departure at 20120614T080100 and arrival at 20120614T080102
+        # Check journeys for 20120615, the day of the future disruption
+        # /journeys from B to A with departure at 20120615T080100 and arrival at 20120615T080102
         journey_query = (
-            "journeys?from={f}&to={to}&data_freshness=base_schedule&"
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
                 f='stop_point:stopB', to='stop_point:stopA', dt='20120615T080000'
             )
@@ -2361,6 +2426,31 @@ class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T080100'
         assert response['journeys'][0]['arrival_date_time'] == '20120615T080102'
+
+        # Also check journeys for 20120614 and 20120616
+        # /journeys on 20120614 from B to A with departure at 20120614T080100 and arrival at 20120614T080102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120614T080000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120614T080100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120614T080102'
+
+        # /journeys on 20120616 from B to A with departure at 20120616T080100 and arrival at 20120616T080102
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopB', to='stop_point:stopA', dt='20120616T080000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120616T080100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T080102'
 
         # A new disruption with a detour on departure station to have  a pass midnight in advance
         self.send_mock(
@@ -2410,7 +2500,7 @@ class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
 
         # /journeys from C to A with departure at 20120614T223000 and arrival at 20120615T080102
         journey_query = (
-            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
             "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
                 f='stop_point:stopC', to='stop_point:stopA', dt='20120614T220000'
             )
@@ -2419,6 +2509,28 @@ class TestKirinDelayPassMidnightTowardsPreviousDay(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120614T223000'
         assert response['journeys'][0]['arrival_date_time'] == '20120615T080102'
+
+        # For 201206154 there should be only one departure at 223000
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopC', to='stop_point:stopA', dt='20120614T100000'
+            )
+        )
+        response = self.query_region(journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120614T223000'
+        assert response['journeys'][0]['arrival_date_time'] == '20120615T080102'
+
+        # For 20120616 there is no journey from C to A
+        journey_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}&direct_path=none&walking_speed=0.001".format(
+                f='stop_point:stopC', to='stop_point:stopA', dt='20120615T080000'
+            )
+        )
+        response, status = self.query_region(journey_query, check=False)
+        assert 'journeys' not in response
 
 
 def make_mock_kirin_item(
