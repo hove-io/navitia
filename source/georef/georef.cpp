@@ -694,7 +694,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
         const auto u = ind + offset;
 
         BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
-            const auto v = target(e, graph);
+            const auto& v = target(e, graph);
             if (!is_sn_edge(*this, e)) {
                 continue;
             }
