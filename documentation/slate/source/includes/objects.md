@@ -624,7 +624,7 @@ Cities are mainly on the 8 level, dependant on the country
 (<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
 
-### <a name="equipment-reports"></a>Equipment Reports
+### Equipment-reports
 
 ```json
 "equipment_reports": [
@@ -636,15 +636,15 @@ Cities are mainly on the 8 level, dependant on the country
 ]
 ```
 
-A list of object that maps foreach line, the equipments associated with its stop areas.
+A list of object that maps each lines with its associated stop area equipments report.
 
 |Field|Type|Description|
 |-----|----|-----------|
 |line|[line](#line)|The line to which equipments are associated |
-|stop_area_equipments|[stop-area-equipments](#stop-area-equipments)|a list of objects that describes the equipments for each stop area |
+|stop_area_equipments|[stop-area-equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
 
 
-### <a name="stop-area-equipments"></a>Stop Area Equipments
+### Stop-area-equipments
 
 ```json
 "stop_area_equipments": [
@@ -655,58 +655,43 @@ A list of object that maps foreach line, the equipments associated with its stop
     ...
 ]
 ```
-A list of object that maps foreach stop area, the equipments details.
+A list of objects that maps equipments details for each stop area.
 
 |Field|Type|Description|
 |-----|----|-----------|
-|equipment_details|[equipment-details](#equipment-details)|The line to which equipments are associated |
-|stop_area|[stop-area](#stop-area)|The stop area to which equipments are associated |
+|equipment_details|[equipment-details](#equipment-details)|The equipment details associated with the stop area|
+|stop_area|[stop-area](#stop-area)|The stop area to which the `equipments_details` is associated |
 
 
-### <a name="equipment-details"></a>Equipment Details
+### Equipment-details
 ```json
 "equipment_details": [
     {
-        "current_availability": {
-            "status": "unknown"
-        }
-        "embedded_type": "elevator",
-        "id": "272",
-    },
-    {
-        "current_availability": {
-            "cause": {
-                "label": "Travaux à proximité"
-            },
-            "effect": {
-                "label": "."
-            },
-            "periods": [
-                {
-                    "begin": "20190216T000000",
-                    "end": "20190601T220000"
-                }
-            ],
-            "status": "unavailable",
-            "updated_at": "2019-05-17T15:54:53+02:00"
-        }
+        "current_availability": {...},
         "embedded_type": "escalator",
         "id": "2702",
-        "name": "du quai direction Vaulx-en-Velin La Soie  jusqu'à la sortie",
+        "name": "Escalator 2702, for platform 3",
     },
     ...
 ]
 ```
+|Field|Type|Occurrence|Description|
+|-----|----|--------|-----------|
+current_availability|[current-availability](#current-availability)|always| Describes equipments information like: status, name, id etc...
+embedded_type|string|always|Define the equipment type: `"escalator"`, `"elevator"`
+id|string|always|The equipment's unique identifier
+name|string|optional|the equipment's name/description
 
-### <a name="current-availability"></a>Current Availability
+
+### Current-availability
 
 ```json
 "current_availability": {
     "cause": {
-        "label": "Travaux à proximité"
+        "label": "engineering work in progress"
     },
     "effect": {
-        "label": "."
+        "label": "platform 3 available via stairs only"
     },
     "periods": [
         {
@@ -718,6 +703,14 @@ A list of object that maps foreach stop area, the equipments details.
     "updated_at": "2019-05-17T15:54:53+02:00"
 }
 ```
+
+|Field|Type|Required|Description|
+|-----|----|--------|-----------|
+status|string|always|Equipment status: <ul><li>`"unknown"`: no realtime information available</li><li>`"unavailable"`: equipment is known to be unavailable with details provided below </li></ul>
+cause|label|optional|If `unavailable`, gives you the cause in a label
+effect|label|optional|If `unavailable`, gives you the effect in a label
+periods|period|optional|If `unavailable`, gives the effected period with a begin & end date
+updated_at|[iso-date-time](#iso-date-time)|optional|Last update time of the provided information
 
 Other objects
 -------------
