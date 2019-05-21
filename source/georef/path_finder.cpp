@@ -37,7 +37,7 @@ www.navitia.io
 namespace navitia {
 namespace georef {
 
-PathFinder::~PathFinder() {}
+PathFinder::~PathFinder() = default;
 
 navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
     // For BSS we want the default speed of walking, because on extremities we walk !
@@ -90,7 +90,7 @@ nt::LineString PathFinder::path_coordinates_on_same_edge(const Edge& e,
 
 PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref), color(boost::num_vertices(geo_ref.graph)) {}
 
-void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
+void PathFinder::init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
     // we look for the nearest edge from the start coordinate
     // in the right transport mode (walk, bike, car, ...) (ie offset)
@@ -179,25 +179,20 @@ PathItem::TransportCaracteristic PathFinder::get_transportation_mode_item_to_upd
         case georef::PathItem::TransportCaracteristic::Car:
         case georef::PathItem::TransportCaracteristic::Bike:
             return previous_transportation;
-            break;
             // if we were switching between walking and biking, we need to take either
             // the previous or the next transportation mode depending on 'append_to_begin'
         case georef::PathItem::TransportCaracteristic::BssTake:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
                                     : georef::PathItem::TransportCaracteristic::Bike);
-            break;
         case georef::PathItem::TransportCaracteristic::BssPutBack:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
                                     : georef::PathItem::TransportCaracteristic::Walk);
-            break;
         case georef::PathItem::TransportCaracteristic::CarLeaveParking:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
                                     : georef::PathItem::TransportCaracteristic::Car);
-            break;
         case georef::PathItem::TransportCaracteristic::CarPark:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Car
                                     : georef::PathItem::TransportCaracteristic::Walk);
-            break;
         default:
             throw navitia::recoverable_exception("unhandled transportation carac case");
     }

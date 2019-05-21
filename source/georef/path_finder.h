@@ -142,16 +142,11 @@ public:
     boost::two_bit_color_map<> color;
 
     PathFinder(const GeoRef& geo_ref);
+    PathFinder(const PathFinder& o) = default;
 
     // Virtual destructor, to allow use as a public base class,
     // but pure to ensure object itself isn't instantiated
     virtual ~PathFinder() = 0;
-
-    /**
-     *  Update the structure for a given starting point and transportation mode
-     *  The init HAS to be called before any other methods
-     */
-    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     // return the path from the starting point to the target. the target has to have been previously visited.
     Path get_path(type::idx_t idx);
@@ -164,8 +159,9 @@ public:
                   const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge);
 
     // find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target,
-                                                                                     bool handle_on_node = false) const;
+    virtual std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(
+        const ProjectionData& target,
+        bool handle_on_node = false) const;
 
     // return the duration between two projection on the same edge
     navitia::time_duration path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2);
@@ -174,6 +170,12 @@ public:
     type::LineString path_coordinates_on_same_edge(const Edge& e, const ProjectionData& p1, const ProjectionData& p2);
 
 protected:
+    /**
+     *  Update the structure for a given starting point and transportation mode
+     *  The init HAS to be called before any other methods
+     */
+    void init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
+
     // return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
 

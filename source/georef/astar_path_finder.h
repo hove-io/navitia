@@ -59,19 +59,21 @@ public:
     std::vector<navitia::time_duration> costs;
 
     AstarPathFinder(const GeoRef& geo_ref) : PathFinder(geo_ref) {}
+    AstarPathFinder(const AstarPathFinder& o) = default;
+    virtual ~AstarPathFinder();
 
     void init(const type::GeographicalCoord& start_coord,
               const type::GeographicalCoord& dest_coord,
               nt::Mode_e mode,
               const float speed_factor) {
-        PathFinder::init(start_coord, mode, speed_factor);
+        PathFinder::init_start(start_coord, mode, speed_factor);
 
         // we initialize the costs to the maximum value
         size_t n = boost::num_vertices(geo_ref.graph);
         costs.assign(n, bt::pos_infin);
 
         auto const distance_to_dest = start_coord.distance_to(dest_coord);
-        auto const duration_to_dest = navitia::seconds(distance_to_dest / (default_speed[mode] * speed_factor));
+        auto const duration_to_dest = navitia::seconds(distance_to_dest / double(default_speed[mode] * speed_factor));
         costs[starting_edge[source_e]] = duration_to_dest;
         costs[starting_edge[target_e]] = duration_to_dest;
     }
