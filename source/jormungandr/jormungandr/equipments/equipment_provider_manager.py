@@ -149,9 +149,6 @@ class EquipmentProviderManager(object):
 
         stop_points = get_from_to_stop_points_of_journeys(response.journeys)
 
-        # Update config before calling web-service
-        self.update_config()
-
         for provider in self._get_providers().values():
             provider.get_informations_for_journeys(stop_points)
 
@@ -165,13 +162,13 @@ class EquipmentProviderManager(object):
         """
         stop_area_equipments = (sae for er in response.equipment_reports for sae in er.stop_area_equipments)
 
-        # Update config before calling web-service
-        self.update_config()
-
         for provider in self._get_providers().values():
             provider.get_informations_for_equipment_reports(stop_area_equipments)
 
         return response
 
     def _get_providers(self):
+        # Make sure we update the providers list from the database before returning them
+        self.update_config()
+
         return dict(self._equipment_providers, **self._equipment_providers_legacy)
