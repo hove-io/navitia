@@ -532,11 +532,10 @@ class JourneyCommon(object):
 
     def test_some_pt_section_objects(self):
         """
-        Test if, in the first journey, the second section:
-         - is public_transport
-         - len of stop_date_times is 2
-         - len of geojson/coordinates is 3 (and thus,
-           stop_date_times is not used to create the geojson)
+        Test that stop_area as well it's codes are displayed in
+         - section.from
+         - section.to
+         - section.stop_date_times[].stop_point
         """
         response = self.query_region(journey_basic_query, display=False)
         check_best(response)
@@ -545,10 +544,24 @@ class JourneyCommon(object):
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
         assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
-        assert 'stop_area' in response['journeys'][0]['sections'][1]['from']['stop_point']
-        assert 'stop_area' in response['journeys'][0]['sections'][1]['to']['stop_point']
-        assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
-        assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
+
+        from_sp = response['journeys'][0]['sections'][1]['from']['stop_point']
+        assert 'stop_area' in from_sp
+        assert from_sp['stop_area']['codes'][0]['type'] == 'UIC8'
+        assert from_sp['stop_area']['codes'][0]['value'] == '80142281'
+        to_sp = response['journeys'][0]['sections'][1]['to']['stop_point']
+        assert 'stop_area' in to_sp
+        assert to_sp['stop_area']['codes'][1]['type'] == 'UIC8'
+        assert to_sp['stop_area']['codes'][1]['value'] == '80110684'
+
+        sp1 = response['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
+        assert 'stop_area' in sp1
+        assert sp1['stop_area']['codes'][0]['type'] == 'UIC8'
+        assert sp1['stop_area']['codes'][0]['value'] == '80142281'
+        sp2 = response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
+        assert 'stop_area' in sp2
+        assert sp2['stop_area']['codes'][1]['type'] == 'UIC8'
+        assert sp2['stop_area']['codes'][1]['value'] == '80110684'
 
     def test_max_duration_to_pt_equals_to_0(self):
         query = (
