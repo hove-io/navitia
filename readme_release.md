@@ -22,13 +22,13 @@ Then follow the instructions given by the script, and also:
 
 ### For a major release, same as minor, but major:
 ```sh
-python ./release_navitia.sh major <canaltp_distant_repo_name>
+./release_navitia.sh major <canaltp_distant_repo_name>
 ```
 
 ### For hotfix:
 Note: It is preferable but not mandatory to merge the hotfix PR before.
 ```sh
-python ./release_navitia.sh hotfix <canaltp_distant_repo_name>
+./release_navitia.sh hotfix <canaltp_distant_repo_name>
 ```
 A new branch has been created <release_x.yy.z> and the changelog is opened.
 Then the process is less automated (but still, instructions are given):
