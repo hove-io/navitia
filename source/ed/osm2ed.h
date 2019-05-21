@@ -216,12 +216,8 @@ struct OSMWay {
     }
 
     bool contains_admin(const Admin* admin) const {
-        for (auto node : nodes) {
-            if (node->admin == admin) {
-                return true;
-            }
-        }
-        return false;
+        auto has_admin = [&](const auto& n) { return n->admin == admin; };
+        return boost::find_if(nodes, has_admin) != nodes.end();
     }
 
     bool is_used() const { return way_ref == nullptr || this == way_ref; }
