@@ -550,8 +550,6 @@ class JourneyCommon(object):
         assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
         assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
 
-
-
     def test_max_duration_to_pt_equals_to_0(self):
         query = (
             journey_basic_query
