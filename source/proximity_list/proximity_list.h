@@ -119,7 +119,7 @@ struct ProximityList {
      * When Tag is IndexCorrd, the method returns a vector of Index and Coord, which is useful for searching
      * features nearby a wanted place.
      *
-     * If Tag is IndexOnly, the moethod returns a vector of Index, which is useful for coord projections.
+     * If Tag is IndexOnly, the method returns a vector of Index, which is useful for coord projections.
      *
      * */
     template <typename Tag = IndexCoord>
