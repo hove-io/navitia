@@ -141,7 +141,7 @@ template <class T>
 auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
     -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType> {
     // Using small sized std::array will avoid heap allocation and limit the research
-    const static std::size_t max_size = 150;
+    const static std::size_t max_size = 100;
     std::array<int, max_size> indices_data;
     flann::Matrix<int> indices(&indices_data[0], 1, size == -1 ? max_size : size);
     std::array<index_t::DistanceType, max_size> distances_data;
