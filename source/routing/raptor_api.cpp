@@ -572,7 +572,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 pb_creator.action_period = bt::time_period(p_deptime, p_arrtime + bt::seconds(1));
-                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 0);
+                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 1);
                 pb_creator.fill(item.stop_times[i], stop_time, 1);
 
                 // L'heure de départ du véhicule au premier stop point

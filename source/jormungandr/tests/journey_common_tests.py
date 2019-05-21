@@ -517,7 +517,6 @@ class JourneyCommon(object):
         response = self.query_region(journey_basic_query, display=False)
         check_best(response)
         self.is_valid_journey_response(response, journey_basic_query)
-        # print response['journeys'][0]['sections'][1]
         assert len(response['journeys']) == 2
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['co2_emission']['value'] == 0.58
@@ -530,6 +529,28 @@ class JourneyCommon(object):
         assert response['journeys'][1]['duration'] == 276
         assert response['journeys'][1]['durations']['total'] == 276
         assert response['journeys'][1]['durations']['walking'] == 276
+
+    def test_some_pt_section_objects(self):
+        """
+        Test if, in the first journey, the second section:
+         - is public_transport
+         - len of stop_date_times is 2
+         - len of geojson/coordinates is 3 (and thus,
+           stop_date_times is not used to create the geojson)
+        """
+        response = self.query_region(journey_basic_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_basic_query)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
+        assert 'stop_area' in response['journeys'][0]['sections'][1]['from']['stop_point']
+        assert 'stop_area' in response['journeys'][0]['sections'][1]['to']['stop_point']
+        assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
+        assert 'stop_area' in response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
+
+
 
     def test_max_duration_to_pt_equals_to_0(self):
         query = (
