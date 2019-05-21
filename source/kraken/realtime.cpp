@@ -49,7 +49,8 @@ namespace nd = type::disruption;
 static bool base_vj_exists_the_same_day(const type::Data& data, const transit_realtime::TripUpdate& trip_update) {
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
                                                                         data.pt_data->get_main_timezone());
-    if (mvj.get_base_vj_circulating_at_date(boost::gregorian::from_undelimited_string(trip_update.trip().start_date()))) {
+    if (mvj.get_base_vj_circulating_at_date(
+            boost::gregorian::from_undelimited_string(trip_update.trip().start_date()))) {
         return true;
     } else {
         return false;
