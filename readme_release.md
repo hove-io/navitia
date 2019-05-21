@@ -11,7 +11,7 @@ Then the script should take over:
 cd <path/to/repo/navitia>
 # to be sure to trigger the correct version of the release script
 git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/dev dev
-python ./release_navitia.sh minor <canaltp_distant_repo_name>
+./release_navitia.sh minor <canaltp_distant_repo_name>
 ```
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
