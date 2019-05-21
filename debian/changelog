@@ -1,3 +1,9 @@
+navitia2 (2.79.1) unstable; urgency=low
+
+  * Hotfix : add missing import for abort
+
+ -- Nonifier <olivier.georget@kisio.org>  Tue, 21 May 2019 17:05:46 +0100
+
 navitia2 (2.79.0) unstable; urgency=low
 
   * Jormun-Tyr: Association instance-equipments_provider   <https://github.com/CanalTP/navitia/pull/2777>
