@@ -2157,12 +2157,12 @@ class TestKirinAddNewTripPresentInNavitiaWithAShift(MockKirinDisruptionsFixture)
         nb_disruptions_before = len(disruptions_before['disruptions'])
 
         # The vehicle_journey vjA is present in navitia
-        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
 
         assert len(pt_response['vehicle_journeys']) == 1
         assert len(pt_response['disruptions']) == 0
 
-        # New disruption, a new trip with vehicle_journey id = vjA and having 2 stop_times in realtime
+        # New disruption, a new trip with meta vehicle journey id = vjA and having 2 stop_times in realtime
         self.send_mock(
             "vjA",
             "20120620",
