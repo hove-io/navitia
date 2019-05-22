@@ -399,6 +399,13 @@ class Instance(flask_restful.Resource):
             default=instance.min_car,
         )
         parser.add_argument(
+            'min_taxi',
+            type=int,
+            help='minimum duration of taxi fallback',
+            location=('json', 'values'),
+            default=instance.min_taxi,
+        )
+        parser.add_argument(
             'successive_physical_mode_to_limit_id',
             type=str,
             help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
@@ -616,6 +623,7 @@ class Instance(flask_restful.Resource):
                     'min_bike',
                     'min_bss',
                     'min_car',
+                    'min_taxi',
                     'max_duration',
                     'walking_transfer_penalty',
                     'night_bus_filter_max_factor',

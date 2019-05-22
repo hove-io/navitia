@@ -370,6 +370,12 @@ class Instance(object):
         return get_value_or_default('min_car', instance_db, self.name)
 
     @property
+    def min_taxi(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('min_taxi', instance_db, self.name)
+
+    @property
     def successive_physical_mode_to_limit_id(self):
         # type: () -> Text
         instance_db = self.get_models()

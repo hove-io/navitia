@@ -295,6 +295,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_night_bus_filter_max_factor", hidden=True, type=float)
         parser_get.add_argument("_min_car", hidden=True, type=int)
         parser_get.add_argument("_min_bike", hidden=True, type=int)
+        parser_get.add_argument("_min_taxi", hidden=True, type=int)
         parser_get.add_argument(
             "bss_stands",
             type=BooleanType(),
