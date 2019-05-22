@@ -39,7 +39,7 @@ import subprocess
 import re
 from sys import exit, argv
 from shutil import copyfile
-from os import remove, stat
+from os import remove, stat, path
 import codecs
 import requests
 import logging
@@ -271,7 +271,7 @@ class ReleaseManager:
 
         copyfile(back_filename, self.changelog_filename)
 
-        self.git.add(self.changelog_filename)
+        self.git.add(path.abspath(self.changelog_filename))
 
     def get_modified_changelog(self):
         # the changelog might have been modified by the user, so we have to read it again
