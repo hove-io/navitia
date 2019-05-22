@@ -99,7 +99,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    const double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
                    const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
                    const boost::optional<uint32_t>& timeframe_duration = boost::none,
-                   const uint32_t depth=1);
+                   const uint32_t depth = 1);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,

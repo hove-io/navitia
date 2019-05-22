@@ -899,7 +899,9 @@ void make_pathes(PbCreator& pb_creator,
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
 }
 
-static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths, const uint32_t depth) {
+static void add_pt_pathes(PbCreator& pb_creator,
+                          const std::vector<navitia::routing::Path>& paths,
+                          const uint32_t depth) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     for (const Path& path : paths) {
         // TODO: what do we want to do in this case?
@@ -919,7 +921,9 @@ static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::rout
     }
 }
 
-static void make_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths, const uint32_t depth) {
+static void make_pt_pathes(PbCreator& pb_creator,
+                           const std::vector<navitia::routing::Path>& paths,
+                           const uint32_t depth) {
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
     add_pt_pathes(pb_creator, paths, depth);
 }
