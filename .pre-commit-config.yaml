@@ -10,7 +10,7 @@ repos:
     -   id: trailing-whitespace
     -   id: check-ast
     -   id: check-merge-conflict
-    #-   id: flake8
+    -   id: flake8
 -   repo: https://github.com/CanalTP/navitia-pre-commit
     rev: master
     hooks:

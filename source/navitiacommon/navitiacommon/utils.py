@@ -30,6 +30,7 @@
 import zipfile
 import os
 import glob
+import logging
 
 street_source_types = ['OSM']
 address_source_types = ['BANO', 'OSM']
