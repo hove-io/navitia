@@ -1,4 +1,4 @@
-navitia2 (2.79.1) unstable; urgency=low
+navitia2 (2.79.2) unstable; urgency=low
 
   * Hotfix : add missing import for abort
 
