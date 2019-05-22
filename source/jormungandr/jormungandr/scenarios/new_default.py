@@ -203,6 +203,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request['timeframe_duration']:
         req.journeys.timeframe_duration = int(request['timeframe_duration'])
 
+    req.journeys.depth = request['depth']
+
     return req
 
 

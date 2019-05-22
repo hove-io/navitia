@@ -513,7 +513,8 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig,
 
 static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                                     PbCreator& pb_creator,
-                                    const navitia::routing::Path& path) {
+                                    const navitia::routing::Path& path,
+                                    const uint32_t depth) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     pb_journey->set_nb_transfers(path.nb_changes);
     pb_journey->set_requested_date_time(navitia::to_posix_timestamp(path.request_time));
@@ -572,7 +573,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
                 pb_creator.action_period = bt::time_period(p_deptime, p_arrtime + bt::seconds(1));
-                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 1);
+                pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), depth - 1);
                 pb_creator.fill(item.stop_times[i], stop_time, 1);
 
                 // L'heure de départ du véhicule au premier stop point
@@ -730,7 +731,8 @@ void make_pathes(PbCreator& pb_creator,
                  const std::vector<bt::ptime>& datetimes,
                  const bool clockwise,
                  const uint32_t free_radius_from,
-                 const uint32_t free_radius_to) {
+                 const uint32_t free_radius_to,
+                 const uint32_t depth) {
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -816,8 +818,7 @@ void make_pathes(PbCreator& pb_creator,
                 }
             }
         }
-
-        arrival_time = handle_pt_sections(pb_journey, pb_creator, path);
+        arrival_time = handle_pt_sections(pb_journey, pb_creator, path, depth);
         // for 'taxi like' odt, we want to start from the address, not the 1 stop point
         if (journey_begin_with_address_odt) {
             auto* section = pb_journey->mutable_sections(0);
@@ -898,7 +899,7 @@ void make_pathes(PbCreator& pb_creator,
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
 }
 
-static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths) {
+static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths, const uint32_t depth) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     for (const Path& path : paths) {
         // TODO: what do we want to do in this case?
@@ -907,7 +908,7 @@ static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::rout
         }
         bt::ptime departure_time = path.items.front().departures.front();
         pbnavitia::Journey* pb_journey = pb_creator.add_journeys();
-        bt::ptime arrival_time = handle_pt_sections(pb_journey, pb_creator, path);
+        bt::ptime arrival_time = handle_pt_sections(pb_journey, pb_creator, path, depth);
 
         pb_journey->set_departure_date_time(navitia::to_posix_timestamp(departure_time));
         pb_journey->set_arrival_date_time(navitia::to_posix_timestamp(arrival_time));
@@ -918,9 +919,9 @@ static void add_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::rout
     }
 }
 
-static void make_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths) {
+static void make_pt_pathes(PbCreator& pb_creator, const std::vector<navitia::routing::Path>& paths, const uint32_t depth) {
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
-    add_pt_pathes(pb_creator, paths);
+    add_pt_pathes(pb_creator, paths, depth);
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
@@ -1192,7 +1193,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const boost::optional<uint32_t>& min_nb_journeys,
                       const double night_bus_filter_max_factor,
                       const int32_t night_bus_filter_base_factor,
-                      const boost::optional<DateTime>& timeframe_duration) {
+                      const boost::optional<DateTime>& timeframe_duration,
+                      const uint32_t depth) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // Create datetime
@@ -1233,7 +1235,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                     night_bus_filter_max_factor, night_bus_filter_base_factor, timeframe_duration);
 
     // Create pb response
-    make_pt_pathes(pb_creator, pathes);
+    make_pt_pathes(pb_creator, pathes, depth);
 
     // Add error field
     if (pb_creator.empty_journeys()) {
@@ -1322,7 +1324,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& min_nb_journeys,
                    const double night_bus_filter_max_factor,
                    const int32_t night_bus_filter_base_factor,
-                   const boost::optional<uint32_t>& timeframe_duration) {
+                   const boost::optional<uint32_t>& timeframe_duration,
+                   const uint32_t depth) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // Create datetime
@@ -1354,7 +1357,7 @@ void make_response(navitia::PbCreator& pb_creator,
     // case 3 : departure or destination are emtpy
     if (departures->size() == 0 || destinations->size() == 0) {
         make_pathes(pb_creator, std::vector<Path>(), worker, get_direct_path(worker, origin, destination), origin,
-                    destination, datetimes, clockwise);
+                    destination, datetimes, clockwise, depth);
 
         if (pb_creator.empty_journeys()) {
             if (departures->size() == 0 && destinations->size() == 0) {
@@ -1389,7 +1392,7 @@ void make_response(navitia::PbCreator& pb_creator,
 
     // Create pb response
     make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise, free_radius_from,
-                free_radius_to);
+                free_radius_to, depth);
 
     // Add error field
     if (pb_creator.empty_journeys()) {

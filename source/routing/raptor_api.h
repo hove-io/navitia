@@ -98,7 +98,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                    const double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
                    const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
-                   const boost::optional<uint32_t>& timeframe_duration = boost::none);
+                   const boost::optional<uint32_t>& timeframe_duration = boost::none,
+                   const uint32_t depth=1);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,
@@ -134,7 +135,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                       const double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
                       const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
-                      const boost::optional<uint32_t>& timeframe_duration = boost::none);
+                      const boost::optional<uint32_t>& timeframe_duration = boost::none,
+                      const uint32_t depth = 1);
 
 boost::optional<routing::map_stop_point_duration> get_stop_points(const type::EntryPoint& ep,
                                                                   const type::Data& data,
@@ -227,7 +229,8 @@ void make_pathes(PbCreator& pb_creator,
                  const std::vector<bt::ptime>& datetimes,
                  const bool clockwise,
                  const uint32_t free_radius_from = 0,
-                 const uint32_t free_radius_to = 0);
+                 const uint32_t free_radius_to = 0,
+                 const uint32_t depth = 1);
 
 /**
  * @brief This function determines the breaking condition that depends on nb of found journeys,

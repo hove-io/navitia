@@ -374,6 +374,7 @@ class Journeys(JourneyCommon):
                 type=int,
                 help="limit duration of direct path in {}, used ONLY in distributed scenario".format(mode),
             )
+        parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
         args = self.parsers["get"].parse_args()
 
         self.get_decorators.append(complete_links(self))
