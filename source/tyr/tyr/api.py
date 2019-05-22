@@ -38,6 +38,7 @@ flask_restful.representations.json.settings = {'indent': 4}
 api.app.url_map.strict_slashes = False
 
 api.add_resource(resources.Instance, '/v0/instances/', '/v0/instances/<int:id>/', '/v0/instances/<string:name>/')
+
 api.add_resource(resources.Api, '/v0/api/')
 
 api.add_resource(resources.User, '/v0/users/', '/v0/users/<int:user_id>/')
@@ -47,7 +48,11 @@ api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/', '/v0/users/<int
 api.add_resource(resources.Authorization, '/v0/users/<int:user_id>/authorizations/')
 
 api.add_resource(resources.Index, '/')
+
+api.add_resource(resources.Status, '/v0/status')
+
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint=str('jobs'))
+
 api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint=str('end_points'))
 
 api.add_resource(
