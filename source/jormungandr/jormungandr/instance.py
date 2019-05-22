@@ -219,6 +219,13 @@ class Instance(object):
             )
         return backend
 
+    @property
+    def kraken_autocomplete(self):
+        backend = global_autocomplete.get('kraken')
+        if backend is None:
+            raise RuntimeError('impossible to find autocomplete kraken for instance {}'.format(self.name))
+        return backend
+
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()

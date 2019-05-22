@@ -356,6 +356,9 @@ class GeocodeJson(AbstractAutocomplete):
     def status(self):
         return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}
 
+    def is_handling_stop_points(self):
+        return False
+
 
 class GeocodeJsonError(AutocompleteError):
     pass

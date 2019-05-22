@@ -658,7 +658,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """
         with mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE):
             response = self.query_region(
-                "places?q=bob&type[]=stop_area&type[]=address&type[]=poi" "&type[]=administrative_region"
+                "places?q=bob&type[]=stop_area&type[]=address&type[]=poi&type[]=administrative_region"
             )
 
             is_valid_global_autocomplete(response, depth=1)
@@ -1157,6 +1157,43 @@ class TestBragiAutocomplete(AbstractTestFixture):
             # When no comments exist in Bragi, the API mask the "comment" and "comments" field.
             assert not stop_area.get('comment')
             assert not stop_area.get('comments')
+
+    def test_place_uri_stop_point(self):
+        url = "https://host_of_bragi/features/stop_point:stopB?{}".format(
+            urlencode({'timeout': 200, 'pt_dataset[]': 'main_routing_test'}, doseq=True)
+        )
+        response = {'short': 'query error', 'long': 'invalid query EsError("Unable to find object")'}
+        with requests_mock.Mocker() as m:
+            m.get(url, json=response, status_code=404)
+            response = self.query_region("places/stop_point:stopB")
+
+            # bragi should have been called
+            assert m.called
+
+            # but since it has not found anything, kraken have been called, and he knows this stop_point
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['embedded_type'] == 'stop_point'
+            assert r[0]['id'] == 'stop_point:stopB'
+
+    def test_place_uri_stop_point_global_endpoint(self):
+        url = "https://host_of_bragi/features/stop_point:stopB?{}".format(
+            urlencode({'timeout': 200, 'pt_dataset[]': 'main_routing_test'}, doseq=True)
+        )
+        response = {'short': 'query error', 'long': 'invalid query EsError("Unable to find object")'}
+        with requests_mock.Mocker() as m:
+            m.get(url, json=response, status_code=404)
+            response, status = self.query_no_assert("/v1/places/stop_point:stopB")
+
+            # bragi should have been called
+            assert m.called
+
+            # for the global /places endpoint, we do not fallback on kraken, even if a pt_dataset is given,
+            # so the object cannot be found
+            assert status == 404
+            assert response["error"]["id"] == 'unknown_object'
+            assert "The object stop_point:stopB doesn't exist" in response["error"]["message"]
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})

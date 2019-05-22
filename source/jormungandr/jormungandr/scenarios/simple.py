@@ -37,6 +37,7 @@ from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios.utils import updated_common_journey_request_with_default
+from jormungandr.exceptions import UnknownObject
 
 
 def get_pb_data_freshness(request):
@@ -185,9 +186,24 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        return autocomplete.get_by_uri(
-            uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
-        )
+        try:
+            return autocomplete.get_by_uri(
+                uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+            )
+        except UnknownObject as e:
+            if not autocomplete.is_handling_stop_points():
+                # the autocomplete have not found anything and it does not handle stop_points,
+                # we'll search for the object in kraken too
+
+                kraken_res = instance.kraken_autocomplete.get_by_uri(
+                    uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+                )
+                if kraken_res.get("places"):
+                    return kraken_res
+                # we raise the initial exception
+                raise e
+            else:
+                raise e
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()
