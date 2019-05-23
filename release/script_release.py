@@ -270,8 +270,7 @@ class ReleaseManager:
             exit(2)
 
         copyfile(back_filename, self.changelog_filename)
-
-        self.git.add(self.changelog_filename)
+        self.git.add(os.path.abspath(self.changelog_filename))
 
     def get_modified_changelog(self):
         # the changelog might have been modified by the user, so we have to read it again
