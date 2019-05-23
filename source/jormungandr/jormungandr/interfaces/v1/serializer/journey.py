@@ -86,12 +86,15 @@ class FareSerializer(PbNestedSerializer):
 
 
 class TicketSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, display_none=True, description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
+    id = jsonschema.Field(schema_type=str, display_none=True, description='Identifier of the ticket')
+    name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the ticket')
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer(display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
+    source_id = jsonschema.Field(
+        schema_type=str, display_none=True, description='Product identifier of the ticket'
+    )
 
     def get_links(self, obj):
         if not hasattr(obj, 'section_id'):
