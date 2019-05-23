@@ -49,7 +49,13 @@ from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger, DepthArgument
+from navitiacommon.parser_args_type import (
+    BooleanType,
+    OptionValue,
+    UnsignedInteger,
+    PositiveInteger,
+    DepthArgument,
+)
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.scenarios import new_default, distributed
 from jormungandr.fallback_modes import FallbackModes
