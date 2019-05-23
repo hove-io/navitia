@@ -1049,7 +1049,7 @@ In this example, the stop points within the circle (SP1, SP2 et SP3) can be reac
 The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
 They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `transfer` and `crow_fly` sections).
 
-For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
+To filter vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used.
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
@@ -1665,7 +1665,7 @@ Required | Name             | Type                            | Description     
 nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                          | the current datetime
 nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                           | 86400
 nop      | count            | int                             | Maximum number of results.                                                                               | 10
-nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        | 
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        |
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                  | false
 
@@ -1770,7 +1770,7 @@ HTTP/1.1 200 OK
 
 ```
 
-This service provides the state of public transport traffic, grouped by lines and all their stops. 
+This service provides the state of public transport traffic, grouped by lines and all their stops.
 It can be called for an overall coverage or for a specific object.
 
 <img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
@@ -1795,7 +1795,7 @@ no       | until            | [iso-date-time](#iso-date-time) | Only display dis
 no       | count            | int                             | Maximum number of results.                        | 10
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Restrain the search within the given disruption tags| 
+no       | tags[]           | array of string                 | Restrain the search within the given disruption tags|
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1879,7 +1879,7 @@ see the [inner-reference](#inner-references) section to use them.
 Line_reports is an array of some line_report object.
 
 One Line_report object is a complex object, made of a line, and an array
-of [pt_objects](#pt-objects) linked (for example stop_areas, stop_point or network). 
+of [pt_objects](#pt-objects) linked (for example stop_areas, stop_point or network).
 
 #### What a **complete** response **means**
 
@@ -1905,7 +1905,7 @@ Details for disruption objects : [disruptions](#disruptions)
 
 -   1 line which is the grouping object
     -   it can contain links to its disruptions.  
-    These disruptions are globals and might not be applied on stop_areas and stop_points. 
+    These disruptions are globals and might not be applied on stop_areas and stop_points.
 -   1..n pt_objects
     -   each one contains at least a link to its disruptions.
 
@@ -2132,3 +2132,75 @@ Details for disruption objects : [disruptions](#disruptions)
 -   0..n stop_areas
     -   each stop_area contains at least a link to its disruptions  
     If a stop_area is used by multiple networks, it will appear each time.
+
+
+Equipment_Reports
+---------------------------------------------
+``` shell
+#request
+$ curl 'http://api.navitia.io/v1/coverage/sandbox/equipment_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+``` shell
+# response, composed by 1 main list: "equipment_reports"
+HTTP/1.1 200 OK
+
+{
+    "equipment_reports": [
+        {
+            "line": {15 items},
+            "stop_area_equipments": [
+                {  
+                    "equipment_details": [
+                        {
+                            "current_availability": {
+                                "cause": {
+                                    "label": "engineering work in progress"
+                                },
+                                "effect": {
+                                    "label": "platform 3 available via stairs only"
+                                },
+                                "periods": [
+                                    {
+                                        "begin": "20190216T000000",
+                                        "end": "20190601T220000"
+                                    }
+                                ],
+                                "status": "unavailable",
+                                "updated_at": "2019-05-17T15:54:53+02:00"
+                            }
+                        "embedded_type": "escalator",
+                        "id": "2702",
+                        "name": "du quai direction Vaulx-en-Velin La Soie  jusqu'à la sortie B",
+                        },
+                    ]
+                    "stop_area": {9 items},
+                },
+            ]
+        },
+    ],
+}
+```
+
+Also known as the `"/equipment_reports"` service.
+
+This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.
+The endpoint will report accessible equipement per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered on a per line basis.
+Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.
+For more information, refer to [equipment-reports](#equipment-reports) API description.
+
+<aside class="warning">
+    This feature requires a specific configuration from a equipment service provider.
+    Therefore this service is not available by default.
+</aside>
+
+### Parameters
+
+
+Required | Name             | Type   | Description                                        | Default Value
+---------|------------------|--------|----------------------------------------------------|--------------
+no       | count            | int    | Elements per page                                  | 10
+no       | depth            | int    | Depth                                              | 1
+no       | filter           | string | A [filter](#filter) to refine your request         |
+no       | forbidden_uris[] | id     | If you want to avoid lines, modes, networks, etc.  |
+no       | start_page       | int    | The page number (cf the [paging section](#paging)) | 0
