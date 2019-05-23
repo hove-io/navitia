@@ -530,7 +530,7 @@ class JourneyCommon(object):
         assert response['journeys'][1]['durations']['total'] == 276
         assert response['journeys'][1]['durations']['walking'] == 276
 
-    def test_some_pt_section_objects_without_parameter_depth_or_with_depth_1(self):
+    def test_some_pt_section_objects_without_parameter_depth_or_with_depth_0_and_1(self):
         """
         Test that stop_area as well it's codes are displayed in
          - section.from
@@ -558,6 +558,13 @@ class JourneyCommon(object):
 
         # Request without parameter depth:
         journey_query = journey_basic_query
+        response = self.query_region(journey_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_query)
+        check_result(response)
+
+        # Request with parameter depth=0
+        journey_query = journey_basic_query + '&depth=0'
         response = self.query_region(journey_query, display=False)
         check_best(response)
         self.is_valid_journey_response(response, journey_query)
