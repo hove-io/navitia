@@ -49,7 +49,7 @@ from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger
+from navitiacommon.parser_args_type import BooleanType, OptionValue, UnsignedInteger, PositiveInteger, DepthArgument
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.scenarios import new_default, distributed
 from jormungandr.fallback_modes import FallbackModes
@@ -374,7 +374,7 @@ class Journeys(JourneyCommon):
                 type=int,
                 help="limit duration of direct path in {}, used ONLY in distributed scenario".format(mode),
             )
-        parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
+        parser_get.add_argument("depth", type=DepthArgument(), default=1, help="The depth of your object")
         args = self.parsers["get"].parse_args()
 
         self.get_decorators.append(complete_links(self))
