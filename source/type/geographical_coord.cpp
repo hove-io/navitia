@@ -82,8 +82,8 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project_common(const Geog
     else if (u > 1)
         result = std::make_pair(segment_end, f(*this, segment_end));
     else {
-        result.first._lon = segment_start._lon + u * (segment_end._lon - segment_start._lon);
-        result.first._lat = segment_start._lat + u * (segment_end._lat - segment_start._lat);
+        result.first._lon = segment_start._lon + u * dlon;
+        result.first._lat = segment_start._lat + u * dlat;
         result.second = f(*this, result.first);
     }
 

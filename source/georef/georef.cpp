@@ -691,7 +691,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    for (const auto& ind : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, 20)) {
+    for (const auto& ind : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, 30)) {
         // we increment the index to get the vertex in the other graph
         const auto u = ind + offset;
 
