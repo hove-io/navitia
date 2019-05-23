@@ -707,9 +707,9 @@ name|string|optional|the equipment's name/description
 |Field|Type|Required|Description|
 |-----|----|--------|-----------|
 status|string|always|Equipment status: <ul><li>`"unknown"`: no realtime information available</li><li>`"unavailable"`: equipment is known to be unavailable with details provided below </li></ul>
-cause|label|optional|If `unavailable`, gives you the cause in a label
-effect|label|optional|If `unavailable`, gives you the effect in a label
-periods|period|optional|If `unavailable`, gives the effected period with a begin & end date
+cause|label|optional|If status is `unavailable`, gives you the cause in a label
+effect|label|optional|If status is `unavailable`, gives you the effect in a label
+periods|period|optional|If status is `unavailable`, gives the effected period with a begin & end date
 updated_at|[iso-date-time](#iso-date-time)|optional|Last update time of the provided information
 
 Other objects
