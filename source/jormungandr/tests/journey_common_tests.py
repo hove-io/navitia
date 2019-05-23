@@ -552,7 +552,6 @@ class JourneyCommon(object):
             assert 'stop_area' in to_sp
             assert to_sp['stop_area']['codes'][1]['type'] == 'UIC8'
             assert to_sp['stop_area']['codes'][1]['value'] == '80110684'
-
             assert 'stop_area' not in resp['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
             assert 'stop_area' not in resp['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
 
