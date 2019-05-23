@@ -127,11 +127,13 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
         ticket[t.id()] = t;
     }
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].name(), "Ticket vj 1");
+    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].source_id(), "price1");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].cost().value(), 100);
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].cost().currency(), "euro");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].section_id_size(), 1);
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].section_id(0), "section_1");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].name(), "Ticket vj 2");
+    BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].source_id(), "price2");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].cost().value(), 200);
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].cost().currency(), "euro");
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(1)].section_id(0), "section_3");
