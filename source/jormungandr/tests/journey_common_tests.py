@@ -517,7 +517,6 @@ class JourneyCommon(object):
         response = self.query_region(journey_basic_query, display=False)
         check_best(response)
         self.is_valid_journey_response(response, journey_basic_query)
-        # print response['journeys'][0]['sections'][1]
         assert len(response['journeys']) == 2
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['co2_emission']['value'] == 0.58
@@ -530,6 +529,87 @@ class JourneyCommon(object):
         assert response['journeys'][1]['duration'] == 276
         assert response['journeys'][1]['durations']['total'] == 276
         assert response['journeys'][1]['durations']['walking'] == 276
+
+    def test_some_pt_section_objects_without_parameter_depth_or_with_depth_0_and_1(self):
+        """
+        Test that stop_area as well it's codes are displayed in
+         - section.from
+         - section.to
+         Test that stop_area is not displayed in section.stop_date_times[].stop_point
+        """
+
+        def check_result(resp):
+            assert len(resp['journeys']) == 2
+            assert len(resp['journeys'][0]['sections']) == 3
+            assert resp['journeys'][0]['sections'][1]['type'] == 'public_transport'
+            assert len(resp['journeys'][0]['sections'][1]['stop_date_times']) == 2
+
+            from_sp = resp['journeys'][0]['sections'][1]['from']['stop_point']
+            assert 'stop_area' in from_sp
+            assert from_sp['stop_area']['codes'][0]['type'] == 'UIC8'
+            assert from_sp['stop_area']['codes'][0]['value'] == '80142281'
+            to_sp = resp['journeys'][0]['sections'][1]['to']['stop_point']
+            assert 'stop_area' in to_sp
+            assert to_sp['stop_area']['codes'][1]['type'] == 'UIC8'
+            assert to_sp['stop_area']['codes'][1]['value'] == '80110684'
+            assert 'stop_area' not in resp['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
+            assert 'stop_area' not in resp['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
+
+        # Request without parameter depth:
+        journey_query = journey_basic_query
+        response = self.query_region(journey_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_query)
+        check_result(response)
+
+        # Request with parameter depth=0
+        journey_query = journey_basic_query + '&depth=0'
+        response = self.query_region(journey_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_query)
+        check_result(response)
+
+        # Request with parameter depth=1 (equivalent to request without parameter)
+        journey_query = journey_basic_query + '&depth=1'
+        response = self.query_region(journey_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_query)
+        check_result(response)
+
+    def test_some_pt_section_objects_with_parameter_depth_2(self):
+        """
+        Test that stop_area as well it's codes are displayed in
+         - section.from
+         - section.to
+         - section.stop_date_times[].stop_point
+        """
+
+        journey_query = journey_basic_query + '&depth=2'
+        response = self.query_region(journey_query, display=False)
+        check_best(response)
+        self.is_valid_journey_response(response, journey_query)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
+
+        from_sp = response['journeys'][0]['sections'][1]['from']['stop_point']
+        assert 'stop_area' in from_sp
+        assert from_sp['stop_area']['codes'][0]['type'] == 'UIC8'
+        assert from_sp['stop_area']['codes'][0]['value'] == '80142281'
+        to_sp = response['journeys'][0]['sections'][1]['to']['stop_point']
+        assert 'stop_area' in to_sp
+        assert to_sp['stop_area']['codes'][1]['type'] == 'UIC8'
+        assert to_sp['stop_area']['codes'][1]['value'] == '80110684'
+
+        sp1 = response['journeys'][0]['sections'][1]['stop_date_times'][0]['stop_point']
+        assert 'stop_area' in sp1
+        assert sp1['stop_area']['codes'][0]['type'] == 'UIC8'
+        assert sp1['stop_area']['codes'][0]['value'] == '80142281'
+        sp2 = response['journeys'][0]['sections'][1]['stop_date_times'][1]['stop_point']
+        assert 'stop_area' in sp2
+        assert sp2['stop_area']['codes'][1]['type'] == 'UIC8'
+        assert sp2['stop_area']['codes'][1]['value'] == '80110684'
 
     def test_max_duration_to_pt_equals_to_0(self):
         query = (

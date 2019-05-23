@@ -500,6 +500,13 @@ struct routing_api_data {
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "8");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "9");
 
+        // Add codes on stop_area
+        const auto* sa = b.get<nt::StopArea>("stopA");
+        b.data->pt_data->codes.add(sa, "CR-CI-CH", "0080-110684-00");
+        b.data->pt_data->codes.add(sa, "UIC8", "80110684");
+        sa = b.get<nt::StopArea>("stopB");
+        b.data->pt_data->codes.add(sa, "UIC8", "80142281");
+
         // Add a main stop area to our admin
         admin->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["stopC"]);
 

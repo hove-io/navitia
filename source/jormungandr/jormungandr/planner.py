@@ -37,6 +37,7 @@ class JourneyParameters(object):
         night_bus_filter_base_factor=None,
         min_nb_journeys=None,
         timeframe=None,
+        depth=1,
     ):
 
         self.max_duration = max_duration
@@ -51,6 +52,7 @@ class JourneyParameters(object):
         self.night_bus_filter_base_factor = night_bus_filter_base_factor
         self.min_nb_journeys = min_nb_journeys
         self.timeframe = timeframe
+        self.depth = depth
 
 
 class Kraken(object):
@@ -98,5 +100,8 @@ class Kraken(object):
 
         if journey_parameters.timeframe:
             req.journeys.timeframe_duration = int(journey_parameters.timeframe)
+
+        if journey_parameters.depth:
+            req.journeys.depth = journey_parameters.depth
 
         return self.instance.send_and_receive(req)

@@ -208,6 +208,7 @@ class PtJourneyPool:
             night_bus_filter_base_factor=request['_night_bus_filter_base_factor'],
             min_nb_journeys=request['min_nb_journeys'],
             timeframe=request['timeframe_duration'],
+            depth=request['depth'],
         )
 
     def _async_request(self):
