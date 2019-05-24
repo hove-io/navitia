@@ -11,6 +11,7 @@ repos:
     -   id: check-ast
     -   id: check-merge-conflict
     -   id: flake8
+        language_version: python2.7
 -   repo: https://github.com/CanalTP/navitia-pre-commit
     rev: master
     hooks:
