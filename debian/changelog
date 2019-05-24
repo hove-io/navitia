@@ -1,6 +1,23 @@
+navitia2 (2.80.0) unstable; urgency=low
+
+  * Kraken: Display stop_area in each stop_point of section.stop_date_times  <https://github.com/CanalTP/navitia/pull/2796>
+  * Kraken: Add 'source_id' in ticket  <https://github.com/CanalTP/navitia/pull/2803>
+  * Kraken: Realtime, cannot add new trip if trip-id corresponds to a base VJ the same day  <https://github.com/CanalTP/navitia/pull/2776>
+  * Tyr: Upgrade endpoints '/' & add '/status'  <https://github.com/CanalTP/navitia/pull/2785>
+  * Jormun: Fix missing import  <https://github.com/CanalTP/navitia/pull/2797>
+  * Kraken: Using Astar for direct path  <https://github.com/CanalTP/navitia/pull/2778>
+  * Kraken: Include portable boost serialization is missing  <https://github.com/CanalTP/navitia/pull/2794>
+  * Tests: Concurent integration tests  <https://github.com/CanalTP/navitia/pull/2788>
+  * Kraken: Move more types....  <https://github.com/CanalTP/navitia/pull/2784>
+  * Kraken: Improve RT vj name and uri  <https://github.com/CanalTP/navitia/pull/2779>
+  * Kraken: Fix boost::posix_time::seconds on ubuntu disco with boost 1.67  <https://github.com/CanalTP/navitia/pull/2789>
+  * Tyr: Add job 'cities' and returns it in /cities/status  <https://github.com/CanalTP/navitia/pull/2773>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Fri, 24 May 2019 11:05:04 +0100
+
 navitia2 (2.79.2) unstable; urgency=low
 
-  * Hotfix : add missing import for abort
+  * Hotfix : Add missing import for abort
 
  -- Nonifier <olivier.georget@kisio.org>  Tue, 21 May 2019 17:05:46 +0100
 
