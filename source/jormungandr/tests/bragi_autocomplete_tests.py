@@ -260,6 +260,35 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                         {"id": "pm_id:Bus", "name": "pm_name:Bus"},
                         {"id": "pm_id:Car", "name": "pm_name:Car"},
                     ],
+                    "lines": [
+                        {
+                            "commercial_mode": {"id": "Metro", "name": "Metro"},
+                            "id": "M1",
+                            "name": "Metro 1",
+                            "code": "1",
+                            "network": {"id": "TGN", "name": "The Great Network"},
+                            "physical_modes": [{"id": "Metro", "name": "Metro"}],
+                            "text_color": "FFFFFF",
+                            "color": "7D36F5",
+                        },
+                        {
+                            "commercial_mode": {"id": "Bus", "name": "Bus"},
+                            "id": "B5",
+                            "name": "Bus 5",
+                            "code": "5",
+                            "network": {"id": "TGN", "name": "The Great Network"},
+                            "physical_modes": [{"id": "Bus", "name": "Bus"}],
+                            "color": "7D36F5",
+                            "text_color": "FFFFFF",
+                        },
+                        {
+                            "commercial_mode": {"id": "Bus", "name": "Bus"},
+                            "id": "B42",
+                            "name": "Bus 42",
+                            "network": {"id": "TGN", "name": "The Great Network"},
+                            "physical_modes": [{"id": "Bus", "name": "Bus"}],
+                        },
+                    ],
                     "codes": [{"name": "navitia1", "value": "424242"}, {"name": "source", "value": "1161"}],
                     "timezone": "Europe/Paris",
                     "administrative_regions": [
@@ -795,31 +824,51 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
             r = response.get('places')
             assert len(r) == 1
+            sa = r[0]['stop_area']
             assert r[0]['embedded_type'] == 'stop_area'
-            assert r[0]['stop_area']['name'] == 'bobette'
-            assert len(r[0]['stop_area'].get('commercial_modes')) == 2
-            assert r[0]['stop_area'].get('commercial_modes')[0].get('id') == 'cm_id:Bus'
-            assert r[0]['stop_area'].get('commercial_modes')[0].get('name') == 'cm_name:Bus'
-            assert r[0]['stop_area'].get('commercial_modes')[1].get('id') == 'cm_id:Car'
-            assert r[0]['stop_area'].get('commercial_modes')[1].get('name') == 'cm_name:Car'
+            assert sa['name'] == 'bobette'
+            assert len(sa.get('commercial_modes')) == 2
+            assert sa.get('commercial_modes')[0].get('id') == 'cm_id:Bus'
+            assert sa.get('commercial_modes')[0].get('name') == 'cm_name:Bus'
+            assert sa.get('commercial_modes')[1].get('id') == 'cm_id:Car'
+            assert sa.get('commercial_modes')[1].get('name') == 'cm_name:Car'
 
-            assert len(r[0]['stop_area'].get('physical_modes')) == 2
-            assert r[0]['stop_area'].get('physical_modes')[0].get('id') == 'pm_id:Bus'
-            assert r[0]['stop_area'].get('physical_modes')[0].get('name') == 'pm_name:Bus'
-            assert r[0]['stop_area'].get('physical_modes')[1].get('id') == 'pm_id:Car'
-            assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
+            assert len(sa.get('physical_modes')) == 2
+            assert sa.get('physical_modes')[0].get('id') == 'pm_id:Bus'
+            assert sa.get('physical_modes')[0].get('name') == 'pm_name:Bus'
+            assert sa.get('physical_modes')[1].get('id') == 'pm_id:Car'
+            assert sa.get('physical_modes')[1].get('name') == 'pm_name:Car'
 
-            assert len(r[0]['stop_area'].get('codes')) == 2
-            assert r[0]['stop_area'].get('codes')[0].get('type') == 'external_code'
-            assert r[0]['stop_area'].get('codes')[0].get('value') == '424242'
-            assert r[0]['stop_area'].get('codes')[1].get('type') == 'source'
-            assert r[0]['stop_area'].get('codes')[1].get('value') == '1161'
+            assert len(sa.get('lines')) == 3
+            assert sa.get('lines')[0].get('id') == 'M1'
+            assert sa.get('lines')[0].get('name') == 'Metro 1'
+            assert sa.get('lines')[0].get('code') == '1'
+            assert sa.get('lines')[0].get('commercial_mode') == {'id': 'Metro', 'name': 'Metro'}
+            assert sa.get('lines')[0].get('network') == {'id': 'TGN', 'name': 'The Great Network'}
+            assert sa.get('lines')[0].get('physical_modes') == [{'id': 'Metro', 'name': 'Metro'}]
+            assert sa.get('lines')[0].get('text_color') == "FFFFFF"
+            assert sa.get('lines')[0].get('color') == "7D36F5"
 
-            assert r[0]['stop_area'].get('properties').get('name') == 'railway station'
-            assert r[0]['stop_area'].get('properties').get('code') == 'station:01'
+            assert sa.get('lines')[1].get('id') == 'B5'
+            assert sa.get('lines')[1].get('name') == 'Bus 5'
+            assert sa.get('lines')[1].get('code') == '5'
+            assert sa.get('lines')[1].get('commercial_mode') == {'id': 'Bus', 'name': 'Bus'}
+            assert sa.get('lines')[1].get('network') == {'id': 'TGN', 'name': 'The Great Network'}
+            assert sa.get('lines')[1].get('physical_modes') == [{'id': 'Bus', 'name': 'Bus'}]
+            assert sa.get('lines')[1].get('text_color') == "FFFFFF"
+            assert sa.get('lines')[1].get('color') == "7D36F5"
 
-            assert r[0]['stop_area'].get('timezone') == 'Europe/Paris'
-            admins = r[0]['stop_area'].get('administrative_regions')
+            assert len(sa.get('codes')) == 2
+            assert sa.get('codes')[0].get('type') == 'external_code'
+            assert sa.get('codes')[0].get('value') == '424242'
+            assert sa.get('codes')[1].get('type') == 'source'
+            assert sa.get('codes')[1].get('value') == '1161'
+
+            assert sa.get('properties').get('name') == 'railway station'
+            assert sa.get('properties').get('code') == 'station:01'
+
+            assert sa.get('timezone') == 'Europe/Paris'
+            admins = sa.get('administrative_regions')
             assert r[0]['distance'] == '400'
             assert len(admins) == 1
 
