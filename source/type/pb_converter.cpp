@@ -1697,6 +1697,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
                 pb_ticket->set_name(ticket.caption);
                 pb_ticket->set_found(false);
                 pb_ticket->set_id("unknown_ticket");
+                pb_ticket->set_source_id(ticket.key);
                 pb_ticket->set_comment("unknown ticket");
                 unknown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
@@ -1710,6 +1711,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
             pb_ticket->set_found(true);
             pb_ticket->set_comment(ticket.comment);
             pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
+            pb_ticket->set_source_id(ticket.key);
             pb_ticket->mutable_cost()->set_currency(*currency);
             pb_ticket->mutable_cost()->set_value(ticket.value.value);
             pb_fare->add_ticket_id(pb_ticket->id());
@@ -1907,7 +1909,7 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
     section->set_length(total_length);
 
     section->set_begin_date_time(navitia::to_posix_timestamp(departure));
-    section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(total_duration)));
+    section->set_end_date_time(navitia::to_posix_timestamp(departure + bt::seconds(long(total_duration))));
 
     // add the destination as a placemark
     pbnavitia::PtObject* dest_place = section->mutable_destination();

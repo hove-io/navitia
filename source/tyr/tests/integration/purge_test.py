@@ -319,3 +319,65 @@ def test_purge_instance_jobs():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 4
+
+
+@pytest.mark.usefixtures("init_cities_dir")
+def test_purge_cities_job():
+    """
+    Test that 'cities' jobs and associated datasets are correctly purged
+    'cities' file should also be deleted unless used by a job to keep
+    """
+
+    def create_cities_job(creation_date, path, state):
+        job = models.Job()
+        job.state = state
+        dataset_backup_dir = path
+
+        dataset = models.DataSet()
+        dataset.type = 'cities'
+        dataset.family_type = 'cities_family'
+        dataset.name = '{}'.format(dataset_backup_dir)
+        models.db.session.add(dataset)
+
+        job.data_sets.append(dataset)
+        job.created_at = creation_date
+        models.db.session.add(job)
+
+    cities_file_dir = app.config['CITIES_OSM_FILE_PATH']
+    # Have 2 jobs with the same dataset to test that it isn't deleted if one of the jobs is kept
+    common_dataset_folder = tempfile.mkdtemp(dir=cities_file_dir)
+    with app.app_context():
+        for i in range(2):
+            create_cities_job(datetime.utcnow() - timedelta(days=i), common_dataset_folder, state='done')
+        for j in range(2):
+            create_cities_job(
+                datetime.utcnow() - timedelta(days=j + 2), tempfile.mkdtemp(dir=cities_file_dir), state='done'
+            )
+        models.db.session.commit()
+
+        jobs_resp = api_get('/v0/jobs')
+        assert 'jobs' in jobs_resp
+        assert len(jobs_resp['jobs']) == 4
+
+        folders = set(glob.glob('{}/*'.format(cities_file_dir)))
+        assert len(folders) == 3
+
+        app.config['DATASET_MAX_BACKUPS_TO_KEEP'] = 3
+        tasks.purge_cities()
+
+        jobs_resp = api_get('/v0/jobs')
+        assert 'jobs' in jobs_resp
+        assert len(jobs_resp['jobs']) == 3
+
+        folders = set(glob.glob('{}/*'.format(cities_file_dir)))
+        assert len(folders) == 2
+
+        app.config['DATASET_MAX_BACKUPS_TO_KEEP'] = 1
+        tasks.purge_cities()
+
+        jobs_resp = api_get('/v0/jobs')
+        assert 'jobs' in jobs_resp
+        assert len(jobs_resp['jobs']) == 1
+
+        folders = set(glob.glob('{}/*'.format(cities_file_dir)))
+        assert len(folders) == 1

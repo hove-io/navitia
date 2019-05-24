@@ -387,7 +387,7 @@ Real time and disruption objects
 |severity      | [severity](#severity)          |gives some categorization element
 |application_periods |array of [period](#period)      |dates where the current disruption is active
 |messages            |array of [message](#message)    |texts to provide to the traveler
-|updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
+|updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
 |category            |string                   |The category of the disruption, such as "construction works" or "incident"
@@ -557,7 +557,7 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization:
 
 `/poi_types` lists groups of point of interest. You will find classifications as theater, offices or bicycle rental station for example.
 
- 
+
 |Field|Type|Description|
 |-----|----|-----------|
 |id|string|Identifier of the poi type|
@@ -583,7 +583,7 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/pois' -H 'Authorization: 3b03
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/coords/2.377310;48.847002/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
 #very smart request
-#combining filters to get some specific POIs, as bicycle rental stations, 
+#combining filters to get some specific POIs, as bicycle rental stations,
 #nearby a coordinate
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types/poi_type:amenity:bicycle_rental/coords/2.377310;48.847002/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 ```
@@ -623,6 +623,94 @@ Poi = Point Of Interest
 Cities are mainly on the 8 level, dependant on the country
 (<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
+
+### Equipment-reports
+
+```json
+"equipment_reports": [
+    {
+        "line": {...},
+        "stop_area_equipments": [...]
+    },
+    ...
+]
+```
+
+A list of object that maps each lines with its associated stop area equipments report.
+
+|Field|Type|Description|
+|-----|----|-----------|
+|line|[line](#line)|The line to which equipments are associated |
+|stop_area_equipments|[stop-area-equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
+
+
+### Stop-area-equipments
+
+```json
+"stop_area_equipments": [
+    {
+        "equipment_details": [...],
+        "stop_area": {...},
+    },
+    ...
+]
+```
+A list of objects that maps equipments details for each stop area.
+
+|Field|Type|Description|
+|-----|----|-----------|
+|equipment_details|[equipment-details](#equipment-details)|The equipment details associated with the stop area|
+|stop_area|[stop-area](#stop-area)|The stop area to which the `equipments_details` is associated |
+
+
+### Equipment-details
+```json
+"equipment_details": [
+    {
+        "current_availability": {...},
+        "embedded_type": "escalator",
+        "id": "2702",
+        "name": "Escalator 2702, for platform 3",
+    },
+    ...
+]
+```
+|Field|Type|Occurrence|Description|
+|-----|----|--------|-----------|
+current_availability|[current-availability](#current-availability)|always| Describes equipments information like: status, name, id etc...
+embedded_type|string|always|Define the equipment type: `"escalator"`, `"elevator"`
+id|string|always|The equipment's unique identifier
+name|string|optional|the equipment's name/description
+
+
+### Current-availability
+
+```json
+"current_availability": {
+    "cause": {
+        "label": "engineering work in progress"
+    },
+    "effect": {
+        "label": "platform 3 available via stairs only"
+    },
+    "periods": [
+        {
+            "begin": "20190216T000000",
+            "end": "20190601T220000"
+        }
+    ],
+    "status": "unavailable",
+    "updated_at": "2019-05-17T15:54:53+02:00"
+}
+```
+
+|Field|Type|Required|Description|
+|-----|----|--------|-----------|
+status|string|always|Equipment status: <ul><li>`"unknown"`: no realtime information available</li><li>`"unavailable"`: equipment is known to be unavailable with details provided below </li></ul>
+cause|label|optional|If status is `unavailable`, gives you the cause in a label
+effect|label|optional|If status is `unavailable`, gives you the effect in a label
+periods|period|optional|If status is `unavailable`, gives the effected period with a begin & end date
+updated_at|[iso-date-time](#iso-date-time)|optional|Last update time of the provided information
 
 Other objects
 -------------

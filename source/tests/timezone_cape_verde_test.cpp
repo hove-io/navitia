@@ -52,12 +52,12 @@ int main(int argc, const char* const argv[]) {
 
     // UTC and local pass midnight vj
     b.vj("line:1", "000010")
-        .uri("vj:1:1")("A", "23:00"_t)("B", "23:30"_t)("C", "24:00"_t)("D", "24:30"_t)("E", "25:00"_t)("F", "25:30"_t)(
+        .name("vj:1:1")("A", "23:00"_t)("B", "23:30"_t)("C", "24:00"_t)("D", "24:30"_t)("E", "25:00"_t)("F", "25:30"_t)(
             "G", "26:00"_t);
 
     // Only local pass midnight vj
     b.vj("line:1", "000100")
-        .uri("vj:1:2")("C", "00:00"_t)("D", "00:30"_t)("E", "01:00"_t)("F", "01:30"_t)("G", "02:00"_t);
+        .name("vj:1:2")("C", "00:00"_t)("D", "00:30"_t)("E", "01:00"_t)("F", "01:30"_t)("G", "02:00"_t);
 
     /* The X line is used to test first/last departure of a line
      *
@@ -65,37 +65,37 @@ int main(int argc, const char* const argv[]) {
      * */
     b.vj("X", "11100111")
         .route("route_1")
-        .uri("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t)("X_S4", "24:40"_t)
+        .name("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t)("X_S4", "24:40"_t)
         .make();
     b.vj("X", "11100111")
         .route("route_1")
-        .uri("X:vj2")("X_S1", "09:00"_t)("X_S2", "17:00"_t)("X_S3", "25:30"_t)("X_S4", "25:40"_t)
+        .name("X:vj2")("X_S1", "09:00"_t)("X_S2", "17:00"_t)("X_S3", "25:30"_t)("X_S4", "25:40"_t)
         .make();
     b.vj("X", "11100111")
         .route("route_1")
-        .uri("X:vj3")("X_S1", "10:00"_t)("X_S2", "18:00"_t)("X_S3", "26:30"_t)("X_S4", "26:40"_t)
+        .name("X:vj3")("X_S1", "10:00"_t)("X_S2", "18:00"_t)("X_S3", "26:30"_t)("X_S4", "26:40"_t)
         .make();
 
     b.vj("X", "00011000")
         .route("route_1")
-        .uri("X:vj4")("X_S1", "08:05"_t)("X_S2", "16:05"_t)("X_S3", "24:45"_t)("X_S4", "24:55"_t)
+        .name("X:vj4")("X_S1", "08:05"_t)("X_S2", "16:05"_t)("X_S3", "24:45"_t)("X_S4", "24:55"_t)
         .make();
     b.vj("X", "00011000")
         .route("route_1")
-        .uri("X:vj5")("X_S1", "09:05"_t)("X_S2", "17:05"_t)("X_S3", "25:45"_t)("X_S4", "25:55"_t)
+        .name("X:vj5")("X_S1", "09:05"_t)("X_S2", "17:05"_t)("X_S3", "25:45"_t)("X_S4", "25:55"_t)
         .make();
     b.vj("X", "00011000")
         .route("route_1")
-        .uri("X:vj6")("X_S1", "10:05"_t)("X_S2", "18:05"_t)("X_S3", "26:45"_t)("X_S4", "26:55"_t)
+        .name("X:vj6")("X_S1", "10:05"_t)("X_S2", "18:05"_t)("X_S3", "26:45"_t)("X_S4", "26:55"_t)
         .make();
 
     b.vj("X", "11111111")
         .route("route_2")
-        .uri("X:vj7")("X_S4", "08:55"_t)("X_S3", "09:05"_t)("X_S2", "17:05"_t)("X_S1", "25:45"_t)
+        .name("X:vj7")("X_S4", "08:55"_t)("X_S3", "09:05"_t)("X_S2", "17:05"_t)("X_S1", "25:45"_t)
         .make();
     b.vj("X", "11111111")
         .route("route_2")
-        .uri("X:vj8")("X_S4", "09:55"_t)("X_S3", "10:05"_t)("X_S2", "18:05"_t)("X_S1", "26:45"_t)
+        .name("X:vj8")("X_S4", "09:55"_t)("X_S3", "10:05"_t)("X_S2", "18:05"_t)("X_S1", "26:45"_t)
         .make();
 
     auto line_X = b.lines.find("X")->second;
@@ -113,7 +113,7 @@ int main(int argc, const char* const argv[]) {
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 
-    mock_kraken kraken(b, "timezone_cape_verde_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }

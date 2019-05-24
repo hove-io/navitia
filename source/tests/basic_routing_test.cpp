@@ -174,6 +174,6 @@ int main(int argc, const char* const argv[]) {
     b.manage_admin();
     b.make();
 
-    mock_kraken kraken(b, "basic_routing_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
     return 0;
 }

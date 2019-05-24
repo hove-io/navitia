@@ -83,7 +83,7 @@ class TestPtRef(AbstractTestFixture):
 
         assert len(vjs) == 3
         vj = vjs[0]
-        assert vj['id'] == 'vj1'
+        assert vj['id'] == 'vehicle_journey:vj1'
 
         assert len(vj['stop_times']) == 2
 
@@ -607,12 +607,12 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
 
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # same with an until at the end of the day
         response = self.query_region("vehicle_journeys?since=20140105T000000&until=20140106T0000")
         vjs = get_not_null(response, 'vehicle_journeys')
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # there is no vj after the 8
         response, code = self.query_no_assert(
@@ -632,28 +632,28 @@ class TestPtRef(AbstractTestFixture):
         params = {'since': '20140105T111500', 'until': '20140105T121000', 'headsign': 'vj1'}
         response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
         vjs = get_not_null(response, 'vehicle_journeys')
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # check using the actual TZ (Europe/Paris so UTC+1)
         params['since'] = '20140105T111500+0100'
         params['until'] = '20140105T121000+0100'
         response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
         vjs = get_not_null(response, 'vehicle_journeys')
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # check converting time correctly to UTC
         params['since'] = '20140105T101500+0000'
         params['until'] = '20140105T111000+0000'
         response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
         vjs = get_not_null(response, 'vehicle_journeys')
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # check converting time correctly to 2 random TZ
         params['since'] = '20140105T034500-0630'
         params['until'] = '20140105T192500+0815'
         response = self.query_region('vehicle_journeys?{}'.format(urlencode(params, doseq=True)))
         vjs = get_not_null(response, 'vehicle_journeys')
-        assert 'vj1' in (vj['id'] for vj in vjs)
+        assert 'vehicle_journey:vj1' in (vj['id'] for vj in vjs)
 
         # check putting time in UTC with a mistake returns no VJ as it's then out of VJ's period
         params['since'] = '20140105T111500+0000'
@@ -995,7 +995,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
         assert len(arrivals) == 2
-        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 4"
+        assert arrivals[0]['display_informations']['headsign'] == "vj 4"
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""
@@ -1058,7 +1058,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert get_not_null(trips[0], 'id') == "vjA"
 
         # we can also display trip of a vj
-        response = self.query_region('vehicle_journeys/vjB/trips')
+        response = self.query_region('vehicle_journeys/vehicle_journey:vjB/trips')
         trips = get_not_null(response, 'trips')
         assert len(trips) == 1
         assert get_not_null(trips[0], 'id') == "vjB"

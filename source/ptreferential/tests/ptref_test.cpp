@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted) {
     navitia::type::Indexes vj_idx = make_query(nt::Type_e::VehicleJourney, "vehicle_journey.has_disruption()", *b.data);
 
     BOOST_CHECK_EQUAL(vj_idx.size(), 1);
-    BOOST_CHECK_EQUAL(get_uris<nt::VehicleJourney>(vj_idx, *b.data), std::set<std::string>({"vj:A-2"}));
+    BOOST_CHECK_EQUAL(get_uris<nt::VehicleJourney>(vj_idx, *b.data), std::set<std::string>({"vehicle_journey:vj:A-2"}));
 }
 
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
@@ -412,13 +412,13 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
 
     // looking for MetaVJ 0
     indexes = make_query(nt::Type_e::MetaVehicleJourney,
-                         R"(trip.uri="vehicle_journey 0")", *(builder.data));
+                         R"(trip.uri="vj 0")", *(builder.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(*indexes.begin());
-    BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vehicle_journey 0");
+    BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vj 0");
 
     // looking for MetaVJ A through VJ A
-    indexes = make_query(Type_e::MetaVehicleJourney, "vehicle_journey.uri = vj:A:0", *builder.data);
+    indexes = make_query(Type_e::MetaVehicleJourney, "vehicle_journey.uri = vehicle_journey:A:0", *builder.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, {0})
 
     // not limited, we get 3 vj
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({a, b, c}));
 
     // looking for VJ B through MetaVJ B
-    indexes = make_query(Type_e::VehicleJourney, R"(trip.uri="vehicle_journey 1")", *builder.data);
+    indexes = make_query(Type_e::VehicleJourney, R"(trip.uri="vj 1")", *builder.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, {b})
 }
 
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
     b.make();
 
     const auto res = make_query(nt::Type_e::VehicleJourney,
-                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))", *(b.data));
+                                R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(res, nt::make_indexes({1}));
 }
 
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(headsign_sa_request) {
     b.make();
 
     const auto res = make_query(nt::Type_e::StopArea,
-                                R"(vehicle_journey.has_headsign("vehicle_journey 1"))", *(b.data));
+                                R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     std::set<std::string> sas;
     for (const auto& idx : res) {
@@ -593,14 +593,14 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     dataset->contributor = contributor;
     contributor->dataset_list.insert(dataset);
 
-    // dataset "d1" is assigned to vehicle_journey "vj:A:0"
+    // dataset "d1" is assigned to vehicle_journey "vehicle_journey:A:0"
     vj_a->dataset = dataset;
 
     dataset = b.add<nt::Dataset>("d2", "name-d2");
     dataset->contributor = contributor;
     contributor->dataset_list.insert(dataset);
 
-    // dataset "d2" is assigned to vehicle_journey "vj:C:1"
+    // dataset "d2" is assigned to vehicle_journey "vehicle_journey:C:1"
     vj_c->dataset = dataset;
 
     // Here contributor c2 contains datasets d3
@@ -624,13 +624,15 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     indexes = make_query(nt::Type_e::VehicleJourney, "contributor.uri=c1", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data),
-                            std::set<std::string>({"vj:A:0", "vj:C:1"}));
+                            std::set<std::string>({"vehicle_journey:A:0", "vehicle_journey:C:1"}));
 
     indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d1", *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data), std::set<std::string>({"vj:A:0"}));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data),
+                            std::set<std::string>({"vehicle_journey:A:0"}));
 
     indexes = make_query(nt::Type_e::VehicleJourney, "dataset.uri=d2", *(b.data));
-    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data), std::set<std::string>({"vj:C:1"}));
+    BOOST_CHECK_EQUAL_RANGE(get_uris<nt::VehicleJourney>(indexes, *b.data),
+                            std::set<std::string>({"vehicle_journey:C:1"}));
 
     indexes = make_query(nt::Type_e::Route, "dataset.uri=d1", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(indexes, *b.data), std::set<std::string>({"A:0"}));

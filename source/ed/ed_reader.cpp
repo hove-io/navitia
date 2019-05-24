@@ -847,18 +847,18 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         auto rt_level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
         const auto& vp = *validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
         const auto uri = const_it["uri"].as<std::string>();
+        const auto name = const_it["name"].as<std::string>();
         const auto vj_id = const_it["id"].as<idx_t>();
         if (const_it["is_frequency"].as<bool>()) {
             auto f_vj =
-                mvj->create_frequency_vj(uri, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
+                mvj->create_frequency_vj(uri, name, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
             const_it["start_time"].to(f_vj->start_time);
             const_it["end_time"].to(f_vj->end_time);
             const_it["headway_sec"].to(f_vj->headway_secs);
             vj = f_vj;
         } else {
-            vj = mvj->create_discrete_vj(uri, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
+            vj = mvj->create_discrete_vj(uri, name, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
         }
-        const_it["name"].to(vj->name);
         const_it["odt_message"].to(vj->odt_message);
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
         vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());

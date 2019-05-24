@@ -129,10 +129,10 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 0), "2");
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 1), "1");
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 2), "3");
-    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 3), "4");
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:2");
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:1");
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:3");
+    BOOST_REQUIRE_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:4");
 }
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
@@ -481,9 +481,9 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:C");
 }
 
 // We want:
@@ -514,11 +514,11 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "C");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:C");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "3:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:A");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(1).time(), "5:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:B");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(2).time(), "6:00"_t);
 }
 
@@ -552,11 +552,11 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "C");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:C");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(0).time(), "8:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:A");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(1).time(), "9:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:B");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(5).date_times(2).time(), "7:00"_t);
 }
 
@@ -596,15 +596,15 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:A");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:B");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "1:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:C");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "2:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "D");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:D");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "3:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "E");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vehicle_journey:E");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
 
     // current_datetime
@@ -669,15 +669,15 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "A");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:A");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "6:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "B");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:B");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "1:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "C");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:C");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "2:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "D");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:D");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "3:00"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "E");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vehicle_journey:E");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
 
     // Call with RealTime:
@@ -699,16 +699,16 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
 
-    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
         "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
         "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-    b.vj("L1").uri("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
+    b.vj("L1").name("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
         "stop2", "23:55"_t, "23:55"_t, std::numeric_limits<uint16_t>::max(), true, true, 600, 1800)(
         "stop3", "24:10"_t, "24:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.frequency_vj("L1", "18:00"_t, "19:00"_t, "00:30"_t)
-        .uri("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+        .name("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "stop2", "18:05"_t, "18:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
             "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
@@ -738,13 +738,13 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "8:10"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:vj:1");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "19:00"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "19:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(3).time(), "19:10"_t);
@@ -757,17 +757,17 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "8:10"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:vj:1");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "19:00"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "19:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(3).time(), "19:10"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vj:2");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vehicle_journey:vj:2");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "23:50"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).time(), "23:55"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(4).time(), "0:10"_t);
@@ -777,11 +777,11 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
 BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
     ed::builder b("20170101");
 
-    b.vj("L1").uri("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
         "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
         "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").uri("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+    b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
         "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
         "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
@@ -799,11 +799,11 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
     pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);
 
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "8:10"_t);
-    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "8:05"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "8:10"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), "8:15"_t);
@@ -812,10 +812,10 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
 BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
     ed::builder b("20180101");
 
-    b.vj("L1", "10000001").uri("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t);
+    b.vj("L1", "10000001").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t);
 
     b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")
-        .uri("vj:1")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
+        .name("vj:1")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
@@ -834,22 +834,22 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         print_route_schedule(route_schedule);
 
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
@@ -865,22 +865,22 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         print_route_schedule(route_schedule);
 
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
@@ -896,27 +896,27 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
         pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
         print_route_schedule(route_schedule);
 
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:vj:0");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vehicle_journey:vj:1");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "11:05"_t);
-        BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vj:0");
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vehicle_journey:vj:0");
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).date(), last_sunday);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "08:00"_t);
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).date(), last_sunday);

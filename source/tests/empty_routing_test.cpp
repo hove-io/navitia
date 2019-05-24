@@ -48,7 +48,7 @@ int main(int argc, const char* const argv[]) {
        << routing_data.S.lon() - 1 << " " << routing_data.S.lat() - 1 << "))";
     b.data->meta->shape = ss.str();
 
-    mock_kraken kraken(b, "empty_routing_test", argc, argv);
+    mock_kraken kraken(b, argc, argv);
 
     return 0;
 }
