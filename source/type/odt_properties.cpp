@@ -28,33 +28,17 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#pragma once
-#include <bitset>
+#include "type/odt_properties.h"
+#include "type/serialization.h"
 
 namespace navitia {
 namespace type {
 
-struct hasOdtProperties {
-    typedef std::bitset<2> OdtProperties;
-    static const uint8_t ESTIMATED_ODT = 0;
-    static const uint8_t ZONAL_ODT = 1;
-    OdtProperties odt_properties;
+template <class Archive>
+void hasOdtProperties::serialize(Archive& ar, const unsigned int) {
+    ar& odt_properties;
+}
+SERIALIZABLE(hasOdtProperties)
 
-    hasOdtProperties() { odt_properties.reset(); }
-
-    void operator|=(const type::hasOdtProperties& other) { odt_properties |= other.odt_properties; }
-
-    void reset() { odt_properties.reset(); }
-    void set_estimated(const bool val = true) { odt_properties.set(ESTIMATED_ODT, val); }
-    void set_zonal(const bool val = true) { odt_properties.set(ZONAL_ODT, val); }
-
-    bool is_scheduled() const { return odt_properties.none(); }
-    bool is_with_stops() const { return !odt_properties[ZONAL_ODT]; }
-    bool is_estimated() const { return odt_properties[ESTIMATED_ODT]; }
-    bool is_zonal() const { return odt_properties[ZONAL_ODT]; }
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-};
 }  // namespace type
 }  // namespace navitia
