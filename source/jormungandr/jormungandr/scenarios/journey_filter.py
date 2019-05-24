@@ -216,7 +216,7 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
                 min_mode = self.min_taxi
 
             if (
-                (s.street_network.mode == response_pb2.Car or s.street_network.mode == response_pb2.Taxi)
+                s.street_network.mode in (response_pb2.Car, response_pb2.Taxi)
                 and min_mode is not None
                 and _exceed_min_duration(
                     s, journey, min_duration=min_mode, orig_modes=self.orig_modes, dest_modes=self.dest_modes
