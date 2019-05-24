@@ -165,25 +165,28 @@ class SytralProvider(object):
         :param data: equipments data received from the webservice
         :param stop_area_equipments_list: list of stop_area_equipments from the protobuf response
         """
-        for sae in stop_area_equipments_list:
-            for st in sae.stop_area.stop_points:
-                for code in st.codes:
-                    if code.type in self.code_types:
-                        equipments_list = jmespath.search(
-                            "equipments_details[?id=='{}']".format(code.value), data
-                        )
 
-                        if equipments_list:
-                            equipment = equipments_list[0]
-                            # Fill PB
-                            equipment_details = sae.equipment_details.add()
-                            self._fill_equipment_details(
-                                equipment_form_web_service=equipment, equipment_details=equipment_details
-                            )
-                        else:
-                            equipment_details = sae.equipment_details.add()
-                            self._fill_default_equipment_details(
-                                id=code.value,
-                                embedded_type=self._embedded_type(code.type),
-                                equipment_details=equipment_details,
-                            )
+        for sae in stop_area_equipments_list:
+            """
+            Codes might be duplicated across different stop points.
+            Because we report equipments on a stop area basis, we  don't want them duplicated
+            """
+            unique_codes = {str(code): code for st in sae.stop_area.stop_points for code in st.codes}
+            for code in unique_codes.values():
+                if code.type in self.code_types:
+                    equipments_list = jmespath.search("equipments_details[?id=='{}']".format(code.value), data)
+
+                    if equipments_list:
+                        equipment = equipments_list[0]
+                        # Fill PB
+                        equipment_details = sae.equipment_details.add()
+                        self._fill_equipment_details(
+                            equipment_form_web_service=equipment, equipment_details=equipment_details
+                        )
+                    else:
+                        equipment_details = sae.equipment_details.add()
+                        self._fill_default_equipment_details(
+                            id=code.value,
+                            embedded_type=self._embedded_type(code.type),
+                            equipment_details=equipment_details,
+                        )
