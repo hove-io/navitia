@@ -38,6 +38,7 @@ script:
   - bash source/scripts/check_submodules.sh
   - pre-commit run clang-format-6.0 --all --show-diff-on-failure
   - pushd source/tyr && PYTHONPATH=.:../navitiacommon/ py.test --doctest-modules --ignore=migrations/ ; popd
+  - pre-commit run flake8 --all
 
 matrix:
   include:
