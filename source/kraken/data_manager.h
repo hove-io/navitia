@@ -135,6 +135,7 @@ public:
             }
         }
 
+        data->init_georef_after_loading();
         // Build Raptor Data
         data->build_raptor(raptor_cache_size);
         // Build proximity list NN index

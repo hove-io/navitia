@@ -62,7 +62,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 70;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 69;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -177,6 +177,10 @@ void Data::build_raptor(size_t cache_size) {
     LOG4CPLUS_DEBUG(logger, "Start to build data Raptor");
     dataRaptor->load(*this->pt_data, cache_size);
     LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
+}
+
+void Data::init_georef_after_loading() {
+    geo_ref->init_inversed_nb_vertex_by_mode();
 }
 
 void Data::warmup(const Data& other) {

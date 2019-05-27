@@ -233,6 +233,7 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
 }
 
 type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
+    assert(inversed_nb_vertex_by_mode);
     return static_cast<type::Mode_e>(vertex * inversed_nb_vertex_by_mode);
 }
 
@@ -370,9 +371,9 @@ void GeoRef::init() {
 
     // each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);
-    // a math trick to handle the round error:
-    // use (N + 0.1)/N^2 instead of 1/N
-    inversed_nb_vertex_by_mode = (nb_vertex_by_mode + .1) / pow(nb_vertex_by_mode, 2);
+
+    init_inversed_nb_vertex_by_mode();
+
     // we dupplicate the graph for the bike and the car
     for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
         offsets[mode] = boost::num_vertices(graph);
@@ -863,6 +864,12 @@ bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
     add_edge(car_v, walking_v, edge, graph);
 
     return true;
+}
+
+void GeoRef::init_inversed_nb_vertex_by_mode() {
+    // a math trick to handle the round error:
+    // use (N + 0.1)/N^2 instead of 1/N
+    inversed_nb_vertex_by_mode = (nb_vertex_by_mode + .1) / pow(nb_vertex_by_mode, 2);
 }
 
 GeoRef::~GeoRef() {

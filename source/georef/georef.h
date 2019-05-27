@@ -246,6 +246,9 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode = 0;
+
+    // this number is used to void division operations
+    // it must be computed by calling init_inversed_nb_vertex_by_mode
     float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
@@ -257,8 +260,7 @@ struct GeoRef {
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
-            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode&
-                inversed_nb_vertex_by_mode;
+            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
     }
 
     template <class Archive>
@@ -267,8 +269,7 @@ struct GeoRef {
         // On avait donc une fuite de mémoire
         graph.clear();
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
-            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode&
-                inversed_nb_vertex_by_mode;
+            poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -338,6 +339,10 @@ struct GeoRef {
     /// get the transportation mode of the vertex
     type::Mode_e get_mode(const vertex_t& vertex) const;
     PathItem::TransportCaracteristic get_caracteristic(const edge_t& edge) const;
+
+    // Compute the inversed nb_vertex_by_mode for the sake of performance
+    void init_inversed_nb_vertex_by_mode();
+
     ~GeoRef();
     GeoRef() = default;
     GeoRef(const GeoRef& other) = default;
