@@ -247,7 +247,7 @@ struct GeoRef {
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode = 0;
 
-    // this number is used to void division operations
+    // this number is used to avoid division operations
     // it must be computed by calling init_inversed_nb_vertex_by_mode
     float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
