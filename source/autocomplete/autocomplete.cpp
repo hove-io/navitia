@@ -30,6 +30,9 @@ www.navitia.io
 
 #include "autocomplete.h"
 #include "type/pt_data.h"
+#include "type/stop_area.h"
+#include "type/stop_point.h"
+
 namespace navitia {
 namespace autocomplete {
 

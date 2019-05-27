@@ -30,15 +30,14 @@ www.navitia.io
 
 #pragma once
 #include <set>
-#include "type/type.h"
 #include <osmpbfreader/osmpbfreader.h>
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include <unordered_map>
-#include "ed/types.h"
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
+#include <boost/geometry/core/cs.hpp>
 #include <RTree/RTree.h>
 #include <boost/algorithm/string.hpp>
 
@@ -101,11 +100,7 @@ struct OSMNode {
         return std::abs(this->ilon - other.ilon) < distance && std::abs(this->ilat - other.ilat) < distance;
     }
 
-    std::string coord_to_string() const {
-        std::stringstream geog;
-        geog << std::setprecision(10) << lon() << " " << lat();
-        return geog.str();
-    }
+    std::string coord_to_string() const;
     std::string to_geographic_point() const;
 };
 
@@ -139,14 +134,7 @@ struct OSMWay {
 
     void add_node(std::unordered_map<OSMId, OSMNode>::const_iterator node) { nodes.push_back(node); }
 
-    std::string coord_to_string() const {
-        std::stringstream geog;
-        geog << std::setprecision(10);
-        for (auto node : nodes) {
-            geog << node->second.coord_to_string();
-        }
-        return geog.str();
-    }
+    std::string coord_to_string() const;
 };
 
 typedef std::set<OSMWay>::const_iterator it_way;

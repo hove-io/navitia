@@ -43,6 +43,7 @@ www.navitia.io
 #include <map>
 #include <set>
 #include <functional>
+#include "type/time_duration.h"
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;

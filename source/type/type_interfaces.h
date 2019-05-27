@@ -32,6 +32,8 @@ www.navitia.io
 #include <iostream>
 #include "utils/idx_map.h"
 #include <boost/container/flat_set.hpp>
+#include "utils/flat_enum_map.h"
+
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -90,32 +92,6 @@ enum class Type_e {
     Dataset = 28,
     size = 29
 };
-
-enum class Mode_e {
-    Walking = 0,    // Marche à pied
-    Bike = 1,       // Vélo
-    Car = 2,        // Voiture
-    Bss = 3,        // Vls
-    CarNoPark = 4,  // used for ridesharing typicaly
-    // Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
-};
-
-inline std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
-    switch (mode) {
-        case Mode_e::Walking:
-            return os << "walking";
-        case Mode_e::Bike:
-            return os << "bike";
-        case Mode_e::Car:
-            return os << "car";
-        case Mode_e::Bss:
-            return os << "bss";
-        case Mode_e::CarNoPark:
-            return os << "car_no_park";
-        default:
-            return os << "[unknown mode]";
-    }
-}
 
 enum class OdtLevel_e { scheduled = 0, with_stops = 1, zonal = 2, all = 3 };
 
@@ -282,5 +258,37 @@ public:
 
     void clean_weak_impacts();
 };
+
+enum class Mode_e {
+    Walking = 0,    // Marche à pied
+    Bike = 1,       // Vélo
+    Car = 2,        // Voiture
+    Bss = 3,        // Vls
+    CarNoPark = 4,  // used for ridesharing typicaly
+    // Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
+    switch (mode) {
+        case Mode_e::Walking:
+            return os << "walking";
+        case Mode_e::Bike:
+            return os << "bike";
+        case Mode_e::Car:
+            return os << "car";
+        case Mode_e::Bss:
+            return os << "bss";
+        case Mode_e::CarNoPark:
+            return os << "car_no_park";
+        default:
+            return os << "[unknown mode]";
+    }
+}
 }  // namespace type
+// trait to access the number of elements in the Mode_e enum
+template <>
+struct enum_size_trait<type::Mode_e> {
+    static constexpr typename get_enum_type<type::Mode_e>::type size() { return 5; }
+};
+
 }  // namespace navitia
