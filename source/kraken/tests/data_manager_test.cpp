@@ -46,7 +46,6 @@ public:
     void build_raptor(size_t) {}
     void build_proximity_list() {}
     void build_autocomplete() {}
-    void init_georef_after_loading(){};
     mutable std::atomic<bool> loading;
     mutable std::atomic<bool> is_connected_to_rabbitmq;
     static bool load_status;

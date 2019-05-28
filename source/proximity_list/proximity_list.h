@@ -123,7 +123,7 @@ struct ProximityList {
      *
      * */
     template <typename Tag = IndexCoord>
-    auto find_within(const GeographicalCoord& coord, double radius, int size = -1) const
+    auto find_within(const GeographicalCoord& coord, double radius = 500, int size = -1) const
         -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
         if (!NN_index || !size || !radius)
             return {};

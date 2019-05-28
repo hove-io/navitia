@@ -179,10 +179,6 @@ void Data::build_raptor(size_t cache_size) {
     LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
 }
 
-void Data::init_georef_after_loading() {
-    geo_ref->init_inversed_nb_vertex_by_mode();
-}
-
 void Data::warmup(const Data& other) {
     this->dataRaptor->warmup(*other.dataRaptor);
 }

@@ -248,7 +248,6 @@ struct GeoRef {
     nt::idx_t nb_vertex_by_mode = 0;
 
     // this number is used to avoid division operations
-    // it must be computed by calling init_inversed_nb_vertex_by_mode
     float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
@@ -270,6 +269,8 @@ struct GeoRef {
         graph.clear();
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
+
+        compute_inversed_nb_vertex_by_mode();
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -341,7 +342,7 @@ struct GeoRef {
     PathItem::TransportCaracteristic get_caracteristic(const edge_t& edge) const;
 
     // Compute the inversed nb_vertex_by_mode for the sake of performance
-    void init_inversed_nb_vertex_by_mode();
+    void compute_inversed_nb_vertex_by_mode();
 
     ~GeoRef();
     GeoRef() = default;

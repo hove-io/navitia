@@ -217,7 +217,6 @@ public:
     void load_nav(const std::string& filename);
     void load_disruptions(const std::string& database, const std::vector<std::string>& contributors = {});
     void build_raptor(size_t cache_size = 10);
-    void init_georef_after_loading();
 
     void warmup(const Data& other);
 

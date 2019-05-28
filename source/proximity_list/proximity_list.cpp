@@ -12,8 +12,8 @@ using type::GeographicalCoord;
 
 static std::array<float, 3> project_coord(const type::GeographicalCoord& coord) {
     std::array<float, 3> res;
-    float lat_grad = coord.lat() * GeographicalCoord::N_DEG_TO_RAD;
-    float lon_grad = coord.lon() * GeographicalCoord::N_DEG_TO_RAD;
+    double lat_grad = coord.lat() * GeographicalCoord::N_DEG_TO_RAD;
+    double lon_grad = coord.lon() * GeographicalCoord::N_DEG_TO_RAD;
     res[0] = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(lat_grad) * sin(lon_grad);
     res[1] = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(lat_grad) * cos(lon_grad);
     res[2] = GeographicalCoord::EARTH_RADIUS_IN_METERS * sin(lat_grad);
@@ -94,7 +94,7 @@ static auto make_result(const type::GeographicalCoord& coord,
             log4cplus::Logger::getInstance("log"),
             "Distance(squared) from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances[i]);
 
-        res.push_back(std::move(extract<T>(items[res_ind], Tag{})));
+        res.push_back(extract<T>(items[res_ind], Tag{}));
     }
     return res;
 }
