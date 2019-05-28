@@ -63,7 +63,7 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 
 
 class CostSerializer(PbNestedSerializer):
-    value = PbStrField()
+    value = PbStrField(display_none=True)
     currency = PbField(schema_type=str)
 
 
@@ -93,7 +93,7 @@ class TicketSerializer(PbNestedSerializer):
     cost = CostSerializer(display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
     source_id = jsonschema.Field(
-        schema_type=str, display_none=True, description='Product identifier of the ticket'
+        schema_type=str, display_none=True, description='Product identifier of the ticket in the input data'
     )
 
     def get_links(self, obj):
