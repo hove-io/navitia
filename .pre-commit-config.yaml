@@ -25,4 +25,5 @@ repos:
     hooks:
     -   id: mypy
         args: [--ignore-missing-imports, --py2]
+        files: source/jormungandr/jormungandr
         language_version: python3.6
