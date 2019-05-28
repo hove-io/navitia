@@ -32,6 +32,8 @@ www.navitia.io
 
 #include "utils/logger.h"
 
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
 namespace navitia {
 namespace georef {
 
@@ -43,21 +45,8 @@ void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& r
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
-        dijkstra(starting_edge[source_e], starting_edge[target_e], dijkstra_distance_visitor(radius, distances));
+        dijkstra({starting_edge[source_e], starting_edge[target_e]}, dijkstra_distance_visitor(radius, distances));
     } catch (DestinationFound) {
-    }
-}
-
-void DijkstraPathFinder::start_distance_or_target_dijkstra(const navitia::time_duration& radius,
-                                                           const std::vector<vertex_t>& destinations) {
-    if (!starting_edge.found)
-        return;
-    computation_launch = true;
-    // We start dijkstra from source and target nodes
-    try {
-        dijkstra(starting_edge[source_e], starting_edge[target_e],
-                 dijkstra_distance_or_target_visitor(radius, distances, destinations));
-    } catch (DestinationFound&) {
     }
 }
 
@@ -212,6 +201,23 @@ DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& rad
                                                 ProjectionGetterOnFly>(radius, dest_coords, projection_getter);
 }
 
+template <class Visitor>
+void DijkstraPathFinder::dijkstra(const std::array<georef::vertex_t, 2>& origin_vertexes, const Visitor& visitor) {
+    // Note: the predecessors have been updated in init
+    // Fill color map in white before dijkstra
+    std::fill(color.data.get(), color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
+              0);
+
+    // we filter the graph to only use certain mean of transport
+    using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
+    auto const g = filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref));
+    auto const weight_map = boost::get(&Edge::duration, geo_ref.graph);
+    auto const combiner = SpeedDistanceCombiner(speed_factor);  // we multiply the edge duration by a speed factor
+
+    dijkstra_shortest_paths_no_init_with_heap(g, origin_vertexes.front(), origin_vertexes.back(), visitor, weight_map,
+                                              combiner);
+}
+
 std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder::update_path(
     const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
@@ -223,7 +229,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder:
     if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
-            dijkstra(starting_edge[source_e], starting_edge[target_e],
+            dijkstra({starting_edge[source_e], starting_edge[target_e]},
                      dijkstra_target_all_visitor({target[source_e], target[target_e]}));
         } catch (DestinationFound) {
             found = true;
@@ -257,6 +263,25 @@ navitia::time_duration DijkstraPathFinder::get_distance(type::idx_t target_idx) 
     auto nearest_edge = update_path(target);
 
     return nearest_edge.first;
+}
+
+template <class Graph, class DijkstraVisitor, class WeightMap, class Compare>
+void DijkstraPathFinder::dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
+                                                                   const vertex_t& s_begin,
+                                                                   const vertex_t& s_end,
+                                                                   const DijkstraVisitor& visitor,
+                                                                   const WeightMap& weight,
+                                                                   const SpeedDistanceCombiner& combine,
+                                                                   const Compare& compare) {
+    typedef boost::d_ary_heap_indirect<vertex_t, 4, vertex_t*, navitia::time_duration*, Compare> MutableQueue;
+
+    MutableQueue Q(&distances[0], &index_in_heap_map[0], compare);
+
+    boost::detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap, vertex_t*, navitia::time_duration*,
+                                        SpeedDistanceCombiner, Compare>
+        bfs_vis(visitor, Q, weight, &predecessors[0], &distances[0], combine, compare, navitia::seconds(0));
+
+    breadth_first_visit(g, &s_begin, &s_end, Q, bfs_vis, color);
 }
 
 }  // namespace georef

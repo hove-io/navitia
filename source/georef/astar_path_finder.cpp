@@ -73,14 +73,14 @@ void AstarPathFinder::astar(const std::array<georef::vertex_t, 2>& origin_vertex
     auto weight_map = boost::get(&Edge::duration, geo_ref.graph);
     auto combiner = SpeedDistanceCombiner(speed_factor);
 
-    astar_shortest_paths_no_init_with_heap(g, origin_vertexes.cbegin(), origin_vertexes.cend(), heuristic, visitor,
+    astar_shortest_paths_no_init_with_heap(g, origin_vertexes.front(), origin_vertexes.back(), heuristic, visitor,
                                            weight_map, combiner);
 }
 
 template <class Graph, class WeightMap, class Compare>
 void AstarPathFinder::astar_shortest_paths_no_init_with_heap(const Graph& g,
-                                                             const vertex_t* s_begin,
-                                                             const vertex_t* s_end,
+                                                             const vertex_t& s_begin,
+                                                             const vertex_t& s_end,
                                                              const astar_distance_heuristic& h,
                                                              const astar_distance_or_target_visitor& vis,
                                                              const WeightMap& weight,
@@ -95,7 +95,7 @@ void AstarPathFinder::astar_shortest_paths_no_init_with_heap(const Graph& g,
         bfs_vis(h, vis, Q, &predecessors[0], &costs[0], &distances[0], weight, color, combine, compare,
                 navitia::seconds(0));
 
-    breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
+    breadth_first_visit(g, &s_begin, &s_end, Q, bfs_vis, color);
 }
 
 }  // namespace georef
