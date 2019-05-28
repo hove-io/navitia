@@ -801,6 +801,26 @@ def test_heavy_journey_car():
     assert not f.filter_func(journey)
 
 
+def test_heavy_journey_taxi():
+    """
+    the first time the duration of the taxi section is superior to the min value, so we keep the journey
+    on the second test the duration is inferior to the min, so we delete the journey
+    """
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Taxi
+    journey.durations.taxi = journey.sections[-1].duration = 25
+
+    f = jf.FilterTooShortHeavyJourneys(min_bike=10, min_taxi=20)
+    assert f.filter_func(journey)
+
+    journey.durations.taxi = journey.sections[-1].duration = 15
+
+    f = jf.FilterTooShortHeavyJourneys(min_bike=10, min_taxi=20, orig_modes=['bike', 'walking'])
+    assert not f.filter_func(journey)
+
+
 def test_heavy_journey_bss():
     """
     we should not remove any bss journey since it is already in concurrence with the walking
@@ -1031,4 +1051,103 @@ def test_activate_deactivate_min_car():
     journey.durations.car = 12
 
     f = jf.FilterTooShortHeavyJourneys(min_car=8, orig_modes=['car'], dest_modes=['car', 'walking'])
+    assert not f.filter_func(journey)
+
+
+def test_activate_deactivate_min_taxi():
+    """
+
+      A                 B                           C            D
+      *................*============================*.............*
+      A: origin
+      D: Destination
+      A->B : taxi
+      B->C : public transport
+      C->D : taxi
+
+    """
+    # case 1: request without origin_mode and destination_mode
+
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Taxi
+    journey.sections[-1].duration = 5
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[-1].street_network.mode = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[-1].duration = 35
+
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Taxi
+    journey.sections[-1].duration = 7
+
+    journey.durations.taxi = 12
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=10)
+    assert f.filter_func(journey)
+
+    # case 2: request without origin_mode
+    journey.sections[-1].duration = 15
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, dest_modes=['taxi', 'walking'])
+    assert f.filter_func(journey)
+
+    # case 3: request without destination_mode
+    journey.sections[0].duration = 15
+    journey.sections[-1].duration = 5
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, orig_modes=['taxi', 'walking'])
+    assert f.filter_func(journey)
+
+    # case 4: request without walking in origin_mode
+    journey.sections[0].duration = 5
+    journey.sections[-1].duration = 15
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, orig_modes=['taxi'])
+    assert f.filter_func(journey)
+
+    # case 5: request without walking in destination_mode
+    journey.sections[0].duration = 15
+    journey.sections[-1].duration = 5
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, dest_modes=['taxi'])
+    assert f.filter_func(journey)
+
+    # case 6: request with taxi only in origin_mode destination_mode
+    journey.sections[0].duration = 15
+    journey.sections[-1].duration = 14
+    journey.durations.taxi = 29
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=17, orig_modes=['taxi'], dest_modes=['taxi'])
+    assert f.filter_func(journey)
+
+    # case 7: request with walking in destination_mode
+    journey.sections[0].duration = 15
+    journey.sections[-1].duration = 5
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, dest_modes=['taxi', 'walking'])
+    assert not f.filter_func(journey)
+
+    # case 8: request with walking in origin_mode
+    journey.sections[0].duration = 5
+    journey.sections[-1].duration = 15
+    journey.durations.taxi = 20
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, orig_modes=['taxi', 'walking'])
+    assert not f.filter_func(journey)
+
+    # case 9: request with bike in origin_mode and bike, walking in destination_mode
+    journey.sections[0].duration = 5
+    journey.sections[-1].duration = 7
+    journey.durations.taxi = 12
+
+    f = jf.FilterTooShortHeavyJourneys(min_taxi=8, orig_modes=['taxi'], dest_modes=['taxi', 'walking'])
     assert not f.filter_func(journey)
