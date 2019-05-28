@@ -35,7 +35,7 @@ You can navigate through a response using 2 parameters
 |count     |int |Number of items per page |
 
 <aside class="notice">
-    The number of objects returned for a request can <b>not be superior than 1000</b>. 
+    The number of objects returned for a request can <b>not be superior than 1000</b>.
     If you request for more, Navitia will return the first 1000, and you will have to paginate to get next 1000.
 </aside>
 
@@ -66,7 +66,7 @@ HTTP/1.1 200 OK
         {...}
         ],
     ...,
- 
+
 #and a templated link from the example above:
 
     "links": [
@@ -94,7 +94,7 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/
 Under some link sections, you will find a "templated" property.
 
 If "templated" is true, then you will have to format the link with your right id as describe in the example.
-In order to do that, you will have to 
+In order to do that, you will have to
 
 * take the id from the object you want to get the linked service
 * replace {lines.id} in the url as the example
@@ -120,9 +120,9 @@ Some link sections holds disruption links. These links are templated.
 
 That means :
 
-* inside the self stream ( **"internal": true** ) 
-* you will find a **disruptions** section ( **"rel": "disruptions"** ) 
-* containing some [disruptions](#disruption) objects ( **"type": "disruption"** ) 
+* inside the self stream ( **"internal": true** )
+* you will find a **disruptions** section ( **"rel": "disruptions"** )
+* containing some [disruptions](#disruption) objects ( **"type": "disruption"** )
 * where you can find the details of your object ( **"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"** ).
 
 

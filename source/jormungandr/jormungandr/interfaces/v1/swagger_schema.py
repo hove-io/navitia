@@ -208,7 +208,7 @@ def get_schema(serializer):
 def get_schema_properties(serializer):
     """
     create the schema from a serpy serializer
-    
+
     for each serializer field, we'll search for it's schema
     All complex fields (a field that is another serializer), we add the field's serializer to the external
     definitions

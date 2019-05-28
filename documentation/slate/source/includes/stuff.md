@@ -33,7 +33,7 @@ Here are some tagging rules:
 -    itineraries with other types are displayed only if they are relevant
 -    and for a specific type, you may find many relevant itinerary
 
-For example, for a specific request, you can find the "best" itinerary, 2 "less_fallback_walk" ones 
+For example, for a specific request, you can find the "best" itinerary, 2 "less_fallback_walk" ones
 (with less walking, but taking more time) and no "comfort" (the "best" one is the same as the "comfort" one for example).
 
 The different journey types are:

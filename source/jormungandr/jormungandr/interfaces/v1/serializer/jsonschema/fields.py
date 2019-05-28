@@ -36,7 +36,7 @@ from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
 def _init(self, parent_class, schema_type=None, schema_metadata=None, **kwargs):
     """
-    Call the parent constructor with the needed kwargs and 
+    Call the parent constructor with the needed kwargs and
     add the remaining kwargs to the schema metadata
     """
     if 'display_none' not in kwargs:

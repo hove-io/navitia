@@ -1,5 +1,5 @@
 add_library(thermometer thermometer.cpp)
-target_link_libraries(thermometer types)    
+target_link_libraries(thermometer types)
 
 SET(TIME_TABLES_SRC passages.cpp route_schedules.cpp departure_boards.cpp request_handle.cpp)
 add_library(time_tables ${TIME_TABLES_SRC})
