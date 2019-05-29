@@ -1797,13 +1797,13 @@ For example:
 
 Required | Name             | Type                            | Description                                       | Default Value
 ---------|------------------|---------------------------------|---------------------------------------------------|--------------
-no       | since            | [iso-date-time](#iso-date-time) | Only display disruptions active after this date   |
-no       | until            | [iso-date-time](#iso-date-time) | Only display disruptions active before this date  |
+no       | since            | [iso-date-time](#iso-date-time) | Only display active disruptions after this date   |
+no       | until            | [iso-date-time](#iso-date-time) | Only display active disruptions before this date  |
 no       | count            | int                             | Maximum number of results.                        | 10
 no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Restrain the search within the given disruption tags|
+no       | tags[]           | array of string                 | Filter disruptions with the given tags            |
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1970,13 +1970,13 @@ For example:
 
 Required | Name             | Type                            | Description                                         | Default Value
 ---------|------------------|---------------------------------|-----------------------------------------------------|--------------
-no       | since            | [iso-date-time](#iso-date-time) | Only display disruptions active after this date     |
-no       | until            | [iso-date-time](#iso-date-time) | Only display disruptions active before this date    |
+no       | since            | [iso-date-time](#iso-date-time) | Only display active disruptions after this date     |
+no       | until            | [iso-date-time](#iso-date-time) | Only display active disruptions before this date    |
 no       | count            | int                             | Maximum number of results.                          | 10
 no       | depth            | int                             | Json response [depth](#depth)                       | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.   |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response             | false
-no       | tags[]           | array of string                 | Restrain the search within the given disruption tags|
+no       | tags[]           | array of string                 | Filter disruptions with the given tags              |
 
 The response is made of an array of [traffic_reports](#traffic-reports),
 and another one of [disruptions](#disruption).
