@@ -88,7 +88,7 @@ def equipments_get_information_test():
 
 def equipments_get_informations_for_reports_not_duplicated():
     """
-    When 2 stop points (from the same stop are) refer to the same equipment (type and value),
+    When 2 stop points (from the same stop areas) refer to the same equipment (type and value),
     we only want 1 equipment_details object that refers to it as we report information per stop area.
     """
     CODE_TYPE = "TCL_ESCALIER"
