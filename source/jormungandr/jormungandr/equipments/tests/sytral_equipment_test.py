@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from mock import MagicMock
 from jormungandr.equipments.sytral import SytralProvider
-from navitiacommon.type_pb2 import StopPoint
+from navitiacommon.type_pb2 import StopPoint, StopAreaEquipment, StopArea
 
 mock_data = {
     "equipments_details": [
@@ -84,3 +84,31 @@ def equipments_get_information_test():
     st = create_stop_point("TCL_ASCENCEUR", "261")
     provider.get_informations_for_journeys([st])
     assert not st.equipment_details
+
+
+def equipments_get_informations_for_reports_not_duplicated():
+    """
+    When 2 stop points (from the same stop areas) refer to the same equipment (type and value),
+    we only want 1 equipment_details object that refers to it as we report information per stop area.
+    """
+    CODE_TYPE = "TCL_ESCALIER"
+    provider = SytralProvider(url="sytral.url", timeout=3, code_types=[CODE_TYPE])
+    provider._call_webservice = MagicMock(return_value=mock_data)
+
+    sae = StopAreaEquipment()
+    sae.stop_area.name = "StopArea1_name"
+    sae.stop_area.uri = "StopArea1_uri"
+
+    sp1 = sae.stop_area.stop_points.add()
+    codes1 = sp1.codes.add()
+    codes1.type = CODE_TYPE
+    codes1.value = "val"
+
+    sp2 = sae.stop_area.stop_points.add()
+    codes2 = sp2.codes.add()
+    codes2.type = CODE_TYPE
+    codes2.value = "val"
+
+    provider.get_informations_for_equipment_reports([sae])
+
+    assert len(sae.equipment_details) == 1
