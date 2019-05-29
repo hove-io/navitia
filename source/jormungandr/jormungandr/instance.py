@@ -188,7 +188,7 @@ class Instance(object):
 
         self.zmq_socket_type = zmq_socket_type
 
-        if app.config['DISABLE_DATABASE']:
+        if app.config[str('DISABLE_DATABASE')]:
             self.equipment_provider_manager = EquipmentProviderManager(
                 app.config[str('EQUIPMENT_DETAILS_PROVIDERS')]
             )

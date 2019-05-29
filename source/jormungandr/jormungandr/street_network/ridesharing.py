@@ -40,9 +40,8 @@ class Ridesharing(AbstractStreetNetworkService):
         )
         self.sn_system_id = id or 'ridesharing'
         config = kwargs.get('street_network', {})
-        if 'service_url' not in config['args']: 
-            config['args'].update(
-                {'service_url': None})
+        if 'service_url' not in config['args']:
+            config['args'].update({'service_url': None})
         if 'instance' not in config['args']:
             config['args'].update({'instance': instance})
         config['args'].update({'modes': self.modes})

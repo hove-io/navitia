@@ -41,7 +41,7 @@ At the root of the repository, several directories can be found:
 
 The project provides a few git hooks that you should use to prevent any issue.
 The hooks are managed by [pre-commit](https://pre-commit.com/) that you need to
-[install](https://pre-commit.com/#install). 
+[install](https://pre-commit.com/#install).
 Then, install the hooks with:
 ```
 pre-commit install
@@ -67,7 +67,7 @@ But bare in mind, it requires python 3.6+ to run.
 
 Our pre-commit hooks are running [Clang-format](https://releases.llvm.org/6.0.0/tools/clang/docs/ClangFormat.html) to format our c++ codebase. You'll need version 6.0 in order to pass our CI.
 ```sh
-sudo apt  install clang-format-6.0
+sudo apt install clang-format-6.0
 ```
 
 In case you might want to run Clang-format on the entire codebase, you can do:

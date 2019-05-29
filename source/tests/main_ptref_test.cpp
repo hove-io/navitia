@@ -62,8 +62,7 @@ struct data_set {
         navitia::type::Calendar* monday_cal{new navitia::type::Calendar(b.data->meta->production_date.begin())};
         monday_cal->name = "the monday calendar";
         monday_cal->uri = "monday";
-        monday_cal->active_periods.push_back(
-            period("20140105", "20140911"));
+        monday_cal->active_periods.push_back(period("20140105", "20140911"));
         monday_cal->week_pattern = std::bitset<7>{"1000000"};
         for (int i = 1; i <= 3; ++i) {
             navitia::type::ExceptionDate exd;
