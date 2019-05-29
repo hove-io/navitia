@@ -41,7 +41,7 @@ At the root of the repository, several directories can be found:
 
 The project provides a few git hooks that you should use to prevent any issue.
 The hooks are managed by [pre-commit](https://pre-commit.com/) that you need to
-[install](https://pre-commit.com/#install).
+[install](https://pre-commit.com/#install). 
 Then, install the hooks with:
 ```
 pre-commit install
