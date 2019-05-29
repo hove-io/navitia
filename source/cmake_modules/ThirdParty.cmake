@@ -42,3 +42,13 @@ add_subdirectory(third_party/prometheus-cpp)
 
 # Reactivate warnings flags
 set(CMAKE_CXX_FLAGS ${TMP_FLAG})
+
+#
+# flann
+#
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/flann/src/cpp")
+
+#
+# lz4
+#
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/lz4")
