@@ -630,6 +630,7 @@ HTTP/1.1 200 OK
   yep      | q        | string           | The search term      |
   nop      | type[]   | array of string  | Type of objects you want to query It takes one the following values: [`network`, `commercial_mode`, `line`, `route`, `stop_area`] | [`network`, `commercial_mode`, `line`, `route`, `stop_area`]
   nop      | disable_disruption | boolean  | Remove disruptions from the response  | False
+  nop      | depth    | int              | Json response [depth](#depth) | 1
 
 <aside class="warning">
 There is no pagination for this api
@@ -706,6 +707,7 @@ Differents kind of objects can be returned (sorted as):
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, it will filter the search within the given admin uris
   nop      | disable_geojson | boolean | remove geojson from the response | False
+  nop      | depth       | int             | Json response [depth](#depth)     | 1
   nop      | from | string | Coordinates longitude;latitude used to prioritize the objects around this coordinate. Note this parameter will be taken into account only if the autocomplete's backend can handle it |
 
 
@@ -764,6 +766,7 @@ coordinates, returning a [places](#place) collection.
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
   nop      | disable_disruption | boolean  | Remove disruptions from the response  | False
   nop      | count       | int             | Elements per page                 | 10
+  nop      | depth       | int             | Json response [depth](#depth)     | 1
   nop      | start_page  | int             | The page number (cf the [paging section](#paging)) | 0
   nop      | add_poi_infos[] | enum        | Activate the output of additional infomations about the poi. For example, parking availability (BSS, car parking etc.) in the pois of response. Pass `add_poi_infos[]=none&` or `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
 
@@ -997,6 +1000,7 @@ These disruptions won't be on the `display_informations` of the sections or used
 |nop        | allowed_id[]            | id            | If you want to use only a small subset of the public transport objects in your solution. The constraint intersects with `forbidden_uris[]`. For example, if you ask for `allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, only vehicles of the line A that are not buses will be used. | everything |
 | nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`.<br>It's an array, you can give multiple modes.<br><br>See [Ridesharing](#ridesharing-stuff) section for more details on that mode.<br>`bss` stands for bike sharing system.<br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
 | nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
+| nop       | depth                   | int               | Json response [depth](#depth)                        | 1           |
 
 ### Other parameters
 
@@ -1435,6 +1439,7 @@ Required | Name               | Type      | Description                         
 ---------|--------------------|-----------|------------------------------------------------------------------------------------------|--------------
 nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
 nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
+nop      | depth              | int       | Json response [depth](#depth)                                                            | 1
 nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
 nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        |
 nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
@@ -1562,14 +1567,15 @@ You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_
 
 ### Parameters
 
-Required | Name           | Type                    | Description        | Default Value
----------|----------------|-------------------------|--------------------|--------------
-nop      | from_datetime  | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
-nop      | duration         | int                            | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    |
-nop      | items_per_schedule | int       | Maximum number of datetimes per schedule.                                                  |
-nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
-nop      | disable_geojson | boolean                | remove geojson fields from the response | False
+Required | Name               | Type                            | Description        | Default Value
+---------|--------------------|---------------------------------|--------------------|--------------
+nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
+nop      | duration           | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
+nop      | depth              | int                             | Json response [depth](#depth) | 1
+nop      | forbidden_uris[]   | id                              | If you want to avoid lines, modes, networks, etc.    |
+nop      | items_per_schedule | int                             | Maximum number of datetimes per schedule.                                                  |
+nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+nop      | disable_geojson    | boolean                         | remove geojson fields from the response | False
 
 
 ### <a name="stop-schedule"></a>Stop_schedule object
@@ -1665,6 +1671,7 @@ Required | Name             | Type                            | Description     
 nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                          | the current datetime
 nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                           | 86400
 nop      | count            | int                             | Maximum number of results.                                                                               | 10
+nop      | depth            | int                             | Json response [depth](#depth)                                                                            | 1
 nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        |
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                  | false
@@ -1790,12 +1797,13 @@ For example:
 
 Required | Name             | Type                            | Description                                       | Default Value
 ---------|------------------|---------------------------------|---------------------------------------------------|--------------
-no       | since            | [iso-date-time](#iso-date-time) | Only display disruptions active after this date   |
-no       | until            | [iso-date-time](#iso-date-time) | Only display disruptions active before this date  |
+no       | since            | [iso-date-time](#iso-date-time) | Only display active disruptions after this date   |
+no       | until            | [iso-date-time](#iso-date-time) | Only display active disruptions before this date  |
 no       | count            | int                             | Maximum number of results.                        | 10
+no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Restrain the search within the given disruption tags|
+no       | tags[]           | array of string                 | Filter disruptions with the given tags            |
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1960,6 +1968,15 @@ For example:
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
+Required | Name             | Type                            | Description                                         | Default Value
+---------|------------------|---------------------------------|-----------------------------------------------------|--------------
+no       | since            | [iso-date-time](#iso-date-time) | Only display active disruptions after this date     |
+no       | until            | [iso-date-time](#iso-date-time) | Only display active disruptions before this date    |
+no       | count            | int                             | Maximum number of results.                          | 10
+no       | depth            | int                             | Json response [depth](#depth)                       | 1
+no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.   |
+no       | disable_geojson  | boolean                         | remove geojson fields from the response             | false
+no       | tags[]           | array of string                 | Filter disruptions with the given tags              |
 
 The response is made of an array of [traffic_reports](#traffic-reports),
 and another one of [disruptions](#disruption).
@@ -2200,7 +2217,7 @@ For more information, refer to [equipment-reports](#equipment-reports) API descr
 Required | Name             | Type   | Description                                        | Default Value
 ---------|------------------|--------|----------------------------------------------------|--------------
 no       | count            | int    | Elements per page                                  | 10
-no       | depth            | int    | Depth                                              | 1
+no       | depth            | int    | Json response [depth](#depth)                      | 1
 no       | filter           | string | A [filter](#filter) to refine your request         |
 no       | forbidden_uris[] | id     | If you want to avoid lines, modes, networks, etc.  |
 no       | start_page       | int    | The page number (cf the [paging section](#paging)) | 0
