@@ -1,4 +1,5 @@
 -r requirements.txt
+-r ../../requirements_pre-commit.txt
 swagger-spec-validator==2.1.0
 mock==1.0.1
 validators==0.10
@@ -9,6 +10,3 @@ requests-mock==1.0.0
 flex==6.10.0
 jsonschema==2.6.0
 pytest-timeout==1.3.3
-mypy==0.670; python_version > '3.0'
-mypy-extensions==0.4.1; python_version > '3.0'
-flake8==3.5.0

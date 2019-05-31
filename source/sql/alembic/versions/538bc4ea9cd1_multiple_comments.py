@@ -1,6 +1,6 @@
 """multiple comments
 
-Remove all comment column and add 2 new tables: 
+Remove all comment column and add 2 new tables:
     * one comment table
     * one table to make the link between pt object and the comments
 Revision ID: 538bc4ea9cd1

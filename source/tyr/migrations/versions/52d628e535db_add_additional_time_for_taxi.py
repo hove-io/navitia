@@ -1,4 +1,4 @@
-""" Adding attributes additional_time_after_first_section_taxi and 
+""" Adding attributes additional_time_after_first_section_taxi and
     additional_time_before_last_section_taxi in table instance
 Revision ID: 52d628e535db
 Revises: 584590c53431

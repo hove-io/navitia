@@ -1,7 +1,7 @@
 # Eitri
 
 Eitri is the brother of Brokkr, he builds stuff.
- 
+
 For navitia, he builds a `data.nav.lz4` used as an input by Kraken. Eitri uses docker to create the temporary database needed to produce the `.nav`.
 
 Eitri consumes GTFS/NTFS, POI infos, Open Street Map data etc... to generate a `.nav` file. If you have several datasets (eg. a GTFS and an OSM), they will need to be in sperarate directories (ie. `/my/data/gtfs` & `/my/data/osm`).

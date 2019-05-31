@@ -114,7 +114,7 @@ We impact a line and add some precisions on how this line is impacted
           // a line
         }
         "id":"id_of_the_line",
-     }, 
+     },
      "impacted_section":{ // <- the integration is a bit tricky, you need to check this field to know the impact is on a line section
         "from": {
             // a pt object
@@ -134,7 +134,7 @@ We impact a line and add some precisions on how this line is impacted
 }
 ```
 
-The downside is that the integration is harder, the user needs to check wheter or not a field `impacted_section` is present to treat the impacted line differently, 
+The downside is that the integration is harder, the user needs to check wheter or not a field `impacted_section` is present to treat the impacted line differently,
 but:
 * it's like what we have for the delays on trips
 * we find that it's quite clear
@@ -164,7 +164,7 @@ We'll at least link the line section disruption to:
 
 examples:
 
-this is the navitia call and YES means we display the disruption, NO means we do not display it, 
+this is the navitia call and YES means we display the disruption, NO means we do not display it,
 NOT_SPECIFIED means that we haven't yet decided whether or not they are to be displayed
 
 `/routes/route_1_of_the_line_1` --> YES
@@ -222,7 +222,7 @@ We'll not use the whole ptref query to filter the disruption displayed it can th
 
 This is for the calls api.navitia.io/v1/coverage/bob/<some pt ref filters>/disruptions
 
-The /disruption api is meant to be a direct representation of the object model below so I think it's ok the keep the same mechanism as before 
+The /disruption api is meant to be a direct representation of the object model below so I think it's ok the keep the same mechanism as before
 where only the objects with disruptions technically linked to them have disruptions.
 
 

@@ -637,13 +637,13 @@ The API handles the users's billing plan.
 
  - Parameters:
 
-name               | description                                                                          | required | default                                                      
+name               | description                                                                          | required | default  
 -------------------|--------------------------------------------------------------------------------------|----------|-----------------------------------------
-name               | name of the billing plan                                                             | yep      |                                       
+name               | name of the billing plan                                                             | yep      |  
 end_point_id       | the id of the endpoint for this billing plan (in most case the default value is good enough) | nope     | the default end_point (navitia.io)
 default            | if this plan is the default one for the end_point                                    | nope     | false
-max_request_count  | max request count for this billing plan                                              | nope     |                                    
-max_object_count   | max object count for this billing plan                                               | nope     | 
+max_request_count  | max request count for this billing plan                                              | nope     |  
+max_object_count   | max object count for this billing plan                                               | nope     |
 
 
 #### Cities
@@ -723,7 +723,7 @@ instance:
     curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
 
 If you want to change something on poi types you have to POST again all the json (previous AND new poi types):
-    
+
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "amenity:bicycle_rental", "name": "Station VLS"}, {"id": "amenity:parking", "name": "Parking"}, {"id": "pdv", "name": "Point de vente"}],"rules": [{"osm_tags_filters": [{"key": "amenity", "value": "bicycle_rental"}], "poi_type_id": "amenity:bicycle_rental"}, {"osm_tags_filters": [{"key": "amenity", "value": "parking"}], "poi_type_id": "amenity:parking"}, {"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
 Any update requires a complete POST because the order of the rules matters, so no PUT is allowed on a partial object.

@@ -19,7 +19,7 @@ from sqlalchemy.dialects import postgresql
 def upgrade():
     op.execute(
         """
-    ALTER TABLE navitia.parameters ALTER COLUMN shape 
+    ALTER TABLE navitia.parameters ALTER COLUMN shape
     SET DATA TYPE GEOGRAPHY(MULTIPOLYGON, 4326) USING ST_Multi(shape::geometry)
     """
     )
@@ -28,7 +28,7 @@ def upgrade():
 def downgrade():
     op.execute(
         """
-    ALTER TABLE navitia.parameters ALTER COLUMN shape 
+    ALTER TABLE navitia.parameters ALTER COLUMN shape
     SET DATA TYPE GEOGRAPHY(POLYGON, 4326) USING ST_GeometryN(shape::geometry, 1)
     """
     )
