@@ -348,7 +348,7 @@ A container containing either a [network](#network), [commercial_mode](#commerci
 Real time and disruption objects
 --------------------------------
 
-### Disruption
+### <a name="disruption"></a>Disruption
 
 ``` json
 {
@@ -391,6 +391,9 @@ Real time and disruption objects
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
 |category            |string                   |The category of the disruption, such as "construction works" or "incident"
+|contributor         |string                   |The source from which Navitia received the disruption
+|uri                 |string                   |deprecated
+|disruption_uri      |string                   |deprecated
 
 
 ### Impacted_object

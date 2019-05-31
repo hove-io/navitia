@@ -28,6 +28,7 @@ includes:
   - stuff
   - lexicon
   - errors
+  - realtime
 
 search: true
 ---

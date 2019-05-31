@@ -972,7 +972,7 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
 ### <a name="journeys-disruptions"></a> Disruptions
-By default, Navitia only computes journeys that don't have disruptions, disrupted journeys will not be reported into the response.
+By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules.
 If you want to provide journeys without blocking disruptions, you need to use the parameter `data_freshness=realtime`.
 
 In a journey's response, different disruptions may have different meanings.
@@ -982,6 +982,8 @@ Disruptions are on the sections, the ones that impact the journey are in the sec
 You might also have other disruptions in the response. They don't directly impact the journey, but might affect them.
 For example, some intermediate stops of a section can be disrupted, it doesn't prevent the journey from being realised but modifies it.
 These disruptions won't be on the `display_informations` of the sections or used in the journey's status.
+
+See how disruptions affect a journey in the [real time](#realtime) section.
 
 ### <a name="journeys-parameters"></a>Main parameters
 
@@ -1551,6 +1553,8 @@ The response is made of an array of [stop_schedule](#stop-schedule), and another
 one of [note](#note).
 [Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
+
+See how disruptions affect stop schedules in the [real time](#realtime) section.
 
 ### Accesses
 
