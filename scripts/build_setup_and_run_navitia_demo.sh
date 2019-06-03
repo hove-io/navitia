@@ -86,7 +86,7 @@ mkdir -p "$run_dir"
 #===================================================
 
 if [ -z "$ntfs_data_dir" ] || [ -z "$osm_file" ] || [ ! -z "$skip_bina"]; then
-    echo "** Download datas, we'll take a default data set, Paris"
+    echo "** Download data, we'll take a default data set, Paris"
     # Note, here is a link to a dataset of the paris region.
     # You can explore https://navitia.opendatasoft.com if you want another dataset
 

@@ -232,7 +232,7 @@ else
     echo "db $kraken_db_name already exists"
 fi
 
-echo "** create temporary virtenv to migrate bdd"
+echo "** create temporary virtenv to migrate db"
 if [ -d /tmp/venv_navitia_sql ]; then
     rm -rf /tmp/venv_navitia_sql
 fi
@@ -260,7 +260,7 @@ else
     echo "db jormungandr already exists"
 fi
 
-echo "** create temporary virtenv to upgrade jormun bdd"
+echo "** create temporary virtenv to upgrade jormun db"
 if [ -d /tmp/venv_tyr ]; then
     rm -rf /tmp/venvtyr
 fi

@@ -2,7 +2,7 @@
 
 ## Dev environment installation
 
-Aftermath the installation, it will be possible to :
+Following the installation, it will be possible to :
  - Compile kraken
  - Run all integration and Unit tests
  - Run docker tests (tyr)
