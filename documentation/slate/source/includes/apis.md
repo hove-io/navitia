@@ -972,8 +972,8 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
 ### <a name="journeys-disruptions"></a> Disruptions
-By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules.
-If you want to provide journeys without blocking disruptions, you need to use the parameter `data_freshness=realtime`.
+By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules. The disruption present in the response is for information only.
+If you want to provide journeys without blocking disruptions, you need to make an other request with the parameter `data_freshness=realtime`.
 
 In a journey's response, different disruptions may have different meanings.
 Each journey has a `status` attribute that indicates the most serious disruption effect.
@@ -1653,6 +1653,8 @@ object.
 [Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 Departures are ordered chronologically in ascending order as:
 ![departures](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG)
+
+See how disruptions affect the next departures in the [real time](#realtime) section.
 
 
 ### Accesses

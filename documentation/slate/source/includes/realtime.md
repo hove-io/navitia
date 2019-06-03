@@ -1,30 +1,30 @@
 <a name="realtime"></a> Real time integration in Navita
 ===============================================
 
-Several endpoints can integrate real time information in their responses. In the response received, a disruption will be present and additional information will be provided if the parameter `data_freshness` is set to `realtime`.
+Several endpoints can integrate real time information in their responses. In the response received, a disruption will be present and additional information will be provided if the parameter `data_freshness` is set to `realtime`. If the parameter `data_freshness` is set to `base_schedule`, the disruption is also present in the response for the user information, but it won't be taken into account in the results of the query.
 
-<aside class="notice">
-Real time isn't available on every coverages for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia, which can be provided through several means (GTFS-RT for ex or proprietary format like the SNCF client).
+<aside class="warning">
+Real time isn't available on every coverages for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia.
 </aside>
 
 The effect of a disruption can be one of the following:
 <ul>
-	<li>SIGNIFICANT_DELAYS</li>
-	<li>REDUCED_SERVICE</li>
+	<li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
+	<li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
 </ul>
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints. A link to the API
 
 
-## Trip delayed
+## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
 
 The effect of the disruption is `SIGNIFICANT_DELAYS`. It means that the train will arrive late at one or more stations in its journey.
 
-```
+``` shell
 {
     "amended_arrival_time": "093200",
     "amended_departure_time": "093300",
-    "arrival_status": "delayed"
+    "arrival_status": "delayed",
     "base_arrival_time": "092200",
     "base_departure_time": "092300",
     "cause": "Panne d'un aiguillage",
@@ -37,6 +37,7 @@ The effect of the disruption is `SIGNIFICANT_DELAYS`. It means that the train wi
 
 In the disruption, the delay can be found in the list of "impacted_stops" with the departure/arrival status set to "delayed". See the [disruption](#disruption) objects section for its full content and description.
 
+<div></div>
 ### Journeys
 
 ``` shell
@@ -116,6 +117,7 @@ A list of the disruptions impacting the journey is also present at the root leve
 For a disruption to be present in the response, the request has to be made during its application period.
 </aside>
 
+<div></div>
 ### Departures
 
 ``` shell
@@ -145,6 +147,7 @@ In the "stop_date_time" section of the response, the parameter "stop_date_time" 
 
 A list of the disruptions impacting the departures is also present at the root level of the response.
 
+<div></div>
 ### Stop Schedules
 
 ``` shell
@@ -180,13 +183,13 @@ In the list of "date_times" available in the response, the parameter "data_fresh
 
 A list of the disruptions impacting the stop schedules is also present at the root level of the response.
 
-## Reduced service
+## <a name="REDUCED_SERVICE"></a>Reduced service
 
 The effect of the disruption is `REDUCED_SERVICE`. It means that the train won't be serving one or more stations in its journey.
 
-```
+``` shell
 {
-    "arrival_status": "deleted"
+    "arrival_status": "deleted",
     "cause": "",
     "departure_status": "deleted",
     "is_detour": false,
@@ -201,6 +204,6 @@ In the disruption, the deleted stations can be found in the list of "impacted_st
 
 If the station deleted is the destination of the journey, Navitia will compute an other itinerary to the requested station. If not, the disruption will be present at the root level of the response for information, but it won't be affecting the journey.
 
-### Departures
+### Departures & Stop Schedules
 
-The departure time of the train with the reduced service simply won't be displayed in the list of departures if "data_freshness" is set to "realtime".
+The departure time of the train with the reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
