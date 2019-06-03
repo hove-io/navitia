@@ -1066,7 +1066,7 @@ int osm2ed(int argc, const char** argv) {
                        "a json string describing poi_types and rules to build them from OSM tags")
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name")
-        ("cities-connection-string", po::value<std::string>(), 
+        ("cities-connection-string", po::value<std::string>(),
             "cities database connection string, to use admins from cities instead of osm's relations");
     // clang-format on
 

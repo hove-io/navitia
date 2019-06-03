@@ -128,7 +128,7 @@ struct Admin {
           const uint32_t level,
           mpolygon_type&& polygon,
           point&& center);
-
+    virtual ~Admin() {}
     virtual void build_geometry(OSMCache&) {}
     bool is_city() const { return level == 8; }
 
@@ -152,6 +152,7 @@ struct OSMAdminRelation : public Admin {
                      const std::string& postal_code,
                      const std::string& name,
                      const uint32_t level);
+    virtual ~OSMAdminRelation() {}
 
     virtual void build_geometry(OSMCache& cache);
     void build_polygon(OSMCache& cache);
