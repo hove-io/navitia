@@ -127,7 +127,7 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::
         // on direct path with car we want to arrive on the walking graph
         dest_mode = type::Mode_e::Walking;
     }
-    const auto dest_edge = ProjectionData(destination.coordinates, geo_ref, geo_ref.offsets[dest_mode], geo_ref.pl);
+    const auto dest_edge = ProjectionData(destination.coordinates, geo_ref, dest_mode);
     if (!dest_edge.found) {
         return Path();
     }

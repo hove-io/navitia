@@ -73,7 +73,7 @@ void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
 
 // Compute the path from the starting point to the the target geographical coord
 Path compute_path(DijkstraPathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
-    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
+    ProjectionData dest(target_coord, finder.geo_ref);
 
     auto best_pair = finder.update_path(dest);
 
@@ -82,7 +82,7 @@ Path compute_path(DijkstraPathFinder& finder, const navitia::type::GeographicalC
 
 // Compute the path from the starting point to the the target geographical coord
 Path compute_path(AstarPathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
-    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
+    ProjectionData dest(target_coord, finder.geo_ref);
     auto const max_dur = navitia::seconds(1000.);
 
     finder.start_distance_or_target_astar(max_dur, dest.projected, {dest[source_e], dest[target_e]});

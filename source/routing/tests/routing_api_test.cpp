@@ -1770,7 +1770,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), 7_days);
 
     // first we want to check that the projection is done on A->B (the whole point of this test)
-    auto starting_edge = ng::ProjectionData(start, *b.data->geo_ref, 0, b.data->geo_ref->pl);
+    auto starting_edge = ng::ProjectionData(start, *b.data->geo_ref);
     BOOST_REQUIRE(starting_edge.found);
 
     BOOST_CHECK_EQUAL(starting_edge.vertices[ng::ProjectionData::Direction::Target], AA);
