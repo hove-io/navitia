@@ -257,7 +257,7 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef& worker,
     size_t n = boost::num_vertices(worker.graph);
     distances.assign(n, bt::pos_infin);
     nt::idx_t offset = worker.offsets[mode];
-    auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
+    auto proj = georef::ProjectionData(coord_origin, worker, mode);
     if (proj.found) {
         distances[proj[source_e]] =
             std::min(distances[proj[source_e]], time_duration(seconds(proj.distances[source_e] / speed)));
@@ -290,8 +290,7 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef& worker,
                                                  const bool clockwise,
                                                  const DateTime& bound) {
     std::vector<georef::vertex_t> initialized_points;
-    nt::idx_t offset = worker.offsets[mode];
-    auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
+    auto proj = georef::ProjectionData(coord_origin, worker, mode);
     if (proj.found) {
         initialized_points.push_back(proj[source_e]);
         initialized_points.push_back(proj[target_e]);
@@ -323,8 +322,7 @@ static BoundBox find_boundary_box(const georef::GeoRef& worker,
                                   const double speed) {
     auto box = BoundBox();
     const auto distance_500m = (500 / type::GeographicalCoord::EARTH_RADIUS_IN_METERS) * N_RAD_TO_DEG;
-    nt::idx_t offset = worker.offsets[mode];
-    auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
+    auto proj = georef::ProjectionData(coord_origin, worker, mode);
     if (proj.found) {
         box.set_box(coord_origin, walking_distance(max_duration, 0, speed) + distance_500m);
     }

@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/foreach.hpp>
 #include <boost/geometry.hpp>
 #include <boost/range/algorithm/sort.hpp>
+#include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/range/algorithm/lexicographical_compare.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <array>
@@ -296,31 +297,12 @@ float PathItem::get_length(float speed_factor) const {
 
 ProjectionData::ProjectionData(const type::GeographicalCoord& coord,
                                const GeoRef& sn,
-                               const proximitylist::ProximityList<vertex_t>& prox) {
-    edge_t edge;
-    found = true;
-    try {
-        edge = sn.nearest_edge(coord, prox);
-    } catch (proximitylist::NotFound) {
-        found = false;
-        vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
-        vertices[Direction::Target] = std::numeric_limits<vertex_t>::max();
-    }
-
-    if (found) {
-        init(coord, sn, edge);
-    }
-}
-
-ProjectionData::ProjectionData(const type::GeographicalCoord& coord,
-                               const GeoRef& sn,
-                               type::idx_t offset,
-                               const proximitylist::ProximityList<vertex_t>& prox,
+                               type::Mode_e mode,
                                double horizon) {
     edge_t edge;
     found = true;
     try {
-        edge = sn.nearest_edge(coord, prox, offset, horizon);
+        edge = sn.nearest_edge(coord, mode);
     } catch (proximitylist::NotFound) {
         found = false;
         vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
@@ -353,6 +335,17 @@ void ProjectionData::init(const type::GeographicalCoord& coord, const GeoRef& sn
         distances[Direction::Target] = projected.distance_to(vertex2_coord);
     }
     this->real_coord = coord;
+}
+
+static bool is_sn_edge(const GeoRef& georef, const edge_t& e) {
+    switch (georef.get_caracteristic(e)) {
+        case PathItem::TransportCaracteristic::Walk:
+        case PathItem::TransportCaracteristic::Bike:
+        case PathItem::TransportCaracteristic::Car:
+            return true;
+        default:
+            return false;
+    }
 }
 
 /**
@@ -388,17 +381,33 @@ void GeoRef::init() {
 
 void GeoRef::build_proximity_list() {
     pl.clear();
-
-    // do not build the proximitylist with the edge of other transportation mode than walking (and walking HAS to be the
-    // first graph)
-    for (vertex_t v = 0; v < nb_vertex_by_mode; ++v) {
-        pl.add(graph[v].coord, v);
-    }
-
-    pl.build();
-
+    pl_walking.clear();
+    pl_bike.clear();
+    pl_car.clear();
     poi_proximity_list.clear();
 
+    auto log = log4cplus::Logger::getInstance("");
+
+    auto build_sn_pl = [this](proximitylist::ProximityList<vertex_t>& sn_pl, nt::idx_t offset) {
+        for (vertex_t v = offset; v < nb_vertex_by_mode + offset; ++v) {
+            if (boost::algorithm::none_of(boost::out_edges(v, graph),
+                                          [=](const auto& edge) { return is_sn_edge(*this, edge); }))
+                continue;
+            sn_pl.add(graph[v].coord, v);
+        }
+        sn_pl.build();
+    };
+
+    LOG4CPLUS_INFO(log, "Building Proximity list for walking graph");
+    build_sn_pl(pl_walking, offsets[nt::Mode_e::Walking]);
+
+    LOG4CPLUS_INFO(log, "Building Proximity list for bike graph");
+    build_sn_pl(pl_bike, offsets[nt::Mode_e::Bike]);
+
+    LOG4CPLUS_INFO(log, "Building Proximity list for car graph");
+    build_sn_pl(pl_car, offsets[nt::Mode_e::Car]);
+
+    LOG4CPLUS_INFO(log, "Building Proximity list for POIs");
     for (const POI* poi : pois) {
         poi_proximity_list.add(poi->coord, poi->idx);
     }
@@ -657,7 +666,7 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
         nt::Mode_e mode = mode_layer.first;
         nt::idx_t offset = offsets[mode_layer.second];
 
-        ProjectionData proj(stop_point->coord, *this, offset, this->pl);
+        ProjectionData proj(stop_point->coord, *this, mode_layer.second);
         projections[mode] = proj;
         if (proj.found)
             one_proj_found = true;
@@ -672,24 +681,27 @@ vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord& coordinates,
 }
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates) const {
-    return this->nearest_edge(coordinates, this->pl);
+    return nearest_edge(coordinates, pl_walking);
 }
 
-static bool is_sn_edge(const GeoRef& georef, const edge_t& e) {
-    switch (georef.get_caracteristic(e)) {
-        case PathItem::TransportCaracteristic::Walk:
-        case PathItem::TransportCaracteristic::Bike:
-        case PathItem::TransportCaracteristic::Car:
-            return true;
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates, type::Mode_e mode) const {
+    switch (mode) {
+        case type::Mode_e::Walking:
+        case type::Mode_e::Bss:
+            return nearest_edge(coordinates, pl_walking);
+        case type::Mode_e::Bike:
+            return nearest_edge(coordinates, pl_bike);
+        case type::Mode_e::Car:
+        case type::Mode_e::CarNoPark:
+            return nearest_edge(coordinates, pl_car);
         default:
-            return false;
+            throw navitia::exception("Unknown mode when looking for nearest edges");
     }
 }
 
 /// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
                             const proximitylist::ProximityList<vertex_t>& prox,
-                            type::idx_t offset,
                             double horizon) const {
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
@@ -702,13 +714,12 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     // With 30, we have broken less than 1% tests on Artemis_idfm.
     constexpr int nb_nearest_vertices = 30;
 
-    for (const auto& ind : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, nb_nearest_vertices)) {
-        // we increment the index to get the vertex in the other graph
-        const auto u = ind + offset;
-
+    for (const auto& u : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, nb_nearest_vertices)) {
         BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
             const auto& v = target(e, graph);
-            if (!is_sn_edge(*this, e)) {
+            auto source_mode = get_mode(u);
+            auto target_mode = get_mode(v);
+            if (source_mode != target_mode) {
                 continue;
             }
             const auto& edge = graph[e];
@@ -740,7 +751,7 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
                                                 const std::function<bool(const Way&)>& filter) const {
     // first, we collect each ways with its distance to the coord
     std::map<const Way*, double> way_dist;
-    for (const auto& ind : pl.find_within<proximitylist::IndexOnly>(coord)) {
+    for (const auto& ind : pl_walking.find_within<proximitylist::IndexOnly>(coord)) {
         BOOST_FOREACH (const edge_t& e, boost::out_edges(ind, graph)) {
             const Way* w = ways[graph[e].way_idx];
             if (filter(*w)) {

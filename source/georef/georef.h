@@ -228,6 +228,10 @@ struct GeoRef {
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
 
+    proximitylist::ProximityList<vertex_t> pl_walking;
+    proximitylist::ProximityList<vertex_t> pl_bike;
+    proximitylist::ProximityList<vertex_t> pl_car;
+
     /// for all stop_point, we store it's projection on each graph
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
     std::vector<ProjectionByMode> projected_stop_points = {};
@@ -320,14 +324,9 @@ struct GeoRef {
     vertex_t nearest_vertex(const type::GeographicalCoord& coordinates,
                             const proximitylist::ProximityList<vertex_t>& prox) const;
     edge_t nearest_edge(const type::GeographicalCoord& coordinates) const;
-    edge_t nearest_edge(const type::GeographicalCoord& coordinates,
-                        const proximitylist::ProximityList<vertex_t>& prox,
-                        type::idx_t offset = 0,
-                        double horizon = 500) const;
 
-    edge_t nearest_edge(const type::GeographicalCoord& coordinates, type::Mode_e mode) const {
-        return nearest_edge(coordinates, pl, offsets[mode]);
-    }
+    edge_t nearest_edge(const type::GeographicalCoord& coordinates, type::Mode_e mode) const;
+
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord&) const;
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord& coord,
                                             const std::function<bool(const Way&)>& filter) const;
@@ -348,6 +347,11 @@ struct GeoRef {
     ~GeoRef();
     GeoRef() = default;
     GeoRef(const GeoRef& other) = default;
+
+private:
+    edge_t nearest_edge(const type::GeographicalCoord& coordinates,
+                        const proximitylist::ProximityList<vertex_t>& prox,
+                        double horizon = 500) const;
 };
 
 /** When given a coordinate, we have to associate it with the street network.
@@ -384,15 +388,10 @@ struct ProjectionData {
     flat_enum_map<Direction, double> distances{{{-1, -1}}};
 
     ProjectionData() {}
-    /// Project the coordinate on the graph
-    ProjectionData(const type::GeographicalCoord& coord,
-                   const GeoRef& sn,
-                   const proximitylist::ProximityList<vertex_t>& prox);
     /// Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord& coord,
                    const GeoRef& sn,
-                   type::idx_t offset,
-                   const proximitylist::ProximityList<vertex_t>& prox,
+                   type::Mode_e mode = type::Mode_e::Walking,
                    double horizon = 500);
 
     template <class Archive>
