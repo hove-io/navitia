@@ -46,8 +46,6 @@ GraphBuilder& GraphBuilder::add_vertex(std::string node_name, double x, double y
     }
 
     this->geo_ref.graph[v].coord = coord;
-    this->geo_ref.pl.add(coord, v);
-    this->geo_ref.pl.build();
     return *this;
 }
 

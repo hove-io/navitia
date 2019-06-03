@@ -390,9 +390,6 @@ void GeoRef::build_proximity_list() {
 
     auto build_sn_pl = [this](proximitylist::ProximityList<vertex_t>& sn_pl, nt::idx_t offset) {
         for (vertex_t v = offset; v < nb_vertex_by_mode + offset; ++v) {
-            if (boost::algorithm::none_of(boost::out_edges(v, graph),
-                                          [=](const auto& edge) { return is_sn_edge(*this, edge); }))
-                continue;
             sn_pl.add(graph[v].coord, v);
         }
         sn_pl.build();

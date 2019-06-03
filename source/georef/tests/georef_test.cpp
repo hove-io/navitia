@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(init_test) {
 
     BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 5);
 
-    b.geo_ref.init();
+    b.init();
 
     BOOST_CHECK_EQUAL(boost::num_vertices(b.geo_ref.graph), 15);  // one graph for each transportation mode save VLS
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(nearest_segment) {
 
     b("a", 0, 10)("b", -10, 0)("c", 10, 0)("d", 0, -10)("o", 0, 0)("e", 50, 10);
     b("o", "a")("o", "b")("o", "c")("o", "d")("b", "o");
-    b.geo_ref.init();
+    b.init();
 
     navitia::type::GeographicalCoord c(1, 2, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "a"));
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge) {
     */
     b("a", 0, -100)("b", 0, 100)("c", 10, 0)("d", 10, 10);
     b("a", "b")("c", "d");
-    b.geo_ref.init();
+    b.init();
 
     navitia::type::GeographicalCoord s(-10, 0, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(s) == b.get("a", "b"));
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(nearest_edge_with_geometries) {
     nt::GeographicalCoord x3(23, 2, false);
     nt::GeographicalCoord x4(15, 5, false);
     nt::GeographicalCoord x5(40, 32, false);
-    b.geo_ref.init();
+    b.init();
 
     BOOST_CHECK(b.geo_ref.nearest_edge(x1) == b.get("b", "e"));
     BOOST_CHECK(b.geo_ref.nearest_edge(x2) == b.get("c", "d"));
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     std::reverse(geom.begin(), geom.end());
     b.add_geom(b.get("e", "d"), geom);
 
-    b.geo_ref.init();
+    b.init();
     DijkstraPathFinder djikstra_path_finder(b.geo_ref);
     AstarPathFinder astar_path_finder(b.geo_ref);
 
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
         }
     }
 
-    b.geo_ref.init();
+    b.init();
 
     auto edge_x1 = b.geo_ref.nearest_edge(x1);
     BOOST_REQUIRE_EQUAL(boost::source(edge_x1, b.geo_ref.graph), b.get("a"));
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     b.geo_ref.graph[b.get("d", "e")].way_idx = 1;
     b.geo_ref.graph[b.get("e", "d")].way_idx = 1;
 
-    b.geo_ref.init();
+    b.init();
 
     DijkstraPathFinder djikstra_path_finder(b.geo_ref);
     AstarPathFinder astar_path_finder(b.geo_ref);
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(compute_coord) {
     start.set_xy(3, -1);
     GeographicalCoord destination;
     destination.set_xy(4, 11);
-    b.geo_ref.init();
+    b.init();
     djikstra_path_finder.init(start, Mode_e::Walking, 1);
     Path p = compute_path(djikstra_path_finder, destination);
     auto coords = get_coords_from_path(p);
@@ -832,7 +832,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest) {
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
-    b.geo_ref.init();
+    b.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->idx = 0;
@@ -1218,7 +1218,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.add(c1, 0);
     pl.add(c2, 1);
     pl.build();
-    b.geo_ref.init();
+    b.init();
 
     StopPoint* sp1 = new StopPoint();
     sp1->coord = c1;
@@ -1477,7 +1477,7 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge) {
     pl.add(c2, 2);
     pl.add(c3, 3);
     pl.build();
-    b.geo_ref.init();
+    b.init();
 
     StopPoint* sp0 = new StopPoint();
     sp0->coord = c0;

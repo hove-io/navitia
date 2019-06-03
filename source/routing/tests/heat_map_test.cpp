@@ -126,7 +126,6 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     boost::add_vertex(ng::Vertex(B), b.data->geo_ref->graph);
     boost::add_vertex(ng::Vertex(C), b.data->geo_ref->graph);
     boost::add_vertex(ng::Vertex(D), b.data->geo_ref->graph);
-    b.data->geo_ref->init();
 
     size_t way_idx = 0;
     for (const auto& name : {"ab", "bc", "ac", "cd"}) {
@@ -149,6 +148,10 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
     b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
     b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
+
+    b.data->geo_ref->init();
+    b.data->geo_ref->build_proximity_list();
+
     b.data->build_proximity_list();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), 7_days);
     b.vj("A")("stop1", "08:00"_t)("stop2", "08:10"_t)("stop3", "08:20"_t);
