@@ -191,19 +191,19 @@ class Scenario(object):
                 uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
             )
         except UnknownObject as e:
-            if not autocomplete.is_handling_stop_points():
-                # the autocomplete have not found anything and it does not handle stop_points,
-                # we'll search for the object in kraken too
-
-                kraken_res = instance.kraken_autocomplete.get_by_uri(
+            # the autocomplete have not found anything
+            # We'll check if we can find another autocomplete system that explictly handle stop_points
+            # because for the moment mimir does not have stoppoints, but kraken do
+            for autocomplete_system in instance.stop_point_fallbacks():
+                if autocomplete_system == autocomplete:
+                    continue
+                res = autocomplete_system.get_by_uri(
                     uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
                 )
-                if kraken_res.get("places"):
-                    return kraken_res
-                # we raise the initial exception
-                raise e
-            else:
-                raise e
+                if res.get("places"):
+                    return res
+            # we raise the initial exception
+            raise e
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()

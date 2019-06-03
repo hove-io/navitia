@@ -219,12 +219,8 @@ class Instance(object):
             )
         return backend
 
-    @property
-    def kraken_autocomplete(self):
-        backend = global_autocomplete.get('kraken')
-        if backend is None:
-            raise RuntimeError('impossible to find autocomplete kraken for instance {}'.format(self.name))
-        return backend
+    def stop_point_fallbacks(self):
+        return [a for a in global_autocomplete.values() if a.is_handling_stop_points()]
 
     def get_models(self):
         if self.name not in g.instances_model:
