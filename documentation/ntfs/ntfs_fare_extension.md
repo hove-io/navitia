@@ -36,7 +36,7 @@ Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_id | Text | Required | Unique ID of the ticket
 ticket_price | Non-negative Float | Required |
-ticker_currency | Currency Code | Required | An ISO 4217 alphabetical currency code. For the list of current currency, refer to https://en.wikipedia.org/wiki/ISO_4217#Active_codes.
+ticket_currency | Currency Code | Required | An ISO 4217 alphabetical currency code. For the list of current currency, refer to https://en.wikipedia.org/wiki/ISO_4217#Active_codes.
 ticket_validity_start | Date | Required | First day of usability of the ticket (included)
 ticket_validity_end | Date | Required | Last day of usability of the ticket (included)
 
@@ -46,8 +46,8 @@ Field | Type | Constraint | Description
 ticket_id | Text | Required | Unique ID of the ticket
 ticket_use_id | Text | Required | Unique ID of the ticket use
 max_transfers | integer | Required | Max number of transfers using one ticket. The value can be empty to indicate there is no constraint, but the field must be provided.
-boarding_time_limit | integer | Required | Specifies the time frame (in minutes) in which a traveler can board in a new vehicle. The value can be empty to indicate there is no constraint, but the field must be provided.
-alighting_time_limit | integer | Required | Specifies the time frame (in minutes) in which a traveler must get off the vehicle. When this duration is expired, the ticket is no longer valid. The value can be empty to indicate there is no constraint, but the field must be provided.
+boarding_time_limit | integer | Required | Specifies the time frame (in seconds) in which a traveler can board in a new vehicle. The value can be empty to indicate there is no constraint, but the field must be provided.
+alighting_time_limit | integer | Required | Specifies the time frame (in seconds) in which a traveler must get off the vehicle. When this duration is expired, the ticket is no longer valid. The value can be empty to indicate there is no constraint, but the field must be provided.
 
 ## ticket_use_perimeter.txt (Required)
 
