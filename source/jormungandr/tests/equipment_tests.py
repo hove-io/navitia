@@ -330,10 +330,6 @@ class TestEquipment(AbstractTestFixture):
         )
         response = self.query_region(default_line_uri_filter + 'equipment_reports?' + default_date_filter)
 
-        warnings = get_not_null(response, 'warnings')
-        assert len(warnings) == 1
-        assert warnings[0]['id'] == 'beta_endpoint'
-
         # Expected response
         stopA_equipment_details = [
             ("5", "elevator", "unknown"),
@@ -358,10 +354,6 @@ class TestEquipment(AbstractTestFixture):
         self._check_equipment_report(equipment_reports, expected_result)
 
         response = self.query_region(default_stop_areas_uri_filter + 'equipment_reports?' + default_date_filter)
-
-        warnings = get_not_null(response, 'warnings')
-        assert len(warnings) == 1
-        assert warnings[0]['id'] == 'beta_endpoint'
 
         # Expected response
         stopA_equipment_details = [
