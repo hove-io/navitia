@@ -355,20 +355,6 @@ class TestEquipment(AbstractTestFixture):
 
         response = self.query_region(default_stop_areas_uri_filter + 'equipment_reports?' + default_date_filter)
 
-        # Expected response
-        stopA_equipment_details = [
-            ("5", "elevator", "unknown"),
-            ("1", "escalator", "unknown"),
-            ("2", "escalator", "unknown"),
-            ("3", "escalator", "unknown"),
-            ("4", "escalator", "unknown"),
-        ]
-        stopb_equipment_details = [
-            ("6", "elevator", "available"),
-            ("7", "elevator", "unavailable"),
-            ("8", "elevator", "unknown"),
-            ("9", "elevator", "unknown"),
-        ]
         # filtered with the stopA stop_area
         expected_result = {
             "A": {"stopA": stopA_equipment_details},
