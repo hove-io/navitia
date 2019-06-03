@@ -256,7 +256,6 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef& worker,
     std::vector<navitia::time_duration> distances;
     size_t n = boost::num_vertices(worker.graph);
     distances.assign(n, bt::pos_infin);
-    nt::idx_t offset = worker.offsets[mode];
     auto proj = georef::ProjectionData(coord_origin, worker, mode);
     if (proj.found) {
         distances[proj[source_e]] =
