@@ -121,7 +121,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
             "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
             "first_section_mode[]={first}&last_section_mode[]={last}".format(first='ridesharing', last='walking')
         )
-        response = self.query_region(q)
+        response = self.query_region(q, check=False)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')

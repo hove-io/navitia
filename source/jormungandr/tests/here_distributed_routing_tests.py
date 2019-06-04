@@ -224,7 +224,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
                 from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR
             )
         )
-        response = self.query_region(q)
+        response = self.query_region(q, check=False)
         # we don't want to check the journeys links as that will make more HERE call (when testing the links)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
