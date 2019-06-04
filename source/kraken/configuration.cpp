@@ -80,6 +80,7 @@ po::options_description get_options_description(const boost::optional<std::strin
 
         ("GENERAL.enable_request_deadline", po::value<bool>()->default_value(true), "enable deadline of request")
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
+        ("GENERAL.core_file_size_limit", po::value<int>()->default_value(0), "ulimit that define the maximum size of a core file")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -179,6 +180,10 @@ bool Configuration::is_realtime_add_trip_enabled() const {
 
 int Configuration::kirin_timeout() const {
     return this->vm["GENERAL.kirin_timeout"].as<int>();
+}
+
+int Configuration::core_file_size_limit() const {
+    return this->vm["GENERAL.core_file_size_limit"].as<int>();
 }
 
 std::string Configuration::broker_host() const {
