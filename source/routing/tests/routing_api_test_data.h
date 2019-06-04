@@ -467,6 +467,10 @@ struct routing_api_data {
                 .st_shape({B, I, A});
             b.lines["B"]->code = "1B";
 
+            b.vj("PM", "111111", "", true, "vjPM")("stop_point:stopB", "23:55"_t)("stop_point:stopA", "24:01:00"_t)
+                .st_shape({B, I, A});
+            b.lines["PM"]->code = "1PM";
+
             b.vj("C")("stop_point:stopA", "08:01"_t)("stop_point:stopB", "08:01:02"_t).st_shape({A, I, B});
             b.lines["C"]->code = "1C";
 
@@ -475,7 +479,6 @@ struct routing_api_data {
                 "stop_point:stopB", "23:05:00"_t, "23:07:00"_t, zone_id, true, false, 1800, 0);
 
             // we add another stop not used in the routing tests, but used for ptref tests
-
             b.sa("stopC", J.lon(), J.lat());
             // and we add some one vj from a to D with a metro
             auto& builder_vj =

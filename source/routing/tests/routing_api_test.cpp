@@ -2123,7 +2123,7 @@ BOOST_FIXTURE_TEST_CASE(direct_path_filtering_test, streetnetworkmode_fixture<te
     destination.streetnetwork_params.speed_factor = 1;
     destination.streetnetwork_params.max_duration = navitia::seconds(15 * 60);
 
-    forbidden = {"A", "B", "D", "M"};
+    forbidden = {"A", "B", "D", "M", "PM"};
 
     pbnavitia::Response resp = make_response();
     dump_response(resp, "direct_path_filtering");
