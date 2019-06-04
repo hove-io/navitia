@@ -141,26 +141,27 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
     std::vector<std::vector<Projection>> dist_pixel = {step, {step, Projection()}};
     const size_t offset_lon = floor(min_dist / (width_step * N_DEG_TO_DISTANCE)) + 1;
     const size_t offset_lat = floor(min_dist / (height_step * N_DEG_TO_DISTANCE)) + 1;
-    auto begin = std::lower_bound(
-        worker.pl.items.begin(), worker.pl.items.end(), box.min.lon(),
-        [](const proximitylist::ProximityList<georef::vertex_t>::Item& i, double min) { return i.coord.lon() < min; });
 
-    if (begin == worker.pl.items.end()) {
-        return dist_pixel;
+    auto box_center = type::GeographicalCoord{(box.min.lon() + box.max.lon()) / 2, (box.min.lat() + box.max.lat()) / 2};
+
+    auto radius = box.min.distance_to(box.max);
+
+    auto objects_inside = worker.pl_walking.find_within(box_center, 1.4 * radius);
+
+    if (objects_inside.empty()) {
+        return {};
     }
 
-    auto end = std::upper_bound(
-        begin, worker.pl.items.end(), box.max.lon(),
-        [](double max, const proximitylist::ProximityList<georef::vertex_t>::Item& i) { return max <= i.coord.lon(); });
+    const auto coslat = cos(objects_inside.front().second.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
+    for (const auto& o : objects_inside) {
+        const auto element = o.first;
+        const auto& source = o.second;
 
-    const auto coslat = cos(begin->coord.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    for (auto it = begin; it != end; ++it) {
-        const auto& source = it->coord;
         if (!box.contains(source)) {
             continue;
         }
         const auto rank_source = find_rank(box, source, height_step, width_step);
-        BOOST_FOREACH (georef::edge_t e, boost::out_edges(it->element, worker.graph)) {
+        BOOST_FOREACH (georef::edge_t e, boost::out_edges(element, worker.graph)) {
             const auto v = target(e, worker.graph);
             const auto& target = worker.graph[v].coord;
             const auto rank_target = find_rank(box, target, height_step, width_step);
@@ -175,7 +176,7 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
                         && (!dist_pixel[lon_rank][lat_rank].distance
                             || length < *dist_pixel[lon_rank][lat_rank].distance)) {
                         dist_pixel[lon_rank][lat_rank].distance = length;
-                        dist_pixel[lon_rank][lat_rank].source = it->element;
+                        dist_pixel[lon_rank][lat_rank].source = element;
                         dist_pixel[lon_rank][lat_rank].target = v;
                     }
                 }

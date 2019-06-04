@@ -226,6 +226,8 @@ struct GeoRef {
         autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::POI);
 
     /// Indexe tous les nœuds
+
+    // TODO: Remove this before the next re-binarisation
     proximitylist::ProximityList<vertex_t> pl;
 
     proximitylist::ProximityList<vertex_t> pl_walking;
