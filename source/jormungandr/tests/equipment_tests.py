@@ -204,7 +204,7 @@ class TestEquipment(AbstractTestFixture):
         call equipment_reports without provider config
         """
 
-        # Provider configis empty
+        # Provider config is empty
         self.equipment_provider_manager("main_routing_test")._equipment_providers = {}
         response, status = self.query_no_assert(
             'v1/coverage/main_routing_test/equipment_reports?' + default_date_filter
