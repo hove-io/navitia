@@ -96,6 +96,7 @@ instance_fields = {
     'is_free': fields.Raw,
     'import_stops_in_mimir': fields.Raw,
     'import_ntfs_in_mimir': fields.Raw,
+    'admins_from_cities_db': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
     'max_walking_duration_to_pt': fields.Raw,

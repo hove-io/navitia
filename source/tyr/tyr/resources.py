@@ -511,6 +511,13 @@ class Instance(flask_restful.Resource):
             default=instance.import_ntfs_in_mimir,
         )
         parser.add_argument(
+            'admins_from_cities_db',
+            type=inputs.boolean,
+            help='use cities db while importing data from osm',
+            location=('json', 'values'),
+            default=instance.admins_from_cities_db,
+        )
+        parser.add_argument(
             'min_nb_journeys',
             type=int,
             help='minimum number of different suggested journeys',
@@ -652,6 +659,7 @@ class Instance(flask_restful.Resource):
                     'is_open_data',
                     'import_stops_in_mimir',
                     'import_ntfs_in_mimir',
+                    'admins_from_cities_db',
                     'min_nb_journeys',
                     'max_nb_journeys',
                     'min_journeys_calls',

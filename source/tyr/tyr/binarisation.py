@@ -278,6 +278,13 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         args.append("--log_comment")
         args.append(instance_config.name)
 
+        if instance.admins_from_cities_db:
+            cities_db = current_app.config.get('CITIES_DATABASE_URI')
+            if not cities_db:
+                raise ValueError(
+                    'impossible to use osm2ed with cities db since no cities database configuration has been set'
+                )
+            args.extend(["--cities-connection-string", cities_db])
         with collect_metric('osm2ed', job, dataset_uid):
             res = launch_exec('osm2ed', args, logger)
         if res != 0:
