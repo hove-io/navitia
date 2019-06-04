@@ -41,6 +41,7 @@ from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
+from jormungandr.interfaces.common import split_uri
 from flask_restful.inputs import natural
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
@@ -189,7 +190,7 @@ class Schedules(ResourceUri, ResourceUtc):
                 self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
             self.collection = 'schedules'
-            args["filter"] = self.get_filter(uri.split("/"), args)
+            args["filter"] = self.get_filter(split_uri(uri), args)
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
 

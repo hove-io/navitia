@@ -36,6 +36,7 @@ from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.common import split_uri
 from navitiacommon.parser_args_type import DateTimeFormat, DepthArgument
 from datetime import datetime
 import six
@@ -106,10 +107,7 @@ class Calendars(ResourceUri):
             args["filter"] = "calendar.uri=" + id
         elif uri:
             # Calendars of line
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-            args["filter"] = self.get_filter(uris, args)
+            args["filter"] = self.get_filter(split_uri(uri), args)
         else:
             args["filter"] = ""
 

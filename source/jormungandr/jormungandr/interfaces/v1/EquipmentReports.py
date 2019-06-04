@@ -39,6 +39,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
+from jormungandr.interfaces.common import split_uri
 
 import six
 import logging
@@ -90,12 +91,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
         args = self.parsers["get"].parse_args()
         instance = i_manager.instances.get(self.region)
 
-        uris = []
-        if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-        args["filter"] = self.get_filter(uris, args)
+        args["filter"] = self.get_filter(split_uri(uri), args)
 
         # create filter
         if args["filter"] != "":
