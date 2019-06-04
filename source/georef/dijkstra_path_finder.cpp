@@ -188,13 +188,6 @@ DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& rad
     if (dest_coords.empty()) {
         return {};
     }
-    nt::idx_t offset;
-    if (mode == type::Mode_e::Car) {
-        // on direct path with car we want to arrive on the walking graph
-        offset = geo_ref.offsets[nt::Mode_e::Walking];
-    } else {
-        offset = geo_ref.offsets[mode];
-    }
 
     ProjectionGetterOnFly projection_getter{geo_ref, mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode};
     return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord,

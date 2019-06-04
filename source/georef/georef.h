@@ -391,10 +391,7 @@ struct ProjectionData {
 
     ProjectionData() {}
     /// Project the coordinate on the graph corresponding to the transportation mode of the offset
-    ProjectionData(const type::GeographicalCoord& coord,
-                   const GeoRef& sn,
-                   type::Mode_e mode = type::Mode_e::Walking,
-                   double horizon = 500);
+    ProjectionData(const type::GeographicalCoord& coord, const GeoRef& sn, type::Mode_e mode = type::Mode_e::Walking);
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {

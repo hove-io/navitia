@@ -295,10 +295,7 @@ float PathItem::get_length(float speed_factor) const {
     return duration.total_milliseconds() * def_speed * speed_factor / 1000;
 }
 
-ProjectionData::ProjectionData(const type::GeographicalCoord& coord,
-                               const GeoRef& sn,
-                               type::Mode_e mode,
-                               double horizon) {
+ProjectionData::ProjectionData(const type::GeographicalCoord& coord, const GeoRef& sn, type::Mode_e mode) {
     edge_t edge;
     found = true;
     try {
@@ -664,8 +661,6 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
 
     for (auto const mode_layer : mode_to_layer) {
         nt::Mode_e mode = mode_layer.first;
-        nt::idx_t offset = offsets[mode_layer.second];
-
         ProjectionData proj(stop_point->coord, *this, mode_layer.second);
         projections[mode] = proj;
         if (proj.found)
