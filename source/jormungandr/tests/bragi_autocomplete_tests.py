@@ -107,6 +107,78 @@ BRAGI_MOCK_RESPONSE = {
     ]
 }
 
+BRAGI_MOCK_REVERSE_RESPONSE_NEW_ID_FMT = {
+    "features": [
+        {
+            "geometry": {"coordinates": [3.282103, 49.847586], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "housenumber": "20",
+                    "id": "49.847586;3.282103-12",  # <- the id has a new format
+                    "label": "20 Rue Bob (Bobtown)",
+                    "name": "Rue Bob",
+                    "postcode": "02100",
+                    "street": "Rue Bob",
+                    "type": "house",
+                    "citycode": "02000",
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "name": "Bobtown",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                        }
+                    ],
+                }
+            },
+            "type": "Feature",
+            "distance": 400,
+        }
+    ]
+}
+
+BRAGI_BOB_STREET_NEW_ID_FMT = {
+    "features": [
+        {
+            "geometry": {"coordinates": [0.00188646, 0.00071865], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "housenumber": "20",
+                    "id": "addr:"
+                    + check_utils.r_coord
+                    + "-random-postfix",  # the id has a postfix, it should not be a pb
+                    "label": "20 Rue Bob (Bobtown)",
+                    "name": "Rue Bob",
+                    "postcode": "02100",
+                    "street": "Rue Bob",
+                    "type": "house",
+                    "citycode": "02000",
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "name": "Bobtown",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                        }
+                    ],
+                }
+            },
+            "type": "Feature",
+        }
+    ]
+}
+
+
 BRAGI_MOCK_ZONE = {
     "features": [
         {
@@ -1380,6 +1452,9 @@ class TestBragiShape(AbstractTestFixture):
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompleteAndRouting:
     def test_journey_with_external_uri_from_bragi(self):
+        self.abstract_journey_with_external_uri_from_bragi(BOB_STREET)
+
+    def abstract_journey_with_external_uri_from_bragi(self, bragi_bob_reverse_response):
         """
         This test aim to recreate a classic integration
 
@@ -1433,8 +1508,8 @@ class AbstractAutocompleteAndRouting:
 
         with requests_mock.Mocker() as m:
             m.get('https://host_of_bragi/autocomplete?{p}'.format(p=bobette_params), json=BRAGI_MOCK_BOBETTE)
-            m.get('https://host_of_bragi/autocomplete?{p}'.format(p=bob_params), json=BOB_STREET)
-            m.get(reverse_url, json=BOB_STREET)
+            m.get('https://host_of_bragi/autocomplete?{p}'.format(p=bob_params), json=bragi_bob_reverse_response)
+            m.get(reverse_url, json=bragi_bob_reverse_response)
             m.get(features_url, json=BRAGI_MOCK_BOBETTE)
             journeys_from = get_autocomplete('places?q=bobette')
             journeys_to = get_autocomplete('places?q=20 rue bob')
@@ -1489,6 +1564,42 @@ class AbstractAutocompleteAndRouting:
             assert address['house_number'] == 20
             assert address['name'] == 'Rue Bob'
             assert address['label'] == '20 Rue Bob (Bobtown)'
+            assert address['coord'] == {'lat': '49.847586', 'lon': '3.282103'}
+            assert address['id'] == '3.282103;49.847586'
+            assert len(address['administrative_regions']) == 1
+
+    def test_journey_with_external_uri_from_bragi_new_bragi_coord_id_fmt(self):
+        """
+        Test that navitia's /journey still works if bragi returns addresses with a new id format (not 'addr:{lon};{lat}' anymore)
+        It should not be a problem since navitia is not meant to do some tricks to parse the id, but we never know
+        """
+        self.abstract_journey_with_external_uri_from_bragi(BOB_STREET)
+
+    def test_global_coords_uri_new_bragi_coord_id_fmt(self):
+        """
+        Test that navitia's /places still works if bragi returns addresses with a new id format (not 'addr:{lon};{lat}' anymore)
+        It should not be a problem since navitia is not meant to do some tricks to parse the id, but we never know
+        """
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset[]': 'main_routing_test', 'lon': 3.282103, 'lat': 49.84758, 'timeout': 200}
+
+        url += "/reverse?{}".format(urlencode(params, doseq=True))
+
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_REVERSE_RESPONSE_NEW_ID_FMT)
+            response = self.query(
+                "/v1/coverage/{pt_dataset}/coords/{lon};{lat}".format(
+                    lon=params.get('lon'), lat=params.get('lat'), pt_dataset=params.get('pt_dataset[]')
+                )
+            )
+
+            address = response.get('address')
+            assert address
+            assert address['house_number'] == 20
+            assert address['name'] == 'Rue Bob'
+            assert address['label'] == '20 Rue Bob (Bobtown)'
+            assert address['coord'] == {'lat': '49.847586', 'lon': '3.282103'}
+            assert address['id'] == '3.282103;49.847586'
             assert len(address['administrative_regions']) == 1
 
 
