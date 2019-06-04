@@ -199,6 +199,20 @@ class TestEquipment(AbstractTestFixture):
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
 
+    def test_equipment_reports_without_config(self):
+        """
+        call equipment_reports without provider config
+        """
+
+        # Provider configis empty
+        self.equipment_provider_manager("main_routing_test")._equipment_providers = {}
+        response, status = self.query_no_assert(
+            'v1/coverage/main_routing_test/equipment_reports?' + default_date_filter
+        )
+
+        assert status == 404
+        assert "No code type exists into equipment provider" in response['message']
+
     def test_equipment_reports_with_wrong_id(self):
         """
         wrong id test
