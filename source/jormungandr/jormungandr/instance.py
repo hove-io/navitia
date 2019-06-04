@@ -219,6 +219,9 @@ class Instance(object):
             )
         return backend
 
+    def stop_point_fallbacks(self):
+        return [a for a in global_autocomplete.values() if a.is_handling_stop_points()]
+
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()

@@ -111,6 +111,10 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
             return places[0]
         return None
 
+    @abstractmethod
+    def is_handling_stop_points(self):
+        pass
+
 
 class GeoStatusResponse(object):
     def __init__(self):
