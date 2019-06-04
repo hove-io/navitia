@@ -344,7 +344,7 @@ class TestEquipment(AbstractTestFixture):
             ("8", "elevator", "unknown"),
             ("9", "elevator", "unknown"),
         ]
-        # filtered with the A line
+        # filtered with the A line that serve stopA and stopB
         expected_result = {"A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details}}
 
         equipment_reports = get_not_null(response, 'equipment_reports')
@@ -355,7 +355,8 @@ class TestEquipment(AbstractTestFixture):
 
         response = self.query_region(default_stop_areas_uri_filter + 'equipment_reports?' + default_date_filter)
 
-        # filtered with the stopA stop_area
+        # Filtered with the stopA stop_area.
+        # The A, B, C, D, M Line serve stopA
         expected_result = {
             "A": {"stopA": stopA_equipment_details},
             "B": {"stopA": stopA_equipment_details},
