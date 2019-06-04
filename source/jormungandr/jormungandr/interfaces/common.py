@@ -59,7 +59,7 @@ def handle_poi_infos(add_poi_info_param, bss_stands_param):
 def split_uri(uri):
     """
     Split uri into an output list
-    :param uri: concatened uri params
+    :param uri: concatenated uri params
     :return: the splitted uri list
     """
     uris = []
