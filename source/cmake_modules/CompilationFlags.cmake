@@ -51,3 +51,16 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 # Debug flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
+
+set(NAVITIA_ALLOCATOR "tcmalloc")
+
+option(USE_SANATIZER "build with the desired sanitizer enabled. usual values: address, thread, leak, undefined" OFF)
+if(USE_SANATIZER)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=${USE_SANATIZER}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${USE_SANATIZER}")
+    #We can't use tcmalloc with address sanatizer
+    if(USE_SANATIZER STREQUAL "address")
+        add_definitions("-DNO_FORCE_MEMORY_RELEASE")
+        set(NAVITIA_ALLOCATOR "")
+    endif()
+endif(USE_SANATIZER)

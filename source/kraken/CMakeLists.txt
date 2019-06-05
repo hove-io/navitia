@@ -26,7 +26,8 @@ target_link_libraries(kraken workers types proximitylist
     rabbitmq-static log4cplus ${Boost_THREAD_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_REGEX_LIBRARY} ${Boost_CHRONO_LIBRARY}
-    ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} protobuf tcmalloc)
+    ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} protobuf
+    ${NAVITIA_ALLOCATOR})
 add_dependencies(kraken protobuf_files)
 
 install(TARGETS kraken DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
