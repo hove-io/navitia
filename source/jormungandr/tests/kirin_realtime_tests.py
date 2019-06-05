@@ -2441,10 +2441,15 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
     def test_delay_on_base_pass_midnight_towards_next_day(self):
         """
         Relates to "test_cots_update_trip_with_delay_pass_midnight_on_first_station" in kirin
+        Test on a vehicle_journey with departure from stop_point:stopB at 23:55:00 and arrival
+        to stop_point:stopA at 00:01:00 the next day.
         1. Verify disruption count, vehicle_journeys count and journey
-        3. Update the disruption so that  departure station stop_point:stopB is replaced by stop_point:stopC
-        with a delay so that there is no more pass midnight
-        4. Verify disruption count, vehicle_journeys count and journey
+        2. Add a disruption with a delay = 2 minutes at first station (stop_point:stopB) so that
+        there is still pass midnight
+        3. Update the disruption with a delay = 6 minutes at first station  and delay = 5 minutes
+        at second station so that there is no more pass midnight and the departure is the day after
+        4. Update the disruption with a smaller delay on first station and advance on arrival station
+        so that there is no pass midnight and the departure is the same day as original (base_schedule)
         """
 
         def journey_base_schedule_for_day_before(resp):
@@ -2462,10 +2467,8 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         disruption_query = 'disruptions?_current _datetime={dt}'.format(dt='20120615T080000')
         initial_nb_disruptions = len(self.query_region(disruption_query)['disruptions'])
 
-        # We have 8 vehicle_journeys at the beginning
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 8
 
         empty_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
