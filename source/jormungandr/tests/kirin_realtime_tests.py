@@ -207,6 +207,27 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestMainStopAreaWeightFactorWithKirinUpdate(MockKirinDisruptionsFixture):
+    def test_main_stop_area_weight_factor_with_kirin_update(self):
+        response = self.query_region("places?type[]=stop_area&q=stop")
+        places = response['places']
+        assert len(places) == 3
+        assert places[0]['id'] == 'stopA'
+        assert places[1]['id'] == 'stopB'
+        assert places[2]['id'] == 'stopC'
+
+        # only used to activate the autocomplete rebuild process
+        self.send_mock("id", "20120614", 'type', disruption_id='disruption_bob')
+
+        response = self.query_region("places?type[]=stop_area&q=stop&_main_stop_area_weight_factor=5")
+        places = response['places']
+        assert len(places) == 3
+        assert places[0]['id'] == 'stopC'
+        assert places[1]['id'] == 'stopA'
+        assert places[2]['id'] == 'stopB'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
     def test_vj_delay(self):
         """
