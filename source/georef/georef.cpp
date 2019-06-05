@@ -377,7 +377,6 @@ void GeoRef::init() {
 }
 
 void GeoRef::build_proximity_list() {
-    pl.clear();
     pl_walking.clear();
     pl_bike.clear();
     pl_car.clear();

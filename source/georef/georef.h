@@ -225,11 +225,7 @@ struct GeoRef {
     autocomplete::Autocomplete<unsigned int> fl_poi =
         autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::POI);
 
-    /// Indexe tous les nœuds
-
-    // TODO: Remove this before the next re-binarisation
-    proximitylist::ProximityList<vertex_t> pl;
-
+    // We creat one proximity list for each mode
     proximitylist::ProximityList<vertex_t> pl_walking;
     proximitylist::ProximityList<vertex_t> pl_bike;
     proximitylist::ProximityList<vertex_t> pl_car;
@@ -265,7 +261,7 @@ struct GeoRef {
 
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
-        ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
+        ar& ways& way_map& graph& offsets& fl_admin& fl_way& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
     }
 
@@ -274,7 +270,7 @@ struct GeoRef {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
+        ar& ways& way_map& graph& offsets& fl_admin& fl_way& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
 
         compute_inversed_nb_vertex_by_mode();
