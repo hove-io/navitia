@@ -202,7 +202,6 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->pt_data->clean_weak_impacts();
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
         data->build_raptor(conf.raptor_cache_size());
-        data->build_proximity_list();
         data->warmup(*data_manager.get_data());
         data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));

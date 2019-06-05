@@ -32,61 +32,31 @@ www.navitia.io
 
 #include "type/geographical_coord.h"
 #include "utils/exception.h"
-#include "utils/logger.h"
-#include <memory>
 #include <vector>
-
-// Forward declaration
-namespace flann {
-template <typename T>
-class Index;
-
-template <typename T>
-class L2;
-}  // namespace flann
+#include <cmath>
 
 namespace navitia {
 namespace proximitylist {
 
 using type::GeographicalCoord;
-using index_t = flann::Index<flann::L2<float>>;
-
 struct NotFound : public recoverable_exception {
     NotFound() = default;
     NotFound(const NotFound&) = default;
     NotFound& operator=(const NotFound&) = default;
-    virtual ~NotFound() noexcept {};
+    virtual ~NotFound() noexcept;
 };
 
-// find_within Dispatch Tag
-struct IndexOnly {};
-struct IndexCoord {};
-
-template <typename T, typename Tag>
-struct ReturnTypeTrait;
-
-template <typename T>
-struct ReturnTypeTrait<T, IndexOnly> {
-    typedef T ValueType;
-};
-
-template <typename T>
-struct ReturnTypeTrait<T, IndexCoord> {
-    typedef std::pair<T, GeographicalCoord> ValueType;
-};
-
-/* A structure allows to find K Nearest Neighbours with a given radius.
+/** Définit un indexe spatial qui permet de retrouver les n éléments les plus proches
  *
- * The Item contains T(in practice, the Idx of the wanted object) and the coord of the object.
- *
- * This structure is used to do projection and find features(POI, stop_points, etc) nearby a wanted place.
- * An internal structure, KD-tree from flann is used to have a good perfomance.
- *
- * The coord is projected into 3D space so that we can performan a euclidean distance which can be highly optimized.
- *
- * */
+ * Le template T est le type que l'on souhaite indexer (typiquement un Idx). L'élément sera copié.
+ * On rajoute des élements itérativements et on appelle build pour construire l'indexe.
+ * L'implémentation est un bête tableau trié par X.
+ * On cherche les bornes inf/sup selon X, puis on itère sur les données et on garde les bonnes
+ */
+
 template <class T>
 struct ProximityList {
+    /// Élement que l'on garde dans le vector
     struct Item {
         GeographicalCoord coord;
         T element;
@@ -100,46 +70,51 @@ struct ProximityList {
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
     std::vector<Item> items;
-    std::vector<float> NN_data;
-    std::shared_ptr<index_t> NN_index = nullptr;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element) { items.push_back(Item(coord, element)); }
-    void clear() {
-        items.clear();
-        NN_data.clear();
+    void clear() { items.clear(); }
+
+    /// Construit l'indexe
+    void build() {
+        std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) { return a.coord < b.coord; });
     }
 
-    // build the Nearest Neighbours data from items, then the index
-    void build();
+    /// Retourne tous les éléments dans un rayon de x mètres
+    std::vector<std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance = 500) const {
+        double distance_degree = distance / 111320;
 
-    /*
-     * This method can return two types of result
-     *
-     * When Tag is IndexCorrd, the method returns a vector of Index and Coord, which is useful for searching
-     * features nearby a wanted place.
-     *
-     * If Tag is IndexOnly, the method returns a vector of Index, which is useful for coord projections.
-     *
-     * */
-    template <typename Tag = IndexCoord>
-    auto find_within(const GeographicalCoord& coord, double radius = 500, int size = -1) const
-        -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
-        if (!NN_index || !size || !radius)
-            return {};
-        return find_within_impl(coord, radius, size, Tag{});
+        double coslat = ::cos(coord.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
+
+        auto begin = std::lower_bound(items.begin(), items.end(), coord.lon() - distance_degree / coslat,
+                                      [](const Item& i, double min) { return i.coord.lon() < min; });
+        auto end = std::upper_bound(begin, items.end(), coord.lon() + distance_degree / coslat,
+                                    [](double max, const Item& i) { return max < i.coord.lon(); });
+        std::vector<std::pair<T, GeographicalCoord> > result;
+        double max_dist = distance * distance;
+        for (; begin != end; ++begin) {
+            if (begin->coord.approx_sqr_distance(coord, coslat) <= max_dist)
+                result.push_back(std::make_pair(begin->element, begin->coord));
+        }
+        std::sort(
+            result.begin(), result.end(),
+            [&coord, &coslat](const std::pair<T, GeographicalCoord>& a, const std::pair<T, GeographicalCoord>& b) {
+                return a.second.approx_sqr_distance(coord, coslat) < b.second.approx_sqr_distance(coord, coslat);
+            });
+        return result;
     }
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
     T find_nearest(double lon, double lat) const { return find_nearest(GeographicalCoord(lon, lat)); }
 
     /// Retourne l'élément le plus proche dans tout l'indexe
-    T find_nearest(const GeographicalCoord& coord, double max_dist = 500) const {
-        auto temp = find_within<IndexOnly>(coord, max_dist, 1);
+    T find_nearest(GeographicalCoord coord, double max_dist = 500) const {
+        auto temp = find_within(coord, max_dist);
         if (temp.empty())
             throw NotFound();
         else
-            return temp.front();
+
+            return temp.front().first;
     }
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
@@ -150,28 +125,6 @@ struct ProximityList {
     void serialize(Archive& ar, const unsigned int) {
         ar& items;
     }
-
-private:
-    /*
-     * This implementation is used for /places_nearby
-     *
-     * Auto-sized container is used, NN_index will return ALL elements meet the criteira
-     *
-     * Note that this implementation returns the indices AND the coords of all the nearest elements
-     * */
-    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
-        -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType>;
-
-    /*
-     * This implementation is used for edge projection
-     *
-     * A small size-fixed std::array container is used to boost the performance, the NN_index will stop when
-     * the small size-fixed container is full.
-     * .
-     * Note that this implementation returns ONLY indices of nearest elements
-     * */
-    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
-        -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType>;
 };
 
 }  // namespace proximitylist

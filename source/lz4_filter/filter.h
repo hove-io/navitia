@@ -33,7 +33,7 @@ www.navitia.io
 #include <boost/iostreams/concepts.hpp>
 #include <string.h>
 #include <iostream>
-#include "lz4.h"
+#include "third_party/lz4/lz4.h"
 #include <boost/iostreams/write.hpp>
 #include <boost/iostreams/read.hpp>
 #include <boost/cstdint.hpp>

@@ -19,6 +19,3 @@
 [submodule "source/third_party/prometheus-cpp"]
 	path = source/third_party/prometheus-cpp
 	url = https://github.com/jupp0r/prometheus-cpp
-[submodule "source/third_party/flann"]
-	path = source/third_party/flann
-	url = https://github.com/mariusmuja/flann
