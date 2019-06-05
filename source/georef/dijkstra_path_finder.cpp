@@ -176,7 +176,7 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
 
 struct ProjectionGetterOnFly {
     const GeoRef& geo_ref;
-    const type::Mode_e mode;
+    const type::Mode_e mode = type::Mode_e::Walking;
     const georef::ProjectionData operator()(const type::GeographicalCoord& coord) const {
         return georef::ProjectionData{coord, geo_ref, mode};
     }

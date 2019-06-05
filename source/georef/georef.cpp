@@ -383,7 +383,7 @@ void GeoRef::build_proximity_list() {
     pl_car.clear();
     poi_proximity_list.clear();
 
-    auto log = log4cplus::Logger::getInstance("");
+    auto log = log4cplus::Logger::getInstance("GeoRef::build_proximity_list");
 
     auto build_sn_pl = [this](proximitylist::ProximityList<vertex_t>& sn_pl, nt::idx_t offset) {
         for (vertex_t v = offset; v < nb_vertex_by_mode + offset; ++v) {
@@ -690,7 +690,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates, type::Mo
         case type::Mode_e::CarNoPark:
             return nearest_edge(coordinates, pl_car);
         default:
-            throw navitia::exception("Unknown mode when looking for nearest edges");
+            throw navitia::recoverable_exception("Unknown mode when looking for nearest edges");
     }
 }
 
