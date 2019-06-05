@@ -129,13 +129,13 @@ void find(navitia::PbCreator& pb_creator,
         }
         switch (type) {
             case nt::Type_e::StopArea:
-                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance);
                 break;
             case nt::Type_e::StopPoint:
-                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance);
                 break;
             case nt::Type_e::POI:
-                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance);
                 break;
             default:
                 break;

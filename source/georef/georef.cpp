@@ -234,12 +234,11 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
     return {to_return, distance};
 }
 
-type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
-    assert(inversed_nb_vertex_by_mode);
-    return static_cast<type::Mode_e>(vertex * inversed_nb_vertex_by_mode);
+type::Mode_e GeoRef::get_mode(vertex_t vertex) const {
+    return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
 
-PathItem::TransportCaracteristic GeoRef::get_caracteristic(const edge_t& edge) const {
+PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     auto source_mode = get_mode(boost::source(edge, graph));
     auto target_mode = get_mode(boost::target(edge, graph));
 
@@ -332,7 +331,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord& coord,
     }
 }
 
-void ProjectionData::init(const type::GeographicalCoord& coord, const GeoRef& sn, const edge_t& nearest_edge) {
+void ProjectionData::init(const type::GeographicalCoord& coord, const GeoRef& sn, edge_t nearest_edge) {
     // We retrieve both vertices of nearest_edge from the graph to get their coordinates
     vertices[Direction::Source] = boost::source(nearest_edge, sn.graph);
     vertices[Direction::Target] = boost::target(nearest_edge, sn.graph);
@@ -373,8 +372,6 @@ void GeoRef::init() {
 
     // each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);
-
-    compute_inversed_nb_vertex_by_mode();
 
     // we dupplicate the graph for the bike and the car
     for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
@@ -694,27 +691,19 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-
-    // Magic Number!
-    // The number indicates the number of nearest vertices that should be returned by find_with
-    // This number is determined by balancing the performance and the practical results (Artemis)
-    // The bigger the number is, the better the projection will be and slower it will run.
-    // With 30, we have broken less than 1% tests on Artemis_idfm.
-    constexpr int nb_nearest_vertices = 30;
-
-    for (const auto& ind : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, nb_nearest_vertices)) {
+    for (const auto& pair_coord : prox.find_within(coordinates, horizon)) {
         // we increment the index to get the vertex in the other graph
-        const auto u = ind + offset;
+        const auto u = pair_coord.first + offset;
 
-        BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
-            const auto& v = target(e, graph);
+        BOOST_FOREACH (edge_t e, boost::out_edges(u, graph)) {
+            const auto v = target(e, graph);
             if (!is_sn_edge(*this, e)) {
                 continue;
             }
-            const auto& edge = graph[e];
+            const auto edge = graph[e];
             // If there is a geometry for this edge get the projected point to get the distance
             if (edge.geom_idx != nt::invalid_idx) {
-                const auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
+                auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
                 cur_dist = coordinates.approx_sqr_distance(projected, coslat);
             } else {
                 cur_dist = coordinates.approx_project(graph[u].coord, graph[v].coord, coslat).second;
@@ -740,8 +729,8 @@ std::pair<int, const Way*> GeoRef::nearest_addr(const type::GeographicalCoord& c
                                                 const std::function<bool(const Way&)>& filter) const {
     // first, we collect each ways with its distance to the coord
     std::map<const Way*, double> way_dist;
-    for (const auto& ind : pl.find_within<proximitylist::IndexOnly>(coord)) {
-        BOOST_FOREACH (const edge_t& e, boost::out_edges(ind, graph)) {
+    for (const auto& pair_coord : pl.find_within(coord)) {
+        BOOST_FOREACH (edge_t e, boost::out_edges(pair_coord.first, graph)) {
             const Way* w = ways[graph[e].way_idx];
             if (filter(*w)) {
                 continue;
@@ -874,16 +863,6 @@ bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
     add_edge(car_v, walking_v, edge, graph);
 
     return true;
-}
-
-void GeoRef::compute_inversed_nb_vertex_by_mode() {
-    // a math trick to handle the round error:
-    // use (N + 0.1)/N^2 instead of 1/N
-    // Warning: The method does has its limit
-    // It works fine when the number of graphs is smaller than 10 and
-    // the number of vertex by mode is smaller than 150000
-    // In pratice, we have 3 graphs (walking, bike, car) and about 10000 vertices per graph
-    inversed_nb_vertex_by_mode = (nb_vertex_by_mode + .1) / pow(nb_vertex_by_mode, 2);
 }
 
 GeoRef::~GeoRef() {
