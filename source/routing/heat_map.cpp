@@ -146,7 +146,7 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
 
     auto radius = box.min.distance_to(box.max);
 
-    auto objects_inside = worker.pl_walking.find_within(box_center, 1.4 * radius);
+    auto objects_inside = worker.pl_walking.find_within(box_center, radius);
 
     if (objects_inside.empty()) {
         return {};
@@ -161,7 +161,7 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
             continue;
         }
         const auto rank_source = find_rank(box, source, height_step, width_step);
-        BOOST_FOREACH (georef::edge_t e, boost::out_edges(element, worker.graph)) {
+        BOOST_FOREACH (const georef::edge_t& e, boost::out_edges(element, worker.graph)) {
             const auto v = target(e, worker.graph);
             const auto& target = worker.graph[v].coord;
             const auto rank_target = find_rank(box, target, height_step, width_step);
