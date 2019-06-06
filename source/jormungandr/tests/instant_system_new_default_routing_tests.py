@@ -111,6 +111,7 @@ def mock_http_instance_system(monkeypatch):
 class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
     """
     Integration test with Instace System
+    Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
     """
 
     def test_basic_ride_sharing(self):
@@ -119,9 +120,11 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         """
         q = (
             "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
-            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='ridesharing', last='walking')
+            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM".format(
+                first='ridesharing', last='walking'
+            )
         )
-        response = self.query_region(q, check=False)
+        response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
