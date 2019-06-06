@@ -62,9 +62,6 @@ def split_uri(uri):
     :param uri: concatenated uri params
     :return: the splitted uri list
     """
-    uris = []
-    if uri:
-        if uri[-1] == "/":
-            uri = uri[:-1]
-        uris = uri.split("/")
-    return uris
+    if not uri:
+        return []
+    return uri.strip('/').split('/')
