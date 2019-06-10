@@ -685,7 +685,15 @@ class Instance(flask_restful.Resource):
                 equipment_provider = models.EquipmentsProvider.query.get(provider_id)
                 if equipment_provider:
                     instance.equipment_details_providers.append(equipment_provider)
-
+                else:
+                    return (
+                        {
+                            "message": "Couldn't set equipment providers - Provider '{}' isn't present in db".format(
+                                provider_id
+                            )
+                        },
+                        400,
+                    )
             db.session.commit()
         except Exception:
             logging.exception("fail")
