@@ -103,15 +103,15 @@ struct GeographicalCoord {
        */
 
     template <typename F>
-    std::pair<GeographicalCoord, float> project_common(GeographicalCoord segment_start,
-                                                       GeographicalCoord segment_end,
+    std::pair<GeographicalCoord, float> project_common(const GeographicalCoord& segment_start,
+                                                       const GeographicalCoord& segment_end,
                                                        F f) const;
 
-    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start,
-                                                      GeographicalCoord segment_end) const;
+    std::pair<type::GeographicalCoord, float> project(const GeographicalCoord& segment_start,
+                                                      const GeographicalCoord& segment_end) const;
 
-    std::pair<GeographicalCoord, float> approx_project(GeographicalCoord segment_start,
-                                                       GeographicalCoord segment_end,
+    std::pair<GeographicalCoord, float> approx_project(const GeographicalCoord& segment_start,
+                                                       const GeographicalCoord& segment_end,
                                                        double coslat) const;
 
     /** Calcule la distance au carré grand arc entre deux points de manière approchée
