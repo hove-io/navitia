@@ -228,6 +228,26 @@ class TestMainStopAreaWeightFactorWithKirinUpdate(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestAutocompleteOnWaysWithKirinUpdate(MockKirinDisruptionsFixture):
+    def test_autocomplete_on_ways_with_kirin_update(self):
+        response = self.query_region("places?&q=rue ts")
+        places = response['places']
+        assert len(places) == 1
+        assert places[0]['embedded_type'] == 'address'
+        assert places[0]['name'] == 'rue ts (Condom)'
+
+        # only used to activate the autocomplete rebuild process
+        self.send_mock("id", "20120614", 'type', disruption_id='disruption_bob')
+
+        # After injection of realtime, we should not return way with visible=false.
+        response = self.query_region("places?&q=rue ts")
+        places = response['places']
+        assert len(places) == 1
+        assert places[0]['embedded_type'] == 'address'
+        assert places[0]['name'] == 'rue ts (Condom)'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
     def test_vj_delay(self):
         """
