@@ -128,7 +128,7 @@ struct Admin {
           const uint32_t level,
           mpolygon_type&& polygon,
           point&& center);
-    virtual ~Admin() {}
+    virtual ~Admin();
     virtual void build_geometry(OSMCache&) {}
     bool is_city() const { return level == 8; }
 
