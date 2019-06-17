@@ -96,12 +96,12 @@ const Journey& get_best_journey(const Journeys& journeys, bool clockwise) {
     if (journeys.size() == 0)
         throw recoverable_exception("get_best_journey takes a list of at least 1 journey");
 
-    auto earliest_journey = [](const Journey& j1, const Journey& j2) { return j1.departure_dt < j2.departure_dt; };
+    auto departure_comp = [](const Journey& j1, const Journey& j2) { return j1.departure_dt < j2.departure_dt; };
 
-    auto latest_journey = [](const Journey& j1, const Journey& j2) { return j1.arrival_dt < j2.arrival_dt; };
+    auto arrival_comp = [](const Journey& j1, const Journey& j2) { return j1.arrival_dt < j2.arrival_dt; };
 
-    const auto best = clockwise ? std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey)
-                                : std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
+    const auto best = clockwise ? std::min_element(journeys.cbegin(), journeys.cend(), arrival_comp)
+                                : std::max_element(journeys.cbegin(), journeys.cend(), departure_comp);
 
     return *best;
 }
