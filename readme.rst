@@ -64,9 +64,10 @@ Who's who
 More information
 ----------------
 
-* documentation http://doc.navitia.io
 * main web site http://www.navitia.io
 * playground http://canaltp.github.io/navitia-playground/
+* integration documentation http://doc.navitia.io
+* technical documentation https://github.com/CanalTP/navitia/tree/dev/documentation/rfc
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia
 * channel `#navitia` on irc.freenode.net
