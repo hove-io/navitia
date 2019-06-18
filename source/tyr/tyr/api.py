@@ -37,7 +37,13 @@ import flask_restful
 flask_restful.representations.json.settings = {'indent': 4}
 api.app.url_map.strict_slashes = False
 
-api.add_resource(resources.Instance, '/v0/instances/', '/v0/instances/<int:id>/', '/v0/instances/<string:name>/')
+api.add_resource(
+    resources.Instance,
+    '/v<int:version>/instances/',
+    '/v<int:version>/instances/<int:id>/',
+    '/v<int:version>/instances/<string:name>/',
+    endpoint=str('instances'),
+)
 
 api.add_resource(resources.Api, '/v0/api/')
 
@@ -88,7 +94,9 @@ api.add_resource(
 api.add_resource(resources.BssProvider, '/v0/bss_providers', '/v0/bss_providers/<string:id>')
 
 api.add_resource(
-    resources.EquipmentsProvider, '/v0/equipments_providers', '/v0/equipments_providers/<string:id>'
+    resources.EquipmentsProvider,
+    '/v<int:version>/equipments_providers',
+    '/v<int:version>/equipments_providers/<string:id>',
 )
 
 # TODO: Find a way to handle GET on an URL and POST to another in one class
