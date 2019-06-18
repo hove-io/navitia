@@ -49,7 +49,7 @@ max_transfers | integer | Required | Max number of transfers using one ticket. T
 boarding_time_limit | integer | Required | Specifies the time frame (in seconds) in which a traveler can board in a new vehicle. The value can be empty to indicate there is no constraint, but the field must be provided.
 alighting_time_limit | integer | Required | Specifies the time frame (in seconds) in which a traveler must get off the vehicle. When this duration is expired, the ticket is no longer valid. The value can be empty to indicate there is no constraint, but the field must be provided.
 
-## ticket_use_perimeter.txt (Required)
+## ticket_use_perimeters.txt (Required)
 
 A ticket_use must contain at least one included line or network.
 
@@ -60,7 +60,7 @@ object_type | Text | Required | This field can be either `line` or `network`
 object_id | Text | Required | This field refers to the ID of the considered line or network.
 perimeter_action | integer | Required | Value 1 for inclusion (for a `network` or a `line`) and 2 for an exclusion (for a `line` only)
 
-## ticket_use_restriction.txt (Optional)
+## ticket_use_restrictions.txt (Optional)
 Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_use_id | Text | Required | Unique ID of the ticket use
