@@ -141,12 +141,13 @@ class Sytral(RealtimeProxy):
             'sytralrt response: {}'.format(resp), extra={'rt_system_id': unicode(self.rt_system_id)}
         )
 
-        line_code = route_point.fetch_line_id(self.object_id_tag)
+        # One line navitia can be multiple lines on the SAE side
+        line_ids = route_point.fetch_all_line_id(self.object_id_tag)
 
         departures = resp.get('departures', [])
         next_passages = []
         for next_expected_st in departures:
-            if line_code != next_expected_st['line']:
+            if next_expected_st['line'] not in line_ids:
                 continue
             dt = self._get_dt(next_expected_st['datetime'])
             direction = next_expected_st.get('direction_name')
