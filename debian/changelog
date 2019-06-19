@@ -1,3 +1,9 @@
+navitia2 (2.80.3) unstable; urgency=low
+
+  * Jormun: handle multiple SAE lines for a navitia line in sytralRT <https://github.com/CanalTP/navitia/pull/2833>
+
+ -- Alexandre Jacquin <alexandre.jacquin@kisio.com>  Wed, 19 Jun 2019 15:06:30 +0100
+
 navitia2 (2.80.2) unstable; urgency=low
 
   * [Jormun] Dedup equipment details  <https://github.com/CanalTP/navitia/pull/2806>
