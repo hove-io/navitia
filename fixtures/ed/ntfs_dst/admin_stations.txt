@@ -1,1 +1,2 @@
-admin_id,admin_name,station_id,station_name,stop_id,stop_name
+admin_id,admin_name,stop_id,stop_name
+admin_id_1,"admin name 1",SCF:SP:SPOCENoctilien87976902,"Brunoy-Wittlich"

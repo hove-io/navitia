@@ -1,0 +1,2 @@
+admin_id,admin_name,station_id,station_name,stop_id,stop_name
+admin:A,"admin A",A,"Arrêt A",SA:A,"Arrêt A"
