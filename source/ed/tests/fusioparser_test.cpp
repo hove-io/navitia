@@ -443,7 +443,6 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
 }
 
 BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
-
     // for retrocompatibity
     // admin_stations.txt file contains only "station_id"
     // TODO : to remove after the data team update, it will become useless (NAVP-1285)
@@ -456,7 +455,6 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Arrêt A");
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
-
     }
 
     // admin_stations.txt file contains "stop_id" and "station_id"
@@ -470,6 +468,5 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Brunoy-Wittlich");
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SCF:SP:SPOCENoctilien87976902");
-
     }
 }

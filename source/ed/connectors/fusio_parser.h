@@ -304,7 +304,8 @@ struct GridCalendarTripExceptionDatesFusioHandler : public GenericHandler {
 }  // namespace grid_calendar
 
 struct AdminStopAreaFusioHandler : public GenericHandler {
-    AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader), stop_id_is_present(true){}
+    AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader)
+        : GenericHandler(gdata, reader), stop_id_is_present(true) {}
     int admin_c, stop_area_c;
     bool stop_id_is_present;
 
