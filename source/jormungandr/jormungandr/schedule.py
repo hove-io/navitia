@@ -30,6 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from typing import Text, List, Optional, Union
 
 import logging
 from jormungandr import utils
@@ -99,6 +100,7 @@ def _create_template_from_pb_route_point(pb_route_point):
 
 class RoutePoint(object):
     def __init__(self, route, stop_point):
+        # type: (type_pb2.Route, type_pb2.StopPoint) -> None
         self.pb_stop_point = stop_point
         self.pb_route = route
 
@@ -119,9 +121,11 @@ class RoutePoint(object):
 
     @staticmethod
     def _get_all_codes(obj, object_id_tag):
+        # type: (Union[type_pb2.Line, type_pb2.Route, type_pb2.StopPoint], Text) -> List[Text]
         return list({c.value for c in obj.codes if c.type == object_id_tag})
 
     def _get_code(self, obj, object_id_tag):
+        # type: (Union[type_pb2.Line, type_pb2.Route, type_pb2.StopPoint], Text) -> Optional[Text]
         tags = self._get_all_codes(obj, object_id_tag)
         if len(tags) < 1:
             return None
@@ -132,23 +136,32 @@ class RoutePoint(object):
             )
         return tags[0]
 
-    # Cache this ?
     def fetch_stop_id(self, object_id_tag):
+        # type: (Text) -> Optional[Text]
         return self._get_code(self.pb_stop_point, object_id_tag)
 
     def fetch_line_id(self, object_id_tag):
+        # type: (Text) -> Optional[Text]
         return self._get_code(self.pb_route.line, object_id_tag)
 
     def fetch_route_id(self, object_id_tag):
+        # type: (Text) -> Optional[Text]
         return self._get_code(self.pb_route, object_id_tag)
 
     def fetch_all_route_id(self, object_id_tag):
+        # type: (Text) -> List[Text]
         return self._get_all_codes(self.pb_route, object_id_tag)
 
+    def fetch_all_line_id(self, object_id_tag):
+        # type: (Text) -> List[Text]
+        return self._get_all_codes(self.pb_route.line, object_id_tag)
+
     def fetch_line_code(self):
+        # type: () -> Text
         return self.pb_route.line.code
 
     def fetch_line_uri(self):
+        # type: () -> Text
         return self.pb_route.line.uri
 
 
