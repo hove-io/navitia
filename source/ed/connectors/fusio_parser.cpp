@@ -1545,14 +1545,22 @@ void GridCalendarTripExceptionDatesFusioHandler::handle_line(Data&, const csv_ro
 
 void AdminStopAreaFusioHandler::init(Data& data) {
     admin_c = csv.get_pos_col("admin_id");
-    stop_area_c = csv.get_pos_col("station_id");
-    for (const auto& object_code_map : data.object_codes) {
-        for (auto& object_code : object_code_map.second) {
-            if (object_code_map.first.type == nt::Type_e::StopArea && object_code.first == "external_code") {
-                const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first.pt_object->uri);
-                if (stop_area != gtfs_data.stop_area_map.end()) {
-                    for (const auto& external_code : object_code.second) {
-                        tmp_stop_area_map[external_code] = stop_area->second;
+
+    stop_area_c = csv.get_pos_col("stop_id");
+
+    // For retro compatibity
+    // TODO : to remove after the data team update, it will become useless (NAVP-1285)
+    if (stop_area_c == unknown_column) {
+        stop_id_is_present = false;
+        stop_area_c = csv.get_pos_col("station_id");
+        for (const auto& object_code_map : data.object_codes) {
+            for (auto& object_code : object_code_map.second) {
+                if (object_code_map.first.type == nt::Type_e::StopArea && object_code.first == "external_code") {
+                    const auto stop_area = gtfs_data.stop_area_map.find(object_code_map.first.pt_object->uri);
+                    if (stop_area != gtfs_data.stop_area_map.end()) {
+                        for (const auto& external_code : object_code.second) {
+                            tmp_stop_area_map[external_code] = stop_area->second;
+                        }
                     }
                 }
             }
@@ -1566,10 +1574,22 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
         throw InvalidHeaders(csv.filename);
     }
 
-    auto sa = tmp_stop_area_map.find(row[stop_area_c]);
-    if (sa == tmp_stop_area_map.end()) {
-        LOG4CPLUS_ERROR(logger, "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
-        return;
+    std::unordered_map<std::string, ed::types::StopArea*>::iterator sa_it;
+    // For retrocompatibity
+    // TODO : to remove after the data team update, it will become useless (NAVP-1285)
+    if (!stop_id_is_present) {
+        sa_it = tmp_stop_area_map.find(row[stop_area_c]);
+        if (sa_it == tmp_stop_area_map.end()) {
+            LOG4CPLUS_ERROR(logger, "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
+            return;
+        }
+    } else {
+        sa_it = gtfs_data.stop_area_map.find(row[stop_area_c]);
+        if (sa_it == tmp_stop_area_map.end()) {
+            LOG4CPLUS_ERROR(logger, "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
+            return;
+        }
+
     }
 
     ed::types::AdminStopArea* admin_stop_area{nullptr};
@@ -1583,7 +1603,7 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
         admin_stop_area = admin_it->second;
     }
 
-    admin_stop_area->stop_area.push_back(sa->second);
+    admin_stop_area->stop_area.push_back(sa_it->second);
 }
 
 void CommentLinksFusioHandler::init(Data&) {
