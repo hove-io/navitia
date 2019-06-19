@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from typing import Text, List, Optional, Union
+from typing import Text, List, Optional, Any
 
 import logging
 from jormungandr import utils
@@ -100,7 +100,6 @@ def _create_template_from_pb_route_point(pb_route_point):
 
 class RoutePoint(object):
     def __init__(self, route, stop_point):
-        # type: (type_pb2.Route, type_pb2.StopPoint) -> None
         self.pb_stop_point = stop_point
         self.pb_route = route
 
@@ -121,11 +120,11 @@ class RoutePoint(object):
 
     @staticmethod
     def _get_all_codes(obj, object_id_tag):
-        # type: (Union[type_pb2.Line, type_pb2.Route, type_pb2.StopPoint], Text) -> List[Text]
+        # type: (Any, Text) -> List[Text]
         return list({c.value for c in obj.codes if c.type == object_id_tag})
 
     def _get_code(self, obj, object_id_tag):
-        # type: (Union[type_pb2.Line, type_pb2.Route, type_pb2.StopPoint], Text) -> Optional[Text]
+        # type: (Any, Text) -> Optional[Text]
         tags = self._get_all_codes(obj, object_id_tag)
         if len(tags) < 1:
             return None
