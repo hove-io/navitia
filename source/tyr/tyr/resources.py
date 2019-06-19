@@ -255,7 +255,7 @@ class Instance(flask_restful.Resource):
         pass
 
     @marshal_with(instance_fields)
-    def get(self, id=None, name=None):
+    def _get(self, id, name):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'is_free',
@@ -275,7 +275,12 @@ class Instance(flask_restful.Resource):
         else:
             return models.Instance.query_existing().all()
 
-    def delete(self, id=None, name=None):
+    def get(self, version=0, id=None, name=None):
+        if version == 1:
+            return {'instances': self._get(id, name)}
+        return self._get(id, name)
+
+    def delete(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
 
         try:
@@ -287,7 +292,7 @@ class Instance(flask_restful.Resource):
 
         return marshal(instance, instance_fields)
 
-    def put(self, id=None, name=None):
+    def put(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
 
         parser = reqparse.RequestParser()
@@ -1890,7 +1895,7 @@ class BssProvider(flask_restful.Resource):
 
 class EquipmentsProvider(flask_restful.Resource):
     @marshal_with(equipment_provider_list_fields)
-    def get(self, id=None):
+    def get(self, version=0, id=None):
         if id:
             try:
                 return {'equipments_providers': [models.EquipmentsProvider.find_by_id(id)]}
@@ -1899,7 +1904,7 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
-    def put(self, id=None):
+    def put(self, version=0, id=None):
         """
         Create or update an equipment provider in db
         """
@@ -1941,7 +1946,7 @@ class EquipmentsProvider(flask_restful.Resource):
             abort(400, status="error", message=str(ex))
         return message, status
 
-    def delete(self, id=None):
+    def delete(self, version=0, id=None):
         """
         Delete an equipment provider in db, i.e. set parameter DISCARDED to TRUE
         """
