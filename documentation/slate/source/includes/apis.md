@@ -1170,8 +1170,8 @@ direction       | int                    | Angle (in degree) between the previou
 
 |Field|Type|Description|
 |-----|----|-----------|
-|value|string|cost formatted as string|
-|currency|string|currency|
+|value|string|cost: float formatted as string|
+|currency|string|currency as specified in input data|
 
 #### Ticket
 
