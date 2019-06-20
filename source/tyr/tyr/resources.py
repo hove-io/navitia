@@ -73,7 +73,9 @@ class Api(flask_restful.Resource):
     def __init__(self):
         pass
 
-    def get(self):
+    def get(self, version=0):
+        if version == 1:
+            return {'api': marshal(models.Api.query.all(), api_fields)}
         return marshal(models.Api.query.all(), api_fields)
 
 

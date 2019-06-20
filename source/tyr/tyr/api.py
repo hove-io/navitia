@@ -44,7 +44,7 @@ api.add_resource(
     '/v<int:version>/instances/<string:name>/',
 )
 
-api.add_resource(resources.Api, '/v0/api/')
+api.add_resource(resources.Api, '/v<int:version>/api/')
 
 api.add_resource(resources.User, '/v0/users/', '/v0/users/<int:user_id>/')
 
