@@ -701,7 +701,7 @@ class Instance(flask_restful.Resource):
 
 
 class User(flask_restful.Resource):
-    def get(self, user_id=None):
+    def _get(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'disable_geojson', type=inputs.boolean, default=True, help='remove geojson from the response'
@@ -738,7 +738,12 @@ class User(flask_restful.Resource):
                     users = models.User.query.all()
                     return marshal(users, user_fields)
 
-    def post(self):
+    def get(self, user_id=None, version=0):
+        if version == 1:
+            return {'users': self._get(user_id)}
+        return self._get(user_id)
+
+    def post(self, version=0):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -792,7 +797,7 @@ class User(flask_restful.Resource):
             check_mx=current_app.config['EMAIL_CHECK_MX'],
             verify=current_app.config['EMAIL_CHECK_SMTP'],
         ):
-            return ({'error': 'email invalid'}, 400)
+            return {'error': 'email invalid'}, 400
 
         end_point = None
         if args['end_point_id']:
@@ -801,7 +806,7 @@ class User(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         if args['billing_plan_id']:
             billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
@@ -809,7 +814,7 @@ class User(flask_restful.Resource):
             billing_plan = models.BillingPlan.get_default(end_point)
 
         if not billing_plan:
-            return ({'error': 'billing plan doesn\'t exist'}, 400)
+            return {'error': 'billing plan doesn\'t exist'}, 400
 
         try:
             user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
@@ -824,14 +829,16 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "create_user")
 
+            if version == 1:
+                return {'users': marshal(user, user_fields_full)}
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate user'}, 409)
+            return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, user_id):
+    def put(self, user_id, version=0):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -897,16 +904,15 @@ class User(flask_restful.Resource):
             check_mx=current_app.config['EMAIL_CHECK_MX'],
             verify=current_app.config['EMAIL_CHECK_SMTP'],
         ):
-            return ({'error': 'email invalid'}, 400)
+            return {'error': 'email invalid'}, 400
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
-        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
-
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
+        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
         if not billing_plan:
-            return ({'error': 'billing_plan doesn\'t exist'}, 400)
+            return {'error': 'billing_plan doesn\'t exist'}, 400
 
         # If the user gives the empty object, we don't change the
         # shape. This is because the empty object can be outputed by
@@ -931,14 +937,16 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "update_user", last_login)
 
+            if version == 1:
+                return {'users': marshal(user, user_fields_full)}
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate user'}, 409)  # Conflict
+            return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self, user_id):
+    def delete(self, user_id, version=0):
         user = models.User.query.get_or_404(user_id)
         try:
             db.session.delete(user)

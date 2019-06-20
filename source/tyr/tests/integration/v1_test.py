@@ -35,9 +35,18 @@ Tests the differences of endpoints responses for API v1
 """
 
 
-def test_api():
-    resp_v0 = api_get('/v0/api')
+def check_v1_response(endpoint):
+    resp_v0 = api_get('/v0/{}'.format(endpoint))
     assert type(resp_v0) == list
-    resp_v1 = api_get('/v1/api')
+    resp_v1 = api_get('/v1/{}'.format(endpoint))
     assert type(resp_v1) == dict
-    assert 'api' in resp_v1
+    assert endpoint in resp_v1
+    assert resp_v1[endpoint] == resp_v0
+
+
+def test_api():
+    check_v1_response('api')
+
+
+def test_users():
+    check_v1_response('users')
