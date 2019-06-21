@@ -72,13 +72,6 @@ def include_object(object, name, type_, reflected, compare_to):
         return True
 
 
-def include_object(object, name, type_, reflected, compare_to):
-    if type_ == "table" and name in exclude_tables:
-        return False
-    else:
-        return True
-
-
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 

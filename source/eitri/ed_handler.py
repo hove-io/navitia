@@ -30,7 +30,6 @@ from contextlib import contextmanager
 import glob
 import os
 from navitiacommon import utils, launch_exec
-from navitiacommon.launch_exec import launch_exec
 import psycopg2
 import zipfile
 import logging
