@@ -44,7 +44,7 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-static const int unknown_column = -1;
+static const int UNKNOWN_COLUMN = -1;
 
 struct FeedInfoFusioHandler : public GenericHandler {
     FeedInfoFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}

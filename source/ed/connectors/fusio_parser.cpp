@@ -1550,7 +1550,7 @@ void AdminStopAreaFusioHandler::init(Data& data) {
 
     // For retro compatibity
     // TODO : to remove after the data team update, it will become useless (NAVP-1285)
-    if (stop_area_c == unknown_column) {
+    if (stop_area_c == UNKNOWN_COLUMN) {
         stop_id_is_present = false;
         stop_area_c = csv.get_pos_col("station_id");
         for (const auto& object_code_map : data.object_codes) {
