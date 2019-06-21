@@ -1,2 +1,2 @@
 admin_id,admin_name,station_id,station_name,stop_id,stop_name
-admin:A,"admin:A_name_that_is_no_read",station_id_that_is_no_read,"station_name_A_that_is_no_read",SA:A,"stop_name_that_is_no_read"
+admin:A,"admin_name_A_that_is_no_read",station_id_A_that_is_no_read,"station_name_A_that_is_no_read",SA:A,"stop_name_A_that_is_no_read"
