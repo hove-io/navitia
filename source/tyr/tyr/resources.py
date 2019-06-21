@@ -711,7 +711,7 @@ class User(flask_restful.Resource):
             g.disable_geojson = args['disable_geojson']
             user = models.User.query.get_or_404(user_id)
 
-            return marshal(user, user_fields_full)
+            return marshal(user, user_fields_full), None
         else:
             parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
@@ -726,7 +726,7 @@ class User(flask_restful.Resource):
             if args['key']:
                 logging.debug(args['key'])
                 users = models.User.get_from_token(args['key'], datetime.now())
-                return marshal(users, user_fields)
+                return marshal(users, user_fields), None
             else:
                 del args['disable_geojson']
                 # dict comprehension would be better, but it's not in python 2.6
@@ -745,12 +745,15 @@ class User(flask_restful.Resource):
                     pagination_json['next'] = request.base_url + "?page={}".format(pagination.next_num)
                 return marshal(pagination.items, user_fields), pagination_json
             else:
-                return marshal(models.User.query.filter_by(**filter_params).all(), user_fields)
+                return marshal(models.User.query.filter_by(**filter_params).all(), user_fields), None
 
     def get(self, user_id=None, version=0):
         if version == 1:
             users, pagination = self._get(user_id, version)
-            return {'users': users, 'pagination': pagination}
+            resp_v1 = {'users': users}
+            if pagination:
+                resp_v1['pagination'] = pagination
+            return resp_v1
         return self._get(user_id, version)
 
     def post(self, version=0):
