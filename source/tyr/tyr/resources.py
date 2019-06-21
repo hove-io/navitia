@@ -701,7 +701,7 @@ class Instance(flask_restful.Resource):
 
 
 class User(flask_restful.Resource):
-    def _get(self, user_id):
+    def _get(self, user_id, version):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'disable_geojson', type=inputs.boolean, default=True, help='remove geojson from the response'
@@ -718,6 +718,7 @@ class User(flask_restful.Resource):
             parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
             parser.add_argument('end_point_id', type=int)
             parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
+            parser.add_argument('page', type=int, required=False, default=1)
 
             args = parser.parse_args()
             g.disable_geojson = args['disable_geojson']
@@ -729,19 +730,28 @@ class User(flask_restful.Resource):
             else:
                 del args['disable_geojson']
                 # dict comprehension would be better, but it's not in python 2.6
-                filter_params = dict((k, v) for k, v in args.items() if v)
+                filter_params = dict((k, v) for k, v in args.items() if v and k != 'page')
 
-                if filter_params:
-                    users = models.User.query.filter_by(**filter_params).all()
-                    return marshal(users, user_fields)
-                else:
-                    users = models.User.query.all()
-                    return marshal(users, user_fields)
+            if version == 1:
+                pagination = models.User.query.filter_by(**filter_params).paginate(
+                    args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+                )
+                pagination_json = {
+                    'current_page': pagination.page,
+                    'items_per_page': pagination.per_page,
+                    'total_items': pagination.total,
+                }
+                if pagination.has_next:
+                    pagination_json['next'] = request.base_url + "?page={}".format(pagination.next_num)
+                return marshal(pagination.items, user_fields), pagination_json
+            else:
+                return marshal(models.User.query.filter_by(**filter_params).all(), user_fields)
 
     def get(self, user_id=None, version=0):
         if version == 1:
-            return {'users': self._get(user_id)}
-        return self._get(user_id)
+            users, pagination = self._get(user_id, version)
+            return {'users': users, 'pagination': pagination}
+        return self._get(user_id, version)
 
     def post(self, version=0):
         user = None
