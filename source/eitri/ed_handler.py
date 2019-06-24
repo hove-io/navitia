@@ -30,7 +30,6 @@ from contextlib import contextmanager
 import glob
 import os
 from navitiacommon import utils, launch_exec
-from navitiacommon.launch_exec import launch_exec
 import psycopg2
 import zipfile
 import logging
@@ -58,7 +57,7 @@ def binarize(ed_db_params, output, ed_component_path, cities_db_params):
     ed2nav = 'ed2nav'
     if ed_component_path:
         ed2nav = os.path.join(ed_component_path, ed2nav)
-    launch_exec(
+    launch_exec.launch_exec(
         ed2nav,
         [
             "-o",
@@ -98,7 +97,7 @@ def import_data(data_dir, db_params, ed_component_path):
         zip_file.extractall(path=data_dir)
         file_to_load = data_dir
 
-    if launch_exec(
+    if launch_exec.launch_exec(
         import_component, ["-i", file_to_load, "--connection-string", db_params.old_school_cnx_string()], log
     ):
         raise Exception('Error: problem with running {}, stoping'.format(import_component))
@@ -109,7 +108,7 @@ def load_cities(cities_file, cities_db_params, cities_exec_path):
 
     cities_exec = os.path.join(cities_exec_path, 'cities')
 
-    if launch_exec(
+    if launch_exec.launch_exec(
         cities_exec, ["-i", cities_file, "--connection-string", cities_db_params.old_school_cnx_string()], logger
     ):
         raise Exception('Error: problem with running {}, stoping'.format(cities_exec))

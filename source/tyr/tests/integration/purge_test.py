@@ -38,10 +38,11 @@ from tyr import app, tasks
 from navitiacommon import models
 from tests.check_utils import api_get, api_delete
 
+# TODO : need to clean that after full migration to python3
 try:
     import ConfigParser
 except:
-    import configparser as ConfigParser
+    import configparser as ConfigParser  # type: ignore
 
 
 def create_dataset(dataset_type, dir):
