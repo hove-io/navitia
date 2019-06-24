@@ -1069,7 +1069,7 @@ class Authorization(flask_restful.Resource):
     def __init__(self):
         pass
 
-    def delete(self, user_id):
+    def delete(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
@@ -1094,9 +1094,11 @@ class Authorization(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        if version == 1:
+            return {'users': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
-    def post(self, user_id):
+    def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
@@ -1119,10 +1121,12 @@ class Authorization(flask_restful.Resource):
             db.session.add(authorization)
             db.session.commit()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate entry'}, 409)
+            return {'error': 'duplicate entry'}, 409
         except Exception:
             logging.exception("fail")
             raise
+        if version == 1:
+            return {'users': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
 

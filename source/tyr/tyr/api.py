@@ -54,7 +54,7 @@ api.add_resource(
     '/v<int:version>/users/<int:user_id>/keys/<int:key_id>/',
 )
 
-api.add_resource(resources.Authorization, '/v0/users/<int:user_id>/authorizations/')
+api.add_resource(resources.Authorization, '/v<int:version>/users/<int:user_id>/authorizations/')
 
 api.add_resource(resources.Index, '/')
 

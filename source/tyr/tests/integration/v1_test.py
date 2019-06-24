@@ -40,6 +40,47 @@ Tests the differences of endpoints responses for API v1
 """
 
 
+@pytest.fixture
+def create_5_users():
+    with app.app_context():
+        for i in range(5):
+            user_name = 'user{}'.format(str(i))
+            user = models.User(user_name, '{}@example.com'.format(user_name))
+            models.db.session.add(user)
+        models.db.session.commit()
+
+        # Return only 1 id for test purpose
+        yield user.id
+
+        for user in models.User.query.all():
+            models.db.session.delete(user)
+        models.db.session.commit()
+
+
+@pytest.fixture
+def create_instance():
+    with app.app_context():
+        instance = models.Instance('test_instance')
+        models.db.session.add(instance)
+        models.db.session.commit()
+
+        yield instance.id
+
+        models.db.session.delete(instance)
+
+
+@pytest.fixture
+def create_api():
+    with app.app_context():
+        api = models.Api('test_api')
+        models.db.session.add(api)
+        models.db.session.commit()
+
+        yield api.id
+
+        models.db.session.delete(api)
+
+
 def check_v1_response(endpoint, request=None):
     if not request:
         request = endpoint
@@ -56,26 +97,9 @@ def test_api():
     check_v1_response('api')
 
 
-@pytest.fixture
-def create_5_users():
-    with app.app_context():
-        for i in range(5):
-            user_name = 'user{}'.format(str(i))
-            user = models.User(user_name, '{}@example.com'.format(user_name))
-            models.db.session.add(user)
-        models.db.session.commit()
-
-        yield
-
-        for user in models.User.query.all():
-            models.db.session.delete(user)
-        models.db.session.commit()
-
-
 def test_users(create_5_users):
     check_v1_response('users')
-    user_id = api_get('/v1/users')['users'][0]['id']
-    check_v1_response('users', 'users/{}'.format(user_id))
+    check_v1_response('users', 'users/{}'.format(create_5_users))
 
 
 def test_users_pagination(create_5_users):
@@ -107,14 +131,13 @@ def test_users_pagination(create_5_users):
 
 
 def test_keys(create_5_users):
-    user_id = api_get('/v1/users')['users'][0]['id']
-    check_v1_response('keys', 'users/{}/keys'.format(user_id))
+    check_v1_response('keys', 'users/{}/keys'.format(create_5_users))
 
 
 def test_keys_methods(create_5_users):
-    user_id = api_get('/v1/users')['users'][0]['id']
+    user_id = create_5_users
     resp_post = api_post(
-        '/v1/users/{}/keys'.format(user_id),
+        '/v1/users/{}/keys'.format(create_5_users),
         data=json.dumps({'app_name': 'testApp', 'valid_until': '2020-01-01'}),
         content_type='application/json',
     )
@@ -135,3 +158,22 @@ def test_keys_methods(create_5_users):
 
     resp_delete = api_delete('/v1/users/{}/keys/{}'.format(user_id, key_id))
     assert len(resp_delete['users']['keys']) == 0
+
+
+def test_authorization_methods(create_5_users, create_instance, create_api):
+    user_id = create_5_users
+    full_user = api_get('/v1/users/{}'.format(user_id))
+    assert len(full_user['users']['authorizations']) == 0
+    auth = {'instance_id': create_instance, 'api_id': create_api}
+    resp_post = api_post(
+        '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
+    )
+    assert len(resp_post['users']['authorizations']) == 1
+
+    assert resp_post['users']['authorizations'][0]['api']['name'] == 'test_api'
+    assert resp_post['users']['authorizations'][0]['instance']['name'] == 'test_instance'
+
+    resp_delete = api_delete(
+        '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
+    )
+    assert len(resp_delete['users']['authorizations']) == 0
