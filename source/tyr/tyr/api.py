@@ -48,7 +48,11 @@ api.add_resource(resources.Api, '/v<int:version>/api/')
 
 api.add_resource(resources.User, '/v<int:version>/users/', '/v<int:version>/users/<int:user_id>/')
 
-api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/', '/v0/users/<int:user_id>/keys/<int:key_id>/')
+api.add_resource(
+    resources.Key,
+    '/v<int:version>/users/<int:user_id>/keys/',
+    '/v<int:version>/users/<int:user_id>/keys/<int:key_id>/',
+)
 
 api.add_resource(resources.Authorization, '/v0/users/<int:user_id>/authorizations/')
 

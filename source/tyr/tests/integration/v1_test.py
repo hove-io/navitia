@@ -28,43 +28,57 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-from tests.check_utils import api_get
+from tests.check_utils import api_get, api_post, api_put, api_delete
 from tyr import app
 from navitiacommon import models
+
+import pytest
+import ujson as json
 
 """
 Tests the differences of endpoints responses for API v1
 """
 
 
-def check_v1_response(endpoint):
-    resp_v0 = api_get('/v0/{}'.format(endpoint))
-    resp_v1 = api_get('/v1/{}'.format(endpoint))
+def check_v1_response(endpoint, request=None):
+    if not request:
+        request = endpoint
+    resp_v0 = api_get('/v0/{}'.format(request))
+    assert endpoint not in resp_v0
+
+    resp_v1 = api_get('/v1/{}'.format(request))
     assert type(resp_v1) == dict
-    root_endpoint = endpoint.split('/')[0]
-    assert root_endpoint in resp_v1
-    assert resp_v1[root_endpoint] == resp_v0
+    assert endpoint in resp_v1
+    assert sorted(resp_v1[endpoint]) == sorted(resp_v0)
 
 
 def test_api():
     check_v1_response('api')
 
 
+@pytest.fixture
 def create_5_users():
     with app.app_context():
         for i in range(5):
             user_name = 'user{}'.format(str(i))
-            models.db.session.add(models.User(user_name, '{}@example.com'.format(user_name)))
+            user = models.User(user_name, '{}@example.com'.format(user_name))
+            models.db.session.add(user)
+        models.db.session.commit()
+
+        yield
+
+        for user in models.User.query.all():
+            models.db.session.delete(user)
         models.db.session.commit()
 
 
-def test_users():
-    create_5_users()
+def test_users(create_5_users):
     check_v1_response('users')
-    check_v1_response('users/1')
+    user_id = api_get('/v1/users')['users'][0]['id']
+    check_v1_response('users', 'users/{}'.format(user_id))
 
 
-def test_users_pagination():
+def test_users_pagination(create_5_users):
     def check_resp_page(page_num, resp, is_last_page=False):
         assert len(resp['users']) == 2 if not is_last_page else 1
         assert 'pagination' in resp
@@ -77,7 +91,6 @@ def test_users_pagination():
         else:
             assert 'next' not in resp['pagination']
 
-    create_5_users()
     app.config['MAX_ITEMS_PER_PAGE'] = 2
 
     first_page_resp = api_get('/v1/users')
@@ -91,3 +104,34 @@ def test_users_pagination():
     last_page_resp = api_get('/v1/{}'.format(last_page_link))
     no_more_page_link = check_resp_page(3, last_page_resp, is_last_page=True)
     assert not no_more_page_link
+
+
+def test_keys(create_5_users):
+    user_id = api_get('/v1/users')['users'][0]['id']
+    check_v1_response('keys', 'users/{}/keys'.format(user_id))
+
+
+def test_keys_methods(create_5_users):
+    user_id = api_get('/v1/users')['users'][0]['id']
+    resp_post = api_post(
+        '/v1/users/{}/keys'.format(user_id),
+        data=json.dumps({'app_name': 'testApp', 'valid_until': '2020-01-01'}),
+        content_type='application/json',
+    )
+    assert 'keys' in resp_post['users']
+    assert len(resp_post['users']['keys']) == 1
+    assert resp_post['users']['keys'][0]['app_name'] == 'testApp'
+    assert resp_post['users']['keys'][0]['valid_until'] == '2020-01-01'
+
+    key_id = resp_post['users']['keys'][0]['id']
+    resp_put = api_put(
+        '/v1/users/{}/keys/{}'.format(user_id, key_id),
+        data=json.dumps({'app_name': 'testApp', 'valid_until': '2021-01-01'}),
+        content_type='application/json',
+    )
+    assert len(resp_put['users']['keys']) == 1
+    assert resp_put['users']['keys'][0]['app_name'] == 'testApp'
+    assert resp_put['users']['keys'][0]['valid_until'] == '2021-01-01'
+
+    resp_delete = api_delete('/v1/users/{}/keys/{}'.format(user_id, key_id))
+    assert len(resp_delete['users']['keys']) == 0

@@ -978,16 +978,17 @@ class Key(flask_restful.Resource):
     def __init__(self):
         pass
 
-    @marshal_with(key_fields)
-    def get(self, user_id, key_id=None):
+    def get(self, user_id, key_id=None, version=0):
         try:
-            return models.User.query.get_or_404(user_id).keys.all()
+            resp = models.User.query.get_or_404(user_id).keys.all()
         except Exception:
             logging.exception("fail")
             raise
+        if version == 1:
+            return {'keys': marshal(resp, key_fields)}
+        return marshal(resp, key_fields)
 
-    @marshal_with(user_fields_full)
-    def post(self, user_id):
+    def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'valid_until',
@@ -1011,10 +1012,11 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        if version == 1:
+            return {'users': marshal(user, user_fields_full)}
+        return marshal(user, user_fields_full)
 
-    @marshal_with(user_fields_full)
-    def delete(self, user_id, key_id):
+    def delete(self, user_id, key_id, version=0):
         user = models.User.query.get_or_404(user_id)
         try:
             key = user.keys.filter_by(id=key_id).first()
@@ -1025,10 +1027,11 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        if version == 1:
+            return {'users': marshal(user, user_fields_full)}
+        return marshal(user, user_fields_full)
 
-    @marshal_with(user_fields_full)
-    def put(self, user_id, key_id):
+    def put(self, user_id, key_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'valid_until',
@@ -1057,7 +1060,9 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        if version == 1:
+            return {'users': marshal(user, user_fields_full)}
+        return marshal(user, user_fields_full)
 
 
 class Authorization(flask_restful.Resource):
