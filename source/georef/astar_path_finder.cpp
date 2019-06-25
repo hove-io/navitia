@@ -37,8 +37,6 @@ www.navitia.io
 namespace navitia {
 namespace georef {
 
-AstarPathFinder::~AstarPathFinder() = default;
-
 void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duration& radius,
                                                      const std::vector<vertex_t>& destinations) {
     if (!starting_edge.found)

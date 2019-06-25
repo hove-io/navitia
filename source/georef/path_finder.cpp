@@ -37,7 +37,7 @@ www.navitia.io
 namespace navitia {
 namespace georef {
 
-PathFinder::~PathFinder() = default;
+PathFinder::~PathFinder() {}
 
 navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
     // For BSS we want the default speed of walking, because on extremities we walk !

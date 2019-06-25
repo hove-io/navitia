@@ -142,7 +142,6 @@ public:
     boost::two_bit_color_map<> color;
 
     PathFinder(const GeoRef& geo_ref);
-    PathFinder(const PathFinder& o) = default;
 
     // Virtual destructor, to allow use as a public base class,
     // but pure to ensure object itself isn't instantiated
@@ -165,9 +164,8 @@ public:
                   const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge);
 
     // find the nearest vertex from the projection. return the distance to this vertex and the vertex
-    virtual std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(
-        const ProjectionData& target,
-        bool handle_on_node = false) const;
+    std::pair<navitia::time_duration, ProjectionData::Direction> find_nearest_vertex(const ProjectionData& target,
+                                                                                     bool handle_on_node = false) const;
 
     // return the duration between two projection on the same edge
     navitia::time_duration path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2);

@@ -42,8 +42,6 @@ namespace georef {
 class DijkstraPathFinder : public PathFinder {
 public:
     DijkstraPathFinder(const GeoRef& geo_ref) : PathFinder(geo_ref) {}
-    DijkstraPathFinder(const DijkstraPathFinder& o) = default;
-    virtual ~DijkstraPathFinder();
 
     void start_distance_dijkstra(const navitia::time_duration& radius);
     void start_distance_or_target_dijkstra(const navitia::time_duration& radius,

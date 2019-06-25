@@ -35,8 +35,6 @@ www.navitia.io
 namespace navitia {
 namespace georef {
 
-DijkstraPathFinder::~DijkstraPathFinder() = default;
-
 void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
     if (!starting_edge.found)
         return;
