@@ -99,11 +99,11 @@ Path compute_path(AstarPathFinder& finder, const navitia::type::GeographicalCoor
 // Compute the path with astar and check if we have the same result
 // Than a previously computed path with dijkstra
 void check_has_astar_same_result_than_dijkstra(AstarPathFinder& finder,
-                                               const navitia::type::GeographicalCoord& start_coord,
-                                               const navitia::type::GeographicalCoord& dest_coord,
-                                               navitia::type::Mode_e mode,
-                                               float speed_factor,
-                                               const Path& dijkstra_path) {
+                                         const navitia::type::GeographicalCoord& start_coord,
+                                         const navitia::type::GeographicalCoord& dest_coord,
+                                         navitia::type::Mode_e mode,
+                                         float speed_factor,
+                                         const Path& dijkstra_path) {
     finder.init(start_coord, dest_coord, mode, speed_factor);
     auto const astar_path = compute_path(finder, dest_coord);
     BOOST_REQUIRE_EQUAL(dijkstra_path.duration, astar_path.duration);
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     auto dest = nt::GeographicalCoord{4, 4, true};
 
     djikstra_path_finder.init(start, Mode_e::Walking, 1);  // starting from a
-    Path p = compute_path(djikstra_path_finder, dest);     // going to e
+    Path p = compute_path(djikstra_path_finder, dest);    // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
     start = nt::GeographicalCoord{3, 3, true};
     dest = nt::GeographicalCoord{4, 4, true};
     djikstra_path_finder.init(start, Mode_e::Walking, 1);  // starting from d
-    p = compute_path(djikstra_path_finder, dest);          // going to e
+    p = compute_path(djikstra_path_finder, dest);         // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
     check_has_astar_same_result_than_dijkstra(astar_path_finder, start, dest, Mode_e::Walking, 1, p);
@@ -809,6 +809,7 @@ BOOST_AUTO_TEST_CASE(compute_coord) {
     BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10, 10, false));
     BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4, 10, false));
     check_has_astar_same_result_than_dijkstra(astar_path_finder, start, destination, Mode_e::Walking, 1, p);
+
 }
 
 BOOST_AUTO_TEST_CASE(compute_nearest) {
