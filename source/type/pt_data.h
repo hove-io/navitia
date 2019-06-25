@@ -43,6 +43,10 @@ www.navitia.io
 #include "code_container.h"
 #include "headsign_handler.h"
 
+#include <boost/serialization/map.hpp>
+#include "utils/serialization_unordered_map.h"
+#include "utils/serialization_tuple.h"
+
 namespace navitia {
 template <>
 struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
