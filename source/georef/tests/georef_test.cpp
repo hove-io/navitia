@@ -85,7 +85,7 @@ Path compute_path(AstarPathFinder& finder, const navitia::type::GeographicalCoor
     ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
     auto const max_dur = navitia::seconds(1000.);
 
-    finder.start_distance_or_target_astar(max_dur, dest.projected, {dest[source_e], dest[target_e]});
+    finder.start_distance_or_target_astar(max_dur, {dest[source_e], dest[target_e]});
     const auto dest_vertex = finder.find_nearest_vertex(dest, true);
     const auto res = finder.get_path(dest, dest_vertex);
 

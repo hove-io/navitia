@@ -132,11 +132,10 @@ Path StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::
         return Path();
     }
     const auto max_dur = origin.streetnetwork_params.max_duration + destination.streetnetwork_params.max_duration;
-    direct_path_finder.init(origin.coordinates, dest_edge.projected, origin.streetnetwork_params.mode,
+    direct_path_finder.init(origin.coordinates, destination.coordinates, origin.streetnetwork_params.mode,
                             origin.streetnetwork_params.speed_factor);
 
-    direct_path_finder.start_distance_or_target_astar(max_dur, dest_edge.projected,
-                                                      {dest_edge[source_e], dest_edge[target_e]});
+    direct_path_finder.start_distance_or_target_astar(max_dur, {dest_edge[source_e], dest_edge[target_e]});
     const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
     const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
     if (res.duration > max_dur) {
