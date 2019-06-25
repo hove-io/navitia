@@ -30,7 +30,7 @@ www.navitia.io
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-namespace navitia {
+namespace boost {
 // Call breadth first search
 // Allow to pass color map so that user deals with the allocation (and white init)
 template <class Graph,
@@ -56,15 +56,18 @@ inline void dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
                                                       DijkstraVisitor vis,
                                                       ColorMap color,
                                                       IndexInHeapMap index_in_heap) {
-    typedef typename boost::graph_traits<Graph>::vertex_descriptor Vertex;
-    typedef boost::d_ary_heap_indirect<Vertex, 4, IndexInHeapMap, DistanceMap, Compare> MutableQueue;
+    typedef indirect_cmp<DistanceMap, Compare> IndirectCmp;
+    IndirectCmp icmp(distance, compare);
+
+    typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+    typedef d_ary_heap_indirect<Vertex, 4, IndexInHeapMap, DistanceMap, Compare> MutableQueue;
     MutableQueue Q(distance, index_in_heap, compare);
 
-    boost::detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap, PredecessorMap, DistanceMap, Combine,
-                                        Compare>
+    detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap, PredecessorMap, DistanceMap, Combine,
+                                 Compare>
         bfs_vis(vis, Q, weight, predecessor, distance, combine, compare, zero);
 
     breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
 }
 
-}  // namespace navitia
+}  // namespace boost

@@ -51,9 +51,7 @@ BOOST_GLOBAL_FIXTURE(logger_initialized);
 using namespace navitia::georef;
 using namespace boost;
 
-namespace {
-
-std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
+static std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
     std::vector<navitia::type::GeographicalCoord> res;
     for (const auto& item : path.path_items) {
         for (const auto& coord : item.coordinates) {
@@ -63,58 +61,13 @@ std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& p
     return res;
 }
 
-void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
+static void print_coord(const std::vector<navitia::type::GeographicalCoord>& coord) {
     std::cout << " coord : " << std::endl;
     for (auto c : coord) {
         std::cout << " -- " << c.lon() / navitia::type::GeographicalCoord::N_M_TO_DEG << ", "
                   << c.lat() / navitia::type::GeographicalCoord::N_M_TO_DEG << std::endl;
     }
 }
-
-// Compute the path from the starting point to the the target geographical coord
-Path compute_path(DijkstraPathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
-    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
-
-    auto best_pair = finder.update_path(dest);
-
-    return finder.get_path(dest, best_pair);
-}
-
-// Compute the path from the starting point to the the target geographical coord
-Path compute_path(AstarPathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
-    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
-    auto const max_dur = navitia::seconds(1000.);
-
-    finder.start_distance_or_target_astar(max_dur, {dest[source_e], dest[target_e]});
-    const auto dest_vertex = finder.find_nearest_vertex(dest, true);
-    const auto res = finder.get_path(dest, dest_vertex);
-
-    if (res.duration > max_dur) {
-        return Path();
-    }
-
-    return res;
-}
-
-// Compute the path with astar and check if we have the same result
-// Than a previously computed path with dijkstra
-void check_has_astar_same_result_than_dijkstra(AstarPathFinder& finder,
-                                         const navitia::type::GeographicalCoord& start_coord,
-                                         const navitia::type::GeographicalCoord& dest_coord,
-                                         navitia::type::Mode_e mode,
-                                         float speed_factor,
-                                         const Path& dijkstra_path) {
-    finder.init(start_coord, dest_coord, mode, speed_factor);
-    auto const astar_path = compute_path(finder, dest_coord);
-    BOOST_REQUIRE_EQUAL(dijkstra_path.duration, astar_path.duration);
-
-    auto const& d_path = dijkstra_path.path_items;
-    auto const& a_path = astar_path.path_items;
-    BOOST_CHECK_EQUAL_COLLECTIONS(d_path[0].coordinates.begin(), d_path[0].coordinates.end(),
-                                  a_path[0].coordinates.begin(), a_path[0].coordinates.end());
-}
-
-}  // namespace
 
 BOOST_AUTO_TEST_CASE(init_test) {
     using namespace navitia::type;
@@ -222,6 +175,15 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge) {
 
     navitia::type::GeographicalCoord s(-10, 0, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(s) == b.get("a", "b"));
+}
+
+/// Compute the path from the starting point to the the target geographical coord
+static Path compute_path(PathFinder& finder, const navitia::type::GeographicalCoord& target_coord) {
+    ProjectionData dest(target_coord, finder.geo_ref, finder.geo_ref.pl);
+
+    auto best_pair = finder.update_path(dest);
+
+    return finder.get_path(dest, best_pair);
 }
 
 /*
@@ -385,8 +347,7 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     b.add_geom(b.get("e", "d"), geom);
 
     b.geo_ref.init();
-    DijkstraPathFinder djikstra_path_finder(b.geo_ref);
-    AstarPathFinder astar_path_finder(b.geo_ref);
+    PathFinder path_finder(b.geo_ref);
 
     nt::LineString expectedGeom;
     expectedGeom.push_back(nt::GeographicalCoord(30, 17, false));
@@ -395,26 +356,23 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     expectedGeom.push_back(nt::GeographicalCoord(27, 2, false));
     expectedGeom.push_back(nt::GeographicalCoord(23, 2, false));
     // Computing path from x2 to x3. Both of them should be projected on the edge (a,c)
-    djikstra_path_finder.init(x2, nt::Mode_e::Walking, 1);  // starting from x2
-    Path p = compute_path(djikstra_path_finder, x3);        // going to x3
+    path_finder.init(x2, nt::Mode_e::Walking, 1);  // starting from x2
+    Path p = compute_path(path_finder, x3);        // going to x3
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
                                   p.path_items[0].coordinates.end());
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, x2, x3, nt::Mode_e::Walking, 1, p);
 
     // Same thing with a reverse geometry
     std::reverse(expectedGeom.begin(), expectedGeom.end());
-    djikstra_path_finder.init(x3, nt::Mode_e::Walking, 1);  // starting from x3
-    p = compute_path(djikstra_path_finder, x2);             // going to x2
+    path_finder.init(x3, nt::Mode_e::Walking, 1);  // starting from x3
+    p = compute_path(path_finder, x2);             // going to x2
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(),
                                   p.path_items[0].coordinates.end());
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, x3, x2, nt::Mode_e::Walking, 1, p);
 
-    djikstra_path_finder.init(x4, nt::Mode_e::Walking, 1);  // starting from x4
-    p = compute_path(djikstra_path_finder, x5);             // going to x5
+    path_finder.init(x4, nt::Mode_e::Walking, 1);  // starting from x4
+    p = compute_path(path_finder, x5);             // going to x5
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, x4, x5, nt::Mode_e::Walking, 1, p);
 
     expectedGeom.clear();
     expectedGeom.push_back(nt::GeographicalCoord(15, 7, false));
@@ -692,38 +650,28 @@ BOOST_AUTO_TEST_CASE(compute_directions_test) {
 
     b.geo_ref.init();
 
-    DijkstraPathFinder djikstra_path_finder(b.geo_ref);
-    AstarPathFinder astar_path_finder(b.geo_ref);
-
-    auto start = nt::GeographicalCoord{0, 0, true};
-    auto dest = nt::GeographicalCoord{4, 4, true};
-
-    djikstra_path_finder.init(start, Mode_e::Walking, 1);  // starting from a
-    Path p = compute_path(djikstra_path_finder, dest);    // going to e
+    PathFinder path_finder(b.geo_ref);
+    path_finder.init({0, 0, true}, Mode_e::Walking, 1);  // starting from a
+    Path p = compute_path(path_finder, {4, 4, true});    // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 2);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
     BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, start, dest, Mode_e::Walking, 1, p);
     //    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
     //    BOOST_CHECK(p.path_items[0].segments[1] == b.get("b", "c"));
     //    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
     //    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
 
-    start = nt::GeographicalCoord{3, 3, true};
-    dest = nt::GeographicalCoord{4, 4, true};
-    djikstra_path_finder.init(start, Mode_e::Walking, 1);  // starting from d
-    p = compute_path(djikstra_path_finder, dest);         // going to e
+    path_finder.init({3, 3, true}, Mode_e::Walking, 1);  // starting from d
+    p = compute_path(path_finder, {4, 4, true});         // going to e
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, start, dest, Mode_e::Walking, 1, p);
 }
 
 // On teste le calcul d'itinéraire de coordonnées à coordonnées
 BOOST_AUTO_TEST_CASE(compute_coord) {
     using namespace navitia::type;
     GraphBuilder b;
-    DijkstraPathFinder djikstra_path_finder(b.geo_ref);
-    AstarPathFinder astar_path_finder(b.geo_ref);
+    PathFinder path_finder(b.geo_ref);
 
     /*           a+------+b
      *            |      |
@@ -778,14 +726,12 @@ BOOST_AUTO_TEST_CASE(compute_coord) {
     GeographicalCoord destination;
     destination.set_xy(4, 11);
     b.geo_ref.init();
-    djikstra_path_finder.init(start, Mode_e::Walking, 1);
-    Path p = compute_path(djikstra_path_finder, destination);
+    path_finder.init(start, Mode_e::Walking, 1);
+    Path p = compute_path(path_finder, destination);
     auto coords = get_coords_from_path(p);
     print_coord(coords);
     BOOST_REQUIRE_EQUAL(coords.size(), 4);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, start, destination, Mode_e::Walking, 1, p);
-
     GeographicalCoord expected;
     expected.set_xy(3, 0);
     BOOST_CHECK_EQUAL(coords[0], expected);
@@ -799,8 +745,8 @@ BOOST_AUTO_TEST_CASE(compute_coord) {
 
     // Trajet partiel : on ne parcourt pas un arc en entier, mais on passe par un nœud
     start.set_xy(7, 6);
-    djikstra_path_finder.init(start, Mode_e::Walking, 1);
-    p = compute_path(djikstra_path_finder, destination);
+    path_finder.init(start, Mode_e::Walking, 1);
+    p = compute_path(path_finder, destination);
     coords = get_coords_from_path(p);
     print_coord(coords);
     BOOST_CHECK_EQUAL(p.path_items.size(), 2);
@@ -808,8 +754,6 @@ BOOST_AUTO_TEST_CASE(compute_coord) {
     BOOST_CHECK_EQUAL(coords[0], GeographicalCoord(10, 6, false));
     BOOST_CHECK_EQUAL(coords[1], GeographicalCoord(10, 10, false));
     BOOST_CHECK_EQUAL(coords[2], GeographicalCoord(4, 10, false));
-    check_has_astar_same_result_than_dijkstra(astar_path_finder, start, destination, Mode_e::Walking, 1, p);
-
 }
 
 BOOST_AUTO_TEST_CASE(compute_nearest) {
