@@ -71,7 +71,7 @@ public:
         costs.assign(n, bt::pos_infin);
 
         auto const distance_to_dest = start_coord.distance_to(dest_coord);
-        auto const duration_to_dest = navitia::seconds(distance_to_dest / double(default_speed[mode] * speed_factor));
+        auto const duration_to_dest = navitia::seconds(distance_to_dest / (default_speed[mode] * speed_factor));
         costs[starting_edge[source_e]] = duration_to_dest;
         costs[starting_edge[target_e]] = duration_to_dest;
     }

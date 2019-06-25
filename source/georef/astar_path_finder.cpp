@@ -45,8 +45,7 @@ void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duratio
     // We start astar from source and target nodes
     try {
         astar({starting_edge[source_e], starting_edge[target_e]},
-              astar_distance_heuristic(geo_ref.graph, destinations.back(),
-                                       1. / double(default_speed[mode] * speed_factor)),
+              astar_distance_heuristic(geo_ref.graph, destinations.back(), 1. / (default_speed[mode] * speed_factor)),
               astar_distance_or_target_visitor(radius, distances, destinations));
     } catch (DestinationFound&) {
     }

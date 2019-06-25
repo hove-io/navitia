@@ -179,20 +179,25 @@ PathItem::TransportCaracteristic PathFinder::get_transportation_mode_item_to_upd
         case georef::PathItem::TransportCaracteristic::Car:
         case georef::PathItem::TransportCaracteristic::Bike:
             return previous_transportation;
+            break;
             // if we were switching between walking and biking, we need to take either
             // the previous or the next transportation mode depending on 'append_to_begin'
         case georef::PathItem::TransportCaracteristic::BssTake:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
                                     : georef::PathItem::TransportCaracteristic::Bike);
+            break;
         case georef::PathItem::TransportCaracteristic::BssPutBack:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
                                     : georef::PathItem::TransportCaracteristic::Walk);
+            break;
         case georef::PathItem::TransportCaracteristic::CarLeaveParking:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
                                     : georef::PathItem::TransportCaracteristic::Car);
+            break;
         case georef::PathItem::TransportCaracteristic::CarPark:
             return (append_to_begin ? georef::PathItem::TransportCaracteristic::Car
                                     : georef::PathItem::TransportCaracteristic::Walk);
+            break;
         default:
             throw navitia::recoverable_exception("unhandled transportation carac case");
     }
