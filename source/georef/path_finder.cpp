@@ -90,7 +90,7 @@ nt::LineString PathFinder::path_coordinates_on_same_edge(const Edge& e,
 
 PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref), color(boost::num_vertices(geo_ref.graph)) {}
 
-void PathFinder::init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
+void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
     // we look for the nearest edge from the start coordinate
     // in the right transport mode (walk, bike, car, ...) (ie offset)

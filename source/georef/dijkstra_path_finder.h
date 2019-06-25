@@ -45,10 +45,6 @@ public:
     DijkstraPathFinder(const DijkstraPathFinder& o) = default;
     virtual ~DijkstraPathFinder();
 
-    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
-        PathFinder::init_start(start_coord, mode, speed_factor);
-    }
-
     void start_distance_dijkstra(const navitia::time_duration& radius);
     void start_distance_or_target_dijkstra(const navitia::time_duration& radius,
                                            const std::vector<vertex_t>& destinations);

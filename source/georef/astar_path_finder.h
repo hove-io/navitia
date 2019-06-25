@@ -66,7 +66,7 @@ public:
               const type::GeographicalCoord& dest_coord,
               nt::Mode_e mode,
               const float speed_factor) {
-        PathFinder::init_start(start_coord, mode, speed_factor);
+        PathFinder::init(start_coord, mode, speed_factor);
 
         // we initialize the costs to the maximum value
         size_t n = boost::num_vertices(geo_ref.graph);

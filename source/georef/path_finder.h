@@ -148,6 +148,12 @@ public:
     // but pure to ensure object itself isn't instantiated
     virtual ~PathFinder() = 0;
 
+    /**
+     *  Update the structure for a given starting point and transportation mode
+     *  The init HAS to be called before any other methods
+     */
+    void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
+
     // return the path from the starting point to the target. the target has to have been previously visited.
     Path get_path(type::idx_t idx);
 
@@ -170,12 +176,6 @@ public:
     type::LineString path_coordinates_on_same_edge(const Edge& e, const ProjectionData& p1, const ProjectionData& p2);
 
 protected:
-    /**
-     *  Update the structure for a given starting point and transportation mode
-     *  The init HAS to be called before any other methods
-     */
-    void init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
-
     // return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
 
