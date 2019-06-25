@@ -102,6 +102,29 @@ def test_users(create_5_users):
     check_v1_response('users', 'users/{}'.format(create_5_users))
 
 
+def test_users_methods():
+    user_data = {'login': 'user1', 'email': 'user1@example.com'}
+    resp_post = api_post('/v1/users', data=json.dumps(user_data), content_type='application/json')
+    assert 'users' in resp_post
+    assert resp_post['users']['login'] == 'user1'
+    assert resp_post['users']['email'] == 'user1@example.com'
+    user_id = resp_post['users']['id']
+
+    user_data_update = {'type': 'super_user'}
+    resp_put = api_put(
+        '/v1/users/{}'.format(user_id), data=json.dumps(user_data_update), content_type='application/json'
+    )
+    assert 'users' in resp_put
+    assert resp_put['users']['login'] == 'user1'
+    assert resp_put['users']['type'] == 'super_user'
+
+    resp_delete, status_delete = api_delete('/v1/users/{}'.format(user_id), check=False, no_json=True)
+    assert status_delete == 204
+
+    resp_get, status_get = api_get('/v1/users/{}'.format(user_id), check=False)
+    assert status_get == 404
+
+
 def test_users_pagination(create_5_users):
     def check_resp_page(page_num, resp, is_last_page=False):
         assert len(resp['users']) == 2 if not is_last_page else 1

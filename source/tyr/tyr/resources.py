@@ -971,7 +971,7 @@ class User(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class Key(flask_restful.Resource):
