@@ -114,8 +114,6 @@ void AstarPathFinder::astar_shortest_paths_no_init_with_heap(const Graph& g,
     breadth_first_visit(g, &s_begin, &s_end, Q, bfs_vis, color);
 }
 
-// The cost of a starting edge is the distance from this edge to the projected destination point (distance_to_dest)
-// Plus the distance from this edge to the projected starting point (distances[v])
 navitia::time_duration AstarPathFinder::compute_cost_from_starting_edge_to_dist(
     const vertex_t& v,
     const type::GeographicalCoord& dest_coord) const {
