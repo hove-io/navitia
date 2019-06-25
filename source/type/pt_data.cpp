@@ -30,7 +30,6 @@ www.navitia.io
 
 #include "pt_data.h"
 #include "utils/functions.h"
-#include "type/type.h"
 
 #include <boost/range/algorithm/find_if.hpp>
 #include "type/serialization.h"

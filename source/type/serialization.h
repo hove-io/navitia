@@ -44,8 +44,6 @@ www.navitia.io
 #include <boost/serialization/map.hpp>
 #include "utils/serialization_unordered_map.h"
 #include "utils/serialization_tuple.h"
-#include "utils/serialization_unique_ptr.h"
-#include "utils/serialization_unique_ptr_container.h"
 
 #define SERIALIZABLE(T)                                                                                                \
     template void T::serialize<boost::archive::binary_oarchive>(boost::archive::binary_oarchive&, const unsigned int); \

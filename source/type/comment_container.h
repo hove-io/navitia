@@ -29,9 +29,7 @@ www.navitia.io
 */
 
 #include "utils/serialization_fusion_map.h"
-#include "type/fwd_type.h"
-#include <vector>
-#include <map>
+#include "type/type.h"
 #include <type_traits>
 #include <boost/fusion/include/at_key.hpp>
 
@@ -90,7 +88,9 @@ private:
     const T* get_as_key(T const* const& obj) const {
         return obj;
     }
-    const stop_time_key get_as_key(const navitia::type::StopTime& st) const;
+    const stop_time_key get_as_key(const navitia::type::StopTime& st) const {
+        return std::make_pair(st.vehicle_journey, st.order());
+    }
 
     typedef boost::fusion::map<fusion_pair_comment_map<navitia::type::StopArea>,
                                fusion_pair_comment_map<navitia::type::StopPoint>,
