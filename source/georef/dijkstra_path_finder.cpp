@@ -227,7 +227,7 @@ void DijkstraPathFinder::dijkstra(const std::array<georef::vertex_t, 2>& origin_
     auto const weight_map = boost::get(&Edge::duration, geo_ref.graph);
     auto const combiner = SpeedDistanceCombiner(speed_factor);  // we multiply the edge duration by a speed factor
 
-    dijkstra_shortest_paths_no_init_with_heap(g, origin_vertexes.front(), origin_vertexes.back(), visitor, weight_map,
+    dijkstra_shortest_paths_no_init_with_heap(g, origin_vertexes.cbegin(), origin_vertexes.cend(), visitor, weight_map,
                                               combiner);
 }
 
@@ -280,8 +280,8 @@ navitia::time_duration DijkstraPathFinder::get_distance(type::idx_t target_idx) 
 
 template <class Graph, class DijkstraVisitor, class WeightMap, class Compare>
 void DijkstraPathFinder::dijkstra_shortest_paths_no_init_with_heap(const Graph& g,
-                                                                   const vertex_t& s_begin,
-                                                                   const vertex_t& s_end,
+                                                                   const vertex_t* s_begin,
+                                                                   const vertex_t* s_end,
                                                                    const DijkstraVisitor& visitor,
                                                                    const WeightMap& weight,
                                                                    const SpeedDistanceCombiner& combine,
@@ -294,7 +294,7 @@ void DijkstraPathFinder::dijkstra_shortest_paths_no_init_with_heap(const Graph& 
                                         SpeedDistanceCombiner, Compare>
         bfs_vis(visitor, Q, weight, &predecessors[0], &distances[0], combine, compare, navitia::seconds(0));
 
-    breadth_first_visit(g, &s_begin, &s_end, Q, bfs_vis, color);
+    breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
 }
 
 }  // namespace georef
