@@ -76,7 +76,7 @@ std::string get_name(int i, int j) {
     return ss.str();
 }
 
-const ProjectionData build_data(GraphBuilder& b, type::Data& data) {
+const ProjectionData build_data(GraphBuilder& b, type::Data& data, type::StopPoint* sp) {
     // graph creation
     size_t square_size(10);
 
@@ -97,7 +97,6 @@ const ProjectionData build_data(GraphBuilder& b, type::Data& data) {
         }
     }
 
-    type::StopPoint* sp = new type::StopPoint();
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
     data.pt_data->stop_points.push_back(sp);
@@ -124,7 +123,8 @@ const ProjectionData build_data(GraphBuilder& b, type::Data& data) {
 BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
     GraphBuilder b;
     type::Data data;
-    auto proj = build_data(b, data);
+    auto sp = std::make_unique<type::StopPoint>();
+    auto proj = build_data(b, data, sp.get());
 
     // we project 2 stations
     type::GeographicalCoord start;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
     DijkstraPathFinder worker(b.geo_ref);
     worker.init(start, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
 
-    auto const target_idx = data.pt_data->stop_points.front()->idx;
+    type::idx_t target_idx(sp->idx);
     auto distance = worker.get_distance(target_idx);
 
     // we have to find a way to get there
@@ -199,7 +199,8 @@ BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
 BOOST_AUTO_TEST_CASE(astar_init) {
     GraphBuilder b;
     type::Data data;
-    auto proj_stop_point = build_data(b, data);
+    auto sp = std::make_unique<type::StopPoint>();
+    auto proj_stop_point = build_data(b, data, sp.get());
 
     type::GeographicalCoord start;
     start.set_xy(2., 2.);
