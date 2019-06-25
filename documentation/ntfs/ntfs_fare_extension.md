@@ -31,7 +31,11 @@ ticket_id | Text | Required | Unique ID of the ticket
 ticket_name | Text | Required | Name of the ticket (may be displayed to travelers)
 ticket_comment | Text | Optional | Comment on the ticket that may be displayed to traveler
 
-## ticket_prices.txt (Required)
+## ticket_prices.txt (Required)  
+A ticket may have no price, either:
+- no ticket_price is provided for the ticket,
+- one or more ticket_prices are provided, but do not cover the validity period of the dataset.
+
 Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_id | Text | Required | Unique ID of the ticket
@@ -41,6 +45,8 @@ ticket_validity_start | Date | Required | First day of usability of the ticket (
 ticket_validity_end | Date | Required | Last day of usability of the ticket (included)
 
 ## ticket_uses.txt (Required)
+To be valid, a ticket must be associated to at least one ticket_use to describe the constraints of the ticket within the associated ticket_use_perimeter.
+
 Field | Type | Constraint | Description
 --- | --- | --- | ---
 ticket_id | Text | Required | Unique ID of the ticket
