@@ -213,5 +213,5 @@ BOOST_AUTO_TEST_CASE(astar_init) {
     BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Target]], bt::pos_infin);
 
     BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Source]], navitia::seconds(6));
-    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], bt::pos_infin);
+    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], navitia::seconds(5));
 }

@@ -49,10 +49,10 @@ void AstarPathFinder::init(const type::GeographicalCoord& start_coord,
     size_t n = boost::num_vertices(geo_ref.graph);
     costs.assign(n, bt::pos_infin);
 
-    costs[starting_edge[source_e]] =
-        compute_cost_from_starting_edge_to_dist(starting_edge[source_e], dest_projected_coord);
-    costs[starting_edge[target_e]] =
-        compute_cost_from_starting_edge_to_dist(starting_edge[target_e], dest_projected_coord);
+    costs[starting_edge[source_e]] = compute_cost_from_starting_edge_to_dist(
+        starting_edge[source_e], dest_projected_coord, starting_edge.distances[source_e]);
+    costs[starting_edge[target_e]] = compute_cost_from_starting_edge_to_dist(
+        starting_edge[target_e], dest_projected_coord, starting_edge.distances[source_e]);
 }
 
 void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duration& radius,
@@ -116,10 +116,11 @@ void AstarPathFinder::astar_shortest_paths_no_init_with_heap(const Graph& g,
 
 navitia::time_duration AstarPathFinder::compute_cost_from_starting_edge_to_dist(
     const vertex_t& v,
-    const type::GeographicalCoord& dest_coord) const {
+    const type::GeographicalCoord& dest_coord,
+    const double dist_start_proj_to_edge) const {
     auto const& edge_coords = geo_ref.graph[v].coord;
     auto const distance_to_dest = edge_coords.distance_to(dest_coord);
-    return navitia::seconds(distance_to_dest / double(default_speed[mode] * speed_factor)) + distances[v];
+    return navitia::seconds((distance_to_dest + dist_start_proj_to_edge) / double(default_speed[mode] * speed_factor));
 }
 
 }  // namespace georef
