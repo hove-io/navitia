@@ -76,8 +76,9 @@ std::string get_name(int i, int j) {
     return ss.str();
 }
 
-const ProjectionData build_data(GraphBuilder& b, type::Data& data, type::StopPoint* sp) {
+const ProjectionData build_data(GraphBuilder& b, type::StopPoint* sp) {
     // graph creation
+    type::Data data;
     size_t square_size(10);
 
     // we build a dumb square graph
@@ -122,9 +123,8 @@ const ProjectionData build_data(GraphBuilder& b, type::Data& data, type::StopPoi
  **/
 BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
     GraphBuilder b;
-    type::Data data;
     auto sp = std::make_unique<type::StopPoint>();
-    auto proj = build_data(b, data, sp.get());
+    auto proj = build_data(b, sp.get());
 
     // we project 2 stations
     type::GeographicalCoord start;
@@ -198,9 +198,8 @@ BOOST_AUTO_TEST_CASE(djikstra_idempotence) {
 
 BOOST_AUTO_TEST_CASE(astar_init) {
     GraphBuilder b;
-    type::Data data;
     auto sp = std::make_unique<type::StopPoint>();
-    auto proj_stop_point = build_data(b, data, sp.get());
+    auto proj_stop_point = build_data(b, sp.get());
 
     type::GeographicalCoord start;
     start.set_xy(2., 2.);
