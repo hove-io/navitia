@@ -204,14 +204,16 @@ BOOST_AUTO_TEST_CASE(astar_init) {
     type::GeographicalCoord start;
     start.set_xy(2., 2.);
     type::GeographicalCoord destination;
-    destination.set_xy(8., 6.);
+    start.set_xy(8., 6.);
 
     AstarPathFinder worker(b.geo_ref);
-    worker.init(start, destination, type::Mode_e::Walking, 1);
+    worker.init(start, destination, type::Mode_e::Walking, georef::default_speed[type::Mode_e::Walking]);
+    auto const speed = georef::default_speed[type::Mode_e::Walking] * georef::default_speed[type::Mode_e::Walking];
 
     BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Source]], bt::pos_infin);
     BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Target]], bt::pos_infin);
 
-    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Source]], navitia::seconds(6));
-    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], navitia::seconds(5));
+    // Distance is 10
+    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Source]], navitia::seconds(10 / speed));
+    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], navitia::seconds(10 / speed));
 }

@@ -91,8 +91,7 @@ private:
                                                 const Compare& compare = Compare());
 
     navitia::time_duration compute_cost_from_starting_edge_to_dist(const vertex_t& v,
-                                                                   const type::GeographicalCoord& dest_coord,
-                                                                   const double dist_start_proj_to_edge) const;
+                                                                   const type::GeographicalCoord& dest_coord) const;
 };
 
 }  // namespace georef
