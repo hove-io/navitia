@@ -31,8 +31,6 @@ www.navitia.io
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/stop_point.h"
-#include "georef/adminref.h"
 
 namespace navitia {
 namespace type {

@@ -73,7 +73,6 @@ struct MetaVehicleJourney;
 struct DiscreteVehicleJourney;
 struct FrequencyVehicleJourney;
 struct Calendar;
-struct AssociatedCalendar;
 struct PT_Data;
 namespace disruption {
 struct Impact;

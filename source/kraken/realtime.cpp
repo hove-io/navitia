@@ -31,7 +31,6 @@ www.navitia.io
 #include "utils/logger.h"
 #include "type/data.h"
 #include "type/pt_data.h"
-#include "type/type.h"
 #include "type/meta_data.h"
 #include "type/datetime.h"
 #include "kraken/apply_disruption.h"
