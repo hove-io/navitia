@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "multi_polygon_map.h"
-#include "type/fwd_type.h"
+#include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
 #include "type/request.pb.h"
