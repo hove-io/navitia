@@ -119,7 +119,10 @@ struct distance_or_target_visitor : virtual public distance_visitor<Base>, virtu
 
 using dijkstra_distance_visitor = distance_visitor<boost::dijkstra_visitor<>>;
 using dijkstra_target_all_visitor = target_all_visitor<boost::dijkstra_visitor<>>;
+using dijkstra_distance_or_target_visitor = distance_or_target_visitor<boost::dijkstra_visitor<>>;
 
+using astar_distance_visitor = distance_visitor<boost::astar_visitor<>>;
+using astar_target_all_visitor = target_all_visitor<boost::astar_visitor<>>;
 using astar_distance_or_target_visitor = distance_or_target_visitor<boost::astar_visitor<>>;
 
 }  // namespace georef

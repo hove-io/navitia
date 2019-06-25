@@ -50,6 +50,19 @@ void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& r
     }
 }
 
+void DijkstraPathFinder::start_distance_or_target_dijkstra(const navitia::time_duration& radius,
+                                                           const std::vector<vertex_t>& destinations) {
+    if (!starting_edge.found)
+        return;
+    computation_launch = true;
+    // We start dijkstra from source and target nodes
+    try {
+        dijkstra({starting_edge[source_e], starting_edge[target_e]},
+                 dijkstra_distance_or_target_visitor(radius, distances, destinations));
+    } catch (DestinationFound&) {
+    }
+}
+
 static routing::SpIdx get_id(const routing::SpIdx& idx) {
     return idx;
 }
