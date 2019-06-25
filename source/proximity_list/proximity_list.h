@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 
-#include "type/geographical_coord.h"
+#include "type/type.h"
 #include "utils/exception.h"
 #include <vector>
 #include <cmath>

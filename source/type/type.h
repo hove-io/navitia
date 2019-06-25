@@ -303,4 +303,10 @@ inline Type_e get_type_e<StopPoint>() {
 
 }  // namespace type
 
+// trait to access the number of elements in the Mode_e enum
+template <>
+struct enum_size_trait<type::Mode_e> {
+    static constexpr typename get_enum_type<type::Mode_e>::type size() { return 5; }
+};
+
 }  // namespace navitia

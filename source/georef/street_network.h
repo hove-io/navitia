@@ -32,8 +32,6 @@ www.navitia.io
 #include "georef.h"
 #include "dijkstra_path_finder.h"
 #include "astar_path_finder.h"
-#include "routing/raptor_utils.h"
-#include "type/type.h"  //TODO: Remove
 #include "type/time_duration.h"
 
 namespace navitia {

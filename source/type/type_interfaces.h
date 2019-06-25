@@ -32,8 +32,6 @@ www.navitia.io
 #include <iostream>
 #include "utils/idx_map.h"
 #include <boost/container/flat_set.hpp>
-#include "utils/flat_enum_map.h"
-
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -285,10 +283,4 @@ public:
     void clean_weak_impacts();
 };
 }  // namespace type
-// trait to access the number of elements in the Mode_e enum
-template <>
-struct enum_size_trait<type::Mode_e> {
-    static constexpr typename get_enum_type<type::Mode_e>::type size() { return 5; }
-};
-
 }  // namespace navitia

@@ -43,8 +43,6 @@ www.navitia.io
 #include "code_container.h"
 #include "headsign_handler.h"
 
-#include "type/type.h"
-
 namespace navitia {
 template <>
 struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
