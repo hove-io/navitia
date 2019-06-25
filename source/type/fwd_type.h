@@ -75,10 +75,10 @@ struct FrequencyVehicleJourney;
 struct Calendar;
 struct AssociatedCalendar;
 struct PT_Data;
-struct EntryPoint;
 namespace disruption {
 struct Impact;
 struct Message;
+struct EntryPoint;
 }  // namespace disruption
 }  // namespace type
 }  // namespace navitia
