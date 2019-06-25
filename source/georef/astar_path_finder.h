@@ -47,7 +47,7 @@ struct astar_distance_heuristic : public boost::astar_heuristic<Graph, navitia::
     astar_distance_heuristic(const Graph& graph, const vertex_t& destination, const double inv_speed)
         : g(graph), dest_coord(graph[destination].coord), inv_speed(inv_speed) {}
 
-    navitia::seconds operator()(const vertex_t& v) const {
+    navitia::seconds operator()(vertex_t v) {
         auto const dist_to_target = dest_coord.distance_to(g[v].coord);
         return navitia::seconds(dist_to_target * inv_speed);
     }
@@ -83,7 +83,8 @@ public:
      * Launch an astar without initializing the data structure
      * Warning, it modifies the distances and the predecessors
      **/
-    void astar(const std::array<georef::vertex_t, 2>& origin_vertexes,
+    void astar(const vertex_t source,
+               const vertex_t target,
                const astar_distance_heuristic& heuristic,
                const astar_distance_or_target_visitor& visitor);
 

@@ -171,38 +171,6 @@ Path PathFinder::get_path(type::idx_t idx) {
     return get_path(projection, nearest_edge);
 }
 
-PathItem::TransportCaracteristic PathFinder::get_transportation_mode_item_to_update(
-    const PathItem::TransportCaracteristic& previous_transportation,
-    bool append_to_begin) const {
-    switch (previous_transportation) {
-        case georef::PathItem::TransportCaracteristic::Walk:
-        case georef::PathItem::TransportCaracteristic::Car:
-        case georef::PathItem::TransportCaracteristic::Bike:
-            return previous_transportation;
-            break;
-            // if we were switching between walking and biking, we need to take either
-            // the previous or the next transportation mode depending on 'append_to_begin'
-        case georef::PathItem::TransportCaracteristic::BssTake:
-            return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
-                                    : georef::PathItem::TransportCaracteristic::Bike);
-            break;
-        case georef::PathItem::TransportCaracteristic::BssPutBack:
-            return (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
-                                    : georef::PathItem::TransportCaracteristic::Walk);
-            break;
-        case georef::PathItem::TransportCaracteristic::CarLeaveParking:
-            return (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
-                                    : georef::PathItem::TransportCaracteristic::Car);
-            break;
-        case georef::PathItem::TransportCaracteristic::CarPark:
-            return (append_to_begin ? georef::PathItem::TransportCaracteristic::Car
-                                    : georef::PathItem::TransportCaracteristic::Walk);
-            break;
-        default:
-            throw navitia::recoverable_exception("unhandled transportation carac case");
-    }
-}
-
 void PathFinder::add_custom_projections_to_path(Path& p,
                                                 bool append_to_begin,
                                                 const ProjectionData& projection,
@@ -240,7 +208,7 @@ void PathFinder::add_custom_projections_to_path(Path& p,
     // we need to update the total length
     p.duration += duration;
 
-    // we either add the starting coordinate to the first path item or create a new path item if it was another way
+    // we aither add the starting coordinate to the first path item or create a new path item if it was another way
     nt::idx_t first_way_idx = (p.path_items.empty() ? type::invalid_idx : item_to_update(p).way_idx);
     if (start_edge.way_idx != first_way_idx || first_way_idx == type::invalid_idx) {
         // there can be an item with no way, so we will update this item
@@ -255,8 +223,33 @@ void PathFinder::add_custom_projections_to_path(Path& p,
             if (!p.path_items.empty()) {
                 // still complexifying stuff... TODO: simplify this
                 // we want the projection to be done with the previous transportation mode
-                item.transportation =
-                    get_transportation_mode_item_to_update(item_to_update(p).transportation, append_to_begin);
+                switch (item_to_update(p).transportation) {
+                    case georef::PathItem::TransportCaracteristic::Walk:
+                    case georef::PathItem::TransportCaracteristic::Car:
+                    case georef::PathItem::TransportCaracteristic::Bike:
+                        item.transportation = item_to_update(p).transportation;
+                        break;
+                        // if we were switching between walking and biking, we need to take either
+                        // the previous or the next transportation mode depending on 'append_to_begin'
+                    case georef::PathItem::TransportCaracteristic::BssTake:
+                        item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
+                                                               : georef::PathItem::TransportCaracteristic::Bike);
+                        break;
+                    case georef::PathItem::TransportCaracteristic::BssPutBack:
+                        item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Bike
+                                                               : georef::PathItem::TransportCaracteristic::Walk);
+                        break;
+                    case georef::PathItem::TransportCaracteristic::CarLeaveParking:
+                        item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Walk
+                                                               : georef::PathItem::TransportCaracteristic::Car);
+                        break;
+                    case georef::PathItem::TransportCaracteristic::CarPark:
+                        item.transportation = (append_to_begin ? georef::PathItem::TransportCaracteristic::Car
+                                                               : georef::PathItem::TransportCaracteristic::Walk);
+                        break;
+                    default:
+                        throw navitia::recoverable_exception("unhandled transportation carac case");
+                }
             }
             add_in_path(p, item);
         }

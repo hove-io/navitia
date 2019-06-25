@@ -44,7 +44,7 @@ void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duratio
     computation_launch = true;
     // We start astar from source and target nodes
     try {
-        astar({starting_edge[source_e], starting_edge[target_e]},
+        astar(starting_edge[source_e], starting_edge[target_e],
               astar_distance_heuristic(geo_ref.graph, destinations.back(), 1. / (default_speed[mode] * speed_factor)),
               astar_distance_or_target_visitor(radius, distances, destinations));
     } catch (DestinationFound&) {
@@ -54,13 +54,16 @@ void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duratio
 /**
  * Launch an astar without initializing the data structure
  * Warning, it modifies the distances and the predecessors
+ * Warning 2, the target node is NOT the destination !!!!
  **/
-void AstarPathFinder::astar(const std::array<georef::vertex_t, 2>& origin_vertexes,
+void AstarPathFinder::astar(const vertex_t source,
+                            const vertex_t target,
                             const astar_distance_heuristic& heuristic,
                             const astar_distance_or_target_visitor& visitor) {
     // Note: the predecessors have been updated in init
+    std::array<georef::vertex_t, 2> vertex{{source, target}};
 
-    // Fill color map in white before A*
+    // Fill color map in white before dijkstra
     std::fill(color.data.get(), color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
               0);
 
@@ -70,8 +73,7 @@ void AstarPathFinder::astar(const std::array<georef::vertex_t, 2>& origin_vertex
     auto weight_map = boost::get(&Edge::duration, geo_ref.graph);
     auto combiner = SpeedDistanceCombiner(speed_factor);
 
-    astar_shortest_paths_no_init_with_heap(g, origin_vertexes.cbegin(), origin_vertexes.cend(), heuristic, visitor,
-                                           weight_map, combiner);
+    astar_shortest_paths_no_init_with_heap(g, vertex.cbegin(), vertex.cend(), heuristic, visitor, weight_map, combiner);
 }
 
 template <class Graph, class WeightMap, class Compare>

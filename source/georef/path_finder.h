@@ -177,10 +177,6 @@ protected:
     // return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
 
-    PathItem::TransportCaracteristic get_transportation_mode_item_to_update(
-        const PathItem::TransportCaracteristic& previous_transportation,
-        bool append_to_begin) const;
-
     void add_custom_projections_to_path(Path& p,
                                         bool append_to_begin,
                                         const ProjectionData& projection,

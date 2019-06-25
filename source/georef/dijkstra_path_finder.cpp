@@ -169,7 +169,7 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
     else {
         std::vector<routing::SpIdx> dest_sp_idx;
         for (const auto& e : elements) {
-            dest_sp_idx.emplace_back(routing::SpIdx{e.first});
+            dest_sp_idx.push_back(routing::SpIdx{e.first});
         }
         ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
         auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
