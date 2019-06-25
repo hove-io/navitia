@@ -65,7 +65,18 @@ public:
     void init(const type::GeographicalCoord& start_coord,
               const type::GeographicalCoord& dest_projected_coord,
               nt::Mode_e mode,
-              const float speed_factor);
+              const float speed_factor) {
+        PathFinder::init_start(start_coord, mode, speed_factor);
+
+        // we initialize the costs to the maximum value
+        size_t n = boost::num_vertices(geo_ref.graph);
+        costs.assign(n, bt::pos_infin);
+
+        auto const distance_to_dest = starting_edge.projected.distance_to(dest_projected_coord);
+        auto const duration_to_dest = navitia::seconds(distance_to_dest / double(default_speed[mode] * speed_factor));
+        costs[starting_edge[source_e]] = duration_to_dest;
+        costs[starting_edge[target_e]] = duration_to_dest;
+    }
 
     void start_distance_or_target_astar(const navitia::time_duration& radius,
                                         const type::GeographicalCoord& dest_projected,
@@ -89,9 +100,6 @@ private:
                                                 const WeightMap& weight,
                                                 const SpeedDistanceCombiner& combine,
                                                 const Compare& compare = Compare());
-
-    navitia::time_duration compute_cost_from_starting_edge_to_dist(const vertex_t& v,
-                                                                   const type::GeographicalCoord& dest_coord) const;
 };
 
 }  // namespace georef
