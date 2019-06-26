@@ -63,7 +63,29 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
             "co2_emission": ⊕{2 items},
             "data_freshness": "realtime",
             "departure_date_time": "20190529T160000",
-            "display_informations": ⊕{13 items},
+            "display_informations": ⊖{
+                "code": "",
+                "color": "000000",
+                "commercial_mode": "TGV INOUI",
+                "description": ""
+                "direction": "Nice Ville (Nice)",
+                "equipments": [],
+                "headsign": "847520",
+                "label": "Paris - Nice",
+                "links": ⊖[
+                   ⊖{
+                        "id": "b59bdab8-3560-4cfe-8009-b0461f74c417",
+                        "internal": true,
+                        "rel": "disruptions",
+                        "templated": false
+                        "type": "disruption",
+                    }
+                ],
+                "name": "Paris - Nice",
+                "network": "SNCF",
+                "physical_mode": "Train grande vitesse",
+                "text_color": "",
+            },
             "duration": 21180,
             "from": ⊕{5 items},
             "geojson": ⊕{3 items},
@@ -100,7 +122,8 @@ In a public transport section of the response:
 The delay can also be observed for every stop point of the journey with the same parameters in "stop_date_times".  
 If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
-A list of the disruptions impacting the journey is also present at the root level of the response.
+A list of the disruptions impacting the journey is also present at the root level of the response.  
+In a disrupted section, `display_informations.links` contains an internal link to the concerned disruption in that list.
 
 <div></div>
 ### Departures
@@ -114,12 +137,36 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
 # Extract of an impacted departure object from the response /departures
 
 {
-    "display_informations": ⊕{13 items},
+    "display_informations": ⊖{
+        "code": "",
+        "color": "000000",
+        "commercial_mode": "TGV INOUI",
+        "description": ""
+        "direction": "Nice Ville (Nice)",
+        "equipments": [],
+        "headsign": "847520",
+        "label": "Paris - Nice",
+        "links": ⊖[
+           ⊖{
+                "id": "b59bdab8-3560-4cfe-8009-b0461f74c417",
+                "internal": true,
+                "rel": "disruptions",
+                "templated": false
+                "type": "disruption",
+            }
+        ],
+        "name": "Paris - Nice",
+        "network": "SNCF",
+        "physical_mode": "Train grande vitesse",
+        "text_color": "",
+    },
     "links": ⊕[6 items],
     "route": ⊕{9 items},
     "stop_date_time": ⊖{
         "additional_informations": [],
         "arrival_date_time": "20190605T194700",
+        "base_arrival_date_time": "20190605T193200",
+        "base_departure_date_time": "20190605T193400",
         "stop_date_time": "realtime"
         "departure_date_time": "20190605T194900",
         "links": [],
@@ -128,9 +175,10 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
 }
 ```
 
-In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" take the delay into account.
+In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" take the delay into account, whereas "base_arrival_date_time"/"base_departure_date_time" show the base-schedule departure/arrival datetime.
 
-A list of the disruptions impacting the departures is also present at the root level of the response.
+A list of the disruptions impacting the departures is also present at the root level of the response.  
+In a disrupted departure, `display_informations.links` contains an internal link to the concerned disruption in that list.
 
 <div></div>
 ### Stop Schedules
@@ -149,9 +197,19 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
        ⊕{5 items},
        ⊖{
             "additional_informations": [],
+            "base_date_time": "20190605T193400",
             "data_freshness": "realtime",
             "date_time": "20190605T194900",
-            "links": ⊕[2 items]
+            "links": ⊖[
+               ⊕{4 items},
+               ⊖{
+                    "id": "b59bdab8-3560-4cfe-8009-b0461f74c417",
+                    "internal": true,
+                    "rel": "disruptions",
+                    "templated": false
+                    "type": "disruption",
+                }
+            ]
         },
        ⊕{5 items},
     ],
@@ -164,8 +222,10 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 }
 ```
 
-In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the fileld "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.  
-A list of the disruptions impacting the stop schedules is also present at the root level of the response.
+In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the field "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.
+
+A list of the disruptions impacting the stop schedules is also present at the root level of the response.  
+In a disrupted date_time, `links` contains an internal link to the concerned disruption in that list.
 
 ## <a name="REDUCED_SERVICE"></a>Reduced service
 
@@ -188,7 +248,8 @@ See the [disruption](#disruption) objects section for its full content and descr
 
 ### Journeys
 
-If the station deleted is the destination of the journey, Navitia will compute an other itinerary to the requested station. If not, the disruption will be present at the root level of the response for information, but it won't be affecting the journey.
+If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.  
+If not, the disruption will be present in the `display_informations.links` part of the section for information, but it won't be affecting the journey.
 
 ### Departures & Stop Schedules
 
@@ -235,7 +296,29 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
             "co2_emission": ⊕{2 items},
             "data_freshness": "realtime",
             "departure_date_time": "20190605T160000",
-            "display_informations": ⊕{13 items},
+            "display_informations": ⊖{
+                "code": "",
+                "color": "000000",
+                "commercial_mode": "TGV INOUI",
+                "description": ""
+                "direction": "Nice Ville (Nice)",
+                "equipments": [],
+                "headsign": "847520",
+                "label": "Paris - Nice",
+                "links": ⊖[
+                   ⊖{
+                        "id": "b59bdab8-3560-4cfe-8009-b0461f74c418",
+                        "internal": true,
+                        "rel": "disruptions",
+                        "templated": false
+                        "type": "disruption",
+                    }
+                ],
+                "name": "Paris - Nice",
+                "network": "SNCF",
+                "physical_mode": "Train grande vitesse",
+                "text_color": "",
+            },
             "duration": 28560,
             "from": ⊕{5 items},
             "geojson": ⊕{3 items},
@@ -260,4 +343,5 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 
 The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure times of an added stop point. New stop points are only used when the "data_freshness" parameter is set to "realtime".
 
-A list of the disruptions impacting the journey is also present at the root level of the response.
+A list of the disruptions impacting the journey is also present at the root level of the response.  
+In a disrupted section, `display_informations.links` contains an internal link to the concerned disruption in that list.
