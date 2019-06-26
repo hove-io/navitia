@@ -70,7 +70,7 @@ poi_type_conf_format = {
 equipments_provider_format = {
     'type': 'object',
     'properties': {
-        'class': {'type': 'string'},
+        'klass': {'type': 'string'},
         'args': {
             'type': 'object',
             'properties': {
@@ -83,5 +83,5 @@ equipments_provider_format = {
         },
         'discarded': {'type': 'boolean'},
     },
-    'required': ['class', 'args'],
+    'required': ['klass', 'args'],
 }
