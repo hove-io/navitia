@@ -105,18 +105,18 @@ def test_users(create_5_users):
 def test_users_methods():
     user_data = {'login': 'user1', 'email': 'user1@example.com'}
     resp_post = api_post('/v1/users', data=json.dumps(user_data), content_type='application/json')
-    assert 'users' in resp_post
-    assert resp_post['users']['login'] == 'user1'
-    assert resp_post['users']['email'] == 'user1@example.com'
-    user_id = resp_post['users']['id']
+    assert 'user' in resp_post
+    assert resp_post['user']['login'] == 'user1'
+    assert resp_post['user']['email'] == 'user1@example.com'
+    user_id = resp_post['user']['id']
 
     user_data_update = {'type': 'super_user'}
     resp_put = api_put(
         '/v1/users/{}'.format(user_id), data=json.dumps(user_data_update), content_type='application/json'
     )
-    assert 'users' in resp_put
-    assert resp_put['users']['login'] == 'user1'
-    assert resp_put['users']['type'] == 'super_user'
+    assert 'user' in resp_put
+    assert resp_put['user']['login'] == 'user1'
+    assert resp_put['user']['type'] == 'super_user'
 
     resp_delete, status_delete = api_delete('/v1/users/{}'.format(user_id), check=False, no_json=True)
     assert status_delete == 204
@@ -164,23 +164,23 @@ def test_keys_methods(create_5_users):
         data=json.dumps({'app_name': 'testApp', 'valid_until': '2020-01-01'}),
         content_type='application/json',
     )
-    assert 'keys' in resp_post['users']
-    assert len(resp_post['users']['keys']) == 1
-    assert resp_post['users']['keys'][0]['app_name'] == 'testApp'
-    assert resp_post['users']['keys'][0]['valid_until'] == '2020-01-01'
+    assert 'keys' in resp_post['user']
+    assert len(resp_post['user']['keys']) == 1
+    assert resp_post['user']['keys'][0]['app_name'] == 'testApp'
+    assert resp_post['user']['keys'][0]['valid_until'] == '2020-01-01'
 
-    key_id = resp_post['users']['keys'][0]['id']
+    key_id = resp_post['user']['keys'][0]['id']
     resp_put = api_put(
         '/v1/users/{}/keys/{}'.format(user_id, key_id),
         data=json.dumps({'app_name': 'testApp', 'valid_until': '2021-01-01'}),
         content_type='application/json',
     )
-    assert len(resp_put['users']['keys']) == 1
-    assert resp_put['users']['keys'][0]['app_name'] == 'testApp'
-    assert resp_put['users']['keys'][0]['valid_until'] == '2021-01-01'
+    assert len(resp_put['user']['keys']) == 1
+    assert resp_put['user']['keys'][0]['app_name'] == 'testApp'
+    assert resp_put['user']['keys'][0]['valid_until'] == '2021-01-01'
 
     resp_delete = api_delete('/v1/users/{}/keys/{}'.format(user_id, key_id))
-    assert len(resp_delete['users']['keys']) == 0
+    assert len(resp_delete['user']['keys']) == 0
 
 
 def test_authorization_methods(create_5_users, create_instance, create_api):
@@ -191,12 +191,12 @@ def test_authorization_methods(create_5_users, create_instance, create_api):
     resp_post = api_post(
         '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
     )
-    assert len(resp_post['users']['authorizations']) == 1
+    assert len(resp_post['user']['authorizations']) == 1
 
-    assert resp_post['users']['authorizations'][0]['api']['name'] == 'test_api'
-    assert resp_post['users']['authorizations'][0]['instance']['name'] == 'test_instance'
+    assert resp_post['user']['authorizations'][0]['api']['name'] == 'test_api'
+    assert resp_post['user']['authorizations'][0]['instance']['name'] == 'test_instance'
 
     resp_delete = api_delete(
         '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
     )
-    assert len(resp_delete['users']['authorizations']) == 0
+    assert len(resp_delete['user']['authorizations']) == 0

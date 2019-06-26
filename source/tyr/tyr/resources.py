@@ -843,7 +843,7 @@ class User(flask_restful.Resource):
             tyr_user_event.request(user, "create_user")
 
             if version == 1:
-                return {'users': marshal(user, user_fields_full)}
+                return {'user': marshal(user, user_fields_full)}
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
@@ -951,7 +951,7 @@ class User(flask_restful.Resource):
             tyr_user_event.request(user, "update_user", last_login)
 
             if version == 1:
-                return {'users': marshal(user, user_fields_full)}
+                return {'user': marshal(user, user_fields_full)}
             return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
@@ -1013,7 +1013,7 @@ class Key(flask_restful.Resource):
             logging.exception("fail")
             raise
         if version == 1:
-            return {'users': marshal(user, user_fields_full)}
+            return {'user': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
     def delete(self, user_id, key_id, version=0):
@@ -1028,7 +1028,7 @@ class Key(flask_restful.Resource):
             logging.exception("fail")
             raise
         if version == 1:
-            return {'users': marshal(user, user_fields_full)}
+            return {'user': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
     def put(self, user_id, key_id, version=0):
@@ -1061,7 +1061,7 @@ class Key(flask_restful.Resource):
             logging.exception("fail")
             raise
         if version == 1:
-            return {'users': marshal(user, user_fields_full)}
+            return {'user': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
 
@@ -1095,7 +1095,7 @@ class Authorization(flask_restful.Resource):
             logging.exception("fail")
             raise
         if version == 1:
-            return {'users': marshal(user, user_fields_full)}
+            return {'user': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
     def post(self, user_id, version=0):
@@ -1126,7 +1126,7 @@ class Authorization(flask_restful.Resource):
             logging.exception("fail")
             raise
         if version == 1:
-            return {'users': marshal(user, user_fields_full)}
+            return {'user': marshal(user, user_fields_full)}
         return marshal(user, user_fields_full)
 
 
