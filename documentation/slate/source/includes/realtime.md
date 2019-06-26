@@ -17,7 +17,7 @@ The effect of a disruption can be one of the following:
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 
 <aside class="notice">
-A disruption is present in the response of the endpoints described if the request has to be made during its application period.
+A disruption is present in the response of the endpoints described if the request is made during its application period.
 </aside>
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
@@ -34,7 +34,6 @@ A disruption is present in the response of the endpoints described if the reques
     "base_departure_time": "193400",
     "cause": "Panne d'un aiguillage",
     "departure_status": "delayed",
-    "is_detour": false,
     "stop_point": ⊕{7 items},
     "stop_time_effect": "delayed",
 }
@@ -91,10 +90,15 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 ```
 
 
-The status of the journey is `SIGNIFICANT_DELAYS`.  
-In a public transport section of the response, "base_arrival_date_time"/"base_departure_date_time" represent the scheduled arrival/departure time without taking into account the delay whereas "arrival_date_time"/"departure_date_time" are the actual arrival/departure time, after the delay is applied.  
-The delay can also be observed for every stop points of the journey with the same parameters in "stop_date_times".  
-If the parameter "data_freshness" is set to "base_schedule",  "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
+The status of the journey is `SIGNIFICANT_DELAYS`.
+
+In a public transport section of the response:
+
+* "base_arrival_date_time"/"base_departure_date_time" represent the scheduled arrival/departure time without taking into account the delay
+* whereas "arrival_date_time"/"departure_date_time" are the actual arrival/departure time, after the delay is applied
+
+The delay can also be observed for every stop point of the journey with the same parameters in "stop_date_times".  
+If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.
 
@@ -173,14 +177,14 @@ A list of the disruptions impacting the stop schedules is also present at the ro
     "arrival_status": "deleted",
     "cause": "",
     "departure_status": "deleted",
-    "is_detour": false,
     "stop_point": ⊕{7 items},
     "stop_time_effect": "deleted",
 }
 ```
 The effect of the disruption is `REDUCED_SERVICE`. It means that the train won't be serving one or more stations in its journey.
 
-In the disruption, the deleted stations can be found in the list of "impacted_stops" with the departure/arrival status set to "deleted". See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, the deleted stations can be found in the list of "impacted_stops" with the departure/arrival status set to "deleted".  
+See the [disruption](#disruption) objects section for its full content and description.
 
 ### Journeys
 
@@ -203,7 +207,6 @@ If data_freshness" is "base_schedule", then the depature time is displayed and a
     "arrival_status": "added"
     "cause": "Ajout d'une desserte",
     "departure_status": "added",
-    "is_detour": false,
     "stop_point": ⊕{7 items},
     "stop_time_effect": "added",
 },
