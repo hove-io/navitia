@@ -14,15 +14,18 @@ The effect of a disruption can be one of the following:
 	<li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
 </ul>
 
-For each one of these effects, here's how the Navitia responses will be affected over the different endpoints. A link to the API
+For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 
+<aside class="notice">
+A disruption is present in the response of the endpoints described if the request has to be made during its application period.
+</aside>
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
 
 ![image](delay.png)
 
 ``` shell
-# Extract of an impacted stop of /disruptions
+# Extract of an impacted stop from /disruptions
 {
     "amended_arrival_time": "194700",
     "amended_departure_time": "194900",
@@ -38,7 +41,8 @@ For each one of these effects, here's how the Navitia responses will be affected
 ```
 The effect of the disruption is `SIGNIFICANT_DELAYS`. It means that the train will arrive late at one or more stations in its journey.
 
-In the disruption, the delay can be found in the list of "impacted_stops" with the departure/arrival status set to "delayed". See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, the delay can be found in the list of "impacted_stops" with the departure/arrival status set to "delayed".  
+See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
@@ -49,7 +53,7 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 ```
 
 ``` shell
-# Extract of the public transport section of the response /journeys
+# Extract of the public transport section from the response /journeys
 
     "sections": ⊖[
        ⊖{
@@ -87,25 +91,23 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 ```
 
 
-The status of the journey is `SIGNIFICANT_DELAYS`. In a public transport section of the response, "base_arrival_date_time"/"base_departure_date_time" represent the scheduled arrival/departure time without taking into account the delay whereas "arrival_date_time"/"departure_date_time" are the actual arrival/departure time, after the delay is applied. The delay can also be observed for every stop_point of the journey with the same parameters in "stop_date_times".
+The status of the journey is `SIGNIFICANT_DELAYS`.  
+In a public transport section of the response, "base_arrival_date_time"/"base_departure_date_time" represent the scheduled arrival/departure time without taking into account the delay whereas "arrival_date_time"/"departure_date_time" are the actual arrival/departure time, after the delay is applied.  
+The delay can also be observed for every stop points of the journey with the same parameters in "stop_date_times".  
 If the parameter "data_freshness" is set to "base_schedule",  "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.
-
-<aside class="notice">
-For a disruption to be present in the response, the request has to be made during its application period.
-</aside>
 
 <div></div>
 ### Departures
 
 ``` shell
-# Request example for /departures
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_points/<stop_point>/departures?from_datetime=<from_date>&data_freshness=realtime
+# Request example for /departures (data_freshness=realtime by default)
+http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_areas/<stop_area>/departures?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
-# Extract of an impacted departure object of the response /departures
+# Extract of an impacted departure object from the response /departures
 
 {
     "display_informations": ⊕{13 items},
@@ -130,12 +132,12 @@ A list of the disruptions impacting the departures is also present at the root l
 ### Stop Schedules
 
 ``` shell
-# Request example for /stop_schedules
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_points/<stop_point>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
+# Request example for /stop_schedules (data_freshness=realtime by default)
+http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
-# Extract of an impacted stop_schedules object of the response /stop_schedules
+# Extract of an impacted stop_schedules object from the response /stop_schedules
 
 {
     "additional_informations": null,
@@ -158,8 +160,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 }
 ```
 
-In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the fileld "departure_date_time" take the delay into account.
-
+In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the fileld "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.  
 A list of the disruptions impacting the stop schedules is also present at the root level of the response.
 
 ## <a name="REDUCED_SERVICE"></a>Reduced service
@@ -167,7 +168,7 @@ A list of the disruptions impacting the stop schedules is also present at the ro
 ![image](reduced_service.png)
 
 ``` shell
-# Extract of an impacted stop of /disruptions
+# Extract of an impacted stop from /disruptions
 {
     "arrival_status": "deleted",
     "cause": "",
@@ -188,13 +189,14 @@ If the station deleted is the destination of the journey, Navitia will compute a
 ### Departures & Stop Schedules
 
 The departure time of the train with the reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
+If data_freshness" is "base_schedule", then the depature time is displayed and a link to the disruption is present at the root level of the response. A link to this disruption can be found in the section "display_informations".
 
 ## <a name="MODIFIED_SERVICE"></a>Modified service
 
 ![image](modified_service.png)
 
 ``` shell
-# Extract of an impacted stop of /disruptions
+# Extract of an impacted stop from /disruptions
 {
     "amended_arrival_time": "185500",
     "amended_departure_time": "190000",
@@ -206,9 +208,10 @@ The departure time of the train with the reduced service simply won't be display
     "stop_time_effect": "added",
 },
 ```
-The effect of the disruption is `MODIFIED_SERVICE`. It means that there is one or several stop points added into the journey. This can be at any position in the journey (origin and destination included).
+The effect of the disruption is `MODIFIED_SERVICE`. It means that there is one or several stop points added into the trip. This can be at any position in the trip (origin and destination included).
 
-In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added". See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added".  
+See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
@@ -219,7 +222,7 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 ```
 
 ``` shell
-# Extract of the public transport section of the response /journeys
+# Extract of the public transport section from the response /journeys
 
     "sections": ⊖[
        ⊖{
@@ -252,12 +255,6 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
     ]
 ```
 
-The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure time of a new stop_point. New stop points are only available when the "data_freshness" parameter is set to "realtime". 
+The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure times of an added stop point. New stop points are only used when the "data_freshness" parameter is set to "realtime".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.
-
-<aside class="notice">
-For a disruption to be present in the response, the request has to be made during its application period.
-</aside>
-
-<div></div>
