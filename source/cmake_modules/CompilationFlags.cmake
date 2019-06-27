@@ -14,7 +14,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 # Gcc Release flags
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_GNUCXX_WARN_FLAGS "-Wall -Wextra -Woverloaded-virtual -Wundef -pedantic")
-    set(CMAKE_GNUCXX_COMMON_FLAGS "-std=c++14 -rdynamic -g")
+    set(CMAKE_GNUCXX_COMMON_FLAGS "-std=c++14 -rdynamic -g -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS "${CMAKE_GNUCXX_COMMON_FLAGS} ${CMAKE_GNUCXX_WARN_FLAGS}")
     set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -fprofile-arcs -ftest-coverage  -g")
     set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
@@ -50,4 +50,14 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 # Debug flags
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1")
+
+set(NAVITIA_ALLOCATOR "tcmalloc")
+
+option(USE_SANITIZER "build with the desired sanitizer enabled. usual values: address, thread, leak, undefined" OFF)
+if(USE_SANITIZER)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=${USE_SANITIZER} -fno-sanitize=vptr")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=${USE_SANITIZER} -fno-sanitize=vptr")
+    add_definitions("-DNO_FORCE_MEMORY_RELEASE")
+    set(NAVITIA_ALLOCATOR "")
+endif(USE_SANITIZER)
