@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "multi_polygon_map.h"
-#include "type/fwd_type.h"
+#include "type.h"
 #include "georef/georef.h"
 #include "type/message.h"
 #include "type/request.pb.h"
@@ -42,7 +42,10 @@ www.navitia.io
 #include "comment_container.h"
 #include "code_container.h"
 #include "headsign_handler.h"
-#include "type/timezone_manager.h"
+
+#include <boost/serialization/map.hpp>
+#include "utils/serialization_unordered_map.h"
+#include "utils/serialization_tuple.h"
 
 namespace navitia {
 template <>
@@ -67,6 +70,7 @@ struct PT_Data : boost::noncopyable {
 #undef COLLECTION_AND_MAP
 
     std::vector<StopPointConnection*> stop_point_connections;
+
     // meta vj factory
     navitia::ObjFactory<MetaVehicleJourney> meta_vjs;
 
@@ -126,7 +130,16 @@ struct PT_Data : boost::noncopyable {
     /// sort the collections and set the corresponding idx field
     void sort_and_index();
 
-    size_t nb_stop_times() const;
+    size_t nb_stop_times() const {
+        size_t nb = 0;
+        for (const auto* route : routes) {
+            route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                nb += vj.stop_time_list.size();
+                return true;
+            });
+        };
+        return nb;
+    }
 
     type::ValidityPattern* get_or_create_validity_pattern(const ValidityPattern& vp_ref);
 

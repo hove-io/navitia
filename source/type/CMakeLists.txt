@@ -97,7 +97,7 @@ target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
     validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
     contributor.cpp dataset.cpp company.cpp commercial_mode.cpp physical_mode.cpp line.cpp route.cpp
-    vehicle_journey.cpp stop_time.cpp type_interfaces.cpp comment_container.cpp odt_properties.cpp)
+    vehicle_journey.cpp stop_time.cpp type_interfaces.cpp)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
 add_dependencies(types protobuf_files)
 

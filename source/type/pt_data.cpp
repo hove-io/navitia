@@ -30,7 +30,6 @@ www.navitia.io
 
 #include "pt_data.h"
 #include "utils/functions.h"
-#include "type/type.h"
 
 #include <boost/range/algorithm/find_if.hpp>
 #include "type/serialization.h"
@@ -48,17 +47,6 @@ void PT_Data::serialize(Archive& ar, const unsigned int) {
                   disruption_holder& meta_vjs& stop_points_by_area& comments& codes& headsign_handler& tz_manager;
 }
 SERIALIZABLE(PT_Data)
-
-size_t PT_Data::nb_stop_times() const {
-    size_t nb = 0;
-    for (const auto* route : routes) {
-        route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-            nb += vj.stop_time_list.size();
-            return true;
-        });
-    };
-    return nb;
-}
 
 type::Network* PT_Data::get_or_create_network(const std::string& uri, const std::string& name, int sort) {
     const auto it = networks_map.find(uri);

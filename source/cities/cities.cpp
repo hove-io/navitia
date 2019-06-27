@@ -43,7 +43,7 @@ www.navitia.io
 #include "ed/connectors/osm_tags_reader.h"
 #include "utils/functions.h"
 #include "utils/init.h"
-#include <iomanip>
+
 #include "conf.h"
 
 namespace po = boost::program_options;
@@ -51,21 +51,6 @@ namespace pt = boost::posix_time;
 
 namespace navitia {
 namespace cities {
-
-std::string OSMNode::coord_to_string() const {
-    std::stringstream geog;
-    geog << std::setprecision(10) << lon() << " " << lat();
-    return geog.str();
-}
-
-std::string OSMWay::coord_to_string() const {
-    std::stringstream geog;
-    geog << std::setprecision(10);
-    for (auto node : nodes) {
-        geog << node->second.coord_to_string();
-    }
-    return geog.str();
-}
 
 /*
  * Read relations

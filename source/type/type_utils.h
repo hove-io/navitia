@@ -28,8 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/fwd_type.h"
-#include "type/rt_level.h"
+#include "type/type.h"
 #include "type/type.pb.h"
 #include "routing/stop_event.h"
 #include <boost/date_time/posix_time/posix_time.hpp>

@@ -32,10 +32,6 @@ www.navitia.io
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/vehicle_journey.h"
-#include "type/line.h"
-#include "type/dataset.h"
-#include "type/stop_area.h"
 
 namespace navitia {
 namespace type {

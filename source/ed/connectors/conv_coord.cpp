@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #include "conv_coord.h"
-#include "utils/exception.h"
 
 namespace ed {
 namespace connectors {

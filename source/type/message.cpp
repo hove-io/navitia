@@ -30,16 +30,12 @@ www.navitia.io
 
 #include "type/message.h"
 #include "type/pt_data.h"
-#include "type/type.h"
 #include "utils/logger.h"
 
 #include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include "type/serialization.h"
-#include <boost/serialization/variant.hpp>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -333,20 +329,6 @@ Indexes make_indexes(const idx_t& idx) {
     Indexes indexes;
     indexes.insert(idx);
     return indexes;
-}
-
-std::set<StopPoint*> LineSection::get_stop_points_section() const {
-    std::set<StopPoint*> res;
-    for (const auto* route : routes) {
-        route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-            res = vj.get_sections_stop_points(start_point, end_point);
-            if (res.empty()) {
-                return true;
-            }
-            return false;
-        });
-    }
-    return res;
 }
 
 using pair_indexes = std::pair<Type_e, Indexes>;

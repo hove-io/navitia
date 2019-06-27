@@ -28,12 +28,13 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/fwd_type.h"
+#include "type/type.h"
+#include "utils/serialization_flat_map.h"
+#include "utils/serialization_unordered_map.h"
+#include "utils/serialization_unordered_set.h"
 #include <boost/container/flat_map.hpp>
 #include <unordered_map>
 #include <unordered_set>
-#include <set>
-#include <vector>
 
 #pragma once
 
@@ -58,7 +59,9 @@ struct HeadsignHandler {
     std::vector<const VehicleJourney*> get_vj_from_headsign(const std::string& headsign) const;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
+    void serialize(Archive& ar, const unsigned int) {
+        ar& headsign_changes& headsign_mvj;
+    }
 
     void forget_vj(const VehicleJourney*);
 

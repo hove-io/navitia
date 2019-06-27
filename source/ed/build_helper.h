@@ -32,7 +32,6 @@ www.navitia.io
 
 #include "utils/functions.h"
 #include "type/data.h"
-#include "type/pt_data.h"
 #include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
 #include "type/meta_data.h"

@@ -40,9 +40,7 @@ www.navitia.io
 #include <map>
 #include <unordered_map>
 #include <set>
-#include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
-#include "type/fwd_type.h"
+#include "type/type.h"
 #include "utils/functions.h"
 
 namespace navitia {

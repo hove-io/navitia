@@ -54,7 +54,9 @@ struct hasOdtProperties {
     bool is_zonal() const { return odt_properties[ZONAL_ODT]; }
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
+    void serialize(Archive& ar, const unsigned int) {
+        ar& odt_properties;
+    }
 };
 }  // namespace type
 }  // namespace navitia
