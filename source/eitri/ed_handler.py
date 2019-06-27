@@ -34,6 +34,11 @@ import psycopg2
 import zipfile
 import logging
 
+"""
+This module contains all the functions to prepare a job, to call the binaries that ingest input data (all the "*2ed" binaries),
+into a database and then call "ed2nav" to produce a single ".nav.lz4" file.
+"""
+
 ALEMBIC_PATH_ED = os.environ.get('ALEMBIC_PATH', '../sql')
 ALEMBIC_PATH_CITIES = os.environ.get('ALEMBIC_PATH_CITIES', '../cities')
 
@@ -41,7 +46,9 @@ ALEMBIC_PATH_CITIES = os.environ.get('ALEMBIC_PATH_CITIES', '../cities')
 @contextmanager
 def cd(new_dir):
     """
-    small helper to change the current dir
+    Change the current directory.
+
+    :param new_dir: the new directory to move into
     """
     prev_dir = os.getcwd()
     os.chdir(os.path.expanduser(new_dir))
@@ -52,6 +59,14 @@ def cd(new_dir):
 
 
 def binarize(ed_db_params, output, ed_component_path, cities_db_params):
+    """
+    Binarize the data from the database to a file.
+
+    :param ed_db_params: the parameters of the database
+    :param output: the name of the output file (usually with extension ".nav.lz4")
+    :param ed_component_path: the path to the "ed2nav" binary
+    :param cities_db_params: the parameters for the cities of the database
+    """
     logger = logging.getLogger(__name__)
     logger.info('creating data.nav')
     ed2nav = 'ed2nav'
@@ -74,9 +89,11 @@ def binarize(ed_db_params, output, ed_component_path, cities_db_params):
 
 def import_data(data_dir, db_params, ed_component_path):
     """
-    call the right component to import the data in the directory
+    Call the right binary for its data (all the "*2ed") to create data then load it in the database.
 
-    we loop through all files until we recognize one on them
+    :param data_dir: the directory containing the data for "*2ed"
+    :param db_params: the parameters of the database
+    :param ed_component_path: the path of the folder containing the binary "*2ed"
     """
     log = logging.getLogger(__name__)
     files = glob.glob(data_dir + "/*")
@@ -85,14 +102,13 @@ def import_data(data_dir, db_params, ed_component_path):
         log.info('unknown data type for dir {}, skipping'.format(data_dir))
         return
 
-    # Note, we consider that we only have to load one kind of data per directory
+    # we consider that we only have to load one kind of data per directory
     import_component = data_type + '2ed'
     if ed_component_path:
         import_component = os.path.join(ed_component_path, import_component)
 
     if file_to_load.endswith('.zip') or file_to_load.endswith('.geopal'):
-        # TODO: handle geopal as non zip
-        # if it's a zip, we unzip it
+        # TODO: handle geopal as non zip ; if it's a zip, we unzip it
         zip_file = zipfile.ZipFile(file_to_load)
         zip_file.extractall(path=data_dir)
         file_to_load = data_dir
@@ -104,6 +120,13 @@ def import_data(data_dir, db_params, ed_component_path):
 
 
 def load_cities(cities_file, cities_db_params, cities_exec_path):
+    """
+    Load cities in the database.
+
+    :param cities_file: the path to the directory containing the data for the "ed2nav" binary
+    :param cities_db_params: the parameters of the database
+    :param cities_exec_path: the path of the folder containing the "cities" binary
+    """
     logger = logging.getLogger(__name__)
 
     cities_exec = os.path.join(cities_exec_path, 'cities')
@@ -115,6 +138,13 @@ def load_cities(cities_file, cities_db_params, cities_exec_path):
 
 
 def load_data(data_dirs, ed_db_params, ed_component_path):
+    """
+    Load all data in the database.
+
+    :param data_dirs: the directory containing all the data ("*.osm", "*.gtfs", ...)
+    :param ed_db_params: the parameters of the database
+    :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
+    """
     logging.getLogger(__name__).info('loading {}'.format(data_dirs))
 
     for d in data_dirs:
@@ -123,11 +153,13 @@ def load_data(data_dirs, ed_db_params, ed_component_path):
 
 def update_db(db_params, alembic_path):
     """
-    enable postgis on the db and update it's scheme
+    Update the database by enabling Postgre/PostGIS and update it's scheme.
+
+    :param db_params: the parameters of the database
+    :param alembic_path: the path to the folder containing the "alembic" binary
     """
     cnx_string = db_params.cnx_string()
 
-    # we need to enable postgis on the db
     cnx = psycopg2.connect(
         database=db_params.dbname, user=db_params.user, password=db_params.password, host=db_params.host
     )
@@ -149,7 +181,16 @@ def generate_nav(
     data_dir, docker_ed, docker_cities, output_file, ed_component_path, cities_exec_path, import_cities
 ):
     """
-    load all data either directly in data_dir if there is no sub dir, or all data in the subdir
+    Load all data from a directory to an single output file.
+    It can load all the data directly from the directory or in each sub-directories for each data kind.
+
+    :param data_dir: the path of the directory containing all the data ("*.osm", "*.gtfs", ...)
+    :param docker_ed: the Docker for the "*2ed" binaries
+    :param docker_cities: the Docker for the "cities" binary
+    :param output_file: the name of the output file (usually with extension ".nav.lz4")
+    :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
+    :param cities_exec_path: the path of the folder containing the "cities" binary
+    :param import_cities: the path to the directory containing the data for the "ed2nav" binary
     """
     cities_db_params = docker_cities.get_db_params()
     update_db(cities_db_params, ALEMBIC_PATH_CITIES)
