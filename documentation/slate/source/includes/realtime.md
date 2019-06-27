@@ -123,7 +123,7 @@ The delay can also be observed for every stop point of the journey with the same
 If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
-A link to concerned disruption can be found in the section "display_informations".
+A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Departures
@@ -178,7 +178,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
 In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" take the delay into account, whereas "base_arrival_date_time"/"base_departure_date_time" show the base-schedule departure/arrival datetime.
 
 A list of the disruptions impacting the departures is also present at the root level of the response.  
-A link to concerned disruption can be found in the section "display_informations".
+A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Stop Schedules
@@ -225,7 +225,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the field "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.
 
 A list of the disruptions impacting the stop schedules is also present at the root level of the response.  
-A link to concerned disruption can be found in the in the "date_times" object itself.
+A link to the concerned disruption can be found in the in the "date_times" object itself.
 
 ## <a name="REDUCED_SERVICE"></a>Reduced service
 
@@ -346,4 +346,4 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure times of an added stop point. New stop points are only used when the "data_freshness" parameter is set to "realtime".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
-A link to concerned disruption can be found in the section "display_informations".
+A link to the concerned disruption can be found in the section "display_informations".
