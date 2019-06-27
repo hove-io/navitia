@@ -26,13 +26,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from contextlib import contextmanager
+
 import glob
-import os
-from navitiacommon import utils, launch_exec
-import psycopg2
-import zipfile
 import logging
+import psycopg2
+import os
+import zipfile
+
+from contextlib import contextmanager
+from navitiacommon import utils, launch_exec
 
 """
 This module contains all the functions to prepare a job, to call the binaries that ingest input data (all the "*2ed" binaries),

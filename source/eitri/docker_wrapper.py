@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,8 +29,9 @@
 
 import docker
 import logging
-from retrying import retry
 import psycopg2
+
+from retrying import retry
 
 """
 This module contains classes about Docker management.
