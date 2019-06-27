@@ -35,6 +35,8 @@ from tests.check_utils import get_not_null, is_valid_equipment_report
 
 default_date_filter = '_current_datetime=20120801T000000&'
 default_line_filter = 'filter=line.uri(A)'
+default_line_uri_filter = 'lines/A/'
+default_stop_areas_uri_filter = 'stop_areas/stopA/'
 default_forbidden_uris_filter = 'forbidden_uris[]=stop_point:stopB'
 
 
@@ -312,6 +314,59 @@ class TestEquipment(AbstractTestFixture):
 
         equipment_reports = get_not_null(response, 'equipment_reports')
         assert len(equipment_reports) == 1
+        for equipment_report in equipment_reports:
+            is_valid_equipment_report(equipment_report)
+        self._check_equipment_report(equipment_reports, expected_result)
+
+    def test_equipment_reports_with_uri(self):
+        """
+        with uri filter
+        """
+
+        mock_equipment_providers(
+            equipment_provider_manager=self.equipment_provider_manager("main_routing_test"),
+            data=standard_mock_elevator_data,
+            code_types_list=["TCL_ASCENSEUR", "TCL_ESCALIER"],
+        )
+        response = self.query_region(default_line_uri_filter + 'equipment_reports?' + default_date_filter)
+
+        # Expected response
+        stopA_equipment_details = [
+            ("5", "elevator", "unknown"),
+            ("1", "escalator", "unknown"),
+            ("2", "escalator", "unknown"),
+            ("3", "escalator", "unknown"),
+            ("4", "escalator", "unknown"),
+        ]
+        stopb_equipment_details = [
+            ("6", "elevator", "available"),
+            ("7", "elevator", "unavailable"),
+            ("8", "elevator", "unknown"),
+            ("9", "elevator", "unknown"),
+        ]
+        # filtered with the A line that serve stopA and stopB
+        expected_result = {"A": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details}}
+
+        equipment_reports = get_not_null(response, 'equipment_reports')
+        assert len(equipment_reports) == 1
+        for equipment_report in equipment_reports:
+            is_valid_equipment_report(equipment_report)
+        self._check_equipment_report(equipment_reports, expected_result)
+
+        response = self.query_region(default_stop_areas_uri_filter + 'equipment_reports?' + default_date_filter)
+
+        # Filtered with the stopA stop_area.
+        # The A, B, C, D, M Line serve stopA
+        expected_result = {
+            "A": {"stopA": stopA_equipment_details},
+            "B": {"stopA": stopA_equipment_details},
+            "C": {"stopA": stopA_equipment_details},
+            "D": {"stopA": stopA_equipment_details},
+            "M": {"stopA": stopA_equipment_details},
+        }
+
+        equipment_reports = get_not_null(response, 'equipment_reports')
+        assert len(equipment_reports) == 5
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)

@@ -41,7 +41,7 @@ from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.common import odt_levels, add_poi_infos_types, handle_poi_infos
+from jormungandr.interfaces.common import odt_levels, add_poi_infos_types, handle_poi_infos, split_uri
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utils import ResourceUtc
 from datetime import datetime
@@ -183,9 +183,7 @@ class Uri(ResourceUri, ResourceUtc):
             return {"error": "No region"}, 404
         uris = []
         if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
+            uris = split_uri(uri)
             if self.collection is None:
                 self.collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
         args["filter"] = self.get_filter(uris, args)

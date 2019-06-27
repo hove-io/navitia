@@ -39,6 +39,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
+from jormungandr.interfaces.common import split_uri
 
 import six
 import logging
@@ -84,11 +85,13 @@ class EquipmentReports(ResourceUri, ResourceUtc):
             abort(404, message='No code type exists into equipment provider')
         return "stop_point.has_code_type(" + code_types + ")"
 
-    def get(self, region=None, lon=None, lat=None):
+    def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
         instance = i_manager.instances.get(self.region)
+
+        args["filter"] = self.get_filter(split_uri(uri), args)
 
         # create filter
         if args["filter"] != "":

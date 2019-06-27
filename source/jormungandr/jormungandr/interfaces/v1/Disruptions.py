@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.common import split_uri
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
 from flask.globals import g
 from datetime import datetime
@@ -116,12 +117,7 @@ class TrafficReport(ResourceUri):
         for forbid_id in args['__temporary_forbidden_id[]']:
             args['forbidden_uris[]'].append(forbid_id)
 
-        uris = []
-        if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-        args["filter"] = self.get_filter(uris, args)
+        args["filter"] = self.get_filter(split_uri(uri), args)
 
         response = i_manager.dispatch(args, "traffic_reports", instance_name=self.region)
 
