@@ -123,7 +123,7 @@ The delay can also be observed for every stop point of the journey with the same
 If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
-In a disrupted section, `display_informations.links` contains an internal link to the concerned disruption in that list.
+A link to concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Departures
@@ -178,7 +178,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
 In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" take the delay into account, whereas "base_arrival_date_time"/"base_departure_date_time" show the base-schedule departure/arrival datetime.
 
 A list of the disruptions impacting the departures is also present at the root level of the response.  
-In a disrupted departure, `display_informations.links` contains an internal link to the concerned disruption in that list.
+A link to concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Stop Schedules
@@ -225,7 +225,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the field "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.
 
 A list of the disruptions impacting the stop schedules is also present at the root level of the response.  
-In a disrupted date_time, `links` contains an internal link to the concerned disruption in that list.
+A link to concerned disruption can be found in the in the "date_times" object itself.
 
 ## <a name="REDUCED_SERVICE"></a>Reduced service
 
@@ -249,12 +249,14 @@ See the [disruption](#disruption) objects section for its full content and descr
 ### Journeys
 
 If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.  
-If not, the disruption will be present in the `display_informations.links` part of the section for information, but it won't be affecting the journey.
+If not (deleting intermediate stop), the journey won't be affected.  
+Either way, a link to this disruption can be found in the section "display_informations" like for other disruptions.
 
 ### Departures & Stop Schedules
 
 The departure time of the train with the reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
-If data_freshness" is "base_schedule", then the depature time is displayed and a link to the disruption is present at the root level of the response. A link to this disruption can be found in the section "display_informations".
+If data_freshness" is "base_schedule", then the depature time is displayed and a link to the disruption is present at the root level of the response.
+In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 ## <a name="MODIFIED_SERVICE"></a>Modified service
 
@@ -344,4 +346,4 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure times of an added stop point. New stop points are only used when the "data_freshness" parameter is set to "realtime".
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
-In a disrupted section, `display_informations.links` contains an internal link to the concerned disruption in that list.
+A link to concerned disruption can be found in the section "display_informations".
