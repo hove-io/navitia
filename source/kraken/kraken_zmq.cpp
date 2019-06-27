@@ -41,7 +41,10 @@ www.navitia.io
 #include "utils/zmq.h"
 #include "utils/functions.h"  //navitia::absolute_path function
 
-static void show_usage(const std::string& name, const boost::program_options::options_description& descr) {
+#include <sys/resource.h>  // Posix dependencies for getrlimit
+
+namespace {
+void show_usage(const std::string& name, const boost::program_options::options_description& descr) {
     std::cerr << "Usage:\n"
               << "\t" << name << " --help\t\tShow this message.\n"
               << "\t" << name << " [config_file]\tSpecify the path of the configuration file "
@@ -51,6 +54,27 @@ static void show_usage(const std::string& name, const boost::program_options::op
               << "Parameters from the configuration file can also be declared by environment variable like: \n"
               << "\t KRAKEN_GENERAL_instance_name=<inst_name>" << std::endl;
 }
+
+void set_core_file_size_limit(int max_core_file_size, log4cplus::Logger& logger) {
+    if (max_core_file_size != 0) {
+        rlimit limit;
+
+        if (getrlimit(RLIMIT_CORE, &limit) == -1) {
+            LOG4CPLUS_ERROR(logger, "Fail to call system 'getrlimit()'");
+            return;
+        }
+
+        limit.rlim_cur = max_core_file_size;  // Soft Limit
+
+        if (setrlimit(RLIMIT_CORE, &limit) == -1) {
+            LOG4CPLUS_ERROR(logger, "Fail to call system 'setrlimit()'");
+            return;
+        }
+
+        LOG4CPLUS_INFO(logger, "Setting max core file size to : " << max_core_file_size << " bytes");
+    }
+}
+}  // namespace
 
 int main(int argn, char** argv) {
     navitia::init_app();
@@ -89,6 +113,9 @@ int main(int argn, char** argv) {
 
     auto logger = log4cplus::Logger::getInstance("startup");
     LOG4CPLUS_INFO(logger, "starting kraken: " << navitia::config::project_version);
+
+    set_core_file_size_limit(conf.core_file_size_limit(), logger);
+
     boost::thread_group threads;
     // Prepare our context and sockets
     zmq::context_t context(1);
