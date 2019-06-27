@@ -141,16 +141,13 @@ def test_users_pagination(create_5_users):
     app.config['MAX_ITEMS_PER_PAGE'] = 2
 
     first_page_resp = api_get('/v1/users')
-    second_page_link = check_resp_page(1, first_page_resp)
-    assert second_page_link
+    check_resp_page(1, first_page_resp)
 
-    second_page_resp = api_get('/v1/{}'.format(second_page_link))
-    last_page_link = check_resp_page(2, second_page_resp)
-    assert last_page_link
+    second_page_resp = api_get(first_page_resp['pagination']['next'])
+    check_resp_page(2, second_page_resp)
 
-    last_page_resp = api_get('/v1/{}'.format(last_page_link))
-    no_more_page_link = check_resp_page(3, last_page_resp, is_last_page=True)
-    assert not no_more_page_link
+    last_page_resp = api_get(second_page_resp['pagination']['next'])
+    check_resp_page(3, last_page_resp, is_last_page=True)
 
 
 def test_keys(create_5_users):

@@ -74,9 +74,10 @@ class Api(flask_restful.Resource):
         pass
 
     def get(self, version=0):
+        resp = marshal(models.Api.query.all(), api_fields)
         if version == 1:
-            return {'api': marshal(models.Api.query.all(), api_fields)}
-        return marshal(models.Api.query.all(), api_fields)
+            return {'api': resp}
+        return resp
 
 
 class Index(flask_restful.Resource):
@@ -742,19 +743,21 @@ class User(flask_restful.Resource):
                     'total_items': pagination.total,
                 }
                 if pagination.has_next:
-                    pagination_json['next'] = request.base_url + "?page={}".format(pagination.next_num)
+                    pagination_json['next'] = url_for(
+                        request.endpoint, version=version, page=pagination.next_num
+                    )
                 return marshal(pagination.items, user_fields), pagination_json
             else:
                 return marshal(models.User.query.filter_by(**filter_params).all(), user_fields), None
 
     def get(self, user_id=None, version=0):
+        users, pagination = self._get(user_id, version)
         if version == 1:
-            users, pagination = self._get(user_id, version)
             resp_v1 = {'users': users}
             if pagination:
                 resp_v1['pagination'] = pagination
             return resp_v1
-        return self._get(user_id, version)
+        return users
 
     def post(self, version=0):
         user = None
@@ -842,9 +845,10 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "create_user")
 
+            resp = marshal(user, user_fields_full)
             if version == 1:
-                return {'user': marshal(user, user_fields_full)}
-            return marshal(user, user_fields_full)
+                return {'user': resp}
+            return resp
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
@@ -950,9 +954,10 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "update_user", last_login)
 
+            resp = marshal(user, user_fields_full)
             if version == 1:
-                return {'user': marshal(user, user_fields_full)}
-            return marshal(user, user_fields_full)
+                return {'user': resp}
+            return resp
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
@@ -980,13 +985,14 @@ class Key(flask_restful.Resource):
 
     def get(self, user_id, key_id=None, version=0):
         try:
-            resp = models.User.query.get_or_404(user_id).keys.all()
+            keys = models.User.query.get_or_404(user_id).keys.all()
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(keys, key_fields)
         if version == 1:
-            return {'keys': marshal(resp, key_fields)}
-        return marshal(resp, key_fields)
+            return {'keys': resp}
+        return resp
 
     def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
@@ -1012,9 +1018,10 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(user, user_fields_full)
         if version == 1:
-            return {'user': marshal(user, user_fields_full)}
-        return marshal(user, user_fields_full)
+            return {'user': resp}
+        return resp
 
     def delete(self, user_id, key_id, version=0):
         user = models.User.query.get_or_404(user_id)
@@ -1060,9 +1067,10 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(user, user_fields_full)
         if version == 1:
-            return {'user': marshal(user, user_fields_full)}
-        return marshal(user, user_fields_full)
+            return {'user': resp}
+        return resp
 
 
 class Authorization(flask_restful.Resource):
@@ -1094,9 +1102,10 @@ class Authorization(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(user, user_fields_full)
         if version == 1:
-            return {'user': marshal(user, user_fields_full)}
-        return marshal(user, user_fields_full)
+            return {'user': resp}
+        return resp
 
     def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
@@ -1125,9 +1134,10 @@ class Authorization(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(user, user_fields_full)
         if version == 1:
-            return {'user': marshal(user, user_fields_full)}
-        return marshal(user, user_fields_full)
+            return {'user': resp}
+        return resp
 
 
 class EndPoint(flask_restful.Resource):
