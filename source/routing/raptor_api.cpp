@@ -1294,7 +1294,7 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     if (journeys.size() == 0)
         return;
 
-    const auto& best = get_best_journey(journeys, params.clockwise);
+    const auto& best = get_pseudo_best_journey(journeys, params.clockwise);
 
     auto it = journeys.begin();
     while (it != journeys.end()) {
