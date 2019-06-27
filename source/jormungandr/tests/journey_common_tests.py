@@ -36,7 +36,6 @@ from .tests_mechanism import dataset
 from jormungandr import i_manager
 from .check_utils import *
 import mock
-from os import getenv
 from pytest import approx
 
 
@@ -1188,6 +1187,18 @@ class JourneyCommon(object):
         assert car_fallback_pt_journey['sections'][0]['mode'] == 'car'
 
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
+
+    def test_journey_ticket(self):
+        """
+        Test that the ticket info are correctly serialized in the response
+        """
+        query = "journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120614080101&"
+        response = self.query_region(query)
+
+        assert len(response['tickets']) == 1
+        assert response['tickets'][0]['name'] == 'M-Ticket name'
+        assert response['tickets'][0]['source_id'] == 'M-Ticket'
+        assert response['tickets'][0]['comment'] == 'This is M-Ticket'
 
 
 @dataset({"main_stif_test": {}})
