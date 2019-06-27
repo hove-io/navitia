@@ -466,13 +466,40 @@ class Instance(db.Model):  # type: ignore
     )
 
     # street_network_configurations
-    street_network_car = db.Column(db.Text, nullable=False, default=default_values.street_network_backend)
-    street_network_walking = db.Column(db.Text, nullable=False, default=default_values.street_network_backend)
-    street_network_bike = db.Column(db.Text, nullable=False, default=default_values.street_network_backend)
-    street_network_bss = db.Column(db.Text, nullable=False, default=default_values.street_network_backend)
+    street_network_car = db.Column(
+        db.Text,
+        db.ForeignKey('street_network_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_walking = db.Column(
+        db.Text,
+        db.ForeignKey('street_network_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_bike = db.Column(
+        db.Text,
+        db.ForeignKey('street_network_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_bss = db.Column(
+        db.Text,
+        db.ForeignKey('street_network_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
 
-    street_network_ridesharing = db.Column(db.Text, nullable=False, default=default_values.ridesharing_backend)
-    street_network_taxi = db.Column(db.Text, nullable=False, default=default_values.taxi_backend)
+    street_network_ridesharing = db.Column(
+        db.Text,
+        db.ForeignKey('street_network_backend.id'),
+        nullable=False,
+        default=default_values.ridesharing_backend,
+    )
+    street_network_taxi = db.Column(
+        db.Text, db.ForeignKey('street_network_backend.id'), nullable=False, default=default_values.taxi_backend
+    )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
@@ -850,4 +877,4 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 # import at the end to prevent circular dependencies
 from navitiacommon.models.bss_provider import BssProvider
 from navitiacommon.models.equipments_providers import EquipmentsProvider
-from navitiacommon.models.street_network_configuration import StreetNetworkConfiguration
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend

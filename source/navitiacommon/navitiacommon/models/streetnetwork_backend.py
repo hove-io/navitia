@@ -35,7 +35,7 @@ from sqlalchemy.dialects.postgresql.json import JSONB
 from navitiacommon.models import db, TimestampMixin
 
 
-class StreetNetworkConfiguration(db.Model, TimestampMixin):  # type: ignore
+class StreetNetworkBackend(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Text, primary_key=True)
     klass = db.Column(db.Text, unique=False, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False, default=False)
