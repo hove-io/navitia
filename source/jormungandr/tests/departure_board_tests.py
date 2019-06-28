@@ -762,6 +762,43 @@ class TestSchedules(AbstractTestFixture):
 
         self.check_stop_schedule_rt_sol(stop_sched)
 
+        # default data_freshness=realtime, so it should be the same response with only from_datetime
+        response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
+
+        is_valid_notes(response["notes"])
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_stop_schedule_rt_sol(stop_sched)
+
+        # default data_freshness=realtime, so it should be the same response without from_datetime
+        response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000")
+
+        is_valid_notes(response["notes"])
+        stop_sched = response["stop_schedules"]
+        is_valid_stop_schedule(stop_sched, self.tester)
+
+        self.check_stop_schedule_rt_sol(stop_sched)
+
+    def test_route_schedule_freshness(self):
+        # default freshness is base_schedule
+        r = self.query_region("stop_points/S1/route_schedules?_current_datetime=20160101T080000")
+        assert r['route_schedules'][0]['table']['rows'][0]['date_times'][0]['data_freshness'] == 'base_schedule'
+
+        # default freshness is base_schedule with from_datetime too
+        r = self.query_region("stop_points/S1/route_schedules?from_datetime=20160101T080000")
+        assert r['route_schedules'][0]['table']['rows'][0]['date_times'][0]['data_freshness'] == 'base_schedule'
+
+        # respect data_freshness param
+        r = self.query_region(
+            "stop_points/S1/route_schedules?_current_datetime=20160101T080000&data_freshness=realtime"
+        )
+        assert r['route_schedules'][0]['table']['rows'][0]['date_times'][0]['data_freshness'] == 'realtime'
+        r = self.query_region(
+            "stop_points/S1/route_schedules?_current_datetime=20160101T080000&data_freshness=base_schedule"
+        )
+        assert r['route_schedules'][0]['table']['rows'][0]['date_times'][0]['data_freshness'] == 'base_schedule'
+
     def test_stop_schedule_realtime_limit_per_schedule(self):
         """
         same as test_stop_schedule_realtime, but we limit the number of item per schedule
@@ -875,8 +912,18 @@ class TestSchedules(AbstractTestFixture):
         is_valid_notes(response["notes"])
         departures = response["departures"]
         is_valid_departures(departures)
-        # Since data_freshness is specified, it's set to realtime by default, and there shouldn't be (prev, next) links
-        # for api  navigation
+        # Since data_freshness is not specified, it's set to realtime by default,
+        # and there shouldn't be (prev, next) links for api  navigation
+        assert not [l for l in response.get('links') if l.get('rel') == 'prev']
+        assert not [l for l in response.get('links') if l.get('rel') == 'next']
+        self.check_departure_rt_sol(departures)
+
+        # Same with only from_datetime specified
+        response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000")
+
+        is_valid_notes(response["notes"])
+        departures = response["departures"]
+        is_valid_departures(departures)
         assert not [l for l in response.get('links') if l.get('rel') == 'prev']
         assert not [l for l in response.get('links') if l.get('rel') == 'next']
         self.check_departure_rt_sol(departures)
