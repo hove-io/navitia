@@ -49,10 +49,12 @@ void AstarPathFinder::init(const type::GeographicalCoord& start_coord,
     size_t n = boost::num_vertices(geo_ref.graph);
     costs.assign(n, bt::pos_infin);
 
-    costs[starting_edge[source_e]] =
-        compute_cost_from_starting_edge_to_dist(starting_edge[source_e], dest_projected_coord);
-    costs[starting_edge[target_e]] =
-        compute_cost_from_starting_edge_to_dist(starting_edge[target_e], dest_projected_coord);
+    if (starting_edge.found) {
+        costs.at(starting_edge[source_e]) =
+            compute_cost_from_starting_edge_to_dist(starting_edge[source_e], dest_projected_coord);
+        costs.at(starting_edge[target_e]) =
+            compute_cost_from_starting_edge_to_dist(starting_edge[target_e], dest_projected_coord);
+    }
 }
 
 void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duration& radius,

@@ -200,18 +200,35 @@ BOOST_AUTO_TEST_CASE(astar_init) {
     GraphBuilder b;
     type::Data data;
     auto proj_stop_point = build_data(b, data);
+    {
+        type::GeographicalCoord start;
+        start.set_xy(2., 2.);
+        type::GeographicalCoord destination;
+        destination.set_xy(8., 6.);
 
-    type::GeographicalCoord start;
-    start.set_xy(2., 2.);
-    type::GeographicalCoord destination;
-    destination.set_xy(8., 6.);
+        AstarPathFinder worker(b.geo_ref);
+        worker.init(start, destination, type::Mode_e::Walking, 1);
 
-    AstarPathFinder worker(b.geo_ref);
-    worker.init(start, destination, type::Mode_e::Walking, 1);
+        BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Source]), bt::pos_infin);
+        BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Target]), bt::pos_infin);
 
-    BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Source]], bt::pos_infin);
-    BOOST_CHECK_EQUAL(worker.costs[proj_stop_point[dir::Target]], bt::pos_infin);
+        BOOST_CHECK_EQUAL(worker.costs.at(worker.starting_edge[dir::Source]), navitia::seconds(6));
+        BOOST_CHECK_EQUAL(worker.costs.at(worker.starting_edge[dir::Target]), bt::pos_infin);
+    }
+    {
+        type::GeographicalCoord start;
+        start.set_xy(800., 650.);
+        type::GeographicalCoord destination;
+        destination.set_xy(8., 6.);
 
-    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Source]], navitia::seconds(6));
-    BOOST_CHECK_EQUAL(worker.costs[worker.starting_edge[dir::Target]], bt::pos_infin);
+        AstarPathFinder worker(b.geo_ref);
+        worker.init(start, destination, type::Mode_e::Walking, 1);
+
+        BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Source]), bt::pos_infin);
+        BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Target]), bt::pos_infin);
+
+        // Starting edge in not found here so worker.starting_edge[dir::Source] in undefined
+        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Source]), std::out_of_range);
+        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Target]), std::out_of_range);
+    }
 }
