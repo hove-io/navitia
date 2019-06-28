@@ -1578,7 +1578,7 @@ nop      | duration           | int                             | Maximum durati
 nop      | depth              | int                             | Json response [depth](#depth) | 1
 nop      | forbidden_uris[]   | id                              | If you want to avoid lines, modes, networks, etc.    |
 nop      | items_per_schedule | int                             | Maximum number of datetimes per schedule.                                                  |
-nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
 nop      | disable_geojson    | boolean                         | remove geojson fields from the response | False
 
 
