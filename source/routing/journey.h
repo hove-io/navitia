@@ -83,25 +83,26 @@ struct SectionHash {
 typedef std::unordered_set<Journey, JourneyHash> JourneySet;
 
 /**
- * @brief Get the best journey
+ * @brief Get the pseudo-best journey
  *
- * Find the earliest departure (clockwise case) or the lastest arrival (anti clockwise case)
+ * Find journey with the earliest arrival (clockwise case) or the lastest departure (anti clockwise case)
+ * When equal, real "best" uses more criteria, but this is enough for the current use
  *
  * @param journeys A container of journeys
  * @param clokwise Active clockwise or not
  * @return best jouney
  */
 template <class Journeys>
-const Journey& get_best_journey(const Journeys& journeys, bool clockwise) {
+const Journey& get_pseudo_best_journey(const Journeys& journeys, bool clockwise) {
     if (journeys.size() == 0)
-        throw recoverable_exception("get_best_journey takes a list of at least 1 journey");
+        throw recoverable_exception("get_pseudo_best_journey takes a list of at least 1 journey");
 
-    auto earliest_journey = [](const Journey& j1, const Journey& j2) { return j1.departure_dt < j2.departure_dt; };
+    auto departure_comp = [](const Journey& j1, const Journey& j2) { return j1.departure_dt < j2.departure_dt; };
 
-    auto latest_journey = [](const Journey& j1, const Journey& j2) { return j1.arrival_dt < j2.arrival_dt; };
+    auto arrival_comp = [](const Journey& j1, const Journey& j2) { return j1.arrival_dt < j2.arrival_dt; };
 
-    const auto best = clockwise ? std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey)
-                                : std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
+    const auto best = clockwise ? std::min_element(journeys.cbegin(), journeys.cend(), arrival_comp)
+                                : std::max_element(journeys.cbegin(), journeys.cend(), departure_comp);
 
     return *best;
 }
