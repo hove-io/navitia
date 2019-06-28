@@ -29,7 +29,9 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+#include "type/fwd_type.h"
+#include "type/geographical_coord.h"
+#include "type/type_interfaces.h"
 
 #include <boost/geometry/geometries/polygon.hpp>
 #include <unordered_map>
