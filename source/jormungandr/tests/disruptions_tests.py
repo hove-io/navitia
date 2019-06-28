@@ -668,6 +668,21 @@ class TestDisruptions(AbstractTestFixture):
             assert line_report['pt_objects'][0]['id'] == 'base_network'
             assert line_report['pt_objects'][1]['id'] == 'stopA'
 
+    def test_line_reports_with_forbidden_uris(self):
+        response = self.query_region("line_reports?_current_datetime=20120801T000000")
+        line_reports = get_not_null(response, 'line_reports')
+        for line_report in line_reports:
+            is_valid_line_report(line_report)
+        # 5 lines affected by disruptions in this response: A,B,C,D,M
+        assert len(line_reports) == 5
+
+        response = self.query_region("line_reports?_current_datetime=20120801T000000&forbidden_uris[]=M")
+        line_reports = get_not_null(response, 'line_reports')
+        for line_report in line_reports:
+            is_valid_line_report(line_report)
+        # Line M is now forbidden
+        # TODO: investigate behavior -> https://jira.kisio.org/browse/NAVP-1365
+
     def test_disruption_with_stop_areas_and_different_parameters(self):
         """
         Data production period: 2012/06/14 - 2013/06/14
