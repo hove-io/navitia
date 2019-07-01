@@ -443,9 +443,8 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
 }
 
 BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
-    // for retrocompatibity
-    // admin_stations.txt file contains only "station_id"
-    // TODO : to remove after the data team update, it will become useless (NAVP-1285)
+    // admin_stations.txt file contains "stop_id" and "station_id"
+    // Following the norm, we only read "stop_id"
     {
         ed::Data data;
         ed::connectors::FusioParser parser(ntfs_path);
@@ -457,8 +456,9 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
     }
 
-    // admin_stations.txt file contains "stop_id" and "station_id"
-    // Following the norm, we only read "stop_id"
+    // For retrocompatibity
+    // admin_stations.txt file contains only "station_id"
+    // TODO : to remove after the data team update, it will become useless (NAVP-1285)
     {
         ed::Data data;
         ed::connectors::FusioParser parser(ntfs_path + "_v5");
