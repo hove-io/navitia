@@ -1523,7 +1523,7 @@ class AutocompleteParameter(flask_restful.Resource):
             type=str,
             required=False,
             default='BANO',
-            help='source for address: [BANO, OpenAddresses]',
+            help='source for address: {}'.format(utils.address_source_types),
             location=('json', 'values'),
             choices=utils.address_source_types,
         )

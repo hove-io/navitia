@@ -51,6 +51,7 @@ from tyr.binarisation import (
     shape2ed,
     load_bounding_shape,
     bano2mimir,
+    openaddresses2mimir,
     osm2mimir,
     stops2mimir,
     ntfs2mimir,
@@ -230,6 +231,7 @@ def update_data():
 
 BANO_REGEXP = re.compile('.*bano.*')
 COSMOGONY_REGEXP = re.compile('.*cosmogony.*')
+OPEN_ADDRESSES_REGEXP = re.compile('.*csv')
 
 
 def type_of_autocomplete_data(filename):
@@ -241,7 +243,7 @@ def type_of_autocomplete_data(filename):
         - 'bano'
         - 'osm'
         - 'cosmogony'
-
+        - 'oa'
     """
 
     def files_type(files):
@@ -252,6 +254,10 @@ def type_of_autocomplete_data(filename):
             return 'cosmogony'
         if len(files) == 1 and files[0].endswith('.pbf'):
             return 'osm'
+        # OpenAddresses files does not have a predefined naming,
+        # so we check it last, and consider all csv as OA
+        if any(f for f in files if OPEN_ADDRESSES_REGEXP.match(f)):
+            return 'oa'
         return None
 
     if not isinstance(filename, list):
@@ -276,11 +282,11 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     job = models.Job()
     actions = []
 
-    task = {'bano': bano2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
+    task = {'bano': bano2mimir, 'oa': openaddresses2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
     # it's important for the admin to be loaded first, then addresses, then street, then poi
-    import_order = ['cosmogony', 'bano', 'osm']
+    import_order = ['cosmogony', 'bano', 'oa', 'osm']
     files_and_types = [(f, type_of_autocomplete_data(f)) for f in files]
     files_and_types = sorted(files_and_types, key=lambda f_t: import_order.index(f_t[1]))
 
