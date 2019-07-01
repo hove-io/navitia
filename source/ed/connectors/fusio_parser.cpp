@@ -1586,7 +1586,7 @@ void AdminStopAreaFusioHandler::handle_line(Data& data, const csv_row& row, bool
         }
     } else {
         sa_it = gtfs_data.stop_area_map.find(row[stop_area_c]);
-        if (sa_it == tmp_stop_area_map.end()) {
+        if (sa_it == gtfs_data.stop_area_map.end()) {
             LOG4CPLUS_ERROR(logger,
                             "AdminStopAreaFusioHandler : Impossible to find the stop_area " << row[stop_area_c]);
             return;
