@@ -227,8 +227,8 @@ BOOST_AUTO_TEST_CASE(astar_init) {
         BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Source]), bt::pos_infin);
         BOOST_CHECK_EQUAL(worker.costs.at(proj_stop_point[dir::Target]), bt::pos_infin);
 
-        // Starting edge in not found here so worker.starting_edge[dir::Source] in undefined
-        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Source]), std::out_of_range);
-        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Target]), std::out_of_range);
+        // Starting edge in not found here so a proximitylist::NotFound exception is thrown
+        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Source]), proximitylist::NotFound);
+        BOOST_CHECK_THROW(worker.costs.at(worker.starting_edge[dir::Target]), proximitylist::NotFound);
     }
 }
