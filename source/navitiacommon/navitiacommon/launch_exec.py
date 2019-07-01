@@ -1,4 +1,3 @@
-# coding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -28,95 +27,41 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import logging
+import re
+import subprocess
+import sys
+
 """
 Function to launch a bin
 """
-import subprocess
-import os
-import select
-import re
-import fcntl
-import errno
+
+logger = logging.getLogger(__name__)  # type: logging.Logger
 
 
-class LogLine(object):
-    def __init__(self, line):
-        if line.startswith('DEBUG') or line.startswith('TRACE') or line.startswith('NOTICE') or not line:
-            self.level = 10
-        elif line.startswith('INFO'):
-            self.level = 20
-        elif line.startswith('WARN'):
-            self.level = 30
-        else:
-            self.level = 40
+def run(exec_name, args, sync=True, new_logger=None):
+    """
+    Run a process with its args.
 
-        pos = line.find(' - ')
-        if 0 < pos < 10:
-            self.msg = line[pos + 3 :]
-        else:
-            self.msg = line
-
-
-def parse_log(buff):
-    logs = []
-    line, sep, buff = buff.partition('\n')
-    while sep and line:
-        logs.append(LogLine(line))
-        line, sep, buff = buff.partition('\n')
-    if not sep:
-        buff = line  # we put back the last unterminated line in the buffer
-    return (logs, buff)
-
-
-# from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
-def make_async(fd):
-    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
-
-
-# Helper function to read some data from a file descriptor, ignoring EAGAIN errors
-# (those errors mean that there are no data available for the moment)
-def read_async(fd):
-    try:
-        return fd.read()
-    except IOError as e:
-        if e.errno != errno.EAGAIN:
-            raise e
-        else:
-            return ''
-
-
-def launch_exec_traces(exec_name, args, logger):
-    """ Launch an exec with args, log the outputs """
-    log = 'Launching ' + exec_name + ' ' + ' '.join(args)
+    :param exec_name: the binary name to run the new subprocess
+    :param args: the parameters for the subprocess
+    :param sync: true if synchronous, otherwise false
+    :param new_logger: the optionnal logger to log into
+    :return: the error code of the subprocess
+    """
     # we hide the password in logs
-    logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
+    args_str = re.sub('password=\w+', 'password=xxxxxxxxx', ' '.join(args))
+    logger.info('Running binary: ' + exec_name + ' ' + args_str)
 
     args.insert(0, exec_name)
+    proc = subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    for line in proc.stdout:
+        if new_logger is not None:
+            new_logger.info(line)
+        else:
+            sys.stdout.write(line)
 
-    proc = subprocess.Popen(args, stderr=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
-    traces = ""
-    try:
-        make_async(proc.stderr)
-        make_async(proc.stdout)
-        while True:
-            select.select([proc.stdout, proc.stderr], [], [])
+    if sync is True:
+        proc.wait()
 
-            for pipe in proc.stdout, proc.stderr:
-                log_pipe = read_async(pipe)
-                logs, line = parse_log(log_pipe)
-                for l in logs:
-                    logger.log(l.level, l.msg)
-                    traces += "##  {}  ##".format(l.msg)
-
-            if proc.poll() is not None:
-                break
-    finally:
-        proc.stdout.close()
-        proc.stderr.close()
-
-    return proc.returncode, traces
-
-
-def launch_exec(exec_name, args, logger):
-    code, _ = launch_exec_traces(exec_name, args, logger)
-    return code
+    return proc.returncode
