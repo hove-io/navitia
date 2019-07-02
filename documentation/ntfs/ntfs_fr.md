@@ -570,7 +570,7 @@ Ce fichier contient les calendriers.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-grid_calendar_id | chaine | Requis | Identifiant du calendrier
+id | chaine | Requis | Identifiant du calendrier
 name | chaine | Requis | Nom du calendrier
 monday | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
 tuesday | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
@@ -585,7 +585,7 @@ Ce fichier contient les exceptions sur les calendriers des grilles horaires.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-grid_calendar_id | string | Requis | Identifiant du calendrier de grille horaire
+calendar_id | string | Requis | Identifiant du calendrier de grille horaire
 date | date | Requis | Date de l'exception
 type | entier | Requis | 0 : Ne circule pas ce jour <br> 1 : Circule ce jour
 
@@ -594,7 +594,7 @@ Ce fichier contient les périodes des calendriers des grilles horaires.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-grid_calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
+calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
 start_date | date | Requis | Date de début
 end_date | date | Requis | Date de fin
 
@@ -603,7 +603,7 @@ Ce fichier contient toutes les relations entre les lignes et les calendriers des
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-grid_calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
+calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
 line_id | chaine | Requis | Identifiant de la ligne associée à ce calendrier (lien vers le fichier lines). Ce champ peut être vide si le champ line_external_code est renseigné.
 line_external_code | chaine | Requis | cette colonne contient le code externe NAViTiA 1 de la ligne (lien vers le fichier lines). Ce champ peut être vide si le champ line_id et renseigné
 
