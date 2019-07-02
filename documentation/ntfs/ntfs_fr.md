@@ -595,7 +595,7 @@ Ce fichier contient les périodes des calendriers des grilles horaires.
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
-start_date | date | Requis | Date de début
+begin_date | date | Requis | Date de début
 end_date | date | Requis | Date de fin
 
 ### grid_rel_calendar_line.txt (optionnel)
@@ -604,8 +604,7 @@ Ce fichier contient toutes les relations entre les lignes et les calendriers des
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
-line_id | chaine | Requis | Identifiant de la ligne associée à ce calendrier (lien vers le fichier lines). Ce champ peut être vide si le champ line_external_code est renseigné.
-line_external_code | chaine | Requis | cette colonne contient le code externe NAViTiA 1 de la ligne (lien vers le fichier lines). Ce champ peut être vide si le champ line_id et renseigné
+line_external_code | chaine | Requis | cette colonne contient le code externe de la ligne tel que retourné par l'API Navitia
 
 # Évolutions possibles du format
 Ce chapitre liste des évolutions du format qui peuvent être intéressantes si elles sont utiles concrètement.
