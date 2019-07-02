@@ -208,9 +208,6 @@ class Schedules(ResourceUri, ResourceUtc):
             args['from_datetime'] = args['_current_datetime']
             if args["calendar"]:  # if we have a calendar, the dt is only used for sorting, so 00:00 is fine
                 args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)
-
-            if not args['data_freshness']:
-                args['data_freshness'] = self._get_default_freshness()
         elif not args.get('calendar'):
             # if a calendar is given all times will be given in local (because the calendar might span over dst)
             if args['from_datetime']:
