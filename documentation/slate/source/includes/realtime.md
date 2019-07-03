@@ -254,8 +254,9 @@ Either way, a link to this disruption can be found in the section "display_infor
 
 ### Departures & Stop Schedules
 
-The departure time of the train with the reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
-If data_freshness" is "base_schedule", then the depature time is displayed and a link to the disruption is present at the root level of the response.
+At the deleted stop area, the departure time of the train with a reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
+
+If "data_freshness" is "base_schedule", then the depature time is displayed.  
 In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 ## <a name="MODIFIED_SERVICE"></a>Modified service
@@ -347,3 +348,11 @@ The status of the journey is `MODIFIED_SERVICE`. In a public transport section o
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
 A link to the concerned disruption can be found in the section "display_informations".
+
+<div></div>
+### Departures & Stop Schedules
+
+At the added stop area, the departure time of the train with a modified service is displayed if "data_freshness" is set to "realtime".  
+In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+
+The departure time of the train with a modified service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "base_schedule".
