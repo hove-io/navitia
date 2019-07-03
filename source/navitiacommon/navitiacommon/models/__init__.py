@@ -468,37 +468,37 @@ class Instance(db.Model):  # type: ignore
     # street_network_configurations
     street_network_car = db.Column(
         db.Text,
-        db.ForeignKey('street_network_backend.id'),
+        db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
         default=default_values.street_network_backend,
     )
     street_network_walking = db.Column(
         db.Text,
-        db.ForeignKey('street_network_backend.id'),
+        db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
         default=default_values.street_network_backend,
     )
     street_network_bike = db.Column(
         db.Text,
-        db.ForeignKey('street_network_backend.id'),
+        db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
         default=default_values.street_network_backend,
     )
     street_network_bss = db.Column(
         db.Text,
-        db.ForeignKey('street_network_backend.id'),
+        db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
         default=default_values.street_network_backend,
     )
 
     street_network_ridesharing = db.Column(
         db.Text,
-        db.ForeignKey('street_network_backend.id'),
+        db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
         default=default_values.ridesharing_backend,
     )
     street_network_taxi = db.Column(
-        db.Text, db.ForeignKey('street_network_backend.id'), nullable=False, default=default_values.taxi_backend
+        db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False, default=default_values.taxi_backend
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

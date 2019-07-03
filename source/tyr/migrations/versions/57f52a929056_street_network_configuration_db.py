@@ -14,6 +14,9 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 import datetime
+import json
+
+list_modes = ["car", "walking", "bike", "bss", "ridesharing", "taxi"]
 
 
 def upgrade():
@@ -28,9 +31,24 @@ def upgrade():
         sa.PrimaryKeyConstraint('id'),
     )
 
-    op.execute(
-        "INSERT INTO streetnetwork_backend (id, klass) VALUES ('kraken','jormungandr.street_network.kraken.Kraken');"
-    )
+    # These are the default configurations
+    kraken = {'id': 'kraken', 'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
+    ridesharingKraken = {
+        'id': 'ridesharingKraken',
+        'class': 'jormungandr.street_network.Ridesharing',
+        'args': {'street_network': kraken},
+    }
+    taxiKraken = {
+        'id': 'taxiKraken',
+        'class': 'jormungandr.street_network.Taxi',
+        'args': {'street_network': kraken},
+    }
+
+    for value in [kraken, ridesharingKraken, taxiKraken]:
+        query = "INSERT INTO streetnetwork_backend (id, klass, args) VALUES ('{}','{}', '{}')".format(
+            value['id'], value['class'], json.dumps(value['args'])
+        )
+        op.execute(query)
 
     op.add_column(
         'instance', sa.Column('street_network_car', sa.Text(), nullable=False, server_default='kraken')
@@ -53,24 +71,21 @@ def upgrade():
         'instance', sa.Column('street_network_taxi', sa.Text(), nullable=False, server_default='taxiKraken')
     )
 
-    op.create_foreign_key(
-        "fk_instance_street_network_backend",
-        "instance",
-        "streetnetwork_backend",
-        [
-            "street_network_car",
-            "street_network_walking",
-            "street_network_bike",
-            "street_network_bss",
-            "street_network_ridesharing",
-            "street_network_taxi",
-        ],
-        ["id"],
-    )
+    # We create the keys for all the modes
+    for mode in list_modes:
+        op.create_foreign_key(
+            "fk_instance_street_network_backend_{}".format(mode),
+            "instance",
+            "streetnetwork_backend",
+            ["street_network_{}".format(mode)],
+            ["id"],
+        )
 
 
 def downgrade():
-    op.drop_constraint('fk_instance_street_network_backend', 'instance', type_='foreignkey')
+    # We drop the keys for all the modes
+    for mode in list_modes:
+        op.drop_constraint("fk_instance_street_network_backend_{}".format(mode), 'instance', type_='foreignkey')
 
     op.drop_column('instance', 'street_network_taxi')
     op.drop_column('instance', 'street_network_ridesharing')
