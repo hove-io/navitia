@@ -1184,7 +1184,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='vjA_delayed_with_new_stop_time',
-            effect='detour',
+            effect='modified',
         )
 
         # Verify disruptions
@@ -1192,7 +1192,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         assert len(disrupts['disruptions']) == 13
         assert has_the_disruption(disrupts, 'vjA_delayed_with_new_stop_time')
         last_disrupt = disrupts['disruptions'][-1]
-        assert last_disrupt['severity']['effect'] == 'DETOUR'
+        assert last_disrupt['severity']['effect'] == 'MODIFIED_SERVICE'
 
         # the journey has the new stop_time in its section of public_transport
         response = self.query_region(sub_query + "&data_freshness=realtime&datetime=20120614T080200")
