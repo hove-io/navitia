@@ -1805,7 +1805,7 @@ Required | Name             | Type                            | Description     
 ---------|------------------|---------------------------------|---------------------------------------------------|--------------
 no       | since            | [iso-date-time](#iso-date-time) | Only display active disruptions after this date   |
 no       | until            | [iso-date-time](#iso-date-time) | Only display active disruptions before this date  |
-no       | count            | int                             | Maximum number of results.                        | 10
+no       | count            | int                             | Maximum number of results.                        | 25
 no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false

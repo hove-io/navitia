@@ -156,7 +156,7 @@ class Scenario(object):
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.traffic_reports.forbidden_uris.append(forbidden_uri)
+                req.line_reports.forbidden_uris.append(forbidden_uri)
 
         if request['since']:
             req.line_reports.since_datetime = request['since']
