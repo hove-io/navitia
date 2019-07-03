@@ -244,6 +244,9 @@ def updated_request_with_default(request, instance):
     if request['_min_bike'] is None:
         request['_min_bike'] = instance.min_bike
 
+    if request['_min_taxi'] is None:
+        request['_min_taxi'] = instance.min_taxi
+
 
 def change_ids(new_journeys, response_index):
     """

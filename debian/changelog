@@ -1,3 +1,38 @@
+navitia2 (2.81.0) unstable; urgency=low
+
+  * All: Use mypy for every projects  <https://github.com/CanalTP/navitia/pull/2838>
+  * Tyr: load open addresses in mimir  <https://github.com/CanalTP/navitia/pull/2849>
+  * Jormun: fix default data_freshness for route_schedules   <https://github.com/CanalTP/navitia/pull/2847>
+  * fusio2ed: stop_id is supported into admin_stations.txt  <https://github.com/CanalTP/navitia/pull/2836>
+  * [Jormun] Fix 'forbidden_uris[]' for /line_reports  <https://github.com/CanalTP/navitia/pull/2844>
+  * Kraken: Fix the way best journey is picked (filter)  <https://github.com/CanalTP/navitia/pull/2829>
+  * [Tyr] Return error when provider not found + test  <https://github.com/CanalTP/navitia/pull/2826>
+  * build: handle sanitizers in cmake  <https://github.com/CanalTP/navitia/pull/2817>
+  * Kraken: Add ability to configure max core dump file size  <https://github.com/CanalTP/navitia/pull/2816>
+  * Jormungandr: add a test to ensure that jormungandr does not read bragi's id  <https://github.com/CanalTP/navitia/pull/2815>
+  * [Doc] Realtime integration in Navitia  <https://github.com/CanalTP/navitia/pull/2811>
+  * jormungandr: equipment_reports abort is tested  <https://github.com/CanalTP/navitia/pull/2814>
+  * Jormungandr: equipment_reports api with uri filter  <https://github.com/CanalTP/navitia/pull/2812>
+  * [Jormun] Integration test for ticket in journeys response  <https://github.com/CanalTP/navitia/pull/2808>
+  * Kraken: Revert A* PR  <https://github.com/CanalTP/navitia/pull/2840>
+  * Doc: add precision on cardinality of fare objects  <https://github.com/CanalTP/navitia/pull/2841>
+  * Jormun: mypy doesn't like protobuf types  <https://github.com/CanalTP/navitia/pull/2835>
+  * Tyr: fix revision  <https://github.com/CanalTP/navitia/pull/2822>
+  * Revert "[Kraken]: use Flann to find nearest objects"  <https://github.com/CanalTP/navitia/pull/2818>
+  * [Ed] add a cli param to fetch admins from cities to osm2ed  <https://github.com/CanalTP/navitia/pull/2783>
+  * Jormungandr: fallback to kraken for /places/<uri>  <https://github.com/CanalTP/navitia/pull/2800>
+  * Jormun: read stop's lines in /places  <https://github.com/CanalTP/navitia/pull/2805>
+  * Doc: Defining a new NTFS fare modelization  <https://github.com/CanalTP/navitia/pull/2791>
+  * jormungandr: Integration test on pass midnight  <https://github.com/CanalTP/navitia/pull/2807>
+  * All: Update precommit  <https://github.com/CanalTP/navitia/pull/2809>
+  * [Kraken]: use Flann to find nearest objects  <https://github.com/CanalTP/navitia/pull/2774>
+  * Kraken : Using projected coord instead of real coord for astar  <https://github.com/CanalTP/navitia/pull/2804>
+  * Kraken : Optimisation for dijkstra  <https://github.com/CanalTP/navitia/pull/2792>
+  * Jormun : Adding min_taxi  <https://github.com/CanalTP/navitia/pull/2802>
+  * Build: add pre-commit for flake8  <https://github.com/CanalTP/navitia/pull/2801>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Wed, 03 Jul 2019 12:07:01 +0100
+
 navitia2 (2.80.3) unstable; urgency=low
 
   * Jormun: handle multiple SAE lines for a navitia line in sytralRT <https://github.com/CanalTP/navitia/pull/2833>

@@ -67,3 +67,5 @@
     * modification des propriétés présentes dans le fichier feed_info
 * Version 0.8 du 25/03/2019
     * Ajout de la gestion des pathways
+* Version 0.9 du 16/05/2019
+    * AJout du nouveau modèle tarifaire

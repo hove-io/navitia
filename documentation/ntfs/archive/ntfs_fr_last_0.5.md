@@ -68,10 +68,10 @@ line_group_links.txt | Optionnel | Ce fichier contient la liaison entre un group
 ## Fichiers des calendriers par période
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-grid_calendars.txt | Optionnel |  Ce fichier contient les jours de fonctionnement des calendriers 
-grid_exception_dates.txt | Optionnel | Ce fichier contient les exceptions sur les jours de fonctionnement des calendriers 
-grid_periods.txt | Optionnel | Ce fichier contient les périodes des calendriers 
-grid_rel_calendar_line.txt | Optionnel | Ce fichier contient les liens entre les lignes et ces calendriers 
+grid_calendars.txt | Optionnel |  Ce fichier contient les jours de fonctionnement des calendriers
+grid_exception_dates.txt | Optionnel | Ce fichier contient les exceptions sur les jours de fonctionnement des calendriers
+grid_periods.txt | Optionnel | Ce fichier contient les périodes des calendriers
+grid_rel_calendar_line.txt | Optionnel | Ce fichier contient les liens entre les lignes et ces calendriers
 
 # Description des fichiers
 ### networks.txt (requis)
@@ -82,8 +82,8 @@ Colonne | Type | Contrainte | Commentaire
 network_id | chaine | Requis | Identifiant unique et pérenne du réseau
 network_name | chaine | Requis | Nom du réseau
 network_url | chaine | Optionnel | Lien vers le site institutionnel
-network_timezone | chaine | Optionnel | 
-network_lang | chaine | Optionnel | 
+network_timezone | chaine | Optionnel |
+network_lang | chaine | Optionnel |
 network_phone | chaine | Optionnel | Numéro de téléphone de contact
 network_sort_order | entier | Optionnel | Ordre de trie des réseaux, les plus petit sont en premier.
 
@@ -95,7 +95,7 @@ Colonne | Type | Contrainte | Commentaire
 service_id | chaine | Requis | Identifiant du calendrier de circulation
 monday | entier | Requis | (1)
 tuesday | entier | Requis | (1)
-wednesday | entier | Requis | (1) 
+wednesday | entier | Requis | (1)
 thursday | entier | Requis | (1)
 friday | entier | Requis | (1)
 saturday | entier | Requis | (1)
@@ -270,8 +270,8 @@ Car | Voiture
 ### equipments.txt (optionnel)
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-equipment_id | chaine | Requis | Identifiant de l'équipement | 
-wheelchair_boarding | entier (1) | Optionnel | Accès UFR | 
+equipment_id | chaine | Requis | Identifiant de l'équipement |
+wheelchair_boarding | entier (1) | Optionnel | Accès UFR |
 sheltered | entier (1) | Optionnel | Abris couvert
 elevator | entier (1) | Optionnel | Ascenseur
 escalator | entier (1) | Optionnel | Escalier mécanique
@@ -298,7 +298,7 @@ stop_name | chaine | Requis | Nom de l'arrêt
 city_code | chaine | Optionnel | Identifiant de la commune (code INSEE). Si ce champ n'est pas renseigné, les coordonnées géographiques sont utilisées pour faire l'association.
 stop_lat | décimal | Requis | Latitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
 stop_lon | décimal | Requis | Longitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
-fare_zone_id | chaine | Optionnel | Zone tarifaire de l'arrêt 
+fare_zone_id | chaine | Optionnel | Zone tarifaire de l'arrêt
 location_type | entier (1) | Requis | Type de l'arrêt ou de la zone
 geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geometries.txt qui décrit la géométrie associée à une zone géographique (type 2) afin de permettre au moteur de définir les adresses couvertes en cas de TAD zonal "adresse à adresse". Ce champ peut également être utilisé pour préciser une géométrie pour les zones d'arrêts (type 1) et les communes (type 4) pour enrichir le web service.
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
@@ -321,7 +321,7 @@ arrival_time | heure | Requis | Heure d'arrivée, ou chaine vide si la descente 
 departure_time | heure | Requis | Heure de départ, ou chaine vide si la descente est interdite
 stop_id | chaine | Requis | Identifiant de l'arrêt physique de passage (cas général). Ce champ peut également référencer une "zone géographique" (stop de type 2) ou une commune (stop de type 3) dans le cas de TAD zonal.
 stop_sequence | entier | Requis | Ordre de passage de desserte dans la circulation
-stop_headsign | chaine | Optionnel | 
+stop_headsign | chaine | Optionnel |
 pickup_type | entier | Optionnel | Indication sur l'horaire (issues du gtfs)
 drop_off_type | entier (1) | Optionnel | Indication sur l'horaire (issues du gtfs)
 local_zone_id  | entier (1) | Optionnel | identifiant de la zone d'ITL de l'horaire
@@ -329,7 +329,7 @@ date_time_estimated | entier (2) | Optionnel | Précise si l'heure de passage es
 
     (1) Indication sur l'horaire (issues du gtfs) :
         0 (par défaut) : non renseigné
-        2 - Horaire sur réservation associé à un TAD (si un message est associé au TAD, voir la liaison avec comment_links.txt) 
+        2 - Horaire sur réservation associé à un TAD (si un message est associé au TAD, voir la liaison avec comment_links.txt)
 
     (2) La fiabilité peut prendre les valeurs suivantes :
         0 - l'heure de passage est fiable
@@ -350,8 +350,8 @@ equipment_id | string | Optionnel | Identifiant de description des propriétés 
 ### trip_properties.txt (optionnel)
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-trip_property_id | chaine | Requis | Identifiant de la propriété | 
-wheelchair_accessible | entier (1) | Optionnel | Le véhicule est accessible aux UFR | 
+trip_property_id | chaine | Requis | Identifiant de la propriété |
+wheelchair_accessible | entier (1) | Optionnel | Le véhicule est accessible aux UFR |
 bike_accepted | entier (1) | Optionnel | Le véhicule permet l'embarquement de vélo
 air_conditioned | entier (1) | Optionnel | Le véhicule dispose de l'air conditionné
 visual_announcement | entier (1) | Optionnel | Le véhicule dispose d'annonces visuelles
@@ -394,7 +394,7 @@ Ce fichier contient la représentation spatiale d'une géométrie (pour des lign
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-geometry_id | chaine | Requis | Identifiant de la géométrie. 
+geometry_id | chaine | Requis | Identifiant de la géométrie.
 geometry_wkt | géométrie | Requis | Représentation spatiale de la géométrie selon le standard http://fr.wikipedia.org/wiki/Well-known_text.
 
     Les lignes et parcours peuvent être des LINESTRING ou des MULTILINESTRING.
@@ -464,7 +464,7 @@ Colonne | Type | Contrainte | Commentaire
 feed_info_param | chaine | Requis | Nom du paramètre
 feed_info_value | chaine | Requis | Valeur du paramètre
 
-#### Description du contenu du fichier 
+#### Description du contenu du fichier
 
 Ce fichier contient 3 types de paramètres :
 * des paramètres obligatoires
@@ -485,12 +485,12 @@ Le tableau ci-dessous indique les paramètres libres renseignés par Kisio Digit
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-feed_provider | chaine | Libre | Société/Entité fournissant le jeu de données 
+feed_provider | chaine | Libre | Société/Entité fournissant le jeu de données
 fusio_url | chaine | Libre | URL du système ayant généré le jeu de données
 fusio_version | date | Libre | Version du système ayant généré le jeu de données
 
 ### grid_calendars.txt (optionnel)
-Ce fichier contient les calendriers. 
+Ce fichier contient les calendriers.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
@@ -581,10 +581,10 @@ Cette modélisation unique traite l'ensemble des possibilité:
 ### Modélisation NTFS
 
 * Les lignes intégralement TAD, sans horaire, sont déclarée en "fréquence"
-* Les stop_point du fichier "stops" de type "shape", ne devraient pas être en correspondance avec d'autres stop_point. 
+* Les stop_point du fichier "stops" de type "shape", ne devraient pas être en correspondance avec d'autres stop_point.
     * A l'intégration des données, les correspondances éventuellement déclarées seront ignorées
 * Les correspondances entre 2 circulations ne sont autorisées QUE si un des 2 horaires est fixe
-    * Les correspondances entre 2 horaires estimés sont interdites (stop.estimated vers stop.estimated) 
+    * Les correspondances entre 2 horaires estimés sont interdites (stop.estimated vers stop.estimated)
 * Des lignes peuvent traiter de zones d'adresse à adresse
     * Les itinéraires adresse à adresse au sein de ces zones ne seront pas proposés
 * les lignes TAD ne sont plus typées
@@ -616,25 +616,25 @@ On peut alimenter le fichier stop_times en mettant des horaires précis sur chac
 **Fichier stop: déclare les "arrêts"**
 
 stop_id | stop_name | stop_lat | stop_lon | location_type | geometry_id | parent_station
---- | --- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | --- | ---
 stop_point_A | A | 47.01 | 1.01 | 0 |  | stop_area_A
 stop_point_B | A | 47.01 | 1.01 | 0 |  | stop_area_B
 stop_point_C | A | 47.01 | 1.01 | 0 |  | stop_area_C
 stop_point_D | A | 47.01 | 1.01 | 0 |  | stop_area_D
 stop_point_E | A | 47.01 | 1.01 | 0 |  | stop_area_E
 stop_point_H | A | 47.01 | 1.01 | 0 |  | stop_area_H
-stop_area_A | A | 47.01 | 1.01 | 1 |  | 
-stop_area_B | A | 47.01 | 1.01 | 1 |  | 
-stop_area_C | A | 47.01 | 1.01 | 1 |  | 
-stop_area_D | A | 47.01 | 1.01 | 1 |  | 
-stop_area_E | A | 47.01 | 1.01 | 1 |  | 
-stop_area_H | A | 47.01 | 1.01 | 1 |  | 
-zone_2 | Zone 1 | 47.01 | 1.01 | 2 | id_vers_POLYGON((1 1,5 1,5 5,1 5,1 1)) | 
+stop_area_A | A | 47.01 | 1.01 | 1 |  |
+stop_area_B | A | 47.01 | 1.01 | 1 |  |
+stop_area_C | A | 47.01 | 1.01 | 1 |  |
+stop_area_D | A | 47.01 | 1.01 | 1 |  |
+stop_area_E | A | 47.01 | 1.01 | 1 |  |
+stop_area_H | A | 47.01 | 1.01 | 1 |  |
+zone_2 | Zone 1 | 47.01 | 1.01 | 2 | id_vers_POLYGON((1 1,5 1,5 5,1 5,1 1)) |
 
 **Fichier stop_times: déclare les "horaires", estimés ou non**
 
 trip_id | stop_id | arrival_time | departure_time | stop_sequence | pickup_type | drop_off_type | date_time_estimated | zone_itl
---- | --- | --- | --- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | --- | --- | --- | ---
 trip_1 | stop_point_A |  | 09:02:00 | 1 | 0 | 0 | 0 | 0
 trip_1 | stop_point_B | 09:15:00 | 09:05:00 | 2 | 2 | 2 | 1 | 1
 trip_1 | stop_point_C | 09:15:00 | 09:07:00 | 2 | 2 | 2 | 1 | 1

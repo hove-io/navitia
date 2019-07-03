@@ -415,6 +415,13 @@ class Instance(flask_restful.Resource):
             default=instance.min_car,
         )
         parser.add_argument(
+            'min_taxi',
+            type=int,
+            help='minimum duration of taxi fallback',
+            location=('json', 'values'),
+            default=instance.min_taxi,
+        )
+        parser.add_argument(
             'successive_physical_mode_to_limit_id',
             type=str,
             help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
@@ -502,6 +509,13 @@ class Instance(flask_restful.Resource):
             help='import ntfs data in global autocomplete',
             location=('json', 'values'),
             default=instance.import_ntfs_in_mimir,
+        )
+        parser.add_argument(
+            'admins_from_cities_db',
+            type=inputs.boolean,
+            help='use cities db while importing data from osm',
+            location=('json', 'values'),
+            default=instance.admins_from_cities_db,
         )
         parser.add_argument(
             'min_nb_journeys',
@@ -632,6 +646,7 @@ class Instance(flask_restful.Resource):
                     'min_bike',
                     'min_bss',
                     'min_car',
+                    'min_taxi',
                     'max_duration',
                     'walking_transfer_penalty',
                     'night_bus_filter_max_factor',
@@ -644,6 +659,7 @@ class Instance(flask_restful.Resource):
                     'is_open_data',
                     'import_stops_in_mimir',
                     'import_ntfs_in_mimir',
+                    'admins_from_cities_db',
                     'min_nb_journeys',
                     'max_nb_journeys',
                     'min_journeys_calls',
@@ -669,7 +685,15 @@ class Instance(flask_restful.Resource):
                 equipment_provider = models.EquipmentsProvider.query.get(provider_id)
                 if equipment_provider:
                     instance.equipment_details_providers.append(equipment_provider)
-
+                else:
+                    return (
+                        {
+                            "message": "Couldn't set equipment providers - Provider '{}' isn't present in db".format(
+                                provider_id
+                            )
+                        },
+                        400,
+                    )
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -1499,7 +1523,7 @@ class AutocompleteParameter(flask_restful.Resource):
             type=str,
             required=False,
             default='BANO',
-            help='source for address: [BANO, OpenAddresses]',
+            help='source for address: {}'.format(utils.address_source_types),
             location=('json', 'values'),
             choices=utils.address_source_types,
         )

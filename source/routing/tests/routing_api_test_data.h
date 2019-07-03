@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
+#include "fare/fare.h"
 
 namespace ng = navitia::georef;
 
@@ -478,6 +479,21 @@ struct routing_api_data {
             for (auto r : b.data->pt_data->routes) {
                 r->destination = b.sas.find("stopA")->second;
             }
+
+            // Add Fare
+            boost::gregorian::date start_date(boost::gregorian::neg_infin);
+            boost::gregorian::date end_date(boost::gregorian::pos_infin);
+
+            b.data->fare->fare_map["M-Ticket"].add(
+                start_date, end_date, navitia::fare::Ticket("M-Ticket", "M-Ticket name", 100, "This is M-Ticket"));
+
+            navitia::fare::Transition ticket_transition;
+            navitia::fare::State ticket_state;
+            ticket_state.line = "M";
+            ticket_transition.ticket_key = "M-Ticket";
+
+            auto ticket_state_v = boost::add_vertex(ticket_state, b.data->fare->g);
+            boost::add_edge(b.data->fare->begin_v, ticket_state_v, ticket_transition, b.data->fare->g);
         }
 
         b.data->complete();

@@ -35,10 +35,11 @@ import pytest
 import tempfile
 import shutil
 
+# TODO : need to clean that after full migration to python3
 try:
     import ConfigParser
 except:
-    import configparser as ConfigParser
+    import configparser as ConfigParser  # type: ignore
 
 from tests.docker_wrapper import PostgresDocker
 

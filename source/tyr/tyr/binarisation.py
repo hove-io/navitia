@@ -278,6 +278,13 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         args.append("--log_comment")
         args.append(instance_config.name)
 
+        if instance.admins_from_cities_db:
+            cities_db = current_app.config.get('CITIES_DATABASE_URI')
+            if not cities_db:
+                raise ValueError(
+                    'impossible to use osm2ed with cities db since no cities database configuration has been set'
+                )
+            args.extend(["--cities-connection-string", cities_db])
         with collect_metric('osm2ed', job, dataset_uid):
             res = launch_exec('osm2ed', args, logger)
         if res != 0:
@@ -610,6 +617,46 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         if res != 0:
             # @TODO: exception
             raise ValueError('bano2mimir failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise
+
+
+@celery.task(bind=True)
+def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
+    """ launch openaddresses2mimir """
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
+    logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
+    job = models.Job.query.get(job_id)
+    cnx_string = current_app.config['MIMIR_URL']
+    working_directory = unzip_if_needed(filename)
+
+    if autocomplete_instance.address != 'OA':
+        logger.warn(
+            'no open addresses data will be loaded for instance {} because the address are read from {}'.format(
+                autocomplete_instance.name, autocomplete_instance.address
+            )
+        )
+        return
+
+    try:
+        res = launch_exec(
+            "openaddresses2mimir",
+            [
+                '-i',
+                working_directory,
+                '--connection-string',
+                cnx_string,
+                '--dataset',
+                autocomplete_instance.name,
+            ],
+            logger,
+        )
+        if res != 0:
+            # @TODO: exception
+            raise ValueError('openaddresses2mimir failed')
     except:
         logger.exception('')
         job.state = 'failed'

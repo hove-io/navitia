@@ -53,7 +53,7 @@ typedef bg::model::linestring<point> ls_type;
 namespace ed {
 namespace connectors {
 
-struct OSMRelation;
+struct Admin;
 struct OSMCache;
 
 struct OSMNode {
@@ -64,7 +64,7 @@ struct OSMNode {
 
     // We use int32_t to save memory, these are coordinates *  factor
     mutable int32_t ilon = std::numeric_limits<int32_t>::max(), ilat = std::numeric_limits<int32_t>::max();
-    mutable const OSMRelation* admin = nullptr;
+    mutable const Admin* admin = nullptr;
     static constexpr double factor = 1e6;
 
     OSMNode(uint64_t osm_id) : osm_id(osm_id) {}
@@ -113,33 +113,49 @@ private:
     mutable std::bitset<2> properties = 0;
 };
 
-struct OSMRelation {
-    const u_int64_t osm_id;
-    CanalTP::References references;
-    const std::string insee = "", name = "";
+struct Admin {
+    Admin(u_int64_t id,
+          const std::string& uri,
+          const std::string& insee,
+          const std::string& postal_code,
+          const std::string& name,
+          const uint32_t level);
+    Admin(u_int64_t id,
+          const std::string& uri,
+          const std::string& insee,
+          const std::string& postal_code,
+          const std::string& name,
+          const uint32_t level,
+          mpolygon_type&& polygon,
+          point&& center);
+    virtual ~Admin();
+    virtual void build_geometry(OSMCache&) {}
+    bool is_city() const { return level == 8; }
+
+    const u_int64_t id;
+    const std::string uri;
+    const std::string insee;
+    const std::string name;
     std::vector<std::string> postal_codes;
     const uint32_t level = std::numeric_limits<uint32_t>::max();
+    mpolygon_type polygon;
+    point center = point(0.0, 0.0);
+};
 
-    // these attributes are mutable because this object would be use in a set, and
-    // all object in a set are const, since these attributes are not used in the key we can modify them
-    mutable mpolygon_type polygon;
-    mutable point centre = point(0.0, 0.0);
+struct OSMAdminRelation : public Admin {
+    CanalTP::References references;
 
-    OSMRelation(const u_int64_t osm_id,
-                const std::vector<CanalTP::Reference>& refs,
-                const std::string& insee,
-                const std::string& postal_code,
-                const std::string& name,
-                const uint32_t level);
+    OSMAdminRelation(u_int64_t id,
+                     const std::string& uri,
+                     const std::vector<CanalTP::Reference>& refs,
+                     const std::string& insee,
+                     const std::string& postal_code,
+                     const std::string& name,
+                     const uint32_t level);
+    virtual ~OSMAdminRelation() {}
 
-    bool operator<(const OSMRelation& other) const { return this->osm_id < other.osm_id; }
-
-    bool operator<(const u_int64_t other) const { return osm_id < other; }
-
-    void set_centre(double lon, double lat) const { centre = point(lon, lat); }
-
-    void build_geometry(OSMCache& cache) const;
-    void build_polygon(OSMCache& cache) const;
+    virtual void build_geometry(OSMCache& cache);
+    void build_polygon(OSMCache& cache);
 };
 
 struct OSMWay {
@@ -200,14 +216,9 @@ struct OSMWay {
         return bg::distance(p, ls);
     }
 
-    std::set<const OSMRelation*> admins() const {
-        std::set<const OSMRelation*> result;
-        for (auto node : nodes) {
-            if (node->admin != nullptr) {
-                result.insert(node->admin);
-            }
-        }
-        return result;
+    bool contains_admin(const Admin* admin) const {
+        auto has_admin = [&](const auto& n) { return n->admin == admin; };
+        return boost::find_if(nodes, has_admin) != nodes.end();
     }
 
     bool is_used() const { return way_ref == nullptr || this == way_ref; }
@@ -237,27 +248,42 @@ struct AssociateStreetRelation {
 };
 
 typedef std::set<OSMWay>::const_iterator it_way;
-typedef std::map<std::set<const OSMRelation*>, std::set<it_way>> rel_ways;
-typedef std::set<OSMRelation>::const_iterator admin_type;
+typedef std::map<std::set<const Admin*>, std::set<it_way>> rel_ways;
+typedef std::set<OSMAdminRelation>::const_iterator admin_type;
 typedef std::pair<admin_type, double> admin_distance;
 
+constexpr double M_TO_DEG = 1.0 / 111320.0;  // approximate the convertion between meter to degree
+
 struct OSMCache {
-    std::set<OSMRelation> relations;
+    std::map<uint64_t, std::unique_ptr<Admin>> admins;
     std::set<OSMNode> nodes;
     std::set<OSMWay> ways;
     std::set<AssociateStreetRelation> associated_streets;
     std::unordered_map<std::string, rel_ways> way_admin_map;
-    RTree<const OSMRelation*, double, 2> admin_tree;
+    RTree<const Admin*, double, 2> admin_tree;
     RTree<it_way, double, 2> way_tree;
     double max_search_distance = 0;
     size_t NB_PROJ = 0;
+    double cities_bbox_to_fetch =
+        10000.0 * M_TO_DEG;  // by default if we search for cities in the db, we get all the cities +/- 10km around
+
+    size_t admin_from_cities = 0;
+    size_t cities_db_calls = 0;
 
     Lotus lotus;
 
-    OSMCache(const std::string& connection_string) : lotus(connection_string) {}
+    std::unique_ptr<pqxx::connection> cities_db = {};
+
+    OSMCache(const std::string& connection_string, const boost::optional<std::string>& cities_cnx)
+        : lotus(connection_string) {
+        if (cities_cnx) {
+            cities_db = std::make_unique<pqxx::connection>(*cities_cnx);
+        }
+    }
 
     void build_relations_geometries();
-    const OSMRelation* match_coord_admin(const double lon, const double lat);
+    const Admin* match_coord_admin(const double lon, const double lat);
+    const Admin* find_admin_in_cities(const double lon, const double lat);
     void match_nodes_admin();
     void insert_nodes();
     void insert_ways();
@@ -272,7 +298,8 @@ struct OSMCache {
 
 struct ReadRelationsVisitor {
     OSMCache& cache;
-    ReadRelationsVisitor(OSMCache& cache) : cache(cache) {}
+    bool use_cities;
+    ReadRelationsVisitor(OSMCache& cache, bool use_cities) : cache(cache), use_cities(use_cities) {}
 
     void node_callback(uint64_t, double, double, const CanalTP::Tags&) {}
     void relation_callback(uint64_t osm_id, const CanalTP::Tags& tags, const CanalTP::References& refs);

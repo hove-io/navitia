@@ -55,7 +55,7 @@ $ curl 'https://api.navitia.io/v1/'
 
 Go to the API  <https://api.navitia.io>
 
-The simpliest way is to use a web browser. 
+The simpliest way is to use a web browser.
 Our humble opinion is that [firefox browser](http://www.getfirefox.com) and a json viewer extension like [JSON Lite](https://addons.mozilla.org/fr/firefox/addon/json-lite/) is a good setup.
 
 Third step

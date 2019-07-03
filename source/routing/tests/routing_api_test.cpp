@@ -3086,14 +3086,21 @@ nr::NightBusFilter::Params get_default_filter_params() {
                                       nr::NightBusFilter::default_max_factor, nr::NightBusFilter::default_base_factor};
 }
 
-std::tuple<nr::Journey, nr::Journey> build_night_bus_journeys(ed::builder& b) {
-    b.vj("vj1")("A1", "09:00"_t, "09:00"_t)("C1", "12:00"_t, "12:00"_t);
-
+std::tuple<nr::Journey, nr::Journey, nr::Journey> build_night_bus_journeys(ed::builder& b) {
+    b.vj("vj0")("A0", "08:55"_t, "08:55"_t)("C1", "23:30"_t, "23:30"_t);  // sooner departure, but worst journey
+    b.vj("vj1")("A1", "09:00"_t, "09:00"_t)("C1", "12:00"_t, "12:00"_t);  // best journey clockwise: based on arrival
     b.vj("vj2")("B1", "22:00"_t, "22:00"_t)("C1", "23:00"_t, "23:00"_t);
 
     nt::PT_Data& d = *b.data->pt_data;
-    const auto& stl1 = d.vehicle_journeys[0]->stop_time_list;
-    const auto& stl2 = d.vehicle_journeys[1]->stop_time_list;
+    const auto& stl0 = d.vehicle_journeys[0]->stop_time_list;
+    const auto& stl1 = d.vehicle_journeys[1]->stop_time_list;
+    const auto& stl2 = d.vehicle_journeys[2]->stop_time_list;
+
+    nr::Journey j0;
+    j0.sections.push_back(nr::Journey::Section(stl0[0], navitia::DateTimeUtils::set(0, "08:55"_t), stl0[1],
+                                               navitia::DateTimeUtils::set(0, "23:30"_t)));
+    j0.departure_dt = navitia::DateTimeUtils::set(0, "08:15"_t);
+    j0.arrival_dt = navitia::DateTimeUtils::set(0, "23:45"_t);
 
     nr::Journey j1;
     j1.sections.push_back(nr::Journey::Section(stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t), stl1[1],
@@ -3107,7 +3114,7 @@ std::tuple<nr::Journey, nr::Journey> build_night_bus_journeys(ed::builder& b) {
     j2.departure_dt = navitia::DateTimeUtils::set(0, "21:55"_t);
     j2.arrival_dt = navitia::DateTimeUtils::set(0, "23:10"_t);
 
-    return std::make_tuple(j1, j2);
+    return std::make_tuple(j0, j1, j2);
 }
 
 class Night_bus_fixture {
@@ -3116,10 +3123,10 @@ private:
 
 public:
     nr::NightBusFilter::Params filter_params;
-    nr::Journey j1, j2;
+    nr::Journey j0, j1, j2;
     Night_bus_fixture() : b("20120614") {
         filter_params = get_default_filter_params();
-        std::tie(j1, j2) = build_night_bus_journeys(b);
+        std::tie(j0, j1, j2) = build_night_bus_journeys(b);
     }
 };
 }  // namespace
@@ -3139,22 +3146,22 @@ BOOST_FIXTURE_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise, Ni
 
 BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fixture) {
     {
-        nr::RAPTOR::Journeys journeys = {j1, j2};
+        nr::RAPTOR::Journeys journeys = {j0, j1, j2};
         nr::filter_late_journeys(journeys, filter_params);
 
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:1");
     }
     {
-        nr::RAPTOR::Journeys journeys = {j2, j1};
+        nr::RAPTOR::Journeys journeys = {j2, j1, j0};
         nr::filter_late_journeys(journeys, filter_params);
 
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:1");
     }
 }
 
@@ -3163,13 +3170,13 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture) {
     // The max_pseudo_duration is 7h, so journeys departing after 15:00 are deleted
     nr::NightBusFilter::Params filter_params = get_default_filter_params();
     {
-        nr::RAPTOR::Journeys journeys = {j1, j2};
+        nr::RAPTOR::Journeys journeys = {j0, j1, j2};
         nr::filter_late_journeys(journeys, filter_params);
 
         BOOST_REQUIRE_EQUAL(journeys.size(), 1);
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:0");
+        BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj1:1");
     }
 
     // With the custom parameters, the max_pseudo_duration is 15h
@@ -3183,9 +3190,9 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture) {
         BOOST_REQUIRE_EQUAL(journeys.size(), 2);
 
         auto vj1 = journeys.front().sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj1->uri, "vehicle_journey:vj1:0");
+        BOOST_CHECK_EQUAL(vj1->uri, "vehicle_journey:vj1:1");
         auto vj2 = journeys.back().sections[0].get_in_st->vehicle_journey;
-        BOOST_CHECK_EQUAL(vj2->uri, "vehicle_journey:vj2:1");
+        BOOST_CHECK_EQUAL(vj2->uri, "vehicle_journey:vj2:2");
     }
 }
 

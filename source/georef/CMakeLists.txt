@@ -5,12 +5,6 @@ SET(GEOREF_SRC
     street_network.cpp
     adminref.h
     adminref.cpp
-    path_finder.h
-    path_finder.cpp
-    dijkstra_path_finder.h
-    dijkstra_path_finder.cpp
-    astar_path_finder.h
-    astar_path_finder.cpp
 )
 
 add_library(georef ${GEOREF_SRC})

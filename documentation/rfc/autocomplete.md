@@ -3,7 +3,7 @@
 This RFC describes how kraken's autocomplete works.
 
 There are two search modes managed by the *search_type* parameter. The autocompletion starts by doing a request with
-`search_type=0`, this uses a prefix search, if no results are found, a second search is done with `search_type=1` to 
+`search_type=0`, this uses a prefix search, if no results are found, a second search is done with `search_type=1` to
 use the n-gram.
 The *search_type* parameter also changes the sorting/scoring.
 
@@ -47,12 +47,12 @@ The results are sorted by type, with the following order:
 
 For each type, we have the following order:  
 In firsts positions, we have the results with a 100 quality (exact match). After them, the order is based
-on the *global score*, then by the length of the longest, then by the position of this substring, 
+on the *global score*, then by the length of the longest, then by the position of this substring,
 and finally by the quality.
 
 
 ## What does it mean?
-If a request returns a lot of admins, the response will be filled with the ten most important admins 
+If a request returns a lot of admins, the response will be filled with the ten most important admins
 and won't have any stop_area or way.
 
 Most of the complains we've got on the autocompletion is that a stop_area can't be found.

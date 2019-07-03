@@ -219,6 +219,9 @@ class Instance(object):
             )
         return backend
 
+    def stop_point_fallbacks(self):
+        return [a for a in global_autocomplete.values() if a.is_handling_stop_points()]
+
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()
@@ -368,6 +371,12 @@ class Instance(object):
         # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('min_car', instance_db, self.name)
+
+    @property
+    def min_taxi(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('min_taxi', instance_db, self.name)
 
     @property
     def successive_physical_mode_to_limit_id(self):

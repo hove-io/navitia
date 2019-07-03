@@ -30,9 +30,10 @@
 import zipfile
 import os
 import glob
+import logging
 
 street_source_types = ['OSM']
-address_source_types = ['BANO', 'OSM']
+address_source_types = ['BANO', 'OA']
 poi_source_types = ['FUSIO', 'OSM']
 admin_source_types = ['OSM', 'COSMOGONY']
 

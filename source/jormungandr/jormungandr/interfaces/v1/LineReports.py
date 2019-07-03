@@ -39,6 +39,7 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.common import split_uri
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
 from flask_restful import reqparse
@@ -103,12 +104,7 @@ class LineReports(ResourceUri, ResourceUtc):
         if args['disable_geojson']:
             g.disable_geojson = True
 
-        uris = []
-        if uri:
-            if uri[-1] == "/":
-                uri = uri[:-1]
-            uris = uri.split("/")
-        args["filter"] = self.get_filter(uris, args)
+        args["filter"] = self.get_filter(split_uri(uri), args)
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))

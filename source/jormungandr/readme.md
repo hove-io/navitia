@@ -12,7 +12,7 @@ In the Norse mythology, Jörmungandr is a sea serpent that grew so large that it
 
 ```sh
 cd navitia/source/jormungandr
-mkvirtualenv -r requirements_dev.txt -p /usr/bin/python2 jormungandr 
+mkvirtualenv -r requirements_dev.txt -p /usr/bin/python2 jormungandr
 ```
 
 # Configure
@@ -47,7 +47,7 @@ JORMUNGANDR_INSTANCE_FR_IDF='{"key": "fr-idf","zmq_socket": "tcp://localhost:300
 
 Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
 
-example for a development environment: 
+example for a development environment:
 
 ```sh
 PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_START_MONITORING_THREAD=False  JORMUNGANDR_DISABLE_DATABASE=True JORMUNGANDR_IS_PUBLIC=True python manage.py runserver
@@ -55,7 +55,7 @@ PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JOR
 
 ## custom_settings.py
 
-This helps you overwrite the default settings from a file. Prevent from mixing both custom file settings and environment variables. 
+This helps you overwrite the default settings from a file. Prevent from mixing both custom file settings and environment variables.
 
 Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:  
 
@@ -63,7 +63,7 @@ Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:
 PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py  python manage.py runserver
 ```
 
-# Run 
+# Run
 
 To run the web service, you'll need to:
 
@@ -125,7 +125,7 @@ You file `jormungandr.json` is not found or your `key` and `socket` don't match 
 
 ### Python error : `No module named flask`
 > from flask import Flask, got_request_exception
-> 
+>
 > ImportError: No module named flask
 
 Make sure you use your `jormungandr` VirtualEnv with :
@@ -138,7 +138,7 @@ $ workon jormung
 
 Jormungandr is trying to access a "jormungandr" database. You can disable this default behavior with `JORMUNGANDR_DISABLE_DATABASE=True`.
 
-# How to profile Jormungandr? 
+# How to profile Jormungandr?
 
 The profiling of Jormungandr is done thanks to Werkzeug profiler, for more details, one can read this interesting [article](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvi-debugging-testing-and-profiling), more specifically, in the Profiling section.
 
@@ -151,5 +151,5 @@ Once the profile file is generated, download `gprof2dot` with `pip install gprof
 
 Note that, in order to profile the real performance, you should activate the cpp implementation of protobuf by adding the env vars: `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`.
 
-Have fun! 
+Have fun!
 

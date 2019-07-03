@@ -57,12 +57,12 @@ def downgrade():
     op.drop_column('stop_time', 'order', schema='navitia')
     op.create_table(
         'journey_pattern',
-        sa.Column('id', BIGINT(), primary_key=True, nullable=False),
-        sa.Column('route_id', BIGINT(), primary_key=False, nullable=False),
-        sa.Column('physical_mode_id', BIGINT(), primary_key=False, nullable=False),
-        sa.Column('uri', TEXT(), primary_key=False, nullable=False),
-        sa.Column('name', TEXT(), primary_key=False, nullable=False),
-        sa.Column('is_frequence', BOOLEAN(), primary_key=False, nullable=False),
+        sa.Column('id', sa.BIGINT(), primary_key=True, nullable=False),
+        sa.Column('route_id', sa.BIGINT(), primary_key=False, nullable=False),
+        sa.Column('physical_mode_id', sa.BIGINT(), primary_key=False, nullable=False),
+        sa.Column('uri', sa.TEXT(), primary_key=False, nullable=False),
+        sa.Column('name', sa.TEXT(), primary_key=False, nullable=False),
+        sa.Column('is_frequence', sa.BOOLEAN(), primary_key=False, nullable=False),
         sa.ForeignKeyConstraint(['route_id'], [u'navitia.route.id'], name=u'journey_pattern_route_id_fkey'),
         sa.ForeignKeyConstraint(
             ['physical_mode_id'], [u'navitia.physical_mode.id'], name=u'journey_pattern_physical_mode_id_fkey'
@@ -71,15 +71,15 @@ def downgrade():
     )
     op.create_table(
         'journey_pattern_point',
-        sa.Column('id', BIGINT(), primary_key=True, nullable=False),
-        sa.Column('journey_pattern_id', BIGINT(), primary_key=False, nullable=False),
-        sa.Column('name', TEXT(), primary_key=False, nullable=False),
-        sa.Column('uri', TEXT(), primary_key=False, nullable=False),
-        sa.Column('order', INTEGER(), primary_key=False, nullable=False),
-        sa.Column('stop_point_id', BIGINT(), primary_key=False, nullable=False),
+        sa.Column('id', sa.BIGINT(), primary_key=True, nullable=False),
+        sa.Column('journey_pattern_id', sa.BIGINT(), primary_key=False, nullable=False),
+        sa.Column('name', sa.TEXT(), primary_key=False, nullable=False),
+        sa.Column('uri', sa.TEXT(), primary_key=False, nullable=False),
+        sa.Column('order', sa.INTEGER(), primary_key=False, nullable=False),
+        sa.Column('stop_point_id', sa.BIGINT(), primary_key=False, nullable=False),
         sa.Column(
             'shape_from_prev',
-            Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False),
+            ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False),
             primary_key=False,
         ),
         sa.ForeignKeyConstraint(

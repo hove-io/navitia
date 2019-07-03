@@ -291,6 +291,8 @@ class Instance(db.Model):  # type: ignore
 
     import_ntfs_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
+    admins_from_cities_db = db.Column(db.Boolean, default=False, nullable=False)
+
     # ============================================================
     # params for jormungandr
     # ============================================================
@@ -339,6 +341,8 @@ class Instance(db.Model):  # type: ignore
     min_bss = db.Column(db.Integer, default=default_values.min_bss, nullable=False)
 
     min_car = db.Column(db.Integer, default=default_values.min_car, nullable=False)
+
+    min_taxi = db.Column(db.Integer, default=default_values.min_taxi, nullable=False)
 
     max_duration = db.Column(
         db.Integer, default=default_values.max_duration, nullable=False, server_default='86400'

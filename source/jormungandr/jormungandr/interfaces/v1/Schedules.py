@@ -41,6 +41,7 @@ from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
+from jormungandr.interfaces.common import split_uri
 from flask_restful.inputs import natural
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
@@ -161,6 +162,15 @@ class Schedules(ResourceUri, ResourceUtc):
     def options(self, **kwargs):
         return self.api_description(**kwargs)
 
+    def _get_default_freshness(self):
+        # The data freshness depends on the endpoint
+        # for route_schedule, by default we want the base schedule
+        if self.endpoint == 'route_schedules':
+            return 'base_schedule'
+        # for stop_schedule and previous/next departure/arrival, we want the freshest data by default
+        else:
+            return 'realtime'
+
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 
@@ -189,7 +199,7 @@ class Schedules(ResourceUri, ResourceUtc):
                 self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
             self.collection = 'schedules'
-            args["filter"] = self.get_filter(uri.split("/"), args)
+            args["filter"] = self.get_filter(split_uri(uri), args)
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
 
@@ -198,9 +208,6 @@ class Schedules(ResourceUri, ResourceUtc):
             args['from_datetime'] = args['_current_datetime']
             if args["calendar"]:  # if we have a calendar, the dt is only used for sorting, so 00:00 is fine
                 args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)
-
-            if not args['data_freshness']:
-                args['data_freshness'] = 'realtime'
         elif not args.get('calendar'):
             # if a calendar is given all times will be given in local (because the calendar might span over dst)
             if args['from_datetime']:
@@ -208,7 +215,7 @@ class Schedules(ResourceUri, ResourceUtc):
             if args['until_datetime']:
                 args['until_datetime'] = self.convert_to_utc(args['until_datetime'])
 
-        # we save the original datetime for debuging purpose
+        # we save the original datetime for debugging purpose
         args['original_datetime'] = args['from_datetime']
         if args['from_datetime']:
             args['from_datetime'] = utils.date_to_timestamp(args['from_datetime'])
@@ -216,13 +223,7 @@ class Schedules(ResourceUri, ResourceUtc):
             args['until_datetime'] = utils.date_to_timestamp(args['until_datetime'])
 
         if not args['data_freshness']:
-            # The data freshness depends on the API
-            # for route_schedule, by default we want the base schedule
-            if self.endpoint == 'route_schedules':
-                args['data_freshness'] = 'base_schedule'
-            # for stop_schedule and previous/next departure/arrival, we want the freshest data by default
-            else:
-                args['data_freshness'] = 'realtime'
+            args['data_freshness'] = self._get_default_freshness()
 
         if not args["from_datetime"] and args["until_datetime"] and self.endpoint[:4] == "next":
             self.endpoint = "previous" + self.endpoint[4:]

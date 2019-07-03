@@ -67,7 +67,7 @@ But bare in mind, it requires python 3.6+ to run.
 
 Our pre-commit hooks are running [Clang-format](https://releases.llvm.org/6.0.0/tools/clang/docs/ClangFormat.html) to format our c++ codebase. You'll need version 6.0 in order to pass our CI.
 ```sh
-sudo apt  install clang-format-6.0
+sudo apt install clang-format-6.0
 ```
 
 In case you might want to run Clang-format on the entire codebase, you can do:

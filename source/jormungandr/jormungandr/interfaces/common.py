@@ -54,3 +54,14 @@ def handle_poi_infos(add_poi_info_param, bss_stands_param):
         add_poi_info_param.append("bss_stands")
 
     return any(value in add_poi_info_param for value in ['bss_stands', 'car_park'])
+
+
+def split_uri(uri):
+    """
+    Split uri into an output list
+    :param uri: concatenated uri params
+    :return: the splitted uri list
+    """
+    if not uri:
+        return []
+    return uri.strip('/').split('/')

@@ -105,6 +105,7 @@ def test_update_instances(create_instance):
         "min_bike": 40,
         "max_walking_duration_to_pt": 300,
         "min_car": 400,
+        "min_taxi": 263,
         "max_bike_duration_to_pt": 600,
         "scenario": "new_default",
         "bss_speed": 2.1,
@@ -291,6 +292,7 @@ def test_update_instances_with_invalid_scenario(create_instance):
         "min_bike": 40,
         "max_walking_duration_to_pt": 300,
         "min_car": 400,
+        "min_taxi": 263,
         "max_bike_duration_to_pt": 600,
         "max_duration_criteria": "duration",
         "scenario": "stif",
@@ -407,6 +409,16 @@ def test_equipments_instance_association(create_instance, default_equipments_con
     Note: the fixture 'default_equipments_config' defines 2 providers :'sytral' & 'sytral2'
     """
 
+    # 'Unknown' doesn't exist in db, return error message and no update performed
+    params = {'equipment_details_providers': ['Unknown']}
+
+    resp, status = api_put(
+        '/v0/instances/fr', data=json.dumps(params), content_type='application/json', check=False
+    )
+    assert status == 400
+    assert 'message' in resp
+    assert resp['message'] == "Couldn't set equipment providers - Provider 'Unknown' isn't present in db"
+
     # The equipments provider 'sytral' is associated to the instance 'fr'
     params = {'equipment_details_providers': ['sytral']}
 
@@ -423,9 +435,14 @@ def test_equipments_instance_association(create_instance, default_equipments_con
     assert len(resp['equipment_details_providers']) == 1
     assert resp['equipment_details_providers'][0]['id'] == 'sytral2'
 
-    # 'sytral3' doesn't exist in db, no provider is associated to the instance 'fr' after update
-    params = {'equipment_details_providers': ['sytral3']}
 
+def test_update_min_taxi(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['min_taxi'] == 4 * 60
+
+    params = {'min_taxi': 7 * 60}
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert 'equipment_details_providers' in resp
-    assert len(resp['equipment_details_providers']) == 0
+    assert resp['min_taxi'] == 7 * 60
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['min_taxi'] == 7 * 60

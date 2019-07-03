@@ -10,7 +10,8 @@ repos:
     -   id: trailing-whitespace
     -   id: check-ast
     -   id: check-merge-conflict
-    #-   id: flake8
+    -   id: flake8
+        language_version: python2.7
 -   repo: https://github.com/CanalTP/navitia-pre-commit
     rev: master
     hooks:
@@ -24,4 +25,6 @@ repos:
     hooks:
     -   id: mypy
         args: [--ignore-missing-imports, --py2]
-        language_version: python3.6
+        files: source
+        language_version: python3
+        exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py$

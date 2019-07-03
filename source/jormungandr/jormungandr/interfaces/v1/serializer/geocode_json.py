@@ -41,6 +41,7 @@ from jormungandr.interfaces.v1.serializer.base import (
     IntNestedPropertyField,
     value_by_path,
     BetaEndpointsSerializer,
+    DictGenericSerializer,
 )
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
@@ -222,6 +223,15 @@ class GeocodeAddressSerializer(PlacesCommonSerializer):
         return AddressSerializer(obj).data
 
 
+class LineSerializer(NestedDictGenericField):
+    code = StringNestedPropertyField(display_none=False, attr='code')
+    commercial_mode = DictGenericSerializer()
+    physical_modes = DictGenericSerializer(many=True)
+    network = DictGenericSerializer()
+    color = StringNestedPropertyField(display_none=False, attr='color')
+    text_color = StringNestedPropertyField(display_none=False, attr='text_color')
+
+
 class StopAreaSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -235,6 +245,7 @@ class StopAreaSerializer(serpy.DictSerializer):
     comment = jsonschema.MethodField(display_none=True)
     codes = NestedDictCodeField(attr='properties.geocoding.codes', many=True)
     properties = NestedPropertiesField(attr='properties.geocoding.properties', display_none=False)
+    lines = LineSerializer(attr='properties.geocoding.lines', many=True)
 
     def get_comment(self, obj):
         # To be compatible with old version, we create the "comment" field in addition.

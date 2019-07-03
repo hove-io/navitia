@@ -509,3 +509,38 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         # the pt journey is eliminated
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
+
+    def test_min_taxi(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&first_section_mode[]=walking"
+            + "&debug=true"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        # the taxi direct_path because it's duration in less than min_taxi default
+        taxi_direct = journeys[0]
+        assert 'deleted_because_too_short_heavy_mode_fallback' in taxi_direct['tags']
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&first_section_mode[]=walking"
+            + "&_min_taxi=652"
+            + "&debug=true"
+            + "&taxi_speed=0.15"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        taxi_fallback = next((j for j in response['journeys'] if "taxi" in j['tags']), None)
+        assert 'deleted_because_too_short_heavy_mode_fallback' in taxi_fallback['tags']

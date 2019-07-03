@@ -105,3 +105,6 @@ class Kraken(AbstractAutocomplete):
 
     def status(self):
         return {'class': self.__class__.__name__}
+
+    def is_handling_stop_points(self):
+        return True

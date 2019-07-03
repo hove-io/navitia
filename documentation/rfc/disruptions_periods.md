@@ -4,7 +4,7 @@ There are several periods in the disruptions model and they can be tricky to und
 
 ## Periods
 
-### production period 
+### production period
 The production period is global to a navitia coverage and is the validity period of the coverage's data.  
 This production period cannot exceed one year.
 
@@ -62,13 +62,13 @@ To understand a bit how those periods behave with the different query dates let'
 
 ```
 [-------------------------------------------------------------]                         production period
-                   
+
                                                 Impact
                                     <--------------------------------->                 publication period
-                   
+
                                                      (------------)                     application period
-                   
-                   
+
+
 ```
 
 ## now is before the impact's publication period
@@ -88,24 +88,24 @@ To understand a bit how those periods behave with the different query dates let'
 
 ### ptref
 
-do we show the impact ?      No 
+do we show the impact ?      No
 
 ### contextual api: /journeys, /stop_schedules
 
-do we show the impact ?      No 
+do we show the impact ?      No
 
 
 ## now is inside the impact's publication period but before the application period
 
 ```
 [------------------------------------------|-----------------------------------]        production period
-                                           |                                           
+                                           |  
                                            |     Impact
                                     <------|----------------------->                    publication period
-                                           |                                           
+                                           |  
                                            |          (------------)                    application period
-                                           |                                           
-                                          now                                           
+                                           |  
+                                          now  
 
 ```
 ### ptref
@@ -119,13 +119,13 @@ what is it's status ?        futur
 
 ```
 [------------------------------------------|------------------------------------]       production period
-                                           |                                           
+                                           |  
                                            |     Impact
                                     <------|----------------------->                    publication period
-                                           |                                           
+                                           |  
                                            |          (------------)                    application period
-                                           |                                           
-                                          now                                           
+                                           |  
+                                          now  
                                  {----}
                               action period
 
@@ -138,52 +138,52 @@ what is it's status ?        -
 
 ```
 [------------------------------------------|-----------------------------------]        production period
-                                           |                                           
+                                           |  
                                            |     Impact
                                     <------|----------------------->                    publication period
-                                           |                                           
+                                           |  
                                            |          (------------)                    application period
-                                           |                                           
-                                          now                                           
+                                           |  
+                                          now  
                                                    {----}
                                                action period
 
 ```
 do we show the impact ?      Yes
 
-what is it's status ?        futur 
+what is it's status ?        futur
 
 #### context is after the application period
 
 ```
 [------------------------------------------|-----------------------------------]        production period
-                                           |                                           
+                                           |  
                                            |     Impact
                                     <------|----------------------->                    publication period
-                                           |                                           
+                                           |  
                                            |          (------------)                    application period
-                                           |                                           
-                                          now                                           
+                                           |  
+                                          now  
                                                                        {----}
                                                                    action period
 
 ```
 do we show the impact ?      No
 
-what is it's status ?        - 
+what is it's status ?        -
 
 
 ## now is inside the impact's publication period and inside the application period
 
 ```
 [-----------------------------------------------------------|------------------]        production period
-                                                            |                          
-                                                Impact      |                         
+                                                            |  
+                                                Impact      |  
                                     <-----------------------|------>                    publication period
-                                                            |                          
+                                                            |  
                                                      (------|------)                    application period
-                                                            |                          
-                                                           now                          
+                                                            |  
+                                                           now  
 
 
 ```
@@ -198,13 +198,13 @@ what is it's status ?        Active
 
 ```
 [-----------------------------------------------------------|------------------]        production period
-                                                            |                          
-                                                Impact      |                         
+                                                            |  
+                                                Impact      |  
                                     <-----------------------|------>                    publication period
-                                                            |                          
+                                                            |  
                                                      (------|------)                    application period
-                                                            |                          
-                                                           now                          
+                                                            |  
+                                                           now  
                                         {----}
                                      action period
 
@@ -217,13 +217,13 @@ what is it's status ?        -
 
 ```
 [-----------------------------------------------------------|------------------]        production period
-                                                            |                          
-                                                Impact      |                         
+                                                            |  
+                                                Impact      |  
                                     <-----------------------|------>                    publication period
-                                                            |                          
+                                                            |  
                                                      (------|------)                    application period
-                                                            |                          
-                                                           now                          
+                                                            |  
+                                                           now  
                                                                 {----}
                                                             action period
 
@@ -236,13 +236,13 @@ what is it's status ?        Active
 
 ```
 [-----------------------------------------------------------|------------------]        production period
-                                                            |                          
-                                                Impact      |                         
+                                                            |  
+                                                Impact      |  
                                     <-----------------------|------>                    publication period
-                                                            |                          
+                                                            |  
                                                      (------|------)                    application period
-                                                            |                          
-                                                           now                          
+                                                            |  
+                                                           now  
                                                                       {----}
                                                                   action period
 

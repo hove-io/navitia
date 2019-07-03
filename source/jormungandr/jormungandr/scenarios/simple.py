@@ -37,6 +37,7 @@ from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios.utils import updated_common_journey_request_with_default
+from jormungandr.exceptions import UnknownObject
 
 
 def get_pb_data_freshness(request):
@@ -155,7 +156,7 @@ class Scenario(object):
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
-                req.traffic_reports.forbidden_uris.append(forbidden_uri)
+                req.line_reports.forbidden_uris.append(forbidden_uri)
 
         if request['since']:
             req.line_reports.since_datetime = request['since']
@@ -185,9 +186,24 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        return autocomplete.get_by_uri(
-            uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
-        )
+        try:
+            return autocomplete.get_by_uri(
+                uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+            )
+        except UnknownObject as e:
+            # the autocomplete have not found anything
+            # We'll check if we can find another autocomplete system that explictly handle stop_points
+            # because for the moment mimir does not have stoppoints, but kraken do
+            for autocomplete_system in instance.stop_point_fallbacks():
+                if autocomplete_system == autocomplete:
+                    continue
+                res = autocomplete_system.get_by_uri(
+                    uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+                )
+                if res.get("places"):
+                    return res
+            # we raise the initial exception
+            raise e
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()
