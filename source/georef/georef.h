@@ -225,7 +225,7 @@ struct GeoRef {
     autocomplete::Autocomplete<unsigned int> fl_poi =
         autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::POI);
 
-    // We creat one proximity list for each mode
+    // We create one proximity list for each mode
     proximitylist::ProximityList<vertex_t> pl_walking;
     proximitylist::ProximityList<vertex_t> pl_bike;
     proximitylist::ProximityList<vertex_t> pl_car;

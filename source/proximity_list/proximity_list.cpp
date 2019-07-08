@@ -34,7 +34,7 @@ static float search_radius_correction_factor(const double& radius) {
     return radius < GeographicalCoord::EARTH_RADIUS_IN_METERS * 0.01
                ? 1.f
                : 2 * GeographicalCoord::EARTH_RADIUS_IN_METERS
-                     * asin(radius / (2.f * GeographicalCoord::EARTH_RADIUS_IN_METERS)) / radius;
+                     * asin(radius / (2. * GeographicalCoord::EARTH_RADIUS_IN_METERS)) / radius;
 }
 
 template <class T>
@@ -117,7 +117,7 @@ static int radius_search(const std::shared_ptr<index_t>& NN_index,
 
     float factor = search_radius_correction_factor(radius);
     int nb_found = NN_index->radiusSearch(flann::Matrix<float>{&query[0], 1, 3}, indices, distances,
-                                          pow(radius * factor, 2), search_param);
+                                          pow(radius * static_cast<double>(factor), 2), search_param);
 
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"),
                     "" << nb_found << " point found for the coord: " << coord.lon() << " " << coord.lat());
@@ -150,9 +150,8 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double r
     return make_result<T>(coord, items, indices_data, distances_data, nb_found, IndexOnly{});
 }
 
-template class ProximityList<unsigned int>;
-
-template class ProximityList<unsigned long>;
+template struct ProximityList<unsigned int>;
+template struct ProximityList<unsigned long>;
 
 }  // namespace proximitylist
 }  // namespace navitia

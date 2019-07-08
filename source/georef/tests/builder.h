@@ -47,7 +47,7 @@ struct GraphBuilder {
     void init() {
         geo_ref.init();
         geo_ref.build_proximity_list();
-    };
+    }
 
     /// upsert a node
     GraphBuilder& add_vertex(std::string node_name, double x, double y);
