@@ -673,8 +673,8 @@ class TestDisruptions(AbstractTestFixture):
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
-        # 5 lines affected by disruptions in this response: A,B,C,D,M
-        assert len(line_reports) == 5
+        # 6 lines affected by disruptions in this response: A,B,C,D,M,PM
+        assert len(line_reports) == 6
 
         response = self.query_region("line_reports?_current_datetime=20120801T000000&forbidden_uris[]=M")
         line_reports = get_not_null(response, 'line_reports')
