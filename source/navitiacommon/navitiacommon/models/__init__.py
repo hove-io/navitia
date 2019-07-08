@@ -262,6 +262,7 @@ associate_instance_equipments = db.Table(
 # We need that here for the foreign keys in instance
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 
+
 class Instance(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
