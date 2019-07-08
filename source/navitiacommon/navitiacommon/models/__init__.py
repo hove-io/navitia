@@ -259,6 +259,8 @@ associate_instance_equipments = db.Table(
     db.PrimaryKeyConstraint('instance_id', 'equipments_id', name='instance_equipments_pk'),
 )
 
+# We need that here for the foreign keys in instance
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 
 class Instance(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
@@ -877,4 +879,3 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 # import at the end to prevent circular dependencies
 from navitiacommon.models.bss_provider import BssProvider
 from navitiacommon.models.equipments_providers import EquipmentsProvider
-from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
