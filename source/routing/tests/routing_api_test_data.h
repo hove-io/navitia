@@ -281,6 +281,15 @@ struct routing_api_data {
         way->add_house_number(navitia::georef::HouseNumber(T.lon(), T.lat(), 1));
         b.data->geo_ref->ways.push_back(way);
 
+        way = new navitia::georef::Way();
+        way->name = "rue ts Entrée/Sortie";  // T->S
+        way->idx = 15;
+        way->way_type = "rue";
+        way->visible = false;
+        way->admin_list.push_back(admin);
+        way->add_house_number(navitia::georef::HouseNumber(T.lon(), T.lat(), 1));
+        b.data->geo_ref->ways.push_back(way);
+
         // A->B
         add_edges(0, *b.data->geo_ref, AA, BB, distance_ab, navitia::type::Mode_e::Walking);
         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
