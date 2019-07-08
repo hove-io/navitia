@@ -27,42 +27,14 @@ IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-#include "type/stop_area.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/serialization.h"
-#include "type/stop_point.h"
-#include "georef/adminref.h"
+#include "type/comment_container.h"
+#include "type/stop_time.h"
 
 namespace navitia {
 namespace type {
 
-template <class Archive>
-void StopArea::serialize(Archive& ar, const unsigned int) {
-    ar& idx& label& uri& name& coord& stop_point_list& admin_list& _properties& wheelchair_boarding& impacts& visible&
-        timezone;
-}
-SERIALIZABLE(StopArea)
-
-bool StopArea::operator<(const StopArea& other) const {
-    if (name != other.name) {
-        return name < other.name;
-    }
-    return uri < other.uri;
-}
-
-Indexes StopArea::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            return indexes(this->stop_point_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-
-        default:
-            break;
-    }
-    return result;
+const Comments::stop_time_key Comments::get_as_key(const navitia::type::StopTime& st) const {
+    return std::make_pair(st.vehicle_journey, st.order());
 }
 
 }  // namespace type

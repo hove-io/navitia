@@ -28,11 +28,11 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/datetime.h"
-#include "type/message.h"
-#include "type/meta_data.h"
 #include "type/type_utils.h"
+#include "type/datetime.h"
+#include "type/meta_data.h"
 #include "utils/logger.h"
+#include "type/message.h"
 
 namespace nt = navitia::type;
 namespace bt = boost::posix_time;

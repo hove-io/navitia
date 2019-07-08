@@ -28,7 +28,9 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "type/stop_point.h"
-#include "type/type.h"
+#include "type/stop_area.h"
+#include "type/dataset.h"
+#include "type/connection.h"
 #include "type/pt_data.h"
 
 #include "type/serialization.h"

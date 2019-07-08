@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "type/type_interfaces.h"
 #include "type/message.h"
+#include "utils/functions.h"
 
 namespace navitia {
 namespace type {

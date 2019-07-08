@@ -28,9 +28,10 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "timezone_manager.h"
-#include "type.h"
-#include "meta_data.h"
+#include "type/validity_pattern.h"
+#include "type/meta_data.h"
 #include "utils/logger.h"
+#include "utils/exception.h"
 
 namespace navitia {
 namespace type {
