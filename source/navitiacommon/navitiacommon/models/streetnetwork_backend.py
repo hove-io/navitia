@@ -36,6 +36,7 @@ from navitiacommon.models import db, TimestampMixin
 
 
 class StreetNetworkBackend(db.Model, TimestampMixin):  # type: ignore
+    __tablename__ = 'streetnetwork_backend'
     id = db.Column(db.Text, primary_key=True)
     klass = db.Column(db.Text, unique=False, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False, default=False)
@@ -47,7 +48,7 @@ class StreetNetworkBackend(db.Model, TimestampMixin):  # type: ignore
             self.from_json(json)
 
     def from_json(self, json):
-        self.klass = json['class']
+        self.klass = json['klass']
         self.args = json['args']
         self.discarded = json['discarded'] if 'discarded' in json else self.discarded
 

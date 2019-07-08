@@ -32,21 +32,21 @@ def upgrade():
     )
 
     # These are the default configurations
-    kraken = {'id': 'kraken', 'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
+    kraken = {'id': 'kraken', 'klass': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
     ridesharingKraken = {
         'id': 'ridesharingKraken',
-        'class': 'jormungandr.street_network.Ridesharing',
+        'klass': 'jormungandr.street_network.Ridesharing',
         'args': {'street_network': kraken},
     }
     taxiKraken = {
         'id': 'taxiKraken',
-        'class': 'jormungandr.street_network.Taxi',
+        'klass': 'jormungandr.street_network.Taxi',
         'args': {'street_network': kraken},
     }
 
     for value in [kraken, ridesharingKraken, taxiKraken]:
         query = "INSERT INTO streetnetwork_backend (id, klass, args) VALUES ('{}','{}', '{}')".format(
-            value['id'], value['class'], json.dumps(value['args'])
+            value['id'], value['klass'], json.dumps(value['args'])
         )
         op.execute(query)
 
