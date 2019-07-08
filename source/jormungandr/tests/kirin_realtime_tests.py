@@ -1005,6 +1005,110 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinSchedulesNewStopTimeInBetween(MockKirinDisruptionsFixture):
+    def test_schedules_add_one_stop_time(self):
+        """
+        Checking that when a stop is added on a trip, /departures and /stop_schedules are updated
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+
+        base_query = 'stop_areas/stopC/{api}?from_datetime={dt}&_current_datetime={dt}&data_freshness={df}'
+
+        departures = self.query_region(base_query.format(api='departures', dt='20120614T080100', df='realtime'))
+        assert len(departures['departures']) == 0
+
+        stop_schedules = self.query_region(
+            base_query.format(api='stop_schedules', dt='20120614T080100', df='realtime')
+        )
+        len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['display_informations']['label'] == '1D'
+        assert not stop_schedules['stop_schedules'][0]['date_times']
+
+        # New disruption with a new stop_time in between B and A of the VJ = vjA
+        self.send_mock(
+            "vjA",
+            "20120614",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080330"),
+                    departure=tstamp("20120614T080331"),
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120614T080400"),
+                    departure=tstamp("20120614T080400"),
+                    arrival_delay=3 * 60 + 58,
+                    departure_delay=3 * 60 + 58,
+                ),
+            ],
+            disruption_id='vjA_delayed_with_new_stop_time',
+            effect='modified',
+        )
+
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert len(disruptions_before['disruptions']) + 1 == len(disruptions_after['disruptions'])
+        assert has_the_disruption(disruptions_after, 'vjA_delayed_with_new_stop_time')
+
+        # still nothing for base_schedule
+        departures = self.query_region(
+            base_query.format(api='departures', dt='20120614T080100', df='base_schedule')
+        )
+        assert len(departures['departures']) == 0
+        stop_schedules = self.query_region(
+            base_query.format(api='stop_schedules', dt='20120614T080100', df='base_schedule')
+        )
+        len(stop_schedules['stop_schedules']) == 2  # a new route is linked (not used in base_schedule)
+        assert not stop_schedules['stop_schedules'][0]['date_times']
+        assert not stop_schedules['stop_schedules'][1]['date_times']
+
+        # departures updated in realtime
+        departures = self.query_region(base_query.format(api='departures', dt='20120614T080100', df='realtime'))
+        assert len(departures['departures']) == 1
+        assert departures['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
+        assert (
+            departures['departures'][0]['stop_date_time']['arrival_date_time'] == '20120614T080330'
+        )  # new stop
+        assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080331'
+        assert 'vjA_delayed_with_new_stop_time' in [
+            l['id'] for l in departures['departures'][0]['display_informations']['links']
+        ]  # link to disruption
+        assert 'vjA_delayed_with_new_stop_time' in [
+            d['id'] for d in departures['disruptions']
+        ]  # disruption in collection
+
+        # stop_schedules updated in realtime
+        stop_schedules = self.query_region(
+            base_query.format(api='stop_schedules', dt='20120614T080100', df='realtime')
+        )
+        len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][1]['display_informations']['label'] == '1D'
+        assert not stop_schedules['stop_schedules'][1]['date_times']  # still no departure on other route
+        assert stop_schedules['stop_schedules'][0]['display_informations']['label'] == '1A'
+        assert stop_schedules['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+        assert (
+            stop_schedules['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080331'
+        )  # new departure
+        assert 'vjA_delayed_with_new_stop_time' in [
+            l['id'] for l in stop_schedules['stop_schedules'][0]['date_times'][0]['links']
+        ]  # link to disruption
+        assert 'vjA_delayed_with_new_stop_time' in [
+            d['id'] for d in departures['disruptions']
+        ]  # disruption in collection
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
     def test_add_modify_and_delete_one_stop_time(self):
         """
@@ -1100,7 +1204,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
                 ),
             ],
             disruption_id='vjA_delayed_with_new_stop_time',
-            effect='detour',
+            effect='modified',
         )
 
         # Verify disruptions
@@ -1108,7 +1212,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
         assert len(disrupts['disruptions']) == 13
         assert has_the_disruption(disrupts, 'vjA_delayed_with_new_stop_time')
         last_disrupt = disrupts['disruptions'][-1]
-        assert last_disrupt['severity']['effect'] == 'DETOUR'
+        assert last_disrupt['severity']['effect'] == 'MODIFIED_SERVICE'
 
         # the journey has the new stop_time in its section of public_transport
         response = self.query_region(sub_query + "&data_freshness=realtime&datetime=20120614T080200")
