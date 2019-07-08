@@ -710,64 +710,52 @@ class Instance(flask_restful.Resource):
 
 
 class User(flask_restful.Resource):
-    def _get(self, user_id, version):
+    def _get_args(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'disable_geojson', type=inputs.boolean, default=True, help='remove geojson from the response'
         )
         if user_id:
-            args = parser.parse_args()
-            g.disable_geojson = args['disable_geojson']
-            user = models.User.query.get_or_404(user_id)
+            return parser
 
-            return marshal(user, user_fields_full), None
+        parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
+        parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
+        parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
+        parser.add_argument('end_point_id', type=int)
+        parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
+        return parser
+
+    def _get_user_by_id(self, user_id):
+        return models.User.query.get_or_404(user_id)
+
+    def _get_user_by_keys(self, keys):
+        logging.debug(args['key'])
+        return models.User.get_from_token(keys, datetime.now())
+
+    def _get_all_users(self, args):
+        del args['disable_geojson']
+        # dict comprehension would be better, but it's not in python 2.6
+        filter_params = dict((k, v) for k, v in args.items() if v)
+
+        if filter_params:
+            users = models.User.query.filter_by(**filter_params).all()
+            return marshal(users, user_fields)
         else:
-            parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
-            parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
-            parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
-            parser.add_argument('end_point_id', type=int)
-            parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
-            parser.add_argument('page', type=int, required=False, default=1)
+            users = models.User.query.all()
+            return marshal(users, user_fields)
 
-            args = parser.parse_args()
-            g.disable_geojson = args['disable_geojson']
-
+    def get(self, user_id=None):
+        args = self._get_args(user_id).parse_args()
+        g.disable_geojson = args['disable_geojson']
+        if user_id:
+            return marshal(self._get_user_by_id(user_id), user_fields_full)
+        else:
             if args['key']:
-                logging.debug(args['key'])
-                users = models.User.get_from_token(args['key'], datetime.now())
-                return marshal(users, user_fields), None
+                return marshal(self._get_user_by_keys(args['key']), user_fields)
             else:
-                del args['disable_geojson']
-                # dict comprehension would be better, but it's not in python 2.6
-                filter_params = dict((k, v) for k, v in args.items() if v and k != 'page')
+                return self._get_all_users(args)
 
-            if version == 1:
-                pagination = models.User.query.filter_by(**filter_params).paginate(
-                    args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
-                )
-                pagination_json = {
-                    'current_page': pagination.page,
-                    'items_per_page': pagination.per_page,
-                    'total_items': pagination.total,
-                }
-                if pagination.has_next:
-                    pagination_json['next'] = url_for(
-                        request.endpoint, version=version, page=pagination.next_num
-                    )
-                return marshal(pagination.items, user_fields), pagination_json
-            else:
-                return marshal(models.User.query.filter_by(**filter_params).all(), user_fields), None
-
-    def get(self, user_id=None, version=0):
-        users, pagination = self._get(user_id, version)
-        if version == 1:
-            resp_v1 = {'users': users}
-            if pagination:
-                resp_v1['pagination'] = pagination
-            return resp_v1
-        return users
-
-    def post(self, version=0):
+    def post(self):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -853,17 +841,14 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "create_user")
 
-            resp = marshal(user, user_fields_full)
-            if version == 1:
-                return {'user': resp}
-            return resp
+            return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, user_id, version=0):
+    def put(self, user_id):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -962,17 +947,14 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "update_user", last_login)
 
-            resp = marshal(user, user_fields_full)
-            if version == 1:
-                return {'user': resp}
-            return resp
+            return marshal(user, user_fields_full)
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self, user_id, version=0):
+    def delete(self, user_id):
         user = models.User.query.get_or_404(user_id)
         try:
             db.session.delete(user)
@@ -985,6 +967,42 @@ class User(flask_restful.Resource):
             logging.exception("fail")
             raise
         return {}, 204
+
+
+class UserV1(User):
+    def _get_args(self, user_id):
+        parser = super(UserV1, self)._get_args(user_id)
+        parser.add_argument('page', type=int, required=False, default=1)
+        return parser
+
+    def _get_all_users(self, args):
+        del args['disable_geojson']
+        # dict comprehension would be better, but it's not in python 2.6
+        filter_params = dict((k, v) for k, v in args.items() if v and k != 'page')
+
+        pagination = models.User.query.filter_by(**filter_params).paginate(
+            args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+        )
+        pagination_json = {
+            'current_page': pagination.page,
+            'items_per_page': pagination.per_page,
+            'total_items': pagination.total,
+        }
+        if pagination.has_next:
+            pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
+        return marshal(pagination.items, user_fields), pagination_json
+
+    def get(self, user_id=None):
+        resp = super(UserV1, self).get(user_id)
+        if type(resp) == tuple:
+            return {'users': resp[0], 'pagination': resp[1]}
+        return {'user': resp}
+
+    def put(self, user_id):
+        return {'user': super(UserV1, self).put(user_id)}
+
+    def post(self):
+        return {'user': super(UserV1, self).post()}
 
 
 class Key(flask_restful.Resource):
@@ -1945,7 +1963,7 @@ class BssProvider(flask_restful.Resource):
 
 class EquipmentsProvider(flask_restful.Resource):
     @marshal_with(equipment_provider_list_fields)
-    def get(self, version=0, id=None):
+    def get(self, id=None):
         if id:
             try:
                 return {'equipments_providers': [models.EquipmentsProvider.find_by_id(id)]}
@@ -1954,7 +1972,7 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
-    def put(self, version=0, id=None):
+    def put(self, id=None):
         """
         Create or update an equipment provider in db
         """
@@ -1996,7 +2014,7 @@ class EquipmentsProvider(flask_restful.Resource):
             abort(400, status="error", message=str(ex))
         return message, status
 
-    def delete(self, version=0, id=None):
+    def delete(self, id=None):
         """
         Delete an equipment provider in db, i.e. set parameter DISCARDED to TRUE
         """
