@@ -73,8 +73,11 @@ class Api(flask_restful.Resource):
     def __init__(self):
         pass
 
-    def get(self):
-        return marshal(models.Api.query.all(), api_fields)
+    def get(self, version=0):
+        resp = marshal(models.Api.query.all(), api_fields)
+        if version == 1:
+            return {'api': resp}
+        return resp
 
 
 class Index(flask_restful.Resource):
@@ -255,7 +258,7 @@ class Instance(flask_restful.Resource):
         pass
 
     @marshal_with(instance_fields)
-    def get(self, id=None, name=None):
+    def _get(self, id, name):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'is_free',
@@ -275,7 +278,12 @@ class Instance(flask_restful.Resource):
         else:
             return models.Instance.query_existing().all()
 
-    def delete(self, id=None, name=None):
+    def get(self, version=0, id=None, name=None):
+        if version == 1:
+            return {'instances': self._get(id, name)}
+        return self._get(id, name)
+
+    def delete(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
 
         try:
@@ -287,7 +295,7 @@ class Instance(flask_restful.Resource):
 
         return marshal(instance, instance_fields)
 
-    def put(self, id=None, name=None):
+    def put(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
 
         parser = reqparse.RequestParser()
@@ -702,7 +710,7 @@ class Instance(flask_restful.Resource):
 
 
 class User(flask_restful.Resource):
-    def get(self, user_id=None):
+    def _get(self, user_id, version):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'disable_geojson', type=inputs.boolean, default=True, help='remove geojson from the response'
@@ -712,13 +720,14 @@ class User(flask_restful.Resource):
             g.disable_geojson = args['disable_geojson']
             user = models.User.query.get_or_404(user_id)
 
-            return marshal(user, user_fields_full)
+            return marshal(user, user_fields_full), None
         else:
             parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
             parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
             parser.add_argument('end_point_id', type=int)
             parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
+            parser.add_argument('page', type=int, required=False, default=1)
 
             args = parser.parse_args()
             g.disable_geojson = args['disable_geojson']
@@ -726,20 +735,39 @@ class User(flask_restful.Resource):
             if args['key']:
                 logging.debug(args['key'])
                 users = models.User.get_from_token(args['key'], datetime.now())
-                return marshal(users, user_fields)
+                return marshal(users, user_fields), None
             else:
                 del args['disable_geojson']
                 # dict comprehension would be better, but it's not in python 2.6
-                filter_params = dict((k, v) for k, v in args.items() if v)
+                filter_params = dict((k, v) for k, v in args.items() if v and k != 'page')
 
-                if filter_params:
-                    users = models.User.query.filter_by(**filter_params).all()
-                    return marshal(users, user_fields)
-                else:
-                    users = models.User.query.all()
-                    return marshal(users, user_fields)
+            if version == 1:
+                pagination = models.User.query.filter_by(**filter_params).paginate(
+                    args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+                )
+                pagination_json = {
+                    'current_page': pagination.page,
+                    'items_per_page': pagination.per_page,
+                    'total_items': pagination.total,
+                }
+                if pagination.has_next:
+                    pagination_json['next'] = url_for(
+                        request.endpoint, version=version, page=pagination.next_num
+                    )
+                return marshal(pagination.items, user_fields), pagination_json
+            else:
+                return marshal(models.User.query.filter_by(**filter_params).all(), user_fields), None
 
-    def post(self):
+    def get(self, user_id=None, version=0):
+        users, pagination = self._get(user_id, version)
+        if version == 1:
+            resp_v1 = {'users': users}
+            if pagination:
+                resp_v1['pagination'] = pagination
+            return resp_v1
+        return users
+
+    def post(self, version=0):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -793,7 +821,7 @@ class User(flask_restful.Resource):
             check_mx=current_app.config['EMAIL_CHECK_MX'],
             verify=current_app.config['EMAIL_CHECK_SMTP'],
         ):
-            return ({'error': 'email invalid'}, 400)
+            return {'error': 'email invalid'}, 400
 
         end_point = None
         if args['end_point_id']:
@@ -802,7 +830,7 @@ class User(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         if args['billing_plan_id']:
             billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
@@ -810,7 +838,7 @@ class User(flask_restful.Resource):
             billing_plan = models.BillingPlan.get_default(end_point)
 
         if not billing_plan:
-            return ({'error': 'billing plan doesn\'t exist'}, 400)
+            return {'error': 'billing plan doesn\'t exist'}, 400
 
         try:
             user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
@@ -825,14 +853,17 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "create_user")
 
-            return marshal(user, user_fields_full)
+            resp = marshal(user, user_fields_full)
+            if version == 1:
+                return {'user': resp}
+            return resp
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate user'}, 409)
+            return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, user_id):
+    def put(self, user_id, version=0):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -898,16 +929,15 @@ class User(flask_restful.Resource):
             check_mx=current_app.config['EMAIL_CHECK_MX'],
             verify=current_app.config['EMAIL_CHECK_SMTP'],
         ):
-            return ({'error': 'email invalid'}, 400)
+            return {'error': 'email invalid'}, 400
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
-        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
-
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
+        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
         if not billing_plan:
-            return ({'error': 'billing_plan doesn\'t exist'}, 400)
+            return {'error': 'billing_plan doesn\'t exist'}, 400
 
         # If the user gives the empty object, we don't change the
         # shape. This is because the empty object can be outputed by
@@ -932,14 +962,17 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "update_user", last_login)
 
-            return marshal(user, user_fields_full)
+            resp = marshal(user, user_fields_full)
+            if version == 1:
+                return {'user': resp}
+            return resp
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate user'}, 409)  # Conflict
+            return {'error': 'duplicate user'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self, user_id):
+    def delete(self, user_id, version=0):
         user = models.User.query.get_or_404(user_id)
         try:
             db.session.delete(user)
@@ -951,23 +984,25 @@ class User(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class Key(flask_restful.Resource):
     def __init__(self):
         pass
 
-    @marshal_with(key_fields)
-    def get(self, user_id, key_id=None):
+    def get(self, user_id, key_id=None, version=0):
         try:
-            return models.User.query.get_or_404(user_id).keys.all()
+            keys = models.User.query.get_or_404(user_id).keys.all()
         except Exception:
             logging.exception("fail")
             raise
+        resp = marshal(keys, key_fields)
+        if version == 1:
+            return {'keys': resp}
+        return resp
 
-    @marshal_with(user_fields_full)
-    def post(self, user_id):
+    def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'valid_until',
@@ -991,10 +1026,12 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        resp = marshal(user, user_fields_full)
+        if version == 1:
+            return {'user': resp}
+        return resp
 
-    @marshal_with(user_fields_full)
-    def delete(self, user_id, key_id):
+    def delete(self, user_id, key_id, version=0):
         user = models.User.query.get_or_404(user_id)
         try:
             key = user.keys.filter_by(id=key_id).first()
@@ -1005,10 +1042,11 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        if version == 1:
+            return {'user': marshal(user, user_fields_full)}
+        return marshal(user, user_fields_full)
 
-    @marshal_with(user_fields_full)
-    def put(self, user_id, key_id):
+    def put(self, user_id, key_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'valid_until',
@@ -1037,14 +1075,17 @@ class Key(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return user
+        resp = marshal(user, user_fields_full)
+        if version == 1:
+            return {'user': resp}
+        return resp
 
 
 class Authorization(flask_restful.Resource):
     def __init__(self):
         pass
 
-    def delete(self, user_id):
+    def delete(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
@@ -1069,9 +1110,12 @@ class Authorization(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(user, user_fields_full)
+        resp = marshal(user, user_fields_full)
+        if version == 1:
+            return {'user': resp}
+        return resp
 
-    def post(self, user_id):
+    def post(self, user_id, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
@@ -1094,11 +1138,14 @@ class Authorization(flask_restful.Resource):
             db.session.add(authorization)
             db.session.commit()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate entry'}, 409)
+            return {'error': 'duplicate entry'}, 409
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(user, user_fields_full)
+        resp = marshal(user, user_fields_full)
+        if version == 1:
+            return {'user': resp}
+        return resp
 
 
 class EndPoint(flask_restful.Resource):
@@ -1898,7 +1945,7 @@ class BssProvider(flask_restful.Resource):
 
 class EquipmentsProvider(flask_restful.Resource):
     @marshal_with(equipment_provider_list_fields)
-    def get(self, id=None):
+    def get(self, version=0, id=None):
         if id:
             try:
                 return {'equipments_providers': [models.EquipmentsProvider.find_by_id(id)]}
@@ -1907,7 +1954,7 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
-    def put(self, id=None):
+    def put(self, version=0, id=None):
         """
         Create or update an equipment provider in db
         """
@@ -1949,7 +1996,7 @@ class EquipmentsProvider(flask_restful.Resource):
             abort(400, status="error", message=str(ex))
         return message, status
 
-    def delete(self, id=None):
+    def delete(self, version=0, id=None):
         """
         Delete an equipment provider in db, i.e. set parameter DISCARDED to TRUE
         """

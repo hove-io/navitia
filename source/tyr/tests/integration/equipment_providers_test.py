@@ -95,7 +95,7 @@ def test_equipments_provider_put(default_equipments_config):
 
     # Create new provider
     new_provider = {
-        'class': 'jormungandr.equipments.sytral.SytralProvider',
+        'klass': 'jormungandr.equipments.sytral.SytralProvider',
         'args': {'url': 'sytral3.url', 'fail_max': 5, 'timeout': 1},
     }
     resp, status = api_put(
@@ -165,13 +165,13 @@ def test_equipments_provider_schema():
         assert 'status' in resp
         assert resp['status'] == "invalid data"
 
-    # 'class' is missing
+    # 'klass' is missing
     corrupted_provider = {'args': {'url': 'sytral.url', 'fail_max': 5, 'timeout': 1}}
-    send_and_check('sytral', corrupted_provider, 'class')
+    send_and_check('sytral', corrupted_provider, 'klass')
 
     # args['url'] is missing
     corrupted_provider = {
-        'class': 'jormungandr.equipments.sytral.SytralProvider',
+        'klass': 'jormungandr.equipments.sytral.SytralProvider',
         'key': 'sytral',
         'args': {'fail_max': 5, 'timeout': 1},
     }

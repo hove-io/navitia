@@ -47,7 +47,7 @@ class EquipmentsProvider(db.Model, TimestampMixin):  # type: ignore
             self.from_json(json)
 
     def from_json(self, json):
-        self.klass = json['class']
+        self.klass = json['klass']
         self.args = json['args']
         self.discarded = json['discarded'] if 'discarded' in json else self.discarded
 
