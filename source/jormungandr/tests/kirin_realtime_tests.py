@@ -801,7 +801,6 @@ MAIN_ROUTING_TEST_SETTING_NO_ADD = {
 MAIN_ROUTING_TEST_SETTING = deepcopy(MAIN_ROUTING_TEST_SETTING_NO_ADD)
 MAIN_ROUTING_TEST_SETTING['main_routing_test']['kraken_args'].append('--GENERAL.is_realtime_add_enabled=1')
 MAIN_ROUTING_TEST_SETTING['main_routing_test']['kraken_args'].append('--GENERAL.is_realtime_add_trip_enabled=1')
-BASIC_SCHEDULE_TEST_SETTING = {"basic_schedule_test": deepcopy(MAIN_ROUTING_TEST_SETTING['main_routing_test'])}
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -2596,7 +2595,7 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
-        # vjB circulates with departure at 23:57:00 and arrival at 00:01:00 the day after
+        # vjB circulates with departure at 23:55:00 and arrival at 00:06:00 the day after
         response = self.query_region(ba_15T23_journey_query)
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T000100'
@@ -2654,7 +2653,7 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
-        # vjB circulates with departure at 23:57:00 and arrival at 00:01:00 the day after
+        # vjB circulates with departure at 23:56:00 and arrival at 23:59:00 the same day
         response = self.query_region(ba_15T23_journey_query)
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T235600'

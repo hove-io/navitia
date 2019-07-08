@@ -56,7 +56,7 @@ MOCKED_INSTANCE_CONF = {
     },
 }
 
-INSTANCE_SYSTEM_RESPONSE = {
+INSTANT_SYSTEM_RESPONSE = {
     "total": 1,
     "journeys": [
         {
@@ -96,21 +96,21 @@ INSTANCE_SYSTEM_RESPONSE = {
 }
 
 
-def mock_instance_system(_, params):
-    return MockResponse(INSTANCE_SYSTEM_RESPONSE, 200)
+def mock_instant_system(_, params):
+    return MockResponse(INSTANT_SYSTEM_RESPONSE, 200)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_http_instance_system(monkeypatch):
+def mock_http_instant_system(monkeypatch):
     monkeypatch.setattr(
-        'jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service', mock_instance_system
+        'jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service', mock_instant_system
     )
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
+class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
     """
-    Integration test with Instace System
+    Integration test with Instant System
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
     """
 
