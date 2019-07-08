@@ -1520,3 +1520,10 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge) {
         BOOST_CHECK_EQUAL(elt.second, w.get_path(elt.first.val, false).duration);
     }
 }
+
+BOOST_AUTO_TEST_CASE(projection_data_not_found) {
+    ProjectionData proj;
+
+    BOOST_CHECK_THROW(proj[source_e], navitia::proximitylist::NotFound);
+    BOOST_CHECK_THROW(proj[target_e], navitia::proximitylist::NotFound);
+}
