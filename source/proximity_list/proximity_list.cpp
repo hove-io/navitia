@@ -150,6 +150,8 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double r
     return make_result<T>(coord, items, indices_data, distances_data, nb_found, IndexOnly{});
 }
 
+NotFound::~NotFound() noexcept {}
+
 template struct ProximityList<unsigned int>;
 template struct ProximityList<unsigned long>;
 

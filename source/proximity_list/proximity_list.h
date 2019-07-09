@@ -55,7 +55,7 @@ struct NotFound : public recoverable_exception {
     NotFound() = default;
     NotFound(const NotFound&) = default;
     NotFound& operator=(const NotFound&) = default;
-    virtual ~NotFound() noexcept {}
+    virtual ~NotFound() noexcept;
 };
 
 // find_within Dispatch Tag
