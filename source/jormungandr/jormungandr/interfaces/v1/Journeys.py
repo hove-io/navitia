@@ -329,7 +329,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "timeframe_duration",
             type=int,
-            dest="timeframe_duration",
             help="Minimum timeframe to search journeys.\n"
             "For example 'timeframe_duration=3600' will search for all "
             "interesting journeys departing within the next hour.\n"
