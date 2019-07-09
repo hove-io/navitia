@@ -447,8 +447,8 @@ class Journeys(JourneyCommon):
                 args['_max_successive_physical_mode'] = mod.max_successive_physical_mode
             if args.get('_final_line_filter') is None:
                 args['_final_line_filter'] = mod.final_line_filter
-            if args.get('_max_extra_second_pass') is None:
-                args['_max_extra_second_pass'] = mod.max_extra_second_pass
+            if args.get('max_extra_second_pass') is None:
+                args['max_extra_second_pass'] = mod.max_extra_second_pass
             if args.get('additional_time_after_first_section_taxi') is None:
                 args['additional_time_after_first_section_taxi'] = mod.additional_time_after_first_section_taxi
             if args.get('additional_time_before_last_section_taxi') is None:
