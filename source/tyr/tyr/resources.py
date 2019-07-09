@@ -279,9 +279,11 @@ class Instance(flask_restful.Resource):
             return models.Instance.query_existing().all()
 
     def get(self, version=0, id=None, name=None):
+        resp = self._get(id, name)
         if version == 1:
-            return {'instances': self._get(id, name)}
-        return self._get(id, name)
+            status_code = 404 if not resp else 200
+            return {'instances': resp}, status_code
+        return resp
 
     def delete(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
