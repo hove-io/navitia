@@ -34,9 +34,11 @@ from clingon import clingon
 import logging
 
 """
-Nav generator
+Eitri uses a set of binaries to extract data, load it into a database and extract it to a single file.
 
-from an input dir create a data.nav.lz4 with the data needed by kraken
+First, it uses every binaries "*2ed" to create data to load in the database.
+Then it uses "ed2nav" binary to extract that data from the database and create a single file ".nav.lz4".
+In the end, the file ".nav.lz4" is often used as input coverage data for Kraken.
 """
 
 logging.basicConfig(level=logging.DEBUG)
@@ -52,17 +54,16 @@ def eitri(
     add_pythonpath=[],
 ):
     """
-    Generate a data.nav.lz4 file
+    Generate a "data.nav.lz4" file.
 
-    :param data_dir: directory with data. if several dataset (osm/gtfs/...) are available, they need to be in separate directory
-    :param output_file: output data.nav.lz4 file path
-    :param cities_exec_path: optional, where to find the command 'cities'
-    :param import_cities: optional, cities files ex:france_boundaries.osm.pbf,
-                          if given, cities will be loaded
+    :param data_dir: the directory with all data. If several datasets ("*.osm", "*.gtfs", ...) are available, they need to be in separate directories
+    :param output_file: the output file path
+    :param ed_component_path: the folder path containing all "*2ed" and "ed2nav" binaries
+    :param cities_exec_path: the path to the binary "cities"
+    :param import_cities: the path to cities file (ex: france_boundaries.osm.pbf) to load
     """
 
-    # there is some problems with environment variables and cmake, so all args
-    # can be given through cli
+    # there is some problems with environment variables and cmake, so all args can be given through cli
     for p in add_pythonpath:
         sys.path.append(p)
 
