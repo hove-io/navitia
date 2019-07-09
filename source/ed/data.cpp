@@ -275,7 +275,6 @@ void Data::complete() {
     build_associated_calendar();
 
     shift_stop_times();
-    finalize_frequency();
 
     ::ed::normalize_uri(routes);
 
