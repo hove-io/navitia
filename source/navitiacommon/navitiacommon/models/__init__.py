@@ -259,6 +259,9 @@ associate_instance_equipments = db.Table(
     db.PrimaryKeyConstraint('instance_id', 'equipments_id', name='instance_equipments_pk'),
 )
 
+# We need that here for the foreign keys in instance
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
+
 
 class Instance(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
@@ -463,6 +466,42 @@ class Instance(db.Model):  # type: ignore
 
     equipment_details_providers = db.relationship(
         "EquipmentsProvider", secondary=associate_instance_equipments, backref="instances", lazy='joined'
+    )
+
+    # street_network_configurations
+    street_network_car = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_walking = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_bike = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+    street_network_bss = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_backend,
+    )
+
+    street_network_ridesharing = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.ridesharing_backend,
+    )
+    street_network_taxi = db.Column(
+        db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False, default=default_values.taxi_backend
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

@@ -142,6 +142,10 @@ max_taxi_direct_path_duration = 24 * 60 * 60
 
 max_ridesharing_direct_path_duration = 24 * 60 * 60
 
+street_network_backend = "kraken"
+taxi_backend = "taxiKraken"
+ridesharing_backend = "ridesharingKraken"
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
