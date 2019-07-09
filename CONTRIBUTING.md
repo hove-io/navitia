@@ -16,9 +16,13 @@ you may also run `make docker_test` for important contributions), and have a wee
 If you want to build navitia, please refer to the
 [installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
 
-You can install a full development environment with helping [scripts](https://github.com/CanalTP/navitia/tree/dev/scripts), depending on your OS.
+You can install a full development environment with helping
+[scripts](https://github.com/CanalTP/navitia/tree/dev/scripts), depending on your OS.
 
-Therefore, an [automated navitia script](https://github.com/canaltp/navitia/blob/dev/scripts/build_setup_and_run_navitia_demo.sh) is available to build, setup and run a navitia demo. It's needed as a prerequisite for a dev environment setup.
+Therefore, an
+[automated navitia script](https://github.com/canaltp/navitia/blob/dev/scripts/build_setup_and_run_navitia_demo.sh)
+is available to build, setup and run a navitia demo.
+It's needed as a prerequisite for a dev environment setup.
 Kraken is built into navitia_dir/build_release and all demo files are available in navitia_dir/run:
 ```
 navitia_dir/run/data.nav.lz4
@@ -61,7 +65,7 @@ pre-commit install
 
 Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/)
 You should enable the pre-commit git hook to make sure it's being run before commiting your changes, it's
-also the easiest way to run Black.
+also the easiest way to run Black.  
 Otherwise, to only update the files that you've changed, simply run:
 ```
 pre-commit run black

@@ -25,15 +25,15 @@ performs the following actions :
 
  - build kraken with cmake, make
  - download osm and ntfs (by default : Paris city in example)
- - load osm and ntfs into ed bdd
- - genrate data.nav.lz4 form bdd ed
+ - load OSM and NTFS into ed database
+ - generate data.nav.lz4 from ed database
  - create basic kraken configuration file and run
  - create basic jormun configuration files and run
 
 by default, ED database used :
-bdd name = navitia
-user     = navitia
-password = navitia
+database name  = navitia
+user           = navitia
+password       = navitia
 
 OPTIONS:
    -h        help

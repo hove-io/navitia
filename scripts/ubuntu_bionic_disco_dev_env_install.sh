@@ -2,10 +2,10 @@
 
 # ********************************************************************
 # Complete dev environment installation on Ubuntu bionic LTS.
-# Aftermath the installation, you'll can :
+# After the installation, you'll be able to :
 # - Compile kraken
 # - Run all integration ad Unit tests
-# - Run docker tests (tyr)
+# - Run docker (tyr + eitri) tests
 # - Run binaries to fill ed database (fusio2ed, osm2ed, ...)
 # - Run ed2nav binary to generate data.nav.lz4 form the ed database
 # - Run eitri (the docker method) to build data.nav.lz4 with your own NTFS and Osm files
@@ -142,7 +142,7 @@ echo ""
 echo "**********************************************"
 echo "* !!! WARNING !!!"
 echo "* You should probably log out or reboot because of docker."
-echo "* Please test if docker run correctly with :"
+echo "* Please test if docker runs correctly with :"
 echo "* docker run hello-world"
 echo "**********************************************"
 echo ""
@@ -151,8 +151,8 @@ echo "1. clone navitia"
 echo "$ git clone https://github.com/CanalTP/navitia.git"
 echo ""
 echo "for convenience reason, some submodule links are in ssh (easier to push)"
-echo "it is however thus mandatory for the user to have a github access"
-echo "Can change the ssh links to https with :"
+echo "it is thus mandatory for the user to have a github access"
+echo "However you can change the ssh links to https with :"
 echo "$ sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules"
 echo ""
 echo "2. compile navitia"
@@ -164,7 +164,7 @@ echo ""
 echo "3. install ED binaries [fusio2ed, ed2nav, ...] for eitri"
 echo "$ make install (as a super user)"
 echo "or"
-echo "create a sym link to recognize binaries"
+echo "add into your $PATH the binaries location"
 echo ""
 echo "4. run tests"
 echo "Please create your python virtualenv to launch tests with requirement_dev.txt"
