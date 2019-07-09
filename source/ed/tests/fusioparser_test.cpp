@@ -482,3 +482,38 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
     }
 }
+
+BOOST_AUTO_TEST_CASE(frequencies_tests) {
+    ed::Data data;
+    ed::connectors::FusioParser parser(ntfs_path);
+    parser.fill(data);
+    data.complete();  // complete() is called by fusio2ed
+
+    // trip_5 is composed of 4 stop_times.
+    // Check that inside fixtures/ed/ntfs/stop_times.txt
+    const auto& mvj = data.meta_vj_map["trip_5"];
+    // We split the vj in 2 parts because of the time change
+    BOOST_REQUIRE_EQUAL(mvj.theoric_vj.size(), 2);
+    const auto& vj = mvj.theoric_vj[0];
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(vj->name, "trip_5_dst_1");
+    BOOST_CHECK_EQUAL(vj->stop_time_list[0]->departure_time, "05:00:00"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list[0]->stop_point->uri, "SP:A");
+    BOOST_CHECK_EQUAL(vj->stop_time_list[1]->departure_time, "05:10:00"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list[1]->stop_point->uri, "SP:B");
+    BOOST_CHECK_EQUAL(vj->stop_time_list[2]->departure_time, "05:20:00"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list[2]->stop_point->uri, "SP:C");
+    BOOST_CHECK_EQUAL(vj->stop_time_list[3]->departure_time, "05:30:00"_t);
+    BOOST_CHECK_EQUAL(vj->stop_time_list[3]->stop_point->uri, "SP:D");
+    const auto& vj2 = mvj.theoric_vj[1];
+    BOOST_REQUIRE_EQUAL(vj2->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(vj2->name, "trip_5_dst_2");
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[0]->departure_time, "04:00:00"_t);
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[0]->stop_point->uri, "SP:A");
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[1]->departure_time, "04:10:00"_t);
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[1]->stop_point->uri, "SP:B");
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[2]->departure_time, "04:20:00"_t);
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[2]->stop_point->uri, "SP:C");
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[3]->departure_time, "04:30:00"_t);
+    BOOST_CHECK_EQUAL(vj2->stop_time_list[3]->stop_point->uri, "SP:D");
+}
