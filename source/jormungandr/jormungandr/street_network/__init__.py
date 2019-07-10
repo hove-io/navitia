@@ -31,8 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.street_network.street_network import StreetNetwork
-
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from jormungandr.street_network.asgard import Asgard
 from jormungandr.street_network.geovelo import Geovelo
 from jormungandr.street_network.here import Here
