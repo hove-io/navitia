@@ -57,7 +57,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         """Test to verify optimization of direct path calls
         """
         # Initialize counter value in the object MockKraken
-        sn_service = i_manager.instances['main_routing_test'].street_network_services[0]
+        sn_service = i_manager.instances['main_routing_test'].get_all_street_networks()[0]
         sn_service.direct_path_call_count = 0
         sn_service.routing_matrix_call_count = 0
         query = (
@@ -89,7 +89,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         """Test to verify optimization of direct path calls
         """
         # Initialize counter value in the object MockKraken
-        sn_service = i_manager.instances['main_routing_test'].street_network_services[0]
+        sn_service = i_manager.instances['main_routing_test'].get_all_street_networks()[0]
         sn_service.direct_path_call_count = 0
         sn_service.routing_matrix_call_count = 0
         query = (
