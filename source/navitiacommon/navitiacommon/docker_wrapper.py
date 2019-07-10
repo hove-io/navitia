@@ -39,11 +39,6 @@ from retrying import retry
 This module contains classes about Docker management.
 """
 
-# Postgres/PostGIS image
-POSTGIS_IMAGE = 'github.com/CanalTP/docker-postgis.git'
-POSTGIS_IMAGE_NAME = 'postgis:2.1'
-
-
 class DbParams(object):
     """
     Class to store and manipulate database parameters.
@@ -90,44 +85,47 @@ class DbParams(object):
         )
 
 
-class PostgresDocker(object):
+class DockerWrapper(object):
     """
     Class to launch a temporary docker with a PostgreSQL/PostGIS database.
     """
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(
+        self, image_name, dockerfile_path=None, dbname='postgres', dbuser='docker', dbpassword='docker'
+    ):
         """
         Constructor of PostgresDocker.
         """
+        # type: () -> None
         log = logging.getLogger(__name__)  # type: logging.Logger
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
         self.docker_api_client = docker.APIClient(base_url=base_url)
-
+        self.image_name = image_name
+        self.dockerfile_path = dockerfile_path
+        self.dbname = dbname
+        self.dbuser = dbuser
+        self.dbpassword = dbpassword
         log.info("Trying to build/update the docker image")
+
         try:
-            for build_output in self.docker_client.images.build(
-                path=POSTGIS_IMAGE, tag=POSTGIS_IMAGE_NAME, rm=True
-            ):
+            for build_output in self.docker_client.images.build(path=dockerfile_path, tag=image_name, rm=True):
                 log.debug(build_output)
         except docker.errors.APIError as e:
             if e.is_server_error():
                 log.warn("[docker server error] A server error occcured, maybe " "missing internet connection?")
                 log.warn("[docker server error] Details: {}".format(e))
                 log.warn(
-                    "[docker server error] Checking if '{}' docker image "
-                    "is already built".format(POSTGIS_IMAGE_NAME)
+                    "[docker server error] Checking if '{}' docker image " "is already built".format(image_name)
                 )
-                self.docker_client.images.get(POSTGIS_IMAGE_NAME)
+                self.docker_client.images.get(image_name)
                 log.warn(
-                    "[docker server error] Going on, as '{}' docker image "
-                    "is already built".format(POSTGIS_IMAGE_NAME)
+                    "[docker server error] Going on, as '{}' docker image " "is already built".format(image_name)
                 )
             else:
                 raise
 
-        self.container = self.docker_client.containers.create(POSTGIS_IMAGE_NAME)
+        self.container = self.docker_client.containers.create(image_name)
 
         log.info("docker id is {}".format(self.container.id))
 
@@ -188,3 +186,13 @@ class PostgresDocker(object):
             password=self.get_db_params().password,
             host=self.get_db_params().host,
         )
+
+
+def PostgisDocker():
+    return DockerWrapper(
+        image_name='postgis:2.1',
+        dockerfile_path='github.com/CanalTP/docker-postgis.git',
+        dbname='postgres',
+        dbuser='docker',
+        dbpassword='docker',
+    )
