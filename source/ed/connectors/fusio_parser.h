@@ -44,8 +44,6 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-static const int UNKNOWN_COLUMN = -1;
-
 struct FeedInfoFusioHandler : public GenericHandler {
     FeedInfoFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int feed_info_param_c, feed_info_value_c;
@@ -304,19 +302,13 @@ struct GridCalendarTripExceptionDatesFusioHandler : public GenericHandler {
 }  // namespace grid_calendar
 
 struct AdminStopAreaFusioHandler : public GenericHandler {
-    AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader)
-        : GenericHandler(gdata, reader), stop_id_is_present(true) {}
+    AdminStopAreaFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int admin_c, stop_area_c;
-    bool stop_id_is_present;
-
-    // temporaty map to have a StopArea by it's external code
-    std::unordered_map<std::string, ed::types::StopArea*> tmp_stop_area_map;
 
     std::unordered_map<std::string, ed::types::AdminStopArea*> admin_stop_area_map;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    // TODO : "stop_id" will becomme required, after the data team update (NAVP-1285)
-    const std::vector<std::string> required_headers() const { return {"admin_id"}; }
+    const std::vector<std::string> required_headers() const { return {"admin_id", "stop_id"}; }
 };
 
 struct CommentLinksFusioHandler : public GenericHandler {
