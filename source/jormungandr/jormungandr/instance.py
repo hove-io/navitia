@@ -83,34 +83,6 @@ def _init_g():
     g.instances_model = {}
 
 
-# For street network modes that are not set in the given config file,
-# we set kraken as their default engine
-def _set_default_street_network_config(street_network_configs):
-    if not isinstance(street_network_configs, list):
-        street_network_configs = []
-
-    kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
-    taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
-    ridesharing = {'class': 'jormungandr.street_network.Ridesharing', 'args': {'street_network': kraken}}
-
-    default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
-    # taxi mode's default class is changed to 'taxi' not kraken
-    default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
-    default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
-
-    modes_in_configs = set(
-        list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
-    )
-    modes_not_set = fm.all_fallback_modes - modes_in_configs
-
-    for mode in modes_not_set:
-        config = {"modes": [mode]}
-        config.update(default_sn_class[mode])
-        street_network_configs.append(copy.deepcopy(config))
-
-    return street_network_configs
-
-
 # TODO: use this helper function for all properties if possible
 # Warning: it breaks static type deduction
 def _make_property_getter(attr_name):

@@ -44,5 +44,36 @@ class StreetNetworkBackendManager(object):
         self._append_default_street_network_to_config()
         self._create_street_network_backends(instance)
 
+    # For street network modes that are not set in the given config file,
+    # we set kraken as their default engine
+    def _append_default_street_network_to_config(self):
+        if not isinstance(self.streetnetwork_backend_config, list):
+            self.streetnetwork_backend_config = []
+
+        kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
+        taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
+        ridesharing = {'class': 'jormungandr.street_network.Ridesharing', 'args': {'street_network': kraken}}
+
+        default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
+        # taxi mode's default class is changed to 'taxi' not kraken
+        default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
+        default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
+
+        modes_in_configs = set(
+            list(
+                itertools.chain.from_iterable(
+                    config.get('modes', []) for config in self.streetnetwork_backend_config
+                )
+            )
+        )
+        modes_not_set = fm.all_fallback_modes - modes_in_configs
+
+        for mode in modes_not_set:
+            config = {"modes": [mode]}
+            config.update(default_sn_class[mode])
+            self.streetnetwork_backend_config.append(copy.deepcopy(config))
+
+        return self.streetnetwork_backend_config
+
     def get_all_street_networks(self):
         return self._streetnetwork_backends
