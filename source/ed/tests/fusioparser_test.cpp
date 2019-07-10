@@ -442,43 +442,13 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(vj->accessible(has_vehicle_properties.vehicles()), false);
 }
 
-BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
-    // admin_stations.txt file contains "stop_id" and "station_id"
-    // Following the norm, we only read "stop_id"
-    {
-        ed::Data data;
-        ed::connectors::FusioParser parser(ntfs_path);
-        parser.fill(data);
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Arrêt A");
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
-    }
-
-    // admin_stations.txt file contains only "stop_id"
-    {
-        ed::Data data;
-        ed::connectors::FusioParser parser(ntfs_path + "_dst");
-        parser.fill(data);
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Brunoy-Wittlich");
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SCF:SP:SPOCENoctilien87976902");
-    }
-
-    // For retrocompatibity
-    // admin_stations.txt file contains only "station_id"
-    // TODO : to remove after the data team update, it will become useless (NAVP-1285)
-    {
-        ed::Data data;
-        ed::connectors::FusioParser parser(ntfs_path + "_v5");
-        parser.fill(data);
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
-        BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Arrêt A");
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
-    }
+BOOST_AUTO_TEST_CASE(admin_stations_tests) {
+    ed::Data data;
+    ed::connectors::FusioParser parser(ntfs_path);
+    parser.fill(data);
+    BOOST_REQUIRE_EQUAL(data.admin_stop_areas.size(), 1);
+    BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
+    BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
+    BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Arrêt A");
+    BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
 }
