@@ -345,13 +345,19 @@ def pb_del_if(l, pred):
 def create_object(configuration):
     """
     Create an object from a dict
-    The dict must contains a 'class' key with the class path of the class we want to create
+    The dict must contains a 'class' or 'klass' key with the class path of the class we want to create
     It can contains also an 'args' key with a dictionary of arguments to pass to the constructor
     """
-    class_path = configuration['class']
+    log = logging.getLogger(__name__)
+    class_path = configuration.get('class') or configuration.get('klass')
+    if class_path is None:
+        log.warn('impossible to build object, class_path is empty')
+        raise KeyError(
+            'impossible to build a StreetNetwork, missing mandatory field in configuration: class or klass'
+        )
+    
     kwargs = configuration.get('args', {})
 
-    log = logging.getLogger(__name__)
     try:
         if '.' not in class_path:
             log.warn('impossible to build object {}, wrongly formated class'.format(class_path))
