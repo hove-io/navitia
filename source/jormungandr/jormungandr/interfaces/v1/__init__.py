@@ -49,7 +49,7 @@ def add_common_status(response, instance):
         response['status']['realtime_proxies'].append(realtime_proxy.status())
 
     response['status']['street_networks'] = []
-    for sn in instance.street_network_services:
+    for sn in instance.get_all_street_networks():
         response['status']['street_networks'].append(sn.status())
 
     response['status']['ridesharing_services'] = []
