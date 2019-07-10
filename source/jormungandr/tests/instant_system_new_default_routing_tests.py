@@ -56,7 +56,7 @@ MOCKED_INSTANCE_CONF = {
     },
 }
 
-INSTANCE_SYSTEM_RESPONSE = {
+INSTANT_SYSTEM_RESPONSE = {
     "total": 1,
     "journeys": [
         {
@@ -96,21 +96,22 @@ INSTANCE_SYSTEM_RESPONSE = {
 }
 
 
-def mock_instance_system(_, params):
-    return MockResponse(INSTANCE_SYSTEM_RESPONSE, 200)
+def mock_instant_system(_, params):
+    return MockResponse(INSTANT_SYSTEM_RESPONSE, 200)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_http_instance_system(monkeypatch):
+def mock_http_instant_system(monkeypatch):
     monkeypatch.setattr(
-        'jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service', mock_instance_system
+        'jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service', mock_instant_system
     )
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
+class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
     """
-    Integration test with Instace System
+    Integration test with Instant System
+    Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
     """
 
     def test_basic_ride_sharing(self):
@@ -119,7 +120,9 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         """
         q = (
             "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
-            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='ridesharing', last='walking')
+            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM".format(
+                first='ridesharing', last='walking'
+            )
         )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)

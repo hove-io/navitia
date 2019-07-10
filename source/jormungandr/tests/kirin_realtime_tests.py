@@ -123,7 +123,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # we have 3 departures and 1 disruption (linked to line A departure)
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 1
-        assert len(departures['departures']) == 3
+        assert len(departures['departures']) == 4
 
         # A new disruption impacting vjA is created between 08:01:00 and 08:01:01
         self.send_mock("vjA", "20120614", 'canceled', disruption_id='disruption_bob')
@@ -181,14 +181,14 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # The disruption doesn't appear because the lines departing aren't impacted during the period
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 0
-        assert len(departures['departures']) == 2
+        assert len(departures['departures']) == 3
 
         # We still have 2 passages in base schedule, but we have the new disruption
         departures = self.query_region(
             "stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule"
         )
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 3
+        assert len(departures['departures']) == 4
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
@@ -262,12 +262,12 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # we have 3 departures and 1 disruption (linked to the first passage)
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 1
-        assert len(departures['departures']) == 3
+        assert len(departures['departures']) == 4
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 7
+        assert initial_nb_vehicle_journeys == 8
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
@@ -398,7 +398,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # we have one delayed departure
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 3
+        assert len(departures['departures']) == 4
         assert departures['departures'][1]['stop_date_time']['departure_date_time'] == '20120614T080225'
 
         # Same as realtime except the departure date time
@@ -406,7 +406,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             "stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule"
         )
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 3
+        assert len(departures['departures']) == 4
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         # We send again the same disruption
@@ -569,7 +569,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 7
+        assert initial_nb_vehicle_journeys == 8
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -966,7 +966,7 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
         assert nb_disruptions_before == 11
 
         vjs_before = self.query_region('vehicle_journeys')
-        assert len(vjs_before['vehicle_journeys']) == 7
+        assert len(vjs_before['vehicle_journeys']) == 8
 
         self.send_mock(
             "vjA",
@@ -1001,7 +1001,7 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
 
         vjs_after = self.query_region('vehicle_journeys')
         # we got a new vj due to the disruption, which means the disruption is handled correctly
-        assert len(vjs_after['vehicle_journeys']) == 8
+        assert len(vjs_after['vehicle_journeys']) == 9
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -2017,10 +2017,10 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         1. send a disruption with a physical_mode to update a trip
         2. check physical_mode of journey
         """
-        # we have 7 vehicle_jouneys
+        # we have 8 vehicle_jouneys
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 7
+        assert initial_nb_vehicle_journeys == 8
 
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)
@@ -2351,6 +2351,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         3. Update the disruption so that  departure station stop_point:stopB is replaced by stop_point:stopC
         with a delay so that there is no more pass midnight
         4. Verify disruption count, vehicle_journeys count and journey
+        Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journey
         """
         disruption_query = 'disruptions?_current _datetime={dt}'.format(dt='20120614T080000')
         initial_nb_disruptions = len(self.query_region(disruption_query)['disruptions'])
@@ -2360,7 +2361,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
 
         empty_query = (
             "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
-            "datetime={dt}&_current_datetime={dt}"
+            "datetime={dt}&_current_datetime={dt}&forbidden_uris[]=PM"
         )
 
         # Check journeys in realtime for 20120615(the day of the future disruption) from B to A
@@ -2433,7 +2434,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
         # vjB circulates with departure at 20120615T18:01:00 and arrival at 20120616T01:01:02
-        response = self.query_region(ba_15T18_journey_query)
+        response = self.query_region(ba_15T18_journey_query + '&forbidden_uris[]=PM')
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
@@ -2536,6 +2537,247 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['base_departure_date_time'] == '20120616T180100'
         assert response['journeys'][0]['sections'][0]['base_arrival_date_time'] == '20120616T180102'
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
+    def test_delay_on_base_pass_midnight_towards_next_day(self):
+        """
+        Relates to "test_cots_update_trip_with_delay_pass_midnight_on_first_station" in kirin
+        Test on a vehicle_journey with departure from stop_point:stopB at 23:55:00 and arrival
+        to stop_point:stopA at 00:01:00 the next day.
+        1. Verify disruption count, vehicle_journeys count and journey
+        2. Add a disruption with a delay = 2 minutes at first station (stop_point:stopB) so that
+        there is still pass midnight
+        3. Update the disruption with a delay = 6 minutes at first station  and delay = 5 minutes
+        at second station so that there is no more pass midnight and the departure is the day after
+        4. Update the disruption with a smaller delay on first station and advance on arrival station
+        so that there is no pass midnight and the departure is the same day as original (base_schedule)
+        """
+
+        def journey_base_schedule_for_day_before(resp):
+            assert resp['journeys'][0]['departure_date_time'] == '20120614T235500'
+            assert resp['journeys'][0]['arrival_date_time'] == '20120615T000100'
+            assert resp['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+            assert resp['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
+
+        def journey_base_schedule_for_next_day(resp):
+            assert resp['journeys'][0]['departure_date_time'] == '20120616T235500'
+            assert resp['journeys'][0]['arrival_date_time'] == '20120617T000100'
+            assert resp['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+            assert resp['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
+
+        disruption_query = 'disruptions?_current _datetime={dt}'.format(dt='20120615T080000')
+        initial_nb_disruptions = len(self.query_region(disruption_query)['disruptions'])
+
+        pt_response = self.query_region('vehicle_journeys')
+        initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
+
+        empty_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&max_duration_to_pt=0&"
+            "datetime={dt}&_current_datetime={dt}"
+        )
+
+        # Check journeys in realtime for 20120615(the day of the future disruption) from B to A
+        # vjPM circulates everyday with departure at 23:55:00 and arrival at 00:01:00 the day after
+        ba_15T23_journey_query = empty_query.format(
+            f='stop_point:stopB', to='stop_point:stopA', dt='20120615T235000'
+        )
+
+        response = self.query_region(ba_15T23_journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T235500'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
+
+        # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
+        ba_14T23_journey_query = empty_query.format(
+            f='stop_point:stopB', to='stop_point:stopA', dt='20120614T235000'
+        )
+        response = self.query_region(ba_14T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_day_before(response)
+
+        # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
+        ba_16T23_journey_query = empty_query.format(
+            f='stop_point:stopB', to='stop_point:stopA', dt='20120616T235000'
+        )
+        response = self.query_region(ba_16T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_next_day(response)
+
+        # A new disruption with a delay on departure station before midnight
+        self.send_mock(
+            "vjPM",
+            "20120615",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120615T235700"),
+                    departure=tstamp("20120615T235700"),
+                    arrival_delay=2 * 60,
+                    departure_delay=2 * 60,
+                    message="Delay before pass midnight",
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120616T000100"),
+                    departure=tstamp("20120616T000100"),
+                    arrival_delay=0,
+                ),
+            ],
+            disruption_id='delay_before_pm',
+            effect='delayed',
+        )
+
+        # A new disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert initial_nb_disruptions + 1 == len(disruptions_after['disruptions'])
+
+        # Now we have 1 more vehicle_journey than before
+        pt_response = self.query_region('vehicle_journeys')
+        assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
+
+        # Check journeys in realtime for 20120615, the day of the disruption from B to A
+        # vjB circulates with departure at 23:57:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_15T23_journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T235700'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+        assert response['journeys'][0]['sections'][0]['base_departure_date_time'] == '20120615T235500'
+        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120615T235700'
+        assert response['journeys'][0]['sections'][0]['base_arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+
+        # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_14T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_day_before(response)
+
+        # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_16T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_next_day(response)
+
+        # Disruption is modified with a delay on first station so that there is no more pass midnight
+        # and the departure is the day after
+        self.send_mock(
+            "vjPM",
+            "20120615",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120616T000100"),
+                    departure=tstamp("20120616T000100"),
+                    arrival_delay=6 * 60,
+                    departure_delay=6 * 60,
+                    message="Departure the next day",
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120616T000600"),
+                    departure=tstamp("20120616T000600"),
+                    arrival_delay=5 * 60,
+                    message="Arrival delayed",
+                ),
+            ],
+            disruption_id='delay_before_pm',
+            effect='delayed',
+        )
+
+        # The disruption created above is modified so no disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert initial_nb_disruptions + 1 == len(disruptions_after['disruptions'])
+
+        # We have 1 more vehicle_journey than initial as realtime vj is deleted and a new one is added
+        pt_response = self.query_region('vehicle_journeys')
+        assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
+
+        # Check journeys in realtime for 20120615, the day of the disruption from B to A
+        # vjB circulates with departure at 23:55:00 and arrival at 00:06:00 the day after
+        response = self.query_region(ba_15T23_journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['arrival_date_time'] == '20120616T000600'
+        assert response['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+        assert response['journeys'][0]['sections'][0]['base_departure_date_time'] == '20120615T235500'
+        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['base_arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['arrival_date_time'] == '20120616T000600'
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+
+        # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_14T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_day_before(response)
+
+        # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_16T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_next_day(response)
+
+        # Disruption is modified with a smaller delay on first station and advance on arrival station
+        #  so that there is no pass midnight and the departure is the same day as original (base_schedule)
+        self.send_mock(
+            "vjPM",
+            "20120615",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival=tstamp("20120615T235600"),
+                    departure=tstamp("20120615T235600"),
+                    arrival_delay=1 * 60,
+                    departure_delay=1 * 60,
+                    message="Departure the same day",
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopA",
+                    arrival=tstamp("20120615T235900"),
+                    departure=tstamp("20120615T235900"),
+                    arrival_delay=-2 * 60,
+                    message="Arrival advanced",
+                ),
+            ],
+            disruption_id='delay_before_pm',
+            effect='delayed',
+        )
+
+        # The disruption created above is modified so no disruption is added
+        disruptions_after = self.query_region(disruption_query)
+        assert initial_nb_disruptions + 1 == len(disruptions_after['disruptions'])
+
+        # We have 1 more vehicle_journey than initial as realtime vj is deleted and a new one is added
+        pt_response = self.query_region('vehicle_journeys')
+        assert initial_nb_vehicle_journeys + 1 == len(pt_response['vehicle_journeys'])
+
+        # Check journeys in realtime for 20120615, the day of the disruption from B to A
+        # vjB circulates with departure at 23:56:00 and arrival at 23:59:00 the same day
+        response = self.query_region(ba_15T23_journey_query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == '20120615T235600'
+        assert response['journeys'][0]['arrival_date_time'] == '20120615T235900'
+        assert response['journeys'][0]['sections'][0]['display_informations']['name'] == 'PM'
+        assert response['journeys'][0]['sections'][0]['base_departure_date_time'] == '20120615T235500'
+        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120615T235600'
+        assert response['journeys'][0]['sections'][0]['base_arrival_date_time'] == '20120616T000100'
+        assert response['journeys'][0]['sections'][0]['arrival_date_time'] == '20120615T235900'
+        assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+
+        # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_14T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_day_before(response)
+
+        # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
+        response = self.query_region(ba_16T23_journey_query)
+        assert len(response['journeys']) == 1
+        journey_base_schedule_for_next_day(response)
 
 
 def make_mock_kirin_item(
