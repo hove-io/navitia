@@ -50,7 +50,6 @@ from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, memory_cache, app, global_autocomplete
-from jormungandr import fallback_modes as fm
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -58,13 +57,13 @@ import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
 from jormungandr.scenarios.ridesharing import ridesharing_service
-import itertools
 import six
 import time
 from collections import deque
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
+from jormungandr.street_network import StreetNetworkBackendManager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -134,10 +133,9 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
 
-        street_network_configurations = _set_default_street_network_config(street_network_configurations)
-        self.street_network_services = street_network.StreetNetwork.get_street_network_services(
-            self, street_network_configurations
-        )
+        self.streetnetwork_backend_manager = StreetNetworkBackendManager(street_network_configurations)
+        self.streetnetwork_backend_manager.init_streetnetwork_backends(self)
+
         self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
             self.ridesharing_services = ridesharing_service.Ridesharing.get_ridesharing_services(
@@ -663,6 +661,9 @@ class Instance(object):
                 'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
             )
         return sn
+
+    def get_all_street_networks(self):
+        return self.streetnetwork_backend_manager.get_all_street_networks()
 
     def get_street_network_routing_matrix(
         self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
