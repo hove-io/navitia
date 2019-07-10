@@ -138,14 +138,7 @@ class StreetNetwork(object):
             if 'modes' not in config['args']:
                 config['args']['modes'] = config.get('modes', [])
 
-            try:
-                service = utils.create_object(config)
-            except KeyError as e:
-                raise KeyError(
-                    'impossible to build a StreetNetwork, missing mandatory field in configuration: {}'.format(
-                        e.message
-                    )
-                )
+            service = utils.create_object(config)
 
             street_network_services.append(service)
             log.info(
