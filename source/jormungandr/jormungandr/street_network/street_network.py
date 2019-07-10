@@ -119,31 +119,3 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
             feed.name = sn_feed.name
             feed.license = sn_feed.license
             feed.url = sn_feed.url
-
-
-class StreetNetwork(object):
-    @staticmethod
-    def get_street_network_services(instance, street_network_configurations):
-        log = logging.getLogger(__name__)
-        street_network_services = []
-        for config in street_network_configurations:
-            # Set default arguments
-            if 'args' not in config:
-                config['args'] = {}
-            if 'service_url' not in config['args']:
-                config['args'].update({'service_url': None})
-            if 'instance' not in config['args']:
-                config['args'].update({'instance': instance})
-            # for retrocompatibility, since 'modes' was originaly outside 'args'
-            if 'modes' not in config['args']:
-                config['args']['modes'] = config.get('modes', [])
-
-            service = utils.create_object(config)
-
-            street_network_services.append(service)
-            log.info(
-                '** StreetNetwork {} used for direct_path with mode: {} **'.format(
-                    type(service).__name__, service.modes
-                )
-            )
-        return street_network_services

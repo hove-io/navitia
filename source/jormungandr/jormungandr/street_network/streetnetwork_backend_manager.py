@@ -75,5 +75,27 @@ class StreetNetworkBackendManager(object):
 
         return self.streetnetwork_backend_config
 
+    def _create_street_network_backends(self, instance):
+        for config in self.streetnetwork_backend_config:
+            # Set default arguments
+            if 'args' not in config:
+                config['args'] = {}
+            if 'service_url' not in config['args']:
+                config['args'].update({'service_url': None})
+            if 'instance' not in config['args']:
+                config['args'].update({'instance': instance})
+            # for retrocompatibility, since 'modes' was originaly outside 'args'
+            if 'modes' not in config['args']:
+                config['args']['modes'] = config.get('modes', [])
+
+            backend = utils.create_object(config)
+
+            self._streetnetwork_backends.append(backend)
+            self.logger.info(
+                '** StreetNetwork {} used for direct_path with mode: {} **'.format(
+                    type(backend).__name__, backend.modes
+                )
+            )
+
     def get_all_street_networks(self):
         return self._streetnetwork_backends
