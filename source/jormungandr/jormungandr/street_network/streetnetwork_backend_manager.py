@@ -97,5 +97,19 @@ class StreetNetworkBackendManager(object):
                 )
             )
 
+    def get_street_network(self, mode, request):
+        overriden_sn_id = request.get('_street_network')
+        if overriden_sn_id:
+
+            def predicate(s):
+                return s.sn_system_id == overriden_sn_id
+
+        else:
+
+            def predicate(s):
+                return mode in s.modes
+
+        return next((s for s in self._streetnetwork_backends if predicate(s)), None)
+
     def get_all_street_networks(self):
         return self._streetnetwork_backends

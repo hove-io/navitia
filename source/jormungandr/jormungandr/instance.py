@@ -657,18 +657,7 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        overriden_sn_id = request.get('_street_network')
-        if overriden_sn_id:
-
-            def predicate(s):
-                return s.sn_system_id == overriden_sn_id
-
-        else:
-
-            def predicate(s):
-                return mode in s.modes
-
-        sn = next((s for s in self.street_network_services if predicate(s)), None)
+        sn = self.streetnetwork_backend_manager.get_street_network(mode, request)
         if sn is None:
             raise TechnicalError(
                 'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
