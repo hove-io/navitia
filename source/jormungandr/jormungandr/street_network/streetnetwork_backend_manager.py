@@ -29,6 +29,7 @@
 
 from jormungandr import utils
 from jormungandr import fallback_modes as fm
+from jormungandr.exceptions import TechnicalError
 from importlib import import_module
 
 import logging, itertools, copy
@@ -109,7 +110,12 @@ class StreetNetworkBackendManager(object):
             def predicate(s):
                 return mode in s.modes
 
-        return next((s for s in self._streetnetwork_backends if predicate(s)), None)
+        sn = next((s for s in self._streetnetwork_backends if predicate(s)), None)
+        if sn is None:
+            raise TechnicalError(
+                'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
+            )
+        return sn
 
     def get_all_street_networks(self):
         return self._streetnetwork_backends

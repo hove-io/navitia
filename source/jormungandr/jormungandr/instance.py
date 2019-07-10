@@ -655,12 +655,7 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        sn = self.streetnetwork_backend_manager.get_street_network(mode, request)
-        if sn is None:
-            raise TechnicalError(
-                'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
-            )
-        return sn
+        return self.streetnetwork_backend_manager.get_street_network(mode, request)
 
     def get_all_street_networks(self):
         return self.streetnetwork_backend_manager.get_all_street_networks()

@@ -355,7 +355,7 @@ def create_object(configuration):
         raise KeyError(
             'impossible to build a StreetNetwork, missing mandatory field in configuration: class or klass'
         )
-    
+
     kwargs = configuration.get('args', {})
 
     try:
