@@ -63,7 +63,6 @@ from collections import deque
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
-from jormungandr.street_network import StreetNetworkBackendManager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
