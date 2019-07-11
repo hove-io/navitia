@@ -91,7 +91,14 @@ class DockerWrapper(object):
     """
 
     def __init__(
-        self, image_name, dockerfile_path=None, dbname='postgres', dbuser='docker', dbpassword='docker'
+        self,
+        image_name,
+        container_name=None,
+        dockerfile_path=None,
+        dbname='postgres',
+        dbuser='docker',
+        dbpassword='docker',
+        env_vars={},
     ):
         """
         Constructor of PostgresDocker.
@@ -103,14 +110,20 @@ class DockerWrapper(object):
         self.docker_api_client = docker.APIClient(base_url=base_url)
         self.image_name = image_name
         self.dockerfile_path = dockerfile_path
+        self.container_name = container_name
         self.dbname = dbname
         self.dbuser = dbuser
         self.dbpassword = dbpassword
+        self.env_vars = env_vars
         log.info("Trying to build/update the docker image")
 
         try:
-            for build_output in self.docker_client.images.build(path=dockerfile_path, tag=image_name, rm=True):
-                log.debug(build_output)
+            if self.dockerfile_path:
+                for build_output in self.docker_client.images.build(
+                    path=self.dockerfile_path, tag=image_name, rm=True
+                ):
+                    log.debug(build_output)
+
         except docker.errors.APIError as e:
             if e.is_server_error():
                 log.warn("[docker server error] A server error occcured, maybe " "missing internet connection?")
@@ -125,10 +138,10 @@ class DockerWrapper(object):
             else:
                 raise
 
-        self.container = self.docker_client.containers.create(image_name)
-
+        self.container = self.docker_client.containers.create(
+            image_name, name=self.container_name, environment=self.env_vars, auto_remove=True
+        )
         log.info("docker id is {}".format(self.container.id))
-
         log.info("starting the temporary docker")
         self.container.start()
         self.ip_addr = (
@@ -172,7 +185,7 @@ class DockerWrapper(object):
 
         :return: the DbParams for the database of the Docker
         """
-        return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
+        return DbParams(self.ip_addr, self.dbname, self.dbuser, self.dbpassword)
 
     @retry(stop_max_delay=10000, wait_fixed=100, retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
@@ -180,12 +193,8 @@ class DockerWrapper(object):
         """
         Test the connection to the database.
         """
-        psycopg2.connect(
-            database=self.get_db_params().dbname,
-            user=self.get_db_params().user,
-            password=self.get_db_params().password,
-            host=self.get_db_params().host,
-        )
+        params = self.get_db_params()
+        psycopg2.connect(database=params.dbname, user=params.user, password=params.password, host=params.host)
 
 
 def PostgisDocker():
@@ -195,4 +204,16 @@ def PostgisDocker():
         dbname='postgres',
         dbuser='docker',
         dbpassword='docker',
+    )
+
+
+def PostgresDocker():
+    env_vars = {'POSTGRES_DB': 'tyr_test', 'POSTGRES_USER': 'postgres', 'POSTGRES_PASSWORD': 'postgres'}
+    return DockerWrapper(
+        image_name='postgres:9.4',
+        container_name='tyr_test_postgres',
+        dbname=env_vars['POSTGRES_DB'],
+        dbuser=env_vars['POSTGRES_USER'],
+        dbpassword=env_vars['POSTGRES_PASSWORD'],
+        env_vars=env_vars,
     )
