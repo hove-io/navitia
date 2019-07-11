@@ -1640,11 +1640,13 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         # Query with data_freshness=realtime
         base_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
 
-        # There is a public transport from B to C with realtime
+        # There is a public transport from B to C with realtime having only two stop_date_times
+        # as the stop deleted for detour should not be displayed
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 2
         assert response['journeys'][0]['status'] == 'DETOUR'
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
+        assert len(response['journeys'][0]['sections'][0]['stop_date_times']) == 2
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
         assert response['journeys'][0]['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
         assert has_the_disruption(response, 'stop_time_with_detour')
@@ -1652,6 +1654,17 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         # Tramway is the first physical_mode in NTFS, but we might pick mode in a smarter way in the future
         response = self.query_region('physical_modes')
         assert response['physical_modes'][0]['name'] == 'Tramway'
+
+        # Check attributes of deleted stop_time in the concerned vehicle_journey
+        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
+            vj='vehicle_journey:vjA:modified:0:stop_time_with_detour', dt='20120614T080000'
+        )
+        response = self.query_region(vj_query)
+        assert has_the_disruption(response, 'stop_time_with_detour')
+        assert len(response['vehicle_journeys']) == 1
+        assert len(response['vehicle_journeys'][0]['stop_times']) == 3
+        assert response['vehicle_journeys'][0]['stop_times'][1]['drop_off_allowed'] is False
+        assert response['vehicle_journeys'][0]['stop_times'][1]['pickup_allowed'] is False
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -1815,6 +1828,8 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len(response['vehicle_journeys']) == 1
         assert response['vehicle_journeys'][0]['disruptions'][0]['id'] == 'new_trip'
         assert len(response['vehicle_journeys'][0]['stop_times']) == 2
+        assert response['vehicle_journeys'][0]['stop_times'][0]['drop_off_allowed'] is True
+        assert response['vehicle_journeys'][0]['stop_times'][0]['pickup_allowed'] is True
 
         # Check that the new line has been created with necessary information
         response = self.query_region(line_query)
@@ -2518,6 +2533,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
         assert response['journeys'][0]['sections'][0]['display_informations']['name'] == 'B'
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
+        assert len(response['journeys'][0]['sections'][0]['stop_date_times']) == 2
 
         # vjB circulates the day before at 18:01:00 and arrival at 18:01:02
         response = self.query_region(ba_14T18_journey_query)
