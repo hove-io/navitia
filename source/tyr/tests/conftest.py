@@ -41,7 +41,7 @@ try:
 except:
     import configparser as ConfigParser  # type: ignore
 
-from tests.docker_wrapper import PostgresDocker
+from navitiacommon.docker_wrapper import PostgresDocker
 
 
 @pytest.yield_fixture(scope="session", autouse=True)

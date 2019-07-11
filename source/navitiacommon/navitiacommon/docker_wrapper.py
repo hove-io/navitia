@@ -139,7 +139,7 @@ class DockerWrapper(object):
                 raise
 
         self.container = self.docker_client.containers.create(
-            image_name, name=self.container_name, environment=self.env_vars, auto_remove=True
+            image_name, name=self.container_name, environment=self.env_vars
         )
         log.info("docker id is {}".format(self.container.id))
         log.info("starting the temporary docker")
