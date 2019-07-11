@@ -93,6 +93,10 @@ else:
 
     global_autocomplete = {'kraken': Kraken()}
 
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+
+# We do not use database yet
+streetnetwork_backend_manager = StreetNetworkBackendManager()
 
 from jormungandr.instance_manager import InstanceManager
 

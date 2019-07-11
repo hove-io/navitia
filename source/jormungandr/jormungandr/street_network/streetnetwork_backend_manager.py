@@ -32,24 +32,25 @@ from jormungandr import fallback_modes as fm
 from jormungandr.exceptions import TechnicalError
 from importlib import import_module
 
+from collections import defaultdict
 import logging, itertools, copy
 
 
 class StreetNetworkBackendManager(object):
-    def __init__(self, streetnetwork_backend_configuration):
+    def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.streetnetwork_backend_config = streetnetwork_backend_configuration
-        self._streetnetwork_backends = []
+        # dict { "instance" : [street_network_backends] }
+        self._streetnetwork_backends_by_instance = defaultdict(list)
 
-    def init_streetnetwork_backends(self, instance):
-        self._append_default_street_network_to_config()
-        self._create_street_network_backends(instance)
+    def init_streetnetwork_backends(self, instance, instance_configuration):
+        instance_configuration = self._append_default_street_network_to_config(instance_configuration)
+        self._create_street_network_backends(instance, instance_configuration)
 
     # For street network modes that are not set in the given config file,
     # we set kraken as their default engine
-    def _append_default_street_network_to_config(self):
-        if not isinstance(self.streetnetwork_backend_config, list):
-            self.streetnetwork_backend_config = []
+    def _append_default_street_network_to_config(self, instance_configuration):
+        if not isinstance(instance_configuration, list):
+            instance_configuration = []
 
         kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
         taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
@@ -61,23 +62,19 @@ class StreetNetworkBackendManager(object):
         default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
 
         modes_in_configs = set(
-            list(
-                itertools.chain.from_iterable(
-                    config.get('modes', []) for config in self.streetnetwork_backend_config
-                )
-            )
+            list(itertools.chain.from_iterable(config.get('modes', []) for config in instance_configuration))
         )
         modes_not_set = fm.all_fallback_modes - modes_in_configs
 
         for mode in modes_not_set:
             config = {"modes": [mode]}
             config.update(default_sn_class[mode])
-            self.streetnetwork_backend_config.append(copy.deepcopy(config))
+            instance_configuration.append(copy.deepcopy(config))
 
-        return self.streetnetwork_backend_config
+        return instance_configuration
 
-    def _create_street_network_backends(self, instance):
-        for config in self.streetnetwork_backend_config:
+    def _create_street_network_backends(self, instance, instance_configuration):
+        for config in instance_configuration:
             # Set default arguments
             if 'args' not in config:
                 config['args'] = {}
@@ -91,14 +88,14 @@ class StreetNetworkBackendManager(object):
 
             backend = utils.create_object(config)
 
-            self._streetnetwork_backends.append(backend)
+            self._streetnetwork_backends_by_instance[instance].append(backend)
             self.logger.info(
                 '** StreetNetwork {} used for direct_path with mode: {} **'.format(
                     type(backend).__name__, backend.modes
                 )
             )
 
-    def get_street_network(self, mode, request):
+    def get_street_network(self, instance, mode, request):
         overriden_sn_id = request.get('_street_network')
         if overriden_sn_id:
 
@@ -110,12 +107,12 @@ class StreetNetworkBackendManager(object):
             def predicate(s):
                 return mode in s.modes
 
-        sn = next((s for s in self._streetnetwork_backends if predicate(s)), None)
+        sn = next((s for s in self._streetnetwork_backends_by_instance[instance] if predicate(s)), None)
         if sn is None:
             raise TechnicalError(
                 'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
             )
         return sn
 
-    def get_all_street_networks(self):
-        return self._streetnetwork_backends
+    def get_all_street_networks(self, instance):
+        return self._streetnetwork_backends_by_instance[instance]

@@ -49,7 +49,7 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete
+from jormungandr import cache, memory_cache, app, global_autocomplete, streetnetwork_backend_manager
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -133,8 +133,7 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
 
-        self.streetnetwork_backend_manager = StreetNetworkBackendManager(street_network_configurations)
-        self.streetnetwork_backend_manager.init_streetnetwork_backends(self)
+        streetnetwork_backend_manager.init_streetnetwork_backends(self, street_network_configurations)
 
         self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
@@ -655,10 +654,10 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        return self.streetnetwork_backend_manager.get_street_network(mode, request)
+        return streetnetwork_backend_manager.get_street_network(self, mode, request)
 
     def get_all_street_networks(self):
-        return self.streetnetwork_backend_manager.get_all_street_networks()
+        return streetnetwork_backend_manager.get_all_street_networks(self)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
