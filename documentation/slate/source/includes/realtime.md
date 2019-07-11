@@ -9,9 +9,9 @@ Real time isn't available on every coverage for Navitia. For real time to be ava
 
 The effect of a disruption can be one of the following:
 <ul>
-	<li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
-	<li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
-	<li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
+    <li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
+    <li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
+    <li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
 </ul>
 
