@@ -531,6 +531,8 @@ class StopTimeSerializer(PbNestedSerializer):
     headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
+    pickup_allowed = BoolField()
+    drop_off_allowed = BoolField()
 
 
 class VehicleJourneySerializer(PbGenericSerializer):
