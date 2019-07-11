@@ -49,7 +49,7 @@ import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, memory_cache, app, global_autocomplete, streetnetwork_backend_manager
+from jormungandr import cache, memory_cache, app, global_autocomplete
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -113,6 +113,7 @@ class Instance(object):
         zmq_socket_type,
         autocomplete_type,
         instance_equipment_providers,  # type: List[Text]
+        streetnetwork_backend_manager,
     ):
         self.geom = None
         self._sockets = deque()
@@ -167,6 +168,9 @@ class Instance(object):
 
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
+
+        self._get_street_network = streetnetwork_backend_manager.get_street_network
+        self._get_all_street_networks = streetnetwork_backend_manager.get_all_street_networks
 
     def get_providers_from_db(self):
         """
@@ -653,10 +657,10 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        return streetnetwork_backend_manager.get_street_network(self, mode, request)
+        return self._get_street_network(self, mode, request)
 
     def get_all_street_networks(self):
-        return streetnetwork_backend_manager.get_all_street_networks(self)
+        return self._get_all_street_networks(self)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
