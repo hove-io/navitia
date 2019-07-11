@@ -2235,7 +2235,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
     BOOST_CHECK_EQUAL(res.impacts_size(), 2);
     for (const auto& impact : res.impacts()) {
         if (impact.uri() == "feed-2") {
@@ -2341,14 +2341,14 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
 
     b.finalize_disruption_batch();
 
-    // The new stop_time added should be in stop_date_times
+    // The delete stop_time should not be in stop_date_times where as the added stop_time should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:B_bis");
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(3).arrival_date_time(), "20171101T0900"_pts);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop_point:B_bis");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).arrival_date_time(), "20171101T0900"_pts);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 4);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).is_detour(), false);
@@ -2432,10 +2432,10 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 4);
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times_size(), 3);
     BOOST_CHECK_EQUAL(res.impacts_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts(0).severity().effect(), pbnavitia::Severity_Effect_DETOUR);
-    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(2).stop_point().uri(), "stop_point:B_bis");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).stop_date_times(1).stop_point().uri(), "stop_point:B_bis");
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops_size(), 4);
     BOOST_CHECK_EQUAL(res.impacts(0).impacted_objects(0).impacted_stops(0).is_detour(), false);
