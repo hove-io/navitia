@@ -44,6 +44,7 @@ www.navitia.io
 
 #include "ed/default_poi_types.h"
 #include "ed_persistor.h"
+#include "utils/lotus.h"
 #include "utils/functions.h"
 #include "utils/init.h"
 
@@ -334,22 +335,27 @@ void OSMCache::match_nodes_admin() {
  */
 void OSMCache::insert_nodes() {
     auto logger = log4cplus::Logger::getInstance("log");
-    this->lotus.prepare_bulk_insert("georef.node", {"id", "coord"});
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert nodes");
+        return;
+    }
+
+    this->lotus->prepare_bulk_insert("georef.node", {"id", "coord"});
     size_t n_inserted = 0;
     const size_t max_n_inserted = 200000;
     for (const auto& node : nodes) {
         if (!node.is_defined() || !node.is_used()) {
             continue;
         }
-        this->lotus.insert({std::to_string(node.osm_id), node.to_geographic_point()});
+        this->lotus->insert({std::to_string(node.osm_id), node.to_geographic_point()});
         ++n_inserted;
         if ((n_inserted % max_n_inserted) == 0) {
-            lotus.finish_bulk_insert();
+            this->lotus->finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << "/" << nodes.size() << " nodes inserted");
-            this->lotus.prepare_bulk_insert("georef.node", {"id", "coord"});
+            this->lotus->prepare_bulk_insert("georef.node", {"id", "coord"});
         }
     }
-    lotus.finish_bulk_insert();
+    this->lotus->finish_bulk_insert();
     LOG4CPLUS_INFO(logger, n_inserted << "/" << nodes.size() << " nodes inserted");
 }
 
@@ -358,7 +364,12 @@ void OSMCache::insert_nodes() {
  */
 void OSMCache::insert_ways() {
     auto logger = log4cplus::Logger::getInstance("log");
-    this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert ways");
+        return;
+    }
+
+    this->lotus->prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
@@ -371,15 +382,15 @@ void OSMCache::insert_ways() {
         values.push_back("way:" + std::to_string(way.osm_id));
         values.push_back("");
         values.push_back("true");
-        this->lotus.insert(values);
+        this->lotus->insert(values);
         ++n_inserted;
         if ((n_inserted % max_n_inserted) == 0) {
-            this->lotus.finish_bulk_insert();
+            this->lotus->finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << "/" << ways.size() << " ways inserted");
-            this->lotus.prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
+            this->lotus->prepare_bulk_insert("georef.way", {"id", "name", "uri", "type", "visible"});
         }
     }
-    this->lotus.finish_bulk_insert();
+    this->lotus->finish_bulk_insert();
     LOG4CPLUS_INFO(logger, n_inserted << "/" << ways.size() << " ways inserted");
 }
 
@@ -391,8 +402,13 @@ void OSMCache::insert_ways() {
  */
 void OSMCache::insert_edges() {
     auto logger = log4cplus::Logger::getInstance("log");
-    lotus.prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                              "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert edges");
+        return;
+    }
+
+    this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
+                                                     "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
     nt::LineString coords;
     std::stringstream wkt;
     wkt.precision(10);
@@ -415,20 +431,22 @@ void OSMCache::insert_edges() {
                 coords.push_back({node->lon(), node->lat()});
                 wkt.str("");
                 wkt << boost::geometry::wkt(coords);
-                lotus.insert({std::to_string(prev_node->osm_id), std::to_string(node->osm_id),
-                              std::to_string(ref_way_id), wkt.str(), std::to_string(way.properties[OSMWay::FOOT_FWD]),
-                              std::to_string(way.properties[OSMWay::CYCLE_FWD]),
-                              std::to_string(way.properties[OSMWay::CAR_FWD])});
+                this->lotus->insert({std::to_string(prev_node->osm_id), std::to_string(node->osm_id),
+                                     std::to_string(ref_way_id), wkt.str(),
+                                     std::to_string(way.properties[OSMWay::FOOT_FWD]),
+                                     std::to_string(way.properties[OSMWay::CYCLE_FWD]),
+                                     std::to_string(way.properties[OSMWay::CAR_FWD])});
                 // In most of the case we need the reversal,
                 // that'll be wrong for some in case in car
                 // We need to work on it
                 std::reverse(coords.begin(), coords.end());
                 wkt.str("");
                 wkt << boost::geometry::wkt(coords);
-                lotus.insert({std::to_string(node->osm_id), std::to_string(prev_node->osm_id),
-                              std::to_string(ref_way_id), wkt.str(), std::to_string(way.properties[OSMWay::FOOT_BWD]),
-                              std::to_string(way.properties[OSMWay::CYCLE_BWD]),
-                              std::to_string(way.properties[OSMWay::CAR_BWD])});
+                this->lotus->insert({std::to_string(node->osm_id), std::to_string(prev_node->osm_id),
+                                     std::to_string(ref_way_id), wkt.str(),
+                                     std::to_string(way.properties[OSMWay::FOOT_BWD]),
+                                     std::to_string(way.properties[OSMWay::CYCLE_BWD]),
+                                     std::to_string(way.properties[OSMWay::CAR_BWD])});
                 prev_node = nodes.end();
                 n_inserted = n_inserted + 2;
             }
@@ -439,13 +457,13 @@ void OSMCache::insert_edges() {
             coords.push_back({node->lon(), node->lat()});
         }
         if ((n_inserted % max_n_inserted) == 0) {
-            lotus.finish_bulk_insert();
+            this->lotus->finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << " edges inserted");
-            lotus.prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                                      "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+            this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
+                                                             "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
         }
     }
-    lotus.finish_bulk_insert();
+    this->lotus->finish_bulk_insert();
     LOG4CPLUS_INFO(logger, n_inserted << " edges inserted");
 }
 
@@ -454,7 +472,12 @@ void OSMCache::insert_edges() {
  */
 void OSMCache::insert_relations() {
     auto logger = log4cplus::Logger::getInstance("log");
-    lotus.prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert relations");
+        return;
+    }
+
+    this->lotus->prepare_bulk_insert("georef.admin", {"id", "name", "insee", "level", "coord", "boundary", "uri"});
     size_t nb_empty_polygons = 0;
     size_t nb_admins = 0;
     for (const auto& id_admin : admins) {
@@ -466,8 +489,8 @@ void OSMCache::insert_relations() {
             std::string polygon_str = polygon_stream.str();
             const auto coord =
                 "POINT(" + std::to_string(admin->center.get<0>()) + " " + std::to_string(admin->center.get<1>()) + ")";
-            lotus.insert({std::to_string(id), admin->name, admin->insee, std::to_string(admin->level), coord,
-                          polygon_str, admin->uri});
+            this->lotus->insert({std::to_string(id), admin->name, admin->insee, std::to_string(admin->level), coord,
+                                 polygon_str, admin->uri});
             ++nb_admins;
         } else {
             LOG4CPLUS_WARN(logger, "admin " << admin->name << " id: " << id << " of level " << admin->level
@@ -475,7 +498,7 @@ void OSMCache::insert_relations() {
             ++nb_empty_polygons;
         }
     }
-    lotus.finish_bulk_insert();
+    this->lotus->finish_bulk_insert();
     LOG4CPLUS_INFO(logger, nb_admins << " admins added, " << nb_empty_polygons
                                      << " admins ignore because their polygons were empty");
 }
@@ -484,24 +507,35 @@ void OSMCache::insert_relations() {
  * Insert poastal codes into the database
  */
 void OSMCache::insert_postal_codes() {
+    auto logger = log4cplus::Logger::getInstance("log");
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert postal codes");
+        return;
+    }
+
     size_t n_inserted = 0;
-    lotus.prepare_bulk_insert("georef.postal_codes", {"admin_id", "postal_code"});
+    this->lotus->prepare_bulk_insert("georef.postal_codes", {"admin_id", "postal_code"});
     for (const auto& id_admin : admins) {
         const auto& admin = id_admin.second;
         if ((!admin->polygon.empty()) && (!admin->postal_codes.empty())) {
             for (const std::string& pst_code : admin->postal_codes) {
-                lotus.insert({std::to_string(admin->id), pst_code});
+                this->lotus->insert({std::to_string(admin->id), pst_code});
                 ++n_inserted;
             }
         }
     }
-    lotus.finish_bulk_insert();
-    auto logger = log4cplus::Logger::getInstance("log");
+    this->lotus->finish_bulk_insert();
     LOG4CPLUS_INFO(logger, n_inserted << " postal codes inserted");
 }
 
 void OSMCache::insert_rel_way_admins() {
-    lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
+    auto logger = log4cplus::Logger::getInstance("log");
+    if (this->lotus) {
+        LOG4CPLUS_INFO(logger, "no database to insert rel way admins");
+        return;
+    }
+
+    this->lotus->prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
     size_t n_inserted = 0;
     const size_t max_n_inserted = 20000;
     for (const auto& map_ways : this->way_admin_map) {
@@ -511,19 +545,18 @@ void OSMCache::insert_rel_way_admins() {
                     continue;
                 }
                 for (const auto& admin : admin_ways.first) {
-                    lotus.insert({std::to_string(admin->id), std::to_string(way->osm_id)});
+                    this->lotus->insert({std::to_string(admin->id), std::to_string(way->osm_id)});
                     ++n_inserted;
                     if (n_inserted == max_n_inserted) {
-                        lotus.finish_bulk_insert();
-                        lotus.prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
+                        this->lotus->finish_bulk_insert();
+                        this->lotus->prepare_bulk_insert("georef.rel_way_admin", {"admin_id", "way_id"});
                         n_inserted = 0;
                     }
                 }
             }
         }
     }
-    lotus.finish_bulk_insert();
-    auto logger = log4cplus::Logger::getInstance("log");
+    this->lotus->finish_bulk_insert();
 }
 
 std::string OSMNode::to_geographic_point() const {
@@ -1131,7 +1164,7 @@ int osm2ed(int argc, const char** argv) {
     persistor.clean_georef();
     persistor.clean_poi();
 
-    ed::connectors::OSMCache cache(connection_string, cities_cnx);
+    ed::connectors::OSMCache cache(std::unique_ptr<Lotus>(new Lotus(connection_string)), cities_cnx);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
     CanalTP::read_osm_pbf(input, relations_visitor);
     ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
