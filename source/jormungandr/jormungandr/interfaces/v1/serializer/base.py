@@ -285,7 +285,7 @@ class IntNestedPropertyField(NestedPropertyField):
 
 
 class StringNestedPropertyField(NestedPropertyField):
-    to_value = staticmethod(str)
+    to_value = staticmethod(six.text_type)
 
 
 class LambdaField(Field):
