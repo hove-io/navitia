@@ -1164,7 +1164,7 @@ int osm2ed(int argc, const char** argv) {
     persistor.clean_georef();
     persistor.clean_poi();
 
-    ed::connectors::OSMCache cache(std::unique_ptr<Lotus>(new Lotus(connection_string)), cities_cnx);
+    ed::connectors::OSMCache cache(std::make_unique<Lotus>(connection_string), cities_cnx);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
     CanalTP::read_osm_pbf(input, relations_visitor);
     ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
