@@ -2938,13 +2938,13 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("00000000"));
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("00000001"));
 
-    //verify that filters &since and &until work well with vehicle_jouneys added by realtime (added trip)
+    // verify that filters &since and &until work well with vehicle_jouneys added by realtime (added trip)
     auto indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, "", {}, nt::OdtLevel_e::all,
-    {"20190101T0400"_dt}, {"20190101T1000"_dt}, *(b.data));
+                                              {"20190101T0400"_dt}, {"20190101T1000"_dt}, *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, "", {}, nt::OdtLevel_e::all,
-    {"20190103T0400"_dt}, {"20190103T1000"_dt}, *(b.data));
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, "", {}, nt::OdtLevel_e::all, {"20190103T0400"_dt},
+                                         {"20190103T1000"_dt}, *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     // New trip added
