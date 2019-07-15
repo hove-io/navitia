@@ -41,3 +41,4 @@ jmespath==0.9.3
 shortuuid
 click==6.7
 typing
+coloredlogs==10.0
