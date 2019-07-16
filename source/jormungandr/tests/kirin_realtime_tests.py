@@ -1906,6 +1906,194 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
+    def test_ptref_on_added_trip(self):
+        """
+        1. Test all possibles ptref calls with/without filters before adding a new trip
+        2. Test all possibles ptref calls with/without filters after adding a new trip
+        3. Test all possibles ptref calls with/without filters after modifying the recently added trip
+        Note: physical_mode is present in gtfs-rt where as for network and commercial_mode default value is used
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # Verify that network, line, commercial_mode of the new trip to be added in future is absent
+        resp, status = self.query_region("networks/network:additional_service", check=False)
+        assert status == 404
+        assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
+        resp, status = self.query_region("lines/line:stopC_stopB", check=False)
+        assert status == 404
+        assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
+        resp, status = self.query_region("commercial_modes/commercial_mode:additional_service", check=False)
+        assert status == 404
+        assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
+
+        # New disruption, a new trip with 2 stop_times in realtime
+        self.send_mock(
+            "additional-trip",
+            "20120614",
+            "added",
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id="new_trip",
+            effect="additional_service",
+            physical_mode_id="physical_mode:Bus",  # this physical mode exists in kraken
+        )
+
+        # Check new disruption 'additional-trip' to add a new trip
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+
+        # Verify that network, line, commercial_mode of the new trip are present
+        resp = self.query_region("networks/network:additional_service")
+        assert "networks" in resp
+        resp = self.query_region("lines/line:stopC_stopB")
+        assert "lines" in resp
+        resp = self.query_region("commercial_modes/commercial_mode:additional_service")
+        assert "commercial_modes" in resp
+
+        resp = self.query_region("networks/network:additional_service/physical_modes")
+        assert resp["physical_modes"][0]["id"] == "physical_mode:Bus"
+
+        resp = self.query_region("physical_modes/physical_mode:Bus/networks")
+        networks = [nw["id"] for nw in resp["networks"]]
+        assert "network:additional_service" in networks
+
+        # network by line should work
+        resp = self.query_region("lines/line:stopC_stopB/networks")
+        assert resp["networks"][0]["id"] == "network:additional_service"
+
+        # The physical_mode sent in gtfs-rt should be present in the new line added
+        resp = self.query_region("lines/line:stopC_stopB/physical_modes")
+        assert resp["physical_modes"][0]["id"] == "physical_mode:Bus"
+
+        # The default commercial_mode used for a new line should be present
+        resp = self.query_region("lines/line:stopC_stopB/commercial_modes")
+        assert resp["commercial_modes"][0]["id"] == "commercial_mode:additional_service"
+
+        # Newly added lines should have a route, vehicle_journey,
+        resp = self.query_region("lines/line:stopC_stopB/routes")
+        assert resp["routes"][0]["id"] == "route:stopC_stopB"
+        resp = self.query_region("lines/line:stopC_stopB/vehicle_journeys")
+        assert resp["vehicle_journeys"][0]["id"] == "vehicle_journey:additional-trip:modified:0:new_trip"
+
+        # We should be able to get the line from vehicle_journey recently added
+        resp = self.query_region("vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/lines")
+        assert resp["lines"][0]["id"] == "line:stopC_stopB"
+
+        # We should be able to get the physical_mode sent in gtfs-rt from vehicle_journey recently added
+        resp = self.query_region(
+            "vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/physical_modes"
+        )
+        assert resp["physical_modes"][0]["id"] == "physical_mode:Bus"
+
+        # The following ptref search should work with theorical data.
+        # network <-> datasets
+        resp = self.query_region("networks/base_network/datasets")
+        assert resp["datasets"][0]["id"] == "default:dataset"
+        resp = self.query_region("datasets/default:dataset/networks")
+        assert resp["networks"][0]["id"] == "base_network"
+
+        # line <-> company
+        resp, status = self.query_region("lines/A/companies", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+        resp, status = self.query_region("companies/base_company/lines", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+
+        # company <-> commercial_modes
+        resp, status = self.query_region("companies/base_company/commercial_modes", check=False)
+        assert status == 404
+        assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
+        resp, status = self.query_region("commercial_modes/Bike/companies", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+
+        # route <-> dataset
+        resp = self.query_region("routes/B:3/datasets")
+        assert resp["datasets"][0]["id"] == "default:dataset"
+        resp = self.query_region("datasets/default:dataset/routes")
+        routes = [rt["id"] for rt in resp["routes"]]
+        assert "B:3" in routes
+
+        # vehicle_journey <-> company
+        resp = self.query_region("vehicle_journeys/vehicle_journey:vjA/companies")
+        assert resp["companies"][0]["id"] == "base_company"
+        resp, status = self.query_region("companies/base_company/vehicle_journeys", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+
+        # network <-> contributor
+        resp = self.query_region("networks/base_network/contributors")
+        assert resp["contributors"][0]["id"] == "default:contributor"
+        resp = self.query_region("contributors/default:contributor/networks")
+        assert resp["networks"][0]["id"] == "base_network"
+
+        # The following ptref search should work with a trip added.
+        # network <-> datasets: use of data->build_relations() in maintenance_worker works
+        resp, status = self.query_region("networks/network:additional_service/datasets", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+        resp = self.query_region("datasets/default:dataset/networks")
+        networks = [nw["id"] for nw in resp["networks"]]
+        assert "network:additional_service" not in networks
+
+        # route <-> dataset: use of data->build_relations() in maintenance_worker works
+        resp, status = self.query_region("routes/route:stopC_stopB/datasets", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+        resp = self.query_region("datasets/default:dataset/routes")
+        routes = [rt["id"] for rt in resp["routes"]]
+        assert "route:stopC_stopB" not in routes
+
+        # network <-> contributor: use of data->build_relations() in maintenance_worker works
+        resp, status = self.query_region("networks/network:additional_service/contributors", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+        resp = self.query_region("contributors/default:contributor/networks")
+        networks = [nw["id"] for nw in resp["networks"]]
+        assert "network:additional_service" not in networks
+
+        # line <-> company: Line.company_list/Company.line_list is filled in the function
+        # EdReader::fill_vehicle_journeys only and is used only during generation theoretical data.
+        resp, status = self.query_region("lines/line:stopC_stopB/companies", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+        resp, status = self.query_region("companies/base_company/lines", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+
+        # vehicle_journey <-> company
+        resp = self.query_region(
+            "vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/companies"
+        )
+        assert resp["companies"][0]["id"] == "base_company"
+        # company -> vehicle_journey doesn't work as it's done in EdReader::fill_vehicle_journeys only
+        resp, status = self.query_region("companies/base_company/vehicle_journeys", check=False)
+        assert status == 404
+        assert resp["error"]["message"] == "ptref : Filters: Unable to find object"
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinAddNewTripWithWrongPhysicalMode(MockKirinDisruptionsFixture):
     def test_add_new_trip_with_wrong_physical_mode(self):
         """
