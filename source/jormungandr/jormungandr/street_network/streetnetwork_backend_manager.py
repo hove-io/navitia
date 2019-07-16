@@ -78,13 +78,11 @@ class StreetNetworkBackendManager(object):
             # Set default arguments
             if 'args' not in config:
                 config['args'] = {}
-            if 'service_url' not in config['args']:
-                config['args'].update({'service_url': None})
-            if 'instance' not in config['args']:
-                config['args'].update({'instance': instance})
+
+            config['args'].setdefault('service_url', None)
+            config['args'].setdefault('instance', instance)
             # for retrocompatibility, since 'modes' was originaly outside 'args'
-            if 'modes' not in config['args']:
-                config['args']['modes'] = config.get('modes', [])
+            config['args'].setdefault('modes', config.get('modes', []))
 
             backend = utils.create_object(config)
 
