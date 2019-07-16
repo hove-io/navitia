@@ -46,7 +46,7 @@ class FakeInstance:
 
 @fixture
 def manager():
-    instance_manager = InstanceManager()
+    instance_manager = InstanceManager(None)
     instance_manager.instances['paris'] = FakeInstance('paris')
     instance_manager.instances['pdl'] = FakeInstance('pdl')
     return instance_manager

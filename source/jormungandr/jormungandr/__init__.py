@@ -93,10 +93,15 @@ else:
 
     global_autocomplete = {'kraken': Kraken()}
 
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+
+# We do not use database yet
+streetnetwork_backend_manager = StreetNetworkBackendManager()
 
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(
+    streetnetwork_backend_manager,
     instances_dir=app.config.get(str('INSTANCES_DIR'), None),
     instance_filename_pattern=app.config.get(str('INSTANCES_FILENAME_PATTERN'), '*.json'),
     start_ping=app.config.get(str('START_MONITORING_THREAD'), True),
