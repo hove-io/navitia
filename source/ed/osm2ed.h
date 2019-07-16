@@ -270,12 +270,12 @@ struct OSMCache {
     size_t admin_from_cities = 0;
     size_t cities_db_calls = 0;
 
-    Lotus lotus;
+    std::unique_ptr<Lotus> lotus;
 
     std::unique_ptr<pqxx::connection> cities_db = {};
 
-    OSMCache(const std::string& connection_string, const boost::optional<std::string>& cities_cnx)
-        : lotus(connection_string) {
+    OSMCache(std::unique_ptr<Lotus>&& new_lotus, const boost::optional<std::string>& cities_cnx)
+        : lotus(std::move(new_lotus)) {
         if (cities_cnx) {
             cities_db = std::make_unique<pqxx::connection>(*cities_cnx);
         }
