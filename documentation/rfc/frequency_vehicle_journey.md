@@ -39,6 +39,5 @@ Nonetheless, if *start_time/end_time/headways_secs* fields are present within th
 So don't take into account stop times list.
 
 To avoid any problems, the principle of use is the following:
-
-    - Don't use *frequencies.txt* and a stop times list (inside *stop_times.txt*) with the same *trip_id*. It does not work well together
+* Don't use *frequencies.txt* and a stop times list (inside *stop_times.txt*) with the same *trip_id*. It does not work well together
 
