@@ -335,7 +335,7 @@ void OSMCache::match_nodes_admin() {
  */
 void OSMCache::insert_nodes() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert nodes");
         return;
     }
@@ -364,7 +364,7 @@ void OSMCache::insert_nodes() {
  */
 void OSMCache::insert_ways() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert ways");
         return;
     }
@@ -402,7 +402,7 @@ void OSMCache::insert_ways() {
  */
 void OSMCache::insert_edges() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert edges");
         return;
     }
@@ -472,7 +472,7 @@ void OSMCache::insert_edges() {
  */
 void OSMCache::insert_relations() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert relations");
         return;
     }
@@ -508,7 +508,7 @@ void OSMCache::insert_relations() {
  */
 void OSMCache::insert_postal_codes() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert postal codes");
         return;
     }
@@ -530,7 +530,7 @@ void OSMCache::insert_postal_codes() {
 
 void OSMCache::insert_rel_way_admins() {
     auto logger = log4cplus::Logger::getInstance("log");
-    if (this->lotus) {
+    if (!this->lotus) {
         LOG4CPLUS_INFO(logger, "no database to insert rel way admins");
         return;
     }
