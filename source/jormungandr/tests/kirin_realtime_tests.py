@@ -1871,13 +1871,22 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert departures['departures'][0]['display_informations']['name'] == 'stopC - stopB'
 
         # Check that stop_schedule on line "line:stopC_stopB" and stop_point stop_point:stopC
-        # exists with disruption
-        stop_schedules = self.query_region(ss_on_line_query)
+        # for base_schedule date_times list is empty.
+        stop_schedules = self.query_region(ss_on_line_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'line:stopC_stopB'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+
+        # Check that stop_schedule on line "line:stopC_stopB" and stop_point stop_point:stopC
+        # exists with disruption.
+        stop_schedules = self.query_region(ss_on_line_query + '&data_freshness=realtime')
         assert len(stop_schedules['stop_schedules']) == 1
         assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'line:stopC_stopB'
         assert len(stop_schedules['disruptions']) == 1
         assert stop_schedules['disruptions'][0]['uri'] == 'new_trip'
         assert len(stop_schedules['stop_schedules'][0]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
         assert stop_schedules['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
 
         # Check stop_schedules on stop_point stop_point:stopC for base_schedule
@@ -1894,6 +1903,32 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         # Check stop_schedules on stop_point stop_point:stopC for realtime
         # Date_times list is empty for line 'D' but not for the new line added
         stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:stopC_stopB'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # Check stop_schedules on stop_area stopC for base_schedule
+        # Date_times list is empty for both stop_schedules
+        ss_on_sa_query = "stop_areas/stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sa_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'line:stopC_stopB'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 0
+
+        # Check stop_schedules on stop_area stopC for realtime
+        # Date_times list is empty for line 'D' but not for the new line added
+        ss_on_sa_query = "stop_areas/stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sa_query + '&data_freshness=realtime')
         assert len(stop_schedules['stop_schedules']) == 2
         assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
         assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
