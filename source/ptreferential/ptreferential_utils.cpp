@@ -149,7 +149,7 @@ static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& perio
 
     const auto& first_departure_dt = vj->earliest_time();
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
-        if (!vj->base_validity_pattern()->check(*it)) {
+        if (!vj->base_validity_pattern()->check(*it) && !vj->rt_validity_pattern()->check(*it)) {
             continue;
         }
         bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
