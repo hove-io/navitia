@@ -132,8 +132,9 @@ class Instance(object):
         )
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
+        self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
-        streetnetwork_backend_manager.init_streetnetwork_backends(self, street_network_configurations)
+        self._streetnetwork_backend_manager.init_streetnetwork_backends(self, street_network_configurations)
 
         self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
@@ -168,9 +169,6 @@ class Instance(object):
 
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
-
-        self._get_street_network = streetnetwork_backend_manager.get_street_network
-        self._get_all_street_networks = streetnetwork_backend_manager.get_all_street_networks
 
     def get_providers_from_db(self):
         """
@@ -657,10 +655,10 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        return self._get_street_network(self, mode, request)
+        return self._streetnetwork_backend_manager.get_street_network(self, mode, request)
 
     def get_all_street_networks(self):
-        return self._get_all_street_networks(self)
+        return self._streetnetwork_backend_manager.get_all_street_networks(self)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
