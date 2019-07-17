@@ -55,7 +55,7 @@ from shapely.geos import ReadingError, PredicateError
 from flask import g
 import flask
 import pybreaker
-from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
+from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network, fallback_modes
 from jormungandr.scenarios.ridesharing import ridesharing_service
 import six
 import time
@@ -134,7 +134,10 @@ class Instance(object):
         self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
-        self._streetnetwork_backend_manager.init_streetnetwork_backends(self, street_network_configurations)
+        if app.config[str('DISABLE_DATABASE')]:
+            self._streetnetwork_backend_manager.init_streetnetwork_backends_legacy(
+                self, street_network_configurations
+            )
 
         self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
@@ -487,6 +490,13 @@ class Instance(object):
     max_taxi_direct_path_duration = _make_property_getter('max_taxi_direct_path_duration')
     max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 
+    street_network_car = _make_property_getter('street_network_car')
+    street_network_walking = _make_property_getter('street_network_walking')
+    street_network_bike = _make_property_getter('street_network_bike')
+    street_network_bss = _make_property_getter('street_network_bss')
+    street_network_ridesharing = _make_property_getter('street_network_ridesharing')
+    street_network_taxi = _make_property_getter('street_network_taxi')
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':
@@ -655,15 +665,20 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        return self._streetnetwork_backend_manager.get_street_network(self, mode, request)
+
+        if app.config[str('DISABLE_DATABASE')]:
+            return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
+        else:
+            column_in_db = fallback_modes.street_network_modes_in_db.get(mode, None)
+            streetnetwork_backend_conf = getattr(self, column_in_db)
+            return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
 
     def get_all_street_networks(self):
-        return self._streetnetwork_backend_manager.get_all_street_networks(self)
+        return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
 
     def get_street_network_routing_matrix(
-        self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
+        self, origins, destinations, mode, max_duration_to_pt, request, service, **kwargs
     ):
-        service = self.get_street_network(mode, request)
         if not service:
             return None
         return service.get_street_network_routing_matrix(
