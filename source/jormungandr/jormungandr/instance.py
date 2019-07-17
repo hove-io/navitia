@@ -685,19 +685,6 @@ class Instance(object):
             origins, destinations, mode, max_duration_to_pt, request, **kwargs
         )
 
-    def direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
-    ):
-        """
-        :param fallback_extremity: is a PeriodExtremity (a datetime and its meaning on the fallback period)
-        """
-        service = self.get_street_network(mode, request)
-        if not service:
-            return None
-        return service.direct_path_with_fp(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
-        )
-
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
             return self.autocomplete
