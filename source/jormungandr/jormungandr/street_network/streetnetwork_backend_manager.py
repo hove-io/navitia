@@ -37,7 +37,7 @@ import logging, itertools, copy, datetime
 
 
 class StreetNetworkBackendManager(object):
-    def __init__(self, sn_backends_getter=None, update_interval=10):
+    def __init__(self, sn_backends_getter=None, update_interval=60):
         self.logger = logging.getLogger(__name__)
         # dict { "instance" : [street_network_backends] }
         self._streetnetwork_backends_by_instance_legacy = defaultdict(list)
