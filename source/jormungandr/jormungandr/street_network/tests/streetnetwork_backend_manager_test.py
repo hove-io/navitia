@@ -41,7 +41,7 @@ ALL_MODES = ['walking', 'bike', 'bss', 'car']
 def _init_and_create_backend_without_default(conf):
     sn_manager = StreetNetworkBackendManager()
     sn_manager._create_street_network_backends("instance", conf)
-    return sn_manager.get_all_street_networks("instance")
+    return sn_manager.get_all_street_networks_legacy("instance")
 
 
 def kraken_class_test():
