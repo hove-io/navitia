@@ -36,7 +36,7 @@ Flask-Caching==1.4.0
 git+https://github.com/canaltp/serpy.git@ctp
 python-json-logger==0.1.7
 jmespath==0.9.3
-shortuuid
+shortuuid==0.5.0
 click==6.7
 typing==3.7.4
 coloredlogs==10.0

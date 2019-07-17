@@ -5,5 +5,5 @@ Werkzeug==0.14.1
 argparse==1.2.1
 itsdangerous==1.1.0
 protobuf
-pyzmq==14.0.1
+pyzmq==15.4.0
 wsgiref==0.1.2
