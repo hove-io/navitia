@@ -1847,15 +1847,6 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert has_the_disruption(response, 'new_trip')
         assert len(response['vehicle_journeys']) == 1
 
-        # Check that the newly created vehicle journey are well filtered by &since and &until
-        response = self.query_region(vj_filter_query + '&since=20120614T080100&until=20120614T080102')
-        assert len(response['vehicle_journeys']) == 1
-        response, status = self.query_region(
-            vj_filter_query + '&since=20120614T080101&until=20120614T080102', check=False
-        )
-        assert status == 404
-        assert 'vehicle_journeys' not in response
-
         response = self.query_region(network_filter_query)
         assert len(response['networks']) == 1
         assert response['networks'][0]['name'] == 'additional service'
