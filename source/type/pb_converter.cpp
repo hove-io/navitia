@@ -857,12 +857,8 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::
 
         fill(vector_bp, vehicle_journey->mutable_calendars());
 
-        if (!pair_jp.second.freq_vjs.empty()) {
-            for (const auto& frequency_vehicle_journey : pair_jp.second.freq_vjs) {
-                if (frequency_vehicle_journey->uri == vj->uri) {
-                    fill_pb_object(frequency_vehicle_journey, vehicle_journey);
-                }
-            }
+        if (auto* v = dynamic_cast<const nt::FrequencyVehicleJourney*>(vj)) {
+            fill_pb_object(v, vehicle_journey);
         }
     }
     fill_messages(vj->meta_vj, vehicle_journey);
@@ -870,10 +866,10 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::
     fill_codes(vj, vehicle_journey);
 }
 
-void PbCreator::Filler::fill_pb_object(const nt::FrequencyVehicleJourney* vj, pbnavitia::VehicleJourney* pb_vj) {
-    pb_vj->set_start_time(vj->start_time);
-    pb_vj->set_end_time(vj->end_time);
-    pb_vj->set_headway_secs(vj->headway_secs);
+void PbCreator::Filler::fill_pb_object(const nt::FrequencyVehicleJourney* fvj, pbnavitia::VehicleJourney* pb_vj) {
+    pb_vj->set_start_time(fvj->start_time);
+    pb_vj->set_end_time(fvj->end_time);
+    pb_vj->set_headway_secs(fvj->headway_secs);
 }
 void PbCreator::Filler::fill_pb_object(const nt::MetaVehicleJourney* nav_mvj, pbnavitia::Trip* pb_trip) {
     pb_trip->set_uri(nav_mvj->uri);
