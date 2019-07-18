@@ -39,9 +39,6 @@ poi = {
     'properties': {'operator': 'Keolis Rennes', 'ref': '42'},
     'poi_type': {'name': 'parking relais', 'id': 'poi_type:amenity:parking'},
 }
-invalid_poi = {}
-
-empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
 
 
 def car_park_space_availability_start_support_poi_test():
@@ -77,6 +74,7 @@ def car_park_space_get_information_ok_test():
 
 def car_park_space_get_information_invalid_poi_test():
     provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    invalid_poi = {}
     with requests_mock.Mocker() as m:
         assert provider.get_informations(invalid_poi) is None
         assert not m.called
@@ -91,9 +89,9 @@ def car_park_space_get_information_none_response_test():
 
 
 def car_park_space_get_information_no_data_test():
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
     star_response = {"records": [{"fields": {"idparc": "42"}}]}
     provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=toto', json=star_response)
         assert provider.get_informations(poi) == empty_parking
