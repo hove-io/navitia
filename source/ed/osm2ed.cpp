@@ -77,6 +77,20 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
         if (it_level == accepted_levels.end()) {
             return;
         }
+        const auto& it_end_date = tags.find("end_date");
+        if (it_end_date != tags.end()) {
+            try {
+                const boost::gregorian::date end_date(boost::gregorian::from_string(it_end_date->second));
+                if (end_date < boost::gregorian::date(boost::gregorian::day_clock::universal_day())) {
+                    LOG4CPLUS_INFO(logger, "admin '" << tags.find("name")->second << "'with osm_id=" << osm_id
+                                                     << " is out of date: " << end_date << " (dropped)");
+                    return;
+                }
+            } catch (boost::bad_lexical_cast& exception) {
+                LOG4CPLUS_INFO(logger, "admin '" << tags.find("name")->second << "' with osm_id=" << osm_id
+                                                 << " has an invalid end date: '" << it_end_date->second << "' (kept)");
+            }
+        }
         for (const CanalTP::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
