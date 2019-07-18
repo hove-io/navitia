@@ -58,8 +58,7 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         self.breaker = pybreaker.CircuitBreaker(fail_max=self.fail_max, reset_timeout=self.reset_timeout)
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
 
-        if kwargs.get('api_key'):
-            self.api_key = kwargs.get('api_key')
+        self.api_key = kwargs.get('api_key')
 
     @abstractmethod
     def process_data(self, data, poi):
@@ -67,7 +66,7 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
 
     def get_informations(self, poi):
         if not poi.get('properties', {}).get('ref'):
-            return
+            return None
 
         data = self._call_webservice(self.ws_service_template.format(self.dataset))
 

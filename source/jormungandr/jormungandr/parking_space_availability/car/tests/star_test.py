@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import pytest
-from mock import MagicMock
+import requests_mock
 
 from jormungandr.parking_space_availability.car.star import StarProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
@@ -39,6 +39,9 @@ poi = {
     'properties': {'operator': 'Keolis Rennes', 'ref': '42'},
     'poi_type': {'name': 'parking relais', 'id': 'poi_type:amenity:parking'},
 }
+invalid_poi = {}
+
+empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
 
 
 def car_park_space_availability_start_support_poi_test():
@@ -49,80 +52,77 @@ def car_park_space_availability_start_support_poi_test():
     assert provider.support_poi(poi)
 
 
-def car_park_space_get_information_test():
+def car_park_space_get_information_ok_test():
     parking_places = ParkingPlaces(available=4, occupied=3, available_PRM=2, occupied_PRM=0)
-    provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
-    star_response = """
-    {
-        "records":[
+    star_response = {
+        "records": [
             {
                 "fields": {
                     "nombreplacesdisponibles": 4,
                     "nombreplacesoccupees": 3,
                     "nombreplacesdisponiblespmr": 2,
                     "nombreplacesoccupeespmr": 0,
-                    "idparc": "42"
+                    "idparc": "42",
                 }
             }
         ]
     }
-    """
-    import json
 
-    provider._call_webservice = MagicMock(return_value=json.loads(star_response))
-    assert provider.get_informations(poi) == parking_places
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    with requests_mock.Mocker() as m:
+        m.get('http://fake.url?dataset=toto', json=star_response)
+        assert provider.get_informations(poi) == parking_places
+        assert m.called
 
-    invalid_poi = {}
-    assert provider.get_informations(invalid_poi) is None
 
-    provider._call_webservice = MagicMock(return_value=None)
-    assert provider.get_informations(poi) is None
+def car_park_space_get_information_invalid_poi_test():
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    with requests_mock.Mocker() as m:
+        assert provider.get_informations(invalid_poi) is None
+        assert not m.called
 
-    star_response = """
-    {
-        "records":[
-            {
-                "fields": {
-                    "idparc": "42"
-                }
-            }
-        ]
-    }
-    """
-    empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
-    provider._call_webservice = MagicMock(return_value=json.loads(star_response))
-    assert provider.get_informations(poi) == empty_parking
 
-    star_response = """
-    {
-        "records":[
-        ]
-    }
-    """
-    provider._call_webservice = MagicMock(return_value=json.loads(star_response))
-    assert provider.get_informations(poi) is None
+def car_park_space_get_information_none_response_test():
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    with requests_mock.Mocker() as m:
+        m.get('http://fake.url?dataset=toto', json=None)
+        assert provider.get_informations(poi) is None
+        assert m.called
 
+
+def car_park_space_get_information_no_data_test():
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    star_response = {"records": [{"fields": {"idparc": "42"}}]}
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    with requests_mock.Mocker() as m:
+        m.get('http://fake.url?dataset=toto', json=star_response)
+        assert provider.get_informations(poi) == empty_parking
+        assert m.called
+
+
+def car_park_space_get_information_no_parking_test():
+    star_response = {"records": []}
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    with requests_mock.Mocker() as m:
+        m.get('http://fake.url?dataset=toto', json=star_response)
+        assert provider.get_informations(poi) is None
+        assert m.called
+
+
+def car_park_space_get_information_ok_without_PMR_test():
     # Information of PRM is not provided
     parking_places = ParkingPlaces(available=4, occupied=3)
-    provider = StarProvider('Keolis Rennes', 'toto', 42)
-    star_response = """
-    {
-        "records":[
-            {
-                "fields": {
-                    "nombreplacesdisponibles": 4,
-                    "nombreplacesoccupees": 3,
-                    "idparc": "42"
-                }
-            }
-        ]
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    star_response = {
+        "records": [{"fields": {"nombreplacesdisponibles": 4, "nombreplacesoccupees": 3, "idparc": "42"}}]
     }
-    """
 
-    provider._call_webservice = MagicMock(return_value=json.loads(star_response))
-    info = provider.get_informations(poi)
-    assert info == parking_places
-    assert hasattr(info, "available")
-    assert hasattr(info, "occupied")
-    assert not hasattr(info, "available_PRM")
-    assert not hasattr(info, "occupied_PRM")
+    with requests_mock.Mocker() as m:
+        m.get('http://fake.url?dataset=toto', json=star_response)
+        info = provider.get_informations(poi)
+        assert info == parking_places
+        assert hasattr(info, "available")
+        assert hasattr(info, "occupied")
+        assert not hasattr(info, "available_PRM")
+        assert not hasattr(info, "occupied_PRM")
+        assert m.called
