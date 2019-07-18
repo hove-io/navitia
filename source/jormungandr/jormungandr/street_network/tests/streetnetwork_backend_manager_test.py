@@ -29,9 +29,12 @@
 from __future__ import absolute_import
 import pytest
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
 from jormungandr.exceptions import ConfigException
+
+import datetime
 
 KRAKEN_CLASS = 'jormungandr.street_network.kraken.Kraken'
 VALHALLA_CLASS = 'jormungandr.street_network.valhalla.Valhalla'
@@ -163,3 +166,98 @@ def valhalla_class_with_class_not_exist_test():
             }
         ]
         _init_and_create_backend_without_default(kraken_conf)
+
+
+def sn_backends_getter_ok():
+    sn_backend1 = StreetNetworkBackend(id='kraken')
+    sn_backend1.klass = 'jormungandr.street_network.tests.StreetNetworkBackendMock'
+    sn_backend1.args = {'url': 'kraken.url'}
+    sn_backend1.created_at = datetime.datetime.utcnow()
+
+    sn_backend2 = StreetNetworkBackend(id='asgard')
+    sn_backend2.klass = 'jormungandr.street_network.tests.StreetNetworkBackendMock'
+    sn_backend2.args = {'url': 'asgard.url'}
+    return [sn_backend1, sn_backend2]
+
+
+def sn_backends_getter_update():
+    sn_backend = StreetNetworkBackend(id='kraken')
+    sn_backend.klass = 'jormungandr.street_network.tests.StreetNetworkBackendMock'
+    sn_backend.args = {'url': 'kraken.url.UPDATE'}
+    sn_backend.updated_at = datetime.datetime.utcnow()
+    return [sn_backend]
+
+
+def sn_backends_getter_wrong_class():
+    sn_backend = StreetNetworkBackend(id='kraken')
+    sn_backend.klass = 'jormungandr/street_network/tests/StreetNetworkBackendMock'
+    sn_backend.args = {'url': 'kraken.url'}
+    return [sn_backend]
+
+
+def streetnetwork_backend_manager_db_test():
+    """
+    Test that streetnetwork backends are created from db when conditions are met
+    """
+    manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
+
+    # 2 sn_backends defined in db are associated to the coverage
+    # -> 2 sn_backends created
+    manager._update_config("instance")
+
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert len(manager._streetnetwork_backends) == 2
+    assert 'kraken' in manager._streetnetwork_backends
+    assert manager._streetnetwork_backends['kraken'].url == 'kraken.url'
+    assert 'asgard' in manager._streetnetwork_backends
+    assert manager._streetnetwork_backends['asgard'].url == 'asgard.url'
+
+    manager_update = manager._last_update
+    assert 'kraken' in manager._streetnetwork_backends_last_update
+    kraken_update = manager._streetnetwork_backends_last_update['kraken']
+
+    # Sn_backend already existing is updated
+    manager._sn_backends_getter = sn_backends_getter_update
+    manager._update_config("instance")
+    assert manager._last_update > manager_update
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert len(manager._streetnetwork_backends) == 2
+    assert 'kraken' in manager._streetnetwork_backends
+    assert manager._streetnetwork_backends['kraken'].url == 'kraken.url.UPDATE'
+    assert 'kraken' in manager._streetnetwork_backends_last_update
+    assert manager._streetnetwork_backends_last_update['kraken'] > kraken_update
+
+    # Long update interval so sn_backend shouldn't be updated
+    manager = StreetNetworkBackendManager(sn_backends_getter_ok, 600)
+    manager._update_config("instance")
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert len(manager._streetnetwork_backends) == 2
+    assert 'kraken' in manager._streetnetwork_backends
+    assert manager._streetnetwork_backends['kraken'].url == 'kraken.url'
+    manager_update = manager._last_update
+
+    manager.sn_backends_getter = sn_backends_getter_update
+    manager._update_config("instance")
+    assert manager._last_update == manager_update
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert len(manager._streetnetwork_backends) == 2
+    assert 'kraken' in manager._streetnetwork_backends
+    assert manager._streetnetwork_backends['kraken'].url == 'kraken.url'
+
+
+def wrong_streetnetwork_backend_test():
+    """
+    Test that streetnetwork backends with wrong parameters aren't created
+    """
+
+    # Sn_backend has a class wrongly formatted
+    manager = StreetNetworkBackendManager(sn_backends_getter_wrong_class, -1)
+    manager._update_config("instance")
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert not manager._streetnetwork_backends
+
+    # No sn_backends available in db
+    manager._sn_backends_getter = []
+    manager._update_config("instance")
+    assert not manager._streetnetwork_backends_by_instance_legacy
+    assert not manager._streetnetwork_backends

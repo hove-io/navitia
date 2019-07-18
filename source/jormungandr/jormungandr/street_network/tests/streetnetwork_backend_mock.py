@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,5 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from streetnetwork_test_utils import MockKraken
-from jormungandr.street_network.tests.streetnetwork_backend_mock import StreetNetworkBackendMock
+
+class StreetNetworkBackendMock(object):
+    def __init__(self, url, timeout=2, **kwargs):
+        self.url = url
+        self.timeout = timeout
