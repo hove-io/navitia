@@ -1,4 +1,5 @@
 # coding=utf-8
+
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,8 +31,9 @@
 
 import docker
 import logging
-from retrying import retry
 import psycopg2
+
+from retrying import retry
 
 """
 This module contains classes about Docker management.
@@ -48,6 +50,7 @@ class DbParams(object):
     """
 
     def __init__(self, host, dbname, user, password):
+        # type: (str, str, str, str) -> None
         """
         Constructor of DbParams.
 
@@ -62,6 +65,7 @@ class DbParams(object):
         self.password = password
 
     def cnx_string(self):
+        # type: () -> str
         """
         The connection string for the database.
         A string containing all the essentials data for a connection to a database.
@@ -73,6 +77,7 @@ class DbParams(object):
         )
 
     def old_school_cnx_string(self):
+        # type: () -> str
         """
         The connection string for the database (old school version).
         A string containg all the essentials data for a connection to a old school database (before Debian8). Old C++
@@ -91,10 +96,11 @@ class PostgresDocker(object):
     """
 
     def __init__(self):
+        # type: () -> None
         """
         Constructor of PostgresDocker.
         """
-        log = logging.getLogger(__name__)
+        log = logging.getLogger(__name__)  # type: logging.Logger
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
         self.docker_api_client = docker.APIClient(base_url=base_url)
@@ -141,6 +147,7 @@ class PostgresDocker(object):
         self.test_db_cnx()
 
     def close(self):
+        # type: () -> None
         """
         Terminate the Docker and clean it.
         """
@@ -160,6 +167,7 @@ class PostgresDocker(object):
             exit(1)
 
     def get_db_params(self):
+        # type: () -> DbParams
         """
         Create the connection parameters of the database.
         Default user and password are "docker" and default database is "postgres".
@@ -170,6 +178,7 @@ class PostgresDocker(object):
 
     @retry(stop_max_delay=10000, wait_fixed=100, retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
+        # type: () -> None
         """
         Test the connection to the database.
         """

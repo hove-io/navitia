@@ -1,4 +1,5 @@
-#!python
+# coding=utf-8
+
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -27,11 +28,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from contextlib import closing
-import sys
 
-from clingon import clingon
+import sys
 import logging
+
+from contextlib import closing
+from clingon import clingon
+from typing import List
 
 """
 Eitri uses a set of binaries to extract data, load it into a database and extract it to a single file.
@@ -53,6 +56,7 @@ def eitri(
     import_cities='',
     add_pythonpath=[],
 ):
+    # type: (str, str, str, str, str, List[str]) -> None
     """
     Generate a "data.nav.lz4" file.
 
