@@ -45,10 +45,12 @@ class StarProvider(CommonCarParkProvider):
 
     def process_data(self, data, poi):
         park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
-        if park:
-            available = jmespath.search('fields.nombreplacesdisponibles', park)
-            occupied = jmespath.search('fields.nombreplacesoccupees', park)
-            # Person with reduced mobility
-            available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
-            occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
-            return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+        if not park:
+            return None
+
+        available = jmespath.search('fields.nombreplacesdisponibles', park)
+        occupied = jmespath.search('fields.nombreplacesoccupees', park)
+        # Person with reduced mobility
+        available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
+        occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
+        return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
