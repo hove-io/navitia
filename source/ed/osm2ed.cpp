@@ -86,7 +86,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
                                                      << " is out of date: " << end_date << " (dropped)");
                     return;
                 }
-            } catch (boost::bad_lexical_cast& exception) {
+            } catch (...) {
                 LOG4CPLUS_INFO(logger, "admin '" << tags.find("name")->second << "' with osm_id=" << osm_id
                                                  << " has an invalid end date: '" << it_end_date->second << "' (kept)");
             }
