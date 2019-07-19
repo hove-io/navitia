@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(osm_admin_wrong_day_value_in_end_date) {
     BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
 }
 
-// Check if the administration is accepted if the "end_date" tag is well-formatted but differently
+// Check if the administration is rejected if the "end_date" tag is well-formatted but differently
 BOOST_AUTO_TEST_CASE(osm_admin_without_zero_in_month_in_end_date) {
     OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
     ReadRelationsVisitor relations_visitor(cache, false);
