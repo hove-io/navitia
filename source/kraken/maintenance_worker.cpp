@@ -196,6 +196,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
     }
     if (data) {
+        LOG4CPLUS_INFO(logger, "rebuilding relations");
+        data->build_relations();
         LOG4CPLUS_INFO(logger, "rebuilding autocomplete");
         data->build_autocomplete();
         LOG4CPLUS_INFO(logger, "cleaning weak impacts");
