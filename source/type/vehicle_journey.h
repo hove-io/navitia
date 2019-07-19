@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include "validity_pattern.h"
 #include <set>
+#include <boost/serialization/split_member.hpp>
 
 namespace navitia {
 namespace type {

@@ -31,6 +31,7 @@ www.navitia.io
 #include "apply_disruption.h"
 #include "utils/logger.h"
 #include <boost/make_shared.hpp>
+#include "type/line.h"
 
 namespace bt = boost::posix_time;
 

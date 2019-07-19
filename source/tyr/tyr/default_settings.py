@@ -39,6 +39,10 @@ DATASET_MAX_BACKUPS_TO_KEEP = 1
 # Period of time to keep job (in days)
 JOB_MAX_PERIOD_TO_KEEP = 60
 
+# Tyr v1: Items per page with pagination
+MAX_ITEMS_PER_PAGE = 10
+
+
 # Log Level available
 # - DEBUG
 # - INFO

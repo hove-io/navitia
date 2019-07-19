@@ -556,6 +556,12 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 if (i != 0 && i != nb_sps - 1 && item.stop_times[i]->date_time_estimated()) {
                     continue;
                 }
+
+                // skipping stop_time having a 'deleted' or 'deleted for detour' stop_point
+                if (!item.stop_times[i]->pick_up_allowed() && !item.stop_times[i]->drop_off_allowed()) {
+                    continue;
+                }
+
                 pbnavitia::StopDateTime* stop_time = pb_section->add_stop_date_times();
                 auto arr_time = navitia::to_posix_timestamp(item.arrivals[i]);
                 stop_time->set_arrival_date_time(arr_time);

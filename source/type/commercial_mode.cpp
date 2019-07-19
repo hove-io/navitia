@@ -31,6 +31,7 @@ www.navitia.io
 #include "type/commercial_mode.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
+#include "type/line.h"
 #include "type/serialization.h"
 
 namespace navitia {

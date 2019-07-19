@@ -43,6 +43,7 @@ www.navitia.io
 #include <map>
 #include <set>
 #include <functional>
+#include "type/time_duration.h"
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
@@ -151,22 +152,11 @@ public:
     nt::MultiLineString make_multiline(const Graph&) const;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar& idx& name& comment& uri& way_type& admin_list& house_number_left& house_number_right& edges& geoms;
+        ar& idx& name& comment& uri& way_type& admin_list& house_number_left& house_number_right& edges& visible& geoms;
     }
     std::string get_label() const;
 
     void sort_house_numbers();
-
-#ifdef _DEBUG_DIJKSTRA_QUANTUM_
-    template <typename Stream, typename G>
-    void print(Stream& stream, const G& g) {
-        for (auto& edge : this->edges) {
-            stream << std::setprecision(16) << "LINESTRING(" << g[edge.first].coord.lon() << " "
-                   << g[edge.first].coord.lat() << ", " << g[edge.second].coord.lon() << " "
-                   << g[edge.second].coord.lat() << ")" << std::endl;
-        }
-    }
-#endif
 
 private:
     nt::GeographicalCoord get_geographical_coord(const int, const Graph&) const;
@@ -363,33 +353,33 @@ struct GeoRef {
  *
  */
 struct ProjectionData {
-    /// enum used to acces the nodes and the distances
+    // enum used to acces the nodes and the distances
     enum class Direction { Source = 0, Target, size };
-    /// 2 possible nodes (each end of the edge where the coordinate has been projected)
+    // 2 possible nodes (each end of the edge where the coordinate has been projected)
     flat_enum_map<Direction, vertex_t> vertices;
 
     // The edge we projected on. Needed since we can't be sure to get the right edge with only the source and the target
     // because of parallel edges.
     Edge edge;
 
-    /// has the projection been successful?
+    // has the projection been successful?
     bool found = false;
 
-    /// The coordinate projected on the edge
+    // The coordinate projected on the edge
     type::GeographicalCoord projected;
 
     // the original coordinate before projection
     type::GeographicalCoord real_coord;
 
-    /// Distance between the projected point and the ends
+    // Distance between the projected point and the ends
     flat_enum_map<Direction, double> distances{{{-1, -1}}};
 
     ProjectionData() {}
-    /// Project the coordinate on the graph
+    // Project the coordinate on the graph
     ProjectionData(const type::GeographicalCoord& coord,
                    const GeoRef& sn,
                    const proximitylist::ProximityList<vertex_t>& prox);
-    /// Project the coordinate on the graph corresponding to the transportation mode of the offset
+    // Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord& coord,
                    const GeoRef& sn,
                    type::idx_t offset,
@@ -403,8 +393,14 @@ struct ProjectionData {
 
     void init(const type::GeographicalCoord& coord, const GeoRef& sn, edge_t nearest_edge);
 
-    /// syntaxic sugar
-    vertex_t operator[](Direction d) const { return vertices[d]; }
+    // syntaxic sugar
+    vertex_t operator[](Direction d) const {
+        if (!found) {
+            throw proximitylist::NotFound();
+        }
+
+        return vertices[d];
+    }
 };
 
 /** Nommage d'un POI (point of interest). **/

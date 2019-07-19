@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 #include <proj_api.h>
-#include "type/type.h"
+#include "type/geographical_coord.h"
 
 namespace ed {
 namespace connectors {

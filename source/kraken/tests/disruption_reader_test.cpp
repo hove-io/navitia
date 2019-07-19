@@ -32,6 +32,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE disruption_reader_test
 #include <boost/test/unit_test.hpp>
 #include "kraken/fill_disruption_from_database.h"
+#include "type/type.h"
 #include <map>
 
 struct Const_it {

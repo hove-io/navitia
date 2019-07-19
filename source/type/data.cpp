@@ -37,9 +37,10 @@ www.navitia.io
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/weak_ptr.hpp>
+#include "utils/serialization_unique_ptr.h"
+#include "utils/serialization_atomic.h"
 #include <boost/serialization/variant.hpp>
+#include "type/serialization.h"
 #include <boost/range/algorithm/find.hpp>
 #include <boost/container/container_fwd.hpp>
 #include <thread>
@@ -62,7 +63,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 69;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 70;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -83,6 +84,26 @@ Data::Data(size_t data_identifier)
 }
 
 Data::~Data() {}
+
+template <class Archive>
+void Data::save(Archive& ar, const unsigned int) const {
+    ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
+        is_realtime_loaded;
+}
+template <class Archive>
+void Data::load(Archive& ar, const unsigned int version) {
+    this->version = version;
+    if (this->version != data_version) {
+        unsigned int v = data_version;  // won't link otherwise...
+        auto msg =
+            boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)")
+            % version % v;
+        throw navitia::data::wrong_version(msg.str());
+    }
+    ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
+        is_realtime_loaded;
+}
+SPLIT_SERIALIZABLE(Data)
 
 /**
  * @brief Load data (in nav.lz4).

@@ -113,10 +113,11 @@ class TestEquipment(AbstractTestFixture):
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
+            "PM": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
         equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
+        assert len(equipment_reports) == 6
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
@@ -153,10 +154,11 @@ class TestEquipment(AbstractTestFixture):
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
+            "PM": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
         equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
+        assert len(equipment_reports) == 6
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
@@ -193,10 +195,11 @@ class TestEquipment(AbstractTestFixture):
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
+            "PM": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
         equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
+        assert len(equipment_reports) == 6
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
@@ -252,10 +255,11 @@ class TestEquipment(AbstractTestFixture):
             "C": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
             "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
+            "PM": {"stopA": stopA_equipment_details, "stopB": stopb_equipment_details},
         }
 
         equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
+        assert len(equipment_reports) == 6
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)
@@ -377,10 +381,11 @@ class TestEquipment(AbstractTestFixture):
             "C": {"stopA": stopA_equipment_details},
             "D": {"stopA": stopA_equipment_details},
             "M": {"stopA": stopA_equipment_details},
+            "PM": {"stopA": stopA_equipment_details},
         }
 
         equipment_reports = get_not_null(response, 'equipment_reports')
-        assert len(equipment_reports) == 5
+        assert len(equipment_reports) == 6
         for equipment_report in equipment_reports:
             is_valid_equipment_report(equipment_report)
         self._check_equipment_report(equipment_reports, expected_result)

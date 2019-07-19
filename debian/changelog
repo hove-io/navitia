@@ -1,3 +1,34 @@
+navitia2 (2.82.0) unstable; urgency=low
+
+  * Ed: Fix for out of range in osm2ed  <https://github.com/CanalTP/navitia/pull/2880>
+  * Jormun: Fix error in parking provider  <https://github.com/CanalTP/navitia/pull/2875>
+  * Ed: Fix issue with admin out of date for osm2ed  <https://github.com/CanalTP/navitia/pull/2859>
+  * Jormun: Do not show a backtrace when New Relic is not available in Jormungandr  <https://github.com/CanalTP/navitia/pull/2877>
+  * Eitri: Add mypy type check in Eitri  <https://github.com/CanalTP/navitia/pull/2845>
+  * Kraken-Jormun: Revert 2869 on rt validity pattern  <https://github.com/CanalTP/navitia/pull/2872>
+  * Ed: Fix issue with Lotus  <https://github.com/CanalTP/navitia/pull/2871>
+  * Jormungandr: ptref test on added trip objects added  <https://github.com/CanalTP/navitia/pull/2824>
+  * Kraken-Jormun: rt_validity_pattern used to verify vehicle_journey validity  <https://github.com/CanalTP/navitia/pull/2869>
+  * Jormun: Refacto street_network_configurations  <https://github.com/CanalTP/navitia/pull/2858>
+  * Ed: Separate Lotus (Postgres handler) from OSMCache  <https://github.com/CanalTP/navitia/pull/2865>
+  * Jormun: handle utf8 from bragi  <https://github.com/CanalTP/navitia/pull/2867>
+  * All: Add colored logs to all Python projects  <https://github.com/CanalTP/navitia/pull/2850>
+  * Doc: Move ntfs specs to their own repo  <https://github.com/CanalTP/navitia/pull/2864>
+  * Doc: Add ADDITIONAL_SERVICE in real time integration  <https://github.com/CanalTP/navitia/pull/2860>
+  * All: Omit deleted stop in stop date times  <https://github.com/CanalTP/navitia/pull/2862>
+  * Jormun: Fix 'max_extra_second_pass' param from db  <https://github.com/CanalTP/navitia/pull/2855>
+  * All: Add test on vj with pass midnight  <https://github.com/CanalTP/navitia/pull/2823>
+  * Script: Install dev env + run Navitia demo  <https://github.com/CanalTP/navitia/pull/2786>
+  * Jormun: Adding street_network_configuraton in db  <https://github.com/CanalTP/navitia/pull/2839>
+  * Doc: Add PyDoc for all Eitri project  <https://github.com/CanalTP/navitia/pull/2842>
+  * Realtime-Doc: Schedules with stop add  <https://github.com/CanalTP/navitia/pull/2853>
+  * Kraken: Fixing undefined behaviour and crash of A*  <https://github.com/CanalTP/navitia/pull/2846>
+  * Kraken: A* back in kraken (Revert "Kraken: Revert A* PR")  <https://github.com/CanalTP/navitia/pull/2843>
+  * Kraken: Visibility of an address in autocomplete fixed  <https://github.com/CanalTP/navitia/pull/2827>
+  * Tyr: API v1  <https://github.com/CanalTP/navitia/pull/2834>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Fri, 19 Jul 2019 13:07:32 +0100
+
 navitia2 (2.81.0) unstable; urgency=low
 
   * All: Use mypy for every projects  <https://github.com/CanalTP/navitia/pull/2838>

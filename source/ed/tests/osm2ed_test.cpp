@@ -32,6 +32,8 @@ www.navitia.io
 #define BOOST_TEST_MODULE osm2ed
 
 #include <boost/test/unit_test.hpp>
+#include "osmpbfreader/osmpbfreader.h"
+#include "utils/lotus.h"
 #include "ed/types.h"
 #include "ed/osm2ed.h"
 
@@ -42,6 +44,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace ed::connectors;
+using namespace CanalTP;
 
 BOOST_AUTO_TEST_CASE(osm2ed_with_no_param_should_start_without_throwing) {
     const char* argv[] = {"osm2ed_test"};
@@ -66,4 +69,93 @@ BOOST_AUTO_TEST_CASE(osm_poi_id_way_should_match_mimirs_one) {
 BOOST_AUTO_TEST_CASE(osm_poi_id_relation_should_match_mimirs_one) {
     OsmPoi osm_poi(OsmObjectType::Relation, 123456);
     BOOST_CHECK_EQUAL(osm_poi.uri, "poi:osm:relation:123456");
+}
+
+// Check if the administration is accepted if the "end_date" tag is not given
+BOOST_AUTO_TEST_CASE(osm_admin_no_end_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {{"name", "NavitiaCity0"}, {"admin_level", "9"}, {"boundary", "administrative"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is accepted if the "end_date" tag is over the current date
+BOOST_AUTO_TEST_CASE(osm_admin_not_out_of_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {
+        {"name", "NavitiaCity1"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2050-12-31"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is rejected if the "end_date" tag is under the current date
+BOOST_AUTO_TEST_CASE(osm_admin_out_of_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {
+        {"name", "NavitiaCity2"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-12-31"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) == relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is accepted if the "end_date" tag is ill-formatted
+BOOST_AUTO_TEST_CASE(osm_admin_ill_formated_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {{"name", "NavitiaCity3"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "plop"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is accepted if the "end_date" tag is well-formatted with out of range value
+BOOST_AUTO_TEST_CASE(osm_admin_out_of_range_in_end_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {
+        {"name", "NavitiaCity4"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-31-12"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is accepted if the "end_date" tag is well-formatted with wrong day value
+BOOST_AUTO_TEST_CASE(osm_admin_wrong_day_value_in_end_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {
+        {"name", "NavitiaCity5"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-02-31"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) != relations_visitor.cache.admins.end());
+}
+
+// Check if the administration is rejected if the "end_date" tag is well-formatted but differently
+BOOST_AUTO_TEST_CASE(osm_admin_without_zero_in_month_in_end_date) {
+    OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
+    ReadRelationsVisitor relations_visitor(cache, false);
+
+    Tags tags = {
+        {"name", "NavitiaCity6"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-2-12"}};
+    References ref(1, Reference());
+
+    relations_visitor.relation_callback(5, tags, ref);
+    BOOST_CHECK(relations_visitor.cache.admins.find(5) == relations_visitor.cache.admins.end());
 }

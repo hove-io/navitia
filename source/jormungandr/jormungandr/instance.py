@@ -50,7 +50,6 @@ from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, memory_cache, app, global_autocomplete
-from jormungandr import fallback_modes as fm
 from shapely import wkt, geometry
 from shapely.geos import ReadingError, PredicateError
 from flask import g
@@ -58,7 +57,6 @@ import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
 from jormungandr.scenarios.ridesharing import ridesharing_service
-import itertools
 import six
 import time
 from collections import deque
@@ -81,34 +79,6 @@ type_to_pttype = {
 @app.before_request
 def _init_g():
     g.instances_model = {}
-
-
-# For street network modes that are not set in the given config file,
-# we set kraken as their default engine
-def _set_default_street_network_config(street_network_configs):
-    if not isinstance(street_network_configs, list):
-        street_network_configs = []
-
-    kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
-    taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
-    ridesharing = {'class': 'jormungandr.street_network.Ridesharing', 'args': {'street_network': kraken}}
-
-    default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
-    # taxi mode's default class is changed to 'taxi' not kraken
-    default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
-    default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
-
-    modes_in_configs = set(
-        list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
-    )
-    modes_not_set = fm.all_fallback_modes - modes_in_configs
-
-    for mode in modes_not_set:
-        config = {"modes": [mode]}
-        config.update(default_sn_class[mode])
-        street_network_configs.append(copy.deepcopy(config))
-
-    return street_network_configs
 
 
 # TODO: use this helper function for all properties if possible
@@ -143,6 +113,7 @@ class Instance(object):
         zmq_socket_type,
         autocomplete_type,
         instance_equipment_providers,  # type: List[Text]
+        streetnetwork_backend_manager,
     ):
         self.geom = None
         self._sockets = deque()
@@ -161,11 +132,10 @@ class Instance(object):
         )
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
+        self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
-        street_network_configurations = _set_default_street_network_config(street_network_configurations)
-        self.street_network_services = street_network.StreetNetwork.get_street_network_services(
-            self, street_network_configurations
-        )
+        self._streetnetwork_backend_manager.init_streetnetwork_backends(self, street_network_configurations)
+
         self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
         if ridesharing_configurations is not None:
             self.ridesharing_services = ridesharing_service.Ridesharing.get_ridesharing_services(
@@ -685,23 +655,10 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-        overriden_sn_id = request.get('_street_network')
-        if overriden_sn_id:
+        return self._streetnetwork_backend_manager.get_street_network(self, mode, request)
 
-            def predicate(s):
-                return s.sn_system_id == overriden_sn_id
-
-        else:
-
-            def predicate(s):
-                return mode in s.modes
-
-        sn = next((s for s in self.street_network_services if predicate(s)), None)
-        if sn is None:
-            raise TechnicalError(
-                'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
-            )
-        return sn
+    def get_all_street_networks(self):
+        return self._streetnetwork_backend_manager.get_all_street_networks(self)
 
     def get_street_network_routing_matrix(
         self, origins, destinations, mode, max_duration_to_pt, request, **kwargs

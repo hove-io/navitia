@@ -336,8 +336,8 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                         {
                             "commercial_mode": {"id": "Metro", "name": "Metro"},
                             "id": "M1",
-                            "name": "Metro 1",
-                            "code": "1",
+                            "name": "Métro 1",
+                            "code": "Métro 1",
                             "network": {"id": "TGN", "name": "The Great Network"},
                             "physical_modes": [{"id": "Metro", "name": "Metro"}],
                             "text_color": "FFFFFF",
@@ -913,8 +913,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
             assert len(sa.get('lines')) == 3
             assert sa.get('lines')[0].get('id') == 'M1'
-            assert sa.get('lines')[0].get('name') == 'Metro 1'
-            assert sa.get('lines')[0].get('code') == '1'
+            assert sa.get('lines')[0].get('name') == 'Métro 1'
+            assert sa.get('lines')[0].get('code') == 'Métro 1'
             assert sa.get('lines')[0].get('commercial_mode') == {'id': 'Metro', 'name': 'Metro'}
             assert sa.get('lines')[0].get('network') == {'id': 'TGN', 'name': 'The Great Network'}
             assert sa.get('lines')[0].get('physical_modes') == [{'id': 'Metro', 'name': 'Metro'}]

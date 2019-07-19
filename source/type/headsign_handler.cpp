@@ -30,9 +30,20 @@ www.navitia.io
 
 #include "headsign_handler.h"
 #include "utils/functions.h"
+#include "type/type.h"  //TODO reduce include once metavj has been move
+#include "type/serialization.h"
+#include "utils/serialization_flat_map.h"
+#include "utils/serialization_unordered_map.h"
+#include "utils/serialization_unordered_set.h"
 
 namespace navitia {
 namespace type {
+
+template <class Archive>
+void HeadsignHandler::serialize(Archive& ar, const unsigned int) {
+    ar& headsign_changes& headsign_mvj;
+}
+SERIALIZABLE(HeadsignHandler)
 
 void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj, const std::string& new_name) {
     std::string prev_name = vj.name;

@@ -38,7 +38,7 @@ try:
     from newrelic import agent
 except ImportError:
     logger = logging.getLogger(__name__)
-    logger.exception('failure while importing newrelic')
+    logger.warn('New Relic is not available')
     agent = None
 
 

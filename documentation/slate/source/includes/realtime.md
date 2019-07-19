@@ -9,9 +9,10 @@ Real time isn't available on every coverage for Navitia. For real time to be ava
 
 The effect of a disruption can be one of the following:
 <ul>
-	<li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
-	<li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
-	<li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
+    <li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
+    <li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
+    <li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
+    <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
 </ul>
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
@@ -246,6 +247,7 @@ The effect of the disruption is `REDUCED_SERVICE`. It means that the train won't
 In the disruption, the deleted stations can be found in the list of "impacted_stops" with the departure/arrival status set to "deleted".  
 See the [disruption](#disruption) objects section for its full content and description.
 
+<div></div>
 ### Journeys
 
 If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.  
@@ -254,8 +256,9 @@ Either way, a link to this disruption can be found in the section "display_infor
 
 ### Departures & Stop Schedules
 
-The departure time of the train with the reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
-If data_freshness" is "base_schedule", then the depature time is displayed and a link to the disruption is present at the root level of the response.
+At the deleted stop area, the departure time of the train with a reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
+
+If "data_freshness" is "base_schedule", then the depature time is displayed.  
 In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 ## <a name="MODIFIED_SERVICE"></a>Modified service
@@ -347,3 +350,112 @@ The status of the journey is `MODIFIED_SERVICE`. In a public transport section o
 
 A list of the disruptions impacting the journey is also present at the root level of the response.  
 A link to the concerned disruption can be found in the section "display_informations".
+
+<div></div>
+### Departures & Stop Schedules
+
+At the added stop area, the departure time of the train with a modified service is displayed if "data_freshness" is set to "realtime".  
+In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+
+The departure time of the train with a modified service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "base_schedule".
+
+
+## <a name="ADDITIONAL_SERVICE"></a>Additional service
+
+![image](additional.png)
+
+``` shell
+# Extract of an impacted stop from /disruptions
+{
+    "amended_arrival_time": "193200",
+    "amended_departure_time": "193400",
+    "arrival_status": "added"
+    "cause": "",
+    "departure_status": "added",
+    "is_detour": false,
+    "stop_point": ⊕{7 items},
+    "stop_time_effect": "added",
+}
+```
+The effect of the disruption is `ADDITIONAL_SERVICE`. It means that a new trip has been scheduled.
+
+In the disruption, every stops served by the new train can be found in the list of "impacted_stops" with the departure/arrival status set to "added".  
+See the [disruption](#disruption) objects section for its full content and description.
+
+
+<div></div>
+### Journeys
+
+``` shell
+# Request example for /journeys
+http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
+```
+
+``` shell
+# Extract of the public transport section from the response /journeys
+
+"sections": ⊖[
+       ⊕{10 items},
+       ⊖{
+            "additional_informations": ⊕[1 item],
+            "arrival_date_time": "20190710T204500",
+            "co2_emission": ⊕{2 items},
+            "data_freshness": "realtime",
+            "departure_date_time": "20190710T160000",
+            "display_informations": ⊖{
+                "code": "",
+                "color": "000000",
+                "commercial_mode": "additional service",
+                "description": ""
+                "direction": "Nice Ville (Nice)",
+                "equipments": [],
+                "headsign": "20470",
+                "label": "Paris - Nice",
+                "links": ⊖[
+                   ⊖{
+                        "id": "1ec4266c-e7f7-4212-a2df-f61c2b56ce91",
+                        "internal": true,
+                        "rel": "disruptions",
+                        "templated": false
+                        "type": "disruption",
+                    }
+                ],
+                "name": "Paris - Nice",
+                "network": "additional service",
+                "physical_mode": "Train grande vitesse",
+                "text_color": "FFFFFF",
+            },
+            "duration": 28560,
+            "from": ⊕{5 items},
+            "geojson": ⊕{3 items},
+            "id": "section_6_0",
+            "links": ⊕[6 items],
+            "stop_date_times": ⊖[
+               ⊖{
+                    "additional_informations": [],
+                    "arrival_date_time": "20190710T160000",
+                    "departure_date_time": "20190710T160000",
+                    "links": []
+                    "stop_point": ⊕{7 items},
+                },
+               ⊕{5 items},
+               ⊕{5 items},
+               ⊕{5 items}
+            ]
+            "to": ⊕{5 items},
+            "type": "public_transport",
+        },
+       ⊕{10 items}
+    ]
+```
+
+The status of the journey is `ADDITIONAL_SERVICE`. This new journey can only be displayed if "data_freshness" is set to "realtime".  
+A list of the disruptions impacting the journey is also present at the root level of the response.  
+A link to the concerned disruption can be found in the section "display_informations".  
+
+<div></div>
+### Departures & Stop Schedules
+At one of the added stop area from the additional trip, the departure time of the train added is displayed if "data_freshness" is set to "realtime".  
+In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+
+The departure time of the train with an additional service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "base_schedule".

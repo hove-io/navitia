@@ -40,4 +40,5 @@ python-json-logger==0.1.7
 jmespath==0.9.3
 shortuuid
 click==6.7
-typing
+typing==3.7.4
+coloredlogs==10.0

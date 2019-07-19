@@ -1,4 +1,5 @@
 # coding=utf-8
+
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,31 +31,59 @@
 
 import docker
 import logging
-from retrying import retry
 import psycopg2
 
-# postgres/postgis image
+from retrying import retry
+
+"""
+This module contains classes about Docker management.
+"""
+
+# Postgres/PostGIS image
 POSTGIS_IMAGE = 'github.com/CanalTP/docker-postgis.git'
 POSTGIS_IMAGE_NAME = 'postgis:2.1'
 
 
 class DbParams(object):
+    """
+    Class to store and manipulate database parameters.
+    """
+
     def __init__(self, host, dbname, user, password):
+        # type: (str, str, str, str) -> None
+        """
+        Constructor of DbParams.
+
+        :param host: the host name
+        :param dbname: the database name
+        :param user: the user name to use for the database
+        :param password: the password of the user
+        """
         self.host = host
         self.user = user
         self.dbname = dbname
         self.password = password
 
     def cnx_string(self):
+        # type: () -> str
+        """
+        The connection string for the database.
+        A string containing all the essentials data for a connection to a database.
+
+        :return: the connection string
+        """
         return 'postgresql://{u}:{pwd}@{h}/{dbname}'.format(
             h=self.host, u=self.user, dbname=self.dbname, pwd=self.password
         )
 
     def old_school_cnx_string(self):
+        # type: () -> str
         """
-        old C++ component does not support the classic postgres://...
+        The connection string for the database (old school version).
+        A string containg all the essentials data for a connection to a old school database (before Debian8). Old C++
+        component does not support the classic "postgres://...".
 
-         refactor when moving to debian 8 as the classic cnx string will be recognized
+        :return: the old school connection string
         """
         return "host={h} user={u} dbname={dbname} password={pwd}".format(
             h=self.host, u=self.user, dbname=self.dbname, pwd=self.password
@@ -63,11 +92,15 @@ class DbParams(object):
 
 class PostgresDocker(object):
     """
-    launch a temporary docker with a postgresql-postgis db
+    Class to launch a temporary docker with a PostgreSQL/PostGIS database.
     """
 
     def __init__(self):
-        log = logging.getLogger(__name__)
+        # type: () -> None
+        """
+        Constructor of PostgresDocker.
+        """
+        log = logging.getLogger(__name__)  # type: logging.Logger
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
         self.docker_api_client = docker.APIClient(base_url=base_url)
@@ -110,10 +143,14 @@ class PostgresDocker(object):
             log.error("temporary docker {} not started".format(self.container.id))
             exit(1)
 
-        # we poll to ensure that the db is ready
+        # we poll to ensure that the database is ready
         self.test_db_cnx()
 
     def close(self):
+        # type: () -> None
+        """
+        Terminate the Docker and clean it.
+        """
         logging.getLogger(__name__).info("stopping the temporary docker")
         self.container.stop()
 
@@ -130,14 +167,21 @@ class PostgresDocker(object):
             exit(1)
 
     def get_db_params(self):
+        # type: () -> DbParams
         """
-        cnx param to the database
-        default user and password are 'docker' and default db is postgres
+        Create the connection parameters of the database.
+        Default user and password are "docker" and default database is "postgres".
+
+        :return: the DbParams for the database of the Docker
         """
         return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
 
     @retry(stop_max_delay=10000, wait_fixed=100, retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
+        # type: () -> None
+        """
+        Test the connection to the database.
+        """
         psycopg2.connect(
             database=self.get_db_params().dbname,
             user=self.get_db_params().user,

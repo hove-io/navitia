@@ -22,8 +22,8 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "don't build example of librabbimq-c")
 set(BUILD_TOOLS OFF CACHE BOOL "don't build tool of librabbimq-c")
 set(BUILD_TESTS OFF CACHE BOOL "don't build tests of librabbimq-c")
 set(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
-add_subdirectory(third_party/librabbitmq-c)
-add_subdirectory(third_party/SimpleAmqpClient)
+add_subdirectory(third_party/librabbitmq-c EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/SimpleAmqpClient EXCLUDE_FROM_ALL)
 
 #
 # Include third_party code in system mode, to avoid warnings
@@ -38,7 +38,7 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/pull/
 #prometheus-cpp cmake will refuse to build if the CMAKE_INSTALL_PREFIX is empty
 #setting it before will have side effects on how we build packages
 set(ENABLE_PUSH OFF CACHE INTERNAL "" FORCE)
-add_subdirectory(third_party/prometheus-cpp)
+add_subdirectory(third_party/prometheus-cpp EXCLUDE_FROM_ALL)
 
 # Reactivate warnings flags
 set(CMAKE_CXX_FLAGS ${TMP_FLAG})

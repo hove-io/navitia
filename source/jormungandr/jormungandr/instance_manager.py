@@ -86,7 +86,14 @@ class InstanceManager(object):
     a kraken instance's id is associated to a zmq socket and possibly some custom configuration
     """
 
-    def __init__(self, instances_dir=None, instance_filename_pattern='*.json', start_ping=False):
+    def __init__(
+        self,
+        streetnetwork_backend_manager,
+        instances_dir=None,
+        instance_filename_pattern='*.json',
+        start_ping=False,
+    ):
+        self._streetnetwork_backend_manager = streetnetwork_backend_manager
         # loads all json files found in 'instances_dir' that matches 'instance_filename_pattern'
         self.configuration_files = (
             glob.glob(instances_dir + '/' + instance_filename_pattern) if instances_dir else []
@@ -114,6 +121,7 @@ class InstanceManager(object):
             config.get('zmq_socket_type', app.config.get('ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')),
             config.get('default_autocomplete', None),
             config.get('equipment_details_providers', []),
+            self._streetnetwork_backend_manager,
         )
         self.instances[instance.name] = instance
 
