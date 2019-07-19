@@ -249,26 +249,26 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
     b.vj("B")("stop2", 700)("stop3", 800)("stop4", 900);
     b.vj("C")("stop1", 700)("stop3", 800)("stop5", 900);
     b.make();
-
+    auto rt_level = navitia::type::RTLevel::Base;
     auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2", {}, OdtLevel_e::all, {},
-                                 {}, *b.data);
+                                 {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4}));
 
     indexes = make_query_ng(Type_e::StopArea, "(get vehicle_journey <- stop_area.id=stop2) - stop_area.id=stop2", {},
-                            OdtLevel_e::all, {}, {}, *b.data);
+                            OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 3, 4}));
 
-    indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4, 5}));
 
-    indexes = make_query_ng(Type_e::StopArea, "empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "empty", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
 
-    indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
 
     indexes = make_query_ng(Type_e::StopArea, "stop_area.id=stop2 or stop_area.id=stop5", {}, OdtLevel_e::all, {}, {},
-                            *b.data);
+                            rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({2, 5}));
 }
 
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(get_connection) {
     b.connection("stop2", "stop1", 50);
     b.make();
 
-    auto indexes =
-        make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A", {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A", {}, OdtLevel_e::all, {}, {},
+                                 navitia::type::RTLevel::Base, *b.data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(*indexes.begin())->uri, "B");
 }
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
                               *b.data->pt_data, *b.data->meta);
     b.make();
 
-    auto indexes =
-        make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"", {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"", {}, OdtLevel_e::all, {}, {},
+                                 navitia::type::RTLevel::Base, *b.data);
 
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
 
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     b.make();
 
     auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(\"tag_0 name\", \"tag_2 name\")", {}, OdtLevel_e::all,
-                                 {}, {}, *b.data);
+                                 {}, {}, navitia::type::RTLevel::Base, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     std::vector<std::string> disruption_names;

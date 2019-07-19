@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 #include <boost/variant/recursive_variant.hpp>
+#include "type/rt_level.h"
 
 namespace navitia {
 namespace ptref {
@@ -48,6 +49,7 @@ type::Indexes make_query_ng(const type::Type_e requested_type,
                             const type::OdtLevel_e odt_level,
                             const boost::optional<boost::posix_time::ptime>& since,
                             const boost::optional<boost::posix_time::ptime>& until,
+                            const type::RTLevel rt_level,
                             const type::Data& data);
 
 namespace ast {

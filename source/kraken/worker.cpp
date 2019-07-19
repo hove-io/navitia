@@ -772,11 +772,12 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
     for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
     }
+    auto rt_level = get_realtime_level(request.realtime_level());
     navitia::ptref::query_pb(
         this->pb_creator, get_type(request.requested_type()), request.filter(), forbidden_uri,
         get_odt_level(request.odt_level()), request.depth(), request.start_page(), request.count(),
         boost::make_optional(request.has_since_datetime(), bt::from_time_t(request.since_datetime())),
-        boost::make_optional(request.has_until_datetime(), bt::from_time_t(request.until_datetime())), *data);
+        boost::make_optional(request.has_until_datetime(), bt::from_time_t(request.until_datetime())), rt_level, *data);
 }
 
 // returns true if there is an error

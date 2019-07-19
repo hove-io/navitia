@@ -286,6 +286,7 @@ class Scenario(object):
             req.ptref.since_datetime = request['since']
         if request['until']:
             req.ptref.until_datetime = request['until']
+        req.ptref.realtime_level = get_pb_data_freshness(request)
         req.disable_disruption = request["disable_disruption"]
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)

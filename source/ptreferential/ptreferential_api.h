@@ -49,6 +49,7 @@ void query_pb(navitia::PbCreator& pb_creator,
               const int count,
               const boost::optional<boost::posix_time::ptime>& since,
               const boost::optional<boost::posix_time::ptime>& until,
+              const type::RTLevel rt_level,
               const type::Data& data);
 
 std::vector<const type::Route*> get_matching_routes(const type::Data*,

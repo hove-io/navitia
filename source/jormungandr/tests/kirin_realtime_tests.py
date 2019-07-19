@@ -1847,6 +1847,38 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert has_the_disruption(response, 'new_trip')
         assert len(response['vehicle_journeys']) == 1
 
+        # Check that the newly created vehicle journey are well filtered by &since and &until
+        # Note: For backward compatibility parameter &data_freshness with base_schedule is added
+        # and works with &since and &until
+        vj_base_query = (
+            'commercial_modes/commercial_mode:additional_service/vehicle_journeys?'
+            '_current_datetime={dt}&since={sin}&until={un}&data_freshness={df}'
+        )
+        response, status = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080100', un='20120614T080102', df='base_schedule'
+            ),
+            check=False,
+        )
+        assert status == 404
+        assert 'vehicle_journeys' not in response
+
+        response = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080100', un='20120614T080102', df='realtime'
+            )
+        )
+        assert len(response['vehicle_journeys']) == 1
+
+        response, status = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080101', un='20120614T080102', df='realtime'
+            ),
+            check=False,
+        )
+        assert status == 404
+        assert 'vehicle_journeys' not in response
+
         response = self.query_region(network_filter_query)
         assert len(response['networks']) == 1
         assert response['networks'][0]['name'] == 'additional service'
