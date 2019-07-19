@@ -126,7 +126,8 @@ BOOST_AUTO_TEST_CASE(osm_admin_out_of_range_in_end_date) {
     OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
     ReadRelationsVisitor relations_visitor(cache, false);
 
-    Tags tags = {{"name", "NavitiaCity4"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-31-12"}};
+    Tags tags = {
+        {"name", "NavitiaCity4"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-31-12"}};
     References ref(1, Reference());
 
     relations_visitor.relation_callback(5, tags, ref);
@@ -138,7 +139,8 @@ BOOST_AUTO_TEST_CASE(osm_admin_wrong_day_value_in_end_date) {
     OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
     ReadRelationsVisitor relations_visitor(cache, false);
 
-    Tags tags = {{"name", "NavitiaCity5"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-02-31"}};
+    Tags tags = {
+        {"name", "NavitiaCity5"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-02-31"}};
     References ref(1, Reference());
 
     relations_visitor.relation_callback(5, tags, ref);
@@ -150,7 +152,8 @@ BOOST_AUTO_TEST_CASE(osm_admin_without_zero_in_month_in_end_date) {
     OSMCache cache(std::unique_ptr<Lotus>(), boost::none);
     ReadRelationsVisitor relations_visitor(cache, false);
 
-    Tags tags = {{"name", "NavitiaCity6"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-2-12"}};
+    Tags tags = {
+        {"name", "NavitiaCity6"}, {"admin_level", "9"}, {"boundary", "administrative"}, {"end_date", "2000-2-12"}};
     References ref(1, Reference());
 
     relations_visitor.relation_callback(5, tags, ref);
