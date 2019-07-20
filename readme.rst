@@ -124,7 +124,7 @@ Navitia is made of 3 main modules:
 
 *Kraken* and *Jörmungandr* communicate with each other through protocol buffer messages send by ZMQ.
 
-| Transportation data (in the `NTFS <https://github.com/CanalTP/navitia/blob/dev/documentation/ntfs/ntfs_fr.md>`_,
+| Transportation data (in the `NTFS <https://github.com/CanalTP/ntfs-specification/blob/master/readme.md>`_,
   or `GTFS <https://developers.google.com/transit/gtfs/>`_ format) or routing data
   (mainly from `OpenStreetMap <http://www.openstreetmap.org/>`_ for the moment) can be given to *Ed*.
 | *Ed* produces a binary file used by *Kraken*.
