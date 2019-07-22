@@ -225,8 +225,10 @@ struct GeoRef {
     autocomplete::Autocomplete<unsigned int> fl_poi =
         autocomplete::Autocomplete<unsigned int>(navitia::type::Type_e::POI);
 
-    /// Indexe tous les nœuds
-    proximitylist::ProximityList<vertex_t> pl;
+    // We create one proximity list for each mode
+    proximitylist::ProximityList<vertex_t> pl_walking;
+    proximitylist::ProximityList<vertex_t> pl_bike;
+    proximitylist::ProximityList<vertex_t> pl_car;
 
     /// for all stop_point, we store it's projection on each graph
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
@@ -247,6 +249,9 @@ struct GeoRef {
 
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode = 0;
+
+    // this number is used to avoid division operations
+    float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
 
@@ -256,7 +261,7 @@ struct GeoRef {
 
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
-        ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
+        ar& ways& way_map& graph& offsets& fl_admin& fl_way& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
     }
 
@@ -265,8 +270,10 @@ struct GeoRef {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar& ways& way_map& graph& offsets& fl_admin& fl_way& pl& projected_stop_points& admins& admin_map& pois& fl_poi&
+        ar& ways& way_map& graph& offsets& fl_admin& fl_way& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
+
+        compute_inversed_nb_vertex_by_mode();
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -315,14 +322,9 @@ struct GeoRef {
     vertex_t nearest_vertex(const type::GeographicalCoord& coordinates,
                             const proximitylist::ProximityList<vertex_t>& prox) const;
     edge_t nearest_edge(const type::GeographicalCoord& coordinates) const;
-    edge_t nearest_edge(const type::GeographicalCoord& coordinates,
-                        const proximitylist::ProximityList<vertex_t>& prox,
-                        type::idx_t offset = 0,
-                        double horizon = 500) const;
 
-    edge_t nearest_edge(const type::GeographicalCoord& coordinates, type::Mode_e mode) const {
-        return nearest_edge(coordinates, pl, offsets[mode]);
-    }
+    edge_t nearest_edge(const type::GeographicalCoord& coordinates, type::Mode_e mode) const;
+
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord&) const;
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord& coord,
                                             const std::function<bool(const Way&)>& filter) const;
@@ -334,11 +336,20 @@ struct GeoRef {
     bool add_parking_edges(const type::GeographicalCoord&);
 
     /// get the transportation mode of the vertex
-    type::Mode_e get_mode(vertex_t vertex) const;
-    PathItem::TransportCaracteristic get_caracteristic(edge_t edge) const;
+    type::Mode_e get_mode(const vertex_t& vertex) const;
+    PathItem::TransportCaracteristic get_caracteristic(const edge_t& edge) const;
+
+    // Compute the inversed nb_vertex_by_mode for the sake of performance
+    void compute_inversed_nb_vertex_by_mode();
+
     ~GeoRef();
     GeoRef() = default;
     GeoRef(const GeoRef& other) = default;
+
+private:
+    edge_t nearest_edge(const type::GeographicalCoord& coordinates,
+                        const proximitylist::ProximityList<vertex_t>& prox,
+                        double horizon = 500) const;
 };
 
 /** When given a coordinate, we have to associate it with the street network.
@@ -375,23 +386,15 @@ struct ProjectionData {
     flat_enum_map<Direction, double> distances{{{-1, -1}}};
 
     ProjectionData() {}
-    // Project the coordinate on the graph
-    ProjectionData(const type::GeographicalCoord& coord,
-                   const GeoRef& sn,
-                   const proximitylist::ProximityList<vertex_t>& prox);
     // Project the coordinate on the graph corresponding to the transportation mode of the offset
-    ProjectionData(const type::GeographicalCoord& coord,
-                   const GeoRef& sn,
-                   type::idx_t offset,
-                   const proximitylist::ProximityList<vertex_t>& prox,
-                   double horizon = 500);
+    ProjectionData(const type::GeographicalCoord& coord, const GeoRef& sn, type::Mode_e mode = type::Mode_e::Walking);
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& vertices& projected& distances& found& real_coord& edge;
     }
 
-    void init(const type::GeographicalCoord& coord, const GeoRef& sn, edge_t nearest_edge);
+    void init(const type::GeographicalCoord& coord, const GeoRef& sn, const edge_t& nearest_edge);
 
     // syntaxic sugar
     vertex_t operator[](Direction d) const {

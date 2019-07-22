@@ -44,6 +44,11 @@ struct GraphBuilder {
     /// node by names
     std::map<std::string, vertex_t> vertex_map;
 
+    void init() {
+        geo_ref.init();
+        geo_ref.build_proximity_list();
+    }
+
     /// upsert a node
     GraphBuilder& add_vertex(std::string node_name, double x, double y);
 
