@@ -856,12 +856,21 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::
         const auto& vector_bp = navitia::vptranslator::translate(*vj->base_validity_pattern());
 
         fill(vector_bp, vehicle_journey->mutable_calendars());
+
+        if (auto* v = dynamic_cast<const nt::FrequencyVehicleJourney*>(vj)) {
+            fill_pb_object(v, vehicle_journey);
+        }
     }
     fill_messages(vj->meta_vj, vehicle_journey);
 
     fill_codes(vj, vehicle_journey);
 }
 
+void PbCreator::Filler::fill_pb_object(const nt::FrequencyVehicleJourney* fvj, pbnavitia::VehicleJourney* pb_vj) {
+    pb_vj->set_start_time(fvj->start_time);
+    pb_vj->set_end_time(fvj->end_time);
+    pb_vj->set_headway_secs(fvj->headway_secs);
+}
 void PbCreator::Filler::fill_pb_object(const nt::MetaVehicleJourney* nav_mvj, pbnavitia::Trip* pb_trip) {
     pb_trip->set_uri(nav_mvj->uri);
 
