@@ -45,7 +45,12 @@ import os
 import shutil
 import json
 from jsonschema import validate, ValidationError
-from tyr.formats import poi_type_conf_format, parse_error, equipments_provider_format
+from tyr.formats import (
+    poi_type_conf_format,
+    parse_error,
+    equipments_provider_format,
+    streetnetwork_backend_format,
+)
 from navitiacommon.default_traveler_profile_params import (
     default_traveler_profile_params,
     acceptable_traveler_types,
@@ -2005,6 +2010,74 @@ class EquipmentsProvider(flask_restful.Resource):
         try:
             provider = models.EquipmentsProvider.find_by_id(id)
             provider.discarded = True
+            models.db.session.commit()
+            return None, 204
+        except sqlalchemy.orm.exc.NoResultFound:
+            abort(404, status="error", message='object not found')
+
+
+class StreetNetworkBackend(flask_restful.Resource):
+    @marshal_with(streetnetwork_backend_list_fields)
+    def get(self, version=0, id=None):
+        if id:
+            try:
+                return {'streetnetwork_backends': [models.StreetNetworkBackend.find_by_id(id)]}
+            except sqlalchemy.orm.exc.NoResultFound:
+                return {'streetnetwork_backends': []}, 404
+        else:
+            return {'streetnetwork_backends': models.StreetNetworkBackend.all()}
+
+    def put(self, version=0, id=None):
+        """
+        Create or update a streetnetwork backend in db
+        """
+
+        def _validate_input(json_data):
+            """
+            Check that the data received contains all required info
+            :param json_data: data received in request
+            """
+            try:
+                validate(json_data, streetnetwork_backend_format)
+            except ValidationError as e:
+                abort(400, status="invalid data", message='{}'.format(parse_error(e)))
+
+        if not id:
+            abort(400, status="error", message='id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        _validate_input(input_json)
+        message = {"message": ""}
+        try:
+            sn_backend = models.StreetNetworkBackend.find_by_id(id)
+            status = 200
+            message["message"] = "StreetNetwork Backend {} from db is updated".format(id)
+        except sqlalchemy.orm.exc.NoResultFound:
+            sn_backend = models.StreetNetworkBackend(id)
+            models.db.session.add(sn_backend)
+            message["message"] = "StreetNetwork Backend {} is created".format(id)
+            status = 201
+
+        sn_backend.from_json(input_json)
+        try:
+            models.db.session.commit()
+        except sqlalchemy.exc.IntegrityError as ex:
+            abort(400, status="error", message=str(ex))
+        return message, status
+
+    def delete(self, version=0, id=None):
+        """
+        Delete an streetnetwork backend in db, i.e. set parameter DISCARDED to TRUE
+        """
+        if not id:
+            abort(400, status="error", message='id is required')
+        try:
+            sn_backend = models.StreetNetworkBackend.find_by_id(id)
+            sn_backend.discarded = True
             models.db.session.commit()
             return None, 204
         except sqlalchemy.orm.exc.NoResultFound:
