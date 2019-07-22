@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask_restful import fields
+from flask_restful import fields, url_for
 from flask.globals import g
 import ujson
 
@@ -89,6 +89,24 @@ equipment_provider_fields = {
 }
 equipment_provider_list_fields = {'equipments_providers': fields.List(fields.Nested(equipment_provider_fields))}
 
+streetnetwork_backend_fields = {
+    'id': fields.Raw,
+    'klass': fields.Raw,
+    'args': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'discarded': fields.Raw,
+}
+streetnetwork_backend_list_fields = {
+    'streetnetwork_backends': fields.List(fields.Nested(streetnetwork_backend_fields))
+}
+
+# Create a url to streetnetwork_backends to access the conf directly
+class FieldUrlStreetNetworkBackend(fields.Raw):
+    def format(self, value):
+        return url_for('streetnetwork_backends', id=value, _external=True)
+
+
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
@@ -143,6 +161,12 @@ instance_fields = {
     'successive_physical_mode_to_limit_id': fields.Raw,
     'car_park_provider': fields.Raw,
     'equipment_details_providers': fields.Nested(equipment_provider_fields),
+    'street_network_car': FieldUrlStreetNetworkBackend(),
+    'street_network_walking': FieldUrlStreetNetworkBackend(),
+    'street_network_bike': FieldUrlStreetNetworkBackend(),
+    'street_network_bss': FieldUrlStreetNetworkBackend(),
+    'street_network_ridesharing': FieldUrlStreetNetworkBackend(),
+    'street_network_taxi': FieldUrlStreetNetworkBackend(),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
