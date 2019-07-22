@@ -901,7 +901,7 @@ void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord, pbnav
         const auto nb_way = pb_creator.data->geo_ref->nearest_addr(*coord);
         const auto& way_coord = WayCoord(nb_way.second, *coord, nb_way.first);
         fill_pb_object(&way_coord, address);
-    } catch (navitia::proximitylist::NotFound) {
+    } catch (const navitia::proximitylist::NotFound&) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                         "unable to find a way from coord [" << coord->lon() << "-" << coord->lat() << "]");
     }
@@ -1550,7 +1550,7 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
             auto address = pb_creator.data->geo_ref->nearest_addr(point->coordinates);
             const auto& way_coord = WayCoord(address.second, point->coordinates, address.first);
             fill_pb_object(&way_coord, place);
-        } catch (navitia::proximitylist::NotFound) {
+        } catch (const navitia::proximitylist::NotFound&) {
             // we didn't find a address at this coordinate, we fill the address manually with the coord, so we have a
             // valid output
             place->set_name("");

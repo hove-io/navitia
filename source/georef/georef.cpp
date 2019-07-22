@@ -300,7 +300,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord& coord, const GeoRe
     found = true;
     try {
         edge = sn.nearest_edge(coord, mode);
-    } catch (proximitylist::NotFound) {
+    } catch (const proximitylist::NotFound&) {
         found = false;
         vertices[Direction::Source] = std::numeric_limits<vertex_t>::max();
         vertices[Direction::Target] = std::numeric_limits<vertex_t>::max();
@@ -821,7 +821,7 @@ bool GeoRef::add_bss_edges(const type::GeographicalCoord& coord) {
         // we need to find the nearest edge in the walking graph and the nearest edge in the biking graph
         nearest_biking_edge = nearest_edge(coord, Mode_e::Bike);
         nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
-    } catch (proximitylist::NotFound) {
+    } catch (const proximitylist::NotFound&) {
         return false;
     }
 
@@ -854,7 +854,7 @@ bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
         // we need to find the nearest edge in the walking and car graph
         nearest_car_edge = nearest_edge(coord, Mode_e::Car);
         nearest_walking_edge = nearest_edge(coord, Mode_e::Walking);
-    } catch (navitia::proximitylist::NotFound) {
+    } catch (const navitia::proximitylist::NotFound&) {
         return false;
     }
 

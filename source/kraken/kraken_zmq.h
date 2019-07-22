@@ -86,7 +86,7 @@ inline void doWork(zmq::context_t& context,
         try {
             // Wait for next request from client
             socket.recv(&request);
-        } catch (zmq::error_t) {
+        } catch (const zmq::error_t&) {
             // on gére le cas du sighup durant un recv
             continue;
         }
