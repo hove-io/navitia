@@ -797,7 +797,7 @@ Admin::Admin(u_int64_t id,
     this->center = center;
 }
 
-Admin::~Admin(){};
+Admin::~Admin() {}
 
 OSMAdminRelation::OSMAdminRelation(u_int64_t id,
                                    const std::string& uri,
