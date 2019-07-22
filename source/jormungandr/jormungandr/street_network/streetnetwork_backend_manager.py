@@ -149,7 +149,7 @@ class StreetNetworkBackendManager(object):
         # Make sure we update the streetnetwork_backends list from the database before returning them
         self._update_config(instance)
 
-        return self._streetnetwork_backends[streetnetwork_backend_conf]
+        return self._streetnetwork_backends.get(streetnetwork_backend_conf, None)
 
     def get_street_network_legacy(self, instance, mode, request):
         overriden_sn_id = request.get('_street_network')

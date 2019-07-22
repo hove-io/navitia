@@ -669,7 +669,9 @@ class Instance(object):
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
-            column_in_db = fallback_modes.street_network_modes_in_db.get(mode, None)
+            # We get the name of the column in the database corresponding to the mode used in the request
+            # And we get the value of this column for this instance
+            column_in_db = "street_network_{}".format(mode)
             streetnetwork_backend_conf = getattr(self, column_in_db)
             return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
 

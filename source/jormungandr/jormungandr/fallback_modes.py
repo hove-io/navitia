@@ -89,12 +89,3 @@ class FallbackModes(Enum):
 all_fallback_modes = FallbackModes.modes_str()
 
 allowed_combinations = FallbackModes.get_allowed_combinations_str()
-
-street_network_modes_in_db = {
-    FallbackModes.car.name: "street_network_car",
-    FallbackModes.walking.name: "street_network_walking",
-    FallbackModes.bike.name: "street_network_bike",
-    FallbackModes.bss.name: "street_network_bss",
-    FallbackModes.ridesharing.name: "street_network_ridesharing",
-    FallbackModes.taxi.name: "street_network_taxi",
-}
