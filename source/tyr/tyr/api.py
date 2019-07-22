@@ -102,6 +102,13 @@ api.add_resource(
     '/v<int:version>/equipments_providers/<string:id>',
 )
 
+api.add_resource(
+    resources.StreetNetworkBackend,
+    '/v0/streetnetwork_backends',
+    '/v0/streetnetwork_backends/<string:id>',
+    endpoint=str('streetnetwork_backends'),
+)
+
 # TODO: Find a way to handle GET on an URL and POST to another in one class
 api.add_resource(resources.CitiesStatus, '/v0/cities/status')
 api.add_resource(resources.Cities, '/v0/cities/')
