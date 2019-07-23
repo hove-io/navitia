@@ -504,6 +504,12 @@ class Instance(db.Model):  # type: ignore
         db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False, default=default_values.taxi_backend
     )
 
+    private_poi_dataset = db.Column(
+        db.Text,
+        default=None,
+        nullable=True
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

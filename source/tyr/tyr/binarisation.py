@@ -815,6 +815,9 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
 @celery.task(bind=True)
 def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     """ launch poi2mimir """
+    dataset_name = 'priv.{}'.format(instance_name) # We give the dataset a prefix to prevent
+                                                   #   collision with other datasets.
+
     # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
     if job_id:
         job = models.Job.query.get(job_id)
@@ -822,6 +825,8 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
         logger = get_instance_logger(instance, task_id=job_id)
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+
     cnx_string = current_app.config['MIMIR_URL']
 
     poi_file = input
@@ -829,8 +834,8 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
     argv = ['--input', poi_file,
             '--connection-string', cnx_string,
-            '--dataset', 'priv.{}'.format(instance_name), # We give the dataset a prefix to prevent
-            '--private' ]                                 #   collision with other datasets.
+            '--dataset', dataset_name,
+            '--private' ]
 
     try:
         res = launch_exec('poi2mimir', argv, logger)
@@ -840,6 +845,9 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
             if job_id:
                 job.state = 'failed'
                 models.db.session.commit()
+        else:
+            instance.private_poi_dataset = dataset_name
+            models.db.session.commit()
     except:
         logger.exception('')
         if job_id:
