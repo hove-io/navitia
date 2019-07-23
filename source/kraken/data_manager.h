@@ -121,7 +121,7 @@ public:
             // to reload the data
             try {
                 data->load_disruptions(*chaos_database, contributors);
-                data->build_autocomplete();
+                data->build_autocomplete_partial();
             } catch (const navitia::data::disruptions_broken_connection&) {
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");
             } catch (const navitia::data::disruptions_loading_error&) {

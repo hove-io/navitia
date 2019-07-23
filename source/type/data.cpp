@@ -323,6 +323,11 @@ void Data::build_autocomplete() {
     pt_data->compute_score_autocomplete(*geo_ref);
 }
 
+void Data::build_autocomplete_partial() {
+    pt_data->build_autocomplete(*geo_ref);
+    pt_data->compute_score_autocomplete(*geo_ref);
+}
+
 ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
     auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((*vp) == (*vp1)); };
     auto it = std::find_if(this->pt_data->validity_patterns.begin(), this->pt_data->validity_patterns.end(),
