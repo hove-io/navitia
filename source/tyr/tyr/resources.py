@@ -980,7 +980,7 @@ class UserV1(User):
     def _get_all_users(self, args):
         del args['disable_geojson']
         # dict comprehension would be better, but it's not in python 2.6
-        filter_params = dict((k, v) for k, v in args.items() if v and k != 'page')
+        filter_params = {k: v for k, v in args.items() if v and k != 'page'}
 
         pagination = models.User.query.filter_by(**filter_params).paginate(
             args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
