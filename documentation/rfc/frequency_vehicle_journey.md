@@ -1,43 +1,66 @@
 # Frequency Vehicle Journeys
 
-The GTFS specification refers to [`frequencies.txt`](https://gtfs.org/reference/static#frequenciestxt)
-that represents trips which operate on regular headways.<br/>
-This RFC describes how kraken works with it.
+Frequencies vehicle journeys are a special case of vehicle journeys as they operate multiple time per day
+contrary to discrete vehicle journeys that operate only one time per day.
+They are used to define a template of a journey that will start it's mission at a defined interval during a
+specified time range.
+By example a journey that serve A, B and C, with a new VJ starting from A every five minutes between 06h00 and
+21h00.
 
-At first, `frequencies.txt` file is read by *fusio2ed*. For each line, a stop time list is created from
-*start_time* to *end_time* with a step of *headway_secs* for a given `trip_id`. Example:
+They are quite an exception as we know very few agencies that model their networks with frequencies, but we use
+them to model some kind of on demand transport.
+
+## Input data feed
+
+The GTFS specification refers to [`frequencies.txt`](https://gtfs.org/reference/static#frequenciestxt)
+that represents trips which operate on regular headways. The NTFS is similar on that point so no distinction
+between them will be made in this documentation.
+
+`frequencies.txt` file is read by *fusio2ed*. For each line, the corresponding vehicle journey is updated with
+*start_time*, *end_time* and *headway_secs*.
+
+## navitia model
+
+On the kraken side frequencies vehicle journeys are implemented as a sub class of `VehicleJourney` named
+`FrequencyVehicleJourney` that add the fields *start_time*, *end_time* and *headway_secs* to a regular vehicle
+journey. They share the same `StopTime` class but use it differently: in a `DiscreteVehicleJourney` the stop
+time contains the passage time from midnight while in a `FrequencyVehicleJourney` the passage time is the shift
+from the start of *this* vehicle journey.
+
+All of this is abstracted by `get_next_stop_time` to make raptor handle both type of vehicle journeys the same
+way.
+
+## Example
 
 *frequencies.txt*
 
 | trip_id | start_time | end_time | headway_secs |
 | ------- | ---------- | -------- | ------------ |
-| 1       | 05:00:00   | 10:00:00 | 600          |
+| 1       | 05:00:00   | 05:30:00 | 600          |
+
+
+*sto_times.txt*
+| trip_id | arrival_time | derparture_time | stop_id | stop_sequence |
+| ------- | ------------ | --------------- | ------- | ------------- |
+| 1       | 05:00:00     | 05:00:00        | A       | 1             |
+| 1       | 05:10:00     | 05:10:00        | B       | 2             |
+| 1       | 05:20:00     | 05:20:00        | C       | 3             |
+
+*Schedules of this trip*
+
+|     A    |    B     |    C     |
+| -------- | -------- | -------- |
+| 05:00:00 | 05:10:00 | 05:20:00 |
+| 05:10:00 | 05:20:00 | 05:30:00 |
+| 05:20:00 | 05:30:00 | 05:40:00 |
+| 05:30:00 | 05:40:00 | 05:50:00 |
+
 
 *Generated stop times list*
 
-| arrival_time | departure_time |
-| ------------ | -------------- |
-| 05:00:00     | 05:00:00       |
-| 05:10:00     | 05:10:00       |
-| 05:20:00     | 05:20:00       |
-| 05:30:00     | 05:30:00       |
-| ...          | ...            |
-| 10:00:00     | 10:00:00       |
-
-
-The generated stop times list is used to create a `Frequency Vehicle journeys`. A bool flag (`is_frequency`) is available inside
-Vehicle journeys data structure to discriminate it.<br/>
-When starting *Kraken*, this data is only loaded inside the *Raptor* cache.
-This means that it is not append into *stop times* list contained inside *Vehicle Journeys*.
-
-*Frequency Vehicle journey* is not cunning with *classic stop times*.<br/>
-As a reminder, stop times are contained inside [`stop_times.txt`](https://gtfs.org/reference/static/#stop_timestxt).<br/>
-If the *trip_id* is the same, frequency parameters alter the given stop times, describ into *stop_times.txt* file.
-The consequence of this meld makes the list become obsolete. The values are no longer valid and become not consistent.<br/>
-For instance, with `/vehicle_journeys` API, we can glimpse the altered stop times list which presents `departure_time/arrival_time` around midnight.<br/>
-Nonetheless, if *start_time/end_time/headways_secs* fields are present within the response, it gives you information that it is a *Frequency Vehicle Journey*.
-So don't take into account stop times list.
-
-To avoid any problems, the principle of use is the following:
-* Don't use *frequencies.txt* and a stop times list (inside *stop_times.txt*) with the same *trip_id*. It does not work well together
+| stop | arrival_time | departure_time |
+| ---- | ------------ | -------------- |
+| A    | 00:00:00     | 00:00:00       |
+| B    | 00:10:00     | 00:10:00       |
+| C    | 00:20:00     | 00:20:00       |
 
