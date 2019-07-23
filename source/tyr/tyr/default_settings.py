@@ -14,7 +14,7 @@ CELERY_BROKER_URL = os.getenv('TYR_CELERY_BROKER_URL', 'amqp://guest:guest@local
 # URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 # http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
+SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@10.0.3.14/jormungandr'
 
 
 # URI for cities database
