@@ -998,7 +998,7 @@ class UserV1(User):
         resp = super(UserV1, self).get(user_id)
         if type(resp) == tuple:
             return {'users': resp[0], 'pagination': resp[1]}
-        return {'user': resp}
+        return {'users': resp}
 
     def put(self, user_id):
         return {'user': super(UserV1, self).put(user_id)}

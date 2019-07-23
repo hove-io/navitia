@@ -99,7 +99,7 @@ def test_api():
 
 def test_users(create_5_users):
     check_v1_response('users')
-    check_v1_response('user', 'users/{}'.format(create_5_users))
+    check_v1_response('users', 'users/{}'.format(create_5_users))
 
 
 def test_users_methods():
@@ -183,7 +183,7 @@ def test_keys_methods(create_5_users):
 def test_authorization_methods(create_5_users, create_instance, create_api):
     user_id = create_5_users
     full_user = api_get('/v1/users/{}'.format(user_id))
-    assert len(full_user['user']['authorizations']) == 0
+    assert len(full_user['users']['authorizations']) == 0
     auth = {'instance_id': create_instance, 'api_id': create_api}
     resp_post = api_post(
         '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
