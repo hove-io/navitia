@@ -1,1 +1,1 @@
-web: ./jormungandr/manage.py runserver
+web: FLASK_DEBUG=1 FLASK_APP=jormungandr:app flask run
