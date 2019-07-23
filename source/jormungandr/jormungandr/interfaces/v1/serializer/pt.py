@@ -545,6 +545,9 @@ class VehicleJourneySerializer(PbGenericSerializer):
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()
     disruptions = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
+    start_time = TimeField(display_none=False)
+    end_time = TimeField(display_none=False)
+    headway_secs = jsonschema.Field(schema_type=int, display_none=False)
 
 
 class ConnectionSerializer(PbNestedSerializer):
