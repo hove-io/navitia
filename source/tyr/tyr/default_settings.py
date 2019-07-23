@@ -137,3 +137,7 @@ MIMIR_URL = os.getenv('TYR_MIMIR_URL', 'http://localhost:9200')
 
 # we don't enable serpy for now
 USE_SERPY = False
+
+# https://flask-sqlalchemy.palletsprojects.com/en/2.x/signals/
+# deprecated and slow
+SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -35,7 +35,7 @@ from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, Realtime
 from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
 import pytz
-from flask import logging
+import logging
 import pybreaker
 import requests as requests
 from jormungandr import cache, app
