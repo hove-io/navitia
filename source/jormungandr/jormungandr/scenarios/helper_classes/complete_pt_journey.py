@@ -74,29 +74,35 @@ def wait_and_build_crowflies(
     res = []
     for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
-        pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
+        try:
+            pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
-        if pt_journeys and pt_journeys.journeys:
-            origin_crowfly = {
-                "entry_point": requested_orig_obj,
-                "mode": dep_mode,
-                "places_free_access": orig_places_free_access.wait_and_get(),
-                "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
-                "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
-            }
+            if pt_journeys and pt_journeys.journeys:
+                origin_crowfly = {
+                    "entry_point": requested_orig_obj,
+                    "mode": dep_mode,
+                    "places_free_access": orig_places_free_access.wait_and_get(),
+                    "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
+                    "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
+                }
 
-            dest_crowfly = {
-                "entry_point": requested_dest_obj,
-                "mode": arr_mode,
-                "places_free_access": dest_places_free_acces.wait_and_get(),
-                "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
-                "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
-            }
+                dest_crowfly = {
+                    "entry_point": requested_dest_obj,
+                    "mode": arr_mode,
+                    "places_free_access": dest_places_free_acces.wait_and_get(),
+                    "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
+                    "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
+                }
 
-            _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
+                _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
 
-            res.append(Pt_element(dep_mode, arr_mode, pt_journeys))
-
+                res.append(Pt_element(dep_mode, arr_mode, pt_journeys))
+        except PtException:
+            logger.exception(
+                'Error occurred when waiting for pt journey with dep_mode:{}, arr_mode{}'.format(
+                    dep_mode, arr_mode
+                )
+            )
     return res
 
 
