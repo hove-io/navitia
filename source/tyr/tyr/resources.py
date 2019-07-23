@@ -843,7 +843,7 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "create_user")
 
-            return marshal(user, user_fields_full)
+            return marshal(user, user_fields_full), 200
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
@@ -949,7 +949,7 @@ class User(flask_restful.Resource):
             tyr_user_event = TyrUserEvent()
             tyr_user_event.request(user, "update_user", last_login)
 
-            return marshal(user, user_fields_full)
+            return marshal(user, user_fields_full), 200
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
             return {'error': 'duplicate user'}, 409
         except Exception:
@@ -1001,10 +1001,12 @@ class UserV1(User):
         return {'users': resp}
 
     def put(self, user_id):
-        return {'user': super(UserV1, self).put(user_id)}
+        resp = super(UserV1, self).put(user_id)
+        return {'user': resp[0]}, resp[1] if resp[1] == 200 else resp
 
     def post(self):
-        return {'user': super(UserV1, self).post()}
+        resp = super(UserV1, self).post()
+        return {'user': resp[0]}, resp[1] if resp[1] == 200 else resp
 
 
 class Key(flask_restful.Resource):
