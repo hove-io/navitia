@@ -632,6 +632,16 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
+        list_modes = ["car", "walking", "bike", "bss", "ridesharing", "taxi"]
+        for mode in list_modes:
+            parser.add_argument(
+                'street_network_{}'.format(mode),
+                type=str,
+                help='the backend to use for the mode {}'.format(mode),
+                location=('json', 'values'),
+                default=getattr(instance, "street_network_{}".format(mode)),
+            )
+
         args = parser.parse_args()
 
         try:
@@ -684,6 +694,12 @@ class Instance(flask_restful.Resource):
                     'additional_time_before_last_section_taxi',
                     'max_additional_connections',
                     'car_park_provider',
+                    'street_network_car',
+                    'street_network_walking',
+                    'street_network_bike',
+                    'street_network_bss',
+                    'street_network_ridesharing',
+                    'street_network_taxi',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')

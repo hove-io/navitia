@@ -124,17 +124,30 @@ def test_update_instances(create_instance):
         "max_extra_second_pass": 1,
         "additional_time_after_first_section_taxi": 42,
         "additional_time_before_last_section_taxi": 789,
+        "street_network_car": "taxiKraken",
+        "street_network_walking": "taxiKraken",
+        "street_network_bike": "taxiKraken",
+        "street_network_bss": "taxiKraken",
+        "street_network_ridesharing": "taxiKraken",
+        "street_network_taxi": "kraken",
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.iteritems():
-        assert resp[key] == param
+        # Keys containing "street_network_" are urls
+        if "street_network_" in key:
+            assert resp[key] == "http://localhost/v0/streetnetwork_backends/{}".format(param)
+        else:
+            assert resp[key] == param
 
     resp = api_put(
         '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
     )
     for key, param in params.iteritems():
-        assert resp[key] == param
+        if "street_network_" in key:
+            assert resp[key] == "http://localhost/v0/streetnetwork_backends/{}".format(param)
+        else:
+            assert resp[key] == param
 
 
 def test_update_instances_is_free(create_instance):
@@ -446,3 +459,44 @@ def test_update_min_taxi(create_instance):
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['min_taxi'] == 7 * 60
+
+
+def test_update_streetnetwork_backends(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert (
+        resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
+    )
+    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+
+    params = {
+        'street_network_car': "taxiKraken",
+        'street_network_walking': "taxiKraken",
+        'street_network_bike': "taxiKraken",
+        'street_network_bss': "taxiKraken",
+        'street_network_ridesharing': "kraken",
+        'street_network_taxi': "ridesharingKraken",
+    }
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['street_network_car'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert resp['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/kraken"
+    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
+
+    # The key does not exist in streetnetwork_backend table
+    with pytest.raises(Exception):
+        params = {'street_network_car': "unknown"}
+        resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
