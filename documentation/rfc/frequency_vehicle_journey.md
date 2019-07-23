@@ -2,9 +2,9 @@
 
 Frequencies vehicle journeys are a special case of vehicle journeys as they operate multiple time per day
 contrary to discrete vehicle journeys that operate only one time per day.
-They are used to define a template of a journey that will start it's mission at a defined interval during a
+They are used to define a journey template that will start its mission at a defined interval for a
 specified time range.
-By example a journey that serve A, B and C, with a new VJ starting from A every five minutes between 06h00 and
+By example a journey that serves A, B and C, with a new VJ starting from A every five minutes between 06h00 and
 21h00.
 
 They are quite an exception as we know very few agencies that model their networks with frequencies, but we use
@@ -13,7 +13,7 @@ them to model some kind of on demand transport.
 ## Input data feed
 
 The GTFS specification refers to [`frequencies.txt`](https://gtfs.org/reference/static#frequenciestxt)
-that represents trips which operate on regular headways. The NTFS is similar on that point so no distinction
+that represents trips which operate on regular headways (time between trips). The NTFS is similar on that point so no distinction
 between them will be made in this documentation.
 
 `frequencies.txt` file is read by *fusio2ed*. For each line, the corresponding vehicle journey is updated with
@@ -21,8 +21,8 @@ between them will be made in this documentation.
 
 ## navitia model
 
-On the kraken side frequencies vehicle journeys are implemented as a sub class of `VehicleJourney` named
-`FrequencyVehicleJourney` that add the fields *start_time*, *end_time* and *headway_secs* to a regular vehicle
+On the kraken side, frequencies vehicle journeys are implemented as a sub class of `VehicleJourney` named
+`FrequencyVehicleJourney` that adds the fields *start_time*, *end_time* and *headway_secs* to a regular vehicle
 journey. They share the same `StopTime` class but use it differently: in a `DiscreteVehicleJourney` the stop
 time contains the passage time from midnight while in a `FrequencyVehicleJourney` the passage time is the shift
 from the start of *this* vehicle journey.
