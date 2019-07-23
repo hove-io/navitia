@@ -40,6 +40,7 @@ way.
 
 
 *sto_times.txt*
+
 | trip_id | arrival_time | derparture_time | stop_id | stop_sequence |
 | ------- | ------------ | --------------- | ------- | ------------- |
 | 1       | 05:00:00     | 05:00:00        | A       | 1             |
