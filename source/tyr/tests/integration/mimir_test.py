@@ -34,6 +34,7 @@ from navitiacommon import models
 from tyr import app
 from tyr import tasks
 
+
 @pytest.fixture
 def create_instance():
     with app.app_context():
@@ -51,6 +52,7 @@ def test_mimir_family_type_not_applicable(create_instance):
         actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'dt'))
         assert actions == []
 
+
 def test_mimir_family_type_poi(create_instance):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
@@ -58,7 +60,8 @@ def test_mimir_family_type_poi(create_instance):
         actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'poi'))
         assert actions[0].task == 'tyr.binarisation.poi2mimir'
         assert actions[0].args[1] == 'test.poi'
-        assert len(actions) == 2   # poi2mimir + finish
+        assert len(actions) == 2  # poi2mimir + finish
+
 
 def test_mimir_ntfs_false(create_instance):
     with app.app_context():
@@ -67,4 +70,3 @@ def test_mimir_ntfs_false(create_instance):
         actions = []
         actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'poi'))
         assert actions == []
-

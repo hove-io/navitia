@@ -213,7 +213,7 @@ def send_to_mimir(instance, filename, family_type):
         # if we are loading pt data we might want to load the stops to autocomplete
         if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
             actions.append(stops2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
-    else: # assume family_type == 'poi':
+    else:  # assume family_type == 'poi':
         actions.append(poi2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
 
     actions.append(finish_job.si(job.id))

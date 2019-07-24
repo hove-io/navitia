@@ -812,11 +812,12 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         models.db.session.commit()
         raise
 
+
 @celery.task(bind=True)
 def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     """ launch poi2mimir """
-    dataset_name = 'priv.{}'.format(instance_name) # We give the dataset a prefix to prevent
-                                                   #   collision with other datasets.
+    dataset_name = 'priv.{}'.format(instance_name)  # We give the dataset a prefix to prevent
+    #   collision with other datasets.
 
     # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
     if job_id:
@@ -832,10 +833,7 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     poi_file = input
 
     # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
-    argv = ['--input', poi_file,
-            '--connection-string', cnx_string,
-            '--dataset', dataset_name,
-            '--private' ]
+    argv = ['--input', poi_file, '--connection-string', cnx_string, '--dataset', dataset_name, '--private']
 
     try:
         res = launch_exec('poi2mimir', argv, logger)
@@ -855,4 +853,3 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
             models.db.session.commit()
 
         raise
-
