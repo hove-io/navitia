@@ -993,6 +993,7 @@ class UserV1(User):
 
     def get(self, user_id=None):
         resp = super(UserV1, self).get(user_id)
+        # In case of a response with pagination, the response type is a tuple and it needs to be serialized
         if type(resp) == tuple:
             return {'users': resp[0], 'pagination': resp[1]}
         return {'users': resp}
