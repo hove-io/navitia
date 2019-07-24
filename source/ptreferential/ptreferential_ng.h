@@ -122,6 +122,7 @@ std::string make_request(const type::Type_e requested_type,
                          const type::OdtLevel_e odt_level,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
+                         const type::RTLevel rt_level,
                          const type::Data& data);
 
 }  // namespace ptref

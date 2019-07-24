@@ -43,6 +43,7 @@ namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 using navitia::type::Indexes;
 using navitia::type::OdtLevel_e;
+using navitia::type::RTLevel;
 using navitia::type::Type_e;
 
 namespace navitia {
@@ -207,6 +208,29 @@ OdtLevel_e odt_level_from_string(const std::string& s) {
     }
 }
 
+const char* rt_level_to_string(RTLevel rt_level) {
+    switch (rt_level) {
+        case type::RTLevel::Base:
+            return "base";
+        case type::RTLevel::Adapted:
+            return "adapted";
+        case type::RTLevel::RealTime:
+            return "realtime";
+        default:
+            return "base";
+    }
+}
+
+RTLevel rt_level_from_string(const std::string& s) {
+    if (s == "realtime") {
+        return RTLevel::RealTime;
+    } else if (s == "adapted") {
+        return RTLevel::Adapted;
+    } else {
+        return RTLevel::Base;
+    }
+}
+
 boost::posix_time::ptime from_datetime(const std::string& s) {
     if (s.empty()) {
         throw parsing_error(parsing_error::partial_error, "empty datetime is illegal");
@@ -223,9 +247,8 @@ boost::posix_time::ptime from_datetime(const std::string& s) {
 
 struct Eval : boost::static_visitor<Indexes> {
     const Type_e target;
-    const type::RTLevel rt_level;
     const type::Data& data;
-    Eval(Type_e t, const type::RTLevel rtl, const type::Data& d) : target(t), rt_level(rtl), data(d) {}
+    Eval(Type_e t, const type::Data& d) : target(t), data(d) {}
 
     Indexes operator()(const ast::All&) const { return data.get_all_index(target); }
     Indexes operator()(const ast::Empty&) const { return Indexes(); }
@@ -271,16 +294,20 @@ struct Eval : boost::static_visitor<Indexes> {
         } else if (f.type == "disruption"
                    && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
             indexes = get_impacts_by_tags(f.args, data);
-        } else if ((f.method == "since" && f.args.size() == 1) || (f.method == "until" && f.args.size() == 1)
-                   || (f.method == "between" && f.args.size() == 2)) {
+        } else if ((f.method == "since" && f.args.size() == 2) || (f.method == "until" && f.args.size() == 2)
+                   || (f.method == "between" && f.args.size() == 3)) {
             boost::optional<boost::posix_time::ptime> since, until;
+            auto rt_level = type::RTLevel::Base;
             if (f.method == "since") {
                 since = from_datetime(f.args.at(0));
+                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "until") {
                 until = from_datetime(f.args.at(0));
+                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "between") {
                 since = from_datetime(f.args.at(0));
                 until = from_datetime(f.args.at(1));
+                rt_level = rt_level_from_string(f.args.at(2));
             }
             const auto type = type_by_caption(f.type);
             indexes = filter_on_period(data.get_all_index(type), type, since, until, rt_level, data);
@@ -322,7 +349,7 @@ struct Eval : boost::static_visitor<Indexes> {
     }
     Indexes operator()(const ast::GetCorresponding& expr) const {
         const auto from = type_by_caption(expr.type);
-        auto indexes = Eval(from, type::RTLevel::Base, data)(expr.expr);
+        auto indexes = Eval(from, data)(expr.expr);
         return get_corresponding(indexes, from, target, data);
     }
     Indexes operator()(const ast::BinaryOp<ast::And>& expr) const {
@@ -372,6 +399,7 @@ std::string make_request(const Type_e requested_type,
                          const OdtLevel_e odt_level,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
+                         const type::RTLevel rt_level,
                          const type::Data& data) {
     type::static_data* static_data = type::static_data::get();
     std::string res = request.empty() ? std::string("all") : request;
@@ -386,13 +414,14 @@ std::string make_request(const Type_e requested_type,
         case Type_e::Impact:
             if (since && until) {
                 res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".between("
-                      + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z)";
+                      + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level)
+                      + ")";
             } else if (since) {
                 res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".since("
-                      + to_iso_string(*since) + "Z)";
+                      + to_iso_string(*since) + "Z, " + rt_level_to_string(rt_level) + ")";
             } else if (until) {
                 res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".until("
-                      + to_iso_string(*until) + "Z)";
+                      + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level) + ")";
             }
             break;
         default:
@@ -439,11 +468,12 @@ Indexes make_query_ng(const Type_e requested_type,
                       const type::RTLevel rt_level,
                       const type::Data& data) {
     auto logger = log4cplus::Logger::getInstance("ptref");
-    const auto request_ng = make_request(requested_type, request, forbidden_uris, odt_level, since, until, data);
+    const auto request_ng =
+        make_request(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
     const auto expr = parse(request_ng);
     LOG4CPLUS_TRACE(logger, "ptref_ng parsed: " << expr << " [requesting: "
                                                 << navitia::type::static_data::captionByType(requested_type) << "]");
-    return Eval(requested_type, rt_level, data)(expr);
+    return Eval(requested_type, data)(expr);
 }
 
 }  // namespace ptref
