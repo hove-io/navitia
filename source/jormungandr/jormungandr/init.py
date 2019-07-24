@@ -65,6 +65,17 @@ def patch_http():
     monkey.patch_socket()
 
 
+def street_network_backends(app):
+    from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+
+    if app.config['DISABLE_DATABASE']:
+        return StreetNetworkBackendManager()
+    else:
+        from navitiacommon import models
+
+        return StreetNetworkBackendManager(models.StreetNetworkBackend.all)
+
+
 def bss_providers(app):
     from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 

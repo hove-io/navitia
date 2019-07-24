@@ -33,16 +33,21 @@ from jormungandr.exceptions import TechnicalError
 from importlib import import_module
 
 from collections import defaultdict
-import logging, itertools, copy
+import logging, itertools, copy, datetime
 
 
 class StreetNetworkBackendManager(object):
-    def __init__(self):
+    def __init__(self, sn_backends_getter=None, update_interval=60):
         self.logger = logging.getLogger(__name__)
         # dict { "instance" : [street_network_backends] }
-        self._streetnetwork_backends_by_instance = defaultdict(list)
+        self._streetnetwork_backends_by_instance_legacy = defaultdict(list)
+        self._sn_backends_getter = sn_backends_getter
+        self._streetnetwork_backends = {}
+        self._streetnetwork_backends_last_update = {}
+        self._last_update = datetime.datetime(1970, 1, 1)
+        self._update_interval = update_interval
 
-    def init_streetnetwork_backends(self, instance, instance_configuration):
+    def init_streetnetwork_backends_legacy(self, instance, instance_configuration):
         instance_configuration = self._append_default_street_network_to_config(instance_configuration)
         self._create_street_network_backends(instance, instance_configuration)
 
@@ -86,14 +91,67 @@ class StreetNetworkBackendManager(object):
 
             backend = utils.create_object(config)
 
-            self._streetnetwork_backends_by_instance[instance].append(backend)
+            self._streetnetwork_backends_by_instance_legacy[instance].append(backend)
             self.logger.info(
                 '** StreetNetwork {} used for direct_path with mode: {} **'.format(
                     type(backend).__name__, backend.modes
                 )
             )
 
-    def get_street_network(self, instance, mode, request):
+    def _create_backend_from_db(self, sn_backend, instance):
+        config = {"class": sn_backend.klass, "args": sn_backend.args}
+        config['args'].setdefault('service_url', None)
+        config['args'].setdefault('instance', instance)
+
+        return utils.create_object(config)
+
+    def _update_sn_backend(self, sn_backend, instance):
+        self.logger.info('Updating / Adding {} streetnetwork backend'.format(sn_backend.id))
+        try:
+            self._streetnetwork_backends[sn_backend.id] = self._create_backend_from_db(sn_backend, instance)
+            self._streetnetwork_backends_last_update[sn_backend.id] = sn_backend.last_update()
+        except Exception:
+            self.logger.exception('impossible to initialize streetnetwork backend')
+
+    def _update_config(self, instance):
+        """
+        Update list of streetnetwork backends from db
+        """
+        if (
+            self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
+            or not self._sn_backends_getter
+        ):
+            return
+
+        self.logger.debug('Updating streetnetwork backends from db')
+        self._last_update = datetime.datetime.utcnow()
+
+        sn_backends = []
+        try:
+            sn_backends = self._sn_backends_getter()
+        except Exception:
+            self.logger.exception('Failure to retrieve streetnetwork backends configuration')
+        if not sn_backends:
+            self.logger.debug('No streetnetwork backends/All streetnetwork backends disabled in db')
+            self._streetnetwork_backends = {}
+            self._streetnetwork_backends_last_update = {}
+
+            return
+
+        for sn_backend in sn_backends:
+            if (
+                sn_backend.id not in self._streetnetwork_backends_last_update
+                or sn_backend.last_update() > self._streetnetwork_backends_last_update[sn_backend.id]
+            ):
+                self._update_sn_backend(sn_backend, instance)
+
+    def get_street_network_db(self, instance, streetnetwork_backend_conf):
+        # Make sure we update the streetnetwork_backends list from the database before returning them
+        self._update_config(instance)
+
+        return self._streetnetwork_backends.get(streetnetwork_backend_conf, None)
+
+    def get_street_network_legacy(self, instance, mode, request):
         overriden_sn_id = request.get('_street_network')
         if overriden_sn_id:
 
@@ -105,12 +163,12 @@ class StreetNetworkBackendManager(object):
             def predicate(s):
                 return mode in s.modes
 
-        sn = next((s for s in self._streetnetwork_backends_by_instance[instance] if predicate(s)), None)
+        sn = next((s for s in self._streetnetwork_backends_by_instance_legacy[instance] if predicate(s)), None)
         if sn is None:
             raise TechnicalError(
                 'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
             )
         return sn
 
-    def get_all_street_networks(self, instance):
-        return self._streetnetwork_backends_by_instance[instance]
+    def get_all_street_networks_legacy(self, instance):
+        return self._streetnetwork_backends_by_instance_legacy[instance]
