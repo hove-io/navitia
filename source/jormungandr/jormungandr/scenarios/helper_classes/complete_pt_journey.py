@@ -28,9 +28,8 @@
 # www.navitia.io
 from __future__ import absolute_import
 import logging
-from . import helper_future
 from .helper_utils import complete_pt_journey, compute_fallback, _build_crowflies
-from .helper_exceptions import PtException
+from .helper_exceptions import PtNoSolutionException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
 from navitiacommon import response_pb2
@@ -50,7 +49,7 @@ def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
         if pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution') and has_valid_direct_paths:
             pt_journeys.ClearField(b"error")
         else:
-            raise PtException(pt_journeys)
+            raise PtNoSolutionException(pt_journeys)
 
     return pt_journeys
 
@@ -97,7 +96,7 @@ def wait_and_build_crowflies(
                 _build_crowflies(pt_journeys, origin_crowfly, dest_crowfly)
 
                 res.append(Pt_element(dep_mode, arr_mode, pt_journeys))
-        except PtException:
+        except PtNoSolutionException:
             logger.exception(
                 'Error occurred when waiting for pt journey with dep_mode:{}, arr_mode{}'.format(
                     dep_mode, arr_mode

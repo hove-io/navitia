@@ -40,6 +40,15 @@ class PtException(Exception):
         return self._response
 
 
+class PtNoSolutionException(Exception):
+    def __init__(self, pt_journey_with_error):
+        super(PtNoSolutionException, self).__init__(pt_journey_with_error)
+        self._response = copy.deepcopy(pt_journey_with_error)
+
+    def get(self):
+        return self._response
+
+
 def _make_error_response(message, error_id):
 
     r = response_pb2.Response()
