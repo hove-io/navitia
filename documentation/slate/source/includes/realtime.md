@@ -41,7 +41,11 @@ A disruption is present in the response of the endpoints described if the reques
 ```
 The effect of the disruption is `SIGNIFICANT_DELAYS`. It means that the train will arrive late at one or more stations in its journey.
 
-In the disruption, the delay can be found in the list of "impacted_stops" with the departure/arrival status set to "delayed".  
+In the disruption, the delay can be found in the list of "impacted_stops" with the departure/arrival status set to "delayed".
+
+* "base_arrival_time"/"base_departure_time" represent the scheduled arrival/departure time without taking into account the delay
+* whereas "amended_arrival_time"/"amended_departure_time" are the actual arrival/departure time, after the delay is applied
+
 See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
@@ -279,7 +283,7 @@ In that case, a link to this disruption can be found in the section "display_inf
 ```
 The effect of the disruption is `MODIFIED_SERVICE`. It means that there is one or several stop points added into the trip. This can be at any position in the trip (origin and destination included).
 
-In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added".  
+In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".
 See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
@@ -379,7 +383,7 @@ The departure time of the train with a modified service simply won't be displaye
 ```
 The effect of the disruption is `ADDITIONAL_SERVICE`. It means that a new trip has been scheduled.
 
-In the disruption, every stops served by the new train can be found in the list of "impacted_stops" with the departure/arrival status set to "added".  
+In the disruption, every stops served by the new train can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".
 See the [disruption](#disruption) objects section for its full content and description.
 
 
