@@ -2034,7 +2034,7 @@ class EquipmentsProvider(flask_restful.Resource):
 
 class StreetNetworkBackend(flask_restful.Resource):
     @marshal_with(streetnetwork_backend_list_fields)
-    def get(self, version=0, id=None):
+    def get(self, id=None):
         if id:
             try:
                 return {'streetnetwork_backends': [models.StreetNetworkBackend.find_by_id(id)]}
@@ -2043,7 +2043,7 @@ class StreetNetworkBackend(flask_restful.Resource):
         else:
             return {'streetnetwork_backends': models.StreetNetworkBackend.all()}
 
-    def put(self, version=0, id=None):
+    def put(self, id=None):
         """
         Create or update a streetnetwork backend in db
         """
@@ -2085,7 +2085,7 @@ class StreetNetworkBackend(flask_restful.Resource):
             abort(400, status="error", message=str(ex))
         return message, status
 
-    def delete(self, version=0, id=None):
+    def delete(self, id=None):
         """
         Delete an streetnetwork backend in db, i.e. set parameter DISCARDED to TRUE
         """
