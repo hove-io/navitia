@@ -736,9 +736,7 @@ class User(flask_restful.Resource):
 
     def _get_all_users(self, args):
         del args['disable_geojson']
-        # dict comprehension would be better, but it's not in python 2.6
-        filter_params = dict((k, v) for k, v in args.items() if v)
-
+        filter_params = {k: v for k, v in args.items() if v}
         if filter_params:
             users = models.User.query.filter_by(**filter_params).all()
             return marshal(users, user_fields)
@@ -979,7 +977,6 @@ class UserV1(User):
 
     def _get_all_users(self, args):
         del args['disable_geojson']
-        # dict comprehension would be better, but it's not in python 2.6
         filter_params = {k: v for k, v in args.items() if v and k != 'page'}
 
         pagination = models.User.query.filter_by(**filter_params).paginate(
