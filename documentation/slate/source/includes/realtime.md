@@ -533,7 +533,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
     "stop_point": ⊕{11 items},
 }
 ```
-In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" are equals to the fields "base_arrival_date_time"/"base_departure_date_time".
+In the "stop_date_time" section of the response, the field "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" are equals to the fields "base_arrival_date_time"/"base_departure_date_time".
 
 No disruption is present at the root level of the response and so, in the section "display_informations", there's no link to any disruption.
 
@@ -570,6 +570,6 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 }
 ```
 
-In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the field "date_time" is equal to the field "base_date_time".
+In the list of "date_times" available in the response, the field "data_freshness" is "realtime" and the field "date_time" is equal to the field "base_date_time".
 
 No disruption is present at the root level of the response and so, in the sections "date_times" and "display_informations", there's no link to any disruption.  
