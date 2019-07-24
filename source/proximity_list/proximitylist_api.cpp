@@ -108,7 +108,7 @@ void find(navitia::PbCreator& pb_creator,
                 // we'll regenerate the good number in make_pb
                 result.push_back(t_result(nb_w.second->idx, coord, type));
                 ++total_result;
-            } catch (proximitylist::NotFound) {
+            } catch (const proximitylist::NotFound&) {
             }
             continue;
         }
