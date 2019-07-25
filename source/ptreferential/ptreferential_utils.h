@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "type/data.h"
+#include "type/rt_level.h"
 
 namespace navitia {
 namespace ptref {
@@ -48,6 +49,7 @@ type::Indexes filter_on_period(const type::Indexes& indexes,
                                const type::Type_e requested_type,
                                const boost::optional<boost::posix_time::ptime>& since,
                                const boost::optional<boost::posix_time::ptime>& until,
+                               const type::RTLevel rt_level,
                                const type::Data& data);
 type::Indexes get_within(const type::Type_e type,
                          const type::GeographicalCoord& coord,

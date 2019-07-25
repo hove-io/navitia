@@ -46,6 +46,7 @@ using namespace navitia::ptref;
 using boost::posix_time::time_period;
 using navitia::type::make_indexes;
 using navitia::type::OdtLevel_e;
+using navitia::type::RTLevel;
 using navitia::type::Type_e;
 using navitia::type::disruption::Tag;
 
@@ -155,7 +156,7 @@ static void assert_odt_level(const Type_e requested_type,
                              const std::string& request,
                              const OdtLevel_e odt_level,
                              const std::string& expected) {
-    const auto req = make_request(requested_type, request, {}, odt_level, {}, {}, {});
+    const auto req = make_request(requested_type, request, {}, odt_level, {}, {}, {}, {});
     assert_expr(req, expected);
 }
 
@@ -171,6 +172,7 @@ static void assert_since_until(const Type_e requested_type,
                                const std::string& request,
                                const std::string& since_str,
                                const std::string& until_str,
+                               const RTLevel rt_level,
                                const std::string& expected) {
     boost::optional<boost::posix_time::ptime> since, until;
     if (!since_str.empty()) {
@@ -179,27 +181,27 @@ static void assert_since_until(const Type_e requested_type,
     if (!until_str.empty()) {
         until = boost::posix_time::from_iso_string(until_str);
     }
-    const auto req = make_request(requested_type, request, {}, OdtLevel_e::all, since, until, {});
+    const auto req = make_request(requested_type, request, {}, OdtLevel_e::all, since, until, rt_level, {});
     assert_expr(req, expected);
 }
 
 BOOST_AUTO_TEST_CASE(make_request_since_until) {
-    assert_since_until(Type_e::Line, "", "", "", "all");
-    assert_since_until(Type_e::Line, "", "20180714T1337", "20180714T1338", "all");
-    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338",
-                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z")))");
-    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "",
-                       R"((all AND vehicle_journey.since("20180714T133700Z")))");
-    assert_since_until(Type_e::VehicleJourney, "", "", "20180714T1338",
-                       R"((all AND vehicle_journey.until("20180714T133800Z")))");
-    assert_since_until(Type_e::Impact, "", "20180714T1337", "20180714T1338",
-                       R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z")))");
-    assert_since_until(Type_e::Impact, "", "20180714T1337", "",
-                       R"((all AND disruption.since("20180714T133700Z")))");
-    assert_since_until(Type_e::Impact, "", "", "20180714T1338",
-                       R"((all AND disruption.until("20180714T133800Z")))");
-    assert_since_until(Type_e::Impact, "all or all", "", "20180714T1338",
-                       R"(((all OR all) AND disruption.until("20180714T133800Z")))");
+    assert_since_until(Type_e::Line, "", "", "", RTLevel::Base, "all");
+    assert_since_until(Type_e::Line, "", "20180714T1337", "20180714T1338", RTLevel::Base, "all");
+    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338", RTLevel::Base,
+                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z", "base")))");
+    assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "", RTLevel::RealTime,
+                       R"((all AND vehicle_journey.since("20180714T133700Z", "realtime")))");
+    assert_since_until(Type_e::VehicleJourney, "", "", "20180714T1338", RTLevel::Base,
+                       R"((all AND vehicle_journey.until("20180714T133800Z", "base")))");
+    assert_since_until(Type_e::Impact, "", "20180714T1337", "20180714T1338", RTLevel::RealTime,
+                       R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z", "realtime")))");
+    assert_since_until(Type_e::Impact, "", "20180714T1337", "", RTLevel::Base,
+                       R"((all AND disruption.since("20180714T133700Z", "base")))");
+    assert_since_until(Type_e::Impact, "", "", "20180714T1338", RTLevel::Base,
+                       R"((all AND disruption.until("20180714T133800Z", "base")))");
+    assert_since_until(Type_e::Impact, "all or all", "", "20180714T1338", RTLevel::Adapted,
+                       R"(((all OR all) AND disruption.until("20180714T133800Z", "adapted")))");
 }
 
 static void assert_forbidden(const Type_e requested_type,
@@ -209,7 +211,7 @@ static void assert_forbidden(const Type_e requested_type,
     ed::builder b("20180710");
     b.generate_dummy_basis();
     b.finish();
-    const auto req = make_request(requested_type, request, forbidden, OdtLevel_e::all, {}, {}, *b.data);
+    const auto req = make_request(requested_type, request, forbidden, OdtLevel_e::all, {}, {}, {}, *b.data);
     assert_expr(req, expected);
 }
 
@@ -226,7 +228,7 @@ BOOST_AUTO_TEST_CASE(make_request_odt_level_forbidden_uris) {
     ed::builder b("20180710");
     b.generate_dummy_basis();
     b.finish();
-    const auto req = make_request(Type_e::Line, "all or all", {"Bus", "0x1"}, OdtLevel_e::zonal, {}, {}, *b.data);
+    const auto req = make_request(Type_e::Line, "all or all", {"Bus", "0x1"}, OdtLevel_e::zonal, {}, {}, {}, *b.data);
     assert_expr(
         req,
         R"((((all OR all) AND line.odt_level("zonal")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
@@ -237,10 +239,10 @@ BOOST_AUTO_TEST_CASE(make_request_since_forbidden_uris) {
     b.generate_dummy_basis();
     b.finish();
     const auto req = make_request(Type_e::Impact, "all or all", {"Bus", "0x1"}, OdtLevel_e::all,
-                                  boost::posix_time::from_iso_string("20180714T1337"), {}, *b.data);
+                                  boost::posix_time::from_iso_string("20180714T1337"), {}, {}, *b.data);
     assert_expr(
         req,
-        R"((((all OR all) AND disruption.since("20180714T133700Z")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
+        R"((((all OR all) AND disruption.since("20180714T133700Z", "base")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
 }
 
 BOOST_AUTO_TEST_CASE(ng_specific_features) {
@@ -249,26 +251,26 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
     b.vj("B")("stop2", 700)("stop3", 800)("stop4", 900);
     b.vj("C")("stop1", 700)("stop3", 800)("stop5", 900);
     b.make();
-
+    auto rt_level = navitia::type::RTLevel::Base;
     auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2", {}, OdtLevel_e::all, {},
-                                 {}, *b.data);
+                                 {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4}));
 
     indexes = make_query_ng(Type_e::StopArea, "(get vehicle_journey <- stop_area.id=stop2) - stop_area.id=stop2", {},
-                            OdtLevel_e::all, {}, {}, *b.data);
+                            OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 3, 4}));
 
-    indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4, 5}));
 
-    indexes = make_query_ng(Type_e::StopArea, "empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "empty", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
 
-    indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
 
     indexes = make_query_ng(Type_e::StopArea, "stop_area.id=stop2 or stop_area.id=stop5", {}, OdtLevel_e::all, {}, {},
-                            *b.data);
+                            rt_level, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({2, 5}));
 }
 
@@ -280,8 +282,8 @@ BOOST_AUTO_TEST_CASE(get_connection) {
     b.connection("stop2", "stop1", 50);
     b.make();
 
-    auto indexes =
-        make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A", {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A", {}, OdtLevel_e::all, {}, {},
+                                 navitia::type::RTLevel::Base, *b.data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(*indexes.begin())->uri, "B");
 }
@@ -297,8 +299,8 @@ BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
                               *b.data->pt_data, *b.data->meta);
     b.make();
 
-    auto indexes =
-        make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"", {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"", {}, OdtLevel_e::all, {}, {},
+                                 navitia::type::RTLevel::Base, *b.data);
 
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
 
@@ -330,7 +332,7 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     b.make();
 
     auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(\"tag_0 name\", \"tag_2 name\")", {}, OdtLevel_e::all,
-                                 {}, {}, *b.data);
+                                 {}, {}, navitia::type::RTLevel::Base, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     std::vector<std::string> disruption_names;

@@ -150,11 +150,12 @@ void query_pb(navitia::PbCreator& pb_creator,
               const int count,
               const boost::optional<boost::posix_time::ptime>& since,
               const boost::optional<boost::posix_time::ptime>& until,
+              const type::RTLevel rt_level,
               const type::Data& data) {
     type::Indexes final_indexes;
     int total_result;
     try {
-        final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, since, until, data);
+        final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
     } catch (const parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more);
         return;

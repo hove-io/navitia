@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(frequency_vehicle_journeys_test) {
     navitia::PbCreator pb_creator(data, bt::second_clock::universal_time(), null_time_period);
     navitia::ptref::query_pb(pb_creator, nt::Type_e::VehicleJourney, {}, {}, nt::OdtLevel_e::all, depth, start_page,
                              count, boost::make_optional(true, "20190101T000000"_dt),
-                             boost::make_optional(true, "20190102T000000"_dt), *data);
+                             boost::make_optional(true, "20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys().size(), 2);
     auto vehicle_journey = resp.vehicle_journeys(0);

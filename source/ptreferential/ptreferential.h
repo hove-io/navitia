@@ -36,6 +36,7 @@ www.navitia.io
 
 #include <boost/optional.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "type/rt_level.h"
 
 namespace navitia {
 namespace ptref {
@@ -60,6 +61,15 @@ struct parsing_error : public ptref_error {
 
 /// Runs the query on the data, and returns the corresponding indexes.
 /// Throws in case of error (parsing, unknown function, no resultst...).
+type::Indexes make_query(const type::Type_e requested_type,
+                         const std::string& request,
+                         const std::vector<std::string>& forbidden_uris,
+                         const type::OdtLevel_e odt_level,
+                         const boost::optional<boost::posix_time::ptime>& since,
+                         const boost::optional<boost::posix_time::ptime>& until,
+                         const type::RTLevel rt_level,
+                         const type::Data& data);
+
 type::Indexes make_query(const type::Type_e requested_type,
                          const std::string& request,
                          const std::vector<std::string>& forbidden_uris,

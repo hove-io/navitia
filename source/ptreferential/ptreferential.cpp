@@ -45,12 +45,24 @@ type::Indexes make_query(const type::Type_e requested_type,
                          const type::OdtLevel_e odt_level,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
+                         const type::RTLevel rt_level,
                          const type::Data& data) {
-    const auto indexes = make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, data);
+    const auto indexes =
+        make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
     if (indexes.empty()) {
         throw ptref_error("Filters: Unable to find object");
     }
     return indexes;
+}
+
+type::Indexes make_query(const type::Type_e requested_type,
+                         const std::string& request,
+                         const std::vector<std::string>& forbidden_uris,
+                         const type::OdtLevel_e odt_level,
+                         const boost::optional<boost::posix_time::ptime>& since,
+                         const boost::optional<boost::posix_time::ptime>& until,
+                         const type::Data& data) {
+    return make_query(requested_type, request, forbidden_uris, odt_level, since, until, type::RTLevel::Base, data);
 }
 
 type::Indexes make_query(const type::Type_e requested_type,
