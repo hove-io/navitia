@@ -65,8 +65,15 @@ krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free, is_open_data, scenario='new_default',
-            equipment_details_providers=[], poi_dataset=None):
+    def __init__(
+        self,
+        priority,
+        is_free,
+        is_open_data,
+        scenario='new_default',
+        equipment_details_providers=[],
+        poi_dataset=None,
+    ):
         self.priority = priority
         self.is_free = is_free
         self.is_open_data = is_open_data

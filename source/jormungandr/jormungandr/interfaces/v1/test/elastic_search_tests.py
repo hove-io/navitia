@@ -582,6 +582,7 @@ def bragi_make_params_without_instance_test():
     rsp.sort()
     assert rsp == params
 
+
 def bragi_make_params_with_instance_and_poi_test():
     """
     test of generate params with instance which includes a poi dataset

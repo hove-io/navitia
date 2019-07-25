@@ -72,7 +72,9 @@ user_in_db_bragi = {
 
 MOCKED_INSTANCE_CONF = {'instance_config': {'default_autocomplete': 'bragi'}}
 
-MOCKED_INSTANCE_POI_DATASET_CONF = {'instance_config': {'default_autocomplete': 'bragi', 'poi_dataset': 'priv.bob' } }
+MOCKED_INSTANCE_POI_DATASET_CONF = {
+    'instance_config': {'default_autocomplete': 'bragi', 'poi_dataset': 'priv.bob'}
+}
 
 BRAGI_MOCK_RESPONSE = {
     "features": [
@@ -1618,9 +1620,9 @@ class TestDistributedAutocompleteAndRouting(
 ):
     pass
 
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_POI_DATASET_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompletePoiDataset:
-
     def test_poi_dataset(self):
 
         """
@@ -1639,8 +1641,7 @@ class AbstractAutocompletePoiDataset:
             assert params
             assert params.get('poi_dataset[]') == ['priv.bob']
 
+
 @config({'poi_dataset': 'priv.bob'})
-class TestPoiDatasetAutocomplete(
-    AbstractAutocompletePoiDataset,  NewDefaultScenarioAbstractTestFixture
-):
+class TestPoiDatasetAutocomplete(AbstractAutocompletePoiDataset, NewDefaultScenarioAbstractTestFixture):
     pass
