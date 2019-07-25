@@ -109,6 +109,10 @@ struct data_set {
             r->destination = b.sas.find("stop_area:stop1")->second;
         }
 
+        b.frequency_vj("line:freq", "10:00:00"_t, "11:00:00"_t, "00:10:00"_t, "network:freq", "1")
+            .name("vj:freq")("stop_area:stop2", "10:00:00"_t, "10:00:00"_t)("stop_area:stop1", "10:05:00"_t,
+                                                                            "10:05:00"_t);
+
         // Company added
         navitia::type::Company* cmp1 = new navitia::type::Company();
         cmp1->line_list.push_back(b.lines["line:A"]);
