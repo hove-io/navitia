@@ -2053,49 +2053,92 @@ class EquipmentsProvider(flask_restful.Resource):
 
 
 class StreetNetworkBackend(flask_restful.Resource):
-    @marshal_with(streetnetwork_backend_list_fields)
-    def get(self, id=None):
-        if id:
-            try:
-                return {'streetnetwork_backends': [models.StreetNetworkBackend.find_by_id(id)]}
-            except sqlalchemy.orm.exc.NoResultFound:
-                return {'streetnetwork_backends': []}, 404
+    def _get_user_by_id(self, backend_id):
+        return models.StreetNetworkBackend.query.get_or_404(backend_id)
+
+    def _get_all_backends(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('page', type=int, required=False, default=1)
+        args = parser.parse_args()
+
+        pagination = models.StreetNetworkBackend.query.filter_by(discarded=False).paginate(
+            args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+        )
+
+        pagination_json = {
+            'current_page': pagination.page,
+            'items_per_page': pagination.per_page,
+            'total_items': pagination.total,
+        }
+
+        if pagination.has_next:
+            pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
+        return marshal(pagination.items, streetnetwork_backend_fields), pagination_json
+
+    def get(self, backend_id=None):
+        resp = None
+        if backend_id:
+            resp = marshal(self._get_user_by_id(backend_id), streetnetwork_backend_fields)
         else:
-            return {'streetnetwork_backends': models.StreetNetworkBackend.all()}
+            resp = self._get_all_backends()
+            # In case of a response with pagination, the response type is a tuple and it needs to be serialized
+            if type(resp) == tuple:
+                return {'streetnetwork_backends': resp[0], 'pagination': resp[1]}
 
-    def put(self, id=None):
+        return {'streetnetwork_backends': resp}
+
+    def _validate_input(self, json_data):
         """
-        Create or update a streetnetwork backend in db
+        Check that the data received contains all required info
+        :param json_data: data received in request
         """
+        try:
+            validate(json_data, streetnetwork_backend_format)
+        except ValidationError as e:
+            abort(400, status="invalid data", message='{}'.format(parse_error(e)))
 
-        def _validate_input(json_data):
-            """
-            Check that the data received contains all required info
-            :param json_data: data received in request
-            """
-            try:
-                validate(json_data, streetnetwork_backend_format)
-            except ValidationError as e:
-                abort(400, status="invalid data", message='{}'.format(parse_error(e)))
-
-        if not id:
-            abort(400, status="error", message='id is required')
+    def post(self, backend_id=None):
+        """
+        Create a streetnetwork backend in db
+        """
+        if not backend_id:
+            abort(400, status="error", message='backend_id is required')
 
         try:
             input_json = request.get_json(force=True, silent=False)
         except BadRequest:
             abort(400, status="error", message='Incorrect json provided')
 
-        _validate_input(input_json)
-        message = {"message": ""}
+        self._validate_input(input_json)
+        sn_backend = models.StreetNetworkBackend(backend_id, input_json)
         try:
-            sn_backend = models.StreetNetworkBackend.find_by_id(id)
-            status = 200
-            message["message"] = "StreetNetwork Backend {} from db is updated".format(id)
-        except sqlalchemy.orm.exc.NoResultFound:
-            sn_backend = models.StreetNetworkBackend(id)
             models.db.session.add(sn_backend)
-            message["message"] = "StreetNetwork Backend {} is created".format(id)
+            models.db.session.commit()
+        except sqlalchemy.exc.IntegrityError as ex:
+            abort(400, status="error", message=str(ex))
+
+        resp = marshal(sn_backend, streetnetwork_backend_fields), 201
+        return {'streetnetwork_backend': resp[0]}, resp[1] if resp[1] == 201 else resp
+
+    def put(self, backend_id=None):
+        """
+        Create or update a streetnetwork backend in db
+        """
+        if not backend_id:
+            abort(400, status="error", message='backend_id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        self._validate_input(input_json)
+        try:
+            sn_backend = models.StreetNetworkBackend.find_by_id(backend_id)
+            status = 200
+        except sqlalchemy.orm.exc.NoResultFound:
+            sn_backend = models.StreetNetworkBackend(backend_id)
+            models.db.session.add(sn_backend)
             status = 201
 
         sn_backend.from_json(input_json)
@@ -2103,16 +2146,18 @@ class StreetNetworkBackend(flask_restful.Resource):
             models.db.session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
-        return message, status
 
-    def delete(self, id=None):
+        resp = marshal(sn_backend, streetnetwork_backend_fields), status
+        return {'streetnetwork_backend': resp[0]}, resp[1] if resp[1] in [200, 201] else resp
+
+    def delete(self, backend_id=None):
         """
         Delete an streetnetwork backend in db, i.e. set parameter DISCARDED to TRUE
         """
-        if not id:
-            abort(400, status="error", message='id is required')
+        if not backend_id:
+            abort(400, status="error", message='backend_id is required')
         try:
-            sn_backend = models.StreetNetworkBackend.find_by_id(id)
+            sn_backend = models.StreetNetworkBackend.find_by_id(backend_id)
             sn_backend.discarded = True
             models.db.session.commit()
             return None, 204

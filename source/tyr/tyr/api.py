@@ -108,9 +108,9 @@ api.add_resource(
 api.add_resource(
     resources.StreetNetworkBackend,
     '/v0/streetnetwork_backends',
-    '/v0/streetnetwork_backends/<string:id>',
+    '/v0/streetnetwork_backends/<string:backend_id>',
     '/v1/streetnetwork_backends',
-    '/v1/streetnetwork_backends/<string:id>',
+    '/v1/streetnetwork_backends/<string:backend_id>',
     endpoint=str('streetnetwork_backends'),
 )
 
