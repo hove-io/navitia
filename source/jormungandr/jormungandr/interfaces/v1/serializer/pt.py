@@ -547,7 +547,13 @@ class VehicleJourneySerializer(PbGenericSerializer):
     disruptions = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     start_time = TimeField(display_none=False)
     end_time = TimeField(display_none=False)
-    headway_secs = jsonschema.Field(schema_type=int, display_none=False)
+    headway_secs = jsonschema.MethodField(schema_type=int, display_none=False)
+
+    def get_headway_secs(self, obj):
+        if obj.HasField(str('headway_secs')):
+            return obj.headway_secs
+        else:
+            return None
 
 
 class ConnectionSerializer(PbNestedSerializer):

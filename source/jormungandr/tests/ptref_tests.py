@@ -165,6 +165,15 @@ class TestPtRef(AbstractTestFixture):
         assert vjs[0]['end_time'] == '110000'
         assert vjs[0]['headway_secs'] == 600  # a 10 min step
 
+        # with a not frequency VJ
+        response = self.query_region('lines/line:A/vehicle_journeys?depth=3')
+        vjs = get_not_null(response, 'vehicle_journeys')
+
+        assert len(vjs) == 1
+        assert not 'start_time' in vjs[0]
+        assert not 'end_time' in vjs[0]
+        assert not 'headway_secs' in vjs[0]
+
     def test_vj_show_codes_propagation(self):
         """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
         response = self.query_region("stop_areas/stop_area:stop1/vehicle_journeys")
