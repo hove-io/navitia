@@ -478,6 +478,12 @@ class Instance(object):
 
         return d
 
+    @property
+    def poi_dataset(self):
+        # type: () -> Text
+        instance_db = self.get_models()
+        return instance_db.poi_dataset if instance_db else None
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')

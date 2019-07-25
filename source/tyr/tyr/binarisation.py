@@ -844,7 +844,7 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
                 job.state = 'failed'
                 models.db.session.commit()
         else:
-            instance.private_poi_dataset = dataset_name
+            instance.poi_dataset = dataset_name
             models.db.session.commit()
     except:
         logger.exception('')

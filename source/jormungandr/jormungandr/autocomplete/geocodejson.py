@@ -283,13 +283,8 @@ class GeocodeJson(AbstractAutocomplete):
 
     def make_params(self, request, instances, timeout):
         params = self.basic_params(instances)
-        # concatenate all poi_datasets from all instances.
-        poi_dataset = reduce(
-            lambda a, b: a + ", " + b,
-            map(lambda i: i.private_poi_dataset, filter(lambda i: i.private_poi_dataset, instances)),
-        )
-        if poi_dataset:
-            params.extend([('poi_dataset[]', poi_dataset)])
+
+        params.extend([('poi_dataset[]', i.poi_dataset) for i in instances if i.poi_dataset])
 
         params.extend([("q", request["q"]), ("limit", request["count"])])
         if request.get("type[]"):

@@ -65,12 +65,14 @@ krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free, is_open_data, scenario='new_default', equipment_details_providers=[]):
+    def __init__(self, priority, is_free, is_open_data, scenario='new_default',
+            equipment_details_providers=[], poi_dataset=None):
         self.priority = priority
         self.is_free = is_free
         self.is_open_data = is_open_data
         self.scenario = scenario
         self.equipment_details_providers = equipment_details_providers
+        self.poi_dataset = poi_dataset
 
 
 class AbstractTestFixture(unittest.TestCase):
@@ -194,11 +196,12 @@ class AbstractTestFixture(unittest.TestCase):
             is_free = cls.data_sets[name].get('is_free', False)
             is_open_data = cls.data_sets[name].get('is_open_data', False)
             scenario = cls.data_sets[name].get('scenario', 'new_default')
+            poi_dataset = cls.data_sets[name].get('poi_dataset', None)
             cls.mocks.append(
                 mock.patch.object(
                     i_manager.instances[name],
                     'get_models',
-                    return_value=FakeModel(priority, is_free, is_open_data, scenario),
+                    return_value=FakeModel(priority, is_free, is_open_data, scenario, poi_dataset=poi_dataset),
                 )
             )
 

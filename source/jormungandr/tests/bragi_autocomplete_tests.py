@@ -72,6 +72,8 @@ user_in_db_bragi = {
 
 MOCKED_INSTANCE_CONF = {'instance_config': {'default_autocomplete': 'bragi'}}
 
+MOCKED_INSTANCE_POI_DATASET_CONF = {'instance_config': {'default_autocomplete': 'bragi', 'poi_dataset': 'priv.bob' } }
+
 BRAGI_MOCK_RESPONSE = {
     "features": [
         {
@@ -1613,5 +1615,32 @@ class TestNewDefaultAutocompleteAndRouting(
 @config({'scenario': 'distributed'})
 class TestDistributedAutocompleteAndRouting(
     AbstractAutocompleteAndRouting, NewDefaultScenarioAbstractTestFixture
+):
+    pass
+
+@dataset({'main_routing_test': MOCKED_INSTANCE_POI_DATASET_CONF}, global_config={'activate_bragi': True})
+class AbstractAutocompletePoiDataset:
+
+    def test_poi_dataset(self):
+
+        """
+        Basic test for autocompletion with poi_dataset.
+        We setup the mock instance to have a poi_dataset 'priv.bob', and then build a query for bragi.
+        We verify that the query to bragi correctly adds a poi_dataset[] parameter.
+        """
+
+        with requests_mock.Mocker() as m:
+            m.get('https://host_of_bragi/autocomplete', json={})
+            self.query_region('places?q=bob&from=3.25;49.84')
+            # m.get(url, json={})
+            # self.query_region('places?q=bob')
+            assert m.called
+            params = m.request_history[0].qs
+            assert params
+            assert params.get('poi_dataset[]') == ['priv.bob']
+
+@config({'poi_dataset': 'priv.bob'})
+class TestPoiDatasetAutocomplete(
+    AbstractAutocompletePoiDataset,  NewDefaultScenarioAbstractTestFixture
 ):
     pass
