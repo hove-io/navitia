@@ -32,12 +32,13 @@
 import docker
 import logging
 import psycopg2
-
+from typing import List, Optional, Dict
 from retrying import retry
 
 """
 This module contains classes about Docker management.
 """
+
 
 class DbParams(object):
     """
@@ -100,10 +101,10 @@ class DockerWrapper(object):
         dbpassword='docker',
         env_vars={},
     ):
+        # type: (str, Optional[str], Optional[str], str, str, str, Dict[str, str]) -> None
         """
         Constructor of PostgresDocker.
         """
-        # type: () -> None
         log = logging.getLogger(__name__)  # type: logging.Logger
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
@@ -126,14 +127,14 @@ class DockerWrapper(object):
 
         except docker.errors.APIError as e:
             if e.is_server_error():
-                log.warn("[docker server error] A server error occcured, maybe " "missing internet connection?")
+                log.warn("[docker server error] A server error occcured, maybe missing internet connection?")
                 log.warn("[docker server error] Details: {}".format(e))
                 log.warn(
-                    "[docker server error] Checking if '{}' docker image " "is already built".format(image_name)
+                    "[docker server error] Checking if '{}' docker image is already built".format(image_name)
                 )
                 self.docker_client.images.get(image_name)
                 log.warn(
-                    "[docker server error] Going on, as '{}' docker image " "is already built".format(image_name)
+                    "[docker server error] Going on, as '{}' docker image is already built".format(image_name)
                 )
             else:
                 raise
