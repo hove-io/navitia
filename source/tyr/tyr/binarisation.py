@@ -44,7 +44,7 @@ from shapely import wkt
 from zipfile import BadZipfile
 import sqlalchemy
 
-from navitiacommon.launch_exec import launch_exec
+from navitiacommon import process
 import navitiacommon.task_pb2
 from tyr import celery, redis
 from tyr.rabbit_mq_handler import RabbitMqHandler
@@ -202,7 +202,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append(instance_config.name)
         res = None
         with collect_metric('fusio2ed', job, dataset_uid):
-            res = launch_exec("fusio2ed", params, logger)
+            res = process.run("fusio2ed", params, True, logger)
         if res != 0:
             raise ValueError('fusio2ed failed')
     except:
@@ -241,7 +241,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
         params.append(instance_config.name)
         res = None
         with collect_metric('gtfs2ed', job, dataset_uid):
-            res = launch_exec("gtfs2ed", params, logger)
+            res = process.run("gtfs2ed", params, True, logger)
         if res != 0:
             raise ValueError('gtfs2ed failed')
     except:
@@ -286,7 +286,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
                 )
             args.extend(["--cities-connection-string", cities_db])
         with collect_metric('osm2ed', job, dataset_uid):
-            res = launch_exec('osm2ed', args, logger)
+            res = process.run('osm2ed', args, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('osm2ed failed')
@@ -317,7 +317,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric('geopal2ed', job, dataset_uid):
-            res = launch_exec('geopal2ed', params, logger)
+            res = process.run('geopal2ed', params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('geopal2ed failed')
@@ -348,7 +348,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric('poi2ed', job, dataset_uid):
-            res = launch_exec('poi2ed', params, logger)
+            res = process.run('poi2ed', params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('poi2ed failed')
@@ -378,7 +378,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric('synonym2ed', job, dataset_uid):
-            res = launch_exec('synonym2ed', params, logger)
+            res = process.run('synonym2ed', params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('synonym2ed failed')
@@ -543,7 +543,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 
         res = None
         with collect_metric('ed2nav', job, None):
-            res = launch_exec('ed2nav', argv, logger)
+            res = process.run('ed2nav', argv, True, logger)
             os.system('sync')  # we sync to be safe
         if res != 0:
             raise ValueError('ed2nav failed')
@@ -573,7 +573,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
-        res = launch_exec("fare2ed", params, logger)
+        res = process.run("fare2ed", params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('fare2ed failed')
@@ -602,7 +602,7 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         return
 
     try:
-        res = launch_exec(
+        res = process.run(
             "bano2mimir",
             [
                 '-i',
@@ -612,6 +612,7 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
                 '--dataset',
                 autocomplete_instance.name,
             ],
+            True,
             logger,
         )
         if res != 0:
@@ -642,7 +643,7 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
         return
 
     try:
-        res = launch_exec(
+        res = process.run(
             "openaddresses2mimir",
             [
                 '-i',
@@ -652,6 +653,7 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
                 '--dataset',
                 autocomplete_instance.name,
             ],
+            True,
             logger,
         )
         if res != 0:
@@ -693,7 +695,7 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     params.append('--dataset')
     params.append(autocomplete_instance.name)
     try:
-        res = launch_exec("osm2mimir", params, logger)
+        res = process.run("osm2mimir", params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('osm2mimir failed')
@@ -728,7 +730,7 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
     argv = ['--input', stops_file, '--connection-string', cnx_string, '--dataset', instance_config.name]
 
     try:
-        res = launch_exec('stops2mimir', argv, logger)
+        res = process.run('stops2mimir', argv, True, logger)
         if res != 0:
             # Do not raise error because that it breaks celery tasks chain.
             # stops2mimir have to be non-blocking.
@@ -764,7 +766,7 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
 
     argv = ['--input', working_directory, '--connection-string', cnx_string, '--dataset', instance_config.name]
     try:
-        res = launch_exec('ntfs2mimir', argv, logger)
+        res = process.run('ntfs2mimir', argv, True, logger)
         if res != 0:
             # Do not raise error because it breaks celery tasks chain.
             # ntfs2mimir have to be non-blocking.
@@ -802,7 +804,7 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         '--french-id-retrocompatibility',
     ]
     try:
-        res = launch_exec("cosmogony2mimir", params, logger)
+        res = process.run("cosmogony2mimir", params, True, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError('cosmogony2mimir failed')

@@ -61,7 +61,7 @@ from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
-from navitiacommon.launch_exec import launch_exec
+from navitiacommon import process
 from datetime import datetime, timedelta
 
 
@@ -520,9 +520,10 @@ def cities(file_path, job_id, exe):
     job = models.Job.query.get(job_id)
     res = -1
     try:
-        res = launch_exec(
+        res = process.run(
             "{}".format(exe),
             ['-i', file_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']],
+            True,
             logging,
         )
         if res != 0:
