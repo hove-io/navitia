@@ -1623,7 +1623,6 @@ class TestDistributedAutocompleteAndRouting(
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_POI_DATASET_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompletePoiDataset:
-
     def test_poi_dataset_places(self):
 
         """
@@ -1676,7 +1675,6 @@ class AbstractAutocompletePoiDataset:
         param_to = "8.99312e-05;8.97312e-05"
         params = {'pt_dataset[]': 'main_routing_test', 'from': param_from, 'to': param_to, 'timeout': 200}
         url += "/journeys?{}".format(urlencode(params, doseq=True))
-
 
         with requests_mock.Mocker() as m:
 
