@@ -277,14 +277,20 @@ class GeocodeJson(AbstractAutocomplete):
         return url
 
     def basic_params(self, instances):
+        '''
+        These are the parameters common to the three endpoints
+        '''
         if not instances:
             return []
-        return [('pt_dataset[]', i.name) for i in instances]
+        params = [('pt_dataset[]', i.name) for i in instances]
+        params.extend([('poi_dataset[]', i.poi_dataset) for i in instances if i.poi_dataset])
+        return params
 
     def make_params(self, request, instances, timeout):
+        '''
+        These are the parameters used specifically for the autocomplete endpoint.
+        '''
         params = self.basic_params(instances)
-
-        params.extend([('poi_dataset[]', i.poi_dataset) for i in instances if i.poi_dataset])
 
         params.extend([("q", request["q"]), ("limit", request["count"])])
         if request.get("type[]"):
