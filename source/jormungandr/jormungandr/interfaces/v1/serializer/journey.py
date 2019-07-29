@@ -251,6 +251,9 @@ class SectionSerializer(PbNestedSerializer):
     )
     data_freshness = EnumField(attr="realtime_level", pb_type=RTLevel, display_none=False)
     to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
+    cycle_path_percentage = jsonschema.Field(
+        schema_type=float, display_none=True, description='Percentage of cycle path used'
+    )
 
     def get_to(self, obj):
         if obj.HasField(str('type')):
