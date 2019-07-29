@@ -2117,8 +2117,8 @@ class StreetNetworkBackend(flask_restful.Resource):
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
 
-        resp = marshal(sn_backend, streetnetwork_backend_fields), 201
-        return {'streetnetwork_backend': resp[0]}, resp[1] if resp[1] == 201 else resp
+        resp = marshal(sn_backend, streetnetwork_backend_fields)
+        return {'streetnetwork_backend': resp}, 201
 
     def put(self, backend_id=None):
         """
@@ -2147,8 +2147,8 @@ class StreetNetworkBackend(flask_restful.Resource):
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
 
-        resp = marshal(sn_backend, streetnetwork_backend_fields), status
-        return {'streetnetwork_backend': resp[0]}, resp[1] if resp[1] in [200, 201] else resp
+        resp = marshal(sn_backend, streetnetwork_backend_fields)
+        return {'streetnetwork_backend': resp}, status
 
     def delete(self, backend_id=None):
         """
