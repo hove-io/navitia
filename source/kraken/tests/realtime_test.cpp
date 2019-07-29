@@ -46,7 +46,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() { navitia::init_logger("logger", "TRACE"); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;

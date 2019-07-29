@@ -45,7 +45,7 @@ using namespace navitia::type;
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     ed::builder b("20120614");

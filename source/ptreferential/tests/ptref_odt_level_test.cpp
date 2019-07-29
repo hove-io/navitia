@@ -46,7 +46,7 @@ using namespace navitia::ptref;
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 class Params {
 public:

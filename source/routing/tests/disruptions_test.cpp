@@ -39,7 +39,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     routing_api_data<normal_speed_provider> data;

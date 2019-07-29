@@ -58,7 +58,7 @@ static boost::gregorian::date date(std::string str) {
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 struct calendar_fixture {
     ed::builder b;

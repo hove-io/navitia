@@ -41,7 +41,7 @@ using btp = boost::posix_time::time_period;
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 /*
  * Fixture to test when we display a disruption and the status of this disruption

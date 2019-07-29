@@ -40,7 +40,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 BOOST_AUTO_TEST_CASE(frequency_vehicle_journeys_test) {
     ed::builder b("20190101");

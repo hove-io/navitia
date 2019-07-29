@@ -46,7 +46,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE(logger_initialized);
+BOOST_GLOBAL_FIXTURE(logger_initialized)
 
 BOOST_AUTO_TEST_CASE(create_vj_test) {
     using year = navitia::type::ValidityPattern::year_bitset;
