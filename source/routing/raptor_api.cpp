@@ -882,7 +882,6 @@ void make_pathes(PbCreator& pb_creator,
                     pb_creator.action_period =
                         bt::time_period(navitia::from_posix_timestamp(section->begin_date_time()),
                                         navitia::from_posix_timestamp(section->end_date_time() + 1));
-                    pb_creator.fill(arrival_stop_point, section->mutable_origin(), 2);
                 }
 
                 // We add coherence with the destination object of the request
