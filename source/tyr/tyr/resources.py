@@ -2053,7 +2053,7 @@ class EquipmentsProvider(flask_restful.Resource):
 
 
 class StreetNetworkBackend(flask_restful.Resource):
-    def _get_user_by_id(self, backend_id):
+    def _get_backend_by_id(self, backend_id):
         return models.StreetNetworkBackend.query.get_or_404(backend_id)
 
     def _get_all_backends(self):
@@ -2078,7 +2078,7 @@ class StreetNetworkBackend(flask_restful.Resource):
     def get(self, backend_id=None):
         resp = None
         if backend_id:
-            resp = marshal(self._get_user_by_id(backend_id), streetnetwork_backend_fields)
+            resp = marshal(self._get_backend_by_id(backend_id), streetnetwork_backend_fields)
         else:
             resp = self._get_all_backends()
             # In case of a response with pagination, the response type is a tuple and it needs to be serialized
