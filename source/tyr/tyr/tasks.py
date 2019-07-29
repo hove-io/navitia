@@ -172,6 +172,7 @@ def send_to_mimir(instance, filename, family_type):
     """
     :param instance: instance to receive the data
     :param filename: file to inject towards mimir
+    :param family_type: dataset's family type
 
     - create a job with a data_set
     - data injection towards mimir(stops2mimir, ntfs2mimir, poi2mimir)

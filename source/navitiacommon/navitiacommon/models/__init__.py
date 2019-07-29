@@ -765,12 +765,8 @@ class Metric(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
 
-    type = db.Column(
-        db.Enum(
-            'ed2nav', 'fusio2ed', 'gtfs2ed', 'osm2ed', 'geopal2ed', 'synonym2ed', 'poi2ed', name='metric_type'
-        ),
-        nullable=False,
-    )
+    type = db.Column(db.Text, nullable=False)
+
     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=True)
     duration = db.Column(INTERVAL)
 

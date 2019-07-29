@@ -819,6 +819,7 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     dataset_name = 'priv.{}'.format(instance_name)  # We give the dataset a prefix to prevent
     #   collision with other datasets.
 
+    job = None
     # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
     if job_id:
         job = models.Job.query.get(job_id)
@@ -836,7 +837,12 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     argv = ['--input', poi_file, '--connection-string', cnx_string, '--dataset', dataset_name, '--private']
 
     try:
-        res = launch_exec('poi2mimir', argv, logger)
+        if job:
+            with collect_metric('poi2mimir', job, dataset_uid):
+                res = launch_exec('poi2mimir', argv, logger)
+        else:
+            res = launch_exec('poi2mimir', argv, logger)
+
         if res != 0:
             # Do not raise error because it breaks celery tasks chain.
             logger.error('poi2mimir failed')
