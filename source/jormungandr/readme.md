@@ -69,7 +69,7 @@ To run the web service, you'll need to:
 
 * set `JORMUNGANDR_INSTANCES_DIR` to point at the directory that contains your `jormungandr.json`.
 * add `navitia/source/jormungandr` and `navitia/navitiacommon` to your python path via `PYTHONPATH`.
-* [optionaly] set `JORMUNGANDR_CONFIG_FILE` to point at your `custom_settings.py`.
+* [optionally] set `JORMUNGANDR_CONFIG_FILE` to point at your `custom_settings.py`.
 
 ## Example
 
