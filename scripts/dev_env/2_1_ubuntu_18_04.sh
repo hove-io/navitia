@@ -34,12 +34,12 @@ ALL_DOCKER_PACKAGES='docker.io
 
 # Install all packages (for natif)
 distrib_natif_install() {
-    apt-get install -y $ALL_NATIF_PACKAGES
+    sudo apt-get install -y $ALL_NATIF_PACKAGES
 }
 
 # Install all packages (for Docker)
-distrib_natif_install() {
-    apt-get install -y $ALL_DOCKER_PACKAGES
+distrib_docker_install() {
+    sudo apt-get install -y $ALL_DOCKER_PACKAGES
 }
 
 # Configure Docker

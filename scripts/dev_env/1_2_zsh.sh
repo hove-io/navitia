@@ -19,17 +19,17 @@ navitia_env_update() {
     pip install -r \$NAVITIA_HOME/source/sql/requirements.txt
 }
 
-alias -s eitri='\$NAVITIA_HOME/source/eitri/eitri.py -e \NAVITIA_BUILD/ed/'
+alias -s eitri='\$NAVITIA_HOME/source/eitri/eitri.py -e \$NAVITIA_BUILD/ed/'
 alias -s docker_update='docker pull navitia/debian8_dev'
 
-# Run a command in the development Docker 
+# Run a command in the development Docker
 docker_navitia() {
     if [ \$# == 0 ]; then
         echo "docker_navitia: error, need at least 1 parameter (the command to execute in the docker)"
         return -1
     fi
 
-    docker run -it --rm --user=$(id -u):$(id -g) -v \$NAVITIA_HOME:/navitia/source -v \$NAVITIA_BUILD:/navitia/build -v \$HOME/.bashrc:/.bashrc -w /navitia navitia/debian8_dev \$@
+    docker run -it --rm --user=$(id -u):$(id -g) -v \$NAVITIA_HOME:/navitia/source -v \$NAVITIA_BUILD:/navitia/build -v \$HOME/.zshrc:/.zshrc -w /navitia navitia/debian8_dev \$@
 }
 
 # ----------> END KISIO DIGITAL <----------

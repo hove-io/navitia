@@ -69,6 +69,8 @@ db_create_navitia() {
 
     print_info "Cleaning temporary virtualenv ..."
     rm -rf /tmp/venv_navitia_sql
+
+    print_info "Database \"$db_name\" is created with user:\"$db_owner\" and password:\"$db_user_password\""
 }
 
 # Create Jormungandr database
@@ -101,4 +103,6 @@ db_create_jormungandr() {
 
     print_info "Cleaning temporary virtualenv ..."
     rm -rf /tmp/venv_tyr
+
+    print_info "Database \"jormungandr\" is created with user:\"$db_owner\" and no password"
 }

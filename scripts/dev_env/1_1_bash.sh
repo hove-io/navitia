@@ -22,7 +22,7 @@ navitia_env_update() {
 alias eitri='\$NAVITIA_HOME/source/eitri/eitri.py -e \$NAVITIA_BUILD/ed/'
 alias docker_update='docker pull navitia/debian8_dev'
 
-# Run a command in the development Docker 
+# Run a command in the development Docker
 docker_navitia() {
     if [ \$# == 0 ]; then
         echo "docker_navitia: error, need at least 1 parameter (the command to execute in the docker)"

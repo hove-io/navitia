@@ -3,12 +3,12 @@
 # ********************************************************************
 # Complete development environment installation for Navitia.
 # After the installation, you'll be able to :
-# - Compile kraken
-# - Run all integration ad Unit tests
-# - Run docker (tyr + eitri) tests
+# - Compile Kraken
+# - Run all integration and unitary tests
+# - Run Docker (Tyr + Eitri) tests
 # - Run binaries to fill ed database (fusio2ed, osm2ed, ...)
-# - Run ed2nav binary to generate data.nav.lz4 form the ed database
-# - Run eitri (the docker method) to build data.nav.lz4 with your own NTFS and Osm files
+# - Run ed2nav binary to generate data.nav.lz4 from the ed database
+# - Run Eitri (the Docker method) to build data.nav.lz4 with your own NTFS and Osm files
 # ********************************************************************
 
 source ./dev_env/0_utils.sh
@@ -21,7 +21,7 @@ source ./dev_env/5_python_env.sh
 
 # entry point
 
-DISTRIBUTION=`cat /etc/os-release | perl -ne 'print "$1\n" if /PRETTY_NAME="(.*?)"/'`
+DISTRIBUTION=`grep PRETTY_NAME /etc/os-release | sed 's/^PRETTY_NAME="\(.*\)".*/\1/'`
 case $DISTRIBUTION in
     'Ubuntu 18.04')
         source ./dev_env/2_1_ubuntu_18_04.sh
