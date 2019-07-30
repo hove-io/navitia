@@ -1,30 +1,29 @@
-# Scripts description
+![alt text](../documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png)
 
-## Dev environment installation
+# Development environment installation script
 
-Following the installation, it will be possible to :
- - Compile kraken
- - Run all integration and Unit tests
- - Run docker (tyr + eitri) tests
- - Run binaries to fill ed database (fusio2ed, osm2ed, ...)
- - Run ed2nav binary to generate data.nav.lz4 form the ed database
- - Run eitri (the docker method) to build data.nav.lz4 with your own NTFS and OSM files
+## What is it doing ?
 
-Script                                   | OS                | Version                           | Comments
------------------------------------------|-------------------|-----------------------------------|--------------------------
-ubuntu_bionic_disco_dev_env_install.sh   | Ubuntu            | Bionic - disco                    | Complete dev environment installation on Ubuntu bionic LTS and Ubuntu Disco.
-build_navitia.sh                         | Ubuntu<br>Debian  | Vivid - Xenial<br>Jessie          | Old script. Combine dev environment installation and Navitia demo
+The script is an entry point to build Navitia. It allows you to install the Navitia dependencies and build it.
+It's cross-platform and modular. If your distribution is not available, do not hesitate to add it in the script. You should easilly be able to do it, following its design.
 
-## Build, setup and run navitia demo
+The script is interactif and allow you to do what you want, how you want it. Moreover, any question can be skipped if you don't want to do a part.
 
-Script does the following actions :
-- build with cmake/make
-- Download GTFS and OSM data set
-- Create data.nav.lz4
-- Create conf files
-- Run Kraken + Jormungandr
 
-Script                                   | OS                | Version                           | Comments
------------------------------------------|-------------------|-----------------------------------|---------------------------
-build_setup_and_run_navitia_demo.sh      | Ubuntu<br>Debian  | Debian >= 8 - Ubuntu >= 15.04     | Needs as a prerequisite, a dev environment setup
-build_navitia.sh                         | Ubuntu<br>Debian  | Vivid - Xenial<br>Jessie          | Old script. Combine dev environment installation and Navitia demo
+## Requierements
+
+The installation script just need Bash to run. It's commonly installed on every modern system, you probably don't have to do anything.
+However, if you have trouble, try to install Bash for your operating system and re-run it.
+
+For any questions, you can find help on https://www.navitia.io/
+
+
+## Usage
+
+You just have to be in the script directory and run :
+
+```sh
+./install_dev_env.sh
+```
+
+Then follow the questions :sunglasses:
