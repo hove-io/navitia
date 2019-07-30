@@ -43,6 +43,7 @@ from .tests_mechanism import config
 from copy import deepcopy
 import requests_mock
 from contextlib import contextmanager
+import json
 
 
 class FakeUserBragi(FakeUser):
@@ -676,7 +677,7 @@ BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
 
 
 @contextmanager
-def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=200):
+def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=200, method='POST'):
     url = 'https://host_of_bragi/autocomplete'
     params = [
         ('q', u'bob'),
@@ -694,7 +695,7 @@ def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=2
     url += "?{}".format(urlencode(params, doseq=True))
 
     with requests_mock.Mocker() as m:
-        m.get(url, json=bragi_response)
+        m.request(method, url, json=bragi_response)
         yield m
 
 
@@ -744,7 +745,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         :return:
         """
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&from=3.25;49.84')
             assert m.called
             params = m.request_history[0].qs
@@ -782,7 +783,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         :return:
         """
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob')
             assert m.called
             params = m.request_history[0].qs
@@ -790,13 +791,43 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'type[]' in params
             assert set(params['type[]']) == set(['public_transport:stop_area', 'street', 'house', 'poi', 'city'])
 
+    def test_autocomplete_call_with_no_shape(self):
+        """
+        test that the coverage shape is sent to bragi if no shape is set
+        :return:
+        """
+        with requests_mock.Mocker() as m:
+            m.post('https://host_of_bragi/autocomplete', json={})
+            self.query_region('places?q=bob')
+            assert m.called
+            body = m.request_history[0].body
+            assert body
+            js = json.loads(body)
+            shape = js.get('shape')
+            assert shape
+            type = shape.get('type')
+            assert type == 'Feature'
+            geom = shape.get('geometry')
+            assert geom
+            assert geom.get('type') == 'Polygon'
+            coords = [
+                [
+                    [-0.99991, -0.99991],
+                    [-0.99991, 0.00171865],
+                    [0.00288646, 0.00171865],
+                    [0.00288646, -0.99991],
+                    [-0.99991, -0.99991],
+                ]
+            ]
+            assert geom.get('coordinates') == coords
+
     def test_autocomplete_call_with_param_type_administrative_region(self):
         """
         test that administrative_region is converted to city
         :return:
         """
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&type[]=administrative_region&type[]=address')
             assert m.called
             params = m.request_history[0].qs
@@ -811,7 +842,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """
         with raises(Exception):
             with requests_mock.Mocker() as m:
-                m.get('https://host_of_bragi/autocomplete', status_code=422)
+                m.post('https://host_of_bragi/autocomplete', status_code=422)
                 self.query_region('places?q=bob&type[]=bobette')
 
     def test_autocomplete_call_with_param_type_stop_point(self):
@@ -820,7 +851,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         :return:
         """
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&type[]=stop_point&type[]=address')
             assert m.called
             params = m.request_history[0].qs
@@ -1010,7 +1041,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'distance' not in r[0]
 
     def test_feature_unknown_type(self):
-        with mock_bragi_autocomplete_call(BRAGI_MOCK_TYPE_UNKNOWN, limite=2):
+        with mock_bragi_autocomplete_call(BRAGI_MOCK_TYPE_UNKNOWN, limite=2, method='GET'):
             response = self.query("v1/places?q=bob&count=2")
 
             is_valid_global_autocomplete(response, depth=1)
@@ -1023,7 +1054,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
     def test_feature_zone(self):
-        with mock_bragi_autocomplete_call(BRAGI_MOCK_ZONE):
+        with mock_bragi_autocomplete_call(BRAGI_MOCK_ZONE, method='GET'):
             response = self.query("v1/places?q=bob")
 
             is_valid_global_autocomplete(response, depth=1)
@@ -1352,10 +1383,11 @@ class TestBragiShape(AbstractTestFixture):
         """
         with user_set(app, FakeUserBragi, "test_user_no_shape"):
             with requests_mock.Mocker() as m:
-                m.get('https://host_of_bragi/autocomplete', json={})
+                m.post('https://host_of_bragi/autocomplete', json={})
                 self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
                 assert m.called
 
+                m.get('https://host_of_bragi/autocomplete', json={})
                 self.query('v1/places?q=toto')
                 assert m.call_count == 2
 
@@ -1365,7 +1397,7 @@ class TestBragiShape(AbstractTestFixture):
         """
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
-                m.get('https://host_of_bragi/autocomplete', json={})
+                m.post('https://host_of_bragi/autocomplete', json={})
                 self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
                 assert m.called
                 params = m.request_history[0].qs
@@ -1379,7 +1411,7 @@ class TestBragiShape(AbstractTestFixture):
         """
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
-                m.get('https://host_of_bragi/autocomplete', json={})
+                m.post('https://host_of_bragi/autocomplete', json={})
                 self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=1;2')
                 assert m.called
                 params = m.request_history[0].qs
@@ -1393,7 +1425,7 @@ class TestBragiShape(AbstractTestFixture):
         """
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
-                m.get('https://host_of_bragi/autocomplete', json={})
+                m.post('https://host_of_bragi/autocomplete', json={})
                 self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=')
                 assert m.called
                 params = m.request_history[0].qs
@@ -1507,8 +1539,10 @@ class AbstractAutocompleteAndRouting:
             return r[0]['id']
 
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete?{p}'.format(p=bobette_params), json=BRAGI_MOCK_BOBETTE)
-            m.get('https://host_of_bragi/autocomplete?{p}'.format(p=bob_params), json=bragi_bob_reverse_response)
+            m.post('https://host_of_bragi/autocomplete?{p}'.format(p=bobette_params), json=BRAGI_MOCK_BOBETTE)
+            m.post(
+                'https://host_of_bragi/autocomplete?{p}'.format(p=bob_params), json=bragi_bob_reverse_response
+            )
             m.get(reverse_url, json=bragi_bob_reverse_response)
             m.get(features_url, json=BRAGI_MOCK_BOBETTE)
             journeys_from = get_autocomplete('places?q=bobette')
