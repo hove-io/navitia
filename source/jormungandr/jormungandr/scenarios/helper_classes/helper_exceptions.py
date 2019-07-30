@@ -40,6 +40,12 @@ class PtException(Exception):
         return self._response
 
 
+class InvalidDateBoundException(PtException):
+    def __init__(self, pt_journey_with_error):
+        super(PtException, self).__init__()
+        self._response = copy.deepcopy(pt_journey_with_error)
+
+
 def _make_error_response(message, error_id):
 
     r = response_pb2.Response()
