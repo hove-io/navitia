@@ -648,7 +648,7 @@ class Instance(object):
 
     def _update_geojson(self):
         """construct the geojson object from the shape"""
-        if not self.geom:
+        if not self.geom or not self.geom.is_valid:
             self.geojson = None
             return
         # simplify the geom to prevent slow query on bragi
