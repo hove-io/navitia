@@ -320,6 +320,7 @@ class GeocodeJson(AbstractAutocomplete):
         if shape:
             kwargs["json"] = {"shape": shape}
             method = self.session.post
+        logging.getLogger(__name__).debug("call bragi with parameters %s", kwargs)
 
         raw_response = self.call_bragi(url, method, **kwargs)
         depth = request.get('depth', 1)
