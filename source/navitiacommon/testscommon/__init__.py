@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+# coding=utf-8
 
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-#
+# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
@@ -28,14 +27,3 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from setuptools import setup, find_packages
-
-setup(
-    name='navitiacommon',
-    description='module shared between jormungandr and tyr',
-    author='CanalTP',
-    author_email='alexandre.jacquin@canaltp.fr',
-    url='www.navitia.io',
-    packages=find_packages(exclude=['testscommon']),
-)

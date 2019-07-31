@@ -32,16 +32,12 @@
 import docker
 import logging
 import psycopg2
-
+from typing import List, Optional, Dict
 from retrying import retry
 
 """
 This module contains classes about Docker management.
 """
-
-# Postgres/PostGIS image
-POSTGIS_IMAGE = 'github.com/CanalTP/docker-postgis.git'
-POSTGIS_IMAGE_NAME = 'postgis:2.1'
 
 
 class DbParams(object):
@@ -90,13 +86,22 @@ class DbParams(object):
         )
 
 
-class PostgresDocker(object):
+class DockerWrapper(object):
     """
     Class to launch a temporary docker with a PostgreSQL/PostGIS database.
     """
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(
+        self,
+        image_name,
+        container_name=None,
+        dockerfile_path=None,
+        dbname='postgres',
+        dbuser='docker',
+        dbpassword='docker',
+        env_vars={},
+    ):
+        # type: (str, Optional[str], Optional[str], str, str, str, Dict[str, str]) -> None
         """
         Constructor of PostgresDocker.
         """
@@ -104,33 +109,40 @@ class PostgresDocker(object):
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
         self.docker_api_client = docker.APIClient(base_url=base_url)
-
+        self.image_name = image_name
+        self.dockerfile_path = dockerfile_path
+        self.container_name = container_name
+        self.dbname = dbname
+        self.dbuser = dbuser
+        self.dbpassword = dbpassword
+        self.env_vars = env_vars
         log.info("Trying to build/update the docker image")
+
         try:
-            for build_output in self.docker_client.images.build(
-                path=POSTGIS_IMAGE, tag=POSTGIS_IMAGE_NAME, rm=True
-            ):
-                log.debug(build_output)
+            if self.dockerfile_path:
+                for build_output in self.docker_client.images.build(
+                    path=self.dockerfile_path, tag=image_name, rm=True
+                ):
+                    log.debug(build_output)
+
         except docker.errors.APIError as e:
             if e.is_server_error():
-                log.warn("[docker server error] A server error occcured, maybe " "missing internet connection?")
+                log.warn("[docker server error] A server error occcured, maybe missing internet connection?")
                 log.warn("[docker server error] Details: {}".format(e))
                 log.warn(
-                    "[docker server error] Checking if '{}' docker image "
-                    "is already built".format(POSTGIS_IMAGE_NAME)
+                    "[docker server error] Checking if '{}' docker image is already built".format(image_name)
                 )
-                self.docker_client.images.get(POSTGIS_IMAGE_NAME)
+                self.docker_client.images.get(image_name)
                 log.warn(
-                    "[docker server error] Going on, as '{}' docker image "
-                    "is already built".format(POSTGIS_IMAGE_NAME)
+                    "[docker server error] Going on, as '{}' docker image is already built".format(image_name)
                 )
             else:
                 raise
 
-        self.container = self.docker_client.containers.create(POSTGIS_IMAGE_NAME)
-
+        self.container = self.docker_client.containers.create(
+            image_name, name=self.container_name, environment=self.env_vars
+        )
         log.info("docker id is {}".format(self.container.id))
-
         log.info("starting the temporary docker")
         self.container.start()
         self.ip_addr = (
@@ -174,7 +186,7 @@ class PostgresDocker(object):
 
         :return: the DbParams for the database of the Docker
         """
-        return DbParams(self.ip_addr, 'postgres', 'docker', 'docker')
+        return DbParams(self.ip_addr, self.dbname, self.dbuser, self.dbpassword)
 
     @retry(stop_max_delay=10000, wait_fixed=100, retry_on_exception=lambda e: isinstance(e, Exception))
     def test_db_cnx(self):
@@ -182,9 +194,27 @@ class PostgresDocker(object):
         """
         Test the connection to the database.
         """
-        psycopg2.connect(
-            database=self.get_db_params().dbname,
-            user=self.get_db_params().user,
-            password=self.get_db_params().password,
-            host=self.get_db_params().host,
-        )
+        params = self.get_db_params()
+        psycopg2.connect(database=params.dbname, user=params.user, password=params.password, host=params.host)
+
+
+def PostgisDocker():
+    return DockerWrapper(
+        image_name='postgis:2.1',
+        dockerfile_path='github.com/CanalTP/docker-postgis.git',
+        dbname='postgres',
+        dbuser='docker',
+        dbpassword='docker',
+    )
+
+
+def PostgresDocker():
+    env_vars = {'POSTGRES_DB': 'tyr_test', 'POSTGRES_USER': 'postgres', 'POSTGRES_PASSWORD': 'postgres'}
+    return DockerWrapper(
+        image_name='postgres:9.4',
+        container_name='tyr_test_postgres',
+        dbname=env_vars['POSTGRES_DB'],
+        dbuser=env_vars['POSTGRES_USER'],
+        dbpassword=env_vars['POSTGRES_PASSWORD'],
+        env_vars=env_vars,
+    )

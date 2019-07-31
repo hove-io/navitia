@@ -41,7 +41,7 @@ try:
 except:
     import configparser as ConfigParser  # type: ignore
 
-from tests.docker_wrapper import PostgresDocker
+from testscommon.docker_wrapper import PostgresDocker
 
 
 @pytest.yield_fixture(scope="session", autouse=True)
@@ -59,7 +59,7 @@ def init_flask_db(docker):
     when the docker is started, we init flask once for the new database
     """
     db_url = 'postgresql://{user}:{pwd}@{host}/{dbname}'.format(
-        user=docker.USER, pwd=docker.PWD, host=docker.ip_addr, dbname=docker.DBNAME
+        user=docker.dbuser, pwd=docker.dbpassword, host=docker.ip_addr, dbname=docker.dbname
     )
 
     # re-init the db by overriding the db_url
