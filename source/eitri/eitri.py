@@ -72,7 +72,7 @@ def eitri(
         sys.path.append(p)
 
     from ed_handler import generate_nav
-    from navitiacommon.docker_wrapper import PostgisDocker
+    from testscommon.docker_wrapper import PostgisDocker
 
     with closing(PostgisDocker()) as docker_ed, closing(PostgisDocker()) as docker_cities:
         generate_nav(

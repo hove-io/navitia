@@ -37,5 +37,5 @@ setup(
     author='CanalTP',
     author_email='alexandre.jacquin@canaltp.fr',
     url='www.navitia.io',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['testscommon']),
 )

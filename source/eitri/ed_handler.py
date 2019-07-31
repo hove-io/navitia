@@ -29,7 +29,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import docker_wrapper
 import glob
 import logging
 import psycopg2
@@ -38,6 +37,7 @@ import zipfile
 
 from contextlib import contextmanager
 from navitiacommon import utils, launch_exec
+from testscommon.docker_wrapper import DockerWrapper, DbParams
 from typing import Any, Generator, List
 
 """
@@ -66,7 +66,7 @@ def cd(new_dir):
 
 
 def binarize(ed_db_params, output, ed_component_path, cities_db_params):
-    # type: (docker_wrapper.DbParams, str, str, docker_wrapper.DbParams) -> None
+    # type: (DbParams, str, str, DbParams) -> None
     """
     Binarize the data from the database to a file.
 
@@ -96,7 +96,7 @@ def binarize(ed_db_params, output, ed_component_path, cities_db_params):
 
 
 def import_data(data_dir, db_params, ed_component_path):
-    # type: (str, docker_wrapper.DbParams, str) -> None
+    # type: (str, DbParams, str) -> None
     """
     Call the right binary for its data (all the "*2ed") to create data then load it in the database.
 
@@ -129,7 +129,7 @@ def import_data(data_dir, db_params, ed_component_path):
 
 
 def load_cities(cities_file, cities_db_params, cities_exec_path):
-    # type: (str, docker_wrapper.DbParams, str) -> None
+    # type: (str, DbParams, str) -> None
     """
     Load cities in the database.
 
@@ -148,7 +148,7 @@ def load_cities(cities_file, cities_db_params, cities_exec_path):
 
 
 def load_data(data_dirs, ed_db_params, ed_component_path):
-    # type: (List[str], docker_wrapper.DbParams, str) -> None
+    # type: (List[str], DbParams, str) -> None
     """
     Load all data in the database.
 
@@ -163,7 +163,7 @@ def load_data(data_dirs, ed_db_params, ed_component_path):
 
 
 def update_db(db_params, alembic_path):
-    # type: (docker_wrapper.DbParams, str) -> None
+    # type: (DbParams, str) -> None
     """
     Update the database by enabling Postgre/PostGIS and update it's scheme.
 
@@ -194,7 +194,7 @@ def update_db(db_params, alembic_path):
 def generate_nav(
     data_dir, docker_ed, docker_cities, output_file, ed_component_path, cities_exec_path, import_cities
 ):
-    # type: (str, docker_wrapper.PostgresDocker, docker_wrapper.PostgresDocker, str, str, str, str) -> None
+    # type: (str, DockerWrapper, DockerWrapper, str, str, str, str) -> None
     """
     Load all data from a directory to an single output file.
     It can load all the data directly from the directory or in each sub-directories for each data kind.
@@ -210,7 +210,7 @@ def generate_nav(
     cities_db_params = docker_cities.get_db_params()
     update_db(cities_db_params, ALEMBIC_PATH_CITIES)
 
-    ed_db_params = docker_ed.get_db_params()  # type: docker_wrapper.DbParams
+    ed_db_params = docker_ed.get_db_params()  # type: DbParams
     update_db(ed_db_params, ALEMBIC_PATH_ED)
 
     if import_cities:
