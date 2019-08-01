@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_rel_calendar_line_retrocompatibilty_tests) {
-    // For retrocompatibity
+    // For backward compatibility
     // grid_rel_calendar_line.txt file contains "line_external_code"
     {
         ed::Data data;
