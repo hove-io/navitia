@@ -1,5 +1,5 @@
 line_external_code,calendar_id
-Nav55,REG_LaV
+extNav55,REG_LaV
 Nav56,REG_LaV
 Nav57,REG_LaV
 Nav58,REG_LaV

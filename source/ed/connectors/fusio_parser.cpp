@@ -1434,6 +1434,7 @@ void CalendarLineFusioHandler::init(Data&) {
     calendar_c = csv.get_pos_col("calendar_id");
     line_c = csv.get_pos_col("line_id");
     if (line_c == UNKNOWN_COLUMN) {
+        line_id_is_present = false;
         line_c = csv.get_pos_col("line_external_code");
     }
 }
@@ -1454,11 +1455,20 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
         LOG4CPLUS_WARN(logger, "CalendarLineFusioHandler: No line column for calendar : " << row[calendar_c]);
         return;
     }
-    auto it = gtfs_data.line_map_by_external_code.find(row[line_c]);
-
-    if (it == gtfs_data.line_map_by_external_code.end()) {
-        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the line " << row[line_c]);
-        return;
+    std::unordered_map<std::string, ed::types::Line*>::iterator it;
+    if (line_id_is_present) {
+        it = gtfs_data.line_map.find(row[line_c]);
+        if (it == gtfs_data.line_map.end()) {
+            LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the line " << row[line_c]);
+            return;
+        }
+    } else {
+        it = gtfs_data.line_map_by_external_code.find(row[line_c]);
+        if (it == gtfs_data.line_map_by_external_code.end()) {
+            LOG4CPLUS_ERROR(logger,
+                            "CalendarLineFusioHandler: Impossible to find the line by external code " << row[line_c]);
+            return;
+        }
     }
     cal->second->line_list.push_back(it->second);
 }
