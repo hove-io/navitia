@@ -63,10 +63,10 @@ def is_file(file_path):
     return file_path
 
 
-def is_folder(folder_path):
-    if not os.path.isdir(folder_path):
-        raise argparse.ArgumentTypeError("'" + folder_path + "' is not a valid folder path")
-    return folder_path
+def is_directory(dir_path):
+    if not os.path.isdir(dir_path):
+        raise argparse.ArgumentTypeError("'" + dir_path + "' is not a valid directory path")
+    return dir_path
 
 
 def is_file_exist(file_path):
@@ -98,7 +98,7 @@ def get_params():
 
     :return: the path to the directory with all data. If several datasets ("*.osm", "*.gtfs", ...) are available, they need to be in separate directories
     :return: the output file path
-    :return: the path of the folder containing all "*2ed" and "ed2nav" binaries
+    :return: the path of the directory containing all "*2ed" and "ed2nav" binaries
     :return: the path to the binary "cities"
     :return: the path to cities file (ex: france_boundaries.osm.pbf) to load
     """
@@ -110,16 +110,16 @@ def get_params():
     )
     parser.add_argument(
         '-d',
-        '--data-folder',
+        '--data-dir',
         required=True,
-        type=is_folder,
+        type=is_directory,
         help='the directory path with all data. If several datasets ("*.osm", "*.gtfs", ...) are available, they need to be in separate directories',
     )
     parser.add_argument(
         '-e',
-        '--ed-folder',
+        '--ed-dir',
         required=True,
-        type=is_folder,
+        type=is_directory,
         help='the directory path containing all "*2ed" and "ed2nav" binaries',
     )
     parser.add_argument(
@@ -133,7 +133,7 @@ def get_params():
         '-i', '--cities-file', type=is_file, help='the path to the "cities" file to load  (usually a *.osm.pbf)'
     )
     parser.add_argument(
-        '-f', '--cities_folder', type=is_folder, help='the path to the folder containing the "cities" binary'
+        '-f', '--cities-dir', type=is_directory, help='the path to the directory containing the "cities" binary'
     )
     parser.add_argument(
         '-c', '--color', type=is_enabled, default=True, help='enable or disable colored logs (default: True)'
@@ -155,13 +155,13 @@ def eitri():
     logger.info("starting Eitri")
     with closing(PostgisDocker()) as docker_ed, closing(PostgisDocker()) as docker_cities:
         generate_nav(
-            args.data_folder,
+            args.data_dir,
             docker_ed,
             docker_cities,
             args.output_file,
-            args.ed_folder,
+            args.ed_dir,
             args.cities_file,
-            args.cities_folder,
+            args.cities_dir,
         )
     logger.info("everything is done !")
     logger.info("file '" + args.output_file + "' is created !")

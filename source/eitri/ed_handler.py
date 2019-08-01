@@ -103,7 +103,7 @@ def import_data(data_dir, db_params, ed_component_path):
 
     :param data_dir: the directory containing the data for "*2ed"
     :param db_params: the parameters of the database
-    :param ed_component_path: the path of the folder containing the binary "*2ed"
+    :param ed_component_path: the path of the directory containing the binary "*2ed"
     """
     files = glob.glob(data_dir + "/*")  # type: List[str]
     data_type, file_to_load = utils.type_of_data(files)  # type: str,str
@@ -135,7 +135,7 @@ def load_cities(cities_file, cities_db_params, cities_exec_path):
 
     :param cities_file: the path to the directory containing the data for the "ed2nav" binary
     :param cities_db_params: the parameters of the database
-    :param cities_exec_path: the path of the folder containing the "cities" binary
+    :param cities_exec_path: the path of the directory containing the "cities" binary
     """
     cities_exec = os.path.join(cities_exec_path, 'cities')  # type: str
 
@@ -152,7 +152,7 @@ def load_data(data_dirs, ed_db_params, ed_component_path):
 
     :param data_dirs: the directory containing all the data ("*.osm", "*.gtfs", ...)
     :param ed_db_params: the parameters of the database
-    :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
+    :param ed_component_path: the path of the directory containing all the binaries for data ("*2ed" and "ed2nav")
     """
     logger.info('loading {}'.format(data_dirs))
 
@@ -166,7 +166,7 @@ def update_db(db_params, alembic_path):
     Update the database by enabling Postgre/PostGIS and update it's scheme.
 
     :param db_params: the parameters of the database
-    :param alembic_path: the path to the folder containing the "alembic" binary
+    :param alembic_path: the path to the directory containing the "alembic" binary
     """
     cnx_string = db_params.cnx_string()  # type: str
 
@@ -201,9 +201,9 @@ def generate_nav(
     :param docker_ed: the Docker for the "*2ed" binaries
     :param docker_cities: the Docker for the "cities" binary
     :param output_file: the name of the output file (usually with extension ".nav.lz4")
-    :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
+    :param ed_component_path: the path of the directory containing all the binaries for data ("*2ed" and "ed2nav")
     :param cities_file: the path to the file loaded by "cities" (usually a *.osm.pbf)
-    :param cities_exec_path: the path of the folder containing the "cities" binary
+    :param cities_exec_path: the path of the directory containing the "cities" binary
     """
     cities_db_params = docker_cities.get_db_params()
     update_db(cities_db_params, ALEMBIC_PATH_CITIES)
