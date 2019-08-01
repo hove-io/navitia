@@ -1,4 +1,4 @@
-calendar_id,line_external_code
+line_external_code,calendar_id
 Nav55,REG_LaV
 Nav56,REG_LaV
 Nav57,REG_LaV
