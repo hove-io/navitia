@@ -80,8 +80,8 @@ class Asgard(Kraken):
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
-    def _add_cycle_path_percentage(self, response):
-        def _is_cycle_path(path):
+    def _add_cycle_lane_length(self, response):
+        def _is_cycle_lane(path):
             if path.HasField(str("cycle_path_type")):
                 return path.cycle_path_type != response_pb2.NoCycleLane
 
@@ -92,7 +92,7 @@ class Asgard(Kraken):
         path_items = section.street_network.path_items
         cycle_lane_length = 0
         for path in path_items:
-            if _is_cycle_path(path):
+            if _is_cycle_lane(path):
                 cycle_lane_length += path.length
 
         # Since path.length are doubles and we want an int32 in the proto
@@ -110,7 +110,7 @@ class Asgard(Kraken):
         response = self._call_asgard(req)
 
         if response and mode == fm.FallbackModes.bike.name:
-            response = self._add_cycle_path_percentage(response)
+            response = self._add_cycle_lane_length(response)
 
         return response
 
