@@ -160,7 +160,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['car'] == 500
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
-        assert response['journeys'][0]['sections'][0]['cycle_path_percentage'] == 0.0
+        assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
 
         # bike from asgard
         assert 'bike' in response['journeys'][1]['tags']
@@ -170,7 +170,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['durations']['total'] == 1000
         assert response['journeys'][1]['distances']['bike'] == 100
         assert response['journeys'][1]['duration'] == 1000
-        assert response['journeys'][1]['sections'][0]['cycle_path_percentage'] == 30.0
+        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30.0
 
         # walking from asgard
         assert 'walking' in response['journeys'][2]['tags']
@@ -180,6 +180,6 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['durations']['total'] == 2000
         assert response['journeys'][2]['distances']['walking'] == 200
         assert response['journeys'][2]['duration'] == 2000
-        assert response['journeys'][2]['sections'][0]['cycle_path_percentage'] == 0.0
+        assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')

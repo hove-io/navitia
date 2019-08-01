@@ -90,12 +90,13 @@ class Asgard(Kraken):
         # We have one journey and one section in direct path
         section = response.journeys[0].sections[0]
         path_items = section.street_network.path_items
-        distance_on_cycle_path = 0
+        cycle_lane_length = 0
         for path in path_items:
             if _is_cycle_path(path):
-                distance_on_cycle_path += path.length
+                cycle_lane_length += path.length
 
-        section.cycle_path_percentage = (distance_on_cycle_path / section.length) * 100.0
+        # Since path.length are doubles and we want an int32 in the proto
+        section.cycle_lane_length = int(cycle_lane_length)
 
         return response
 
