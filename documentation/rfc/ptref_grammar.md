@@ -72,9 +72,9 @@ In the following table, if the invocation starts with `collection`, any collecti
 |`disruption.between(since, until)`|all the disruptions that are active during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)|
 |`disruption.since(since)`|all the disruptions that are active after the given datetime|as above|
 |`disruption.until(until)`|all the disruptions that are active before the given datetime|as above|
-|`vehicle_journey.between(since, until)`|all the vehicle journeys that start during the `[since, until]` period|as above|
-|`vehicle_journey.since(since)`|all the vehicle journeys that start after the given datetime|as above|
-|`vehicle_journey.until(until)`|all the vehicle journeys that start before the given datetime|as above|
+|`vehicle_journey.between(since, until, data_freshness)`|all the vehicle journeys that start during the `[since, until]` period|`since` and `until` must be UTC datetime in the ISO 8601 format (ending with `Z`)</br>Additional `data_freshness` parameter allows to get only the vehicle journeys valid for the data freshness level requested (`base_schedule`, `adapted_schedule`, `realtime`)|
+|`vehicle_journey.since(since, data_freshness)`|all the vehicle journeys that start after the given datetime|as above|
+|`vehicle_journey.until(until, data_freshness)`|all the vehicle journeys that start before the given datetime|as above|
 |`vehicle_journey.has_disruption()`|all the vehicle journeys containing at least a disruption ||
 |`vehicle_journey.has_headsign(headsign)`|all the vehicle journeys containing the given headsign ||
 |`line.code(code)`|all the lines containing the given code|this predicate use the field `line.code`, not `line.codes[]`|
