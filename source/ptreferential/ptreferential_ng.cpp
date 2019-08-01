@@ -294,22 +294,23 @@ struct Eval : boost::static_visitor<Indexes> {
         } else if (f.type == "disruption"
                    && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
             indexes = get_impacts_by_tags(f.args, data);
-        } else if ((f.method == "since" && f.args.size() == 2) || (f.method == "until" && f.args.size() == 2)
-                   || (f.method == "between" && f.args.size() == 3)) {
+        } else if ((f.method == "since" && f.args.size() == 1 + (f.type == "vehicle_journey"))
+                   || (f.method == "until" && f.args.size() == 1 + (f.type == "vehicle_journey"))
+                   || (f.method == "between" && f.args.size() == 2 + (f.type == "vehicle_journey"))) {
             boost::optional<boost::posix_time::ptime> since, until;
-            auto rt_level = type::RTLevel::Base;
             if (f.method == "since") {
                 since = from_datetime(f.args.at(0));
-                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "until") {
                 until = from_datetime(f.args.at(0));
-                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "between") {
                 since = from_datetime(f.args.at(0));
                 until = from_datetime(f.args.at(1));
-                rt_level = rt_level_from_string(f.args.at(2));
             }
             const auto type = type_by_caption(f.type);
+            auto rt_level = type::RTLevel::Base;  // useful only for VJ
+            if (type == Type_e::VehicleJourney) {
+                rt_level = rt_level_from_string(f.args.back());
+            }
             indexes = filter_on_period(data.get_all_index(type), type, since, until, rt_level, data);
 
         } else if (f.method == "within" && f.args.size() == 2) {
@@ -412,16 +413,19 @@ std::string make_request(const Type_e requested_type,
             break;
         case Type_e::VehicleJourney:
         case Type_e::Impact:
-            if (since && until) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".between("
-                      + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level)
-                      + ")";
-            } else if (since) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".since("
-                      + to_iso_string(*since) + "Z, " + rt_level_to_string(rt_level) + ")";
-            } else if (until) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".until("
-                      + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level) + ")";
+            if (since || until) {
+                res = "(" + res + ") AND " + static_data->captionByType(requested_type);
+                if (since && until) {
+                    res = res + ".between(" + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z";
+                } else if (since) {
+                    res = res + ".since(" + to_iso_string(*since) + "Z";
+                } else if (until) {
+                    res = res + ".until(" + to_iso_string(*until) + "Z";
+                }
+                if (requested_type == Type_e::VehicleJourney) {
+                    res = res + ", " + rt_level_to_string(rt_level);
+                }
+                res = res + ")";
             }
             break;
         default:
