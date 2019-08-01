@@ -49,8 +49,8 @@ class StreetNetworkBackend(db.Model, TimestampMixin):  # type: ignore
 
     def from_json(self, json):
         self.klass = json['klass']
-        self.args = json['args'] if 'args' in json else self.args
-        self.discarded = json['discarded'] if 'discarded' in json else self.discarded
+        self.args = json.get('args', {})
+        self.discarded = json.get('discarded', False)
 
     @classmethod
     def find_by_id(cls, id):

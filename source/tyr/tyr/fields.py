@@ -104,7 +104,7 @@ streetnetwork_backend_list_fields = {
 # Create a url to streetnetwork_backends to access the conf directly
 class FieldUrlStreetNetworkBackend(fields.Raw):
     def format(self, value):
-        return url_for('streetnetwork_backends', id=value, _external=True)
+        return url_for('streetnetwork_backends', backend_id=value, _external=True)
 
 
 instance_fields = {

@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, division
 
 from tyr import app
 from navitiacommon import models
-from tests.check_utils import api_get, api_delete, api_put
+from tests.check_utils import api_get, api_delete, api_put, api_post
 
 import pytest
 import ujson
@@ -77,22 +77,29 @@ def test_streetnetwork_backend_get(default_streetnetwork_backend):
     """
     kraken, asgard = default_streetnetwork_backend
     resp = api_get('/v0/streetnetwork_backends')
-    assert 'streetnetwork_backends' in resp
+
+    assert "pagination" in resp
+    assert resp["pagination"]["current_page"] == 1
+    assert resp["pagination"]["items_per_page"] == 10
+    assert resp["pagination"]["total_items"] == 2
+
+    assert "streetnetwork_backends" in resp
     assert len(resp['streetnetwork_backends']) == 2
 
     resp = api_get('/v0/streetnetwork_backends/kraken')
     assert 'streetnetwork_backends' in resp
-    assert len(resp['streetnetwork_backends']) == 1
-
-    assert resp['streetnetwork_backends'][0]['args'] == kraken.args
-    assert not resp['streetnetwork_backends'][0]['discarded']
+    assert resp['streetnetwork_backends']['id'] == "kraken"
+    assert resp['streetnetwork_backends']['klass'] == kraken.klass
+    assert resp['streetnetwork_backends']['args'] == kraken.args
+    assert not resp['streetnetwork_backends']['discarded']
 
     resp = api_get('/v0/streetnetwork_backends/asgard')
     assert 'streetnetwork_backends' in resp
-    assert len(resp['streetnetwork_backends']) == 1
 
-    assert resp['streetnetwork_backends'][0]['args'] == asgard.args
-    assert not resp['streetnetwork_backends'][0]['discarded']
+    assert resp['streetnetwork_backends']['id'] == "asgard"
+    assert resp['streetnetwork_backends']['klass'] == asgard.klass
+    assert resp['streetnetwork_backends']['args'] == asgard.args
+    assert not resp['streetnetwork_backends']['discarded']
 
 
 def test_streetnetwork_backend_put(default_streetnetwork_backend):
@@ -109,8 +116,11 @@ def test_streetnetwork_backend_put(default_streetnetwork_backend):
         check=False,
     )
     assert status == 201
-    assert 'message' in resp
-    assert resp['message'] == 'StreetNetwork Backend valhalla is created'
+    assert 'streetnetwork_backend' in resp
+    assert resp['streetnetwork_backend']['id'] == "valhalla"
+    assert resp['streetnetwork_backend']['klass'] == 'valhalla.klass'
+    assert resp['streetnetwork_backend']['args'] == {}
+    assert not resp['streetnetwork_backend']['discarded']
 
     resp = api_get('/v0/streetnetwork_backends')
     assert 'streetnetwork_backends' in resp
@@ -122,13 +132,40 @@ def test_streetnetwork_backend_put(default_streetnetwork_backend):
     resp = api_put(
         'v0/streetnetwork_backends/valhalla', data=ujson.dumps(new_backend), content_type='application/json'
     )
-    assert 'message' in resp
-    assert resp['message'] == 'StreetNetwork Backend valhalla from db is updated'
+    assert 'streetnetwork_backend' in resp
+    assert resp['streetnetwork_backend']['id'] == "valhalla"
+    assert resp['streetnetwork_backend']['klass'] == 'valhalla.klass'
+    assert resp['streetnetwork_backend']['args']['url'] == 'valhalla.url.update'
+    assert not resp['streetnetwork_backend']['discarded']
 
     resp = api_get('/v0/streetnetwork_backends/valhalla')
     assert 'streetnetwork_backends' in resp
-    assert len(resp['streetnetwork_backends']) == 1
-    assert resp['streetnetwork_backends'][0]['args']['url'] == 'valhalla.url.update'
+    assert resp['streetnetwork_backends']['args']['url'] == 'valhalla.url.update'
+
+
+def test_streetnetwork_backend_post(default_streetnetwork_backend):
+    """
+    Test that a backend is correctly created in db and the info returned when queried
+    """
+
+    # Create new backend
+    new_backend = {'klass': 'valhalla.klass'}
+    resp, status = api_post(
+        'v0/streetnetwork_backends/valhalla',
+        data=ujson.dumps(new_backend),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert 'streetnetwork_backend' in resp
+    assert resp['streetnetwork_backend']['id'] == "valhalla"
+    assert resp['streetnetwork_backend']['klass'] == 'valhalla.klass'
+    assert resp['streetnetwork_backend']['args'] == {}
+    assert not resp['streetnetwork_backend']['discarded']
+
+    resp = api_get('/v0/streetnetwork_backends')
+    assert 'streetnetwork_backends' in resp
+    assert len(resp['streetnetwork_backends']) == 3
 
 
 def test_streetnetwork_backend_delete(default_streetnetwork_backend):
@@ -136,20 +173,30 @@ def test_streetnetwork_backend_delete(default_streetnetwork_backend):
     Test that a 'deleted' backend isn't returned when querying all backends, and that its 'discarded' parameter is set to True
     """
     resp = api_get('/v0/streetnetwork_backends')
-    assert 'streetnetwork_backends' in resp
+
+    assert "pagination" in resp
+    assert resp["pagination"]["current_page"] == 1
+    assert resp["pagination"]["items_per_page"] == 10
+    assert resp["pagination"]["total_items"] == 2
+
+    assert "streetnetwork_backends" in resp
     assert len(resp['streetnetwork_backends']) == 2
 
     _, status_code = api_delete('v0/streetnetwork_backends/kraken', check=False, no_json=True)
     assert status_code == 204
 
     resp = api_get('/v0/streetnetwork_backends')
-    assert 'streetnetwork_backends' in resp
+    assert "pagination" in resp
+    assert resp["pagination"]["current_page"] == 1
+    assert resp["pagination"]["items_per_page"] == 10
+    assert resp["pagination"]["total_items"] == 1
+
+    assert "streetnetwork_backends" in resp
     assert len(resp['streetnetwork_backends']) == 1
 
     resp = api_get('/v0/streetnetwork_backends/kraken')
     assert 'streetnetwork_backends' in resp
-    assert len(resp['streetnetwork_backends']) == 1
-    assert resp['streetnetwork_backends'][0]['discarded']
+    assert resp['streetnetwork_backends']['discarded']
 
 
 def test_streetnetwork_backend_schema():
