@@ -211,20 +211,20 @@ OdtLevel_e odt_level_from_string(const std::string& s) {
 const char* rt_level_to_string(RTLevel rt_level) {
     switch (rt_level) {
         case type::RTLevel::Base:
-            return "base";
+            return "base_schedule";
         case type::RTLevel::Adapted:
-            return "adapted";
+            return "adapted_schedule";
         case type::RTLevel::RealTime:
             return "realtime";
         default:
-            return "base";
+            return "base_schedule";
     }
 }
 
 RTLevel rt_level_from_string(const std::string& s) {
     if (s == "realtime") {
         return RTLevel::RealTime;
-    } else if (s == "adapted") {
+    } else if (s == "adapted_schedule") {
         return RTLevel::Adapted;
     } else {
         return RTLevel::Base;

@@ -189,11 +189,11 @@ BOOST_AUTO_TEST_CASE(make_request_since_until) {
     assert_since_until(Type_e::Line, "", "", "", RTLevel::Base, "all");
     assert_since_until(Type_e::Line, "", "20180714T1337", "20180714T1338", RTLevel::Base, "all");
     assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338", RTLevel::Base,
-                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z", "base")))");
+                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z", "base_schedule")))");
     assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "", RTLevel::RealTime,
                        R"((all AND vehicle_journey.since("20180714T133700Z", "realtime")))");
     assert_since_until(Type_e::VehicleJourney, "", "", "20180714T1338", RTLevel::Base,
-                       R"((all AND vehicle_journey.until("20180714T133800Z", "base")))");
+                       R"((all AND vehicle_journey.until("20180714T133800Z", "base_schedule")))");
     assert_since_until(Type_e::Impact, "", "20180714T1337", "20180714T1338", RTLevel::RealTime,
                        R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z", "realtime")))");
     assert_since_until(Type_e::Impact, "", "20180714T1337", "", RTLevel::Base,
