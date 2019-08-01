@@ -57,19 +57,13 @@ In the end, the file ".nav.lz4" is often used as input coverage data for Kraken.
 logger = logging.getLogger("eitri")  # type: logging.Logger
 
 
-def is_file(file_path):
-    if not os.access(file_path, os.R_OK):
-        raise argparse.ArgumentTypeError("'" + file_path + "' is not a valid file path")
-    return file_path
-
-
 def is_directory(dir_path):
     if not os.path.isdir(dir_path):
         raise argparse.ArgumentTypeError("'" + dir_path + "' is not a valid directory path")
     return dir_path
 
 
-def is_file_exist(file_path):
+def is_valid_file(file_path):
     dirname = os.path.dirname(file_path)
     if not os.access(dirname, os.W_OK):
         raise argparse.ArgumentTypeError("'" + file_path + "' is not a valid path")
@@ -125,12 +119,15 @@ def get_params():
     parser.add_argument(
         '-o',
         '--output-file',
-        type=is_file_exist,
+        type=is_valid_file,
         default='./data.nav.lz4',
         help="the output file path (default: './data.nav.lz4')",
     )
     parser.add_argument(
-        '-i', '--cities-file', type=is_file, help='the path to the "cities" file to load  (usually a *.osm.pbf)'
+        '-i',
+        '--cities-file',
+        type=argparse.FileType,
+        help='the path to the "cities" file to load  (usually a *.osm.pbf)',
     )
     parser.add_argument(
         '-f', '--cities-dir', type=is_directory, help='the path to the directory containing the "cities" binary'
@@ -163,7 +160,6 @@ def eitri():
             args.cities_file,
             args.cities_dir,
         )
-    logger.info("everything is done !")
     logger.info("file '" + args.output_file + "' is created !")
 
 

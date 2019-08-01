@@ -37,6 +37,7 @@ import zipfile
 
 from contextlib import contextmanager
 from navitiacommon import utils, launch_exec
+from os import environ, path
 from testscommon.docker_wrapper import DockerWrapper, DbParams
 from typing import Any, Generator, List
 
@@ -45,8 +46,8 @@ This module contains all the functions to prepare a job, to call the binaries th
 into a database and then call "ed2nav" to produce a single ".nav.lz4" file.
 """
 
-ALEMBIC_PATH_ED = os.path.dirname(__file__) + '/../sql'
-ALEMBIC_PATH_CITIES = os.path.dirname(__file__) + '/../cities'
+ALEMBIC_PATH_ED = environ.get('ALEMBIC_PATH', path.join(path.dirname(__file__), '../sql'))
+ALEMBIC_PATH_CITIES = environ.get('ALEMBIC_PATH_CITIES', path.join(path.dirname(__file__), '../cities'))
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 
