@@ -2089,7 +2089,7 @@ class StreetNetworkBackend(flask_restful.Resource):
 
     def _validate_input(self, json_data):
         """
-        Check that the data received contains all required info
+        Check that the received data contains all required info
         :param json_data: data received in request
         """
         try:
