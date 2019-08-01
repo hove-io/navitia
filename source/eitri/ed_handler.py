@@ -48,6 +48,8 @@ into a database and then call "ed2nav" to produce a single ".nav.lz4" file.
 ALEMBIC_PATH_ED = os.environ.get('ALEMBIC_PATH', '../sql')
 ALEMBIC_PATH_CITIES = os.environ.get('ALEMBIC_PATH_CITIES', '../cities')
 
+logger = logging.getLogger(__name__)  # type: logging.Logger
+
 
 @contextmanager
 def cd(new_dir):
@@ -75,7 +77,6 @@ def binarize(ed_db_params, output, ed_component_path, cities_db_params):
     :param ed_component_path: the path to the "ed2nav" binary
     :param cities_db_params: the parameters for the cities of the database
     """
-    logger = logging.getLogger(__name__)  # type: logging.Logger
     logger.info('creating data.nav')
     ed2nav = 'ed2nav'
     if ed_component_path:
@@ -104,11 +105,10 @@ def import_data(data_dir, db_params, ed_component_path):
     :param db_params: the parameters of the database
     :param ed_component_path: the path of the folder containing the binary "*2ed"
     """
-    log = logging.getLogger(__name__)  # type: logging.Logger
     files = glob.glob(data_dir + "/*")  # type: List[str]
     data_type, file_to_load = utils.type_of_data(files)  # type: str,str
     if not data_type:
-        log.info('unknown data type for dir {}, skipping'.format(data_dir))
+        logger.info('unknown data type for dir {}, skipping'.format(data_dir))
         return
 
     # we consider that we only have to load one kind of data per directory
@@ -123,7 +123,7 @@ def import_data(data_dir, db_params, ed_component_path):
         file_to_load = data_dir
 
     if launch_exec.launch_exec(
-        import_component, ["-i", file_to_load, "--connection-string", db_params.old_school_cnx_string()], log
+        import_component, ["-i", file_to_load, "--connection-string", db_params.old_school_cnx_string()], logger
     ):
         raise Exception('Error: problem with running {}, stoping'.format(import_component))
 
@@ -137,8 +137,6 @@ def load_cities(cities_file, cities_db_params, cities_exec_path):
     :param cities_db_params: the parameters of the database
     :param cities_exec_path: the path of the folder containing the "cities" binary
     """
-    logger = logging.getLogger(__name__)  # type: logging.Logger
-
     cities_exec = os.path.join(cities_exec_path, 'cities')  # type: str
 
     if launch_exec.launch_exec(
@@ -156,7 +154,7 @@ def load_data(data_dirs, ed_db_params, ed_component_path):
     :param ed_db_params: the parameters of the database
     :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
     """
-    logging.getLogger(__name__).info('loading {}'.format(data_dirs))
+    logger.info('loading {}'.format(data_dirs))
 
     for d in data_dirs:
         import_data(d, ed_db_params, ed_component_path)
@@ -180,7 +178,7 @@ def update_db(db_params, alembic_path):
     c.close()
     cnx.commit()
 
-    logging.getLogger(__name__).info('message = {}'.format(c.statusmessage))
+    logger.info('message = {}'.format(c.statusmessage))
 
     with cd(alembic_path):
         res = os.system(
