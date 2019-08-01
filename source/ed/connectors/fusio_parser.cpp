@@ -1432,7 +1432,10 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 
 void CalendarLineFusioHandler::init(Data&) {
     calendar_c = csv.get_pos_col("calendar_id");
-    line_c = csv.get_pos_col("line_external_code");
+    line_c = csv.get_pos_col("line_id");
+    if (line_c == UNKNOWN_COLUMN) {
+        line_c = csv.get_pos_col("line_external_code");
+    }
 }
 
 void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {

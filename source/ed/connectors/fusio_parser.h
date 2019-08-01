@@ -281,7 +281,7 @@ struct CalendarLineFusioHandler : public GenericHandler {
     int calendar_c, line_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "line_external_code"}; }
+    const std::vector<std::string> required_headers() const { return {"calendar_id"}; }
 };
 
 struct CalendarTripFusioHandler : public GenericHandler {
