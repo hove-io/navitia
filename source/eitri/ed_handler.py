@@ -45,8 +45,8 @@ This module contains all the functions to prepare a job, to call the binaries th
 into a database and then call "ed2nav" to produce a single ".nav.lz4" file.
 """
 
-ALEMBIC_PATH_ED = os.environ.get('ALEMBIC_PATH', '../sql')
-ALEMBIC_PATH_CITIES = os.environ.get('ALEMBIC_PATH_CITIES', '../cities')
+ALEMBIC_PATH_ED = os.path.dirname(__file__) + '/../sql'
+ALEMBIC_PATH_CITIES = os.path.dirname(__file__) + '/../cities'
 
 logger = logging.getLogger(__name__)  # type: logging.Logger
 
@@ -190,7 +190,7 @@ def update_db(db_params, alembic_path):
 
 
 def generate_nav(
-    data_dir, docker_ed, docker_cities, output_file, ed_component_path, cities_exec_path, import_cities
+    data_dir, docker_ed, docker_cities, output_file, ed_component_path, cities_file, cities_exec_path
 ):
     # type: (str, DockerWrapper, DockerWrapper, str, str, str, str) -> None
     """
@@ -202,8 +202,8 @@ def generate_nav(
     :param docker_cities: the Docker for the "cities" binary
     :param output_file: the name of the output file (usually with extension ".nav.lz4")
     :param ed_component_path: the path of the folder containing all the binaries for data ("*2ed" and "ed2nav")
+    :param cities_file: the path to the file loaded by "cities" (usually a *.osm.pbf)
     :param cities_exec_path: the path of the folder containing the "cities" binary
-    :param import_cities: the path to the directory containing the data for the "ed2nav" binary
     """
     cities_db_params = docker_cities.get_db_params()
     update_db(cities_db_params, ALEMBIC_PATH_CITIES)
@@ -211,14 +211,8 @@ def generate_nav(
     ed_db_params = docker_ed.get_db_params()  # type: DbParams
     update_db(ed_db_params, ALEMBIC_PATH_ED)
 
-    if import_cities:
-        if not os.path.exists(import_cities):
-            raise Exception('Error: impossible to find {}, exiting'.format(import_cities))
-
-        load_cities(import_cities, cities_db_params, cities_exec_path)
-
-    if not os.path.exists(data_dir):
-        raise Exception('Error: impossible to find {}, exiting'.format(data_dir))
+    if cities_file:
+        load_cities(cities_file, cities_db_params, cities_exec_path)
 
     data_dirs = [
         os.path.join(data_dir, sub_dir_name)

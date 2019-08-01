@@ -12,7 +12,7 @@ macro(generate_nav DATASET_NAME)
     add_custom_command(OUTPUT ${DATA_NAV_TO_CREATE}
         DEPENDS ${ED_TARGETS_TO_INSTALL}
         COMMAND python
-        ARGS ${EITRI} "${FIXTURES_DIR}/ed/${DATASET_NAME}/" --output-file ${DATA_NAV_TO_CREATE} --ed-component-path "${CMAKE_BINARY_DIR}/ed" --add-pythonpath "${CMAKE_SOURCE_DIR}/navitiacommon"
+        ARGS ${EITRI} --data-folder "${FIXTURES_DIR}/ed/${DATASET_NAME}/" --output ${DATA_NAV_TO_CREATE} --ed-folder "${CMAKE_BINARY_DIR}/ed"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/type" VERBATIM
     )
     set_source_files_properties(${DATA_NAV_TO_CREATE} PROPERTIES GENERATED TRUE)
