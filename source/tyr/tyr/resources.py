@@ -2061,31 +2061,25 @@ class StreetNetworkBackend(flask_restful.Resource):
         parser.add_argument('page', type=int, required=False, default=1)
         args = parser.parse_args()
 
-        pagination = models.StreetNetworkBackend.query.filter_by(discarded=False).paginate(
+        return models.StreetNetworkBackend.query.filter_by(discarded=False).paginate(
             args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
         )
-
-        pagination_json = {
-            'current_page': pagination.page,
-            'items_per_page': pagination.per_page,
-            'total_items': pagination.total,
-        }
-
-        if pagination.has_next:
-            pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
-        return pagination.items, pagination_json
 
     def get(self, backend_id=None):
         resp = None
         if backend_id:
             resp = marshal(self._get_backend_by_id(backend_id), streetnetwork_backend_fields)
         else:
-            backends_with_pagination = self._get_all_backends()
-            resp = (
-                marshal(backends_with_pagination[0], streetnetwork_backend_fields),
-                backends_with_pagination[1],
-            )
-            return {'streetnetwork_backends': resp[0], 'pagination': resp[1]}
+            pagination = self._get_all_backends()
+            pagination_json = {
+                'current_page': pagination.page,
+                'items_per_page': pagination.per_page,
+                'total_items': pagination.total,
+            }
+
+            if pagination.has_next:
+                pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
+            return {'streetnetwork_backends': marshal(pagination.items, streetnetwork_backend_fields), 'pagination': pagination_json}
 
         return {'streetnetwork_backends': resp}
 
