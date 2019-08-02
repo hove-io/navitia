@@ -703,7 +703,6 @@ name|string|optional|the equipment's name/description
         }
     ],
     "status": "unavailable",
-    "updated_at": "2019-05-17T15:54:53+02:00"
 }
 ```
 
@@ -713,7 +712,6 @@ status|string|always|Equipment status: <ul><li>`"unknown"`: no realtime informat
 cause|label|optional|If status is `unavailable`, gives you the cause in a label
 effect|label|optional|If status is `unavailable`, gives you the effect in a label
 periods|period|optional|If status is `unavailable`, gives the effected period with a begin & end date
-updated_at|[iso-date-time](#iso-date-time)|optional|Last update time of the provided information
 
 Other objects
 -------------
