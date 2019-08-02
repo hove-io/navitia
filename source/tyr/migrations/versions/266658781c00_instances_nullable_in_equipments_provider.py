@@ -21,6 +21,7 @@ def upgrade():
 
 
 def downgrade():
+    op.execute("UPDATE equipments_provider SET instances = '{null_instance}';")
     op.alter_column(
         'equipments_provider', 'instances', existing_type=postgresql.ARRAY(sa.TEXT()), nullable=False
     )
