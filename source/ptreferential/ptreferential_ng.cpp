@@ -295,9 +295,15 @@ struct Eval : boost::static_visitor<Indexes> {
         } else if (type == Type_e::Impact
                    && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
             indexes = get_impacts_by_tags(f.args, data);
-        } else if ((f.method == "since" && f.args.size() == 1 + (f.type == "vehicle_journey"))
-                   || (f.method == "until" && f.args.size() == 1 + (f.type == "vehicle_journey"))
-                   || (f.method == "between" && f.args.size() == 2 + (f.type == "vehicle_journey"))) {
+        }
+        // since/until/between are available for disruption and vehicle_journey,
+        // but VJ requires the additional param `data_freshness`
+        // so below grammar provides the following methods:
+        // * disruption.between(since, until)
+        // * vehicle_journey.between(since, until, data_freshness)
+        else if ((f.method == "since" && f.args.size() == 1u + nb_extra_args_between(type))
+                 || (f.method == "until" && f.args.size() == 1u + nb_extra_args_between(type))
+                 || (f.method == "between" && f.args.size() == 2u + nb_extra_args_between(type))) {
             boost::optional<boost::posix_time::ptime> since, until;
             if (f.method == "since") {
                 since = from_datetime(f.args.at(0));
@@ -366,6 +372,16 @@ struct Eval : boost::static_visitor<Indexes> {
         return res;
     }
     Indexes operator()(const ast::Expr& expr) const { return boost::apply_visitor(*this, expr.expr); }
+
+private:
+    // helper to add required param to methods since(), until() and between().
+    static size_t nb_extra_args_between(const type::Type_e& type) {
+        // for VehicleJourney, the data_freshness level is also required, so 1 more param is required
+        if (type == type::Type_e::VehicleJourney) {
+            return 1u;
+        }
+        return 0u;
+    }
 };
 
 }  // anonymous namespace
