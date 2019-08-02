@@ -254,7 +254,7 @@ struct Eval : boost::static_visitor<Indexes> {
     Indexes operator()(const ast::Empty&) const { return Indexes(); }
     Indexes operator()(const ast::Fun& f) const {
         Indexes indexes;
-        const Type_e type = type_by_caption(f.type);
+        const auto type = type_by_caption(f.type);
         if (type == Type_e::VehicleJourney && f.method == "has_headsign" && f.args.size() == 1) {
             for (auto vj : data.pt_data->headsign_handler.get_vj_from_headsign(f.args.at(0))) {
                 indexes.insert(vj->idx);
@@ -313,10 +313,9 @@ struct Eval : boost::static_visitor<Indexes> {
                 since = from_datetime(f.args.at(0));
                 until = from_datetime(f.args.at(1));
             }
-            auto rt_level = type::RTLevel::Base;  // useful only for VJ
-            if (type == Type_e::VehicleJourney) {
-                rt_level = rt_level_from_string(f.args.back());
-            }
+            // useful only for VJ
+            const auto rt_level =
+                (type == Type_e::VehicleJourney) ? rt_level_from_string(f.args.back()) : type::RTLevel::Base;
             indexes = filter_on_period(data.get_all_index(type), type, since, until, rt_level, data);
 
         } else if (f.method == "within" && f.args.size() == 2) {
@@ -375,12 +374,9 @@ struct Eval : boost::static_visitor<Indexes> {
 
 private:
     // helper to add required param to methods since(), until() and between().
-    static size_t nb_extra_args_between(const type::Type_e& type) {
+    size_t nb_extra_args_between(const type::Type_e& type) const {
         // for VehicleJourney, the data_freshness level is also required, so 1 more param is required
-        if (type == type::Type_e::VehicleJourney) {
-            return 1u;
-        }
-        return 0u;
+        return (type == type::Type_e::VehicleJourney) ? 1u : 0u;
     }
 };
 
