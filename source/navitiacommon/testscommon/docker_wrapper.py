@@ -39,6 +39,8 @@ from retrying import retry
 This module contains classes about Docker management.
 """
 
+logger = logging.getLogger(__name__)  # type: logging.Logger
+
 
 class DbParams(object):
     """
@@ -105,7 +107,6 @@ class DockerWrapper(object):
         """
         Constructor of PostgresDocker.
         """
-        log = logging.getLogger(__name__)  # type: logging.Logger
         base_url = 'unix://var/run/docker.sock'
         self.docker_client = docker.DockerClient(base_url=base_url)
         self.docker_api_client = docker.APIClient(base_url=base_url)
@@ -116,24 +117,24 @@ class DockerWrapper(object):
         self.dbuser = dbuser
         self.dbpassword = dbpassword
         self.env_vars = env_vars
-        log.info("Trying to build/update the docker image")
+        logger.info("Trying to build/update the docker image")
 
         try:
             if self.dockerfile_path:
                 for build_output in self.docker_client.images.build(
                     path=self.dockerfile_path, tag=image_name, rm=True
                 ):
-                    log.debug(build_output)
+                    logger.debug(build_output)
 
         except docker.errors.APIError as e:
             if e.is_server_error():
-                log.warn("[docker server error] A server error occcured, maybe missing internet connection?")
-                log.warn("[docker server error] Details: {}".format(e))
-                log.warn(
+                logger.warn("[docker server error] A server error occcured, maybe missing internet connection?")
+                logger.warn("[docker server error] Details: {}".format(e))
+                logger.warn(
                     "[docker server error] Checking if '{}' docker image is already built".format(image_name)
                 )
                 self.docker_client.images.get(image_name)
-                log.warn(
+                logger.warn(
                     "[docker server error] Going on, as '{}' docker image is already built".format(image_name)
                 )
             else:
@@ -142,8 +143,8 @@ class DockerWrapper(object):
         self.container = self.docker_client.containers.create(
             image_name, name=self.container_name, environment=self.env_vars
         )
-        log.info("docker id is {}".format(self.container.id))
-        log.info("starting the temporary docker")
+        logger.info("docker id is {}".format(self.container.id))
+        logger.info("starting the temporary docker")
         self.container.start()
         self.ip_addr = (
             self.docker_api_client.inspect_container(self.container.id)
@@ -152,7 +153,7 @@ class DockerWrapper(object):
         )
 
         if not self.ip_addr:
-            log.error("temporary docker {} not started".format(self.container.id))
+            logger.error("temporary docker {} not started".format(self.container.id))
             exit(1)
 
         # we poll to ensure that the database is ready
@@ -163,19 +164,19 @@ class DockerWrapper(object):
         """
         Terminate the Docker and clean it.
         """
-        logging.getLogger(__name__).info("stopping the temporary docker")
+        logger.info("stopping the temporary docker")
         self.container.stop()
 
-        logging.getLogger(__name__).info("removing the temporary docker")
+        logger.info("removing the temporary docker")
         self.container.remove(v=True)
 
         # test to be sure the docker is removed at the end
         try:
             self.docker_client.containers.get(self.container.id)
         except docker.errors.NotFound:
-            logging.getLogger(__name__).info("the container is properly removed")
+            logger.info("the container is properly removed")
         else:
-            logging.getLogger(__name__).error("something is strange, the container is still there ...")
+            logger.error("something is strange, the container is still there ...")
             exit(1)
 
     def get_db_params(self):
