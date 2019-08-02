@@ -1459,7 +1459,7 @@ void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_fi
     if (line_id_is_present) {
         it = gtfs_data.line_map.find(row[line_c]);
         if (it == gtfs_data.line_map.end()) {
-            LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the line " << row[line_c]);
+            LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the line id" << row[line_c]);
             return;
         }
     } else {
