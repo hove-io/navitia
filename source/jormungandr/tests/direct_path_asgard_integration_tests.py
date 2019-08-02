@@ -58,19 +58,19 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
 def add_cycle_path_type_in_section(section):
     path_item = section.street_network.path_items.add()
     path_item.length = 10
-    path_item.cycle_path_type = response_pb2.CyclePathType.NoCycleLane
+    path_item.cycle_path_type = response_pb2.NoCycleLane
 
     path_item = section.street_network.path_items.add()
     path_item.length = 10
-    path_item.cycle_path_type = response_pb2.CyclePathType.SharedCycleWay
+    path_item.cycle_path_type = response_pb2.SharedCycleWay
 
     path_item = section.street_network.path_items.add()
     path_item.length = 10
-    path_item.cycle_path_type = response_pb2.CyclePathType.DedicatedCycleWay
+    path_item.cycle_path_type = response_pb2.DedicatedCycleWay
 
     path_item = section.street_network.path_items.add()
     path_item.length = 10
-    path_item.cycle_path_type = response_pb2.CyclePathType.SeparatedCycleWay
+    path_item.cycle_path_type = response_pb2.SeparatedCycleWay
 
 
 def route_response(mode):
