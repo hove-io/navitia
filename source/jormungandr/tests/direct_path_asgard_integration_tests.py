@@ -170,7 +170,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['durations']['total'] == 1000
         assert response['journeys'][1]['distances']['bike'] == 100
         assert response['journeys'][1]['duration'] == 1000
-        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30.0
+        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30
 
         # walking from asgard
         assert 'walking' in response['journeys'][2]['tags']

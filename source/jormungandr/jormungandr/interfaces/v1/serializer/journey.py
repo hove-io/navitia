@@ -312,14 +312,7 @@ class SectionSerializer(PbNestedSerializer):
             return None
         return JourneySerializer(obj.ridesharing_journeys, display_none=False, many=True).data
 
-    cycle_lane_length = jsonschema.MethodField(
-        schema_type=int, display_none=False, description='Length of the section on cycle lanes'
-    )
-
-    def get_cycle_lane_length(self, obj):
-        if not hasattr(obj, 'cycle_lane_length') or not obj.cycle_lane_length:
-            return None
-        return obj.cycle_lane_length
+    cycle_lane_length = PbIntField(display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):
