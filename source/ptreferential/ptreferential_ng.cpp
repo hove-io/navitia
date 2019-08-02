@@ -254,20 +254,21 @@ struct Eval : boost::static_visitor<Indexes> {
     Indexes operator()(const ast::Empty&) const { return Indexes(); }
     Indexes operator()(const ast::Fun& f) const {
         Indexes indexes;
-        if (f.type == "vehicle_journey" && f.method == "has_headsign" && f.args.size() == 1) {
+        const Type_e type = type_by_caption(f.type);
+        if (type == Type_e::VehicleJourney && f.method == "has_headsign" && f.args.size() == 1) {
             for (auto vj : data.pt_data->headsign_handler.get_vj_from_headsign(f.args.at(0))) {
                 indexes.insert(vj->idx);
             }
-        } else if (f.type == "vehicle_journey" && f.method == "has_disruption" && f.args.size() == 0) {
+        } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.size() == 0) {
             indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, data);
-        } else if (f.type == "line" && f.method == "code" && f.args.size() == 1) {
+        } else if (type == Type_e::Line && f.method == "code" && f.args.size() == 1) {
             for (auto l : data.pt_data->lines) {
                 if (l->code != f.args[0]) {
                     continue;
                 }
                 indexes.insert(l->idx);
             }
-        } else if (f.type == "line" && f.method == "odt_level" && f.args.size() == 1) {
+        } else if (type == Type_e::Line && f.method == "odt_level" && f.args.size() == 1) {
             const auto level = odt_level_from_string(f.args.at(0));
             for (auto l : data.pt_data->lines) {
                 const auto properties = l->get_odt_properties();
@@ -291,7 +292,7 @@ struct Eval : boost::static_visitor<Indexes> {
                         indexes.insert(l->idx);
                 }
             }
-        } else if (f.type == "disruption"
+        } else if (type == Type_e::Impact
                    && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
             indexes = get_impacts_by_tags(f.args, data);
         } else if ((f.method == "since" && f.args.size() == 1 + (f.type == "vehicle_journey"))
@@ -306,7 +307,6 @@ struct Eval : boost::static_visitor<Indexes> {
                 since = from_datetime(f.args.at(0));
                 until = from_datetime(f.args.at(1));
             }
-            const auto type = type_by_caption(f.type);
             auto rt_level = type::RTLevel::Base;  // useful only for VJ
             if (type == Type_e::VehicleJourney) {
                 rt_level = rt_level_from_string(f.args.back());
@@ -332,21 +332,21 @@ struct Eval : boost::static_visitor<Indexes> {
             } catch (...) {
                 throw parsing_error(parsing_error::partial_error, "invalid coord " + f.args.at(1));
             }
-            indexes = get_within(type_by_caption(f.type), coord, distance, data);
+            indexes = get_within(type, coord, distance, data);
         } else if ((f.method == "id" || f.method == "uri") && f.args.size() == 1) {
-            indexes = get_indexes_from_id(type_by_caption(f.type), f.args.at(0), data);
+            indexes = get_indexes_from_id(type, f.args.at(0), data);
         } else if (f.method == "name" && f.args.size() == 1) {
-            indexes = get_indexes_from_name(type_by_caption(f.type), f.args.at(0), data);
+            indexes = get_indexes_from_name(type, f.args.at(0), data);
         } else if (f.method == "has_code" && f.args.size() == 2) {
-            indexes = get_indexes_from_code(type_by_caption(f.type), f.args.at(0), f.args.at(1), data);
+            indexes = get_indexes_from_code(type, f.args.at(0), f.args.at(1), data);
         } else if (f.method == "has_code_type") {
-            indexes = get_indexes_from_code_type(type_by_caption(f.type), f.args, data);
+            indexes = get_indexes_from_code_type(type, f.args, data);
         } else {
             std::stringstream ss;
             ss << "Unknown function: " << f;
             throw parsing_error(parsing_error::partial_error, ss.str());
         }
-        return get_corresponding(indexes, type_by_caption(f.type), target, data);
+        return get_corresponding(indexes, type, target, data);
     }
     Indexes operator()(const ast::GetCorresponding& expr) const {
         const auto from = type_by_caption(expr.type);
