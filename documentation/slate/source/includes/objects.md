@@ -627,7 +627,7 @@ Cities are mainly on the 8 level, dependant on the country
 (<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
 
-### Equipment-reports
+### Equipment reports
 
 ```json
 "equipment_reports": [
@@ -639,15 +639,15 @@ Cities are mainly on the 8 level, dependant on the country
 ]
 ```
 
-A list of object that maps each lines with its associated stop area equipments report.
+A list of objects that maps each line with its associated stop area equipments.
 
 |Field|Type|Description|
 |-----|----|-----------|
 |line|[line](#line)|The line to which equipments are associated |
-|stop_area_equipments|[stop-area-equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
+|stop_area_equipments|[stop area equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
 
 
-### Stop-area-equipments
+### Stop area equipments
 
 ```json
 "stop_area_equipments": [
@@ -658,15 +658,15 @@ A list of object that maps each lines with its associated stop area equipments r
     ...
 ]
 ```
-A list of objects that maps equipments details for each stop area.
+A list of objects that maps equipment details for each stop area.
 
 |Field|Type|Description|
 |-----|----|-----------|
-|equipment_details|[equipment-details](#equipment-details)|The equipment details associated with the stop area|
-|stop_area|[stop-area](#stop-area)|The stop area to which the `equipments_details` is associated |
+|equipment_details|[Equipment details](#equipment-details)|The equipment details associated with the stop area|
+|stop_area|[Stop Area](#stop-area)|The stop area to which the `equipment_details` are associated |
 
 
-### Equipment-details
+### Equipment details
 ```json
 "equipment_details": [
     {
@@ -680,13 +680,13 @@ A list of objects that maps equipments details for each stop area.
 ```
 |Field|Type|Occurrence|Description|
 |-----|----|--------|-----------|
-current_availability|[current-availability](#current-availability)|always| Describes equipments information like: status, name, id etc...
-embedded_type|string|always|Define the equipment type: `"escalator"`, `"elevator"`
+current_availability|[Equipment availability](#equipment-availability)|always| Describes equipments information like: status, name, id etc...
+embedded_type|string|always|Define the equipment type: `escalator`, `elevator`
 id|string|always|The equipment's unique identifier
 name|string|optional|the equipment's name/description
 
 
-### Current-availability
+### Equipment availability
 
 ```json
 "current_availability": {
@@ -708,10 +708,10 @@ name|string|optional|the equipment's name/description
 
 |Field|Type|Required|Description|
 |-----|----|--------|-----------|
-status|string|always|Equipment status: <ul><li>`"unknown"`: no realtime information available</li><li>`"unavailable"`: equipment is known to be unavailable with details provided below </li></ul>
+status|string|always|Equipment status: <ul><li>`unknown`: no realtime information available</li><li>`unavailable`: equipment is known to be unavailable with details provided below </li></ul>
 cause|label|optional|If status is `unavailable`, gives you the cause in a label
 effect|label|optional|If status is `unavailable`, gives you the effect in a label
-periods|period|optional|If status is `unavailable`, gives the effected period with a begin & end date
+periods|period|optional|If status is `unavailable`, gives the affected period (with a `begin` & `end` datetime attributes)
 
 Other objects
 -------------
@@ -841,7 +841,7 @@ Special Parameters
 
 ### datetime
 
-A date time with the format YYYYMMDDThhmmss
+A date time with the format YYYYMMDDThhmmss, considered local to the coverage used.
 
 #### depth
 

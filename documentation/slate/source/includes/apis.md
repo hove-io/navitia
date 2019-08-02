@@ -2161,7 +2161,7 @@ Equipment_Reports
 ---------------------------------------------
 ``` shell
 #request
-$ curl 'http://api.navitia.io/v1/coverage/sandbox/equipment_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+$ curl 'http://api.navitia.io/v1/coverage/<my_coverage>/equipment_reports'
 ```
 
 ``` shell
@@ -2208,9 +2208,10 @@ HTTP/1.1 200 OK
 Also known as the `"/equipment_reports"` service.
 
 This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.
-The endpoint will report accessible equipement per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered on a per line basis.
+The endpoint will report accessible equipment per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered per line.
 Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.
-For more information, refer to [equipment-reports](#equipment-reports) API description.
+For more information, refer to [Equipment reports](#equipment-reports) API description.
+You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/equipment_reports>
 
 <aside class="warning">
     This feature requires a specific configuration from a equipment service provider.
@@ -2220,10 +2221,10 @@ For more information, refer to [equipment-reports](#equipment-reports) API descr
 ### Parameters
 
 
-Required | Name             | Type   | Description                                        | Default Value
----------|------------------|--------|----------------------------------------------------|--------------
-no       | count            | int    | Elements per page                                  | 10
-no       | depth            | int    | Json response [depth](#depth)                      | 1
-no       | filter           | string | A [filter](#filter) to refine your request         |
-no       | forbidden_uris[] | id     | If you want to avoid lines, modes, networks, etc.  |
-no       | start_page       | int    | The page number (cf the [paging section](#paging)) | 0
+Required | Name             | Type   | Description                                         | Default Value
+---------|------------------|--------|-----------------------------------------------------|--------------
+no       | count            | int    | Elements per page                                   | 10
+no       | depth            | int    | Json response [depth](#depth)                       | 1
+no       | filter           | string | A [filter](#filter) to refine your request          |
+no       | forbidden_uris[] | id     | If you want to avoid lines, modes, networks, etc.   |
+no       | start_page       | int    | The page number (cf. the [paging section](#paging)) | 0
