@@ -2073,17 +2073,19 @@ class StreetNetworkBackend(flask_restful.Resource):
 
         if pagination.has_next:
             pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
-        return marshal(pagination.items, streetnetwork_backend_fields), pagination_json
+        return pagination.items, pagination_json
 
     def get(self, backend_id=None):
         resp = None
         if backend_id:
             resp = marshal(self._get_backend_by_id(backend_id), streetnetwork_backend_fields)
         else:
-            resp = self._get_all_backends()
-            # In case of a response with pagination, the response type is a tuple and it needs to be serialized
-            if type(resp) == tuple:
-                return {'streetnetwork_backends': resp[0], 'pagination': resp[1]}
+            backends_with_pagination = self._get_all_backends()
+            resp = (
+                marshal(backends_with_pagination[0], streetnetwork_backend_fields),
+                backends_with_pagination[1],
+            )
+            return {'streetnetwork_backends': resp[0], 'pagination': resp[1]}
 
         return {'streetnetwork_backends': resp}
 
