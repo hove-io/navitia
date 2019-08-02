@@ -96,9 +96,8 @@ void PathFinder::init_start(const type::GeographicalCoord& start_coord, nt::Mode
     // in the right transport mode (walk, bike, car, ...) (ie offset)
     this->mode = mode;
     this->speed_factor = speed_factor;  // the speed factor is the factor we have to multiply the edge cost with
-    nt::idx_t offset = this->geo_ref.offsets[mode];
     this->start_coord = start_coord;
-    starting_edge = ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
+    starting_edge = ProjectionData(start_coord, this->geo_ref, mode);
 
     distance_to_entry_point.clear();
     // we initialize the distances to the maximum value

@@ -108,7 +108,7 @@ void find(navitia::PbCreator& pb_creator,
                 // we'll regenerate the good number in make_pb
                 result.push_back(t_result(nb_w.second->idx, coord, type));
                 ++total_result;
-            } catch (proximitylist::NotFound) {
+            } catch (const proximitylist::NotFound&) {
             }
             continue;
         }
@@ -129,13 +129,13 @@ void find(navitia::PbCreator& pb_creator,
         }
         switch (type) {
             case nt::Type_e::StopArea:
-                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance);
+                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, count);
                 break;
             case nt::Type_e::StopPoint:
-                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance);
+                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, count);
                 break;
             case nt::Type_e::POI:
-                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance);
+                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, count);
                 break;
             default:
                 break;

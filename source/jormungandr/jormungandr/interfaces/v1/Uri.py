@@ -114,6 +114,16 @@ class Uri(ResourceUri, ResourceUtc):
             'of the disruptions.',
         )
         parser.add_argument(
+            "data_freshness",
+            help="Define the freshness of data to use to compute vehicle_journeys "
+            "along with parameters &since and/or &until .\n"
+            "When using `&data_freshness=base_schedule` you get original vehicle_journeys "
+            "where as when using `&data_freshness=realtime` you get vehicle_journeys "
+            "added or modified by realtime.",
+            type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']),
+            default='base_schedule',
+        )
+        parser.add_argument(
             "distance",
             type=int,
             default=200,

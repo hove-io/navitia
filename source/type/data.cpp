@@ -63,7 +63,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 70;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 71;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -318,8 +318,12 @@ void Data::build_administrative_regions() {
 }
 
 void Data::build_autocomplete() {
-    pt_data->build_autocomplete(*geo_ref);
     geo_ref->build_autocomplete_list();
+    build_autocomplete_partial();
+}
+
+void Data::build_autocomplete_partial() {
+    pt_data->build_autocomplete(*geo_ref);
     pt_data->compute_score_autocomplete(*geo_ref);
 }
 
@@ -430,6 +434,17 @@ static void build_datasets(navitia::type::VehicleJourney* vj) {
     }
 }
 
+static void build_companies(navitia::type::VehicleJourney* vj) {
+    if (vj->company) {
+        if (boost::range::find(vj->route->line->company_list, vj->company) == vj->route->line->company_list.end()) {
+            vj->route->line->company_list.push_back(vj->company);
+        }
+        if (boost::range::find(vj->company->line_list, vj->route->line) == vj->company->line_list.end()) {
+            vj->company->line_list.push_back(vj->route->line);
+        }
+    }
+}
+
 void Data::build_relations() {
     // physical_mode_list of line
     for (auto* vj : pt_data->vehicle_journeys) {
@@ -437,6 +452,7 @@ void Data::build_relations() {
         if (!vj->physical_mode || !vj->route || !vj->route->line) {
             continue;
         }
+        build_companies(vj);
         if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)) {
             vj->route->line->physical_mode_list.push_back(vj->physical_mode);
         }

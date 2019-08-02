@@ -44,7 +44,8 @@ public:
     void load_nav(const std::string&) {}
     void load_disruptions(const std::string&, const std::vector<std::string>& = {}) {}
     void build_raptor(size_t) {}
-    void build_autocomplete() {}
+    void build_proximity_list() {}
+    void build_autocomplete_partial() {}
     mutable std::atomic<bool> loading;
     mutable std::atomic<bool> is_connected_to_rabbitmq;
     static bool load_status;

@@ -29,8 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
     name='navitiacommon',
@@ -38,5 +37,5 @@ setup(
     author='CanalTP',
     author_email='alexandre.jacquin@canaltp.fr',
     url='www.navitia.io',
-    packages=find_packages(),
+    packages=find_packages(exclude=['testscommon']),
 )

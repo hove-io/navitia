@@ -73,9 +73,8 @@ struct DisruptionDatabaseReader {
 
     std::set<std::string> message_ids;
     std::set<std::tuple<std::string, std::string, std::string>> properties;
-    std::set<std::string> pt_object_ids;
     std::set<std::string> appplication_periods_ids;
-    std::set<std::string> associate_objects_ids;
+    std::set<std::tuple<std::string, std::string>> line_section_route_set;
     type::PT_Data& pt_data;
     const type::MetaData& meta;
 
@@ -102,9 +101,9 @@ struct DisruptionDatabaseReader {
             message = nullptr;
             channel = nullptr;
             pt_object = nullptr;
-            pt_object_ids.clear();
             message_ids.clear();
             appplication_periods_ids.clear();
+            line_section_route_set.clear();
         }
 
         if (disruption && !const_it["property_key"].is_null() && !const_it["property_type"].is_null()
@@ -125,17 +124,34 @@ struct DisruptionDatabaseReader {
             fill_application_period(const_it);
             appplication_periods_ids.insert(const_it["application_id"].template as<std::string>());
         }
-        if (impact && (!pt_object_ids.count(const_it["ptobject_id"].template as<std::string>()))) {
-            pt_object = impact->add_informed_entities();
-            fill_pt_object(const_it, pt_object);
-            associate_objects_ids.clear();
-            pt_object_ids.insert(const_it["ptobject_id"].template as<std::string>());
+
+        // To manage line_section and it's elements as start, end and routes, we should re-use the pt_object
+        // already existing in informed_entities so that any change in sort order after impact
+        // (message, channel, channel_type..) in the query should work.
+        if (impact && !const_it["ptobject_uri"].is_null()) {
+            auto* entities = impact->mutable_informed_entities();
+            auto pt_obj_it =
+                std::find_if(entities->pointer_begin(), entities->pointer_end(), [&](chaos::PtObject* obj) {
+                    return obj->uri() == const_it["ptobject_uri"].template as<std::string>();
+                });
+            if (pt_obj_it == entities->pointer_end()) {
+                pt_object = impact->add_informed_entities();
+                fill_pt_object(const_it, pt_object);
+            } else {
+                pt_object = *pt_obj_it;
+            }
         }
-        if (impact && !const_it["ls_route_id"].is_null()
-            && (!associate_objects_ids.count(const_it["ls_route_id"].template as<std::string>()))) {
-            fill_associate_route(const_it, pt_object);
-            associate_objects_ids.insert(const_it["ls_route_id"].template as<std::string>());
+
+        if (impact && !const_it["ls_route_uri"].is_null()) {
+            std::tuple<std::string, std::string> line_section_route(
+                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ls_route_uri"].template as<std::string>());
+            if (!line_section_route_set.count(line_section_route)) {
+                fill_associate_route(const_it, pt_object);
+                line_section_route_set.insert(line_section_route);
+            }
         }
+
         if (impact && !const_it["message_id"].is_null()
             && (!message_ids.count(const_it["message_id"].template as<std::string>()))) {
             message = impact->add_messages();

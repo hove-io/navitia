@@ -92,6 +92,7 @@ class FallbackDurations:
         self._speed_switcher = speed_switcher
         self._value = None
         self._direct_path_type = direct_path_type
+        self._streetnetwork_service = instance.get_street_network(mode, request)
         self._async_request()
 
     def _get_duration(self, resp, place):
@@ -111,6 +112,7 @@ class FallbackDurations:
                 self._mode,
                 self._max_duration_to_pt,
                 self._request,
+                self._streetnetwork_service,
                 **self._speed_switcher
             )
         except Exception as e:
@@ -170,8 +172,9 @@ class FallbackDurations:
             origins = places_isochrone
             destinations = [center_isochrone]
 
-        streetnetwork_service = self._instance.get_street_network(self._mode, self._request)
-        sn_routing_matrix = self._get_street_network_routing_matrix(streetnetwork_service, origins, destinations)
+        sn_routing_matrix = self._get_street_network_routing_matrix(
+            self._streetnetwork_service, origins, destinations
+        )
 
         if (
             not sn_routing_matrix

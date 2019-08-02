@@ -1,8 +1,8 @@
 -r requirements.txt
 -r ../../requirements_pre-commit.txt
+
 docker==3.4.1
 pytest==3.7.2
 python-dateutil==2.5.3
 mock==1.0.1
-clingon==0.1.4
 jmespath==0.9.3

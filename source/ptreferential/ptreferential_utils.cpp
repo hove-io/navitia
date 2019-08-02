@@ -142,14 +142,14 @@ Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data
     return result;
 }
 
-static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period) {
+static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period, const type::RTLevel rt_level) {
     if (vj->stop_time_list.empty()) {
         return false;  // no stop time, so it cannot be valid
     }
 
     const auto& first_departure_dt = vj->earliest_time();
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
-        if (!vj->base_validity_pattern()->check(*it)) {
+        if ((vj->validity_patterns[rt_level] != nullptr) && !vj->validity_patterns[rt_level]->check(*it)) {
             continue;
         }
         bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
@@ -161,7 +161,10 @@ static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& perio
     return false;
 }
 
-static Indexes filter_vj_on_period(const Indexes& indexes, const bt::time_period& period, const type::Data& data) {
+static Indexes filter_vj_on_period(const Indexes& indexes,
+                                   const bt::time_period& period,
+                                   const type::RTLevel rt_level,
+                                   const type::Data& data) {
     Indexes res;
     bt::time_period production_period = {bt::ptime(data.meta->production_date.begin()),
                                          bt::ptime(data.meta->production_date.end())};
@@ -169,7 +172,7 @@ static Indexes filter_vj_on_period(const Indexes& indexes, const bt::time_period
 
     for (const idx_t idx : indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (!keep_vj(vj, period_to_check)) {
+        if (!keep_vj(vj, period_to_check, rt_level)) {
             continue;
         }
         res.insert(idx);
@@ -203,6 +206,7 @@ Indexes filter_on_period(const Indexes& indexes,
                          const navitia::type::Type_e requested_type,
                          const boost::optional<bt::ptime>& since,
                          const boost::optional<bt::ptime>& until,
+                         const type::RTLevel rt_level,
                          const type::Data& data) {
     if (since && until && until < since) {
         throw ptref_error("invalid filtering period");
@@ -220,7 +224,7 @@ Indexes filter_on_period(const Indexes& indexes,
 
     switch (requested_type) {
         case nt::Type_e::VehicleJourney:
-            return filter_vj_on_period(indexes, period, data);
+            return filter_vj_on_period(indexes, period, rt_level, data);
         case nt::Type_e::Impact:
             return filter_impact_on_period(indexes, period, data);
         default:

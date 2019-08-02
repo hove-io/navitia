@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, type_pb2
-from flask import logging
+import logging
 
 # Mapping to know with response field to consider for a given pb_type
 PT_TYPE_RESPONSE_MAPPING = {

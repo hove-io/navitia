@@ -85,3 +85,9 @@ equipments_provider_format = {
     },
     'required': ['klass', 'args'],
 }
+
+streetnetwork_backend_format = {
+    'type': 'object',
+    'properties': {'klass': {'type': 'string'}},
+    'required': ['klass'],
+}

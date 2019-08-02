@@ -61,7 +61,7 @@ from jormungandr.parking_space_availability import (
 from jormungandr.equipments.sytral import SytralProvider
 import uuid
 
-krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests'
+krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests/mock-kraken'
 
 
 class FakeModel(object):
@@ -119,6 +119,7 @@ class AbstractTestFixture(unittest.TestCase):
                     logging.error('kraken is dead, check errors, return code = %s', kraken_process.returncode)
                     assert False, 'kraken is dead, check errors, return code'
             kraken_process.kill()
+            kraken_process.communicate()  # read stdout and stderr to prevent zombie processes
 
     @classmethod
     def create_dummy_json(cls):
@@ -130,7 +131,10 @@ class AbstractTestFixture(unittest.TestCase):
                 f.write(json.dumps(instance_config, indent=4))
 
         # we set the env var that will be used to init jormun
-        return [os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests', k + '.json') for k in cls.krakens_pool]
+        return [
+            os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests/mock-kraken', k + '.json')
+            for k in cls.krakens_pool
+        ]
 
     @classmethod
     def global_jormun_setup(cls):

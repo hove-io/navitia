@@ -28,3 +28,4 @@
 # www.navitia.io
 
 from streetnetwork_test_utils import MockKraken
+from jormungandr.street_network.tests.streetnetwork_backend_mock import StreetNetworkBackendMock

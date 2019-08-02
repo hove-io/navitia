@@ -473,6 +473,7 @@ private:
         void fill_pb_object(const nt::Calendar*, pbnavitia::Calendar*);
         void fill_pb_object(const nt::ValidityPattern*, pbnavitia::ValidityPattern*);
         void fill_pb_object(const nt::VehicleJourney*, pbnavitia::VehicleJourney*);
+        void fill_pb_object(const nt::FrequencyVehicleJourney*, pbnavitia::VehicleJourney*);
         void fill_pb_object(const nt::MetaVehicleJourney*, pbnavitia::Trip*);
         void fill_pb_object(const ng::Admin*, pbnavitia::AdministrativeRegion*);
         void fill_pb_object(const nt::ExceptionDate*, pbnavitia::CalendarException*);

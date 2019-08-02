@@ -46,7 +46,8 @@ api.add_resource(
 
 api.add_resource(resources.Api, '/v<int:version>/api/')
 
-api.add_resource(resources.User, '/v<int:version>/users/', '/v<int:version>/users/<int:user_id>/')
+api.add_resource(resources.User, '/v0/users/', '/v0/users/<int:user_id>/')
+api.add_resource(resources.UserV1, '/v1/users/', '/v1/users/<int:user_id>/')
 
 api.add_resource(
     resources.Key,
@@ -98,8 +99,19 @@ api.add_resource(resources.BssProvider, '/v0/bss_providers', '/v0/bss_providers/
 
 api.add_resource(
     resources.EquipmentsProvider,
-    '/v<int:version>/equipments_providers',
-    '/v<int:version>/equipments_providers/<string:id>',
+    '/v0/equipments_providers',
+    '/v0/equipments_providers/<string:id>',
+    '/v1/equipments_providers',
+    '/v1/equipments_providers/<string:id>',
+)
+
+api.add_resource(
+    resources.StreetNetworkBackend,
+    '/v0/streetnetwork_backends',
+    '/v0/streetnetwork_backends/<string:backend_id>',
+    '/v1/streetnetwork_backends',
+    '/v1/streetnetwork_backends/<string:backend_id>',
+    endpoint=str('streetnetwork_backends'),
 )
 
 # TODO: Find a way to handle GET on an URL and POST to another in one class

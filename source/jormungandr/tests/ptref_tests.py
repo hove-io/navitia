@@ -81,7 +81,7 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
 
-        assert len(vjs) == 3
+        assert len(vjs) == 4
         vj = vjs[0]
         assert vj['id'] == 'vehicle_journey:vj1'
 
@@ -149,6 +149,30 @@ class TestPtRef(AbstractTestFixture):
 
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=3)
+
+    def test_frequency_vj(self):
+        """
+        The response should have 3 optional fields
+            start_time
+            end_time
+            headway_secs
+        """
+        response = self.query_region('lines/line:freq/vehicle_journeys?depth=3')
+        vjs = get_not_null(response, 'vehicle_journeys')
+
+        assert len(vjs) == 1
+        assert vjs[0]['start_time'] == '100000'
+        assert vjs[0]['end_time'] == '110000'
+        assert vjs[0]['headway_secs'] == 600  # a 10 min step
+
+        # with a not frequency VJ
+        response = self.query_region('lines/line:A/vehicle_journeys?depth=3')
+        vjs = get_not_null(response, 'vehicle_journeys')
+
+        assert len(vjs) == 1
+        assert not 'start_time' in vjs[0]
+        assert not 'end_time' in vjs[0]
+        assert not 'headway_secs' in vjs[0]
 
     def test_vj_show_codes_propagation(self):
         """stop_area:stop1 has a code, we should be able to find it when accessing it by the vj"""
@@ -266,7 +290,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 3
+        assert len(lines) == 4
 
         l = lines[0]
 
@@ -303,7 +327,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines?disable_geojson=true")
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 3
+        assert len(lines) == 4
         l = lines[0]
         is_valid_line(l, depth_check=1)
         # we don't want a geojson since we have desactivate them
@@ -312,7 +336,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines")
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 3
+        assert len(lines) == 4
         l = lines[0]
         is_valid_line(l, depth_check=1)
 
@@ -327,7 +351,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 3
+        assert len(lines) == 4
 
         l = lines[0]
 
@@ -401,7 +425,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("routes")
 
         routes = get_not_null(response, 'routes')
-        assert len(routes) == 3
+        assert len(routes) == 4
 
         r = [r for r in routes if r['id'] == 'line:A:0']
         assert len(r) == 1
@@ -490,7 +514,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines")
 
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 3
+        assert len(lines) == 4
 
         assert len(lines[0]['physical_modes']) == 1
         assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
@@ -699,7 +723,7 @@ class TestPtRef(AbstractTestFixture):
 
         i = i_manager.instances['main_ptref_test']
 
-        assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 3
+        assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 4
 
     def test_ptref_on_stop_areas_with_disable_disruption(self):
         """

@@ -176,9 +176,10 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
 
 struct ProjectionGetterOnFly {
     const GeoRef& geo_ref;
-    const nt::idx_t offset;
+    const type::Mode_e mode = type::Mode_e::Walking;
+    ProjectionGetterOnFly(const GeoRef& geo_ref, const type::Mode_e mode) : geo_ref(geo_ref), mode(mode) {}
     const georef::ProjectionData operator()(const type::GeographicalCoord& coord) const {
-        return georef::ProjectionData{coord, geo_ref, offset, geo_ref.pl};
+        return georef::ProjectionData{coord, geo_ref, mode};
     }
 };
 
@@ -188,15 +189,8 @@ DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& rad
     if (dest_coords.empty()) {
         return {};
     }
-    nt::idx_t offset;
-    if (mode == type::Mode_e::Car) {
-        // on direct path with car we want to arrive on the walking graph
-        offset = geo_ref.offsets[nt::Mode_e::Walking];
-    } else {
-        offset = geo_ref.offsets[mode];
-    }
 
-    ProjectionGetterOnFly projection_getter{geo_ref, offset};
+    ProjectionGetterOnFly projection_getter{geo_ref, mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode};
     return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord,
                                                 ProjectionGetterOnFly>(radius, dest_coords, projection_getter);
 }

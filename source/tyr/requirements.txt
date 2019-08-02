@@ -1,9 +1,8 @@
-Flask==0.12.4
-Flask-Migrate==1.1.1
+Flask==1.0.4
+Flask-Migrate==2.5.2
 git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686
-Flask-SQLAlchemy==1.0
+Flask-SQLAlchemy==2.4
 Flask-Script==0.6.7
-GeoAlchemy2==0.2.4
 geojson==1.3.3
 Jinja2==2.10.1
 Mako==0.9.1
@@ -11,7 +10,7 @@ MarkupSafe==0.23
 SQLAlchemy==1.3.3
 Shapely==1.3.0
 Werkzeug==0.14.1
-alembic==0.6.2
+alembic==1.0.11
 amqp==1.4.9
 aniso8601==0.82
 anyjson==0.3.3
@@ -19,7 +18,7 @@ argparse==1.2.1
 billiard==3.3.0.13
 celery==3.1.7
 configobj==5.0.6
-itsdangerous==0.24
+itsdangerous==1.1.0
 kombu==3.0.30
 protobuf
 psycopg2
@@ -27,7 +26,7 @@ pydns==2.3.6
 pytz==2013.9
 redis==2.9.1
 six==1.10.0
-validate-email==1.1
+validate-email==1.2
 wsgiref==0.1.2
 retrying==1.3.3
 ujson==1.35

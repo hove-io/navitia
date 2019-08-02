@@ -211,6 +211,7 @@ public:
 
     /** Build Autocomplete index */
     void build_autocomplete();
+    void build_autocomplete_partial();
 
     /** Build ProximityList index */
     void build_proximity_list();
