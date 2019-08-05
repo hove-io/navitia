@@ -312,6 +312,8 @@ class SectionSerializer(PbNestedSerializer):
             return None
         return JourneySerializer(obj.ridesharing_journeys, display_none=False, many=True).data
 
+    cycle_lane_length = PbIntField(display_none=False)
+
 
 class JourneySerializer(PbNestedSerializer):
     duration = jsonschema.Field(

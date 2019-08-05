@@ -53,6 +53,25 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000"
 )
 
+# Create 4 path items of 10 meters each.
+# The first is not a cycle lane, the others are.
+def add_cycle_path_type_in_section(section):
+    path_item = section.street_network.path_items.add()
+    path_item.length = 10
+    path_item.cycle_path_type = response_pb2.NoCycleLane
+
+    path_item = section.street_network.path_items.add()
+    path_item.length = 10
+    path_item.cycle_path_type = response_pb2.SharedCycleWay
+
+    path_item = section.street_network.path_items.add()
+    path_item.length = 10
+    path_item.cycle_path_type = response_pb2.DedicatedCycleWay
+
+    path_item = section.street_network.path_items.add()
+    path_item.length = 10
+    path_item.cycle_path_type = response_pb2.SeparatedCycleWay
+
 
 def route_response(mode):
     map_mode_dist = {"walking": 200, "car": 50, "bike": 100}
@@ -71,6 +90,7 @@ def route_response(mode):
     journey.duration = duration
     journey.durations.total = duration
     section = journey.sections.add()
+    add_cycle_path_type_in_section(section)
     if mode == "walking":
         journey.durations.walking = duration
         journey.distances.walking = distance
@@ -140,6 +160,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['car'] == 500
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
+        assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
 
         # bike from asgard
         assert 'bike' in response['journeys'][1]['tags']
@@ -149,6 +170,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['durations']['total'] == 1000
         assert response['journeys'][1]['distances']['bike'] == 100
         assert response['journeys'][1]['duration'] == 1000
+        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30
 
         # walking from asgard
         assert 'walking' in response['journeys'][2]['tags']
@@ -158,5 +180,6 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['durations']['total'] == 2000
         assert response['journeys'][2]['distances']['walking'] == 200
         assert response['journeys'][2]['duration'] == 2000
+        assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
