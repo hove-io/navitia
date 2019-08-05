@@ -2079,7 +2079,10 @@ class StreetNetworkBackend(flask_restful.Resource):
 
             if pagination.has_next:
                 pagination_json['next'] = url_for(request.endpoint, page=pagination.next_num)
-            return {'streetnetwork_backends': marshal(pagination.items, streetnetwork_backend_fields), 'pagination': pagination_json}
+            return {
+                'streetnetwork_backends': marshal(pagination.items, streetnetwork_backend_fields),
+                'pagination': pagination_json,
+            }
 
         return {'streetnetwork_backends': resp}
 
