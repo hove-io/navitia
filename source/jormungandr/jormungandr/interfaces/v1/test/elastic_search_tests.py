@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places
@@ -534,6 +534,7 @@ def bragi_make_params_with_instance_test():
     """
     instance = mock.MagicMock()
     instance.name = 'bib'
+    instance.poi_dataset = None
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
     request = {"q": "aa", "count": 20}
@@ -551,8 +552,10 @@ def bragi_make_params_with_multiple_instances_test():
     """
     instance1 = mock.MagicMock()
     instance1.name = 'bib'
+    instance1.poi_dataset = None
     instance2 = mock.MagicMock()
     instance2.name = 'bob'
+    instance2.poi_dataset = None
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
     request = {"q": "aa", "count": 20}
@@ -575,6 +578,24 @@ def bragi_make_params_without_instance_test():
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
     rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100)]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
+
+
+def bragi_make_params_with_instance_and_poi_test():
+    """
+    test of generate params with instance which includes a poi dataset
+    """
+    instance = mock.MagicMock()
+    instance.name = 'bob'
+    instance.poi_dataset = 'priv.bob'
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {"q": "aa", "count": 20}
+
+    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bob'), ('poi_dataset[]', 'priv.bob'), ('timeout', 1000)]
     params.sort()
     rsp.sort()
     assert rsp == params
