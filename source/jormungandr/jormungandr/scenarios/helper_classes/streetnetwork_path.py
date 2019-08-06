@@ -56,7 +56,7 @@ class StreetNetworkPath:
         :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
                          auto completion)
-        :param streetnetwork_service: backend
+        :param streetnetwork_service: service that will be used to compute the path
         :param orig_obj: proto obj
         :param dest_obj: proto obj
         :param mode: street network mode, should be one of ['walking', 'bike', 'bss', 'car']
