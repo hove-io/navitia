@@ -125,6 +125,8 @@ class DockerWrapper(object):
                     path=self.dockerfile_path, tag=image_name, rm=True
                 ):
                     logger.debug(build_output)
+            else:
+                self.docker_client.images.pull(image_name)
 
         except docker.errors.APIError as e:
             if e.is_server_error():
