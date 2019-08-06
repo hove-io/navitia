@@ -684,15 +684,6 @@ class Instance(object):
     def get_all_street_networks(self):
         return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
 
-    def get_street_network_routing_matrix(
-        self, origins, destinations, mode, max_duration_to_pt, request, service, **kwargs
-    ):
-        if not service:
-            return None
-        return service.get_street_network_routing_matrix(
-            origins, destinations, mode, max_duration_to_pt, request, **kwargs
-        )
-
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
             return self.autocomplete

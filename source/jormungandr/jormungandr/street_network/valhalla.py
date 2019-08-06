@@ -278,7 +278,14 @@ class Valhalla(AbstractStreetNetworkService):
             raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.format(response.url))
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         data = self._make_request_arguments(
             mode, [pt_object_origin], [pt_object_destination], request, api='route'
@@ -321,7 +328,9 @@ class Valhalla(AbstractStreetNetworkService):
                     routing.routing_status = response_pb2.unknown
         return sn_routing_matrix
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+    ):
         # for now valhalla only manages 1-n request, so we reverse request if needed
         if len(origins) > 1:
             if len(destinations) > 1:
