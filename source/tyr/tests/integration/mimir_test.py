@@ -36,6 +36,14 @@ from tyr import tasks
 
 
 @pytest.fixture
+def enable_mimir():
+    previous_value = app.config['MIMIR_URL']
+    app.config['MIMIR_URL'] = 'http://example.com'
+    yield
+    app.config['MIMIR_URL'] = previous_value
+
+
+@pytest.fixture
 def create_instance():
     with app.app_context():
         instance = models.Instance('fr')
@@ -45,7 +53,7 @@ def create_instance():
         return instance.id
 
 
-def test_mimir_family_type_not_applicable(create_instance):
+def test_mimir_family_type_not_applicable(create_instance, enable_mimir):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -53,7 +61,7 @@ def test_mimir_family_type_not_applicable(create_instance):
         assert actions == []
 
 
-def test_mimir_family_type_poi(create_instance):
+def test_mimir_family_type_poi(create_instance, enable_mimir):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -63,10 +71,18 @@ def test_mimir_family_type_poi(create_instance):
         assert len(actions) == 2  # poi2mimir + finish
 
 
-def test_mimir_ntfs_false(create_instance):
+def test_mimir_ntfs_false(create_instance, enable_mimir):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         instance.import_ntfs_in_mimir = False
         actions = []
         actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'poi'))
         assert actions == []
+
+
+def test_mimir_family_type_poi_mimir_disabled(create_instance):
+    with app.app_context():
+        instance = models.Instance.query.get(create_instance)
+        actions = []
+        actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'poi'))
+        assert len(actions) == 0
