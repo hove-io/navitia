@@ -482,3 +482,18 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
     }
 }
+
+BOOST_AUTO_TEST_CASE(grid_rel_calendar_line_retrocompatibilty_tests) {
+    // For backward compatibility
+    // grid_rel_calendar_line.txt file contains "line_external_code"
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path + "_dst");
+        parser.fill(data);
+        BOOST_REQUIRE_EQUAL(data.calendars.size(), 6);
+        // Test only one, it's the same logic for the 6 calendars
+        BOOST_CHECK_EQUAL(data.calendars[0]->uri, "REG_LaV");
+        BOOST_CHECK_EQUAL(data.calendars[0]->line_list.size(), 1);
+        BOOST_CHECK_EQUAL(data.calendars[0]->line_list[0]->uri, "Nav55");
+    }
+}
