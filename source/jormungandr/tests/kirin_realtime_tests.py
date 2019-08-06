@@ -616,7 +616,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222']  # pt_walk + vj 18:01
         assert get_used_vj(new_response), [[] == ['vjB']]
 
-        # it should not have changed anything for the theoric
+        # it should not have changed anything for the base-schedule
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
         assert get_used_vj(new_base), [['vjA'] == []]
@@ -1987,7 +1987,7 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         assert status == 404
         assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
 
-        # The following ptref search should work with theorical data.
+        # The following ptref search should work with base-schedule data.
         # network <-> datasets
         resp = self.query_region("networks/base_network/datasets")
         assert resp["datasets"][0]["id"] == "default:dataset"
