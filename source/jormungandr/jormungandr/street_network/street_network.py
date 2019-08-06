@@ -66,10 +66,23 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         pass
 
     def direct_path_with_fp(
-        self, instance, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type,
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         resp = self._direct_path(
-            instance, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+            instance,
+            mode,
+            pt_object_origin,
+            pt_object_destination,
+            fallback_extremity,
+            request,
+            direct_path_type,
         )
 
         self._add_feed_publisher(resp)
@@ -77,7 +90,14 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
 
     @abc.abstractmethod
     def _direct_path(
-        self, instance, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type,
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)

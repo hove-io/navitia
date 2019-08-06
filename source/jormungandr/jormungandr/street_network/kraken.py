@@ -69,7 +69,14 @@ class Kraken(AbstractStreetNetworkService):
         return response
 
     def _direct_path(
-        self, instance, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         """
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
