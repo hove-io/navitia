@@ -1641,7 +1641,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         base_journey_query = B_C_query + "&data_freshness=realtime&_current_datetime=20120614T080000"
 
         # There is a public transport from B to C with realtime having only two stop_date_times
-        # as the stop deleted for detour should not be displayed
+        # as the deleted-for-detour stop should not be displayed
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 2
         assert response['journeys'][0]['status'] == 'DETOUR'
@@ -1970,7 +1970,7 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         1. Test all possibles ptref calls with/without filters before adding a new trip
         2. Test all possibles ptref calls with/without filters after adding a new trip
         3. Test all possibles ptref calls with/without filters after modifying the recently added trip
-        Note: physical_mode is present in gtfs-rt where as for network and commercial_mode default value is used
+        Note: physical_mode is present in gtfs-rt whereas for network and commercial_mode default value is used
         """
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)

@@ -189,19 +189,19 @@ BOOST_AUTO_TEST_CASE(make_request_since_until) {
     assert_since_until(Type_e::Line, "", "", "", RTLevel::Base, "all");
     assert_since_until(Type_e::Line, "", "20180714T1337", "20180714T1338", RTLevel::Base, "all");
     assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "20180714T1338", RTLevel::Base,
-                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z", "base")))");
+                       R"((all AND vehicle_journey.between("20180714T133700Z", "20180714T133800Z", "base_schedule")))");
     assert_since_until(Type_e::VehicleJourney, "", "20180714T1337", "", RTLevel::RealTime,
                        R"((all AND vehicle_journey.since("20180714T133700Z", "realtime")))");
     assert_since_until(Type_e::VehicleJourney, "", "", "20180714T1338", RTLevel::Base,
-                       R"((all AND vehicle_journey.until("20180714T133800Z", "base")))");
+                       R"((all AND vehicle_journey.until("20180714T133800Z", "base_schedule")))");
     assert_since_until(Type_e::Impact, "", "20180714T1337", "20180714T1338", RTLevel::RealTime,
-                       R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z", "realtime")))");
+                       R"((all AND disruption.between("20180714T133700Z", "20180714T133800Z")))");
     assert_since_until(Type_e::Impact, "", "20180714T1337", "", RTLevel::Base,
-                       R"((all AND disruption.since("20180714T133700Z", "base")))");
+                       R"((all AND disruption.since("20180714T133700Z")))");
     assert_since_until(Type_e::Impact, "", "", "20180714T1338", RTLevel::Base,
-                       R"((all AND disruption.until("20180714T133800Z", "base")))");
+                       R"((all AND disruption.until("20180714T133800Z")))");
     assert_since_until(Type_e::Impact, "all or all", "", "20180714T1338", RTLevel::Adapted,
-                       R"(((all OR all) AND disruption.until("20180714T133800Z", "adapted")))");
+                       R"(((all OR all) AND disruption.until("20180714T133800Z")))");
 }
 
 static void assert_forbidden(const Type_e requested_type,
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(make_request_since_forbidden_uris) {
                                   boost::posix_time::from_iso_string("20180714T1337"), {}, {}, *b.data);
     assert_expr(
         req,
-        R"((((all OR all) AND disruption.since("20180714T133700Z", "base")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
+        R"((((all OR all) AND disruption.since("20180714T133700Z")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
 }
 
 BOOST_AUTO_TEST_CASE(ng_specific_features) {
