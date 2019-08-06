@@ -1554,10 +1554,9 @@ This endpoint gives you access to time tables going through a stop
 point as:
 ![stop_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
 
-The response is made of an array of [stop_schedule](#stop-schedule), and another
-one of [note](#note).
-[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
-You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
+The response is made of an array of [stop_schedule](#stop-schedule), and another one of [note](#note).  
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.  
+Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 See how disruptions affect stop schedules in the [real time](#realtime) section.
 
@@ -1783,14 +1782,13 @@ HTTP/1.1 200 OK
 
 ```
 
-This service provides the state of public transport traffic, grouped by lines and all their stops.
-It can be called for an overall coverage or for a specific object.
+This service provides the state of public transport traffic, grouped by lines and all their stops.  
+It can be called for an overall coverage or for a specific object.  
+Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
 
 <img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 
 ### Parameters
-
-You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
 
 For example:
 
@@ -1954,12 +1952,12 @@ HTTP/1.1 200 OK
 
 Also known as `/traffic_reports` service. We recommand to use line_reports in place of traffic_reports.
 
-This service provides the state of public transport traffic, grouped by network.
-It can be called for an overall coverage or for a specific object.
+This service provides the state of public transport traffic, grouped by network.  
+It can be called for an overall coverage or for a specific object.  
+Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
 
 ### Parameters
 
-You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
 
 For example:
 
@@ -2207,11 +2205,11 @@ HTTP/1.1 200 OK
 
 Also known as the `"/equipment_reports"` service.
 
-This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.
-The endpoint will report accessible equipment per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered per line.
-Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.
-For more information, refer to [Equipment reports](#equipment-reports) API description.
-You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/equipment_reports>
+This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.  
+The endpoint will report accessible equipment per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered per line.  
+Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.  
+For more information, refer to [Equipment reports](#equipment-reports) API description.  
+Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/equipment_reports>
 
 <aside class="warning">
     This feature requires a specific configuration from a equipment service provider.

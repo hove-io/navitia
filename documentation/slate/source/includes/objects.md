@@ -627,7 +627,7 @@ Cities are mainly on the 8 level, dependant on the country
 (<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
 
-### Equipment reports
+### <a name="equipment-reports"></a>Equipment reports
 
 ```json
 "equipment_reports": [
@@ -647,7 +647,7 @@ A list of objects that maps each line with its associated stop area equipments.
 |stop_area_equipments|[stop area equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
 
 
-### Stop area equipments
+### <a name="stop-area-equipments"></a>Stop area equipments
 
 ```json
 "stop_area_equipments": [
@@ -658,15 +658,15 @@ A list of objects that maps each line with its associated stop area equipments.
     ...
 ]
 ```
-A list of objects that maps equipment details for each stop area.
+A list of objects that maps equipments details for each stop area.
 
 |Field|Type|Description|
 |-----|----|-----------|
 |equipment_details|[Equipment details](#equipment-details)|The equipment details associated with the stop area|
-|stop_area|[Stop Area](#stop-area)|The stop area to which the `equipment_details` are associated |
+|stop_area|[Stop Area](#stop-area)|The stop area to which the `equipment_details` is associated |
 
 
-### Equipment details
+### <a name="equipment-details"></a>Equipment details
 ```json
 "equipment_details": [
     {
@@ -686,7 +686,7 @@ id|string|always|The equipment's unique identifier
 name|string|optional|the equipment's name/description
 
 
-### Equipment availability
+### <a name="equipment-availability"></a>Equipment availability
 
 ```json
 "current_availability": {
@@ -841,7 +841,7 @@ Special Parameters
 
 ### datetime
 
-A date time with the format YYYYMMDDThhmmss, considered local to the coverage used.
+A date time with the format YYYYMMDDThhmmss, considered local to the coverage being used.
 
 #### depth
 
