@@ -1,3 +1,3 @@
-web: ./manage_tyr.py runserver
+web: FLASK_APP=tyr:app FLASK_DEBUG=1 flask run
 worker: celery worker -A tyr.tasks
 scheduler: celery beat -A tyr.tasks

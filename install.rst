@@ -144,7 +144,7 @@ Testing
 
    #. Give him the configuration file (by default it uses source/jormungandr/default_settings.py) and run it
 
-      ``JORMUNGANDR_CONFIG_FILE=your_config.py python manage.py runserver``
+      ``JORMUNGANDR_CONFIG_FILE=your_config.py FLASK_APP=jormungandr:app flask run``
 
    #. Grab a browser and open http://localhost:5000/v1/coverage/default_region
 

@@ -38,7 +38,7 @@ You need to create a *uwsgi_config_file.ini* to run with Jormungandr app.
 [uwsgi]
 plugins = python
 http-socket = :5000
-wsgi-file = manage.py
+wsgi-file = jormungandr:app
 callable = app
 processes = 4
 lazy-apps = True

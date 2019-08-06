@@ -1,5 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_caching.backends.backends import RedisCache as BaseRedisCache
+from flask_caching.backends import RedisCache as BaseRedisCache
 import pybreaker
 import logging
 
