@@ -36,7 +36,7 @@ from tyr.helper import get_instance_logger, wait_or_raise
 
 @manager.command
 def import_last_dataset(
-    instance_name, background=False, reload_kraken=False, custom_output_dir=None, nowait=False
+    instance_name, background=False, reload_kraken=False, custom_output_dir=None, nowait=False, allow_mimir=False
 ):
     """
     reimport the last dataset of a instance
@@ -49,6 +49,9 @@ def import_last_dataset(
 
     """
     instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+    # little trick to keep a flag on the command line: -a enable mimir import,
+    # we reverse it to match import_data
+    skip_mimir = not allow_mimir
 
     if not instance:
         raise Exception("cannot find instance {}".format(instance_name))
@@ -63,6 +66,7 @@ def import_last_dataset(
         async=background,
         reload=reload_kraken,
         custom_output_dir=custom_output_dir,
+        skip_mimir=skip_mimir,
     )
     if not nowait and future:
         wait_or_raise(future)

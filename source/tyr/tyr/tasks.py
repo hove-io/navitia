@@ -77,7 +77,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None):
+def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None, skip_mimir=False):
     """
     import the data contains in the list of 'files' in the 'instance'
 
@@ -157,8 +157,11 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
 
-        for dataset in job.data_sets:
-            actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+        if not skip_mimir:
+            for dataset in job.data_sets:
+                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+        else:
+            current_app.logger.info("skipping mimir import")
 
         actions.append(finish_job.si(job.id))
         if async:
