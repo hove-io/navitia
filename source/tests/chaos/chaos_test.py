@@ -29,7 +29,9 @@
 
 from __future__ import absolute_import, print_function, division
 from contextlib import closing
+from navitiacommon.launch_exec import launch_exec_traces
 from testscommon.docker_wrapper import PostgresDocker
+import logging
 import docker
 import pytest
 import psycopg2

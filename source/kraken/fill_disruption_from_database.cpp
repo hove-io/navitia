@@ -40,8 +40,8 @@ www.navitia.io
 namespace navitia {
 
 void fill_disruption_from_database(const std::string& connection_string,
-                                   type::PT_Data& pt_data,
-                                   type::MetaData& meta,
+                                   const boost::gregorian::date_period& production_date,
+                                   DisruptionDatabaseReader& reader,
                                    const std::vector<std::string>& contributors) {
     std::unique_ptr<pqxx::connection> conn;
     conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
@@ -49,7 +49,6 @@ void fill_disruption_from_database(const std::string& connection_string,
     pqxx::work work(*conn, "loading disruptions");
 
     size_t offset = 0, items_per_request = 1000;
-    DisruptionDatabaseReader reader(pt_data, meta);
     pqxx::result result;
     std::string contributors_array = boost::algorithm::join(contributors, ", ");
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), "Reading disruptions from database");
@@ -160,8 +159,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "     ORDER BY d.id, c.id, t.id, i.id, m.id, ch.id, cht.id"
                  "     LIMIT %i OFFSET %i"
                  " ;")
-             % meta.production_date.end() % meta.production_date.begin() % meta.production_date.end()
-             % contributors_array % items_per_request % offset)
+             % production_date.end() % production_date.begin() % production_date.end() % contributors_array
+             % items_per_request % offset)
                 .str();
         result = work.exec(request);
         for (auto res : result) {
@@ -188,7 +187,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                        "     AND i.status = 'published'"
                        "   GROUP BY d.id"
                        " ;")
-         % meta.production_date.end() % meta.production_date.begin() % meta.production_date.end() % contributors_array)
+         % production_date.end() % production_date.begin() % production_date.end() % contributors_array)
             .str();
     count = work.exec(request);
     for (auto ct : count) {
@@ -203,7 +202,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
 void DisruptionDatabaseReader::finalize() {
     if (disruption && disruption->id() != "") {
-        make_and_apply_disruption(*disruption, pt_data, meta);
+        disruption_callback(*disruption, pt_data, meta);
     }
     pt_data.clean_weak_impacts();
 }

@@ -53,13 +53,14 @@ namespace navitia {
     FILL_REQUIRED(table_name, created_at, uint64_t) \
     FILL_NULLABLE(table_name, updated_at, uint64_t)
 
-void fill_disruption_from_database(const std::string& connection_string,
-                                   navitia::type::PT_Data& pt_data,
-                                   navitia::type::MetaData& meta,
-                                   const std::vector<std::string>& contributors);
+using Chaos_disruption_applier = std::function<
+    void(const chaos::Disruption& chaos_disruption, navitia::type::PT_Data& pt_data, const navitia::type::MetaData&)>;
 
 struct DisruptionDatabaseReader {
-    DisruptionDatabaseReader(type::PT_Data& pt_data, const type::MetaData& meta) : pt_data(pt_data), meta(meta) {}
+    DisruptionDatabaseReader(type::PT_Data& pt_data,
+                             const type::MetaData& meta,
+                             Chaos_disruption_applier disruption_callback = make_and_apply_disruption)
+        : pt_data(pt_data), meta(meta), disruption_callback(disruption_callback) {}
 
     std::unique_ptr<chaos::Disruption> disruption = nullptr;
     chaos::Impact* impact = nullptr;
@@ -77,6 +78,7 @@ struct DisruptionDatabaseReader {
     std::set<std::tuple<std::string, std::string>> line_section_route_set;
     type::PT_Data& pt_data;
     const type::MetaData& meta;
+    Chaos_disruption_applier disruption_callback;
 
     // This function and all others below are templated so they can be tested
     template <typename T>
@@ -171,7 +173,7 @@ struct DisruptionDatabaseReader {
     template <typename T>
     void fill_disruption(T const_it) {
         if (disruption) {
-            make_and_apply_disruption(*disruption, pt_data, meta);
+            disruption_callback(*disruption, pt_data, meta);
         }
         disruption = std::make_unique<chaos::Disruption>();
         FILL_TIMESTAMPMIXIN(disruption)
@@ -375,4 +377,10 @@ struct DisruptionDatabaseReader {
         FILL_REQUIRED(property, value, std::string)
     }
 };
+
+void fill_disruption_from_database(const std::string& connection_string,
+                                   const boost::gregorian::date_period& production_date,
+                                   DisruptionDatabaseReader& reader,
+                                   const std::vector<std::string>& contributors);
+
 }  // namespace navitia
