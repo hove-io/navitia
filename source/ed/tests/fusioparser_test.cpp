@@ -141,8 +141,11 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     // check comments
     BOOST_REQUIRE_EQUAL(data.comment_by_id.size(), 2);
-    BOOST_CHECK_EQUAL(data.comment_by_id["bob"], "bob is in the kitchen");
-    BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], "test comment");
+    nt::Comment bob, bobette;
+    bob.value = "bob is in the kitchen";
+    bobette.value = "test comment";
+    BOOST_CHECK_EQUAL(data.comment_by_id["bob"], bob);
+    BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], bobette);
 
     // 7 objects have comments
     // the file contains wrongly formated comments, but they are skiped

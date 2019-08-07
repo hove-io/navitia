@@ -39,6 +39,7 @@ struct Comment {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
+    bool operator==(const Comment& other) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Comment& comment);

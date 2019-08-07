@@ -40,6 +40,10 @@ void Comment::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZABLE(Comment)
 
+bool Comment::operator==(const Comment& other) const {
+    return this->value == other.value && this->type == other.type;
+}
+
 std::ostream& operator<<(std::ostream& os, const Comment& comment) {
     return os << comment.value;
 }
