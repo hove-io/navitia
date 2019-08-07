@@ -192,14 +192,20 @@ class add_computed_resources(object):
 
 class complete_links(object):
     # This list should not change
-    EXPECTED_ITEMS = set(['category', 'id', 'internal', 'rel', 'type'])
+    EXPECTED_ITEMS = set(['category', 'id', 'internal', 'rel', 'type', 'comment_type'])
 
     def __init__(self, resource):
         self.resource = resource
 
     def make_and_get_link(self, elem, collect):
         if collect == "notes":
-            return {"id": elem['id'], "category": elem['category'], "value": elem['value'], "type": collect}
+            return {
+                "id": elem['id'],
+                "category": elem['category'],
+                "value": elem['value'],
+                "type": collect,
+                "comment_type": elem.get('comment_type'),
+            }
         type_ = "Add" if elem['except_type'] == 0 else "Remove"
         return {"id": elem['id'], "date": elem['date'], "type": type_}
 

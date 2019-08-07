@@ -342,6 +342,7 @@ def make_notes(notes):
             "category": "comment",
             "id": value.uri,
             "value": value.note,
+            "comment_type": value.type,
             "internal": True,
         }
         for value in notes

@@ -218,6 +218,7 @@ class NoteSerializer(serpy.Serializer):
     id = jsonschema.Field(schema_type=str, display_none=True)
     value = jsonschema.Field(schema_type=str)
     category = jsonschema.Field(schema_type=str, schema_metadata={'enum': ['comment', 'terminus']})
+    comment_type = jsonschema.Field(schema_type=str)
 
 
 class ExceptionSerializer(serpy.Serializer):

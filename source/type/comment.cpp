@@ -40,5 +40,9 @@ void Comment::serialize(Archive& ar, const unsigned int) {
 }
 SERIALIZABLE(Comment)
 
+std::ostream& operator<<(std::ostream& os, const Comment& comment) {
+    return os << comment.value;
+}
+
 }  // namespace type
 }  // namespace navitia

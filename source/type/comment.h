@@ -41,5 +41,7 @@ struct Comment {
     void serialize(Archive& ar, const unsigned int);
 };
 
+std::ostream& operator<<(std::ostream& os, const Comment& comment);
+
 }  // namespace type
 }  // namespace navitia

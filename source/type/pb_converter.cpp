@@ -977,6 +977,15 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopDa
     fill(pb_creator.data->pt_data->comments.get(*st), properties->mutable_notes());
 }
 
+void PbCreator::Filler::fill_pb_object(const nt::Comment* comment, pbnavitia::Note* note) {
+    std::hash<std::string> hash_fn;
+    note->set_uri("note:" + std::to_string(hash_fn(comment->value)));
+    note->set_note(comment->value);
+    if (!comment->type.empty()) {
+        note->set_type(comment->type);
+    }
+}
+
 void PbCreator::Filler::fill_pb_object(const std::string* comment, pbnavitia::Note* note) {
     std::hash<std::string> hash_fn;
     note->set_uri("note:" + std::to_string(hash_fn(*comment)));

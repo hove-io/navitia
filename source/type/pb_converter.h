@@ -440,13 +440,14 @@ private:
         }
 
         template <typename NT, typename PB>
-        void fill_comments(const NT* nt, PB* pb, const std::string& type = "standard") {
+        void fill_comments(const NT* nt, PB* pb) {
             if (nt == nullptr) {
                 return;
             }
             for (const auto& comment : pb_creator.data->pt_data->comments.get(nt)) {
                 auto com = pb->add_comments();
-                com->set_value(comment);
+                auto type = comment.type.empty() ? "standard" : comment.type;
+                com->set_value(comment.value);
                 com->set_type(type);
             }
         }
@@ -502,6 +503,7 @@ private:
         void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);
+        void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
 
         // Used for place
         template <typename T>

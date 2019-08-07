@@ -48,17 +48,11 @@ namespace type {
  */
 struct Comments {
     template <typename T>
-    const std::vector<std::string> get(const T& obj) const {
+    const std::vector<Comment> get(const T& obj) const {
         const auto& c =
             boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
 
-        // TODO return Comment
-        auto& comments = find_or_default(get_as_key(obj), c);
-        std::vector<std::string> result;
-        for (auto& comment : comments) {
-            result.push_back(comment.value);
-        }
-        return result;
+        return find_or_default(get_as_key(obj), c);
     }
 
     template <typename T>
@@ -70,13 +64,18 @@ struct Comments {
         c[get_as_key(obj)].push_back(obj_comment);
     }
 
+    template <typename T>
+    void add(const T& obj, const Comment& comment) {
+        auto& c = boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
+        c[get_as_key(obj)].push_back(comment);
+    }
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& map;
     }
 
 private:
-    // using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
     using comment_list = std::vector<Comment>;
 
     template <typename T>

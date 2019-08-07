@@ -48,6 +48,22 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
+namespace navitia {
+namespace type {
+bool operator==(const std::vector<Comment>& lhs, const std::vector<std::string>& rhs) {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < lhs.size(); ++i) {
+        if (lhs[i].value != rhs[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+}  // namespace type
+}  // namespace navitia
+
 BOOST_AUTO_TEST_CASE(comment_map_test) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150);
