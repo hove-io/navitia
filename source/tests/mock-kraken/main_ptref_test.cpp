@@ -150,13 +150,14 @@ struct data_set {
 
         // we add some comments
         auto& comments = b.data->pt_data->comments;
-        comments.add(b.data->pt_data->routes_map["line:A:0"], "I'm a happy comment");
-        comments.add(b.lines["line:A"], "I'm a happy comment");
-        comments.add(b.sas["stop_area:stop1"], "comment on stop A");
-        comments.add(b.sas["stop_area:stop1"], "the stop is sad");
-        comments.add(b.data->pt_data->stop_points_map["stop_area:stop2"], "hello bob");
-        comments.add(b.data->pt_data->vehicle_journeys[0], "hello");
-        comments.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(), "stop time is blocked");
+        comments.add(b.data->pt_data->routes_map["line:A:0"], nt::Comment("I'm a happy comment", "information"));
+        comments.add(b.lines["line:A"], nt::Comment("I'm a happy comment", "information"));
+        comments.add(b.sas["stop_area:stop1"], nt::Comment("comment on stop A", "information"));
+        comments.add(b.sas["stop_area:stop1"], nt::Comment("the stop is sad", "information"));
+        comments.add(b.data->pt_data->stop_points_map["stop_area:stop2"], nt::Comment("hello bob", "information"));
+        comments.add(b.data->pt_data->vehicle_journeys[0], nt::Comment("hello", "information"));
+        comments.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(),
+                     nt::Comment("stop time is blocked", "on_demand_transport"));
         // Disruption on stoparea
         using btp = boost::posix_time::time_period;
         b.impact(nt::RTLevel::RealTime, "Disruption 1")
@@ -172,7 +173,7 @@ struct data_set {
         lg->main_line = b.lines["line:A"];
         lg->line_list.push_back(b.lines["line:A"]);
         b.lines["line:A"]->line_group_list.push_back(lg);
-        comments.add(lg, "I'm a happy comment");
+        comments.add(lg, nt::Comment("I'm a happy comment", "information"));
         b.data->pt_data->line_groups.push_back(lg);
 
         b.impact(nt::RTLevel::RealTime, "Disruption On line:A")

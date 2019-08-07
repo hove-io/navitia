@@ -146,6 +146,7 @@ class LinkSchema(serpy.Serializer):
     href = StrField()
     value = StrField()
     category = StrField()
+    comment_type = StrField()
 
 
 class DisruptionLinkSerializer(jsonschema.Field):
