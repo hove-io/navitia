@@ -19,7 +19,8 @@ add_custom_target(
 add_custom_command(
     TARGET chaos_tests
     WORKING_DIRECTORY ${CHAOS_TESTS_PATH}
-    COMMAND CHAOS_DB_TESTS_BUILD_DIR=${CHAOS_DB_TESTS_BUILD_DIR} py.test ${CHAOS_TESTS_PATH}
+    COMMAND pipenv install
+    COMMAND CHAOS_DB_TESTS_BUILD_DIR=${CHAOS_DB_TESTS_BUILD_DIR} pipenv run py.test ${CHAOS_TESTS_PATH}
     COMMENT "Running Chaos's disruptions tests"
 )
 add_dependencies(docker_test chaos_tests)
