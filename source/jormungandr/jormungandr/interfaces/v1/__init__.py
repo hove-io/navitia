@@ -51,7 +51,7 @@ def add_common_status(response, instance):
     response['status']['street_networks'] = []
     street_networks = instance.get_all_street_networks()
     # street_networks is a list if it comes from the Json
-    if type(street_networks) == list:
+    if isinstance(street_networks, list):
         for sn in street_networks:
             response['status']['street_networks'].append(sn.status())
 
