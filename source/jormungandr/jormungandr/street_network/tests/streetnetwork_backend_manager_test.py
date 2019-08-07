@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 import pytest
+from jormungandr.instance import Instance
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from jormungandr.street_network.kraken import Kraken
@@ -395,3 +396,26 @@ def get_street_network_db_test():
         == 'impossible to find a streetnetwork module for instance instance with configuration plopi'
     )
     assert 'TechnicalError' == str(excinfo.typename)
+
+    
+class FakeInstance:
+    def __init__(self):
+        self.street_network_car = "asgard"
+        self.street_network_walking = "asgard"
+        self.street_network_bike = "geovelo"
+        self.street_network_bss = "kraken"
+        self.street_network_ridesharing = None
+        self.street_network_taxi = None
+
+
+def get_all_street_networks_db_test():
+    manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
+    instance = FakeInstance()
+
+    all_sn = manager.get_all_street_networks_db(instance)
+    assert len(all_sn) == 2
+
+    kraken = manager._streetnetwork_backends["kraken"]
+    asgard = manager._streetnetwork_backends["asgard"]
+    assert all_sn[kraken] == ["bss"]
+    assert all_sn[asgard] == ["walking", "car"]
