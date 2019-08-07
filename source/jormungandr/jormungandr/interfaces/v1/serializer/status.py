@@ -119,6 +119,11 @@ class StreetNetworkSerializer(OutsideServiceCommon):
     def get_timeout(self, obj):
         return obj.get('timeout', None)
 
+    backend_class = MethodField(schema_type=str, display_none=False)
+
+    def get_backend_class(self, obj):
+        return obj.get('backend_class', None)
+
 
 class RidesharingServicesSerializer(OutsideServiceCommon):
     pass

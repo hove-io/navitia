@@ -48,7 +48,12 @@ class Ridesharing(AbstractStreetNetworkService):
         self.street_network = utils.create_object(config)
 
     def status(self):
-        return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
+        return {
+            'id': unicode(self.sn_system_id),
+            'class': self.__class__.__name__,
+            'modes': self.modes,
+            'backend_class': self.street_network.__class__.__name__,
+        }
 
     def _direct_path(
         self,
