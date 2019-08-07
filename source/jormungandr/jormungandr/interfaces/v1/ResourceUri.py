@@ -199,13 +199,10 @@ class complete_links(object):
 
     def make_and_get_link(self, elem, collect):
         if collect == "notes":
-            return {
-                "id": elem['id'],
-                "category": elem['category'],
-                "value": elem['value'],
-                "type": collect,
-                "comment_type": elem.get('comment_type'),
-            }
+            note = {"id": elem['id'], "category": elem['category'], "value": elem['value'], "type": collect}
+            if 'comment_type' in elem:
+                note['comment_type'] = elem['comment_type']
+            return note
         type_ = "Add" if elem['except_type'] == 0 else "Remove"
         return {"id": elem['id'], "date": elem['date'], "type": type_}
 

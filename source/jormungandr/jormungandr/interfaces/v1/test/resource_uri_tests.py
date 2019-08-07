@@ -98,7 +98,7 @@ def test_complete_links():
     assert len(response["exceptions"]) == 2
     assert len(response["notes"]) == 1
     for item in response["notes"][0].keys():
-        assert item in ["category", "type", "id", "value"]
+        assert item in ["category", "type", "id", "value", "comment_type"]
 
     for exception in response["exceptions"]:
         for item in exception.keys():
