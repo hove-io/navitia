@@ -144,6 +144,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     nt::Comment bob, bobette;
     bob.value = "bob is in the kitchen";
     bobette.value = "test comment";
+    bobette.type = "ODT";
     BOOST_CHECK_EQUAL(data.comment_by_id["bob"], bob);
     BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], bobette);
 
