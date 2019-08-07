@@ -62,7 +62,7 @@ def chaos_db_docker(postgres_docker):
 
 
 def test_loading_disruption_from_chaos(chaos_db_docker):
-    chaos_tests_dir = os.getenv('CHAOS_TESTS_DIR', '.')
+    chaos_tests_dir = os.getenv('CHAOS_DB_TESTS_BUILD_DIR', '.')
     chaos_tests_exec = normpath(join(chaos_tests_dir, 'chaos_db_tests'))
 
     assert isfile(chaos_tests_exec), "Couldn't find test executable : {}".format(chaos_tests_exec)
