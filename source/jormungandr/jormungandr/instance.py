@@ -693,7 +693,10 @@ class Instance(object):
             return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
 
     def get_all_street_networks(self):
-        return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
+        if app.config[str('DISABLE_DATABASE')]:
+            return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
+        else:
+            return self._streetnetwork_backend_manager.get_all_street_networks_db(self)
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:

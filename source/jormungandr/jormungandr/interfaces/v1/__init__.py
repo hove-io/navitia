@@ -49,8 +49,18 @@ def add_common_status(response, instance):
         response['status']['realtime_proxies'].append(realtime_proxy.status())
 
     response['status']['street_networks'] = []
-    for sn in instance.get_all_street_networks():
-        response['status']['street_networks'].append(sn.status())
+    street_networks = instance.get_all_street_networks()
+    # street_networks is a list if it comes from the Json
+    if type(street_networks) == list:
+        for sn in street_networks:
+            response['status']['street_networks'].append(sn.status())
+
+    # else it is a dict if it comes from the database
+    else:
+        for sn, modes in street_networks.iteritems():
+            sn_status = sn.status()
+            sn_status["modes"] = modes
+            response['status']['street_networks'].append(sn_status)
 
     response['status']['ridesharing_services'] = []
     for rs in instance.ridesharing_services:

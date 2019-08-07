@@ -30,20 +30,24 @@
 from jormungandr import utils
 from jormungandr import fallback_modes as fm
 from jormungandr.exceptions import TechnicalError
+from jormungandr.instance import Instance
+from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from importlib import import_module
-
 from collections import defaultdict
 import logging, itertools, copy, datetime
+from typing import Any, Dict, List, Mapping, Optional
 
 
 class StreetNetworkBackendManager(object):
     def __init__(self, sn_backends_getter=None, update_interval=60):
         self.logger = logging.getLogger(__name__)
-        # dict { "instance" : [street_network_backends] }
-        self._streetnetwork_backends_by_instance_legacy = defaultdict(list)
+        self._streetnetwork_backends_by_instance_legacy = defaultdict(
+            list
+        )  # type: Dict[Instance, List[AbstractStreetNetworkService]]
         self._sn_backends_getter = sn_backends_getter
-        self._streetnetwork_backends = {}
-        self._streetnetwork_backends_last_update = {}
+        self._streetnetwork_backends = {}  # type: Dict[str, AbstractStreetNetworkService]
+        self._streetnetwork_backends_last_update = {}  # type: Dict[str, datetime]
         self._last_update = datetime.datetime(1970, 1, 1)
         self._update_interval = update_interval
 
@@ -54,6 +58,7 @@ class StreetNetworkBackendManager(object):
     # For street network modes that are not set in the given config file,
     # we set kraken as their default engine
     def _append_default_street_network_to_config(self, instance_configuration):
+        # type: (Any) -> List[Dict[str, Dict[str, Any]]]
         if not isinstance(instance_configuration, list):
             instance_configuration = []
 
@@ -86,6 +91,7 @@ class StreetNetworkBackendManager(object):
         return instance_configuration
 
     def _create_street_network_backends(self, instance, instance_configuration):
+        # type: (Instance, List[Dict[str, Any]]) -> None
         for config in instance_configuration:
             # Set default arguments
             if 'args' not in config:
@@ -106,6 +112,7 @@ class StreetNetworkBackendManager(object):
             )
 
     def _create_backend_from_db(self, sn_backend, instance):
+        # type: (StreetNetworkBackend, Instance) -> AbstractStreetNetworkService
         config = {"class": sn_backend.klass, "args": sn_backend.args}
         config['args'].setdefault('service_url', None)
         config['args'].setdefault('instance', instance)
@@ -113,6 +120,7 @@ class StreetNetworkBackendManager(object):
         return utils.create_object(config)
 
     def _update_sn_backend(self, sn_backend, instance):
+        # type: (StreetNetworkBackend, Instance) -> None
         self.logger.info('Updating / Adding {} streetnetwork backend'.format(sn_backend.id))
         try:
             self._streetnetwork_backends[sn_backend.id] = self._create_backend_from_db(sn_backend, instance)
@@ -121,6 +129,7 @@ class StreetNetworkBackendManager(object):
             self.logger.exception('impossible to initialize streetnetwork backend')
 
     def _update_config(self, instance):
+        # type: (Instance) -> None
         """
         Update list of streetnetwork backends from db
         """
@@ -133,7 +142,7 @@ class StreetNetworkBackendManager(object):
         self.logger.debug('Updating streetnetwork backends from db')
         self._last_update = datetime.datetime.utcnow()
 
-        sn_backends = []
+        sn_backends = []  # type: List[StreetNetworkBackend]
         try:
             sn_backends = self._sn_backends_getter()
         except Exception:
@@ -153,6 +162,7 @@ class StreetNetworkBackendManager(object):
                 self._update_sn_backend(sn_backend, instance)
 
     def get_street_network_db(self, instance, streetnetwork_backend_conf):
+        # type: (Instance, StreetNetworkBackend) -> Optional[AbstractStreetNetworkService]
         # Make sure we update the streetnetwork_backends list from the database before returning them
         self._update_config(instance)
 
@@ -165,7 +175,24 @@ class StreetNetworkBackendManager(object):
             )
         return sn
 
+    def get_all_street_networks_db(self, instance):
+        # type: (Instance) -> Dict[AbstractStreetNetworkService, List[str]]
+        self._update_config(instance)
+
+        all_street_networks_with_modes = defaultdict(list)  # type: Dict[AbstractStreetNetworkService, List[str]]
+        for mode in fm.all_fallback_modes:
+            streetnetwork_backend_conf = getattr(instance, "street_network_{}".format(mode))
+            sn = self._streetnetwork_backends.get(
+                streetnetwork_backend_conf, None
+            )  # type: Optional[AbstractStreetNetworkService]
+            if not sn:
+                continue
+            all_street_networks_with_modes[sn].append(mode)
+
+        return all_street_networks_with_modes
+
     def get_street_network_legacy(self, instance, mode, request):
+        # type: (Instance, str, Dict[str, Any]) -> AbstractStreetNetworkService
         overriden_sn_id = request.get('_street_network')
         if overriden_sn_id:
 
@@ -185,4 +212,5 @@ class StreetNetworkBackendManager(object):
         return sn
 
     def get_all_street_networks_legacy(self, instance):
+        # type: (Instance) -> List[AbstractStreetNetworkService]
         return self._streetnetwork_backends_by_instance_legacy[instance]
