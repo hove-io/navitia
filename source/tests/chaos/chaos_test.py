@@ -29,14 +29,13 @@
 
 from __future__ import absolute_import, print_function, division
 from contextlib import closing
-from navitiacommon.launch_exec import launch_exec_traces
 from testscommon.docker_wrapper import PostgresDocker
-import logging
+from os.path import join, normpath, abspath, isfile
+import os
 import docker
 import pytest
 import psycopg2
-import sys
-import os
+import subprocess
 
 
 @pytest.yield_fixture(scope="session")
@@ -45,23 +44,29 @@ def postgres_docker():
     a docker providing a database is started once for all tests
     """
     sql_mount = docker.types.Mount(
-        "/docker-entrypoint-initdb.d/chaos_loading.sql", os.path.abspath("chaos_loading.sql"), type="bind"
+        "/docker-entrypoint-initdb.d/chaos_loading.sql", abspath("chaos_loading.sql"), type="bind"
     )
     with closing(PostgresDocker("chaos_loading", mounts=[sql_mount])) as chaos_docker:
         yield chaos_docker
 
 
 @pytest.fixture(scope="session")
-def chaos_db(postgres_docker):
+def chaos_db_docker(postgres_docker):
     """
     when the docker is started, we init a chaos db based on a snapshot
     """
     db_cnx_params = postgres_docker.get_db_params().old_school_cnx_string()
     with psycopg2.connect(db_cnx_params) as conn:
         with conn.cursor() as cursor:
-            yield cursor
+            yield {'db': cursor, 'connection_str': db_cnx_params}
 
 
-def test_loading_chaos(chaos_db):
-    chaos_db.execute("SELECT * FROM line_section;")
-    print(chaos_db.fetchone())
+def test_loading_disruption_from_chaos(chaos_db_docker):
+    chaos_tests_dir = os.getenv('CHAOS_TESTS_DIR', '.')
+    chaos_tests_exec = normpath(join(chaos_tests_dir, 'chaos_db_tests'))
+
+    assert isfile(chaos_tests_exec), "Couldn't find test executable : {}".format(chaos_tests_exec)
+
+    # Give the cpp test a connection string to the db
+    os.environ['CHAOS_DB_CONNECTION_STR'] = chaos_db_docker['connection_str']
+    assert subprocess.check_call([chaos_tests_exec]) == 0
