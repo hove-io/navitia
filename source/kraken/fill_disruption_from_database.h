@@ -53,13 +53,13 @@ namespace navitia {
     FILL_REQUIRED(table_name, created_at, uint64_t) \
     FILL_NULLABLE(table_name, updated_at, uint64_t)
 
-using Chaos_disruption_applier = std::function<
+using ChaosDisruptionApplier = std::function<
     void(const chaos::Disruption& chaos_disruption, navitia::type::PT_Data& pt_data, const navitia::type::MetaData&)>;
 
 struct DisruptionDatabaseReader {
     DisruptionDatabaseReader(type::PT_Data& pt_data,
                              const type::MetaData& meta,
-                             Chaos_disruption_applier disruption_callback = make_and_apply_disruption)
+                             ChaosDisruptionApplier disruption_callback = make_and_apply_disruption)
         : pt_data(pt_data), meta(meta), disruption_callback(disruption_callback) {}
 
     std::unique_ptr<chaos::Disruption> disruption = nullptr;
@@ -78,7 +78,7 @@ struct DisruptionDatabaseReader {
     std::set<std::tuple<std::string, std::string>> line_section_route_set;
     type::PT_Data& pt_data;
     const type::MetaData& meta;
-    Chaos_disruption_applier disruption_callback;
+    ChaosDisruptionApplier disruption_callback;
 
     // This function and all others below are templated so they can be tested
     template <typename T>
