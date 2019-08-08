@@ -457,13 +457,11 @@ def shared_section_generator(journey):
             yield "origin:{}/dest:{}".format(s.origin.uri, s.destination.uri)
 
 
-def fallback_duration(journey, transfer_penalty):
+def fallback_duration(journey):
     duration = 0
     for section in journey.sections:
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY, response_pb2.TRANSFER):
+        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
             duration += section.duration
-        if section.type == response_pb2.TRANSFER:
-            duration += transfer_penalty
 
     return duration
 
@@ -513,7 +511,7 @@ def _debug_journey(journey):
             dep=_datetime_to_str(journey.departure_date_time),
             arr=_datetime_to_str(journey.arrival_date_time),
             duration=datetime.timedelta(seconds=journey.duration),
-            fallback=datetime.timedelta(seconds=fallback_duration(journey, 0)),
+            fallback=datetime.timedelta(seconds=fallback_duration(journey)),
             sec=" - ".join(sections),
         )
     )
@@ -614,9 +612,8 @@ def _get_worst_similar(j1, j2, request):
     if j1.duration != j2.duration:
         return j1 if j1.duration > j2.duration else j2
 
-    transfer_penalty = request.get('_walking_transfer_penalty', 120)
-    if fallback_duration(j1, transfer_penalty) != fallback_duration(j2, transfer_penalty):
-        return j1 if fallback_duration(j1, transfer_penalty) > fallback_duration(j2, transfer_penalty) else j2
+    if fallback_duration(j1) != fallback_duration(j2):
+        return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
 
     if get_nb_connections(j1) != get_nb_connections(j2):
         return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
