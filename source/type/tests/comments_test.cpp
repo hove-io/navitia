@@ -73,15 +73,16 @@ BOOST_AUTO_TEST_CASE(comment_map_test) {
     nt::Comments& comments_container = b.data->pt_data->comments;
 
     const nt::Line* l = b.data->pt_data->lines[0];
-    comments_container.add(l, "bob");
+    comments_container.add(l, nt::Comment("bob", "information"));
     nt::Line* l2 = b.data->pt_data->lines[0];  // to test with const or no const type
-    comments_container.add(l2, "bobette");
+    comments_container.add(l2, nt::Comment("bobette", "information"));
 
-    comments_container.add(b.data->pt_data->stop_areas[0], "sabob");
-    comments_container.add(b.data->pt_data->stop_points[0], "spbob");
-    comments_container.add(b.data->pt_data->vehicle_journeys[0], "vj com");
+    comments_container.add(b.data->pt_data->stop_areas[0], nt::Comment("sabob", "information"));
+    comments_container.add(b.data->pt_data->stop_points[0], nt::Comment("spbob", "information"));
+    comments_container.add(b.data->pt_data->vehicle_journeys[0], nt::Comment("vj com", "information"));
 
-    comments_container.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(), "st com");
+    comments_container.add(b.data->pt_data->vehicle_journeys[0]->stop_time_list.front(),
+                           nt::Comment("st com", "information"));
 
     std::vector<std::string> expected = {"bob", "bobette"};
     BOOST_CHECK_EQUAL(comments_container.get(b.data->pt_data->lines[0]), expected);

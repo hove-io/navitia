@@ -56,15 +56,6 @@ struct Comments {
     }
 
     template <typename T>
-    void add(const T& obj, const std::string& comment) {
-        auto& c = boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
-        // TODO take Comment as input
-        auto obj_comment = Comment();
-        obj_comment.value = comment;
-        c[get_as_key(obj)].push_back(obj_comment);
-    }
-
-    template <typename T>
     void add(const T& obj, const Comment& comment) {
         auto& c = boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
         c[get_as_key(obj)].push_back(comment);
