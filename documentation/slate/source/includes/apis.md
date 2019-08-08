@@ -1439,7 +1439,7 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 Required | Name               | Type      | Description                                                                              | Default Value
 ---------|--------------------|-----------|------------------------------------------------------------------------------------------|--------------
-nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    |
+nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    | the current datetime
 nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
 nop      | depth              | int       | Json response [depth](#depth)                                                            | 1
 nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
@@ -1572,7 +1572,7 @@ See how disruptions affect stop schedules in the [real time](#realtime) section.
 
 Required | Name               | Type                            | Description        | Default Value
 ---------|--------------------|---------------------------------|--------------------|--------------
-nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
+nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules | the current datetime
 nop      | duration           | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
 nop      | depth              | int                             | Json response [depth](#depth) | 1
 nop      | forbidden_uris[]   | id                              | If you want to avoid lines, modes, networks, etc.    |
