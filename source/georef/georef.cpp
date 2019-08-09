@@ -236,7 +236,6 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
 }
 
 type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
-    assert(inversed_nb_vertex_by_mode);
     return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
 
