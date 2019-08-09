@@ -250,8 +250,6 @@ struct GeoRef {
     /// number of vertex by transportation mode
     nt::idx_t nb_vertex_by_mode = 0;
 
-    // this number is used to avoid division operations
-    float inversed_nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
 
@@ -272,8 +270,6 @@ struct GeoRef {
         graph.clear();
         ar& ways& way_map& graph& offsets& fl_admin& fl_way& projected_stop_points& admins& admin_map& pois& fl_poi&
             poitypes& poitype_map& poi_map& synonyms& ghostwords& poi_proximity_list& nb_vertex_by_mode;
-
-        compute_inversed_nb_vertex_by_mode();
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -338,9 +334,6 @@ struct GeoRef {
     /// get the transportation mode of the vertex
     type::Mode_e get_mode(const vertex_t& vertex) const;
     PathItem::TransportCaracteristic get_caracteristic(const edge_t& edge) const;
-
-    // Compute the inversed nb_vertex_by_mode for the sake of performance
-    void compute_inversed_nb_vertex_by_mode();
 
     ~GeoRef();
     GeoRef() = default;
