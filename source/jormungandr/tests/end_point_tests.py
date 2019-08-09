@@ -165,6 +165,8 @@ class TestEndPoint(AbstractTestFixture):
         assert len(json_response['warnings']) == 1
         json_response['warnings'][0]['id'] == 'beta_endpoint'
 
+        assert 'street_networks' in json_response['status']
+
     def test_geo_status(self):
         response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)
         self.check_context(response)
