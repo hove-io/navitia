@@ -115,11 +115,10 @@ class OutsideServiceCommon(serpy.DictSerializer):
 class StreetNetworkSerializer(OutsideServiceCommon):
     modes = StringListField(display_none=True)
     timeout = MethodField(schema_type=float, display_none=False)
+    backend_class = MethodField(schema_type=str, display_none=False)
 
     def get_timeout(self, obj):
         return obj.get('timeout', None)
-
-    backend_class = MethodField(schema_type=str, display_none=False)
 
     def get_backend_class(self, obj):
         return obj.get('backend_class', None)
