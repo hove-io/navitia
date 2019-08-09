@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import collections
+
 __all__ = [
     'Uri',
     'Coverage',
@@ -50,17 +52,16 @@ def add_common_status(response, instance):
 
     response['status']['street_networks'] = []
     street_networks = instance.get_all_street_networks()
-    # street_networks is a list if it comes from the Json
-    if isinstance(street_networks, list):
-        for sn in street_networks:
-            response['status']['street_networks'].append(sn.status())
-
-    # else it is a dict if it comes from the database
-    else:
+    if isinstance(street_networks, collections.Mapping):
+        # street_networks is a dict if it comes from the database
         for sn, modes in street_networks.iteritems():
             sn_status = sn.status()
             sn_status["modes"] = modes
             response['status']['street_networks'].append(sn_status)
+    else:
+        # else it is a list if it comes from the Json
+        for sn in street_networks:
+            response['status']['street_networks'].append(sn.status())
 
     response['status']['ridesharing_services'] = []
     for rs in instance.ridesharing_services:
