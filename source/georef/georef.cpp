@@ -237,7 +237,7 @@ std::pair<int, double> Way::nearest_number(const nt::GeographicalCoord& coord) c
 
 type::Mode_e GeoRef::get_mode(const vertex_t& vertex) const {
     assert(inversed_nb_vertex_by_mode);
-    return static_cast<type::Mode_e>(vertex * inversed_nb_vertex_by_mode);
+    return static_cast<type::Mode_e>(vertex / nb_vertex_by_mode);
 }
 
 PathItem::TransportCaracteristic GeoRef::get_caracteristic(const edge_t& edge) const {
@@ -363,8 +363,6 @@ void GeoRef::init() {
 
     // each graph has the same number of vertex
     nb_vertex_by_mode = boost::num_vertices(graph);
-
-    compute_inversed_nb_vertex_by_mode();
 
     // we dupplicate the graph for the bike and the car
     for (nt::Mode_e mode : {nt::Mode_e::Bike, nt::Mode_e::Car}) {
@@ -879,16 +877,6 @@ bool GeoRef::add_parking_edges(const type::GeographicalCoord& coord) {
     add_edge(car_v, walking_v, edge, graph);
 
     return true;
-}
-
-void GeoRef::compute_inversed_nb_vertex_by_mode() {
-    // a math trick to handle the round error:
-    // use (N + 0.1)/N^2 instead of 1/N
-    // Warning: The method does has its limit
-    // It works fine when the number of graphs is smaller than 10 and
-    // the number of vertex by mode is smaller than 150000
-    // In pratice, we have 3 graphs (walking, bike, car) and about 10000 vertices per graph
-    inversed_nb_vertex_by_mode = (nb_vertex_by_mode + .1) / pow(nb_vertex_by_mode, 2);
 }
 
 GeoRef::~GeoRef() {
