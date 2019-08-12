@@ -27,8 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import collections
-
 __all__ = [
     'Uri',
     'Coverage',
