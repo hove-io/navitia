@@ -1131,10 +1131,13 @@ void CommentFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
                        "Error while reading " + csv.filename + "  row has column comment for the id : " + row[id_c]);
         return;
     }
-    nt::Comment comment;
-    comment.value = row[comment_c];
+    nt::Comment comment(row[comment_c]);
     if (has_col(type_c, row)) {
-        comment.type = row[type_c];
+        auto type = row[type_c];
+        // if type is empty we keep the default value
+        if (!type.empty()) {
+            comment.type = type;
+        }
     }
     data.comment_by_id[row[id_c]] = comment;
 }

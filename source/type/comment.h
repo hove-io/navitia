@@ -35,7 +35,7 @@ namespace navitia {
 namespace type {
 struct Comment {
     std::string value;
-    std::string type;
+    std::string type = "information";
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -43,6 +43,7 @@ struct Comment {
 
     Comment() {}
     Comment(const std::string& value, const std::string& type) : value(value), type(type) {}
+    explicit Comment(const std::string& value) : value(value) {}
 };
 
 std::ostream& operator<<(std::ostream& os, const Comment& comment);

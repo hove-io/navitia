@@ -93,10 +93,7 @@ void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const T& obj, const std::
         comment_id = "comment__" + boost::lexical_cast<std::string>(gtfs_data.comments_id_map.size());
     }
     data.add_pt_object_comment(obj, comment_id);
-    nt::Comment comment_obj;
-    comment_obj.value = comment;
-    comment_obj.type = "information";
-    data.comment_by_id[comment_id] = comment_obj;
+    data.comment_by_id[comment_id] = nt::Comment(comment);
 }
 
 static int default_waiting_duration = 120;

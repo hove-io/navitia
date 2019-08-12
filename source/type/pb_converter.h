@@ -448,7 +448,7 @@ private:
                 auto com = pb->add_comments();
                 auto type = comment.type.empty() ? "information" : comment.type;
                 com->set_value(comment.value);
-                com->set_type(type);
+                com->set_type(comment.type);
             }
         }
 
