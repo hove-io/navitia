@@ -1192,7 +1192,7 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             continue;
         }
 
-       const auto& comment = it->second;
+        const auto& comment = it->second;
 
         if (type_str == "route") {
             cpt_not_found += add_comment(data, obj_id, route_map, comment);
