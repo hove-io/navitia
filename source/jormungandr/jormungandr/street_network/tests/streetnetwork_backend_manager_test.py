@@ -397,15 +397,28 @@ def get_street_network_db_test():
     )
     assert 'TechnicalError' == str(excinfo.typename)
 
-    
-class FakeInstance:
+
+class FakeInstance(Instance):
+    street_network_car = "asgard"
+    street_network_walking = "asgard"
+    street_network_bike = "geovelo"
+    street_network_bss = "kraken"
+    street_network_taxi = None
+    street_network_ridesharing = None
+
     def __init__(self):
-        self.street_network_car = "asgard"
-        self.street_network_walking = "asgard"
-        self.street_network_bike = "geovelo"
-        self.street_network_bss = "kraken"
-        self.street_network_ridesharing = None
-        self.street_network_taxi = None
+        super(FakeInstance, self).__init__(
+            context=None,
+            name="instance",
+            zmq_socket=None,
+            street_network_configurations=[],
+            ridesharing_configurations=None,
+            realtime_proxies_configuration=[],
+            zmq_socket_type=None,
+            autocomplete_type='kraken',
+            instance_equipment_providers=[],
+            streetnetwork_backend_manager=None,
+        )
 
 
 def get_all_street_networks_db_test():
@@ -415,7 +428,11 @@ def get_all_street_networks_db_test():
     all_sn = manager.get_all_street_networks_db(instance)
     assert len(all_sn) == 2
 
-    kraken = manager._streetnetwork_backends["kraken"]
-    asgard = manager._streetnetwork_backends["asgard"]
-    assert all_sn[kraken] == ["bss"]
-    assert all_sn[asgard] == ["walking", "car"]
+    # So that Asgard and kraken are always in the same order
+    all_sn_sorted = sorted(all_sn, key=lambda sn: sn.url)
+
+    assert all_sn_sorted[0].url == "asgard.url"
+    assert sorted(all_sn_sorted[0].modes) == sorted(["walking", "car"])
+
+    assert all_sn_sorted[1].url == "kraken.url"
+    assert all_sn_sorted[1].modes == ["bss"]

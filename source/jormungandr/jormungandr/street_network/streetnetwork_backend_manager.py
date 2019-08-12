@@ -176,9 +176,11 @@ class StreetNetworkBackendManager(object):
         return sn
 
     def get_all_street_networks_db(self, instance):
-        # type: (Instance) -> Dict[AbstractStreetNetworkService, List[str]]
+        # type: (Instance) -> List[AbstractStreetNetworkService]
         self._update_config(instance)
 
+        # Since modes aren't set in the backends when they are retrieved from the db
+        # We have to set them manually here
         all_street_networks_with_modes = defaultdict(list)  # type: Dict[AbstractStreetNetworkService, List[str]]
         for mode in fm.all_fallback_modes:
             streetnetwork_backend_conf = getattr(instance, "street_network_{}".format(mode))
@@ -189,7 +191,10 @@ class StreetNetworkBackendManager(object):
                 continue
             all_street_networks_with_modes[sn].append(mode)
 
-        return all_street_networks_with_modes
+        for sn, modes in all_street_networks_with_modes.iteritems():
+            sn.modes = modes
+
+        return [sn for sn in all_street_networks_with_modes]
 
     def get_street_network_legacy(self, instance, mode, request):
         # type: (Instance, str, Dict[str, Any]) -> AbstractStreetNetworkService
