@@ -982,7 +982,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Comment* comment, pbnavitia::No
     note->set_uri("note:" + std::to_string(hash_fn(comment->value + comment->type)));
     note->set_note(comment->value);
     if (!comment->type.empty()) {
-        note->set_type(comment->type);
+        note->set_comment_type(comment->type);
     }
 }
 

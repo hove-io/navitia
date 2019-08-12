@@ -345,8 +345,8 @@ def make_notes(notes):
             "value": value.note,
             "internal": True,
         }
-        if value.type:
-            note["comment_type"] = value.type
+        if value.comment_type:
+            note["comment_type"] = value.comment_type
         result.append(note)
     return result
 
