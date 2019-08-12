@@ -57,24 +57,31 @@ class StreetNetworkBackendManager(object):
         if not isinstance(instance_configuration, list):
             instance_configuration = []
 
-        kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}}
-        taxi = {'class': 'jormungandr.street_network.Taxi', 'args': {'street_network': kraken}}
-        ridesharing = {'class': 'jormungandr.street_network.Ridesharing', 'args': {'street_network': kraken}}
-
-        default_sn_class = {mode: kraken for mode in fm.all_fallback_modes}
-        # taxi mode's default class is changed to 'taxi' not kraken
-        default_sn_class.update({fm.FallbackModes.taxi.name: taxi})
-        default_sn_class.update({fm.FallbackModes.ridesharing.name: ridesharing})
+        kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}, 'modes': []}
+        taxi = {
+            'class': 'jormungandr.street_network.Taxi',
+            'args': {'street_network': copy.deepcopy(kraken)},
+            'modes': ['taxi'],
+        }
+        ridesharing = {
+            'class': 'jormungandr.street_network.Ridesharing',
+            'args': {'street_network': copy.deepcopy(kraken)},
+            'modes': ['ridesharing'],
+        }
 
         modes_in_configs = set(
             list(itertools.chain.from_iterable(config.get('modes', []) for config in instance_configuration))
         )
+
         modes_not_set = fm.all_fallback_modes - modes_in_configs
 
-        for mode in modes_not_set:
-            config = {"modes": [mode]}
-            config.update(default_sn_class[mode])
-            instance_configuration.append(copy.deepcopy(config))
+        if 'taxi' in modes_not_set:
+            instance_configuration.append(taxi)
+        if 'ridesharing' in modes_not_set:
+            instance_configuration.append(ridesharing)
+
+        kraken['modes'] = [m for m in modes_not_set - {'taxi', 'ridesharing'}]
+        instance_configuration.append(copy.deepcopy(kraken))
 
         return instance_configuration
 

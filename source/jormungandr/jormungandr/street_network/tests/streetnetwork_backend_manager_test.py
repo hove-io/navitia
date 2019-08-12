@@ -261,3 +261,114 @@ def wrong_streetnetwork_backend_test():
     manager._update_config("instance")
     assert not manager._streetnetwork_backends_by_instance_legacy
     assert not manager._streetnetwork_backends
+
+
+def append_default_street_network_to_config_test():
+    manager = StreetNetworkBackendManager(sn_backends_getter=None, update_interval=-1)
+
+    # Kraken is used for all the modes.
+    config_full_default = [
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Taxi',
+            'modes': ['taxi'],
+        },
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Ridesharing',
+            'modes': ['ridesharing'],
+        },
+        {
+            'args': {'timeout': 10},
+            'class': 'jormungandr.street_network.Kraken',
+            'modes': ['car', 'walking', 'bike', 'bss'],
+        },
+    ]
+
+    response = manager._append_default_street_network_to_config(None)
+    assert response == config_full_default
+
+    # Asgard is used for car, Kraken for all the other modes.
+    config_car_asgard = [{'class': 'jormungandr.street_network.Asgard', 'modes': ['car']}]
+    response = manager._append_default_street_network_to_config(config_car_asgard)
+
+    config_asgard_plus_default = [
+        {'class': 'jormungandr.street_network.Asgard', 'modes': ['car']},
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Taxi',
+            'modes': ['taxi'],
+        },
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Ridesharing',
+            'modes': ['ridesharing'],
+        },
+        {
+            'args': {'timeout': 10},
+            'class': 'jormungandr.street_network.Kraken',
+            'modes': ['walking', 'bike', 'bss'],
+        },
+    ]
+    assert response == config_asgard_plus_default
+
+    # Surf is used for surf, Kraken for all the other modes.
+    # Surf stay in the config but is not used.
+    wrong_config = [{'class': 'jormungandr.street_network.Surf', 'modes': ['surf']}]
+    response = manager._append_default_street_network_to_config(wrong_config)
+
+    wrong_plus_default_config = [
+        {'class': 'jormungandr.street_network.Surf', 'modes': ['surf']},
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Taxi',
+            'modes': ['taxi'],
+        },
+        {
+            'args': {
+                'street_network': {
+                    'args': {'timeout': 10},
+                    'class': 'jormungandr.street_network.Kraken',
+                    'modes': [],
+                }
+            },
+            'class': 'jormungandr.street_network.Ridesharing',
+            'modes': ['ridesharing'],
+        },
+        {
+            'args': {'timeout': 10},
+            'class': 'jormungandr.street_network.Kraken',
+            'modes': ['car', 'walking', 'bike', 'bss'],
+        },
+    ]
+    assert response == wrong_plus_default_config
