@@ -374,7 +374,7 @@ def append_default_street_network_to_config_test():
     ]
     assert response == wrong_plus_default_config
 
-    
+
 def get_street_network_db_test():
     manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
 
