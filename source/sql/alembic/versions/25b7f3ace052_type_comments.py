@@ -12,7 +12,6 @@ down_revision = '56c1c7a19078'
 
 from alembic import op
 import sqlalchemy as sa
-import geoalchemy2 as ga
 
 
 def upgrade():

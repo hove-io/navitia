@@ -446,7 +446,7 @@ private:
             }
             for (const auto& comment : pb_creator.data->pt_data->comments.get(nt)) {
                 auto com = pb->add_comments();
-                auto type = comment.type.empty() ? "standard" : comment.type;
+                auto type = comment.type.empty() ? "information" : comment.type;
                 com->set_value(comment.value);
                 com->set_type(type);
             }
