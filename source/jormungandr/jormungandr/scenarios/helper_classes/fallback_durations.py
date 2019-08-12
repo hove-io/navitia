@@ -106,8 +106,6 @@ class FallbackDurations:
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
         try:
-            if not self._streetnetwork_service:
-                return None
             return self._streetnetwork_service.get_street_network_routing_matrix(
                 self._instance,
                 origins,

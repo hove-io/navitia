@@ -32,7 +32,8 @@ from jormungandr.street_network.streetnetwork_backend_manager import StreetNetwo
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
-from jormungandr.exceptions import ConfigException
+from jormungandr.exceptions import ConfigException, TechnicalError
+
 
 import datetime
 
@@ -372,3 +373,25 @@ def append_default_street_network_to_config_test():
         },
     ]
     assert response == wrong_plus_default_config
+
+    
+def get_street_network_db_test():
+    manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
+
+    sn = manager.get_street_network_db("instance", "kraken")
+    assert sn is not None
+    assert sn.timeout == 2
+    assert sn.url == 'kraken.url'
+
+    sn = manager.get_street_network_db("instance", "asgard")
+    assert sn is not None
+    assert sn.timeout == 2
+    assert sn.url == 'asgard.url'
+
+    with pytest.raises(TechnicalError) as excinfo:
+        sn = manager.get_street_network_db("instance", "plopi")
+    assert (
+        str(excinfo.value.data['message'])
+        == 'impossible to find a streetnetwork module for instance instance with configuration plopi'
+    )
+    assert 'TechnicalError' == str(excinfo.typename)
