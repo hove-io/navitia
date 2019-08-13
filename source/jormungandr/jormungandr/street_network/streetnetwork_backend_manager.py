@@ -156,7 +156,14 @@ class StreetNetworkBackendManager(object):
         # Make sure we update the streetnetwork_backends list from the database before returning them
         self._update_config(instance)
 
-        return self._streetnetwork_backends.get(streetnetwork_backend_conf, None)
+        sn = self._streetnetwork_backends.get(streetnetwork_backend_conf, None)
+        if sn is None:
+            raise TechnicalError(
+                'impossible to find a streetnetwork module for instance {} with configuration {}'.format(
+                    instance, streetnetwork_backend_conf
+                )
+            )
+        return sn
 
     def get_street_network_legacy(self, instance, mode, request):
         overriden_sn_id = request.get('_street_network')

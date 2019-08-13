@@ -121,6 +121,7 @@ def test_matrix(valid_here_matrix):
     with requests_mock.Mocker() as req:
         req.get(requests_mock.ANY, json=valid_here_matrix, status_code=200)
         response = here.get_street_network_routing_matrix(
+            instance,
             [origin],
             [destination, destination, destination],
             mode='walking',
@@ -146,6 +147,7 @@ def test_matrix_timeout():
         req.get(requests_mock.ANY, exc=requests.exceptions.Timeout)
         with pytest.raises(TechnicalError):
             here.get_street_network_routing_matrix(
+                instance,
                 [origin],
                 [destination, destination, destination],
                 mode='walking',

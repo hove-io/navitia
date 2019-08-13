@@ -55,10 +55,23 @@ class WithParking(AbstractStreetNetworkService):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         response = self.street_network._direct_path(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+            instance,
+            mode,
+            pt_object_origin,
+            pt_object_destination,
+            fallback_extremity,
+            request,
+            direct_path_type,
         )
         if response and len(response.journeys):
             # Depending of the fallback type(beginning/ending fallback), the parking section's
@@ -114,10 +127,10 @@ class WithParking(AbstractStreetNetworkService):
             journey.nb_sections += 1
 
     def get_street_network_routing_matrix(
-        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
         response = self.street_network.get_street_network_routing_matrix(
-            origins, destinations, street_network_mode, max_duration, request, **kwargs
+            instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
         )
 
         if response and len(response.rows) and len(response.rows[0].routing_response):

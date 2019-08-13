@@ -51,14 +51,27 @@ class Ridesharing(AbstractStreetNetworkService):
         return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
         # a proper way to handle this is to override car_no_park_speed use the ridesharing_speed here
         # copy_request = copy.deepcopy(request)
         # copy_request["car_no_park_speed"] = copy_request["ridesharing_speed"]
         response = self.street_network._direct_path(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+            instance,
+            mode,
+            pt_object_origin,
+            pt_object_destination,
+            fallback_extremity,
+            request,
+            direct_path_type,
         )
         for journey in response.journeys:
             journey.durations.ridesharing = journey.durations.car
@@ -71,14 +84,14 @@ class Ridesharing(AbstractStreetNetworkService):
         return response
 
     def get_street_network_routing_matrix(
-        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
         # a proper way to handle this is to override car_no_park_speed use the ridesharing_speed here
         # copy_request = copy.deepcopy(request)
         # copy_request["car_no_park_speed"] = copy_request["ridesharing_speed"]
         return self.street_network.get_street_network_routing_matrix(
-            origins, destinations, street_network_mode, max_duration, request, **kwargs
+            instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
         )
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):

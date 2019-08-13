@@ -69,7 +69,9 @@ class Asgard(Kraken):
             'asgard_socket': self.asgard_socket,
         }
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+    ):
         speed_switcher = make_speed_switcher(request)
 
         req = self._create_sn_routing_matrix_request(
@@ -101,7 +103,14 @@ class Asgard(Kraken):
         return response
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
