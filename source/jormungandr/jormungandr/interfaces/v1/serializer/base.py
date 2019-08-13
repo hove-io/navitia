@@ -335,8 +335,9 @@ class BetaEndpointsSerializer(serpy.Serializer):
 
 
 def make_notes(notes):
-    return [
-        {
+    result = []
+    for value in notes:
+        note = {
             "type": "notes",
             "rel": "notes",
             "category": "comment",
@@ -344,8 +345,10 @@ def make_notes(notes):
             "value": value.note,
             "internal": True,
         }
-        for value in notes
-    ]
+        if value.comment_type:
+            note["comment_type"] = value.comment_type
+        result.append(note)
+    return result
 
 
 class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):

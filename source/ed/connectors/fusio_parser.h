@@ -208,7 +208,7 @@ struct CommercialModeFusioHandler : public GenericHandler {
 
 struct CommentFusioHandler : public GenericHandler {
     CommentFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, comment_c;
+    int id_c, comment_c, type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"comment_id", "comment_name"}; }

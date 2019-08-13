@@ -1198,12 +1198,12 @@ void EdPersistor::insert_admin_stop_areas(const std::vector<types::AdminStopArea
 }
 
 void EdPersistor::insert_comments(const Data& data) {
-    this->lotus.prepare_bulk_insert("navitia.comments", {"id", "comment"});
+    this->lotus.prepare_bulk_insert("navitia.comments", {"id", "comment", "type"});
     // we store the db id's
     std::map<std::string, unsigned int> comment_bd_ids;
     unsigned int cpt = 0;
     for (const auto& comment : data.comment_by_id) {
-        lotus.insert({std::to_string(cpt), comment.second});
+        lotus.insert({std::to_string(cpt), comment.second.value, comment.second.type});
 
         comment_bd_ids[comment.first] = cpt++;
     }

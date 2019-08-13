@@ -847,6 +847,10 @@ def is_valid_note(note):
     get_not_null(note, "value")
     assert get_not_null(note, "type") == "notes"
     assert get_not_null(note, "category") in ["comment", "terminus"]
+    if note["category"] == "comment":
+        # TODO: migrate realtime proxy to use "terminus" note
+        # assert get_not_null(note, "comment_type")
+        pass
 
 
 def is_valid_places(places, depth_check=1):

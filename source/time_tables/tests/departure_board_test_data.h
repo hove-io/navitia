@@ -217,7 +217,7 @@ struct calendar_fixture {
             b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)("stop2", "16:00"_t, "16:10"_t);
         // Add a comment on the vj
         auto& pt_data = *(b.data->pt_data);
-        pt_data.comments.add(builder_vj.vj, "vj comment");
+        pt_data.comments.add(builder_vj.vj, nt::Comment("vj comment", "on_demand_transport"));
 
         // and wednesday that will not be matched to any cal
         b.vj("line:A", "110010011", "", true, "wednesday")("stop1", "17:00"_t, "17:10"_t)("stop2", "18:00"_t,
@@ -347,7 +347,7 @@ struct calendar_fixture {
         }
 
         // and add a comment on a line
-        pt_data.comments.add(b.lines["line:A"], "walk the line");
+        pt_data.comments.add(b.lines["line:A"], nt::Comment("walk the line", "information"));
 
         auto it_sa = b.sas.find("Tstop3");
         auto it_rt = pt_data.routes_map.find("A:1");

@@ -1117,6 +1117,7 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
 void CommentFusioHandler::init(Data&) {
     id_c = csv.get_pos_col("comment_id");
     comment_c = csv.get_pos_col("comment_name");
+    type_c = csv.get_pos_col("comment_type");
 }
 
 void CommentFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -1130,7 +1131,15 @@ void CommentFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
                        "Error while reading " + csv.filename + "  row has column comment for the id : " + row[id_c]);
         return;
     }
-    data.comment_by_id[row[id_c]] = row[comment_c];
+    nt::Comment comment(row[comment_c]);
+    if (has_col(type_c, row)) {
+        auto type = row[type_c];
+        // if type is empty we keep the default value
+        if (!type.empty()) {
+            comment.type = type;
+        }
+    }
+    data.comment_by_id[row[id_c]] = comment;
 }
 
 void OdtConditionsFusioHandler::init(Data&) {
@@ -1637,7 +1646,7 @@ void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool)
     const auto comment_id = row[comment_id_c];
 
     // for coherence purpose we check that the comment exists
-    std::string comment;
+    nt::Comment comment;
     const auto comment_it = data.comment_by_id.find(comment_id);
     if (comment_it != data.comment_by_id.end()) {
         comment = comment_it->second;

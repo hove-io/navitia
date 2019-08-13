@@ -291,6 +291,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["notes"]) == 1
         assert response["notes"][0]["type"] == "notes"
         assert response["notes"][0]["value"] == "Tstop2"
+        assert response["notes"][0]["category"] == "terminus"
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["type"] == "vehicle_journey"
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["value"] == "vehicle_journey:vj1"
         assert response["stop_schedules"][0]["date_times"][1]["links"][0]["type"] == "vehicle_journey"
@@ -419,6 +420,7 @@ class TestDepartureBoard(AbstractTestFixture):
         schedule_notes = get_real_notes(schedule, response)
         assert len(schedule_notes) == 1
         assert schedule_notes[0]['value'] == 'walk the line'
+        assert schedule_notes[0]['comment_type'] == 'information'
 
         headers = get_not_null(get_not_null(schedule, 'table'), 'headers')
         # there is 4 vjs
@@ -439,6 +441,7 @@ class TestDepartureBoard(AbstractTestFixture):
         all_vj_notes = get_real_notes(all_vj, response)
         assert len(all_vj_notes) == 1
         assert all_vj_notes[0]['value'] == 'vj comment'
+        assert all_vj_notes[0]['comment_type'] == 'on_demand_transport'
 
     def test_routes_schedule_with_calendar(self):
         """

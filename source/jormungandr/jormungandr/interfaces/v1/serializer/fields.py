@@ -146,6 +146,7 @@ class LinkSchema(serpy.Serializer):
     href = StrField()
     value = StrField()
     category = StrField()
+    comment_type = StrField()
 
 
 class DisruptionLinkSerializer(jsonschema.Field):
@@ -218,6 +219,7 @@ class NoteSerializer(serpy.Serializer):
     id = jsonschema.Field(schema_type=str, display_none=True)
     value = jsonschema.Field(schema_type=str)
     category = jsonschema.Field(schema_type=str, schema_metadata={'enum': ['comment', 'terminus']})
+    comment_type = jsonschema.Field(schema_type=str, display_none=False)
 
 
 class ExceptionSerializer(serpy.Serializer):
