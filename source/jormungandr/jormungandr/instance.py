@@ -116,6 +116,7 @@ class Instance(object):
         streetnetwork_backend_manager,
     ):
         self.geom = None
+        self.geojson = None
         self._sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
@@ -648,7 +649,17 @@ class Instance(object):
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
+                self._update_geojson()
         set_request_instance_timezone(self)
+
+    def _update_geojson(self):
+        """construct the geojson object from the shape"""
+        if not self.geom or not self.geom.is_valid:
+            self.geojson = None
+            return
+        # simplify the geom to prevent slow query on bragi
+        geom = self.geom.simplify(tolerance=0.1)
+        self.geojson = geometry.mapping(geom)
 
     def init(self):
         """
