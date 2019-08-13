@@ -7,7 +7,7 @@ Those tests are part of `docker_test` test suite, hence depend on the same requi
 If you haven't set any environment just yet, create a new virtual env with :
 
 ```sh
-pip install -r ../../tyr/requirements.txt -r ../../eitri/requirements.txt
+pip install -r ../../tyr/requirements_dev.txt -r ../../eitri/requirements.txt
 ```
 
 Then invoke from your build directory :
