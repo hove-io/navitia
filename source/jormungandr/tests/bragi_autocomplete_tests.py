@@ -1666,7 +1666,7 @@ class AbstractAutocompletePoiDataset:
         """
 
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&from=3.25;49.84')
             assert m.called
             params = m.request_history[0].qs
@@ -1676,7 +1676,7 @@ class AbstractAutocompletePoiDataset:
     def test_poi_dataset_places_coverage(self):
 
         with requests_mock.Mocker() as m:
-            m.get('https://host_of_bragi/autocomplete', json={})
+            m.post('https://host_of_bragi/autocomplete', json={})
             self.query('v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi')
             assert m.called
 
