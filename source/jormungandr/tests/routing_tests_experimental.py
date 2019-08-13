@@ -28,10 +28,13 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr import app
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
-import operator
+import operator, datetime
 
 """
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
@@ -545,3 +548,45 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         taxi_fallback = next((j for j in response['journeys'] if "taxi" in j['tags']), None)
         assert 'deleted_because_too_short_heavy_mode_fallback' in taxi_fallback['tags']
+
+
+@dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})
+class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
+    def setUp(self):
+        self.old_db_val = app.config['DISABLE_DATABASE']
+        app.config['DISABLE_DATABASE'] = False
+
+    def tearDown(self):
+        app.config['DISABLE_DATABASE'] = self.old_db_val
+
+    def _call_and_check_journeys_on_coverage(self, coverage, query_from, query_to, datetime):
+        query = 'v1/coverage/{coverage}/journeys?from={query_from}&to={query_to}&datetime={datetime}&debug=true'.format(
+            coverage=coverage, query_from=query_from, query_to=query_to, datetime=datetime
+        )
+        response = self.query(query)
+        self.is_valid_journey_response(response, query)
+        assert response['debug']['regions_called'][0] == coverage
+
+    def sn_backends_getter(self):
+        kraken = StreetNetworkBackend(id='kraken')
+        kraken.klass = "jormungandr.street_network.tests.MockKraken"
+        kraken.args = {'timeout': 10}
+        kraken.created_at = datetime.datetime.utcnow()
+
+        return [kraken]
+
+    def test_call_with_two_krakens(self):
+        """
+        Checks that in distributed mode with streetnetwork_backends in database
+        There is no error when multiples krakens are up and we call one of them after an other
+        """
+        manager = StreetNetworkBackendManager(self.sn_backends_getter)
+
+        i_manager.instances["main_routing_test"]._streetnetwork_backend_manager = manager
+        i_manager.instances["min_nb_journeys_test"]._streetnetwork_backend_manager = manager
+
+        self._call_and_check_journeys_on_coverage("main_routing_test", "stopA", "stopB", "20120614T080000")
+        self._call_and_check_journeys_on_coverage(
+            "min_nb_journeys_test", "stop_point:sa1:s1", "stop_point:sa3:s1", "20180309T080000"
+        )
+        self._call_and_check_journeys_on_coverage("main_routing_test", "stopB", "stopC", "20120614T080000")
