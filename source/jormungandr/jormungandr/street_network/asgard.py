@@ -66,7 +66,12 @@ class Asgard(Kraken):
             'id': unicode(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
-            'asgard_socket': self.asgard_socket,
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
         }
 
     def get_street_network_routing_matrix(

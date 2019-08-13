@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 import pytest
+from jormungandr.instance import Instance
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from jormungandr.street_network.kraken import Kraken
@@ -395,3 +396,43 @@ def get_street_network_db_test():
         == 'impossible to find a streetnetwork module for instance instance with configuration plopi'
     )
     assert 'TechnicalError' == str(excinfo.typename)
+
+
+class FakeInstance(Instance):
+    street_network_car = "asgard"
+    street_network_walking = "asgard"
+    street_network_bike = "geovelo"
+    street_network_bss = "kraken"
+    street_network_taxi = None
+    street_network_ridesharing = None
+
+    def __init__(self):
+        super(FakeInstance, self).__init__(
+            context=None,
+            name="instance",
+            zmq_socket=None,
+            street_network_configurations=[],
+            ridesharing_configurations=None,
+            realtime_proxies_configuration=[],
+            zmq_socket_type=None,
+            autocomplete_type='kraken',
+            instance_equipment_providers=[],
+            streetnetwork_backend_manager=None,
+        )
+
+
+def get_all_street_networks_db_test():
+    manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
+    instance = FakeInstance()
+
+    all_sn = manager.get_all_street_networks_db(instance)
+    assert len(all_sn) == 2
+
+    # So that Asgard and kraken are always in the same order
+    all_sn_sorted = sorted(all_sn, key=lambda sn: sn.url)
+
+    assert all_sn_sorted[0].url == "asgard.url"
+    assert sorted(all_sn_sorted[0].modes) == sorted(["walking", "car"])
+
+    assert all_sn_sorted[1].url == "kraken.url"
+    assert all_sn_sorted[1].modes == ["bss"]

@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -601,3 +602,23 @@ def sources_to_targets_valhalla_with_park_cost_test():
         assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
         assert valhalla_response.rows[0].routing_response[2].duration == 1337 + 5 * 60
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+
+def status_test():
+    valhalla = Valhalla(
+        instance=None,
+        service_url='http://bob.com',
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=23,
+    )
+    status = valhalla.status()
+    assert len(status) == 5
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+    assert status['class'] == "Valhalla"
+    assert status['modes'] == ["walking", "bike", "car"]
+    assert status['timeout'] == 23
+    assert len(status['circuit_breaker']) == 3
+    assert status['circuit_breaker']['current_state'] == 'closed'
+    assert status['circuit_breaker']['fail_counter'] == 0
+    assert status['circuit_breaker']['reset_timeout'] == 60
