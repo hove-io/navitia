@@ -473,35 +473,38 @@ class Instance(db.Model):  # type: ignore
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
-        default=default_values.street_network_backend,
+        default=default_values.street_network_car,
     )
     street_network_walking = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
-        default=default_values.street_network_backend,
+        default=default_values.street_network_walking,
     )
     street_network_bike = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
-        default=default_values.street_network_backend,
+        default=default_values.street_network_bike,
     )
     street_network_bss = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
-        default=default_values.street_network_backend,
+        default=default_values.street_network_bss,
     )
 
     street_network_ridesharing = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
         nullable=False,
-        default=default_values.ridesharing_backend,
+        default=default_values.street_network_ridesharing,
     )
     street_network_taxi = db.Column(
-        db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False, default=default_values.taxi_backend
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_taxi,
     )
 
     poi_dataset = db.Column(db.Text, default=None, nullable=True)
