@@ -1,3 +1,26 @@
+navitia2 (2.84.0) unstable; urgency=low
+
+  * Jormun: Update status  <https://github.com/CanalTP/navitia/pull/2922>
+  * Jormun: Fix distributed kraken  <https://github.com/CanalTP/navitia/pull/2921>
+  * Jormun: update bragi test to use shape from coverage  <https://github.com/CanalTP/navitia/pull/2929>
+  * Jormun: restrict bragi autocompletion to the coverage  <https://github.com/CanalTP/navitia/pull/2902>
+  * Handle comment types  <https://github.com/CanalTP/navitia/pull/2924>
+  * Jormun: Multiple krakens were created for all the modes added by default in the conf  <https://github.com/CanalTP/navitia/pull/2928>
+  * PTRef: fix warning "suggest parentheses around arithmetic"  <https://github.com/CanalTP/navitia/pull/2913>
+  * PTRef: Update grammar doc and behavior of param data_freshness for since/until  <https://github.com/CanalTP/navitia/pull/2910>
+  * Fusio2ed: line_id is supported into grid_rel_calendar_line.txt  <https://github.com/CanalTP/navitia/pull/2911>
+  * Doc: Minor doc and miscellaneous fixes  <https://github.com/CanalTP/navitia/pull/2915>
+  * Tyr: do not reimport data in mimir during kraken binarisation  <https://github.com/CanalTP/navitia/pull/2919>
+  * Jormun: migration to flask 1.1  <https://github.com/CanalTP/navitia/pull/2888>
+  * Jormun: Fix double add column poi_dataset  <https://github.com/CanalTP/navitia/pull/2918>
+  * Tyr: API streetnetwork_backends compliant with Tyr V1 part2  <https://github.com/CanalTP/navitia/pull/2914>
+  * Jormun/Tyr: Support private poi in tyr and jormungandr  <https://github.com/CanalTP/navitia/pull/2894>
+  * Kraken: Avoid duplicate fields into last street network section  <https://github.com/CanalTP/navitia/pull/2903>
+  * Jormun: Add cycle lane length  <https://github.com/CanalTP/navitia/pull/2908>
+  * Tyr: Add required default value before downgrade migration  <https://github.com/CanalTP/navitia/pull/2912>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Wed, 14 Aug 2019 10:08:26 +0100
+
 navitia2 (2.83.1) unstable; urgency=low
 
   * Kraken: revmove division optimization for large coverages <https://github.com/CanalTP/navitia/pull/2927>
