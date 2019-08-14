@@ -116,6 +116,7 @@ class Instance(object):
         streetnetwork_backend_manager,
     ):
         self.geom = None
+        self.geojson = None
         self._sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
@@ -478,6 +479,12 @@ class Instance(object):
 
         return d
 
+    @property
+    def poi_dataset(self):
+        # type: () -> Text
+        instance_db = self.get_models()
+        return instance_db.poi_dataset if instance_db else None
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
@@ -642,7 +649,17 @@ class Instance(object):
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
+                self._update_geojson()
         set_request_instance_timezone(self)
+
+    def _update_geojson(self):
+        """construct the geojson object from the shape"""
+        if not self.geom or not self.geom.is_valid:
+            self.geojson = None
+            return
+        # simplify the geom to prevent slow query on bragi
+        geom = self.geom.simplify(tolerance=0.1)
+        self.geojson = geometry.mapping(geom)
 
     def init(self):
         """
@@ -676,16 +693,10 @@ class Instance(object):
             return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
 
     def get_all_street_networks(self):
-        return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
-
-    def get_street_network_routing_matrix(
-        self, origins, destinations, mode, max_duration_to_pt, request, service, **kwargs
-    ):
-        if not service:
-            return None
-        return service.get_street_network_routing_matrix(
-            origins, destinations, mode, max_duration_to_pt, request, **kwargs
-        )
+        if app.config[str('DISABLE_DATABASE')]:
+            return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
+        else:
+            return self._streetnetwork_backend_manager.get_all_street_networks_db(self)
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:

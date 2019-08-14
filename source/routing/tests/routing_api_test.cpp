@@ -1294,13 +1294,14 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     // section 3: PT B->A
     BOOST_CHECK_EQUAL(sections.Get(3).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
     BOOST_CHECK_EQUAL(sections.Get(3).origin().name(), "stop_point:stopB (Condom)");
+    BOOST_REQUIRE_EQUAL(sections.Get(3).destination().stop_point().codes().size(), 5);
     BOOST_CHECK_EQUAL(sections.Get(3).destination().name(), "stop_point:stopA (Condom)");
 
     // section 4: goto R
     BOOST_CHECK_EQUAL(sections.Get(4).type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_CHECK_EQUAL(sections.Get(4).origin().name(), "stop_point:stopA (Condom)");
-    // BOOST_CHECK_EQUAL(sections.Get(4).origin().address().name(), "rue bd");
     BOOST_CHECK_EQUAL(sections.Get(4).destination().address().name(), "rue ag");
+    BOOST_REQUIRE_EQUAL(sections.Get(4).origin().stop_point().codes().size(), 5);
     BOOST_CHECK_EQUAL(sections.Get(4).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
     BOOST_CHECK_EQUAL(sections.Get(4).street_network().duration(), 90);
     const auto pathitems4 = sections.Get(4).street_network().path_items();

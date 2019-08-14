@@ -233,16 +233,16 @@ class TestJourneysDistributed(
             "taxi_speed": instance.taxi_speed,
         }
         service = instance.get_street_network(mode, request)
-        resp = instance.get_street_network_routing_matrix(
-            [origin], [destination], mode, max_duration, request, service, **kwargs
+        resp = service.get_street_network_routing_matrix(
+            instance, [origin], [destination], mode, max_duration, request, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
 
         max_duration = 106
-        resp = instance.get_street_network_routing_matrix(
-            [origin], [destination], mode, max_duration, request, service, **kwargs
+        resp = service.get_street_network_routing_matrix(
+            instance, [origin], [destination], mode, max_duration, request, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0

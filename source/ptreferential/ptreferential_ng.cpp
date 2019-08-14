@@ -157,7 +157,7 @@ struct PtRefGrammar : qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
 
         ident = qi::lexeme[qi::alpha >> *(qi::alnum | qi::char_("_"))];
         str = qi::lexeme[+(qi::alnum | qi::char_("_.:;|-"))]
-            | qi::lexeme['"' > (*(qi::char_ - qi::char_("\"\\") | ('\\' > qi::char_))) > '"'];
+            | qi::lexeme['"' > (*((qi::char_ - qi::char_("\"\\")) | ('\\' > qi::char_))) > '"'];
 
         // clang-format on
     }
@@ -211,20 +211,20 @@ OdtLevel_e odt_level_from_string(const std::string& s) {
 const char* rt_level_to_string(RTLevel rt_level) {
     switch (rt_level) {
         case type::RTLevel::Base:
-            return "base";
+            return "base_schedule";
         case type::RTLevel::Adapted:
-            return "adapted";
+            return "adapted_schedule";
         case type::RTLevel::RealTime:
             return "realtime";
         default:
-            return "base";
+            return "base_schedule";
     }
 }
 
 RTLevel rt_level_from_string(const std::string& s) {
     if (s == "realtime") {
         return RTLevel::RealTime;
-    } else if (s == "adapted") {
+    } else if (s == "adapted_schedule") {
         return RTLevel::Adapted;
     } else {
         return RTLevel::Base;
@@ -254,20 +254,21 @@ struct Eval : boost::static_visitor<Indexes> {
     Indexes operator()(const ast::Empty&) const { return Indexes(); }
     Indexes operator()(const ast::Fun& f) const {
         Indexes indexes;
-        if (f.type == "vehicle_journey" && f.method == "has_headsign" && f.args.size() == 1) {
+        const auto type = type_by_caption(f.type);
+        if (type == Type_e::VehicleJourney && f.method == "has_headsign" && f.args.size() == 1) {
             for (auto vj : data.pt_data->headsign_handler.get_vj_from_headsign(f.args.at(0))) {
                 indexes.insert(vj->idx);
             }
-        } else if (f.type == "vehicle_journey" && f.method == "has_disruption" && f.args.size() == 0) {
+        } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.size() == 0) {
             indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, data);
-        } else if (f.type == "line" && f.method == "code" && f.args.size() == 1) {
+        } else if (type == Type_e::Line && f.method == "code" && f.args.size() == 1) {
             for (auto l : data.pt_data->lines) {
                 if (l->code != f.args[0]) {
                     continue;
                 }
                 indexes.insert(l->idx);
             }
-        } else if (f.type == "line" && f.method == "odt_level" && f.args.size() == 1) {
+        } else if (type == Type_e::Line && f.method == "odt_level" && f.args.size() == 1) {
             const auto level = odt_level_from_string(f.args.at(0));
             for (auto l : data.pt_data->lines) {
                 const auto properties = l->get_odt_properties();
@@ -291,25 +292,30 @@ struct Eval : boost::static_visitor<Indexes> {
                         indexes.insert(l->idx);
                 }
             }
-        } else if (f.type == "disruption"
+        } else if (type == Type_e::Impact
                    && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
             indexes = get_impacts_by_tags(f.args, data);
-        } else if ((f.method == "since" && f.args.size() == 2) || (f.method == "until" && f.args.size() == 2)
-                   || (f.method == "between" && f.args.size() == 3)) {
+        }
+        // since/until/between are available for disruption and vehicle_journey,
+        // but VJ requires the additional param `data_freshness`
+        // so below grammar provides the following methods:
+        // * disruption.between(since, until)
+        // * vehicle_journey.between(since, until, data_freshness)
+        else if ((f.method == "since" && f.args.size() == 1u + nb_extra_args_between(type))
+                 || (f.method == "until" && f.args.size() == 1u + nb_extra_args_between(type))
+                 || (f.method == "between" && f.args.size() == 2u + nb_extra_args_between(type))) {
             boost::optional<boost::posix_time::ptime> since, until;
-            auto rt_level = type::RTLevel::Base;
             if (f.method == "since") {
                 since = from_datetime(f.args.at(0));
-                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "until") {
                 until = from_datetime(f.args.at(0));
-                rt_level = rt_level_from_string(f.args.at(1));
             } else if (f.method == "between") {
                 since = from_datetime(f.args.at(0));
                 until = from_datetime(f.args.at(1));
-                rt_level = rt_level_from_string(f.args.at(2));
             }
-            const auto type = type_by_caption(f.type);
+            // useful only for VJ
+            const auto rt_level =
+                (type == Type_e::VehicleJourney) ? rt_level_from_string(f.args.back()) : type::RTLevel::Base;
             indexes = filter_on_period(data.get_all_index(type), type, since, until, rt_level, data);
 
         } else if (f.method == "within" && f.args.size() == 2) {
@@ -331,21 +337,21 @@ struct Eval : boost::static_visitor<Indexes> {
             } catch (...) {
                 throw parsing_error(parsing_error::partial_error, "invalid coord " + f.args.at(1));
             }
-            indexes = get_within(type_by_caption(f.type), coord, distance, data);
+            indexes = get_within(type, coord, distance, data);
         } else if ((f.method == "id" || f.method == "uri") && f.args.size() == 1) {
-            indexes = get_indexes_from_id(type_by_caption(f.type), f.args.at(0), data);
+            indexes = get_indexes_from_id(type, f.args.at(0), data);
         } else if (f.method == "name" && f.args.size() == 1) {
-            indexes = get_indexes_from_name(type_by_caption(f.type), f.args.at(0), data);
+            indexes = get_indexes_from_name(type, f.args.at(0), data);
         } else if (f.method == "has_code" && f.args.size() == 2) {
-            indexes = get_indexes_from_code(type_by_caption(f.type), f.args.at(0), f.args.at(1), data);
+            indexes = get_indexes_from_code(type, f.args.at(0), f.args.at(1), data);
         } else if (f.method == "has_code_type") {
-            indexes = get_indexes_from_code_type(type_by_caption(f.type), f.args, data);
+            indexes = get_indexes_from_code_type(type, f.args, data);
         } else {
             std::stringstream ss;
             ss << "Unknown function: " << f;
             throw parsing_error(parsing_error::partial_error, ss.str());
         }
-        return get_corresponding(indexes, type_by_caption(f.type), target, data);
+        return get_corresponding(indexes, type, target, data);
     }
     Indexes operator()(const ast::GetCorresponding& expr) const {
         const auto from = type_by_caption(expr.type);
@@ -365,6 +371,13 @@ struct Eval : boost::static_visitor<Indexes> {
         return res;
     }
     Indexes operator()(const ast::Expr& expr) const { return boost::apply_visitor(*this, expr.expr); }
+
+private:
+    // helper to add required param to methods since(), until() and between().
+    size_t nb_extra_args_between(const type::Type_e& type) const {
+        // for VehicleJourney, the data_freshness level is also required, so 1 more param is required
+        return (type == type::Type_e::VehicleJourney) ? 1u : 0u;
+    }
 };
 
 }  // anonymous namespace
@@ -412,16 +425,19 @@ std::string make_request(const Type_e requested_type,
             break;
         case Type_e::VehicleJourney:
         case Type_e::Impact:
-            if (since && until) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".between("
-                      + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level)
-                      + ")";
-            } else if (since) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".since("
-                      + to_iso_string(*since) + "Z, " + rt_level_to_string(rt_level) + ")";
-            } else if (until) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type) + ".until("
-                      + to_iso_string(*until) + "Z, " + rt_level_to_string(rt_level) + ")";
+            if (since || until) {
+                res = "(" + res + ") AND " + static_data->captionByType(requested_type);
+                if (since && until) {
+                    res = res + ".between(" + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z";
+                } else if (since) {
+                    res = res + ".since(" + to_iso_string(*since) + "Z";
+                } else if (until) {
+                    res = res + ".until(" + to_iso_string(*until) + "Z";
+                }
+                if (requested_type == Type_e::VehicleJourney) {
+                    res = res + ", " + rt_level_to_string(rt_level);
+                }
+                res = res + ")";
             }
             break;
         default:

@@ -69,7 +69,14 @@ class Kraken(AbstractStreetNetworkService):
         return response
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         """
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
@@ -83,7 +90,7 @@ class Kraken(AbstractStreetNetworkService):
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
         )
 
-        response = self.instance.send_and_receive(req)
+        response = instance.send_and_receive(req)
         if should_invert_journey:
             return self._reverse_journeys(response)
 
@@ -121,7 +128,7 @@ class Kraken(AbstractStreetNetworkService):
         return utils.get_uri_pt_object(pt_object)
 
     def get_street_network_routing_matrix(
-        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
     ):
         # TODO: reverse is not handled as so far
         speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
@@ -138,7 +145,7 @@ class Kraken(AbstractStreetNetworkService):
             origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
         )
 
-        res = self.instance.send_and_receive(req)
+        res = instance.send_and_receive(req)
         self._check_for_error_and_raise(res)
 
         return res.sn_routing_matrix

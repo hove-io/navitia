@@ -446,7 +446,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_dst_test, ArgsFixture) {
     data.build_raptor();
     BOOST_REQUIRE_EQUAL(failed, false);
 
-    BOOST_CHECK_EQUAL(data.pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(data.pt_data->lines.size(), 2);
     BOOST_CHECK_EQUAL(data.pt_data->routes.size(), 1);
 
     BOOST_REQUIRE_EQUAL(data.pt_data->datasets.size(), 1);

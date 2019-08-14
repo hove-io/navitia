@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -431,7 +432,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path_with_fp(None, None, None, None, None, None)
+        valhalla.direct_path_with_fp(None, None, None, None, None, None, None)
     assert '500 Internal Server Error' in str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -447,7 +448,7 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
         with pytest.raises(TechnicalError) as excinfo:
             req.post('http://bob.com/route', json={'error_code': 42}, status_code=400)
             valhalla.direct_path_with_fp(
-                'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+                instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
             )
         assert '500 Internal Server Error' in str(excinfo.value)
         assert (
@@ -467,7 +468,7 @@ def direct_path_func_with_no_response_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json={'error_code': 442}, status_code=400)
         valhalla_response = valhalla.direct_path_with_fp(
-            'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
         )
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.NO_SOLUTION
@@ -486,7 +487,7 @@ def direct_path_func_with_valid_response_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json=resp_json)
         valhalla_response = valhalla.direct_path_with_fp(
-            'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
         )
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
@@ -522,7 +523,7 @@ def sources_to_targets_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         valhalla_response = valhalla.get_street_network_routing_matrix(
-            [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST
+            instance, [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -556,6 +557,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
         req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         # it changes nothing for walking
         valhalla_response = valhalla.get_street_network_routing_matrix(
+            instance,
             [origin],
             [destination, destination, destination],
             mode='walking',
@@ -571,6 +573,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
 
         # for bike every reached point have an additional 30s
         valhalla_response = valhalla.get_street_network_routing_matrix(
+            instance,
             [origin],
             [destination, destination, destination],
             mode='bike',
@@ -586,6 +589,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
 
         # for car every reached point have an additional 5mn
         valhalla_response = valhalla.get_street_network_routing_matrix(
+            instance,
             [origin],
             [destination, destination, destination],
             mode='car',
@@ -598,3 +602,23 @@ def sources_to_targets_valhalla_with_park_cost_test():
         assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
         assert valhalla_response.rows[0].routing_response[2].duration == 1337 + 5 * 60
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+
+def status_test():
+    valhalla = Valhalla(
+        instance=None,
+        service_url='http://bob.com',
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=23,
+    )
+    status = valhalla.status()
+    assert len(status) == 5
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+    assert status['class'] == "Valhalla"
+    assert status['modes'] == ["walking", "bike", "car"]
+    assert status['timeout'] == 23
+    assert len(status['circuit_breaker']) == 3
+    assert status['circuit_breaker']['current_state'] == 'closed'
+    assert status['circuit_breaker']['fail_counter'] == 0
+    assert status['circuit_breaker']['reset_timeout'] == 60

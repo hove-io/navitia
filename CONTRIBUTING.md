@@ -10,6 +10,10 @@ Fork the github repo, create a new branch from dev, and submit your pull request
 Make sure to run the tests before submitting the pull request (`make test` in the build directory,
 you may also run `make docker_test` for important contributions), and have a wee look at what follows.
 
+### Acceptance process and merge
+
+For a proposed PR, we require 2 approvals by repository owners.
+If you have the rights, once your PR has 2 approvals, you are encouraged to merge it yourself.
 
 ## Build Navitia
 

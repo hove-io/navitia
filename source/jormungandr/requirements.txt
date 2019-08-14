@@ -1,7 +1,6 @@
-Flask==1.0.4
+Flask==1.1.1
 git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686
 Flask-SQLAlchemy==2.4
-Flask-Script==0.6.7
 Flask-Cors==1.9.0
 geojson==1.3.3
 enum34==1.1.6
@@ -9,7 +8,7 @@ Jinja2==2.10.1
 MarkupSafe==0.23
 SQLAlchemy==1.3.3
 Shapely==1.3.0
-Werkzeug==0.14.1
+Werkzeug==0.15.5
 blinker==1.3
 itsdangerous==1.1.0
 protobuf
@@ -32,7 +31,7 @@ anyjson==0.3.3
 future==0.15.2
 zeep==1.1.0
 gevent==1.3.7
-Flask-Caching==1.4.0
+Flask-Caching==1.7.2
 git+https://github.com/canaltp/serpy.git@ctp
 python-json-logger==0.1.7
 jmespath==0.9.3

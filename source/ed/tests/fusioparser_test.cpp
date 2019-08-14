@@ -141,8 +141,12 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     // check comments
     BOOST_REQUIRE_EQUAL(data.comment_by_id.size(), 2);
-    BOOST_CHECK_EQUAL(data.comment_by_id["bob"], "bob is in the kitchen");
-    BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], "test comment");
+    nt::Comment bob, bobette;
+    bob.value = "bob is in the kitchen";
+    bobette.value = "test comment";
+    bobette.type = "ODT";
+    BOOST_CHECK_EQUAL(data.comment_by_id["bob"], bob);
+    BOOST_CHECK_EQUAL(data.comment_by_id["bobette"], bobette);
 
     // 7 objects have comments
     // the file contains wrongly formated comments, but they are skiped
@@ -480,5 +484,20 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Arrêt A");
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SA:A");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(grid_rel_calendar_line_retrocompatibilty_tests) {
+    // For backward compatibility
+    // grid_rel_calendar_line.txt file contains "line_external_code"
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path + "_dst");
+        parser.fill(data);
+        BOOST_REQUIRE_EQUAL(data.calendars.size(), 6);
+        // Test only one, it's the same logic for the 6 calendars
+        BOOST_CHECK_EQUAL(data.calendars[0]->uri, "REG_LaV");
+        BOOST_CHECK_EQUAL(data.calendars[0]->line_list.size(), 1);
+        BOOST_CHECK_EQUAL(data.calendars[0]->line_list[0]->uri, "Nav55");
     }
 }

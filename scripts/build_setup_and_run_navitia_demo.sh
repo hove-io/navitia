@@ -200,7 +200,12 @@ sed "s,^INSTANCES_DIR.*,INSTANCES_DIR = '$run_dir/jormungandr'," "$navitia_dir"/
 #we also don't want to depend on the jormungandr database for this test
 sed -i 's/DISABLE_DATABASE.*/DISABLE_DATABASE=False/' "$run_dir"/jormungandr/jormungandr_settings.py
 
-JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr/jormungandr_settings.py PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr" python "$navitia_dir"/source/jormungandr/jormungandr/manage.py runserver -d -r &
+export JORMUNGANDR_CONFIG_FILE="$run_dir"/jormungandr/jormungandr_settings.py
+export PYTHONPATH="$navitia_dir/source/navitiacommon:$navitia_dir/source/jormungandr"
+export FLASK_APP=jormungandr:app
+pushd "$navitia_dir/source/jormungandr"
+flask run &
+popd
 jormun_pid=$!
 
 

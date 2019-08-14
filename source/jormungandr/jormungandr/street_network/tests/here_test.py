@@ -1,3 +1,4 @@
+# coding=utf-8
 #  Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -121,6 +122,7 @@ def test_matrix(valid_here_matrix):
     with requests_mock.Mocker() as req:
         req.get(requests_mock.ANY, json=valid_here_matrix, status_code=200)
         response = here.get_street_network_routing_matrix(
+            instance,
             [origin],
             [destination, destination, destination],
             mode='walking',
@@ -146,6 +148,7 @@ def test_matrix_timeout():
         req.get(requests_mock.ANY, exc=requests.exceptions.Timeout)
         with pytest.raises(TechnicalError):
             here.get_street_network_routing_matrix(
+                instance,
                 [origin],
                 [destination, destination, destination],
                 mode='walking',
@@ -179,3 +182,24 @@ def here_basic_routing_test(valid_here_routing_response):
     assert section.origin == origin
     assert section.begin_date_time == str_to_time_stamp('20161010T152000')
     assert section.end_date_time == section.begin_date_time + section.duration
+
+
+def status_test():
+    here = Here(
+        instance=None,
+        service_base_url='http://bob.com',
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=89,
+    )
+    status = here.status()
+    assert len(status) == 6
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+    assert status['class'] == "Here"
+    assert status['modes'] == ["walking", "bike", "car"]
+    assert status['timeout'] == 89
+    assert status['max_points'] == 100
+    assert len(status['circuit_breaker']) == 3
+    assert status['circuit_breaker']['current_state'] == 'closed'
+    assert status['circuit_breaker']['fail_counter'] == 0
+    assert status['circuit_breaker']['reset_timeout'] == 60

@@ -50,7 +50,7 @@ Environment variables can be set when the service is started. Referer to [defaul
 example for a development environment:
 
 ```sh
-PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_START_MONITORING_THREAD=False  JORMUNGANDR_DISABLE_DATABASE=True JORMUNGANDR_IS_PUBLIC=True python manage.py runserver
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_START_MONITORING_THREAD=False JORMUNGANDR_DISABLE_DATABASE=True JORMUNGANDR_IS_PUBLIC=True FLASK_APP=jormungandr:app flask run
 ```
 
 ## custom_settings.py
@@ -60,7 +60,7 @@ This helps you overwrite the default settings from a file. Prevent from mixing b
 Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:  
 
 ```sh
-PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py  python manage.py runserver
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py FLASK_APP=jormungandr:app flask run
 ```
 
 # Run
@@ -69,14 +69,14 @@ To run the web service, you'll need to:
 
 * set `JORMUNGANDR_INSTANCES_DIR` to point at the directory that contains your `jormungandr.json`.
 * add `navitia/source/jormungandr` and `navitia/navitiacommon` to your python path via `PYTHONPATH`.
-* [optionaly] set `JORMUNGANDR_CONFIG_FILE` to point at your `custom_settings.py`.  
+* [optionally] set `JORMUNGANDR_CONFIG_FILE` to point at your `custom_settings.py`.
 
 ## Example
 
 From `navitia/source/jormungandr/jormungandr` run :
 
 ```sh
-PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ python manage.py runserver
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ FLASK_APP=jormungandr:app flask run
 ```
 
 # Option

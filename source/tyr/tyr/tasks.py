@@ -56,6 +56,7 @@ from tyr.binarisation import (
     stops2mimir,
     ntfs2mimir,
     cosmogony2mimir,
+    poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -76,7 +77,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None):
+def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None, skip_mimir=False):
     """
     import the data contains in the list of 'files' in the 'instance'
 
@@ -156,9 +157,11 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
 
-        for dataset in job.data_sets:
-            if dataset.family_type == 'pt':
-                actions.extend(send_to_mimir(instance, dataset.name))
+        if not skip_mimir:
+            for dataset in job.data_sets:
+                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+        else:
+            current_app.logger.info("skipping mimir import")
 
         actions.append(finish_job.si(job.id))
         if async:
@@ -168,18 +171,24 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             return chain(*actions).apply()
 
 
-def send_to_mimir(instance, filename):
+def send_to_mimir(instance, filename, family_type):
     """
     :param instance: instance to receive the data
     :param filename: file to inject towards mimir
+    :param family_type: dataset's family type
 
     - create a job with a data_set
-    - data injection towards mimir(stops2mimir, ntfs2mimir)
+    - data injection towards mimir(stops2mimir, ntfs2mimir, poi2mimir)
 
     returns action list
     """
+
+    # if mimir isn't setup do not try to import data for the autocompletion
     if not current_app.config.get('MIMIR_URL'):
-        # if mimir isn't setup do not try to import data for the autocompletion
+        return []
+
+    # Bail out if the family type is not one that mimir deals with.
+    if family_type not in ['pt', 'poi']:
         return []
 
     # This test is to avoid creating a new job if there is no action on mimir.
@@ -188,7 +197,6 @@ def send_to_mimir(instance, filename):
 
     actions = []
     job = models.Job()
-    instance_config = load_instance_config(instance.name)
     job.instance = instance
     job.state = 'running'
 
@@ -204,14 +212,17 @@ def send_to_mimir(instance, filename):
     models.db.session.add(job)
     models.db.session.commit()
 
-    # Import ntfs in Mimir
-    if instance.import_ntfs_in_mimir:
-        actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+    if family_type == 'pt':
+        # Import ntfs in Mimir
+        if instance.import_ntfs_in_mimir:
+            actions.append(ntfs2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
 
-    # Import stops in Mimir
-    # if we are loading pt data we might want to load the stops to autocomplete
-    if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-        actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+        # Import stops in Mimir
+        # if we are loading pt data we might want to load the stops to autocomplete
+        if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+            actions.append(stops2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
+    else:  # assume family_type == 'poi':
+        actions.append(poi2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
 
     actions.append(finish_job.si(job.id))
     return actions
@@ -337,12 +348,23 @@ def import_in_mimir(_file, instance, async=True):
     """
     Import pt data stops to autocomplete
     """
-    current_app.logger.debug("Import pt data to mimir")
-    instance_config = load_instance_config(instance.name)
-    if instance.import_ntfs_in_mimir:
-        action = ntfs2mimir.si(instance_config, _file)
-    if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-        action = stops2mimir.si(instance_config, _file)
+    datatype, _ = utils.type_of_data(_file)
+    family_type = utils.family_of_data(datatype)
+
+    current_app.logger.debug("Import {} data to mimir".format(family_type))
+
+    action = None
+
+    if family_type == 'pt':
+        if instance.import_ntfs_in_mimir:
+            action = ntfs2mimir.si(instance.name, _file)
+        if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+            action = stops2mimir.si(instance.name, _file)
+    elif family_type == 'poi':
+        action = poi2mimir.si(instance.name, _file)
+    else:
+        current_app.logger.warn("Unsupported family_type {}".format(family_type))
+
     if async:
         return action.delay()
     else:

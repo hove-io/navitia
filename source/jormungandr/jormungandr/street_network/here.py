@@ -233,7 +233,14 @@ class Here(AbstractStreetNetworkService):
         return params
 
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode, fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
@@ -310,7 +317,9 @@ class Here(AbstractStreetNetworkService):
 
         return params
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+    ):
         params = self.get_matrix_params(origins, destinations, mode, max_duration, request)
         r = self._call_here(self.matrix_service_url, params=params)
 

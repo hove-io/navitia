@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from jormungandr.exceptions import TechnicalError
 from jormungandr import app
+from jormungandr import fallback_modes as fm
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.utils import make_speed_switcher
@@ -65,10 +66,17 @@ class Asgard(Kraken):
             'id': unicode(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
-            'asgard_socket': self.asgard_socket,
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
         }
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+    ):
         speed_switcher = make_speed_switcher(request)
 
         req = self._create_sn_routing_matrix_request(
@@ -79,13 +87,46 @@ class Asgard(Kraken):
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
+    def _add_cycle_lane_length(self, response):
+        def _is_cycle_lane(path):
+            if path.HasField(str("cycle_path_type")):
+                return path.cycle_path_type != response_pb2.NoCycleLane
+
+            return False
+
+        # We have one journey and one section in direct path
+        section = response.journeys[0].sections[0]
+        path_items = section.street_network.path_items
+        cycle_lane_length = 0
+        for path in path_items:
+            if _is_cycle_lane(path):
+                cycle_lane_length += path.length
+
+        # Since path.length are doubles and we want an int32 in the proto
+        section.cycle_lane_length = int(cycle_lane_length)
+
+        return response
+
     def _direct_path(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        self,
+        instance,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
     ):
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
         )
-        return self._call_asgard(req)
+
+        response = self._call_asgard(req)
+
+        if response and mode == fm.FallbackModes.bike.name:
+            response = self._add_cycle_lane_length(response)
+
+        return response
 
     def get_uri_pt_object(self, pt_object):
         return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))

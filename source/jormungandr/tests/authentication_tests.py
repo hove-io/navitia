@@ -551,7 +551,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
         # but when querying /v1/coverage/<something>/places only one pt_dataset is given to bragi
         with user_set(app, FakeUserAuth, 'super_user'):
             with requests_mock.Mocker() as m:
-                m.get(requests_mock.ANY, json=response)
+                m.post(requests_mock.ANY, json=response)
                 _, status = self.query_no_assert(
                     '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
                 )
@@ -599,7 +599,7 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
         """
         with user_set(app, FakeUserAuth, 'bob'):
             with requests_mock.Mocker() as m:
-                m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
+                m.post(requests_mock.ANY, json=BRAGI_RESPONSE)
                 _, status = self.query_no_assert(
                     '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
                 )
@@ -610,7 +610,7 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
     def test_global_places_authentication_no_user(self):
         """even without a user we can access all the places apis"""
         with requests_mock.Mocker() as m:
-            m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
+            m.post(requests_mock.ANY, json=BRAGI_RESPONSE)
             _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi')
             assert status == 200
             assert m.called

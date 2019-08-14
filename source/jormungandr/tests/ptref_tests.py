@@ -103,7 +103,7 @@ class TestPtRef(AbstractTestFixture):
         # we added some comments on the vj, we should have them
         com = get_not_null(vj, 'comments')
         assert len(com) == 1
-        assert com[0]['type'] == 'standard'
+        assert com[0]['type'] == 'information'
         assert com[0]['value'] == 'hello'
         assert "feed_publishers" in response
 
@@ -303,7 +303,7 @@ class TestPtRef(AbstractTestFixture):
 
         com = get_not_null(l, 'comments')
         assert len(com) == 1
-        assert com[0]['type'] == 'standard'
+        assert com[0]['type'] == 'information'
         assert com[0]['value'] == "I'm a happy comment"
 
         physical_modes = get_not_null(l, 'physical_modes')
@@ -378,7 +378,7 @@ class TestPtRef(AbstractTestFixture):
             if depth > 0:
                 com = get_not_null(lg, 'comments')
                 assert len(com) == 1
-                assert com[0]['type'] == 'standard'
+                assert com[0]['type'] == 'information'
                 assert com[0]['value'] == "I'm a happy comment"
 
         # test if line_groups are accessible through the ptref graph
@@ -438,7 +438,7 @@ class TestPtRef(AbstractTestFixture):
 
         com = get_not_null(r, 'comments')
         assert len(com) == 1
-        assert com[0]['type'] == 'standard'
+        assert com[0]['type'] == 'information'
         assert com[0]['value'] == "I'm a happy comment"
 
         self._test_links(response, 'routes')
@@ -456,9 +456,9 @@ class TestPtRef(AbstractTestFixture):
 
         com = get_not_null(s, 'comments')
         assert len(com) == 2
-        assert com[0]['type'] == 'standard'
+        assert com[0]['type'] == 'information'
         assert com[0]['value'] == "comment on stop A"
-        assert com[1]['type'] == 'standard'
+        assert com[1]['type'] == 'information'
         assert com[1]['value'] == "the stop is sad"
 
         self._test_links(response, 'stop_areas')
@@ -490,7 +490,7 @@ class TestPtRef(AbstractTestFixture):
 
         com = get_not_null(s, 'comments')
         assert len(com) == 1
-        assert com[0]['type'] == 'standard'
+        assert com[0]['type'] == 'information'
         assert com[0]['value'] == "hello bob"
 
         modes = get_not_null(s, 'physical_modes')

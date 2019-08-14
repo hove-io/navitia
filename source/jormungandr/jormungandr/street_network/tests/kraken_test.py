@@ -1,7 +1,5 @@
-#!/usr/bin/env python
 # coding=utf-8
-
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -29,24 +27,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr import app
-from jormungandr import i_manager
-import signal
-import sys
-from flask_script import Manager
+from jormungandr.street_network.kraken import Kraken
 
 
-def kill_thread(signal, frame):
-    i_manager.stop()
-    sys.exit(0)
+def status_test():
+    kraken = Kraken(instance=None, service_url=None, id=u"tata-é$~#@\"*!'`§èû", modes=["walking", "bike", "car"])
 
-
-manager = Manager(app)
-
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, kill_thread)
-    signal.signal(signal.SIGTERM, kill_thread)
-    app.config[str('DEBUG')] = True
-    manager.run()
+    status = kraken.status()
+    assert len(status) == 3
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+    assert status['class'] == "Kraken"
+    assert status['modes'] == ["walking", "bike", "car"]

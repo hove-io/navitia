@@ -32,6 +32,7 @@ www.navitia.io
 #include "types.h"
 
 #include "type/type.h"
+#include "type/comment.h"
 #include "type/data.h"
 #include "type/meta_data.h"
 #include "fare/fare.h"
@@ -153,7 +154,7 @@ public:
 
     // list of comment ids for pt_objects
     std::map<ed::types::pt_object_header, std::vector<std::string>> comments;
-    std::map<std::string, std::string> comment_by_id;
+    std::map<std::string, nt::Comment> comment_by_id;
 
     // we don't want stoptime to derive from Header so we use a custom container
     std::map<const ed::types::StopTime*, std::vector<std::string>> stoptime_comments;

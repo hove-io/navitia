@@ -34,6 +34,7 @@ www.navitia.io
 #include <map>
 #include <type_traits>
 #include <boost/fusion/include/at_key.hpp>
+#include "type/comment.h"
 
 #pragma once
 
@@ -47,7 +48,7 @@ namespace type {
  */
 struct Comments {
     template <typename T>
-    const std::vector<std::string>& get(const T& obj) const {
+    const std::vector<Comment> get(const T& obj) const {
         const auto& c =
             boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
 
@@ -55,9 +56,8 @@ struct Comments {
     }
 
     template <typename T>
-    void add(const T& obj, const std::string& comment) {
+    void add(const T& obj, const Comment& comment) {
         auto& c = boost::fusion::at_key<typename std::remove_const<typename std::remove_pointer<T>::type>::type>(map);
-
         c[get_as_key(obj)].push_back(comment);
     }
 
@@ -67,8 +67,7 @@ struct Comments {
     }
 
 private:
-    // using comment_list = std::vector<boost::shared_ptr<std::string>>; //TODO
-    using comment_list = std::vector<std::string>;
+    using comment_list = std::vector<Comment>;
 
     template <typename T>
     using pt_object_comment_map = std::map<const T*, comment_list>;

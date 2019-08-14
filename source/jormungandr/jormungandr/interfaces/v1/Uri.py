@@ -115,11 +115,12 @@ class Uri(ResourceUri, ResourceUtc):
         )
         parser.add_argument(
             "data_freshness",
-            help="Define the freshness of data to use to compute vehicle_journeys "
+            help="Define the freshness of data to use to filter vehicle_journeys "
             "along with parameters &since and/or &until .\n"
-            "When using `&data_freshness=base_schedule` you get original vehicle_journeys "
-            "where as when using `&data_freshness=realtime` you get vehicle_journeys "
-            "added or modified by realtime.",
+            "Provides only the vehicle_journeys valid for the data freshness level requested.\n"
+            "Using `&data_freshness=base_schedule` will return all original vehicle_journeys only"
+            "whereas using `&data_freshness=realtime` will return vehicle_journeys after applying"
+            "modifications by realtime (amended vehicle_journeys, and non-impacted original vehicle_journeys).",
             type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']),
             default='base_schedule',
         )

@@ -58,6 +58,8 @@ from navitiacommon.parser_args_type import (
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 import six
+from jormungandr.instance import Instance
+from typing import Optional, Dict
 
 
 class geojson_argument(CustomSchemaType):
@@ -70,6 +72,13 @@ class geojson_argument(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str)  # TODO a better description of the geojson
+
+
+def build_instance_shape(instance):
+    # type: (Instance) -> Optional[Dict]
+    if instance and instance.geojson:
+        return {"type": "Feature", "properties": {}, "geometry": instance.geojson}
+    return None
 
 
 class Places(ResourceUri):
@@ -160,6 +169,11 @@ class Places(ResourceUri):
 
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
+
+            # when autocompletion is done on a specific coverage we want to filter on its shape
+            if not args['shape']:
+                instance = i_manager.instances.get(self.region)
+                args['shape'] = build_instance_shape(instance)
             timezone.set_request_timezone(self.region)
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:

@@ -44,6 +44,7 @@ class StreetNetworkPath:
         self,
         future_manager,
         instance,
+        streetnetwork_service,
         orig_obj,
         dest_obj,
         mode,
@@ -55,6 +56,7 @@ class StreetNetworkPath:
         :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
                          auto completion)
+        :param streetnetwork_service: service that will be used to compute the path
         :param orig_obj: proto obj
         :param dest_obj: proto obj
         :param mode: street network mode, should be one of ['walking', 'bike', 'bss', 'car']
@@ -64,6 +66,7 @@ class StreetNetworkPath:
         """
         self._future_manager = future_manager
         self._instance = instance
+        self._streetnetwork_service = streetnetwork_service
         self._orig_obj = orig_obj
         self._dest_obj = dest_obj
         self._mode = mode
@@ -77,7 +80,8 @@ class StreetNetworkPath:
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
         try:
-            return self._instance.direct_path_with_fp(
+            return self._streetnetwork_service.direct_path_with_fp(
+                self._instance,
                 self._mode,
                 self._orig_obj,
                 self._dest_obj,
@@ -99,7 +103,7 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        dp = self._direct_path_with_fp(self._instance)
+        dp = self._direct_path_with_fp(self._streetnetwork_service)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
@@ -150,6 +154,7 @@ class StreetNetworkPathPool:
         if not path:
             path = self._value[key] = StreetNetworkPath(
                 self._future_manager,
+                self._instance,
                 streetnetwork_service,
                 requested_orig_obj,
                 requested_dest_obj,

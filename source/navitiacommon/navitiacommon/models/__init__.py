@@ -504,6 +504,8 @@ class Instance(db.Model):  # type: ignore
         db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False, default=default_values.taxi_backend
     )
 
+    poi_dataset = db.Column(db.Text, default=None, nullable=True)
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
@@ -763,12 +765,8 @@ class Metric(db.Model):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
 
-    type = db.Column(
-        db.Enum(
-            'ed2nav', 'fusio2ed', 'gtfs2ed', 'osm2ed', 'geopal2ed', 'synonym2ed', 'poi2ed', name='metric_type'
-        ),
-        nullable=False,
-    )
+    type = db.Column(db.Text, nullable=False)
+
     dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'), nullable=True)
     duration = db.Column(INTERVAL)
 

@@ -1150,31 +1150,33 @@ void EdReader::finish_stop_times(nt::Data& data) {
 }
 
 template <typename Map>
-size_t add_comment(nt::Data& data, const idx_t obj_id, const Map& map, const boost::shared_ptr<std::string>& comment) {
+size_t add_comment(nt::Data& data, const idx_t obj_id, const Map& map, const nt::Comment& comment) {
     const auto obj = find_or_default(obj_id, map);
 
     if (!obj) {
         return 1;
     }
 
-    std::string str_com = *comment;  // TODO shared_ptr
-    data.pt_data->comments.add(obj, str_com);
+    data.pt_data->comments.add(obj, comment);
 
     return 0;
 }
 
 void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
     // since the comments can be big we use shared_ptr to share them
-    std::map<unsigned int, boost::shared_ptr<std::string>> comments_by_id;
+    std::map<unsigned int, nt::Comment> comments_by_id;
 
-    std::string comment_request = "SELECT id, comment FROM navitia.comments;";
+    const std::string comment_request = "SELECT id, comment, type FROM navitia.comments;";
     pqxx::result comment_result = work.exec(comment_request);
     for (auto const_it = comment_result.begin(); const_it != comment_result.end(); ++const_it) {
-        comments_by_id[const_it["id"].as<unsigned int>()] =
-            boost::make_shared<std::string>(const_it["comment"].as<std::string>());
+        nt::Comment comment;
+        const_it["comment"].to(comment.value);
+        const_it["type"].to(comment.type);
+        comments_by_id[const_it["id"].as<unsigned int>()] = comment;
     }
 
-    std::string pt_object_comment_request = "SELECT object_type, object_id, comment_id FROM navitia.ptobject_comments;";
+    const std::string pt_object_comment_request =
+        "SELECT object_type, object_id, comment_id FROM navitia.ptobject_comments;";
     pqxx::result result = work.exec(pt_object_comment_request);
 
     size_t cpt_not_found(0);
@@ -1190,7 +1192,7 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             continue;
         }
 
-        const boost::shared_ptr<std::string>& comment = it->second;
+        const auto& comment = it->second;
 
         if (type_str == "route") {
             cpt_not_found += add_comment(data, obj_id, route_map, comment);
@@ -1206,10 +1208,10 @@ void EdReader::fill_comments(nt::Data& data, pqxx::work& work) {
             // for stop time we store the comment on a temporary map
             // and we will store them when the stop time is read.
             // this way we don't have to store all stoptimes in a map
-            stop_time_comments[obj_id].push_back(*comment);
+            stop_time_comments[obj_id].push_back(comment);
         } else if (type_str == "trip") {
             // as we need to create vjs after stop times, we need to store the comments
-            vehicle_journey_comments[obj_id].push_back(*comment);
+            vehicle_journey_comments[obj_id].push_back(comment);
         } else {
             LOG4CPLUS_WARN(log, "invalid type, skipping object comment: " << obj_id << "(" << type_str << ")");
         }

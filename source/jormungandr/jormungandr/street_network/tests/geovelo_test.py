@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -266,7 +267,7 @@ def direct_path_geovelo_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -304,7 +305,7 @@ def direct_path_geovelo_zero_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -345,7 +346,7 @@ def isochrone_geovelo_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/api/v2/routes_m2m', json=resp_json, status_code=200)
         geovelo_response = geovelo.get_street_network_routing_matrix(
-            origins, destinations, 'bike', 13371337, MOCKED_REQUEST
+            instance, origins, destinations, 'bike', 13371337, MOCKED_REQUEST
         )
         assert geovelo_response.rows[0].routing_response[0].duration == 1051
         assert geovelo_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -388,3 +389,23 @@ def make_request_arguments_bike_details_test():
         '''{"profile": "MEDIAN", "averageSpeed": 15,
     "bikeType": "TRADITIONAL"}'''
     )
+
+
+def status_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url='http://bob.com',
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+    )
+    status = geovelo.status()
+    assert len(status) == 5
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+    assert status['class'] == "Geovelo"
+    assert status['modes'] == ["walking", "bike", "car"]
+    assert status['timeout'] == 56
+    assert len(status['circuit_breaker']) == 3
+    assert status['circuit_breaker']['current_state'] == 'closed'
+    assert status['circuit_breaker']['fail_counter'] == 0
+    assert status['circuit_breaker']['reset_timeout'] == 60
