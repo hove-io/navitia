@@ -434,6 +434,19 @@ static void build_datasets(navitia::type::VehicleJourney* vj) {
     }
 }
 
+/*
+ * Build other nodes than dataset.
+ *
+ * @param vj The vehicle journey to browse
+ */
+static void build_nodes(navitia::type::VehicleJourney* vj) {
+    for (navitia::type::StopTime& st : vj->stop_time_list) {
+        if (st.stop_point) {
+            vj->route->stoppoint_list.insert(st.stop_point);
+        }
+    }
+}
+
 static void build_companies(navitia::type::VehicleJourney* vj) {
     if (vj->company) {
         if (boost::range::find(vj->route->line->company_list, vj->company) == vj->route->line->company_list.end()) {
@@ -449,6 +462,7 @@ void Data::build_relations() {
     // physical_mode_list of line
     for (auto* vj : pt_data->vehicle_journeys) {
         build_datasets(vj);
+        build_nodes(vj);
         if (!vj->physical_mode || !vj->route || !vj->route->line) {
             continue;
         }
