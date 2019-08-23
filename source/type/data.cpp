@@ -444,6 +444,7 @@ static void build_nodes(navitia::type::VehicleJourney* vj) {
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
             vj->route->stoppoint_list.insert(st.stop_point);
+            st.stop_point->route_list.insert(vj->route);
         }
     }
 }

@@ -35,6 +35,7 @@ www.navitia.io
 #include <vector>
 #include <set>
 #include "type/fwd_type.h"
+#include "type/route.h"
 
 namespace navitia {
 namespace type {
@@ -52,6 +53,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
     std::set<Dataset*> dataset_list;
+    std::set<Route*> route_list;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

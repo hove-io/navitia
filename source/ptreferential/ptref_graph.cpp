@@ -87,7 +87,10 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::Route), g);
+
+    // Avoid the bloc JourneyPattern-PhysicalMode-JourneyPatternPoint for Route <-> StopPoint for performance issue
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::Route), g);
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::StopPoint), g);
 
     // JourneyPattern => {Route, JourneyPatternPoint, VehicleJourney, PhysicalMode}
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::JourneyPattern), g);
