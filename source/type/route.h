@@ -33,11 +33,12 @@ www.navitia.io
 #include "type/fwd_type.h"
 #include "type/geographical_coord.h"
 #include "type/odt_properties.h"
-#include "type/stop_point.h"
 #include <set>
 
 namespace navitia {
 namespace type {
+
+struct StopPoint;
 
 struct Route : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Route;
@@ -49,7 +50,7 @@ struct Route : public Header, Nameable, HasMessages {
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
     std::set<Dataset*> dataset_list;
-    std::set<StopPoint*> stoppoint_list;
+    std::set<StopPoint*> stop_point_list;
 
     type::hasOdtProperties get_odt_properties() const;
 

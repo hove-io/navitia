@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/serialization.h"
 #include <boost/serialization/weak_ptr.hpp>
 #include "type/indexes.h"
+#include "type/route.h"
 
 namespace navitia {
 namespace type {

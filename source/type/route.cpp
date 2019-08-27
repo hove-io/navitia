@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/line.h"
 #include "type/dataset.h"
 #include "type/stop_area.h"
+#include "type/stop_point.h"
 
 namespace navitia {
 namespace type {
@@ -86,7 +87,7 @@ Indexes Route::get(Type_e type, const PT_Data& data) const {
         case Type_e::Dataset:
             return indexes(dataset_list);
         case Type_e::StopPoint: {
-            return indexes(stoppoint_list);
+            return indexes(stop_point_list);
         }
         default:
             break;

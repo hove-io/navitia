@@ -303,7 +303,6 @@ BOOST_AUTO_TEST_CASE(line_code) {
     b.lines["A"]->code = "line_A";
     b.vj("C")("stop2", 8000, 8050);
     b.lines["C"]->code = "line C";
-    b.data->build_relations();
     b.make();
 
     // find line by code
@@ -610,7 +609,6 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     dataset->contributor = contributor;
     contributor->dataset_list.insert(dataset);
 
-    b.data->build_relations();
     b.make();
 
     auto indexes = make_query(nt::Type_e::Contributor, "contributor.uri=c1", *(b.data));
