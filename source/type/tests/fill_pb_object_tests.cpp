@@ -122,7 +122,6 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     ln->network = b.data->pt_data->networks_map["Network2"];
     ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
 
-    b.data->build_relations();
     b.make();
 
     auto stop_area = new pbnavitia::StopArea();
@@ -215,7 +214,6 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     auto* vj_b = b.vj("B")("stop2", 8000, 8050).make();
     vj_b->dataset = d2;
 
-    b.data->build_relations();
     b.make();
 
     auto objs = navitia::ptref_indexes<nt::Contributor>(vj_a, *b.data);

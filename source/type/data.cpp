@@ -63,7 +63,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 72;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 73;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -435,14 +435,14 @@ static void build_datasets(navitia::type::VehicleJourney* vj) {
 }
 
 /*
- * Build other nodes than dataset.
+ * Build relations between routes and stop points.
  *
  * @param vj The vehicle journey to browse
  */
-static void build_nodes(navitia::type::VehicleJourney* vj) {
+static void build_route_and_stop_point_relations(navitia::type::VehicleJourney* vj) {
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
-            vj->route->stoppoint_list.insert(st.stop_point);
+            vj->route->stop_point_list.insert(st.stop_point);
             st.stop_point->route_list.insert(vj->route);
         }
     }
@@ -463,7 +463,7 @@ void Data::build_relations() {
     // physical_mode_list of line
     for (auto* vj : pt_data->vehicle_journeys) {
         build_datasets(vj);
-        build_nodes(vj);
+        build_route_and_stop_point_relations(vj);
         if (!vj->physical_mode || !vj->route || !vj->route->line) {
             continue;
         }

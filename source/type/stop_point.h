@@ -35,10 +35,11 @@ www.navitia.io
 #include <vector>
 #include <set>
 #include "type/fwd_type.h"
-#include "type/route.h"
 
 namespace navitia {
 namespace type {
+
+struct Route;
 
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
