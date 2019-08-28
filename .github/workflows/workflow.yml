@@ -1,19 +1,29 @@
 name: CI
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
-  container:
+    container:
       image: navitia/debian8_dev
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [2.7]
-    
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+
     steps:
     - uses: actions/checkout@v1
+    - name: fetch submodules
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -27,4 +37,6 @@ jobs:
     - name: make
       run: make -j $(nproc)
     - name: tests
-      run: make tests
+      run: |
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        ctest --output-on-failure
