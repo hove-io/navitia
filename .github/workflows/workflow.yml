@@ -4,6 +4,8 @@ on: [push]
 
 jobs:
   build:
+  container:
+      image: navitia/debian8_dev
 
     runs-on: ubuntu-latest
     strategy:
