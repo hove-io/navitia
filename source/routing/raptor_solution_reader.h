@@ -52,7 +52,25 @@ struct Dominates {
     }
 };
 
-typedef ParetoFront<Journey, Dominates> Solutions;
+
+struct ParetoFrontVisitor {
+    void at_dominated(const Journey& to_insert, const Journey& in_pool){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+        LOG4CPLUS_TRACE(logger, "Journey dominated ! " 
+                            << std::endl << to_insert
+                            << "  dominated by : " << std::endl << in_pool);
+    }
+    void at_dominates(const Journey& to_insert, const Journey& in_pool){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+        LOG4CPLUS_TRACE(logger, "Journey removed from solution pool " << std::endl << in_pool);
+    }
+    void at_inserted(const Journey& j){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+        LOG4CPLUS_TRACE(logger, "Adding  journey to solution pool" << std::endl << j);
+    }
+};
+
+typedef ParetoFront<Journey, Dominates, ParetoFrontVisitor> Solutions;
 
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).

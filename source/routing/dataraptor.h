@@ -80,6 +80,8 @@ struct dataRAPTOR {
     };
     JppsFromSp jpps_from_sp;
 
+    std::string print_jpps_from_sp();
+
     // cache friendly access to in order JourneyPatternPoints from a JourneyPattern
     struct JppsFromJp {
         // compressed JourneyPatternPoint

@@ -89,6 +89,8 @@ struct Labels {
     inline bool pt_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_pt(sp_idx)); }
     inline bool transfer_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_transfer(sp_idx)); }
 
+    const IdxMap<type::StopPoint, DateTime> & get_dt_pts() { return dt_pts; }
+
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
         dt_pts.assign(stops, val);

@@ -598,10 +598,14 @@ void read_solutions(const RAPTOR& raptor,
                     const StartingPointSndPhase& end_point) {
     auto reader = RaptorSolutionReader<Visitor>(raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
                                                 accessibilite_params, transfer_penalty, end_point);
-
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a : v.clockwise() ? deps : arrs) {
+            SpIdx sp_idx = a.first;
+            navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
+
+
             if (!working_labels.pt_is_initialized(a.first)) {
                 continue;
             }
@@ -614,11 +618,22 @@ void read_solutions(const RAPTOR& raptor,
                                         raptor.labels[0].dt_transfer(end_point.sp_idx),
                                         navitia::seconds(end_point.fallback_dur), count,
                                         raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
+            LOG4CPLUS_TRACE(logger, "Journey from " 
+                                    << stop_point->uri
+                                    <<" count : " << count
+                                    << std::endl << j
+            );
 
             if (reader.solutions.contains_better_than(j)) {
+                LOG4CPLUS_TRACE(logger, "Journey  " 
+                                        << " discarded"
+                );
+
                 continue;
             }
             try {
+                LOG4CPLUS_TRACE(logger, "try to build journey " 
+                );
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             } catch (stop_search&) {
             }
@@ -629,9 +644,15 @@ void read_solutions(const RAPTOR& raptor,
 }  // anonymous namespace
 
 std::ostream& operator<<(std::ostream& os, const Journey& j) {
-    os << "([" << navitia::str(j.departure_dt) << ", " << navitia::str(j.arrival_dt) << ", " << j.min_waiting_dur
-       << ", " << j.transfer_dur << "], [" << j.sections.size() << ", " << unsigned(j.nb_vj_extentions) << "], "
-       << j.sn_dur << ") ";
+    os << "([" 
+        << "departure_dt : " << navitia::str(j.departure_dt) << ", " 
+        << "arrival_dt : " << navitia::str(j.arrival_dt) << ", " 
+        << "min_wainting_dur : " << j.min_waiting_dur << ", " 
+        << "transfer_dur : " << j.transfer_dur << "], [" 
+        << "nb sections : " << j.sections.size() << ", " 
+        << "nb extensions : " << unsigned(j.nb_vj_extentions) << "], "
+        << "foot duration : " << j.sn_dur <<")"
+        << std::endl;
     for (const auto& s : j.sections) {
         if (s.get_in_st) {
             os << "(" << s.get_in_st->vehicle_journey->route->line->uri << ": " << s.get_in_st->stop_point->uri;
