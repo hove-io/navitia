@@ -140,7 +140,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
 int main(int argc, char** argv) {
     navitia::init_app();
     po::options_description desc("Options de l'outil de benchmark");
-    std::string file, output, stop_input_file, start, target;
+    std::string file, output, stop_input_file, start, target, demands_output_file;
     int iterations, date, hour, nb_second_pass;
 
     auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
             ("verbose,v", "Verbose debugging output")
             ("nb_second_pass", po::value<int>(&nb_second_pass)->default_value(0), "nb second pass")
             ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
+            ("dump_demands", po::value<std::string>(&demands_output_file), "Write a csv file with the list of demands (start, target, time) used")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
                      "Output file");
     // clang-format on
@@ -242,6 +243,24 @@ int main(int argc, char** argv) {
                 }
             }
         }
+    }
+
+    //ecriture des requetes
+    if (vm.count("dump_demands")) {
+        std::fstream out_file(demands_output_file, std::ios::out);
+        out_file << "Start id, Target id, , , Day, Hour" << std::endl;
+
+        for (size_t i = 0; i < demands.size(); ++i) {
+            PathDemand demand = demands[i];
+            out_file << demand.start << ", "
+                    << demand.target << ", " 
+                    << " " << ","
+                    << " " << ","
+                    << demand.date << ", "
+                    << demand.hour
+                    << std::endl;
+        }
+        out_file.close();
     }
 
     // Calculs des itinéraires
