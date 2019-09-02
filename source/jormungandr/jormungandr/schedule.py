@@ -63,10 +63,11 @@ def get_realtime_system_code(route_point):
 
 
 class RealTimePassage(object):
-    def __init__(self, datetime, direction=None, is_real_time=True):
+    def __init__(self, datetime, direction=None, is_real_time=True, stop_id=None):
         self.datetime = datetime
         self.direction = direction
         self.is_real_time = is_real_time
+        self.stop_id = stop_id
 
 
 def _create_template_from_passage(passage):
@@ -146,6 +147,10 @@ class RoutePoint(object):
     def fetch_route_id(self, object_id_tag):
         # type: (Text) -> Optional[Text]
         return self._get_code(self.pb_route, object_id_tag)
+
+    def fetch_all_stop_id(self, object_id_tag):
+        # type: (Text) -> List[Text]
+        return self._get_all_codes(self.pb_stop_point, object_id_tag)
 
     def fetch_all_route_id(self, object_id_tag):
         # type: (Text) -> List[Text]

@@ -115,17 +115,19 @@ class Sytral(RealtimeProxy):
         The url returns something like a departure on a stop point
         """
 
-        stop_id = route_point.fetch_stop_id(self.object_id_tag)
+        stop_id_list = route_point.fetch_all_stop_id(self.object_id_tag)
 
-        if not stop_id:
+        if not stop_id_list:
             logging.getLogger(__name__).debug(
-                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id),
+                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id_list),
                 extra={'rt_system_id': unicode(self.rt_system_id)},
             )
             self.record_internal_failure('missing id')
             return None
 
-        url = "{base_url}?stop_id={stop_id}".format(base_url=self.service_url, stop_id=stop_id)
+        url = self.service_url
+        for stop_id in stop_id_list:
+            url += "?stop_id={stop_id}".format(stop_id=stop_id)
 
         return url
 
@@ -151,8 +153,9 @@ class Sytral(RealtimeProxy):
                 continue
             dt = self._get_dt(next_expected_st['datetime'])
             direction = next_expected_st.get('direction_name')
+            stop_id = next_expected_st.get('stop')
             is_real_time = next_expected_st.get('type') == 'E'
-            next_passage = RealTimePassage(dt, direction, is_real_time)
+            next_passage = RealTimePassage(dt, direction, is_real_time, stop_id)
             next_passages.append(next_passage)
 
         return next_passages
