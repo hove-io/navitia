@@ -80,6 +80,9 @@ struct Labels {
     inline void clear(const Labels& clean) {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
+
+        walking_duration_pts = clean.walking_duration_pts;
+        walking_duration_transfers = clean.walking_duration_transfers;
     }
     inline const DateTime& dt_transfer(SpIdx sp_idx) const { return dt_transfers[sp_idx]; }
     inline const DateTime& dt_pt(SpIdx sp_idx) const { return dt_pts[sp_idx]; }
@@ -89,12 +92,22 @@ struct Labels {
     inline bool pt_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_pt(sp_idx)); }
     inline bool transfer_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_transfer(sp_idx)); }
 
+
+    inline const DateTime & walking_duration_pt(SpIdx sp_idx) const { return walking_duration_pts[sp_idx]; }
+    inline const DateTime & walking_duration_transfer(SpIdx sp_idx) const { return walking_duration_transfers[sp_idx]; }
+
+    inline DateTime & mut_walking_duration_pt(SpIdx sp_idx)  { return walking_duration_pts[sp_idx]; }
+    inline DateTime & mut_walking_duration_transfer(SpIdx sp_idx)  { return walking_duration_transfers[sp_idx]; }
+
     const IdxMap<type::StopPoint, DateTime> & get_dt_pts() { return dt_pts; }
 
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
         dt_pts.assign(stops, val);
         dt_transfers.assign(stops, val);
+
+        walking_duration_pts.assign(stops, DateTimeUtils::not_valid);
+        walking_duration_transfers.assign(stops, DateTimeUtils::not_valid);
     }
 
     // All these vectors are indexed by sp_idx
@@ -103,6 +116,13 @@ private:
     IdxMap<type::StopPoint, DateTime> dt_pts;
     // At what time wan we reach this label with a transfer
     IdxMap<type::StopPoint, DateTime> dt_transfers;
+
+    // walking_duration_pts[stop_point] stores the walking duration elapsed during the whole
+    // journey from the starting point which reaches stop point at DateTime dt_pts[stop_point] with public transport
+    IdxMap<type::StopPoint, DateTime> walking_duration_pts;
+    // walking_duration_pts[stop_point] stores the walking duration elapsed during the whole
+    // journey from the starting point which reaches stop point at DateTime transfers_pts[stop_point] with transfers
+    IdxMap<type::StopPoint, DateTime> walking_duration_transfers;
 };
 
 }  // namespace routing
