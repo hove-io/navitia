@@ -100,6 +100,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                     << " from " << working_labels.dt_pt(sp_idx)
                                     << " to "  << workingDt
                                     << " throught : " << st.vehicle_journey->route->line->uri
+                                    << " walk : " << working_walking_duration
                             );
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             working_labels.mut_walking_duration_pt(sp_idx) = working_walking_duration;
@@ -141,15 +142,15 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
             LOG4CPLUS_TRACE(logger, "Updating label transfer count : " << count 
                         << " sp " << data.pt_data->stop_points[destination_sp_idx.val]->uri
-                        << " from " << working_labels.dt_transfer(sp_idx)
+                        << " from " << working_labels.dt_transfer(destination_sp_idx)
                         << " to "  << next
                         << " throught connection : " << data.pt_data->stop_points[sp_idx.val]->uri
+                        << " walk : " << previous_walking_duration_dt
                 );
 
             // if we can improve the best label, we mark it
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
             working_labels.mut_walking_duration_transfer(destination_sp_idx) = previous_walking_duration_dt + conn.duration;
-            BOOST_ASSERT(previous_walking_duration_dt != working_walking_duration);
             best_labels_transfers[destination_sp_idx] = next;
             result = true;
         }
@@ -803,6 +804,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                                                     << " from " << working_labels.dt_pt(jpp.sp_idx)
                                                     << " to "  << workingDt
                                                     << " throught : " << st.vehicle_journey->route->line->uri
+                                                    << " walk : " << working_walking_duration
                                            );
 
                             working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
