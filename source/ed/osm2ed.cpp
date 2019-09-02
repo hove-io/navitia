@@ -727,13 +727,13 @@ void OSMAdminRelation::build_polygon(OSMCache& cache) {
             }
             next_node = next_way->nodes.back();
         }
+        auto log = log4cplus::Logger::getInstance("log");
         if (tmp_polygon.outer().size() < 2 || ref == references.end()) {
             // add some logs
             // some admins are at the boundary of the osm data, so their own boundary may be incomplete
             // some other admins have a split boundary and it is impossible to compute it.
             // to check if the boundary is likely to be split we look for a very near point
             // The admin can also be checked with: http://ra.osmsurround.org/index
-            auto log = log4cplus::Logger::getInstance("log");
             for (const auto& r : references) {
                 if (!is_outer_way(r)) {
                     continue;
@@ -754,6 +754,18 @@ void OSMAdminRelation::build_polygon(OSMCache& cache) {
             }
             break;
         }
+
+        if (boost::geometry::area(tmp_polygon) < std::numeric_limits<double>::epsilon()) {
+            // if area is negative, the polygon needs to be reversed to be valid in OGC norm
+            boost::geometry::reverse(tmp_polygon);
+            if (boost::geometry::area(tmp_polygon) < std::numeric_limits<double>::epsilon()) {
+                // if area is null, it's not a valid shape (refused by PostGIS)
+                LOG4CPLUS_WARN(log, "Part or all of the shape of admin " << name << " (OSM id = " << id
+                                                                         << ") is rejected. Cause: null area.");
+                continue;
+            }
+        }
+
         const auto front = tmp_polygon.outer().front();
         const auto back = tmp_polygon.outer().back();
 
