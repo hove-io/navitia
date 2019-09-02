@@ -143,7 +143,7 @@ and that could be proposed to the user.
     This feature is only available in `distributed` scenario.
 </aside>
 
-With this mode, your journey may contain taxi sections(fallback or diret path). The journey you will obtain is basically as same as a journey by car. The only difference is that with taxi as fallback mode, a buffer time(marked as waiting, defaulted to 5 min) will appear int the section. The buffer time won't appear if the journey is a direct path. Depending on the calculator, the journey may pick up ways that reserved for taxis on not.
+With this mode, your journey may contain taxi sections(fallback or direct path). The journey you will obtain is basically the same as a journey by car. The only difference is that with taxi as fallback mode, a buffer time (section "waiting", defaulted to 5 min) will appear into the journey. The buffer time won't appear if the journey is a direct path. Depending on the calculator, the journey may pick up ways that are reserved for taxis on not.
 
 On demand transportation
 ------------------------
