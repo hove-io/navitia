@@ -599,6 +599,7 @@ void read_solutions(const RAPTOR& raptor,
     auto reader = RaptorSolutionReader<Visitor>(raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
                                                 accessibilite_params, transfer_penalty, end_point);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_point.sp_idx);
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
         for (const auto& a : v.clockwise() ? deps : arrs) {
@@ -616,7 +617,7 @@ void read_solutions(const RAPTOR& raptor,
             // we check that it's worth to explore this possible journey
             auto j = make_bound_journey(working_labels.dt_pt(a.first), a.second,
                                         raptor.labels[0].dt_transfer(end_point.sp_idx),
-                                        navitia::seconds(end_point.fallback_dur), count,
+                                        end_point_street_network_duration, count,
                                         raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
             LOG4CPLUS_TRACE(logger, "Journey from " 
                                     << stop_point->uri
