@@ -64,6 +64,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 const type::VehicleJourney* vj,
                                 const uint16_t l_zone,
                                 DateTime base_dt) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     auto& working_labels = labels[count];
     bool result = false;
     while (vj) {
@@ -93,7 +94,12 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             if (!v.comp(workingDt, best_labels_pts[sp_idx])) {
                 continue;
             }
-
+            LOG4CPLUS_TRACE(logger, "Updating label dt count : " << count 
+                                    << " sp " << data.pt_data->stop_points[sp_idx.val]->uri
+                                    << " from " << working_labels.dt_pt(sp_idx)
+                                    << " to "  << workingDt
+                                    << " throught : " << st.vehicle_journey->route->line->uri
+                            );
             working_labels.mut_dt_pt(sp_idx) = workingDt;
             best_labels_pts[sp_idx] = workingDt;
             result = true;
@@ -105,6 +111,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
 
 template <typename Visitor>
 bool RAPTOR::foot_path(const Visitor& v) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     bool result = false;
     auto& working_labels = labels[count];
     const auto& cnx_list = v.clockwise() ? data.dataRaptor->connections.forward_connections
@@ -127,6 +134,13 @@ bool RAPTOR::foot_path(const Visitor& v) {
             if (!v.comp(next, best_labels_transfers[destination_sp_idx])) {
                 continue;
             }
+
+            LOG4CPLUS_TRACE(logger, "Updating label transfer count : " << count 
+                        << " sp " << data.pt_data->stop_points[destination_sp_idx.val]->uri
+                        << " from " << working_labels.dt_transfer(sp_idx)
+                        << " to "  << next
+                        << " throught connection : " << data.pt_data->stop_points[sp_idx.val]->uri
+                );
 
             // if we can improve the best label, we mark it
             working_labels.mut_dt_transfer(destination_sp_idx) = next;
@@ -748,6 +762,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                             && visitor.comp(workingDt, best_labels_pts[jpp.sp_idx])
                             && valid_stop_points[jpp.sp_idx.val])  // we need to check the accessibility
                         {
+
+                            LOG4CPLUS_TRACE(logger, "Updating label dt count : " << count 
+                                                    << " sp " << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                    << " from " << working_labels.dt_pt(jpp.sp_idx)
+                                                    << " to "  << workingDt
+                                                    << " throught : " << st.vehicle_journey->route->line->uri
+                                           );
+
                             working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                             best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
                             continue_algorithm = true;
