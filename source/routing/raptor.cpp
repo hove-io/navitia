@@ -64,7 +64,8 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 const type::VehicleJourney* vj,
                                 const uint16_t l_zone,
                                 DateTime base_dt,
-                                DateTime working_walking_duration) {
+                                DateTime working_walking_duration,
+                                SpIdx boarding_stop_point) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     auto& working_labels = labels[count];
     bool result = false;
@@ -100,6 +101,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                     << " from " << working_labels.dt_pt(sp_idx)
                                     << " to "  << workingDt
                                     << " throught : " << st.vehicle_journey->route->line->uri
+                                    << " boarding_stop_point : " << data.pt_data->stop_points[boarding_stop_point.val]->uri
                                     << " walk : " << working_walking_duration
                             );
             working_labels.mut_dt_pt(sp_idx) = workingDt;
@@ -765,6 +767,10 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
 
             const JpIdx jp_idx = q_elt.first;
 
+            const RouteIdx route_idx = data.dataRaptor->jp_container.get(jp_idx).route_idx;
+
+
+
             /// q_elt.second == visitor.init_queue_item() means that
             /// this journey_pattern is marked "not to be scanned"
             if (q_elt.second != visitor.init_queue_item()) {
@@ -773,12 +779,17 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                 DateTime workingDt = visitor.worst_datetime();
                 DateTime base_dt = workingDt;
                 DateTime  working_walking_duration = DateTimeUtils::not_valid;
+                SpIdx    boarding_stop_point = SpIdx();
 
                 /// will be used to iterate through the StopTimeS of
                 /// the vehicle journey of the current journey_pattern (jp_idx)
                 ///  with the relevant departure date
                 typename Visitor::stop_time_iterator it_st;  /// item = type::StopTime
                 uint16_t l_zone = std::numeric_limits<uint16_t>::max();
+
+                LOG4CPLUS_TRACE(logger, " Scanning line  " 
+                        << data.pt_data->routes[route_idx.val]->line->uri
+                        );
 
 
                 const auto& jpps_to_explore =
@@ -804,6 +815,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                                                     << " from " << working_labels.dt_pt(jpp.sp_idx)
                                                     << " to "  << workingDt
                                                     << " throught : " << st.vehicle_journey->route->line->uri
+                                                    << " boarding_stop_point : " << data.pt_data->stop_points[boarding_stop_point.val]->uri
                                                     << " walk : " << working_walking_duration
                                            );
 
@@ -816,25 +828,65 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                         }
                     }
 
+
+
                     // We try to get on a vehicle, if we were already on a vehicle, but we arrived
                     // before on the previous via a connection, we try to catch a vehicle leaving this
                     // journey pattern point before
 
-                    /// the time at which we can board the journey_pattern (using at most count-1 transfers)
+
+                    // if we cannot board at this stop point, nothing to do
+                    if (  !prec_labels.transfer_is_initialized(jpp.sp_idx)
+                        || ! valid_stop_points[jpp.sp_idx.val]  ) {
+                        continue;
+                    }
+
+                    /// the time at which we arrive at stop point jpp.sp_idx (using at most count-1 transfers)
+                    //  hence we can board any vehicle arriving after previous_dt
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
                     const DateTime previous_walking_duration = prec_labels.walking_duration_transfer(jpp.sp_idx);
-                    if (prec_labels.transfer_is_initialized(jpp.sp_idx) 
-                        && valid_stop_points[jpp.sp_idx.val]
-                        && ( !is_onboard || visitor.better_or_equal(previous_dt, base_dt, *it_st) )
+
+
+                    /// we are at stop point jpp.idx at time previous_dt
+                    /// waiting for the next vehicle journey of the journey_pattern jpp.jp_idx to embark on
+                    /// the next vehicle journey will arrive at
+                    ///   tmp_st_dt.second
+                    /// the corresponding StopTime is
+                    ///    tmp_st_dt.first
+                    const auto tmp_st_dt =
+                        next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
+
+                    /// if there is no vehicle arriving after previous_dt, nothing to do
+                    if (tmp_st_dt.first == nullptr) {
+                        continue;
+                    }
+
+
+
+                    bool update_boarding_stop_point = !is_onboard 
+                                                        || visitor.comp(tmp_st_dt.second, workingDt)
+                                                        ||  (tmp_st_dt.second ==  workingDt && previous_walking_duration < working_walking_duration) ;
+                    // if(working_walking_duration != DateTimeUtils::not_valid) {
+                    //     update_boarding_stop_point = update_boarding_stop_point 
+                    //                                   || ( visitor.equal(previous_dt, base_dt, *it_st)
+                    //                                         && previous_walking_duration < working_walking_duration 
+                    //                                      );
+                    // }
+
+
+
+                    if (update_boarding_stop_point
                         ) {
-                        /// if we embark/are in a vehicle_journey at time previous_dt
-                        ///  from stop point jpp.idx, the next stop_point we will visit is
-                        //    tmp_st_dt.first
-                        //   and we will arrive at this next stop point at time
-                        //    tmp_st_dt.second
-                        const auto tmp_st_dt =
-                            next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
+                        /// we are at stop point jpp.idx at time previous_dt
+                        /// waiting for the next vehicle journey of the journey_pattern jpp.jp_idx to embark on
+                        /// the next vehicle journey will arrive at
+                        ///   tmp_st_dt.second
+                        /// the corresponding StopTime is
+                        ///    tmp_st_dt.first
+                        // const auto tmp_st_dt =
+                        //     next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
                         if (tmp_st_dt.first != nullptr) {
+
                             if (!is_onboard || &*it_st != tmp_st_dt.first) {
                                 // st_range is quite cache
                                 // unfriendly, so avoid using it if
@@ -854,8 +906,31 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                                 // which stop we pickup)
                                 l_zone = std::numeric_limits<uint16_t>::max();
                             }
+
+                            if(boarding_stop_point == SpIdx()) {
+                                LOG4CPLUS_TRACE(logger, "Setting boarding stop point : " << count 
+                                                << " to "  << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                << " walk after : " << previous_walking_duration
+                                        );
+                            }
+                            else {
+
+                                LOG4CPLUS_TRACE(logger, "Switching boarding stop point : " << count 
+                                                    << " from " << data.pt_data->stop_points[boarding_stop_point.val]->uri
+                                                    << " to "  << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                    << " working dt before : " << workingDt
+                                                    << " working dt after : " << tmp_st_dt.second
+                                                    << " walk before : " << working_walking_duration
+                                                    << " walk after : " << previous_walking_duration
+                                            );
+                                LOG4CPLUS_TRACE(logger, "  previous_dt : : " << previous_dt 
+                                    << " section_end(base_dt)" << it_st->section_end(base_dt, !visitor.clockwise())
+                            );
+
+                            }
                             workingDt = tmp_st_dt.second;
                             working_walking_duration = previous_walking_duration;
+                            boarding_stop_point = jpp.sp_idx;
 
                             base_dt = tmp_st_dt.first->base_dt(workingDt, visitor.clockwise());
                             BOOST_ASSERT(!visitor.comp(workingDt, previous_dt));
@@ -865,7 +940,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                 if (is_onboard) {
                     const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
                     if (vj_stay_in) {
-                        bool applied = apply_vj_extension(visitor, rt_level, vj_stay_in, l_zone, base_dt, working_walking_duration);
+                        bool applied = apply_vj_extension(visitor, rt_level, vj_stay_in, l_zone, base_dt, working_walking_duration, boarding_stop_point);
                         continue_algorithm = continue_algorithm || applied;
                     }
                 }

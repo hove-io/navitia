@@ -209,7 +209,8 @@ struct RAPTOR {
                             const type::VehicleJourney* vj,
                             const uint16_t l_zone,
                             DateTime workingDate,
-                            DateTime working_walking_duration);
+                            DateTime working_walking_duration,
+                            SpIdx boarding_stop_point);
 
     /// Main loop
     template <typename Visitor>
