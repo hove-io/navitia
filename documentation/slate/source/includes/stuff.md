@@ -136,6 +136,15 @@ Inside this section an attribute ridesharing_journeys contains one or multiple j
 depicting specifically the ridesharing ads that could match the above section
 and that could be proposed to the user.
 
+<a name="taxi-stuff"></a>Taxi
+-------------------------------------------
+
+<aside class="warning">
+    This feature is not available on all coverages, as it is dependent on other parameters of the coverage (how journeys are computed).
+</aside>
+
+With this mode, your journey may contain taxi sections(fallback or direct path). The journey you will obtain is basically the same as a journey by car. The only difference is that with taxi as fallback mode, a buffer time (section "waiting", defaulted to 5 min) will appear into the journey. The buffer time won't appear if the journey is a direct path. Depending on the calculator, the journey may pick up ways that are reserved for taxis on not.
+
 On demand transportation
 ------------------------
 
