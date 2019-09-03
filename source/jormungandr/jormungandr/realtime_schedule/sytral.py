@@ -155,7 +155,7 @@ class Sytral(RealtimeProxy):
             direction = next_expected_st.get('direction_name')
             stop_id = next_expected_st.get('stop')
             is_real_time = next_expected_st.get('type') == 'E'
-            next_passage = RealTimePassage(dt, direction, is_real_time, stop_id)
+            next_passage = RealTimePassage(dt, direction, is_real_time)
             next_passages.append(next_passage)
 
         return next_passages

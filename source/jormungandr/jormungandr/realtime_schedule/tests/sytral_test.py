@@ -469,15 +469,13 @@ def next_passage_for_route_point_multi_stop_point_id_test(mock_multi_stop_point_
 
         assert len(passages) == 4
 
+        # Stop id 42
         assert passages[0].datetime == datetime.datetime(2016, 4, 11, 13, 37, 15, tzinfo=pytz.UTC)
         assert not passages[0].is_real_time
-        assert passages[0].stop_id == '42'
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 13, 45, 35, tzinfo=pytz.UTC)
         assert passages[1].is_real_time
-        assert passages[1].stop_id == '42'
+        # Stop id 43
         assert passages[2].datetime == datetime.datetime(2016, 4, 11, 13, 38, 15, tzinfo=pytz.UTC)
         assert not passages[2].is_real_time
-        assert passages[2].stop_id == '43'
         assert passages[3].datetime == datetime.datetime(2016, 4, 11, 13, 47, 35, tzinfo=pytz.UTC)
         assert passages[3].is_real_time
-        assert passages[3].stop_id == '43'
