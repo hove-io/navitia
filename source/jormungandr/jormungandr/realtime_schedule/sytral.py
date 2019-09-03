@@ -125,9 +125,9 @@ class Sytral(RealtimeProxy):
             self.record_internal_failure('missing id')
             return None
 
-        url = self.service_url
-        for stop_id in stop_id_list:
-            url += "?stop_id={stop_id}".format(stop_id=stop_id)
+        url = self.service_url + "?stop_id={stop_id}".format(stop_id=stop_id_list[0])
+        for stop_id in stop_id_list[1:]:
+            url += "&stop_id={stop_id}".format(stop_id=stop_id)
 
         return url
 

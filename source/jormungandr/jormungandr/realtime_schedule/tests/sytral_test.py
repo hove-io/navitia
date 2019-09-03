@@ -459,7 +459,7 @@ def next_passage_for_route_point_multi_stop_point_id_test(mock_multi_stop_point_
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
     mock_requests = MockRequests(
-        {'http://bob.com/?stop_id=42?stop_id=43': (mock_multi_stop_point_id_response, 200)}
+        {'http://bob.com/?stop_id=42&stop_id=43': (mock_multi_stop_point_id_response, 200)}
     )
 
     route_point = MockRoutePoint(line_code='05', stop_id=['42', '43'])
