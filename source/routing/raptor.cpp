@@ -329,13 +329,13 @@ Journey convert_to_bound(const StartingPointSndPhase& sp,
                          bool clockwise) {
     Journey journey;
     journey.sections.resize(sp.count);  // only the number of sections is part of the dominance function
-    journey.sn_dur = navitia::time_duration(0, 0, sp.fallback_dur + lower_bound_fb, 0);
+    journey.sn_dur = navitia::time_duration(0, 0, sp.fallback_dur, 0);
     uint32_t nb_conn = (sp.count >= 1 ? sp.count - 1 : 0);
     if (clockwise) {
         journey.arrival_dt = sp.end_dt;
-        journey.departure_dt = sp.end_dt - journey.sn_dur.seconds() - nb_conn * lower_bound_conn;
+        journey.departure_dt = sp.end_dt - journey.sn_dur.seconds(); 
     } else {
-        journey.arrival_dt = sp.end_dt + journey.sn_dur.seconds() + nb_conn * lower_bound_conn;
+        journey.arrival_dt = sp.end_dt + journey.sn_dur.seconds(); 
         journey.departure_dt = sp.end_dt;
     }
 
