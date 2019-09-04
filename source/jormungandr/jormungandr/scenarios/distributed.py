@@ -90,8 +90,8 @@ class Distributed(object):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
-        requested_dep_modes = {mode for mode, _ in krakens_call}
-        requested_arr_modes = {mode for _, mode in krakens_call}
+        requested_dep_modes = {mode for mode, _, _ in krakens_call}
+        requested_arr_modes = {mode for _, mode, _ in krakens_call}
 
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])

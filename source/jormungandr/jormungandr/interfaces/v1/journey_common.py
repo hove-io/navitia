@@ -424,6 +424,16 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="Radius length (in meters) around the coordinates of arrival "
             "in which the stop points are considered free to go (crowfly=0)",
         )
+        parser_get.add_argument(
+            "direct_path_mode[]",
+            type=OptionValue(fallback_modes.all_fallback_modes),
+            default=[],
+            dest="direct_path_mode",
+            action="append",
+            help="Force the modes we want a direct path."
+            "If this list is not empty, we only compute direct_path for modes in this list"
+            "And filter all the direct_paths of modes in first_section mode[]",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

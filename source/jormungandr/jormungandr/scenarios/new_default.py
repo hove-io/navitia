@@ -91,7 +91,7 @@ STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, res
 
 def get_kraken_calls(request):
     """
-    return a list of tuple (departure fallback mode, arrival fallback mode)
+    return a list of tuple (departure fallback mode, arrival fallback mode, dp_type)
     from the request dict.
 
     for the moment it's a simple stuff:
@@ -102,25 +102,40 @@ def get_kraken_calls(request):
     """
     dep_modes = request['origin_mode']
     arr_modes = request['destination_mode']
+    dp_type = request.get('direct_path', 'indifferent')
+    direct_path_mode = request.get('direct_path_mode', [])
+
+    res = set()
+    for mode in direct_path_mode:
+        # to avoid duplicate tuples (mode1, mode2, "indifferent") and (mode1, mode2, "only")
+        # which will trigger 2 exact same computations
+        if mode not in dep_modes:
+            res.add((mode, mode, "only"))
 
     if len(dep_modes) == len(arr_modes) == 1:
-        return {(dep_modes[0], arr_modes[0])}
+        res.add((dep_modes[0], arr_modes[0], dp_type))
+        return res
 
     # this allowed_combinations is temporary, it does not handle all the use cases at all
     # We don't want to do ridesharing - ridesharing journeys
-    res = {c for c in fallback_modes.allowed_combinations if c in itertools.product(dep_modes, arr_modes)}
+    combinaison_mode = {
+        c for c in fallback_modes.allowed_combinations if c in itertools.product(dep_modes, arr_modes)
+    }
 
-    if not res:
+    if not combinaison_mode:
         abort(
             404,
             message='the asked first_section_mode[] ({}) and last_section_mode[] '
             '({}) combination is not yet supported'.format(dep_modes, arr_modes),
         )
 
+    for first_mode, second_mode in combinaison_mode:
+        res.add((first_mode, second_mode, dp_type))
+
     return res
 
 
-def create_pb_request(requested_type, request, dep_mode, arr_mode):
+def create_pb_request(requested_type, request, dep_mode, arr_mode, dp_type):
     """Parse the request dict and create the protobuf version"""
     # TODO: bench if the creation of the request each time is expensive
     req = request_pb2.Request()
@@ -170,7 +185,12 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     sn_params.origin_mode = dep_mode
     sn_params.destination_mode = arr_mode
 
-    req.journeys.max_duration = request["max_duration"]
+    # If we only want direct_paths, max_duration(time to pass in pt) is zero
+    if dp_type == "only":
+        req.journeys.max_duration = 0
+    else:
+        req.journeys.max_duration = request["max_duration"]
+
     req.journeys.max_transfers = request["max_transfers"]
     if request["max_extra_second_pass"]:
         req.journeys.max_extra_second_pass = request["max_extra_second_pass"]
@@ -912,7 +932,7 @@ class Scenario(simple.Scenario):
         if not api_request['destination_mode']:
             api_request['destination_mode'] = ['walking']
 
-        # Return the possible couples combinations (origin_mode and destination_mode)
+        # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
         # We need the original request (api_request) for filtering, but request
@@ -1044,8 +1064,8 @@ class Scenario(simple.Scenario):
                 )
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
-        for dep_mode, arr_mode in krakens_call:
-            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
+        for dep_mode, arr_mode, dp_type in krakens_call:
+            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode, dp_type)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
             futures.append(
                 pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id)
