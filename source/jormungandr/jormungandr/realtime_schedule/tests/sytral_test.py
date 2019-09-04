@@ -91,6 +91,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+02:00",
                 "type": "E",
                 "line": "05A",
@@ -99,6 +100,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -107,6 +109,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+02:00",
                 "type": "E",
                 "line": "05B",
@@ -115,6 +118,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
                 "type": "E",
                 "line": "04",
@@ -131,6 +135,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+02:00",
                 "type": "E",
                 "line": "05",
@@ -139,6 +144,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -147,6 +153,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+02:00",
                 "type": "E",
                 "line": "05",
@@ -155,7 +162,34 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
+                "type": "E",
+                "line": "04",
+                "stop": "42",
+            },
+        ]
+    }
+
+
+@pytest.fixture(scope="module")
+def mock_direction_type_is_forward_response():
+    return {
+        "departures": [
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "forward",
+                "datetime": "2016-04-11T14:37:15+02:00",
+                "type": "E",
+                "line": "05",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "forward",
+                "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
                 "stop": "42",
@@ -181,6 +215,7 @@ def mock_missing_line_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -189,6 +224,7 @@ def mock_missing_line_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
                 "type": "E",
                 "line": "04",
@@ -205,6 +241,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+01:00",
                 "type": "T",
                 "line": "05",
@@ -213,6 +250,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+01:00",
                 "type": "E",
                 "line": "04",
@@ -221,6 +259,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+01:00",
                 "type": "E",
                 "line": "05",
@@ -229,6 +268,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+01:00",
                 "type": "E",
                 "line": "04",
@@ -245,6 +285,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+01:00",
                 "type": "T",
                 "line": "05",
@@ -253,6 +294,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+01:00",
                 "type": "E",
                 "line": "04",
@@ -261,6 +303,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+01:00",
                 "type": "E",
                 "line": "05",
@@ -269,6 +312,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+01:00",
                 "type": "E",
                 "line": "04",
@@ -277,6 +321,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+01:00",
                 "type": "T",
                 "line": "05",
@@ -285,6 +330,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+01:00",
                 "type": "E",
                 "line": "04",
@@ -293,6 +339,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:47:35+01:00",
                 "type": "E",
                 "line": "05",
@@ -301,6 +348,7 @@ def mock_multi_stop_point_id_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+01:00",
                 "type": "E",
                 "line": "04",
@@ -364,7 +412,7 @@ def next_passage_for_route_point_test(mock_good_response):
         assert passages[1].is_real_time
 
 
-def next_passage_for_route_point_with_direction_type_test(mock_good_response):
+def next_passage_for_route_point_with_direction_type_test(mock_direction_type_is_forward_response):
     """
     test the whole next_passage_for_route_point with direction_type parameter
     mock the http call to return a good response, we should get some next_passages
@@ -372,7 +420,7 @@ def next_passage_for_route_point_with_direction_type_test(mock_good_response):
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
     mock_requests = MockRequests(
-        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_good_response, 200)}
+        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_direction_type_is_forward_response, 200)}
     )
 
     route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
@@ -380,12 +428,10 @@ def next_passage_for_route_point_with_direction_type_test(mock_good_response):
     with mock.patch('requests.get', mock_requests.get):
         passages = sytral.next_passage_for_route_point(route_point)
 
-        assert len(passages) == 2
+        assert len(passages) == 1
 
         assert passages[0].datetime == datetime.datetime(2016, 4, 11, 12, 37, 15, tzinfo=pytz.UTC)
         assert passages[0].is_real_time
-        assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
-        assert passages[1].is_real_time
 
 
 def next_passage_for_empty_response_test(mock_empty_response):
