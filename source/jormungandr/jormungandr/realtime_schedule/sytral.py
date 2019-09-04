@@ -129,6 +129,10 @@ class Sytral(RealtimeProxy):
         for stop_id in stop_id_list[1:]:
             url += "&stop_id={stop_id}".format(stop_id=stop_id)
 
+        direction_type = route_point.fetch_direction_type()
+        if direction_type:
+            url += "&direction_type={direction_type}".format(direction_type=direction_type)
+
         return url
 
     def _get_dt(self, datetime_str):

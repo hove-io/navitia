@@ -46,6 +46,12 @@ def make_url_test():
 
     assert url == 'http://bob.com/?stop_id=stop_tutu'
 
+    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu', direction_type='forward'))
+
+    assert validators.url(url)
+
+    assert url == 'http://bob.com/?stop_id=stop_tutu&direction_type=forward'
+
 
 def make_url_invalid_code_test():
     """
@@ -318,6 +324,11 @@ class MockRoutePoint(object):
         else:
             self._hardcoded_stop_ids = [l]
 
+        if 'direction_type' in kwargs:
+            self._hardcoded_direction_type = kwargs['direction_type']
+        else:
+            self._hardcoded_direction_type = None
+
     # def fetch_stop_id(self, object_id_tag):
     # return self._hardcoded_stop_id
 
@@ -326,6 +337,9 @@ class MockRoutePoint(object):
 
     def fetch_all_line_id(self, object_id_tag):
         return self._hardcoded_line_ids
+
+    def fetch_direction_type(self):
+        return self._hardcoded_direction_type
 
 
 def next_passage_for_route_point_test(mock_good_response):
@@ -338,6 +352,30 @@ def next_passage_for_route_point_test(mock_good_response):
     mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_good_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='42')
+
+    with mock.patch('requests.get', mock_requests.get):
+        passages = sytral.next_passage_for_route_point(route_point)
+
+        assert len(passages) == 2
+
+        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 12, 37, 15, tzinfo=pytz.UTC)
+        assert passages[0].is_real_time
+        assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
+        assert passages[1].is_real_time
+
+
+def next_passage_for_route_point_with_direction_type_test(mock_good_response):
+    """
+    test the whole next_passage_for_route_point with direction_type parameter
+    mock the http call to return a good response, we should get some next_passages
+    """
+    sytral = Sytral(id='tata', service_url='http://bob.com/')
+
+    mock_requests = MockRequests(
+        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_good_response, 200)}
+    )
+
+    route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
 
     with mock.patch('requests.get', mock_requests.get):
         passages = sytral.next_passage_for_route_point(route_point)
