@@ -2227,7 +2227,7 @@ class JourneysDirectPathMode:
     def test_direct_path_mode_bike(self):
         """
         test that the journey returns a direct_path_in bike and no direct path in walking
-        because of direct_path_mode[]=bike and a pt itinerary with walking fallback 
+        because of direct_path_mode[]=bike and a pt itinerary with walking fallback
         because of first_section_mode[]=walking
         """
         query = (
@@ -2248,7 +2248,7 @@ class JourneysDirectPathMode:
     def test_direct_path_mode_bike_and_direct_path_mode_none(self):
         """
         test that the journey returns no direct_path because of direct_path=none
-        even with direct_path_mode[]=bike and a pt itinerary with walking fallback 
+        even with direct_path_mode[]=bike and a pt itinerary with walking fallback
         because of first_section_mode[]=walking
         """
         query = (
