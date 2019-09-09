@@ -865,7 +865,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
 
                     bool update_boarding_stop_point = !is_onboard 
                                                         || visitor.comp(tmp_st_dt.second, workingDt)
-                                                        ||  (tmp_st_dt.second ==  workingDt && previous_walking_duration < working_walking_duration) ;
+                                                        ||  (tmp_st_dt.second ==  workingDt && previous_walking_duration <= working_walking_duration) ;
                     // if(working_walking_duration != DateTimeUtils::not_valid) {
                     //     update_boarding_stop_point = update_boarding_stop_point 
                     //                                   || ( visitor.equal(previous_dt, base_dt, *it_st)
