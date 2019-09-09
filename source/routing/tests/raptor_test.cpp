@@ -38,7 +38,11 @@ www.navitia.io
 #include "utils/logger.h"
 
 struct logger_initialized {
-    logger_initialized() { navitia::init_logger(); }
+    logger_initialized() {
+        navitia::init_logger();
+        auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
+    }
 };
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
@@ -293,8 +297,6 @@ BOOST_AUTO_TEST_CASE(over_midnight) {
 
     res1 = raptor.compute(d.stop_areas[0], d.stop_areas[2], "22:00"_t, 0, DateTimeUtils::set(1, 8500),
                           type::RTLevel::Base, 2_min, true);
-    std::cout << d.stop_areas[0]->uri << std::endl;
-    std::cout << d.stop_areas[2]->uri << std::endl;
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     res = res1.back();
@@ -2810,7 +2812,6 @@ BOOST_AUTO_TEST_CASE(optimize_extention_before_min_wait) {
                               "8:00"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min);
 
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    res[0].print();
     BOOST_REQUIRE_EQUAL(res[0].items.size(), 4);
     BOOST_CHECK_EQUAL(res[0].items[1].type, ItemType::walking);
     BOOST_CHECK_EQUAL(res[0].items[1].stop_points.front()->uri, "2");

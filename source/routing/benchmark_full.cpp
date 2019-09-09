@@ -245,20 +245,18 @@ int main(int argc, char** argv) {
         }
     }
 
-    //ecriture des requetes
+    // ecriture des requetes
     if (vm.count("dump_demands")) {
         std::fstream out_file(demands_output_file, std::ios::out);
         out_file << "Start id, Target id, , , Day, Hour" << std::endl;
 
         for (size_t i = 0; i < demands.size(); ++i) {
             PathDemand demand = demands[i];
-            out_file << demand.start << ", "
-                    << demand.target << ", " 
-                    << " " << ","
-                    << " " << ","
-                    << demand.date << ", "
-                    << demand.hour
-                    << std::endl;
+            out_file << demand.start << ", " << demand.target << ", "
+                     << " "
+                     << ","
+                     << " "
+                     << "," << demand.date << ", " << demand.hour << std::endl;
         }
         out_file.close();
     }

@@ -136,10 +136,9 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                      const boost::optional<uint32_t>& timeframe_duration) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    LOG4CPLUS_TRACE(logger, "direct_path_duration : " 
-                            << direct_path_duration.get_value_or(time_duration(boost::date_time::not_a_date_time))
-                            << " max_duration : " << max_duration        
-                    );
+    LOG4CPLUS_TRACE(logger, "direct_path_duration : "
+                                << direct_path_duration.get_value_or(time_duration(boost::date_time::not_a_date_time))
+                                << " max_duration : " << max_duration);
 
     std::vector<Path> pathes;
 
@@ -1395,13 +1394,13 @@ void make_response(navitia::PbCreator& pb_creator,
         return;
     }
 
-    for(const auto stop_point_iter : *departures) {
+    for (const auto stop_point_iter : *departures) {
         SpIdx sp_idx = stop_point_iter.first;
         navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
         LOG4CPLUS_TRACE(logger, "departure : " << stop_point->uri << " distance : " << stop_point_iter.second);
     }
 
-    for(const auto stop_point_iter : *destinations) {
+    for (const auto stop_point_iter : *destinations) {
         SpIdx sp_idx = stop_point_iter.first;
         navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
         LOG4CPLUS_TRACE(logger, "destination : " << stop_point->uri << " distance : " << stop_point_iter.second);

@@ -92,14 +92,13 @@ struct Labels {
     inline bool pt_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_pt(sp_idx)); }
     inline bool transfer_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_transfer(sp_idx)); }
 
+    inline const DateTime& walking_duration_pt(SpIdx sp_idx) const { return walking_duration_pts[sp_idx]; }
+    inline const DateTime& walking_duration_transfer(SpIdx sp_idx) const { return walking_duration_transfers[sp_idx]; }
 
-    inline const DateTime & walking_duration_pt(SpIdx sp_idx) const { return walking_duration_pts[sp_idx]; }
-    inline const DateTime & walking_duration_transfer(SpIdx sp_idx) const { return walking_duration_transfers[sp_idx]; }
+    inline DateTime& mut_walking_duration_pt(SpIdx sp_idx) { return walking_duration_pts[sp_idx]; }
+    inline DateTime& mut_walking_duration_transfer(SpIdx sp_idx) { return walking_duration_transfers[sp_idx]; }
 
-    inline DateTime & mut_walking_duration_pt(SpIdx sp_idx)  { return walking_duration_pts[sp_idx]; }
-    inline DateTime & mut_walking_duration_transfer(SpIdx sp_idx)  { return walking_duration_transfers[sp_idx]; }
-
-    const IdxMap<type::StopPoint, DateTime> & get_dt_pts() { return dt_pts; }
+    const IdxMap<type::StopPoint, DateTime>& get_dt_pts() { return dt_pts; }
 
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
