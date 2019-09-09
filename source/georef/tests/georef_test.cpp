@@ -36,6 +36,7 @@ www.navitia.io
 #include "utils/logger.h"
 
 #include "georef/georef.h"
+#include "georef/adminref.h"
 #include "tests/utils_test.h"
 #include "type/data.h"
 #include "builder.h"
@@ -1526,4 +1527,21 @@ BOOST_AUTO_TEST_CASE(projection_data_not_found) {
 
     BOOST_CHECK_THROW(proj[source_e], navitia::proximitylist::NotFound);
     BOOST_CHECK_THROW(proj[target_e], navitia::proximitylist::NotFound);
+}
+
+BOOST_AUTO_TEST_CASE(build_admin_tree_from_admin_with_no_boundary) {
+    std::vector<Admin*> admins;
+    Admin no_boundary;
+    admins.push_back(&no_boundary);
+
+    auto admin_tree = build_admins_tree(admins);
+
+    AdminRtree::Iterator it;
+    admin_tree.GetFirst(it);
+
+    double x, y;
+    it.GetBounds(&x, &y);
+
+    BOOST_CHECK_EQUAL(x, 0.);
+    BOOST_CHECK_EQUAL(y, 0.);
 }
