@@ -106,11 +106,12 @@ def get_kraken_calls(request):
     direct_path_mode = request.get('direct_path_mode', [])
 
     res = set()
-    for mode in direct_path_mode:
-        # to avoid duplicate tuples (mode1, mode2, "indifferent") and (mode1, mode2, "only")
-        # which will trigger 2 exact same computations
-        if mode not in dep_modes:
-            res.add((mode, mode, "only"))
+    if dp_type != "none":
+        for mode in direct_path_mode:
+            # to avoid duplicate tuples (mode1, mode2, "indifferent") and (mode1, mode2, "only")
+            # which will trigger 2 exact same computations
+            if mode not in dep_modes:
+                res.add((mode, mode, "only"))
 
     if len(dep_modes) == len(arr_modes) == 1:
         res.add((dep_modes[0], arr_modes[0], dp_type))

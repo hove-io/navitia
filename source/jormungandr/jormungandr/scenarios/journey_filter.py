@@ -163,9 +163,7 @@ def filter_journeys(responses, instance, request):
 
     dp_mode = request.get('direct_path_mode', [])
     if dp_mode:
-        filters.append(
-            FilterDirectPathMode(dp=dp, dp_mode=dp_mode, orig_modes=orig_modes, dest_modes=dest_modes)
-        )
+        filters.append(FilterDirectPathMode(dp_mode))
 
     # compose filters
 
@@ -342,11 +340,8 @@ class FilterDirectPathMode(SingleJourneyFilter):
 
     message = 'direct_path_mode_parameter'
 
-    def __init__(self, dp, dp_mode, orig_modes, dest_modes):
-        self.dp = dp
+    def __init__(self, dp_mode):
         self.dp_mode = [] if dp_mode is None else dp_mode
-        self.orig_modes = [] if orig_modes is None else orig_modes
-        self.dest_modes = [] if dest_modes is None else dest_modes
 
     def filter_func(self, journey):
         """
@@ -355,23 +350,12 @@ class FilterDirectPathMode(SingleJourneyFilter):
 
         is_dp = 'non_pt' in journey.tags
         is_in_direct_path_mode_list = any(mode in self.dp_mode for mode in journey.tags)
-        is_in_fallback_mode_list = any(mode in self.orig_modes for mode in journey.tags)
 
-        if self.dp == 'none' and is_dp:
+        # if direct_path of a mode which is not in direct_path_mode[]
+        if is_dp and not is_in_direct_path_mode_list:
             return False
 
-        if self.dp == 'only' and not is_dp:
-            return False
-
-        # if direct_path of a mode we want the direct_path
-        if is_dp and is_in_direct_path_mode_list:
-            return True
-
-        # if fallback of a mode we want to fallback
-        if not is_dp and is_in_fallback_mode_list:
-            return True
-
-        return False
+        return True
 
 
 class FilterTooLongDirectPath(SingleJourneyFilter):

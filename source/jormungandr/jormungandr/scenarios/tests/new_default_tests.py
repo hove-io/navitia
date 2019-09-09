@@ -348,8 +348,8 @@ def get_kraken_calls_test():
     req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"], "direct_path": "none"}
     assert get_kraken_calls(req) == {("walking", "walking", "none")}
 
-    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"], "direct_path": "only"}
-    assert get_kraken_calls(req) == {("walking", "walking", "only"), ("bike", "walking", "only")}
+    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"], "direct_path": "indifferent"}
+    assert get_kraken_calls(req) == {("walking", "walking", "indifferent"), ("bike", "walking", "indifferent")}
 
     req = {"origin_mode": ["bike", "walking"], "destination_mode": ["bss"], "direct_path": "indifferent"}
     assert get_kraken_calls(req) == {("bike", "bss", "indifferent")}
@@ -397,7 +397,7 @@ def get_kraken_calls_test():
         "direct_path_mode": ["bike"],
         "direct_path": "none",
     }
-    assert get_kraken_calls(req) == {("walking", "walking", "none"), ("bike", "bike", "only")}
+    assert get_kraken_calls(req) == {("walking", "walking", "none")}
 
 
 def get_kraken_calls_invalid_1_test():
