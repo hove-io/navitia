@@ -443,6 +443,11 @@ class JourneyCommon(object):
 
         query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
 
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
+
         # with street network desactivated
         response = self.query_region(query + "&max_duration_to_pt=0")
         assert 'journeys' not in response
@@ -461,6 +466,12 @@ class JourneyCommon(object):
 
         query = "journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120615T080000"
         query += "&max_duration_to_pt=0"
+
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
+
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -648,6 +659,11 @@ class JourneyCommon(object):
         assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
+
         # There is no direct_path but a journey using Metro
         response = self.query_region(query)
         check_best(response)
@@ -667,6 +683,11 @@ class JourneyCommon(object):
         assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
+
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -855,6 +876,10 @@ class JourneyCommon(object):
             to_coord="0.00188646;0.00071865",  # coordinate out of range in the dataset
             datetime="20120901T220000",
         )
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
 
         response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
 
@@ -923,6 +948,11 @@ class JourneyCommon(object):
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true&max_duration_to_pt=0".format(
             from_sa="stopA", to_sa="stopB", datetime="20120614T223000"
         )
+
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # code for new_defatul
+            query += "&max_walking_direct_path_duration=0"
 
         response = self.query_region(query)
         check_best(response)
