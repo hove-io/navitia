@@ -81,8 +81,27 @@ class Sytral(RealtimeProxy):
         except:
             return self.rt_system_id
 
+    def _make_params(self, route_point):
+        '''
+        create params list for GET request
+        '''
+        stop_id_list = route_point.fetch_all_stop_id(self.object_id_tag)
+        if not stop_id_list:
+            logging.getLogger(__name__).debug(
+                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id_list),
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
+            self.record_internal_failure('missing id')
+            return None
+        params = [('stop_id', i) for i in stop_id_list]
+
+        direction_type = route_point.fetch_direction_type()
+        if direction_type:
+            params.append(("direction_type", direction_type))
+        return params
+
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYTRAL', 30))
-    def _call(self, url):
+    def _call(self, url, **kwargs):
         """
         http call to sytralRT
         """
@@ -91,7 +110,7 @@ class Sytral(RealtimeProxy):
             extra={'rt_system_id': unicode(self.rt_system_id)},
         )
         try:
-            return self.breaker.call(requests.get, url, timeout=self.timeout)
+            return self.breaker.call(requests.get, url, **kwargs)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'systralRT service dead, using base ' 'schedule (error: {}'.format(e),
@@ -109,31 +128,6 @@ class Sytral(RealtimeProxy):
                 'systralRT RT error, using base schedule', extra={'rt_system_id': unicode(self.rt_system_id)}
             )
             raise RealtimeProxyError(str(e))
-
-    def _make_url(self, route_point):
-        """
-        The url returns something like a departure on a stop point
-        """
-
-        stop_id_list = route_point.fetch_all_stop_id(self.object_id_tag)
-
-        if not stop_id_list:
-            logging.getLogger(__name__).debug(
-                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id_list),
-                extra={'rt_system_id': unicode(self.rt_system_id)},
-            )
-            self.record_internal_failure('missing id')
-            return None
-
-        url = self.service_url + "?stop_id={stop_id}".format(stop_id=stop_id_list[0])
-        for stop_id in stop_id_list[1:]:
-            url += "&stop_id={stop_id}".format(stop_id=stop_id)
-
-        direction_type = route_point.fetch_direction_type()
-        if direction_type:
-            url += "&direction_type={direction_type}".format(direction_type=direction_type)
-
-        return url
 
     def _get_dt(self, datetime_str):
         dt = aniso8601.parse_datetime(datetime_str)
@@ -166,10 +160,11 @@ class Sytral(RealtimeProxy):
     def _get_next_passage_for_route_point(
         self, route_point, count=None, from_dt=None, current_dt=None, duration=None
     ):
-        url = self._make_url(route_point)
-        if not url:
+        params = self._make_params(route_point)
+        if not params:
             return None
-        r = self._call(url)
+        kwargs = {"params": params, "timeout": self.timeout}
+        r = self._call(self.service_url, **kwargs)
 
         if r.status_code != requests.codes.ok:
             logging.getLogger(__name__).error(
