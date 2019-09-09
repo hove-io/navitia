@@ -1158,7 +1158,7 @@ def test_filter_direct_path_mode_car():
     journey = response_pb2.Journey()
     journey.tags.append("car")
     journey.tags.append("non_pt")
-    f = jf.FilterDirectPathMode([])
+    f = jf.FilterDirectPathMode(["bike"])
     assert not f.filter_func(journey)
 
     # is_dp and is_in_direct_path_mode_list
@@ -1178,7 +1178,7 @@ def test_filter_direct_path_mode_car():
     # not is_dp and not is_in_direct_path_mode_list
     journey = response_pb2.Journey()
     journey.tags.append("car")
-    f = jf.FilterDirectPathMode([])
+    f = jf.FilterDirectPathMode(["bike"])
     assert f.filter_func(journey)
 
     # not is_dp and not is_in_direct_path_mode_list

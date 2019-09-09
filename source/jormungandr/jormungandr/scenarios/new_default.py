@@ -119,19 +119,19 @@ def get_kraken_calls(request):
 
     # this allowed_combinations is temporary, it does not handle all the use cases at all
     # We don't want to do ridesharing - ridesharing journeys
-    combinaison_mode = {
+    combination_mode = {
         c for c in fallback_modes.allowed_combinations if c in itertools.product(dep_modes, arr_modes)
     }
 
-    if not combinaison_mode:
+    if not combination_mode:
         abort(
             404,
             message='the asked first_section_mode[] ({}) and last_section_mode[] '
             '({}) combination is not yet supported'.format(dep_modes, arr_modes),
         )
 
-    for first_mode, second_mode in combinaison_mode:
-        res.add((first_mode, second_mode, dp_type))
+    for dep_mode, arr_mode in combination_mode:
+        res.add((dep_mode, arr_mode, dp_type))
 
     return res
 
