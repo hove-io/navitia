@@ -274,7 +274,7 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
                                                                   const bool clockwise) {
     std::vector<StartingPointSndPhase> res;
     auto overfilter = ParetoFront<std::pair<size_t, StartingPointSndPhase>, Dom>(Dom(clockwise));
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         const auto& working_labels = raptor.labels[count];
@@ -319,7 +319,6 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
 // creation of a fake journey from informations known after first pass
 // this journey aims at being the best we can hope from this StartingPointSndPhase
 Journey convert_to_bound(const StartingPointSndPhase& sp,
-                         uint32_t lower_bound_fb,
                          uint32_t lower_bound_conn,
                          const navitia::time_duration& transfer_penalty,
                          bool clockwise) {
@@ -510,7 +509,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                     << "Second pass from " << start_stop_point->uri << "   count : " << start.count);
 
         Journey fake_journey =
-            convert_to_bound(start, lower_bound_fb, data.dataRaptor->min_connection_time, transfer_penalty, clockwise);
+            convert_to_bound(start, data.dataRaptor->min_connection_time, transfer_penalty, clockwise);
 
         LOG4CPLUS_TRACE(logger, " fake journey : " << fake_journey);
 
@@ -837,10 +836,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                         continue;
                     }
 
-                    bool update_boarding_stop_point = !is_onboard
-                                                      || visitor.comp(tmp_st_dt.second, workingDt)
+                    bool update_boarding_stop_point =
+                        !is_onboard || visitor.comp(tmp_st_dt.second, workingDt)
+                        || (tmp_st_dt.second == workingDt && previous_walking_duration <= working_walking_duration);
 
-                                                             if (update_boarding_stop_point) {
+                    if (update_boarding_stop_point) {
                         /// we are at stop point jpp.idx at time previous_dt
                         /// waiting for the next vehicle journey of the journey_pattern jpp.jp_idx to embark on
                         /// the next vehicle journey will arrive at
