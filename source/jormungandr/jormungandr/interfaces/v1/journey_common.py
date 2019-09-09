@@ -430,9 +430,9 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             default=[],
             dest="direct_path_mode",
             action="append",
-            help="Force the modes we want a direct path."
+            help="Force the direct-path modes."
             "If this list is not empty, we only compute direct_path for modes in this list"
-            "And filter all the direct_paths of modes in first_section mode[]",
+            "And filter all the direct_paths of modes in first_section_mode[]",
         )
 
     def parse_args(self, region=None, uri=None):

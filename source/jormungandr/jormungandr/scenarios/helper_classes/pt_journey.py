@@ -214,7 +214,7 @@ class PtJourneyPool:
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
-        for dep_mode, arr_mode, dp_type in self._krakens_call:
+        for dep_mode, arr_mode, _ in self._krakens_call:
             dp = self._streetnetwork_path_pool.wait_and_get(
                 self._requested_orig_obj,
                 self._requested_dest_obj,

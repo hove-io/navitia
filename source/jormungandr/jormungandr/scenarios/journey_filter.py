@@ -355,9 +355,7 @@ class FilterDirectPathMode(SingleJourneyFilter):
 
         is_dp = 'non_pt' in journey.tags
         is_in_direct_path_mode_list = any(mode in self.dp_mode for mode in journey.tags)
-        is_in_fallback_mode_list = any(mode in self.orig_modes for mode in journey.tags) or any(
-            mode in self.dest_modes for mode in journey.tags
-        )
+        is_in_fallback_mode_list = any(mode in self.orig_modes for mode in journey.tags)
 
         if self.dp == 'none' and is_dp:
             return False

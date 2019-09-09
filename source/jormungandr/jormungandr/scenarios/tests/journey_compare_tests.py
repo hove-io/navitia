@@ -1187,11 +1187,11 @@ def test_filter_direct_path_mode_car():
     f = jf.FilterDirectPathMode(dp="indifferent", dp_mode=[], orig_modes=["car"], dest_modes=[])
     assert f.filter_func(journey)
 
-    # not is_dp and is_in_fallback_mode_list
+    # not is_dp and not is_in_fallback_mode_list
     journey = response_pb2.Journey()
     journey.tags.append("car")
     f = jf.FilterDirectPathMode(dp="indifferent", dp_mode=[], orig_modes=[], dest_modes=["car"])
-    assert f.filter_func(journey)
+    assert not f.filter_func(journey)
 
     # not is_dp and not is_in_fallback_mode_list
     journey = response_pb2.Journey()
