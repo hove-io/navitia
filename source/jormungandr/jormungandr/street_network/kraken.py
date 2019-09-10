@@ -86,7 +86,7 @@ class Kraken(AbstractStreetNetworkService):
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
-        new_request = copy.deepcopy(request)
+        direct_path_request = copy.deepcopy(request)
         if direct_path_type == StreetNetworkPathType.DIRECT:
             # in distributed scenario, we allow the street network calculator to compute a very long direct path
             # in case of Kraken, the stop condition of direct path in Kraken is defined as
