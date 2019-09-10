@@ -65,15 +65,17 @@ std::string Admin::postal_codes_to_string() const {
 
 AdminRtree build_admins_tree(const std::vector<Admin*> admins) {
     AdminRtree admins_tree;
-    double min[2];
-    double max[2];
+    double min[2] = {0., 0.};
+    double max[2] = {0., 0.};
     for (auto* admin : admins) {
-        boost::geometry::model::box<nt::GeographicalCoord> box;
-        boost::geometry::envelope(admin->boundary, box);
-        min[0] = box.min_corner().lon();
-        min[1] = box.min_corner().lat();
-        max[0] = box.max_corner().lon();
-        max[1] = box.max_corner().lat();
+        if (admin->boundary.size() > 0) {
+            boost::geometry::model::box<nt::GeographicalCoord> box;
+            boost::geometry::envelope(admin->boundary, box);
+            min[0] = box.min_corner().lon();
+            min[1] = box.min_corner().lat();
+            max[0] = box.max_corner().lon();
+            max[1] = box.max_corner().lat();
+        }
         admins_tree.Insert(min, max, admin);
     }
     return admins_tree;
