@@ -469,7 +469,7 @@ class JourneyCommon(object):
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         response = self.query_region(query)
@@ -661,7 +661,7 @@ class JourneyCommon(object):
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         # There is no direct_path but a journey using Metro
@@ -685,7 +685,7 @@ class JourneyCommon(object):
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         response = self.query_region(query)
@@ -878,7 +878,7 @@ class JourneyCommon(object):
         )
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
@@ -951,7 +951,7 @@ class JourneyCommon(object):
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         response = self.query_region(query)

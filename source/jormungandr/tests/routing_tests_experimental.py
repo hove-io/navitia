@@ -310,7 +310,7 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
 
 
 def _make_function_upper_limit(from_coord, to_coord, mode, op):
-    def test_max_mode_direct_path_duration(self):
+    def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
             'from={from_coord}'
@@ -337,7 +337,7 @@ def _make_function_upper_limit(from_coord, to_coord, mode, op):
         # Distributed -> 'journeys' not in response
         assert op('journeys' not in response)
 
-    return test_max_mode_direct_path_duration
+    return test_ko_direct_path_longer_than_max_mode_direct_path_duration
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
@@ -361,7 +361,7 @@ class TestDistributedMaxDurationForDirectPathUpperLimit(NewDefaultScenarioAbstra
 
 
 def _make_function_lower_limit(from_coord, to_coord, mode):
-    def test_max_mode_direct_path_duration(self):
+    def test_get_direct_path_smaller_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
             'from={from_coord}'
@@ -382,7 +382,7 @@ def _make_function_lower_limit(from_coord, to_coord, mode):
         assert mode in response['journeys'][0]['tags']
         assert 'non_pt' in response['journeys'][0]['tags']
 
-    return test_max_mode_direct_path_duration
+    return test_get_direct_path_smaller_than_max_mode_direct_path_duration
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
