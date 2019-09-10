@@ -445,7 +445,7 @@ class JourneyCommon(object):
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
             # In distributed scenario, we should deactivate direct path so that we can reuse the same
-            # code for new_defatul
+            # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
         # with street network desactivated
