@@ -96,12 +96,12 @@ class Kraken(AbstractStreetNetworkService):
             from jormungandr.fallback_modes import FallbackModes as fm
 
             kraken_mode = 'car_no_park' if mode in (fm.taxi.name, fm.ridesharing.name) else mode
-            new_request['max_{mode}_duration_to_pt'.format(mode=kraken_mode)] = int(
-                new_request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
+            direct_path_request['max_{mode}_duration_to_pt'.format(mode=kraken_mode)] = int(
+                direct_path_request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
             )
 
         req = self._create_direct_path_request(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, new_request
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
         )
 
         response = instance.send_and_receive(req)
