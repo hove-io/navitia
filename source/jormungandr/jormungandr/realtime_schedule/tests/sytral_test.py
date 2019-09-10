@@ -42,22 +42,17 @@ def make_url_params_test():
     # The return is like [(stop_id, val1), (stop_id, val2), (direction_type, val), ...]
     params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
 
-    assert len(params) == 1
-    assert 'stop_tutu' in params[0]
+    assert params == [('stop_id', 'stop_tutu')]
 
     params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id=['stop_tutu', 'stop_toto']))
 
-    assert len(params) == 2
-    assert 'stop_tutu' in params[0]
-    assert 'stop_toto' in params[1]
+    assert params == [('stop_id', 'stop_tutu'), ('stop_id', 'stop_toto')]
 
     params = sytral._make_params(
         MockRoutePoint(line_code='line_toto', stop_id='stop_tutu', direction_type='forward')
     )
 
-    assert len(params) == 2
-    assert 'stop_tutu' in params[0]
-    assert 'forward' in params[1]
+    assert params == [('stop_id', 'stop_tutu'), ('direction_type', 'forward')]
 
 
 def make_url_params_with_invalid_code_test():
@@ -89,7 +84,17 @@ class MockRequests(object):
         self.responses = responses
 
     def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
+        params = kwargs.get('params')
+        if params:
+            from six.moves.urllib.parse import urlencode
+
+            url += "?{}".format(urlencode(params, doseq=True))
+
+        r = self.responses.get(url)
+        if r:
+            return MockResponse(r[0], r[1], url)
+        else:
+            raise Exception("impossible to find mock response for url {}".format(url))
 
 
 @pytest.fixture(scope="module")
@@ -402,8 +407,8 @@ def next_passage_for_route_point_test(mock_good_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_good_response, 200)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_good_response, 200)})
+
     route_point = MockRoutePoint(line_code='05', stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -424,8 +429,10 @@ def next_passage_for_route_point_with_direction_type_test(mock_direction_type_is
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42&direction_type=forward
-    mock_requests = MockRequests({'http://bob.com/': (mock_direction_type_is_forward_response, 200)})
+    mock_requests = MockRequests(
+        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_direction_type_is_forward_response, 200)}
+    )
+
     route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -444,8 +451,8 @@ def next_passage_for_empty_response_test(mock_empty_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_empty_response, 500)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_empty_response, 500)})
+
     route_point = MockRoutePoint(line_code='05', stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -461,8 +468,8 @@ def next_passage_for_no_departures_response_test(mock_no_departure_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_no_departure_response, 200)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_no_departure_response, 200)})
+
     route_point = MockRoutePoint(line_code='05', stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -478,8 +485,8 @@ def next_passage_for_missing_line_response_test(mock_missing_line_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_missing_line_response, 200)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_missing_line_response, 200)})
+
     route_point = MockRoutePoint(line_code='05', stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -495,8 +502,8 @@ def next_passage_with_theoric_time_response_test(mock_theoric_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_theoric_response, 200)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_theoric_response, 200)})
+
     route_point = MockRoutePoint(line_code='05', stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -524,8 +531,8 @@ def next_passage_for_route_point_multiline_test(mock_multiline_response):
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42
-    mock_requests = MockRequests({'http://bob.com/': (mock_multiline_response, 200)})
+    mock_requests = MockRequests({'http://bob.com/?stop_id=42': (mock_multiline_response, 200)})
+
     route_point = MockRoutePoint(line_code=['05A', '05B'], stop_id='42')
 
     with mock.patch('requests.get', mock_requests.get):
@@ -545,8 +552,10 @@ def next_passage_for_route_point_multi_stop_point_id_test(mock_multi_stop_point_
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    # request http://bob.com/?stop_id=42&stop_id=43
-    mock_requests = MockRequests({'http://bob.com/': (mock_multi_stop_point_id_response, 200)})
+    mock_requests = MockRequests(
+        {'http://bob.com/?stop_id=42&stop_id=43': (mock_multi_stop_point_id_response, 200)}
+    )
+
     route_point = MockRoutePoint(line_code='05', stop_id=['42', '43'])
 
     with mock.patch('requests.get', mock_requests.get):

@@ -101,16 +101,16 @@ class Sytral(RealtimeProxy):
         return params
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYTRAL', 30))
-    def _call(self, url, **kwargs):
+    def _call(self, params):
         """
         http call to sytralRT
         """
         logging.getLogger(__name__).debug(
-            'systralRT RT service , call url : {}'.format(url),
+            'systralRT RT service , call url : {}'.format(self.service_url),
             extra={'rt_system_id': unicode(self.rt_system_id)},
         )
         try:
-            return self.breaker.call(requests.get, url, **kwargs)
+            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'systralRT service dead, using base ' 'schedule (error: {}'.format(e),
@@ -163,8 +163,7 @@ class Sytral(RealtimeProxy):
         params = self._make_params(route_point)
         if not params:
             return None
-        kwargs = {"params": params, "timeout": self.timeout}
-        r = self._call(self.service_url, **kwargs)
+        r = self._call(params)
 
         if r.status_code != requests.codes.ok:
             logging.getLogger(__name__).error(
