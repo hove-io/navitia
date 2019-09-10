@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, division
 import mock
 from jormungandr.realtime_schedule.sytral import Sytral
+from jormungandr.tests.utils_test import MockRequests
 import validators
 import datetime
 import pytz
@@ -77,24 +78,6 @@ class MockResponse(object):
 
     def json(self):
         return self.data
-
-
-class MockRequests(object):
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        params = kwargs.get('params')
-        if params:
-            from six.moves.urllib.parse import urlencode
-
-            url += "?{}".format(urlencode(params, doseq=True))
-
-        r = self.responses.get(url)
-        if r:
-            return MockResponse(r[0], r[1], url)
-        else:
-            raise Exception("impossible to find mock response for url {}".format(url))
 
 
 @pytest.fixture(scope="module")
@@ -430,7 +413,7 @@ def next_passage_for_route_point_with_direction_type_test(mock_direction_type_is
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
     mock_requests = MockRequests(
-        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_direction_type_is_forward_response, 200)}
+        {'http://bob.com/?direction_type=forward&stop_id=42': (mock_direction_type_is_forward_response, 200)}
     )
 
     route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
