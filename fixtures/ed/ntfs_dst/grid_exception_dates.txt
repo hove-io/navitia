@@ -1,4 +1,4 @@
-calendar_id,date,type
+grid_calendar_id,date,type
 REG_LaV,20150223,0
 REG_LaV,20150224,0
 REG_LaV,20150225,0
