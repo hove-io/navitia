@@ -255,7 +255,7 @@ struct PeriodFusioHandler : public GenericHandler {
     int id_c, begin_c, end_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "begin_date", "end_date"}; }
+    const std::vector<std::string> required_headers() const { return {"begin_date", "end_date"}; }
 };
 
 struct GridCalendarFusioHandler : public GenericHandler {
@@ -264,7 +264,7 @@ struct GridCalendarFusioHandler : public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
-        return {"id", "name", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
+        return {"name", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
     }
 };
 
@@ -273,7 +273,7 @@ struct ExceptionDatesFusioHandler : public GenericHandler {
     int id_c, datetime_c, type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "date", "type"}; }
+    const std::vector<std::string> required_headers() const { return {"date", "type"}; }
 };
 
 struct CalendarLineFusioHandler : public GenericHandler {
@@ -283,7 +283,7 @@ struct CalendarLineFusioHandler : public GenericHandler {
     bool line_id_is_present;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id"}; }
+    const std::vector<std::string> required_headers() const { return {}; }
 };
 
 struct CalendarTripFusioHandler : public GenericHandler {
