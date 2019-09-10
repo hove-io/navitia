@@ -123,7 +123,11 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
 
 @config({'scenario': 'distributed'})
 class TestJourneysDistributed(
-    JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+    JourneyCommon,
+    DirectPath,
+    JourneyMinBikeMinCar,
+    NewDefaultScenarioAbstractTestFixture,
+    JourneysDirectPathMode,
 ):
     """
     Test the experiental scenario

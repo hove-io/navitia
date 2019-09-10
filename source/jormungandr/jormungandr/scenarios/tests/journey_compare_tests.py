@@ -1151,3 +1151,38 @@ def test_activate_deactivate_min_taxi():
 
     f = jf.FilterTooShortHeavyJourneys(min_taxi=8, orig_modes=['taxi'], dest_modes=['taxi', 'walking'])
     assert not f.filter_func(journey)
+
+
+def test_filter_direct_path_mode_car():
+    # is_dp and not is_in_direct_path_mode_list
+    journey = response_pb2.Journey()
+    journey.tags.append("car")
+    journey.tags.append("non_pt")
+    f = jf.FilterDirectPathMode(["bike"])
+    assert not f.filter_func(journey)
+
+    # is_dp and is_in_direct_path_mode_list
+    journey = response_pb2.Journey()
+    journey.tags.append("car")
+    journey.tags.append("non_pt")
+    f = jf.FilterDirectPathMode(["car"])
+    assert f.filter_func(journey)
+
+    # is_dp and is_in_direct_path_mode_list
+    journey = response_pb2.Journey()
+    journey.tags.append("car")
+    journey.tags.append("non_pt")
+    f = jf.FilterDirectPathMode(["taxi", "surf", "car", "bike"])
+    assert f.filter_func(journey)
+
+    # not is_dp and not is_in_direct_path_mode_list
+    journey = response_pb2.Journey()
+    journey.tags.append("car")
+    f = jf.FilterDirectPathMode(["bike"])
+    assert f.filter_func(journey)
+
+    # not is_dp and not is_in_direct_path_mode_list
+    journey = response_pb2.Journey()
+    journey.tags.append("car")
+    f = jf.FilterDirectPathMode(["car"])
+    assert f.filter_func(journey)
