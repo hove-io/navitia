@@ -39,6 +39,7 @@ namespace type {
 template <typename T>
 Indexes indexes(const std::vector<T*>& elements) {
     Indexes result;
+    result.reserve(elements.size());
     for (T* element : elements) {
         result.insert(element->idx);
     }
@@ -48,6 +49,7 @@ Indexes indexes(const std::vector<T*>& elements) {
 template <typename T>
 Indexes indexes(const std::set<T*>& elements) {
     Indexes result;
+    result.reserve(elements.size());
     for (T* element : elements) {
         result.insert(element->idx);
     }
