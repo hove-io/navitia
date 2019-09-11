@@ -38,6 +38,8 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
+struct StopPoint;
+
 struct Route : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Route;
     Line* line = nullptr;
@@ -48,6 +50,7 @@ struct Route : public Header, Nameable, HasMessages {
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
     std::set<Dataset*> dataset_list;
+    std::set<StopPoint*> stop_point_list;
 
     type::hasOdtProperties get_odt_properties() const;
 

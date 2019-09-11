@@ -50,7 +50,7 @@ BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 namespace navitia {
 namespace type {
-bool operator==(const std::vector<Comment>& lhs, const std::vector<std::string>& rhs) {
+static bool operator==(const std::vector<Comment>& lhs, const std::vector<std::string>& rhs) {
     if (lhs.size() != rhs.size()) {
         return false;
     }

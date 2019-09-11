@@ -760,6 +760,7 @@ void builder::make() {
     data->pt_data->sort_and_index();
     data->build_uri();
     finish();
+    data->build_relations();
 }
 
 void builder::finalize_disruption_batch() {

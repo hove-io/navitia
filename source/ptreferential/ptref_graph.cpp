@@ -77,16 +77,20 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::PhysicalMode), Edge(0.9), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::PhysicalMode), Edge(1.8), g);
 
-    // À partir d'une ligne on peut avoir ses modes commerciaux, compagnies, réseaux et routes
+    // From a line, get its commercial_modes, companies, networks and routes
     boost::add_edge(vertex_map.at(Type_e::CommercialMode), vertex_map.at(Type_e::Line), g);
     boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::Line), g);
     boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Line), g);
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::Line), g);
 
-    // À partir d'une route on a sa ligne et ses journey pattern
+    // From a route, get its line, vehicle_journeys and journey_patterns
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::Route), g);
+
+    // Avoid JourneyPattern-JourneyPatternPoint on Route <-> StopPoint for performance issue
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::Route), Edge(2.5), g);
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::StopPoint), Edge(2.5), g);
 
     // JourneyPattern => {Route, JourneyPatternPoint, VehicleJourney, PhysicalMode}
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::JourneyPattern), g);
