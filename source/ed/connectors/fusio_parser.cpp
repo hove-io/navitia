@@ -1330,7 +1330,10 @@ void PeriodFusioHandler::init(Data&) {
     if (id_c == UNKNOWN_COLUMN) {
         id_c = csv.get_pos_col("calendar_id");
     }
-    begin_c = csv.get_pos_col("begin_date");
+    begin_c = csv.get_pos_col("start_date");
+    if (begin_c == UNKNOWN_COLUMN) {
+        begin_c = csv.get_pos_col("begin_date");
+    }
     end_c = csv.get_pos_col("end_date");
 }
 
