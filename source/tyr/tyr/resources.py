@@ -1995,6 +1995,7 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
+    @marshal_with(equipment_provider_list_fields)
     def put(self, id=None):
         """
         Create or update an equipment provider in db
@@ -2023,11 +2024,9 @@ class EquipmentsProvider(flask_restful.Resource):
         try:
             provider = models.EquipmentsProvider.find_by_id(id)
             status = 200
-            message["message"] = "Provider {} from db is updated".format(id)
         except sqlalchemy.orm.exc.NoResultFound:
             provider = models.EquipmentsProvider(id)
             models.db.session.add(provider)
-            message["message"] = "Provider {} is created".format(id)
             status = 201
 
         provider.from_json(input_json)
@@ -2035,7 +2034,7 @@ class EquipmentsProvider(flask_restful.Resource):
             models.db.session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
-        return message, status
+        return ({'equipments_providers': [provider]}, status)
 
     def delete(self, id=None):
         """
