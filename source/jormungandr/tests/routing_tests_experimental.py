@@ -309,7 +309,7 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
-def _make_function_test_over_upper_limit(from_coord, to_coord, mode, op):
+def _make_function_over_upper_limit(from_coord, to_coord, mode, op):
     def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
@@ -350,17 +350,17 @@ class TestDistributedMaxDurationForDirectPathUpperLimit(NewDefaultScenarioAbstra
 
     s = '8.98311981954709e-05;8.98311981954709e-05'
     r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function_upper_limit(s, r, 'walking', operator.truth)
-    test_max_car_direct_path_duration = _make_function_upper_limit(s, r, 'car', operator.truth)
-    test_max_bss_direct_path_duration = _make_function_upper_limit(s, r, 'bss', operator.truth)
-    test_max_bike_direct_path_duration = _make_function_upper_limit(s, r, 'bike', operator.truth)
+    test_max_walking_direct_path_duration = _make_function_over_upper_limit(s, r, 'walking', operator.truth)
+    test_max_car_direct_path_duration = _make_function_over_upper_limit(s, r, 'car', operator.truth)
+    test_max_bss_direct_path_duration = _make_function_over_upper_limit(s, r, 'bss', operator.truth)
+    test_max_bike_direct_path_duration = _make_function_over_upper_limit(s, r, 'bike', operator.truth)
 
     a = '0.001077974378345651;0.0007186495855637672'
     b = '8.98311981954709e-05;0.0002694935945864127'
-    test_max_taxi_direct_path_duration = _make_function_upper_limit(a, b, 'taxi', operator.truth)
+    test_max_taxi_direct_path_duration = _make_function_over_upper_limit(a, b, 'taxi', operator.truth)
 
 
-def _make_function_test_under_upper_limit(from_coord, to_coord, mode):
+def _make_function_under_upper_limit(from_coord, to_coord, mode):
     def test_get_direct_path_smaller_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
@@ -396,14 +396,14 @@ class TestDistributedMaxDurationForDirectPathLowerLimit(NewDefaultScenarioAbstra
 
     s = '8.98311981954709e-05;8.98311981954709e-05'
     r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function_lower_limit(s, r, 'walking')
-    test_max_car_direct_path_duration = _make_function_lower_limit(s, r, 'car')
-    test_max_bss_direct_path_duration = _make_function_lower_limit(s, r, 'bss')
-    test_max_bike_direct_path_duration = _make_function_lower_limit(s, r, 'bike')
+    test_max_walking_direct_path_duration = _make_function_under_upper_limit(s, r, 'walking')
+    test_max_car_direct_path_duration = _make_function_under_upper_limit(s, r, 'car')
+    test_max_bss_direct_path_duration = _make_function_under_upper_limit(s, r, 'bss')
+    test_max_bike_direct_path_duration = _make_function_under_upper_limit(s, r, 'bike')
 
     a = '0.001077974378345651;0.0007186495855637672'
     b = '8.98311981954709e-05;0.0002694935945864127'
-    test_max_taxi_direct_path_duration = _make_function_lower_limit(a, b, 'taxi')
+    test_max_taxi_direct_path_duration = _make_function_under_upper_limit(a, b, 'taxi')
 
 
 @dataset({"main_routing_test": {"scenario": "new_default"}})
@@ -414,10 +414,10 @@ class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixtu
 
     s = '8.98311981954709e-05;8.98311981954709e-05'
     r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function_upper_limit(s, r, 'walking', operator.not_)
-    test_max_car_direct_path_duration = _make_function_upper_limit(s, r, 'car', operator.not_)
-    test_max_bss_direct_path_duration = _make_function_upper_limit(s, r, 'bss', operator.not_)
-    test_max_bike_direct_path_duration = _make_function_upper_limit(s, r, 'bike', operator.not_)
+    test_max_walking_direct_path_duration = _make_function_over_upper_limit(s, r, 'walking', operator.not_)
+    test_max_car_direct_path_duration = _make_function_over_upper_limit(s, r, 'car', operator.not_)
+    test_max_bss_direct_path_duration = _make_function_over_upper_limit(s, r, 'bss', operator.not_)
+    test_max_bike_direct_path_duration = _make_function_over_upper_limit(s, r, 'bike', operator.not_)
 
 
 @config(
