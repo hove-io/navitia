@@ -309,7 +309,7 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
-def _make_function_upper_limit(from_coord, to_coord, mode, op):
+def _make_function_test_over_upper_limit(from_coord, to_coord, mode, op):
     def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
@@ -360,7 +360,7 @@ class TestDistributedMaxDurationForDirectPathUpperLimit(NewDefaultScenarioAbstra
     test_max_taxi_direct_path_duration = _make_function_upper_limit(a, b, 'taxi', operator.truth)
 
 
-def _make_function_lower_limit(from_coord, to_coord, mode):
+def _make_function_test_under_upper_limit(from_coord, to_coord, mode):
     def test_get_direct_path_smaller_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
