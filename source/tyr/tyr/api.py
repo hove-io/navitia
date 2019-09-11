@@ -76,7 +76,9 @@ api.add_resource(resources.BillingPlan, '/v0/billing_plans/', '/v0/billing_plans
 api.add_resource(resources.InstancePoiType, '/v0/instances/<string:instance_name>/poi_types')
 
 api.add_resource(
-    resources.AutocompleteParameter, '/v0/autocomplete_parameters/', '/v0/autocomplete_parameters/<string:name>'
+    resources.AutocompleteParameter,
+    '/v<int:version>/autocomplete_parameters/',
+    '/v<int:version>/autocomplete_parameters/<string:name>',
 )
 
 api.add_resource(resources.AutocompletePoiType, '/v0/autocomplete_parameters/<string:name>/poi_types')

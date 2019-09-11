@@ -1579,15 +1579,18 @@ class BillingPlan(flask_restful.Resource):
 
 
 class AutocompleteParameter(flask_restful.Resource):
-    def get(self, name=None):
+    @marshal_with(autocomplete_parameter_fields)
+    def get(self, version=0, name=None):
         if name:
-            autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
-            return marshal(autocomplete_param, autocomplete_parameter_fields)
+            autocomplete_params = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         else:
             autocomplete_params = models.AutocompleteParameter.query.all()
-            return marshal(autocomplete_params, autocomplete_parameter_fields)
+        if version == 1:
+            return {'autocomplete_parameters': autocomplete_params}
+        return autocomplete_params
 
-    def post(self):
+    @marshal_with(autocomplete_parameter_fields)
+    def post(self, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
@@ -1654,9 +1657,13 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete_parameter, autocomplete_parameter_fields)
 
-    def put(self, name=None):
+        if version == 1:
+            return {'autocomplete_parameters': autocomplete_parameter}
+        return autocomplete_parameter
+
+    @marshal_with(autocomplete_parameter_fields)
+    def put(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1713,9 +1720,12 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete_param, autocomplete_parameter_fields)
 
-    def delete(self, name=None):
+        if version == 1:
+            return {'autocomplete_parameters': autocomplete_param}
+        return autocomplete_param
+
+    def delete(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         try:
             remove_autocomplete_depot.delay(name)
@@ -1724,7 +1734,7 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class InstanceDataset(flask_restful.Resource):
