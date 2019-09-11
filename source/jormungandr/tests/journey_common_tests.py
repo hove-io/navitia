@@ -444,7 +444,7 @@ class JourneyCommon(object):
         query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
@@ -468,7 +468,7 @@ class JourneyCommon(object):
         query += "&max_duration_to_pt=0"
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
@@ -660,7 +660,7 @@ class JourneyCommon(object):
 
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
@@ -684,7 +684,7 @@ class JourneyCommon(object):
 
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
@@ -877,7 +877,7 @@ class JourneyCommon(object):
             datetime="20120901T220000",
         )
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
@@ -950,7 +950,7 @@ class JourneyCommon(object):
         )
 
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
-            # In distributed scenario, we should deactivate direct path so that we can reuse the same
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
             # code for new_default
             query += "&max_walking_direct_path_duration=0"
 
