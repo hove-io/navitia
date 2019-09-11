@@ -66,7 +66,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 DateTime base_dt,
                                 DateTime working_walking_duration,
                                 SpIdx boarding_stop_point) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
     auto& working_labels = labels[count];
     bool result = false;
     while (vj) {
@@ -115,7 +115,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
 
 template <typename Visitor>
 bool RAPTOR::foot_path(const Visitor& v) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
     bool result = false;
     auto& working_labels = labels[count];
     const auto& cnx_list = v.clockwise() ? data.dataRaptor->connections.forward_connections
@@ -274,7 +274,7 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
                                                                   const bool clockwise) {
     std::vector<StartingPointSndPhase> res;
     auto overfilter = ParetoFront<std::pair<size_t, StartingPointSndPhase>, Dom>(Dom(clockwise));
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 
     for (unsigned count = 1; count <= raptor.count; ++count) {
         const auto& working_labels = raptor.labels[count];
@@ -289,10 +289,9 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
             const unsigned arrival_walking_t = a.second.total_seconds();
             const DateTime walking_duration_before_arrival_stop_point = working_labels.walking_duration_pt(a.first);
             const DateTime total_walking_duration = arrival_walking_t + walking_duration_before_arrival_stop_point;
-            StartingPointSndPhase starting_point = {a.first, count,
-                                                    (clockwise ? working_labels.dt_pt(a.first) + arrival_walking_t
-                                                               : working_labels.dt_pt(a.first) - arrival_walking_t),
-                                                    total_walking_duration, false};
+            const DateTime arrival_date_time =
+                working_labels.dt_pt(a.first) + (clockwise ? arrival_walking_t : -arrival_walking_t);
+            StartingPointSndPhase starting_point = {a.first, count, arrival_date_time, total_walking_duration, false};
 
             // LOG4CPLUS_TRACE(logger, "Candidate starting point second phase : "
             //                     << raptor.data.pt_data->stop_points[a.first.val]->uri
@@ -372,7 +371,7 @@ Journey convert_to_bound(const StartingPointSndPhase& sp,
 //    size_t nb_is_dominated_by = 0;
 //    size_t nb_dominates = 0;
 //    size_t nb_inserted = 0;
-//    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+//    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 //};
 }  // namespace
 
@@ -435,7 +434,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                               bool clockwise,
                                               const boost::optional<navitia::time_duration>& direct_path_dur,
                                               const size_t max_extra_second_pass) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 
     LOG4CPLUS_TRACE(logger, "departure_datetime : " << iso_string(departure_datetime, data)
                                                     << " bound : " << iso_string(bound, data));
@@ -515,7 +514,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
 
         if (solutions.contains_better_than(fake_journey)) {
             LOG4CPLUS_TRACE(logger, "has better solution than fake journey from " << start_stop_point->uri);
-            for (auto solution : solutions) {
+            for (const auto& solution : solutions) {
                 if (dominator(solution, fake_journey)) {
                     LOG4CPLUS_TRACE(logger, "  dominated by : " << solution);
                     break;
@@ -726,7 +725,7 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date,
 
 template <typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t max_transfers) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
     bool continue_algorithm = true;
     count = 0;  //< Count iteration of raptor algorithm
 
@@ -776,8 +775,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
 
                 const auto& jpps_to_explore =
                     visitor.jpps_from_order(data.dataRaptor->jpps_from_jp, jp_idx, q_elt.second);
-                for (const auto& jpp : jpps_to_explore) {
-                    /// jpp : dataRAPTOR::JppsFromJp::Jpp
+                for (const dataRAPTOR::JppsFromJp::Jpp& jpp : jpps_to_explore) {
                     if (is_onboard) {
                         ++it_st;
                         // We update workingDt with the new arrival time

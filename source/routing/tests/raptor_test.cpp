@@ -40,6 +40,8 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized() {
         navitia::init_logger();
+        auto raptor_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+        raptor_logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
         auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
     }
