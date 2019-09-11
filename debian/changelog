@@ -1,3 +1,9 @@
+navitia2 (2.84.1) unstable; urgency=low
+
+  * Kraken: Fix performance issue by adding pt_ref link between route and stop_point <https://github.com/CanalTP/navitia/pull/2931>
+
+ -- Nonifier <olivier.georget@kisio.org>  Wed, 11 Sep 2019 11:09:37 +0100
+
 navitia2 (2.84.0) unstable; urgency=low
 
   * Jormun: Update status  <https://github.com/CanalTP/navitia/pull/2922>
