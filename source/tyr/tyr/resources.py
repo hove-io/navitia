@@ -752,7 +752,7 @@ class User(flask_restful.Resource):
         return models.User.query.get_or_404(user_id)
 
     def _get_user_by_keys(self, keys):
-        logging.debug(args['key'])
+        logging.debug(keys)
         return models.User.get_from_token(keys, datetime.now())
 
     def _get_all_users(self, args):

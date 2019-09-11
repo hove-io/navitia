@@ -761,3 +761,22 @@ def test_delete_billing_plan_used_by_an_user(create_user, geojson_polygon):
 
     _, status = api_delete('/v0/billing_plans/{}'.format(resp['billing_plan']['id']), check=False, no_json=True)
     assert status == 409
+
+
+def test_filter_users_by_key(create_user, create_multiple_users):
+    resp_users = api_get('/v0/users')
+    assert len(resp_users) == 3
+    for user in resp_users:
+        api_post(
+            '/v0/users/{}/keys'.format(user['id']),
+            data=json.dumps({'app_name': 'myApp'}),
+            content_type='application/json',
+        )
+
+        resp_user = api_get('/v0/users/{}'.format(user['id']))
+        assert len(resp_user['keys']) == 1
+        assert 'token' in resp_user['keys'][0]
+
+        token = resp_user['keys'][0]['token']
+        resp_token = api_get('/v0/users?key={}'.format(token))
+        assert resp_token['id'] == user['id']
