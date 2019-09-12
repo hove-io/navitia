@@ -81,6 +81,14 @@ def create_api():
         models.db.session.delete(api)
 
 
+@pytest.fixture
+def create_autocomplete_parameters():
+    with app.app_context():
+        autocomp = models.AutocompleteParameter(name='autocomp_name')
+        models.db.session.add(autocomp)
+        models.db.session.commit()
+
+
 def check_v1_response(endpoint, request=None):
     if not request:
         request = endpoint
@@ -197,3 +205,65 @@ def test_authorization_methods(create_5_users, create_instance, create_api):
         '/v1/users/{}/authorizations'.format(user_id), data=json.dumps(auth), content_type='application/json'
     )
     assert len(resp_delete['user']['authorizations']) == 0
+
+
+def test_autocomplete_parameters(create_autocomplete_parameters):
+    check_v1_response('autocomplete_parameters')
+
+
+def test_autocomplete_parameters_methods():
+    resp_get = api_get('/v1/autocomplete_parameters')
+    assert 'autocomplete_parameters' in resp_get
+    initial_num = len(resp_get['autocomplete_parameters'])
+    assert initial_num == 0
+
+    autocomplete_data = {
+        'street': 'OSM',
+        'name': 'france',
+        'address': 'BANO',
+        'admin': 'COSMOGONY',
+        'poi': 'OSM',
+    }
+    resp_post, status_post = api_post(
+        '/v1/autocomplete_parameters',
+        data=json.dumps(autocomplete_data),
+        content_type='application/json',
+        check=False,
+    )
+    assert status_post == 201
+    assert 'autocomplete_parameters' in resp_post
+    assert len(resp_post['autocomplete_parameters']) == 1
+    for key in autocomplete_data.keys():
+        assert resp_post['autocomplete_parameters'][0][key] == autocomplete_data[key]
+    autocomplete_name = resp_post['autocomplete_parameters'][0]['name']
+
+    resp_get = api_get('/v1/autocomplete_parameters')
+    assert 'autocomplete_parameters' in resp_get
+    assert len(resp_get['autocomplete_parameters']) == initial_num + 1
+    assert resp_get['autocomplete_parameters'][0]['name'] == autocomplete_name
+    for key in autocomplete_data.keys():
+        assert resp_get['autocomplete_parameters'][0][key] == autocomplete_data[key]
+
+    autocomplete_data_update = {'address': 'OA'}
+    resp_put = api_put(
+        '/v1/autocomplete_parameters/{}'.format(autocomplete_name),
+        data=json.dumps(autocomplete_data_update),
+        content_type='application/json',
+    )
+    assert 'autocomplete_parameters' in resp_put
+    assert len(resp_put['autocomplete_parameters']) == 1
+
+    resp_get = api_get('/v1/autocomplete_parameters')
+    assert 'autocomplete_parameters' in resp_get
+    assert len(resp_get['autocomplete_parameters']) == initial_num + 1
+    assert resp_get['autocomplete_parameters'][0]['name'] == autocomplete_name
+    assert resp_get['autocomplete_parameters'][0]['address'] == autocomplete_data_update['address']
+
+    resp_delete, status_delete = api_delete(
+        '/v1/autocomplete_parameters/{}'.format(autocomplete_name), check=False, no_json=True
+    )
+    assert status_delete == 204
+
+    resp_get = api_get('/v1/autocomplete_parameters')
+    assert 'autocomplete_parameters' in resp_get
+    assert len(resp_get['autocomplete_parameters']) == initial_num

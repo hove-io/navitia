@@ -105,10 +105,10 @@ def test_equipments_provider_put(default_equipments_config):
         check=False,
     )
     assert status == 201
-    assert 'equipments_providers' in resp
-    assert len(resp['equipments_providers']) == 1
+    assert 'equipments_provider' in resp
+    assert len(resp['equipments_provider']) == 1
     for key in new_provider.keys():
-        assert resp['equipments_providers'][0][key] == new_provider[key]
+        assert resp['equipments_provider'][0][key] == new_provider[key]
 
     resp = api_get('/v0/equipments_providers')
     assert 'equipments_providers' in resp
@@ -123,10 +123,10 @@ def test_equipments_provider_put(default_equipments_config):
         check=False,
     )
     assert status == 200
-    assert 'equipments_providers' in resp
-    assert len(resp['equipments_providers']) == 1
+    assert 'equipments_provider' in resp
+    assert len(resp['equipments_provider']) == 1
     for key in new_provider.keys():
-        assert resp['equipments_providers'][0][key] == new_provider[key]
+        assert resp['equipments_provider'][0][key] == new_provider[key]
 
     resp = api_get('/v0/equipments_providers/sytral3')
     assert 'equipments_providers' in resp

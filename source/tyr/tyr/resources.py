@@ -1579,17 +1579,16 @@ class BillingPlan(flask_restful.Resource):
 
 
 class AutocompleteParameter(flask_restful.Resource):
-    @marshal_with(autocomplete_parameter_fields)
     def get(self, version=0, name=None):
         if name:
             autocomplete_params = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         else:
             autocomplete_params = models.AutocompleteParameter.query.all()
+        resp = marshal(autocomplete_params, autocomplete_parameter_fields)
         if version == 1:
-            return {'autocomplete_parameters': autocomplete_params}
-        return autocomplete_params
+            return {'autocomplete_parameters': resp}
+        return resp
 
-    @marshal_with(autocomplete_parameter_fields)
     def post(self, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1653,16 +1652,16 @@ class AutocompleteParameter(flask_restful.Resource):
             create_autocomplete_depot.delay(autocomplete_parameter.name)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate name'}, 409)
+            return {'error': 'duplicate name'}, 409
         except Exception:
             logging.exception("fail")
             raise
 
+        resp = marshal(autocomplete_parameter, autocomplete_parameter_fields)
         if version == 1:
-            return {'autocomplete_parameters': autocomplete_parameter}
-        return autocomplete_parameter
+            return {'autocomplete_parameters': [resp]}, 201
+        return resp
 
-    @marshal_with(autocomplete_parameter_fields)
     def put(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
@@ -1721,9 +1720,10 @@ class AutocompleteParameter(flask_restful.Resource):
             logging.exception("fail")
             raise
 
+        resp = marshal(autocomplete_param, autocomplete_parameter_fields)
         if version == 1:
-            return {'autocomplete_parameters': autocomplete_param}
-        return autocomplete_param
+            return {'autocomplete_parameters': [resp]}
+        return resp
 
     def delete(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
@@ -1734,7 +1734,7 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return {}, 204
+        return None, 204
 
 
 class InstanceDataset(flask_restful.Resource):
@@ -2005,7 +2005,6 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
-    @marshal_with(equipment_provider_list_fields)
     def put(self, id=None):
         """
         Create or update an equipment provider in db
@@ -2044,7 +2043,7 @@ class EquipmentsProvider(flask_restful.Resource):
             models.db.session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
-        return ({'equipments_providers': [provider]}, status)
+        return {'equipments_provider': [marshal(provider, equipment_provider_fields)]}, status
 
     def delete(self, id=None):
         """
