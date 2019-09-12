@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/geographical_coord.h"
 #include "type/odt_properties.h"
 #include <set>
+#include <boost/container/flat_set.hpp>
 
 namespace navitia {
 namespace type {
@@ -50,7 +51,7 @@ struct Route : public Header, Nameable, HasMessages {
     std::vector<DiscreteVehicleJourney*> discrete_vehicle_journey_list;
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
     std::set<Dataset*> dataset_list;
-    std::set<StopPoint*> stop_point_list;
+    boost::container::flat_set<StopPoint*> stop_point_list;
 
     type::hasOdtProperties get_odt_properties() const;
 

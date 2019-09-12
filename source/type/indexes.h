@@ -29,6 +29,7 @@ www.navitia.io
 */
 #pragma once
 
+#include <boost/container/flat_set.hpp>
 #include <set>
 #include <vector>
 #include "type/type_interfaces.h"
@@ -48,6 +49,16 @@ Indexes indexes(const std::vector<T*>& elements) {
 
 template <typename T>
 Indexes indexes(const std::set<T*>& elements) {
+    Indexes result;
+    result.reserve(elements.size());
+    for (T* element : elements) {
+        result.insert(element->idx);
+    }
+    return result;
+}
+
+template <typename T>
+Indexes indexes(const boost::container::flat_set<T*>& elements) {
     Indexes result;
     result.reserve(elements.size());
     for (T* element : elements) {
