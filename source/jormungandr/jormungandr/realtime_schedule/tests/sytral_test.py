@@ -30,30 +30,33 @@
 from __future__ import absolute_import, print_function, division
 import mock
 from jormungandr.realtime_schedule.sytral import Sytral
+from jormungandr.tests.utils_test import MockRequests
 import validators
 import datetime
 import pytz
 import pytest
 
 
-def make_url_test():
+def make_url_params_test():
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
+    # The return is like [(stop_id, val1), (stop_id, val2), (direction_type, val), ...]
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
 
-    # it should be a valid url
-    assert validators.url(url)
+    assert params == [('stop_id', 'stop_tutu')]
 
-    assert url == 'http://bob.com/?stop_id=stop_tutu'
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id=['stop_tutu', 'stop_toto']))
 
-    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu', direction_type='forward'))
+    assert params == [('stop_id', 'stop_tutu'), ('stop_id', 'stop_toto')]
 
-    assert validators.url(url)
+    params = sytral._make_params(
+        MockRoutePoint(line_code='line_toto', stop_id='stop_tutu', direction_type='forward')
+    )
 
-    assert url == 'http://bob.com/?stop_id=stop_tutu&direction_type=forward'
+    assert params == [('stop_id', 'stop_tutu'), ('direction_type', 'forward')]
 
 
-def make_url_invalid_code_test():
+def make_url_params_with_invalid_code_test():
     """
     test make_url when RoutePoint does not have a mandatory code
 
@@ -61,9 +64,10 @@ def make_url_invalid_code_test():
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id=[]))
+    # The return is like [(stop_id, val1), (stop_id, val2), (direction_type, val), ...]
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id=[]))
 
-    assert url is None
+    assert params == None
 
 
 class MockResponse(object):
@@ -74,14 +78,6 @@ class MockResponse(object):
 
     def json(self):
         return self.data
-
-
-class MockRequests(object):
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
 
 
 @pytest.fixture(scope="module")
@@ -377,9 +373,6 @@ class MockRoutePoint(object):
         else:
             self._hardcoded_direction_type = None
 
-    # def fetch_stop_id(self, object_id_tag):
-    # return self._hardcoded_stop_id
-
     def fetch_all_stop_id(self, object_id_tag):
         return self._hardcoded_stop_ids
 
@@ -420,7 +413,7 @@ def next_passage_for_route_point_with_direction_type_test(mock_direction_type_is
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
     mock_requests = MockRequests(
-        {'http://bob.com/?stop_id=42&direction_type=forward': (mock_direction_type_is_forward_response, 200)}
+        {'http://bob.com/?direction_type=forward&stop_id=42': (mock_direction_type_is_forward_response, 200)}
     )
 
     route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
