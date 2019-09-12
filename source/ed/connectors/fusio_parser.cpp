@@ -1330,17 +1330,16 @@ void PeriodFusioHandler::init(Data&) {
     if (id_c == UNKNOWN_COLUMN) {
         id_c = csv.get_pos_col("calendar_id");
     }
-    begin_c = csv.get_pos_col("start_date");
-    if (begin_c == UNKNOWN_COLUMN) {
-        begin_c = csv.get_pos_col("begin_date");
+    start_c = csv.get_pos_col("start_date");
+    if (start_c == UNKNOWN_COLUMN) {
+        start_c = csv.get_pos_col("begin_date");
     }
     end_c = csv.get_pos_col("end_date");
 }
 
 void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
     if (!is_first_line && !has_col(id_c, row)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename
-                                                       << "  file has more than one period and no calendar_id column");
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
     auto cal = gtfs_data.calendars_map.find(row[id_c]);
@@ -1349,8 +1348,8 @@ void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_li
         return;
     }
     boost::gregorian::date begin_date, end_date;
-    if (has_col(begin_c, row)) {
-        begin_date = parse_date(row[begin_c]);
+    if (has_col(start_c, row)) {
+        begin_date = parse_date(row[start_c]);
     }
     if (has_col(end_c, row)) {
         end_date = parse_date(row[end_c]);
@@ -1382,8 +1381,7 @@ void GridCalendarFusioHandler::init(Data&) {
 
 void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     if (!is_first_line && !has_col(id_c, row)) {
-        LOG4CPLUS_FATAL(logger,
-                        "Error while reading " + csv.filename + "  file has more than one calendar and no id column");
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
     if (has_col(id_c, row) && row[id_c].empty()) {
@@ -1417,8 +1415,7 @@ void ExceptionDatesFusioHandler::init(Data&) {
 
 void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
     if (!is_first_line && !has_col(id_c, row)) {
-        LOG4CPLUS_FATAL(
-            logger, "Error while reading " + csv.filename + "  file has more than one calendar_id and no id column");
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
     auto cal = gtfs_data.calendars_map.find(row[id_c]);
@@ -1465,8 +1462,7 @@ void CalendarLineFusioHandler::init(Data&) {
 
 void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
     if (!is_first_line && !has_col(id_c, row)) {
-        LOG4CPLUS_FATAL(logger, "CalendarLineFusioHandler: Error while reading " + csv.filename
-                                    + "  file has more than one calendar_id and no id column");
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
 
