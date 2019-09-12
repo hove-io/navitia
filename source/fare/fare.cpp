@@ -34,6 +34,7 @@ www.navitia.io
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include "type/datetime.h"
 
@@ -89,18 +90,16 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
 }
 
 static bool valid(const State& state, const SectionKey& section) {
-    if ((state.mode != "" && !boost::iequals(state.mode, section.mode))
-        || (state.network != "" && !boost::iequals(state.network, section.network))
-        || (state.line != "" && !boost::iequals(state.line, section.line)))
+    if ((state.mode != "" && state.mode != section.mode) || (state.network != "" && state.network != section.network)
+        || (state.line != "" && state.line != section.line))
         return false;
     return true;
 }
 
 static bool valid(const State& state, const Label& label) {
-    if ((state.mode != "" && !boost::iequals(state.mode, label.mode))
-        || (state.network != "" && !boost::iequals(state.network, label.network))
-        || (state.line != "" && !boost::iequals(state.line, label.line))
-        || (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)))
+    if ((state.mode != "" && state.mode != label.mode) || (state.network != "" && state.network != label.network)
+        || (state.line != "" && state.line != label.line)
+        || (state.ticket != "" && state.ticket != label.tickets.back().caption))
         return false;
     return true;
 }
@@ -139,7 +138,7 @@ results Fare::compute_fare(const routing::Path& path) const {
     labels[0].push_back(Label());
     size_t section_idx(0);
 
-    for (auto item : path.items) {
+    for (const auto& item : path.items) {
         if (item.type != routing::ItemType::public_transport) {
             section_idx++;
             continue;
@@ -247,18 +246,18 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::VehicleJourney* vj = path_item.get_vj();
-
+    std::locale loc;
     // TODO, original uri for all
-    network = vj->route->line->network->uri;  // uri ?
-    start_stop_area = first_sp->stop_area->uri;
-    dest_stop_area = last_sp->stop_area->uri;
-    line = vj->route->line->uri;
+    network = boost::to_lower_copy(vj->route->line->network->uri, loc);  // uri ?
+    start_stop_area = boost::to_lower_copy(first_sp->stop_area->uri, loc);
+    dest_stop_area = boost::to_lower_copy(last_sp->stop_area->uri, loc);
+    line = boost::to_lower_copy(vj->route->line->uri, loc);
     date = path_item.departure.date();
     start_time = path_item.departure.time_of_day().total_seconds();
     dest_time = path_item.arrival.time_of_day().total_seconds();
-    start_zone = first_sp->fare_zone;
-    dest_zone = last_sp->fare_zone;
-    mode = vj->physical_mode->uri;  // CHECK
+    start_zone = boost::to_lower_copy(first_sp->fare_zone, loc);
+    dest_zone = boost::to_lower_copy(last_sp->fare_zone, loc);
+    mode = boost::to_lower_copy(vj->physical_mode->uri, loc);  // CHECK
 }
 
 template <class T>
@@ -340,7 +339,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
     for (const Condition& cond : this->start_conditions) {
         if (cond.key == "zone" && cond.value != section.start_zone) {
             return false;
-        } else if (cond.key == "stoparea" && !boost::iequals(cond.value, section.start_stop_area)) {
+        } else if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
             return false;
         } else if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
@@ -364,7 +363,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
     for (const Condition& cond : this->end_conditions) {
         if (cond.key == "zone" && cond.value != section.dest_zone) {
             return false;
-        } else if (cond.key == "stoparea" && !boost::iequals(cond.value, section.dest_stop_area)) {
+        } else if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
             return false;
         } else if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
