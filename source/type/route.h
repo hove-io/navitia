@@ -40,6 +40,7 @@ namespace navitia {
 namespace type {
 
 struct StopPoint;
+struct StopArea;
 
 struct Route : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Route;
@@ -52,6 +53,7 @@ struct Route : public Header, Nameable, HasMessages {
     std::vector<FrequencyVehicleJourney*> frequency_vehicle_journey_list;
     std::set<Dataset*> dataset_list;
     boost::container::flat_set<StopPoint*> stop_point_list;
+    boost::container::flat_set<StopArea*> stop_area_list;
 
     type::hasOdtProperties get_odt_properties() const;
 

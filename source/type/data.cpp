@@ -444,7 +444,11 @@ static void build_route_and_stop_point_relations(navitia::type::VehicleJourney* 
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
             vj->route->stop_point_list.insert(st.stop_point);
+            vj->route->stop_area_list.insert(st.stop_point->stop_area);
             st.stop_point->route_list.insert(vj->route);
+            if (st.stop_point->stop_area) {
+                st.stop_point->stop_area->route_list.insert(vj->route);
+            }
         }
     }
 }
