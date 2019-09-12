@@ -1841,6 +1841,18 @@ BOOST_AUTO_TEST_CASE(test_ways) {
     BOOST_CHECK_EQUAL(res[2].idx, 0);  // The third one is "rue CERNAVODA"
 }
 
+BOOST_AUTO_TEST_CASE(test_accent) {
+    int nbmax = 10;
+    std::set<std::string> ghostwords{};
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("fòrum", 0, ghostwords, {});
+    ac.build();
+
+    auto res = ac.find_complete("forum", nbmax, [](int) { return true; }, ghostwords);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(test_toknizer_with_delimitor_synonyms_tests) {
     autocomplete_map synonyms;
     synonyms["cc"] = "centre commercial";
