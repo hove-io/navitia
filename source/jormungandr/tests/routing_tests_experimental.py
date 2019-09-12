@@ -313,8 +313,8 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
-def _make_function(from_coord, to_coord, mode, op):
-    def test_max_mode_direct_path_duration(self):
+def _make_function_over_upper_limit(from_coord, to_coord, mode, op):
+    def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
             'journeys?'
             'from={from_coord}'
@@ -337,25 +337,77 @@ def _make_function(from_coord, to_coord, mode, op):
             mode=mode, max_dp_duration=direct_path_duration - 1
         )
         response = self.query_region(query)
+        # New Default -> 'journeys' in response
+        # Distributed -> 'journeys' not in response
+        assert op('journeys' not in response)
 
-        assert len(response['journeys']) == 1
-        assert op('deleted_because_too_long_direct_path' in response['journeys'][0]['tags'])
-
-    return test_max_mode_direct_path_duration
+    return test_ko_direct_path_longer_than_max_mode_direct_path_duration
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMaxDurationForDirectPathUpperLimit(NewDefaultScenarioAbstractTestFixture):
+    """
+    Test max_{mode}_direct_path_duration's upper limit
+
+    Direct path should be filtered if its duration is greater than max_{mode}_direct_path_duration
+    """
+
     s = '8.98311981954709e-05;8.98311981954709e-05'
     r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.truth)
-    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.truth)
-    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.truth)
-    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.truth)
+    test_max_walking_direct_path_duration = _make_function_over_upper_limit(s, r, 'walking', operator.truth)
+    test_max_car_direct_path_duration = _make_function_over_upper_limit(s, r, 'car', operator.truth)
+    test_max_bss_direct_path_duration = _make_function_over_upper_limit(s, r, 'bss', operator.truth)
+    test_max_bike_direct_path_duration = _make_function_over_upper_limit(s, r, 'bike', operator.truth)
 
     a = '0.001077974378345651;0.0007186495855637672'
     b = '8.98311981954709e-05;0.0002694935945864127'
-    test_max_taxi_direct_path_duration = _make_function(a, b, 'taxi', operator.truth)
+    test_max_taxi_direct_path_duration = _make_function_over_upper_limit(a, b, 'taxi', operator.truth)
+
+
+def _make_function_under_upper_limit(from_coord, to_coord, mode):
+    def test_get_direct_path_smaller_than_max_mode_direct_path_duration(self):
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]={mode}'
+            '&last_section_mode[]={mode}'
+            '&max_duration=0'
+            '&{mode}_speed=1'
+            '&max_{mode}_direct_path_duration={max_dp_duration}'
+        ).format(
+            from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode, max_dp_duration=3600
+        )
+
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        assert mode in response['journeys'][0]['tags']
+        assert 'non_pt' in response['journeys'][0]['tags']
+
+    return test_get_direct_path_smaller_than_max_mode_direct_path_duration
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedMaxDurationForDirectPathLowerLimit(NewDefaultScenarioAbstractTestFixture):
+    """
+    Test max_{mode}_direct_path_duration's lower limit
+
+    Direct path should be found if its duration is lower than max_{mode}_direct_path_duration.
+    Especially, when the direct path's duration is large and the street network calculator is Kraken
+    """
+
+    s = '8.98311981954709e-05;8.98311981954709e-05'
+    r = '0.0018864551621048887;0.0007186495855637672'
+    test_max_walking_direct_path_duration = _make_function_under_upper_limit(s, r, 'walking')
+    test_max_car_direct_path_duration = _make_function_under_upper_limit(s, r, 'car')
+    test_max_bss_direct_path_duration = _make_function_under_upper_limit(s, r, 'bss')
+    test_max_bike_direct_path_duration = _make_function_under_upper_limit(s, r, 'bike')
+
+    a = '0.001077974378345651;0.0007186495855637672'
+    b = '8.98311981954709e-05;0.0002694935945864127'
+    test_max_taxi_direct_path_duration = _make_function_under_upper_limit(a, b, 'taxi')
 
 
 @dataset({"main_routing_test": {"scenario": "new_default"}})
@@ -366,10 +418,10 @@ class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixtu
 
     s = '8.98311981954709e-05;8.98311981954709e-05'
     r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function(s, r, 'walking', operator.not_)
-    test_max_car_direct_path_duration = _make_function(s, r, 'car', operator.not_)
-    test_max_bss_direct_path_duration = _make_function(s, r, 'bss', operator.not_)
-    test_max_bike_direct_path_duration = _make_function(s, r, 'bike', operator.not_)
+    test_max_walking_direct_path_duration = _make_function_over_upper_limit(s, r, 'walking', operator.not_)
+    test_max_car_direct_path_duration = _make_function_over_upper_limit(s, r, 'car', operator.not_)
+    test_max_bss_direct_path_duration = _make_function_over_upper_limit(s, r, 'bss', operator.not_)
+    test_max_bike_direct_path_duration = _make_function_over_upper_limit(s, r, 'bike', operator.not_)
 
 
 @config(
