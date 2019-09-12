@@ -1326,31 +1326,36 @@ static boost::gregorian::date parse_date(const std::string& str) {
 namespace grid_calendar {
 
 void PeriodFusioHandler::init(Data&) {
-    calendar_c = csv.get_pos_col("calendar_id");
-    begin_c = csv.get_pos_col("begin_date");
+    id_c = csv.get_pos_col("grid_calendar_id");
+    if (id_c == UNKNOWN_COLUMN) {
+        id_c = csv.get_pos_col("calendar_id");
+    }
+    start_c = csv.get_pos_col("start_date");
+    if (start_c == UNKNOWN_COLUMN) {
+        start_c = csv.get_pos_col("begin_date");
+    }
     end_c = csv.get_pos_col("end_date");
 }
 
 void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
-    if (!is_first_line && !has_col(calendar_c, row)) {
-        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename
-                                                       << "  file has more than one period and no calendar_id column");
+    if (!is_first_line && !has_col(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
-    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    auto cal = gtfs_data.calendars_map.find(row[id_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_ERROR(logger, "GridCalPeriodFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "GridCalPeriodFusioHandler : Impossible to find the calendar " << row[id_c]);
         return;
     }
     boost::gregorian::date begin_date, end_date;
-    if (has_col(begin_c, row)) {
-        begin_date = parse_date(row[begin_c]);
+    if (has_col(start_c, row)) {
+        begin_date = parse_date(row[start_c]);
     }
     if (has_col(end_c, row)) {
         end_date = parse_date(row[end_c]);
     }
     if (begin_date.is_not_a_date() || end_date.is_not_a_date()) {
-        LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "period invalid, not added for calendar " << row[id_c]);
         return;
     }
     // the end of a gregorian period not in the period (it's the day after)
@@ -1360,7 +1365,10 @@ void PeriodFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_li
 }
 
 void GridCalendarFusioHandler::init(Data&) {
-    id_c = csv.get_pos_col("id");
+    id_c = csv.get_pos_col("grid_calendar_id");
+    if (id_c == UNKNOWN_COLUMN) {
+        id_c = csv.get_pos_col("id");
+    }
     name_c = csv.get_pos_col("name");
     monday_c = csv.get_pos_col("monday");
     tuesday_c = csv.get_pos_col("tuesday");
@@ -1373,8 +1381,7 @@ void GridCalendarFusioHandler::init(Data&) {
 
 void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
     if (!is_first_line && !has_col(id_c, row)) {
-        LOG4CPLUS_FATAL(logger,
-                        "Error while reading " + csv.filename + "  file has more than one calendar and no id column");
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
     if (has_col(id_c, row) && row[id_c].empty()) {
@@ -1398,24 +1405,26 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
 }
 
 void ExceptionDatesFusioHandler::init(Data&) {
-    calendar_c = csv.get_pos_col("calendar_id");
+    id_c = csv.get_pos_col("grid_calendar_id");
+    if (id_c == UNKNOWN_COLUMN) {
+        id_c = csv.get_pos_col("calendar_id");
+    }
     datetime_c = csv.get_pos_col("date");
     type_c = csv.get_pos_col("type");
 }
 
 void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
-    if (!is_first_line && !has_col(calendar_c, row)) {
-        LOG4CPLUS_FATAL(
-            logger, "Error while reading " + csv.filename + "  file has more than one calendar_id and no id column");
+    if (!is_first_line && !has_col(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
-    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    auto cal = gtfs_data.calendars_map.find(row[id_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler : Impossible to find the calendar " << row[id_c]);
         return;
     }
     if (!has_col(type_c, row)) {
-        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column type for calendar " << row[calendar_c]);
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column type for calendar " << row[id_c]);
         return;
     }
     if (row[type_c] != "0" && row[type_c] != "1") {
@@ -1423,13 +1432,13 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
         return;
     }
     if (!has_col(datetime_c, row)) {
-        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column datetime for calendar " << row[calendar_c]);
+        LOG4CPLUS_WARN(logger, "ExceptionDatesFusioHandler: No column datetime for calendar " << row[id_c]);
         return;
     }
     boost::gregorian::date date(parse_date(row[datetime_c]));
     if (date.is_not_a_date()) {
-        LOG4CPLUS_ERROR(
-            logger, "date format not valid, we do not add the exception " << row[type_c] << " for " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger,
+                        "date format not valid, we do not add the exception " << row[type_c] << " for " << row[id_c]);
         return;
     }
     navitia::type::ExceptionDate exception_date;
@@ -1440,7 +1449,10 @@ void ExceptionDatesFusioHandler::handle_line(Data&, const csv_row& row, bool is_
 }
 
 void CalendarLineFusioHandler::init(Data&) {
-    calendar_c = csv.get_pos_col("calendar_id");
+    id_c = csv.get_pos_col("grid_calendar_id");
+    if (id_c == UNKNOWN_COLUMN) {
+        id_c = csv.get_pos_col("calendar_id");
+    }
     line_c = csv.get_pos_col("line_id");
     if (line_c == UNKNOWN_COLUMN) {
         line_id_is_present = false;
@@ -1449,19 +1461,18 @@ void CalendarLineFusioHandler::init(Data&) {
 }
 
 void CalendarLineFusioHandler::handle_line(Data&, const csv_row& row, bool is_first_line) {
-    if (!is_first_line && !has_col(calendar_c, row)) {
-        LOG4CPLUS_FATAL(logger, "CalendarLineFusioHandler: Error while reading " + csv.filename
-                                    + "  file has more than one calendar_id and no id column");
+    if (!is_first_line && !has_col(id_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " << csv.filename << " column id : " << id_c << " not available");
         throw InvalidHeaders(csv.filename);
     }
 
-    auto cal = gtfs_data.calendars_map.find(row[calendar_c]);
+    auto cal = gtfs_data.calendars_map.find(row[id_c]);
     if (cal == gtfs_data.calendars_map.end()) {
-        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the calendar " << row[calendar_c]);
+        LOG4CPLUS_ERROR(logger, "CalendarLineFusioHandler: Impossible to find the calendar " << row[id_c]);
         return;
     }
     if (!has_col(line_c, row)) {
-        LOG4CPLUS_WARN(logger, "CalendarLineFusioHandler: No line column for calendar : " << row[calendar_c]);
+        LOG4CPLUS_WARN(logger, "CalendarLineFusioHandler: No line column for calendar : " << row[id_c]);
         return;
     }
     std::unordered_map<std::string, ed::types::Line*>::iterator it;

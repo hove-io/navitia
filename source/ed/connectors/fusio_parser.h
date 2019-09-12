@@ -252,10 +252,10 @@ struct TripPropertiesFusioHandler : public GenericHandler {
 namespace grid_calendar {
 struct PeriodFusioHandler : public GenericHandler {
     PeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int calendar_c, begin_c, end_c;
+    int id_c, start_c, end_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "begin_date", "end_date"}; }
+    const std::vector<std::string> required_headers() const { return {"end_date"}; }
 };
 
 struct GridCalendarFusioHandler : public GenericHandler {
@@ -264,26 +264,26 @@ struct GridCalendarFusioHandler : public GenericHandler {
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
-        return {"id", "name", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
+        return {"name", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"};
     }
 };
 
 struct ExceptionDatesFusioHandler : public GenericHandler {
     ExceptionDatesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int calendar_c, datetime_c, type_c;
+    int id_c, datetime_c, type_c;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id", "date", "type"}; }
+    const std::vector<std::string> required_headers() const { return {"date", "type"}; }
 };
 
 struct CalendarLineFusioHandler : public GenericHandler {
     CalendarLineFusioHandler(GtfsData& gdata, CsvReader& reader)
         : GenericHandler(gdata, reader), line_id_is_present(true) {}
-    int calendar_c, line_c;
+    int id_c, line_c;
     bool line_id_is_present;
     void init(Data&);
     void handle_line(Data& data, const csv_row& row, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return {"calendar_id"}; }
+    const std::vector<std::string> required_headers() const { return {}; }
 };
 
 struct CalendarTripFusioHandler : public GenericHandler {
