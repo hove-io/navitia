@@ -63,7 +63,12 @@ api.add_resource(resources.Status, '/v0/status')
 
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint=str('jobs'))
 
-api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint=str('end_points'))
+api.add_resource(
+    resources.EndPoint,
+    '/v<int:version>/end_points/',
+    '/v<int:version>/end_points/<int:id>/',
+    endpoint=str('end_points'),
+)
 
 api.add_resource(
     resources.TravelerProfile,

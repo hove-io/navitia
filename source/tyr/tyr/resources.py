@@ -1190,13 +1190,15 @@ class Authorization(flask_restful.Resource):
 
 
 class EndPoint(flask_restful.Resource):
-    @marshal_with(end_point_fields)
-    def get(self):
-        return models.EndPoint.query.all()
+    def get(self, version=0):
+        resp = marshal(models.EndPoint.query.all(), end_point_fields)
+        if version == 1:
+            return {'end_points': resp}
+        return resp
 
-    def post(self):
+    def post(self, version=0):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location=('json'))
+        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location='json')
         args = parser.parse_args()
 
         try:
@@ -1218,9 +1220,15 @@ class EndPoint(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(end_point, end_point_fields)
+        resp = marshal(end_point, end_point_fields)
+        if version == 1:
+            return {'end_point': [resp]}, 201
+        return resp
 
-    def put(self, id):
+    def put(self, version=0, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
         end_point = models.EndPoint.query.get_or_404(id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1243,13 +1251,19 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
-            return ({'error': str(e)}, 409)
+            return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(end_point, end_point_fields)
+        resp = marshal(end_point, end_point_fields)
+        if version == 1:
+            return {'end_point': [resp]}
+        return resp
 
-    def delete(self, id):
+    def delete(self, version=0, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
         end_point = models.EndPoint.query.get_or_404(id)
         try:
             db.session.delete(end_point)
@@ -1262,7 +1276,7 @@ class EndPoint(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class TravelerProfile(flask_restful.Resource):
@@ -1573,7 +1587,7 @@ class BillingPlan(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-    def delete(self, billing_plan_id=None):
+    def delete(self, version=0, billing_plan_id=None):
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         try:
             db.session.delete(billing_plan)

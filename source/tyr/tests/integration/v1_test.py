@@ -88,6 +88,10 @@ def create_autocomplete_parameters():
         models.db.session.add(autocomp)
         models.db.session.commit()
 
+        yield autocomp.name
+
+        models.db.session.delete(autocomp)
+
 
 def check_v1_response(endpoint, request=None):
     if not request:
@@ -209,6 +213,9 @@ def test_authorization_methods(create_5_users, create_instance, create_api):
 
 def test_autocomplete_parameters(create_autocomplete_parameters):
     check_v1_response('autocomplete_parameters')
+    check_v1_response(
+        'autocomplete_parameters', 'autocomplete_parameters/{}'.format(create_autocomplete_parameters)
+    )
 
 
 def test_autocomplete_parameters_methods():
@@ -271,3 +278,48 @@ def test_autocomplete_parameters_methods():
 
 def test_billing_plans():
     check_v1_response('billing_plans')
+
+
+def test_end_points():
+    check_v1_response('end_points')
+
+
+def test_end_points_methods():
+    resp_get = api_get('/v1/end_points')
+    assert 'end_points' in resp_get
+    initial_num = len(resp_get['end_points'])
+
+    endpoint_data = {'name': 'tyr_v1', 'hostnames': ['host_v1']}
+    resp_post, status_post = api_post(
+        '/v1/end_points', data=json.dumps(endpoint_data), content_type='application/json', check=False
+    )
+    assert status_post == 201
+    assert 'end_point' in resp_post
+    assert len(resp_post['end_point']) == 1
+    assert resp_post['end_point'][0]['name'] == endpoint_data['name']
+    endpoint_id = resp_post['end_point'][0]['id']
+
+    resp_get = api_get('/v1/end_points')
+    assert 'end_points' in resp_get
+    assert len(resp_get['end_points']) == initial_num + 1
+
+    endpoint_data_update = {'name': 'Tyr_v1_update'}
+    resp_put = api_put(
+        '/v1/end_points/{}'.format(endpoint_id),
+        data=json.dumps(endpoint_data_update),
+        content_type='application/json',
+    )
+    assert 'end_point' in resp_put
+    assert len(resp_put['end_point']) == 1
+    assert resp_put['end_point'][0]['name'] == endpoint_data_update['name']
+
+    resp_get = api_get('/v1/end_points')
+    assert 'end_points' in resp_get
+    assert len(resp_get['end_points']) == initial_num + 1
+
+    resp_delete, status_delete = api_delete('/v1/end_points/{}'.format(endpoint_id), check=False, no_json=True)
+    assert status_delete == 204
+
+    resp_get = api_get('/v1/end_points')
+    assert 'end_points' in resp_get
+    assert len(resp_get['end_points']) == initial_num
