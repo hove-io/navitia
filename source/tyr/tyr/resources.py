@@ -1214,7 +1214,7 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
-            return ({'error': str(e)}, 409)
+            return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
@@ -1437,15 +1437,17 @@ class TravelerProfile(flask_restful.Resource):
 
 
 class BillingPlan(flask_restful.Resource):
-    def get(self, billing_plan_id=None):
+    def get(self, version=0, billing_plan_id=None):
         if billing_plan_id:
-            billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
-            return marshal(billing_plan, billing_plan_fields_full)
+            billing_plans = models.BillingPlan.query.get_or_404(billing_plan_id)
         else:
             billing_plans = models.BillingPlan.query.all()
-            return marshal(billing_plans, billing_plan_fields_full)
+        resp = marshal(billing_plans, billing_plan_fields_full)
+        if version == 1:
+            return {'billing_plans': resp}
+        return resp
 
-    def post(self):
+    def post(self, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
@@ -1488,7 +1490,7 @@ class BillingPlan(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         try:
             billing_plan = models.BillingPlan(
@@ -1500,12 +1502,15 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields_full)
+            resp = marshal(billing_plan, billing_plan_fields_full)
+            if version == 1:
+                return {'billing_plan': resp}, 201
+            return resp
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, billing_plan_id=None):
+    def put(self, version=0, billing_plan_id=None):
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1551,7 +1556,7 @@ class BillingPlan(flask_restful.Resource):
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         try:
             billing_plan.name = args['name']
@@ -1560,7 +1565,10 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.default = args['default']
             billing_plan.end_point = end_point
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields_full)
+            resp = marshal(billing_plan, billing_plan_fields_full)
+            if version == 1:
+                return {'billing_plan': resp}
+            return resp
         except Exception:
             logging.exception("fail")
             raise
@@ -1571,11 +1579,11 @@ class BillingPlan(flask_restful.Resource):
             db.session.delete(billing_plan)
             db.session.commit()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'billing_plan used'}, 409)  # Conflict
+            return {'error': 'billing_plan used'}, 409  # Conflict
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class AutocompleteParameter(flask_restful.Resource):

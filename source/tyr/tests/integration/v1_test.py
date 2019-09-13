@@ -267,3 +267,7 @@ def test_autocomplete_parameters_methods():
     resp_get = api_get('/v1/autocomplete_parameters')
     assert 'autocomplete_parameters' in resp_get
     assert len(resp_get['autocomplete_parameters']) == initial_num
+
+
+def test_billing_plans():
+    check_v1_response('billing_plans')

@@ -71,7 +71,11 @@ api.add_resource(
     '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>',
 )
 
-api.add_resource(resources.BillingPlan, '/v0/billing_plans/', '/v0/billing_plans/<int:billing_plan_id>')
+api.add_resource(
+    resources.BillingPlan,
+    '/v<int:version>/billing_plans/',
+    '/v<int:version>/billing_plans/<int:billing_plan_id>',
+)
 
 api.add_resource(resources.InstancePoiType, '/v0/instances/<string:instance_name>/poi_types')
 
