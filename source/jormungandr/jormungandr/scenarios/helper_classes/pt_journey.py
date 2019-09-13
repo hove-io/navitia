@@ -214,35 +214,36 @@ class PtJourneyPool:
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
-        for dep_mode, arr_mode, _ in self._krakens_call:
-            dp = self._streetnetwork_path_pool.wait_and_get(
-                self._requested_orig_obj,
-                self._requested_dest_obj,
-                dep_mode,
-                periode_extremity,
-                direct_path_type,
-                request=self._request,
-            )
-            if dp and dp.journeys:
-                self._journey_params.direct_path_duration = dp.journeys[0].durations.total
-            else:
-                self._journey_params.direct_path_duration = None
+        for dep_mode, arr_mode, dp_type in self._krakens_call:
+            if dp_type != "only":
+                dp = self._streetnetwork_path_pool.wait_and_get(
+                    self._requested_orig_obj,
+                    self._requested_dest_obj,
+                    dep_mode,
+                    periode_extremity,
+                    direct_path_type,
+                    request=self._request,
+                )
+                if dp and dp.journeys:
+                    self._journey_params.direct_path_duration = dp.journeys[0].durations.total
+                else:
+                    self._journey_params.direct_path_duration = None
 
-            bike_in_pt = dep_mode == 'bike' and arr_mode == 'bike'
-            pt_journey = PtJourney(
-                future_manager=self._future_manager,
-                instance=self._instance,
-                orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
-                dest_fallback_durations_pool=self._dest_fallback_durations_pool,
-                dep_mode=dep_mode,
-                arr_mode=arr_mode,
-                periode_extremity=periode_extremity,
-                journey_params=self._journey_params,
-                bike_in_pt=bike_in_pt,
-                request=self._request,
-            )
+                bike_in_pt = dep_mode == 'bike' and arr_mode == 'bike'
+                pt_journey = PtJourney(
+                    future_manager=self._future_manager,
+                    instance=self._instance,
+                    orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
+                    dest_fallback_durations_pool=self._dest_fallback_durations_pool,
+                    dep_mode=dep_mode,
+                    arr_mode=arr_mode,
+                    periode_extremity=periode_extremity,
+                    journey_params=self._journey_params,
+                    bike_in_pt=bike_in_pt,
+                    request=self._request,
+                )
 
-            self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
+                self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
 
         self._value.sort(_PtJourneySorter())
 
