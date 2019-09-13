@@ -705,15 +705,81 @@ static std::ostream& operator<<(std::ostream& os, const Type_e& type) {
 }  // namespace type
 }  // namespace navitia
 
-BOOST_AUTO_TEST_CASE(find_path_example) {
-    // searching for the path between Route and CommercialMode
-    const auto succ = find_path(Type_e::CommercialMode);
+static std::vector<Type_e> get_path(Type_e source, Type_e dest) {
     std::vector<Type_e> res;
-    for (auto cur = Type_e::Route; succ.at(cur) != cur; cur = succ.at(cur)) {
+    auto succ = find_path(dest);
+    for (auto cur = source; succ.at(cur) != cur; cur = succ.at(cur)) {
         res.push_back(succ.at(cur));
     }
-    // the path is Route -> Line -> CommercialMode
-    BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
+    return res;
+}
+
+BOOST_AUTO_TEST_CASE(test_ptref_complete_pathes) {
+    // Test that the paths in PTRef are corrects (not corrupted by shortcuts, etc.)
+    // Those paths may change as shortcuts are added, but they should stay consistent
+    // The goal of these tests is to check no unwanted side-effect is done by modifications on PTRef-graph
+    // TODO: make it exhaustive, so keep it alphabetically stored by (source, dest)
+    const auto CommercialMode = Type_e::CommercialMode;
+    const auto Dataset = Type_e::Dataset;
+    const auto JourneyPattern = Type_e::JourneyPattern;
+    const auto JourneyPatternPoint = Type_e::JourneyPatternPoint;
+    const auto Line = Type_e::Line;
+    const auto Network = Type_e::Network;
+    const auto POI = Type_e::POI;
+    const auto POIType = Type_e::POIType;
+    const auto Route = Type_e::Route;
+    const auto StopArea = Type_e::StopArea;
+    const auto StopPoint = Type_e::StopPoint;
+    const auto ValidityPattern = Type_e::ValidityPattern;
+    const auto VehicleJourney = Type_e::VehicleJourney;
+    using p = std::vector<Type_e>;  // A path in the graph is a vector of PTRef types (only "source" is missing)
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(CommercialMode, StopArea), p({Line, Route, StopArea}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(CommercialMode, StopPoint), p({Line, Route, StopPoint}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, Network), p({VehicleJourney, Route, Line, Network}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(JourneyPattern, StopArea), p({JourneyPatternPoint, StopPoint, StopArea}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(JourneyPattern, StopPoint), p({JourneyPatternPoint, StopPoint}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(Network, Dataset), p({Dataset}));  // shortcut only 1-way
+    BOOST_CHECK_EQUAL_RANGE(get_path(Network, StopArea), p({Line, Route, StopArea}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(Network, StopPoint), p({Line, Route, StopPoint}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(POI, POIType), p({POIType}));  // Only buddy
+    BOOST_CHECK_EQUAL_RANGE(get_path(POI, VehicleJourney), p({}));  // No path exists
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(POIType, POI), p({POI}));  // Only buddy
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(Route, CommercialMode), p({Line, CommercialMode}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(Route, StopArea), p({StopArea}));    // 2-way shortcut
+    BOOST_CHECK_EQUAL_RANGE(get_path(Route, StopPoint), p({StopPoint}));  // 2-way shortcut
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, CommercialMode), p({Route, Line, CommercialMode}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, JourneyPattern), p({StopPoint, JourneyPatternPoint, JourneyPattern}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, Network), p({Route, Line, Network}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, Route), p({Route}));  // 2-way shortcut
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, VehicleJourney),
+                            p({StopPoint, JourneyPatternPoint, JourneyPattern, VehicleJourney}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopPoint, CommercialMode), p({Route, Line, CommercialMode}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopPoint, JourneyPattern), p({JourneyPatternPoint, JourneyPattern}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopPoint, Network), p({Route, Line, Network}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopPoint, Route), p({Route}));  // 2-way shortcut
+    BOOST_CHECK_EQUAL_RANGE(get_path(StopPoint, VehicleJourney),
+                            p({JourneyPatternPoint, JourneyPattern, VehicleJourney}));
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(ValidityPattern, VehicleJourney), p({}));  // Only the other way
+
+    BOOST_CHECK_EQUAL_RANGE(get_path(VehicleJourney, POI), p({}));  // No path exists
+    BOOST_CHECK_EQUAL_RANGE(get_path(VehicleJourney, StopArea),
+                            p({JourneyPattern, JourneyPatternPoint, StopPoint, StopArea}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(VehicleJourney, StopPoint), p({JourneyPattern, JourneyPatternPoint, StopPoint}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(VehicleJourney, ValidityPattern), p({ValidityPattern}));  // only 1-way
+
+    // extra checks
+    BOOST_CHECK_EQUAL_RANGE(get_path(POI, POI), p({}));  // If source==dest: doesn't crash (handled before find_path())
+    BOOST_CHECK_THROW(get_path(Type_e::Address, Type_e::Admin), ptref_error);  // Non-PTRef types are rejected
 }
 
 BOOST_AUTO_TEST_CASE(find_path_coord) {
