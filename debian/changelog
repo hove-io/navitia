@@ -1,3 +1,28 @@
+navitia2 (2.85.0) unstable; urgency=low
+
+  * Kraken: add accented char in autocomplete  <https://github.com/CanalTP/navitia/pull/2948>
+  * Distributed: handle max_mode_direct_path_duration_in_kraken  <https://github.com/CanalTP/navitia/pull/2940>
+  * Ed : grid_calendars files follow NTFS norm with backward compatibility  <https://github.com/CanalTP/navitia/pull/2945>
+  * Kraken: disable case insensitive test in fare  <https://github.com/CanalTP/navitia/pull/2944>
+  * Jormun: Use params for sytral-rt request  <https://github.com/CanalTP/navitia/pull/2941>
+  * Jormun: disable thread in procfile  <https://github.com/CanalTP/navitia/pull/2943>
+  * Jormun: Fix '/users?key=' + test  <https://github.com/CanalTP/navitia/pull/2947>
+  * PTRef: Increase weight of route<->SP link to avoid unwanted shortcuts  <https://github.com/CanalTP/navitia/pull/2946>
+  * Kraken: Fix performance issue with reports filter  <https://github.com/CanalTP/navitia/pull/2931>
+  * Jormun: Add direct path mode  <https://github.com/CanalTP/navitia/pull/2939>
+  * Kraken: Initialize default boundary for admin tree  <https://github.com/CanalTP/navitia/pull/2942>
+  * Jormun: Sytral-Rt with direction_type parameter inside request  <https://github.com/CanalTP/navitia/pull/2938>
+  * Jormun: Sytral-Rt with multi stop id request  <https://github.com/CanalTP/navitia/pull/2936>
+  * Ed: protect more osm2ed from bad shapes  <https://github.com/CanalTP/navitia/pull/2935>
+  * Doc: update for taxi  <https://github.com/CanalTP/navitia/pull/2932>
+  * Doc: update error list  <https://github.com/CanalTP/navitia/pull/2934>
+  * Kraken: route_schedule API, fix empty lines at beginning of thermometer  <https://github.com/CanalTP/navitia/pull/2933>
+  * Jormun: Add integration test distributed  <https://github.com/CanalTP/navitia/pull/2930>
+  * PTRef: add tests on links after a trip-add  <https://github.com/CanalTP/navitia/pull/2926>
+  * Tests: Chaos disruption tests  <https://github.com/CanalTP/navitia/pull/2923>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 13 Sep 2019 10:09:53 +0100
+
 navitia2 (2.84.1) unstable; urgency=low
 
   * Kraken: Fix performance issue by adding pt_ref link between route and stop_point <https://github.com/CanalTP/navitia/pull/2931>
