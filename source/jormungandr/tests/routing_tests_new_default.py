@@ -39,7 +39,11 @@ unit for scenario new_default
 
 @config({"scenario": "new_default"})
 class TestJourneysNewDefault(
-    JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+    JourneyCommon,
+    DirectPath,
+    JourneyMinBikeMinCar,
+    NewDefaultScenarioAbstractTestFixture,
+    JourneysDirectPathMode,
 ):
     """
     Test the new default scenario

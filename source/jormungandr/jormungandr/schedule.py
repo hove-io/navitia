@@ -147,6 +147,10 @@ class RoutePoint(object):
         # type: (Text) -> Optional[Text]
         return self._get_code(self.pb_route, object_id_tag)
 
+    def fetch_all_stop_id(self, object_id_tag):
+        # type: (Text) -> List[Text]
+        return self._get_all_codes(self.pb_stop_point, object_id_tag)
+
     def fetch_all_route_id(self, object_id_tag):
         # type: (Text) -> List[Text]
         return self._get_all_codes(self.pb_route, object_id_tag)
@@ -162,6 +166,13 @@ class RoutePoint(object):
     def fetch_line_uri(self):
         # type: () -> Text
         return self.pb_route.line.uri
+
+    def fetch_direction_type(self):
+        # type: () -> Optional[Text]
+        if self.pb_route.HasField("direction_type"):
+            return self.pb_route.direction_type
+        else:
+            return None
 
 
 def _get_route_point_from_stop_schedule(stop_schedule):

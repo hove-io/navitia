@@ -11,6 +11,7 @@ For each data format, one executable can be found in this module to import those
 The kraken input file is a binary blob file created using boost::serialize.
 
 ## common stuff
+
 All executables offer a ```--help``` option to list the different options
 
 Every executable needs a ```--connection-string``` option to be able to be linked to the database
@@ -24,6 +25,24 @@ This connection string must contains:
 example: ```--connection-string="host=localhost user=my_user password=my_pwd dbname=my_db"```
 
 Note: importing data will remove the data of the specified type (i.e. osm2ed and geopal2ed will remove street network data).
+
+## Setup `ed` database
+
+```bash
+sudo -i -u postgres
+
+psql
+CREATE DATABASE my_db OWNER my_user;
+\q
+
+psql -d my_db -c "CREATE EXTENSION postgis;"
+exit
+
+cd <navitia>/source/navitia/source/sql/
+workon nav_sql  # switch to nav_sql virtual env
+pip install -r requirements.txt -U
+PYTHONPATH=. alembic -x dbname="postgresql://my_user:my_pwd@localhost/my_db" upgrade head
+```
 
 ## ed2nav
 Component that aggregates all data from `ed` and build the kraken input file.

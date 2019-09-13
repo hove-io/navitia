@@ -102,8 +102,9 @@ class DockerWrapper(object):
         dbuser='docker',
         dbpassword='docker',
         env_vars={},
+        mounts=None,
     ):
-        # type: (str, Optional[str], Optional[str], str, str, str, Dict[str, str]) -> None
+        # type: (str, Optional[str], Optional[str], str, str, str, Dict[str, str], Optional[List[docker.types.Mount]]) -> None
         """
         Constructor of PostgresDocker.
         """
@@ -117,6 +118,8 @@ class DockerWrapper(object):
         self.dbuser = dbuser
         self.dbpassword = dbpassword
         self.env_vars = env_vars
+        self.mounts = mounts or []
+
         logger.info("Trying to build/update the docker image")
 
         try:
@@ -143,7 +146,7 @@ class DockerWrapper(object):
                 raise
 
         self.container = self.docker_client.containers.create(
-            image_name, name=self.container_name, environment=self.env_vars
+            image_name, name=self.container_name, environment=self.env_vars, mounts=self.mounts
         )
         logger.info("docker id is {}".format(self.container.id))
         logger.info("starting the temporary docker")
@@ -211,8 +214,8 @@ def PostgisDocker():
     )
 
 
-def PostgresDocker():
-    env_vars = {'POSTGRES_DB': 'tyr_test', 'POSTGRES_USER': 'postgres', 'POSTGRES_PASSWORD': 'postgres'}
+def PostgresDocker(db_name='tyr_test', user='postgres', pwd='postgres', mounts=None):
+    env_vars = {'POSTGRES_DB': db_name, 'POSTGRES_USER': user, 'POSTGRES_PASSWORD': pwd}
     return DockerWrapper(
         image_name='postgres:9.4',
         container_name='tyr_test_postgres',
@@ -220,4 +223,5 @@ def PostgresDocker():
         dbuser=env_vars['POSTGRES_USER'],
         dbpassword=env_vars['POSTGRES_PASSWORD'],
         env_vars=env_vars,
+        mounts=mounts,
     )

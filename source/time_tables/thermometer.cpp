@@ -200,6 +200,8 @@ void Thermometer::generate_thermometer(const std::vector<vector_idx>& sps) {
     boost::range::sort(stop_point_lists, [](const vector_idx& a, const vector_idx& b) { return a.size() > b.size(); });
 
     if (stop_point_lists.size() > 1) {
+        // Clean old results
+        thermometer.clear();
         // Try a topological_sort first
         // If succeed, return, else use custom algorithm
         if (generate_topological_thermometer(stop_point_lists)) {

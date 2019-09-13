@@ -443,6 +443,11 @@ class JourneyCommon(object):
 
         query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
 
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
+
         # with street network desactivated
         response = self.query_region(query + "&max_duration_to_pt=0")
         assert 'journeys' not in response
@@ -461,6 +466,12 @@ class JourneyCommon(object):
 
         query = "journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120615T080000"
         query += "&max_duration_to_pt=0"
+
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
+
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -648,6 +659,11 @@ class JourneyCommon(object):
         assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
+
         # There is no direct_path but a journey using Metro
         response = self.query_region(query)
         check_best(response)
@@ -667,6 +683,11 @@ class JourneyCommon(object):
         assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
+
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
@@ -855,6 +876,10 @@ class JourneyCommon(object):
             to_coord="0.00188646;0.00071865",  # coordinate out of range in the dataset
             datetime="20120901T220000",
         )
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
 
         response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
 
@@ -923,6 +948,11 @@ class JourneyCommon(object):
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true&max_duration_to_pt=0".format(
             from_sa="stopA", to_sa="stopB", datetime="20120614T223000"
         )
+
+        if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
+            # In distributed scenario, we must deactivate direct path so that we can reuse the same
+            # test code for all scenarios
+            query += "&max_walking_direct_path_duration=0"
 
         response = self.query_region(query)
         check_best(response)
@@ -2220,3 +2250,44 @@ class JourneysRidesharing:
             )
         )
         exec_and_check(query)
+
+
+@dataset({"main_routing_test": {}})
+class JourneysDirectPathMode:
+    def test_direct_path_mode_bike(self):
+        """
+        test that the journey returns a direct_path_in bike and no direct path in walking
+        because of direct_path_mode[]=bike and a pt itinerary with walking fallback
+        because of first_section_mode[]=walking
+        """
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]=walking&last_section_mode[]=walking&_min_bike=0&direct_path_mode[]=bike"
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 2
+        assert response["journeys"][0]["type"] == "best"
+        assert "bike" in response["journeys"][0]["tags"]
+        assert "non_pt" in response["journeys"][0]["tags"]
+
+        assert "walking" in response["journeys"][1]["tags"]
+        assert "non_pt" not in response["journeys"][1]["tags"]
+
+    def test_direct_path_mode_bike_and_direct_path_mode_none(self):
+        """
+        test that the journey returns no direct_path because of direct_path=none
+        even with direct_path_mode[]=bike and a pt itinerary with walking fallback
+        because of first_section_mode[]=walking
+        """
+        query = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]=walking&last_section_mode[]=walking&_min_bike=0&direct_path_mode[]=bike&direct_path=none"
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 1
+        assert "walking" in response["journeys"][0]["tags"]
+        assert "non_pt" not in response["journeys"][0]["tags"]

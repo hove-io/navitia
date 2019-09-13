@@ -501,7 +501,7 @@ struct routing_api_data {
 
             navitia::fare::Transition ticket_transition;
             navitia::fare::State ticket_state;
-            ticket_state.line = "M";
+            ticket_state.line = "m";
             ticket_transition.ticket_key = "M-Ticket";
 
             auto ticket_state_v = boost::add_vertex(ticket_state, b.data->fare->g);

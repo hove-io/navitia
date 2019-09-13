@@ -343,32 +343,32 @@ def add_pt_sections(journey):
 def get_kraken_calls_test():
     for md in ["bike", "walking", "bss", "car", "ridesharing", "taxi"]:
         req = {"origin_mode": [md], "destination_mode": [md]}
-        assert get_kraken_calls(req) == {(md, md)}
+        assert get_kraken_calls(req) == {(md, md, "indifferent")}
 
-    req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"]}
-    assert get_kraken_calls(req) == {("walking", "walking")}
+    req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"], "direct_path": "none"}
+    assert get_kraken_calls(req) == {("walking", "walking", "none")}
 
-    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"]}
-    assert get_kraken_calls(req) == {("walking", "walking"), ("bike", "walking")}
+    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["walking"], "direct_path": "indifferent"}
+    assert get_kraken_calls(req) == {("walking", "walking", "indifferent"), ("bike", "walking", "indifferent")}
 
-    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["bss"]}
-    assert get_kraken_calls(req) == {("bike", "bss")}
+    req = {"origin_mode": ["bike", "walking"], "destination_mode": ["bss"], "direct_path": "indifferent"}
+    assert get_kraken_calls(req) == {("bike", "bss", "indifferent")}
 
     req = {"origin_mode": ["bike", "car"], "destination_mode": ["bss"]}
-    assert get_kraken_calls(req) == {("bike", "bss"), ("car", "bss")}
+    assert get_kraken_calls(req) == {("bike", "bss", "indifferent"), ("car", "bss", "indifferent")}
 
     req = {"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]}
-    assert get_kraken_calls(req) == {("bike", "bike")}
+    assert get_kraken_calls(req) == {("bike", "bike", "indifferent")}
 
     req = {"origin_mode": ["taxi", "bike"], "destination_mode": ["walking", "bss", "car", "ridesharing", "taxi"]}
     assert get_kraken_calls(req) == {
-        ('taxi', 'taxi'),
-        ('taxi', 'bss'),
-        ('bike', 'bss'),
-        ('bike', 'walking'),
-        ('bike', 'taxi'),
-        ('taxi', 'walking'),
-        ('taxi', 'ridesharing'),
+        ('taxi', 'taxi', "indifferent"),
+        ('taxi', 'bss', "indifferent"),
+        ('bike', 'bss', "indifferent"),
+        ('bike', 'walking', "indifferent"),
+        ('bike', 'taxi', "indifferent"),
+        ('taxi', 'walking', "indifferent"),
+        ('taxi', 'ridesharing', "indifferent"),
     }
 
     req = {
@@ -376,14 +376,28 @@ def get_kraken_calls_test():
         "destination_mode": ["walking", "bss", "bike", "car", "ridesharing", "taxi"],
     }
     assert get_kraken_calls(req) == {
-        ('taxi', 'taxi'),
-        ('ridesharing', 'walking'),
-        ('taxi', 'bss'),
-        ('ridesharing', 'bss'),
-        ('taxi', 'ridesharing'),
-        ('taxi', 'walking'),
-        ('ridesharing', 'taxi'),
+        ('taxi', 'taxi', "indifferent"),
+        ('ridesharing', 'walking', "indifferent"),
+        ('taxi', 'bss', "indifferent"),
+        ('ridesharing', 'bss', "indifferent"),
+        ('taxi', 'ridesharing', "indifferent"),
+        ('taxi', 'walking', "indifferent"),
+        ('ridesharing', 'taxi', "indifferent"),
     }
+
+    req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"], "direct_path_mode": ["walking"]}
+    assert get_kraken_calls(req) == {("walking", "walking", "indifferent")}
+
+    req = {"origin_mode": ["bss", "walking"], "destination_mode": ["walking"], "direct_path_mode": ["bike"]}
+    assert get_kraken_calls(req) == {("walking", "walking", "indifferent"), ("bike", "bike", "only")}
+
+    req = {
+        "origin_mode": ["bss", "walking"],
+        "destination_mode": ["walking"],
+        "direct_path_mode": ["bike"],
+        "direct_path": "none",
+    }
+    assert get_kraken_calls(req) == {("walking", "walking", "none")}
 
 
 def get_kraken_calls_invalid_1_test():

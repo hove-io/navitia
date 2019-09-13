@@ -30,24 +30,33 @@
 from __future__ import absolute_import, print_function, division
 import mock
 from jormungandr.realtime_schedule.sytral import Sytral
+from jormungandr.tests.utils_test import MockRequests
 import validators
 import datetime
 import pytz
 import pytest
 
 
-def make_url_test():
+def make_url_params_test():
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
+    # The return is like [(stop_id, val1), (stop_id, val2), (direction_type, val), ...]
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
 
-    # it should be a valid url
-    assert validators.url(url)
+    assert params == [('stop_id', 'stop_tutu')]
 
-    assert url == 'http://bob.com/?stop_id=stop_tutu'
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id=['stop_tutu', 'stop_toto']))
+
+    assert params == [('stop_id', 'stop_tutu'), ('stop_id', 'stop_toto')]
+
+    params = sytral._make_params(
+        MockRoutePoint(line_code='line_toto', stop_id='stop_tutu', direction_type='forward')
+    )
+
+    assert params == [('stop_id', 'stop_tutu'), ('direction_type', 'forward')]
 
 
-def make_url_invalid_code_test():
+def make_url_params_with_invalid_code_test():
     """
     test make_url when RoutePoint does not have a mandatory code
 
@@ -55,9 +64,10 @@ def make_url_invalid_code_test():
     """
     sytral = Sytral(id='tata', service_url='http://bob.com/')
 
-    url = sytral._make_url(MockRoutePoint(line_code='line_toto', stop_id=None))
+    # The return is like [(stop_id, val1), (stop_id, val2), (direction_type, val), ...]
+    params = sytral._make_params(MockRoutePoint(line_code='line_toto', stop_id=[]))
 
-    assert url is None
+    assert params == None
 
 
 class MockResponse(object):
@@ -70,14 +80,6 @@ class MockResponse(object):
         return self.data
 
 
-class MockRequests(object):
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
 @pytest.fixture(scope="module")
 def mock_multiline_response():
     return {
@@ -85,6 +87,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+02:00",
                 "type": "E",
                 "line": "05A",
@@ -93,6 +96,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -101,6 +105,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+02:00",
                 "type": "E",
                 "line": "05B",
@@ -109,6 +114,7 @@ def mock_multiline_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
                 "type": "E",
                 "line": "04",
@@ -125,6 +131,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+02:00",
                 "type": "E",
                 "line": "05",
@@ -133,6 +140,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -141,6 +149,7 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+02:00",
                 "type": "E",
                 "line": "05",
@@ -149,7 +158,34 @@ def mock_good_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
+                "type": "E",
+                "line": "04",
+                "stop": "42",
+            },
+        ]
+    }
+
+
+@pytest.fixture(scope="module")
+def mock_direction_type_is_forward_response():
+    return {
+        "departures": [
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "forward",
+                "datetime": "2016-04-11T14:37:15+02:00",
+                "type": "E",
+                "line": "05",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "forward",
+                "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
                 "stop": "42",
@@ -175,6 +211,7 @@ def mock_missing_line_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+02:00",
                 "type": "E",
                 "line": "04",
@@ -183,6 +220,7 @@ def mock_missing_line_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+02:00",
                 "type": "E",
                 "line": "04",
@@ -199,6 +237,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:37:15+01:00",
                 "type": "T",
                 "line": "05",
@@ -207,6 +246,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:38:15+01:00",
                 "type": "E",
                 "line": "04",
@@ -215,6 +255,7 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:45:35+01:00",
                 "type": "E",
                 "line": "05",
@@ -223,10 +264,91 @@ def mock_theoric_response():
             {
                 "direction_id": "3341",
                 "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
                 "datetime": "2016-04-11T14:49:35+01:00",
                 "type": "E",
                 "line": "04",
                 "stop": "42",
+            },
+        ]
+    }
+
+
+@pytest.fixture(scope="module")
+def mock_multi_stop_point_id_response():
+    return {
+        "departures": [
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:37:15+01:00",
+                "type": "T",
+                "line": "05",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:38:15+01:00",
+                "type": "E",
+                "line": "04",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:45:35+01:00",
+                "type": "E",
+                "line": "05",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:49:35+01:00",
+                "type": "E",
+                "line": "04",
+                "stop": "42",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:38:15+01:00",
+                "type": "T",
+                "line": "05",
+                "stop": "43",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:38:15+01:00",
+                "type": "E",
+                "line": "04",
+                "stop": "43",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:47:35+01:00",
+                "type": "E",
+                "line": "05",
+                "stop": "43",
+            },
+            {
+                "direction_id": "3341",
+                "direction_name": "Piscine Chambéry",
+                "direction_type": "both",
+                "datetime": "2016-04-11T14:49:35+01:00",
+                "type": "E",
+                "line": "04",
+                "stop": "43",
             },
         ]
     }
@@ -240,13 +362,25 @@ class MockRoutePoint(object):
         else:
             self._hardcoded_line_ids = [l]
 
-        self._hardcoded_stop_id = kwargs['stop_id']
+        l = kwargs['stop_id']
+        if isinstance(l, list):
+            self._hardcoded_stop_ids = l
+        else:
+            self._hardcoded_stop_ids = [l]
 
-    def fetch_stop_id(self, object_id_tag):
-        return self._hardcoded_stop_id
+        if 'direction_type' in kwargs:
+            self._hardcoded_direction_type = kwargs['direction_type']
+        else:
+            self._hardcoded_direction_type = None
+
+    def fetch_all_stop_id(self, object_id_tag):
+        return self._hardcoded_stop_ids
 
     def fetch_all_line_id(self, object_id_tag):
         return self._hardcoded_line_ids
+
+    def fetch_direction_type(self):
+        return self._hardcoded_direction_type
 
 
 def next_passage_for_route_point_test(mock_good_response):
@@ -269,6 +403,28 @@ def next_passage_for_route_point_test(mock_good_response):
         assert passages[0].is_real_time
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
         assert passages[1].is_real_time
+
+
+def next_passage_for_route_point_with_direction_type_test(mock_direction_type_is_forward_response):
+    """
+    test the whole next_passage_for_route_point with direction_type parameter
+    mock the http call to return a good response, we should get some next_passages
+    """
+    sytral = Sytral(id='tata', service_url='http://bob.com/')
+
+    mock_requests = MockRequests(
+        {'http://bob.com/?direction_type=forward&stop_id=42': (mock_direction_type_is_forward_response, 200)}
+    )
+
+    route_point = MockRoutePoint(line_code='05', stop_id='42', direction_type='forward')
+
+    with mock.patch('requests.get', mock_requests.get):
+        passages = sytral.next_passage_for_route_point(route_point)
+
+        assert len(passages) == 1
+
+        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 12, 37, 15, tzinfo=pytz.UTC)
+        assert passages[0].is_real_time
 
 
 def next_passage_for_empty_response_test(mock_empty_response):
@@ -371,3 +527,32 @@ def next_passage_for_route_point_multiline_test(mock_multiline_response):
         assert passages[0].is_real_time
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
         assert passages[1].is_real_time
+
+
+def next_passage_for_route_point_multi_stop_point_id_test(mock_multi_stop_point_id_response):
+    """
+    test next_passage for route point with multi stop point ID
+    """
+    sytral = Sytral(id='tata', service_url='http://bob.com/')
+
+    mock_requests = MockRequests(
+        {'http://bob.com/?stop_id=42&stop_id=43': (mock_multi_stop_point_id_response, 200)}
+    )
+
+    route_point = MockRoutePoint(line_code='05', stop_id=['42', '43'])
+
+    with mock.patch('requests.get', mock_requests.get):
+        passages = sytral.next_passage_for_route_point(route_point)
+
+        assert len(passages) == 4
+
+        # Stop id 42
+        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 13, 37, 15, tzinfo=pytz.UTC)
+        assert not passages[0].is_real_time
+        assert passages[1].datetime == datetime.datetime(2016, 4, 11, 13, 45, 35, tzinfo=pytz.UTC)
+        assert passages[1].is_real_time
+        # Stop id 43
+        assert passages[2].datetime == datetime.datetime(2016, 4, 11, 13, 38, 15, tzinfo=pytz.UTC)
+        assert not passages[2].is_real_time
+        assert passages[3].datetime == datetime.datetime(2016, 4, 11, 13, 47, 35, tzinfo=pytz.UTC)
+        assert passages[3].is_real_time

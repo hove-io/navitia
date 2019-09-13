@@ -161,6 +161,10 @@ def filter_journeys(responses, instance, request):
     if dp != 'indifferent':
         filters.append(FilterDirectPath(dp=dp))
 
+    dp_mode = request.get('direct_path_mode', [])
+    if dp_mode:
+        filters.append(FilterDirectPathMode(dp_mode))
+
     # compose filters
 
     composed_filter = ComposedFilter()
@@ -329,6 +333,28 @@ class FilterDirectPath(SingleJourneyFilter):
             return False
         elif self.dp == 'only' and 'non_pt' not in journey.tags:
             return False
+        return True
+
+
+class FilterDirectPathMode(SingleJourneyFilter):
+
+    message = 'direct_path_mode_parameter'
+
+    def __init__(self, dp_mode):
+        self.dp_mode = [] if dp_mode is None else dp_mode
+
+    def filter_func(self, journey):
+        """
+        eliminates journeys that are not matching direct path mode parameter
+        """
+
+        is_dp = 'non_pt' in journey.tags
+        is_in_direct_path_mode_list = any(mode in self.dp_mode for mode in journey.tags)
+
+        # if direct_path of a mode which is not in direct_path_mode[]
+        if is_dp and not is_in_direct_path_mode_list:
+            return False
+
         return True
 
 

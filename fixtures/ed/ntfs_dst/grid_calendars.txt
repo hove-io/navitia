@@ -1,4 +1,4 @@
-id,name,monday,tuesday,wednesday,thursday,friday,saturday,sunday
+grid_calendar_id,name,monday,tuesday,wednesday,thursday,friday,saturday,sunday
 REG_LaV,lundi a vendredi,1,1,1,1,1,0,0
 REG_S,samedi,0,0,0,0,0,1,0
 REG_DJF,dimanche et jour feriés,0,0,0,0,0,0,1

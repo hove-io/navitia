@@ -164,7 +164,8 @@ void Data::load_disruptions(const std::string& database, const std::vector<std::
     LOG4CPLUS_DEBUG(logger, "Start to load disruptions");
 
     try {
-        fill_disruption_from_database(database, *pt_data, *meta, contributors);
+        DisruptionDatabaseReader reader(*pt_data, *meta);
+        fill_disruption_from_database(database, meta->production_date, reader, contributors);
         disruption_error = false;
     } catch (const pqxx::broken_connection& ex) {
         LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));

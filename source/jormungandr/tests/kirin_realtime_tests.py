@@ -2116,6 +2116,25 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         routes = [rt["id"] for rt in resp["routes"]]
         assert "route:stopC_stopB" in routes
 
+        # route <-> physical_mode
+        resp = self.query_region("routes/route:stopC_stopB/physical_modes")
+        assert resp["physical_modes"][0]["id"] == "physical_mode:Bus"
+        resp = self.query_region("physical_modes/physical_mode:Bus/routes")
+        routes = [rt["id"] for rt in resp["routes"]]
+        assert "route:stopC_stopB" in routes
+
+        # route <-> stop_point
+        resp = self.query_region("routes/route:stopC_stopB/stop_points")
+        sps = [sp["id"] for sp in resp["stop_points"]]
+        assert "stop_point:stopC" in sps
+        assert "stop_point:stopB" in sps
+        resp = self.query_region("stop_points/stop_point:stopC/routes")
+        routes = [rt["id"] for rt in resp["routes"]]
+        assert "route:stopC_stopB" in routes
+        resp = self.query_region("stop_points/stop_point:stopB/routes")
+        routes = [rt["id"] for rt in resp["routes"]]
+        assert "route:stopC_stopB" in routes
+
         # network <-> contributor
         resp = self.query_region("networks/network:additional_service/contributors")
         assert resp["contributors"][0]["id"] == "default:contributor"
@@ -2135,7 +2154,25 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         )
         assert resp["companies"][0]["id"] == "base_company"
         resp = self.query_region("companies/base_company/vehicle_journeys")
-        assert len(resp["vehicle_journeys"]) == 9
+        vjs = [vj["id"] for vj in resp["vehicle_journeys"]]
+        assert "vehicle_journey:additional-trip:modified:0:new_trip" in vjs
+
+        # commercial_mode <-> company
+        resp = self.query_region("commercial_modes/commercial_mode:additional_service/companies")
+        assert resp["companies"][0]["id"] == "base_company"
+        resp = self.query_region("companies/base_company/commercial_modes")
+        commercial_modes = [cm["id"] for cm in resp["commercial_modes"]]
+        assert "commercial_mode:additional_service" in commercial_modes
+
+        # stop_point <-> dataset
+        resp = self.query_region("stop_points/stop_point:stopC/datasets")
+        assert resp["datasets"][0]["id"] == "default:dataset"
+        resp = self.query_region("stop_points/stop_point:stopB/datasets")
+        assert resp["datasets"][0]["id"] == "default:dataset"
+        resp = self.query_region("datasets/default:dataset/stop_points")
+        sps = [sp["id"] for sp in resp["stop_points"]]
+        assert "stop_point:stopC" in sps
+        assert "stop_point:stopB" in sps
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

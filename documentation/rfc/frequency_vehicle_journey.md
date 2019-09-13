@@ -39,7 +39,7 @@ way.
 | 1       | 05:00:00   | 05:30:00 | 600          |
 
 
-*sto_times.txt*
+*stop_times.txt*
 
 | trip_id | arrival_time | derparture_time | stop_id | stop_sequence |
 | ------- | ------------ | --------------- | ------- | ------------- |

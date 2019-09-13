@@ -86,8 +86,22 @@ class Kraken(AbstractStreetNetworkService):
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
+        direct_path_request = copy.deepcopy(request)
+        if direct_path_type == StreetNetworkPathType.DIRECT:
+            # in distributed scenario, we allow the street network calculator to compute a very long direct path
+            # in case of Kraken, the stop condition of direct path in Kraken is defined as
+            # max_{mode}_duration_to_pt * 2.
+            # When it comes to a direct path request, we override this parameter with
+            # max_{mode}_direct_path_duration / 2.0
+            from jormungandr.fallback_modes import FallbackModes as fm
+
+            kraken_mode = 'car_no_park' if mode in (fm.taxi.name, fm.ridesharing.name) else mode
+            direct_path_request['max_{mode}_duration_to_pt'.format(mode=kraken_mode)] = int(
+                direct_path_request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
+            )
+
         req = self._create_direct_path_request(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
         )
 
         response = instance.send_and_receive(req)
