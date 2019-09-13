@@ -1518,13 +1518,16 @@ class BillingPlan(flask_restful.Resource):
             db.session.commit()
             resp = marshal(billing_plan, billing_plan_fields_full)
             if version == 1:
-                return {'billing_plan': resp}, 201
+                return {'billing_plan': [resp]}, 201
             return resp
         except Exception:
             logging.exception("fail")
             raise
 
     def put(self, version=0, billing_plan_id=None):
+        if not id:
+            abort(400, status="error", message='billing_plan_id is required')
+
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1581,7 +1584,7 @@ class BillingPlan(flask_restful.Resource):
             db.session.commit()
             resp = marshal(billing_plan, billing_plan_fields_full)
             if version == 1:
-                return {'billing_plan': resp}
+                return {'billing_plan': [resp]}
             return resp
         except Exception:
             logging.exception("fail")

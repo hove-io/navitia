@@ -280,6 +280,44 @@ def test_billing_plans():
     check_v1_response('billing_plans')
 
 
+def test_billing_plans_methods():
+    resp_get = api_get('/v1/billing_plans')
+    assert 'billing_plans' in resp_get
+    initial_num = len(resp_get['billing_plans'])
+
+    billing_plan_data = {'name': 'tyr_v1_plan', 'default': False}
+    resp_post, status_post = api_post(
+        '/v1/billing_plans', data=json.dumps(billing_plan_data), content_type='application/json', check=False
+    )
+    assert status_post == 201
+    assert 'billing_plan' in resp_post
+    assert len(resp_post['billing_plan']) == 1
+    billing_plan_id = resp_post['billing_plan'][0]['id']
+
+    resp_get = api_get('/v1/billing_plans')
+    assert 'billing_plans' in resp_get
+    assert len(resp_get['billing_plans']) == initial_num + 1
+
+    billing_plan_data_update = {'max_object_count': 1000}
+    resp_put = api_put(
+        '/v1/billing_plans/{}'.format(billing_plan_id),
+        data=json.dumps(billing_plan_data_update),
+        content_type='application/json',
+    )
+    assert 'billing_plan' in resp_put
+    assert len(resp_put['billing_plan']) == 1
+    assert resp_put['billing_plan'][0]['max_object_count'] == billing_plan_data_update['max_object_count']
+
+    resp_delete, status_delete = api_delete(
+        '/v1/billing_plans/{}'.format(billing_plan_id), check=False, no_json=True
+    )
+    assert status_delete == 204
+
+    resp_get = api_get('/v1/billing_plans')
+    assert 'billing_plans' in resp_get
+    assert len(resp_get['billing_plans']) == initial_num
+
+
 def test_end_points():
     check_v1_response('end_points')
 
@@ -312,10 +350,6 @@ def test_end_points_methods():
     assert 'end_point' in resp_put
     assert len(resp_put['end_point']) == 1
     assert resp_put['end_point'][0]['name'] == endpoint_data_update['name']
-
-    resp_get = api_get('/v1/end_points')
-    assert 'end_points' in resp_get
-    assert len(resp_get['end_points']) == initial_num + 1
 
     resp_delete, status_delete = api_delete('/v1/end_points/{}'.format(endpoint_id), check=False, no_json=True)
     assert status_delete == 204
