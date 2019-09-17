@@ -118,7 +118,7 @@ class Taxi(AbstractStreetNetworkService):
                     journey, pt_object_destination, request["additional_time_after_first_section_taxi"]
                 )
             else:
-                self._add_additional_section_before_first_section_taxi(
+                self._add_additional_section_before_last_section_taxi(
                     journey, pt_object_origin, request["additional_time_before_last_section_taxi"]
                 )
 
@@ -133,10 +133,10 @@ class Taxi(AbstractStreetNetworkService):
         # Because Jormun does not do it afterwards
         journey.sections[-1].destination.CopyFrom(pt_object)
 
-        self._update_journey(journey, additional_section)
+        self._update_journey(journey, additional_section, 1)
 
-    def _add_additional_section_before_first_section_taxi(self, journey, pt_object, additional_time):
-        logging.getLogger(__name__).info("Creating additional section_before_first_section_taxi")
+    def _add_additional_section_before_last_section_taxi(self, journey, pt_object, additional_time):
+        logging.getLogger(__name__).info("Creating additional section_before_last_section_taxi")
         additional_section = self._create_additional_section(
             pt_object, additional_time, journey.sections[0].begin_date_time, "section_0"
         )
@@ -150,7 +150,7 @@ class Taxi(AbstractStreetNetworkService):
             s.begin_date_time += additional_time
             s.end_date_time += additional_time
 
-        self._update_journey(journey, additional_section)
+        self._update_journey(journey, additional_section, 0)
 
     def _create_additional_section(self, pt_object, additional_time, begin_date_time, section_id):
         additional_section = response_pb2.Section()
@@ -165,13 +165,13 @@ class Taxi(AbstractStreetNetworkService):
 
         return additional_section
 
-    def _update_journey(self, journey, additional_section):
+    def _update_journey(self, journey, additional_section, additional_section_index):
         journey.duration += additional_section.duration
         journey.durations.total += additional_section.duration
         journey.arrival_date_time += additional_section.duration
 
-        # The sections will be sorted afterwards based on begin and end_date_time
-        journey.sections.extend([additional_section])
+        journey.sections.insert(additional_section_index, additional_section)
+
         journey.nb_sections += 1
 
     def get_street_network_routing_matrix(
