@@ -66,15 +66,16 @@ Indexes get_intersection(const Indexes& idxs1, const Indexes& idxs2) {
 
 Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const Data& data) {
     const std::map<Type_e, Type_e> path = find_path(to);
+    std::set<idx_t> set_idx{indexes.begin(), indexes.end()};
     while (path.at(from) != from) {
-        indexes = data.get_target_by_source(from, path.at(from), indexes);
+        set_idx = data.get_target_by_source(from, path.at(from), set_idx);
         from = path.at(from);
     }
     if (from != to) {
         // there was no path to find a requested type
         return Indexes{};
     }
-    return indexes;
+    return Indexes{boost::container::ordered_unique_range_t(), set_idx.begin(), set_idx.end()};
 }
 
 Type_e type_by_caption(const std::string& type) {

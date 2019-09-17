@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/serialization.h"
 #include "type/stop_point.h"
+#include "type/route.h"
 #include "georef/adminref.h"
 
 namespace navitia {
@@ -55,7 +56,9 @@ Indexes StopArea::get(Type_e type, const PT_Data& data) const {
     Indexes result;
     switch (type) {
         case Type_e::StopPoint:
-            return indexes(this->stop_point_list);
+            return indexes(stop_point_list);
+        case Type_e::Route:
+            return indexes(route_list);
         case Type_e::Impact:
             return data.get_impacts_idx(get_impacts());
 

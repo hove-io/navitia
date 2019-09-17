@@ -444,7 +444,11 @@ static void build_route_and_stop_point_relations(navitia::type::VehicleJourney* 
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
             vj->route->stop_point_list.insert(st.stop_point);
+            vj->route->stop_area_list.insert(st.stop_point->stop_area);
             st.stop_point->route_list.insert(vj->route);
+            if (st.stop_point->stop_area) {
+                st.stop_point->stop_area->route_list.insert(vj->route);
+            }
         }
     }
 }
@@ -665,13 +669,12 @@ Indexes Data::get_all_index(Type_e type) const {
     return indexes;
 }
 
-Indexes Data::get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const {
-    Indexes result;
-    result.reserve(source_idx.size());
+std::set<idx_t> Data::get_target_by_source(Type_e source, Type_e target, const std::set<idx_t>& source_idx) const {
+    std::set<idx_t> result;
     for (idx_t idx : source_idx) {
         Indexes tmp = get_target_by_one_source(source, target, idx);
         // TODO: Use flat_set's merge when we pass to boost 1.62
-        result.insert(boost::container::ordered_unique_range_t(), tmp.begin(), tmp.end());
+        result.insert(tmp.begin(), tmp.end());
     }
     return result;
 }

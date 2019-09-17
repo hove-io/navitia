@@ -86,9 +86,10 @@ Indexes Route::get(Type_e type, const PT_Data& data) const {
             return data.get_impacts_idx(get_impacts());
         case Type_e::Dataset:
             return indexes(dataset_list);
-        case Type_e::StopPoint: {
+        case Type_e::StopPoint:
             return indexes(stop_point_list);
-        }
+        case Type_e::StopArea:
+            return indexes(stop_area_list);
         default:
             break;
     }

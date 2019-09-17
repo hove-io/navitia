@@ -35,6 +35,7 @@ www.navitia.io
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <atomic>
+#include <set>
 #include "type/validity_pattern.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
@@ -167,7 +168,7 @@ public:
     /** Given a list of indexes of 'source' objects
      * returns a list of indexes of 'target' objects
      */
-    Indexes get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const;
+    std::set<idx_t> get_target_by_source(Type_e source, Type_e target, const std::set<idx_t>& source_idx) const;
 
     /** Given one index of a 'source' object
      * returns a list of indexes of 'target' objects
