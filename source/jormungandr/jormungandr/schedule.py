@@ -268,6 +268,8 @@ class MixedSchedule(object):
         if request.get("calendar"):
             st.calendar = request["calendar"]
         st.realtime_level = utils.realtime_level_to_pbf(request['data_freshness'])
+        if request.get("direction_type"):
+            st.direction_type = utils.direction_type_to_pbf(request['direction_type'])
         resp = self.instance.send_and_receive(req)
 
         return resp

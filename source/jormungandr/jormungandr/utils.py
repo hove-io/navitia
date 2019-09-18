@@ -323,6 +323,17 @@ def realtime_level_to_pbf(level):
         raise ValueError('Impossible to convert in pbf')
 
 
+def direction_type_to_pbf(direction_type):
+    if direction_type == 'all':
+        return type_pb2.ALL
+    elif direction_type == 'forward':
+        return type_pb2.FORWARD
+    elif direction_type == 'backward':
+        return type_pb2.BACKWARD
+    else:
+        raise ValueError('Impossible to convert in pbf')
+
+
 # we can't use reverse(enumerate(list)) without creating a temporary
 # list, so we define our own reverse enumerate
 def reverse_enumerate(l):

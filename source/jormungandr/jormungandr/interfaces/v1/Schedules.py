@@ -154,7 +154,11 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
-
+        parser_get.add_argument(
+            "direction_type",
+            help='Provide a direction to filter results.',
+            type=OptionValue(['all', 'forward', 'backward']),
+        )
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
         self.get_decorators.append(complete_links(self))
