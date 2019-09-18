@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#pragma once
 #include "type/fwd_type.h"
 #include "type/rt_level.h"
 #include "type/type.pb.h"
@@ -48,5 +49,14 @@ boost::posix_time::ptime get_date_time(const routing::StopEvent stop_event,
 const type::StopTime& earliest_stop_time(const std::vector<type::StopTime>& sts);
 
 pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level);
+
+namespace type {
+
+enum class DirectionType { All = 0, Forward, Backward };
+
+type::DirectionType get_direction_type(pbnavitia::DirectionType direction_type);
+type::DirectionType get_direction_type(std::string& direction_type);
+
+}  // namespace type
 
 }  // namespace navitia

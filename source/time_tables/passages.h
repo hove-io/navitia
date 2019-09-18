@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "type/pb_converter.h"
+#include "type/type_utils.h"
 namespace navitia {
 namespace timetables {
 
@@ -44,6 +45,7 @@ void passages(PbCreator& pb_creator,
               const type::RTLevel rt_level,
               const pbnavitia::API api_pb,
               const uint32_t count,
-              const uint32_t start_page);
+              const uint32_t start_page,
+              const boost::optional<type::DirectionType>& direction_type = boost::none);
 }
 }  // namespace navitia

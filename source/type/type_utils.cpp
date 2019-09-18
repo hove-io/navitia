@@ -82,4 +82,33 @@ pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_le
             throw navitia::exception("realtime level case not handled");
     }
 }
+
+namespace type {
+
+type::DirectionType get_direction_type(pbnavitia::DirectionType direction_type) {
+    switch (direction_type) {
+        case pbnavitia::DirectionType::ALL:
+            return type::DirectionType::All;
+        case pbnavitia::DirectionType::FORWARD:
+            return type::DirectionType::Forward;
+        case pbnavitia::DirectionType::BACKWARD:
+            return type::DirectionType::Backward;
+        default:
+            throw navitia::recoverable_exception("unhandled protobuf direction type");
+    }
+}
+
+type::DirectionType get_direction_type(std::string& direction_type) {
+    if (boost::iequals(direction_type, "all")) {
+        return type::DirectionType::All;
+    } else if (boost::iequals(direction_type, "forward")) {
+        return type::DirectionType::Forward;
+    } else if (boost::iequals(direction_type, "backward")) {
+        return type::DirectionType::Backward;
+    } else {
+        throw navitia::recoverable_exception("unhandled direction type string");
+    }
+}
+
+}  // namespace type
 }  // namespace navitia

@@ -38,7 +38,6 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/range/algorithm/set_algorithm.hpp>
-#include "type/type_utils.h"
 
 namespace pt = boost::posix_time;
 using navitia::routing::StopEvent;
@@ -133,7 +132,8 @@ void passages(PbCreator& pb_creator,
               const type::RTLevel rt_level,
               const pbnavitia::API api_pb,
               const uint32_t count,
-              const uint32_t start_page) {
+              const uint32_t start_page,
+              const boost::optional<type::DirectionType>& direction_type) {
     const PassagesVisitor vis{api_pb, *pb_creator.data};
     RequestHandle handler(pb_creator, datetime, duration, {}, true);
     handler.init_jpp(request, forbidden_uris);
@@ -155,42 +155,53 @@ void passages(PbCreator& pb_creator,
     };
     std::sort(passages_dt_st.begin(), passages_dt_st.end(), sort_predicate);
 
+    auto is_handleable_with_direction_type = [&direction_type](const type::VehicleJourney* vj) {
+        return !direction_type || (direction_type && *direction_type == type::DirectionType::All)
+               || (direction_type && *direction_type == type::get_direction_type(vj->route->direction_type));
+    };
+
     for (auto dt_stop_time : passages_dt_st) {
-        auto base_ptime = navitia::to_posix_time(dt_stop_time.first, *pb_creator.data);
-        pbnavitia::Passage* passage;
-        if (vis.stop_event() == StopEvent::pick_up) {
-            passage = pb_creator.add_next_departures();
-        } else {
-            passage = pb_creator.add_next_arrivals();
-        }
-
-        // We need one second before because else, on terminus, we may
-        // miss something as period exclude the end (disruption period in particular).
-        pb_creator.action_period = pt::time_period(base_ptime - pt::seconds(1), pt::seconds(2));
-
-        auto departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second, base_ptime, true);
-        auto arrival_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second, base_ptime, false);
-
-        passage->mutable_stop_date_time()->set_departure_date_time(navitia::to_posix_timestamp(departure_dt));
-        passage->mutable_stop_date_time()->set_arrival_date_time(navitia::to_posix_timestamp(arrival_dt));
-
-        // find base datetime
-        auto base_st = dt_stop_time.second->get_base_stop_time();
-        if (base_st != nullptr) {
-            auto base_departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st, base_ptime, true);
-            auto base_arrival_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st, base_ptime, false);
-            passage->mutable_stop_date_time()->set_base_departure_date_time(
-                navitia::to_posix_timestamp(base_departure_dt));
-            passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_arrival_dt));
-        }
-        pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
-
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
-        passage->mutable_stop_date_time()->set_data_freshness(to_pb_realtime_level(vj->realtime_level));
-        const auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
-        const auto& vj_st = navitia::VjStopTimes(vj, sts);
-        pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
-        fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
+        if (is_handleable_with_direction_type(vj)) {
+            auto base_ptime = navitia::to_posix_time(dt_stop_time.first, *pb_creator.data);
+            pbnavitia::Passage* passage;
+            if (vis.stop_event() == StopEvent::pick_up) {
+                passage = pb_creator.add_next_departures();
+            } else {
+                passage = pb_creator.add_next_arrivals();
+            }
+
+            // We need one second before because else, on terminus, we may
+            // miss something as period exclude the end (disruption period in particular).
+            pb_creator.action_period = pt::time_period(base_ptime - pt::seconds(1), pt::seconds(2));
+
+            auto departure_dt =
+                get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second, base_ptime, true);
+            auto arrival_dt =
+                get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second, base_ptime, false);
+
+            passage->mutable_stop_date_time()->set_departure_date_time(navitia::to_posix_timestamp(departure_dt));
+            passage->mutable_stop_date_time()->set_arrival_date_time(navitia::to_posix_timestamp(arrival_dt));
+
+            // find base datetime
+            auto base_st = dt_stop_time.second->get_base_stop_time();
+            if (base_st != nullptr) {
+                auto base_departure_dt =
+                    get_date_time(vis.stop_event(), dt_stop_time.second, base_st, base_ptime, true);
+                auto base_arrival_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st, base_ptime, false);
+                passage->mutable_stop_date_time()->set_base_departure_date_time(
+                    navitia::to_posix_timestamp(base_departure_dt));
+                passage->mutable_stop_date_time()->set_base_arrival_date_time(
+                    navitia::to_posix_timestamp(base_arrival_dt));
+            }
+            pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
+
+            passage->mutable_stop_date_time()->set_data_freshness(to_pb_realtime_level(vj->realtime_level));
+            const auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
+            const auto& vj_st = navitia::VjStopTimes(vj, sts);
+            pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
+            fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
+        }
     }
     pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
 
