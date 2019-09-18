@@ -81,3 +81,66 @@ BOOST_AUTO_TEST_CASE(frequency_vehicle_journeys_test) {
     BOOST_REQUIRE_EQUAL(vehicle_journey.has_headway_secs(), true);
     BOOST_CHECK_EQUAL(vehicle_journey.headway_secs(), "00:30:00"_t);
 }
+
+/*
+ * Test to check if a stop_point presents in one over two vehicule_journey is not always returned.
+ *
+ * StopPoints (3) :  sp0          Journeys (2) :  vj0 (sp0) ──── (sp1)          Map (1) :                 ┌── sp1 (8:05)
+ *                   sp1                          vj1 (sp0) ──── (sp2)                     sp0 (8:00) ────┤
+ *                   sp2                                                                                  └── sp2 (8:05)
+ *
+ * This test should not return journeys with sp1 in it if we ask to get journey with sp2 and vice versa but both if
+ * none of them is specified.
+ */
+BOOST_AUTO_TEST_CASE(stop_points_in_vehicle_journeys_test) {
+    ed::builder b("20190101");
+    b.vj("L1").name("vj0")("sp0", "8:00"_t)("sp1", "8:05"_t);
+    b.vj("L1").name("vj1")("sp0", "8:00"_t)("sp2", "8:05"_t);
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    // Check if 2 vehicule_journey are present
+    auto* data = b.data.get();
+    uint depth = 3;
+    uint start_page = 0;
+    uint count = 10;
+
+    navitia::PbCreator pb_creator(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator, nt::Type_e::VehicleJourney, {}, {}, nt::OdtLevel_e::all, depth, start_page,
+                             count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    pbnavitia::Response const & resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys().size(), 2);
+    BOOST_CHECK_EQUAL(resp.vehicle_journeys(0).uri(), "vehicle_journey:vj:0");
+    BOOST_CHECK_EQUAL(resp.vehicle_journeys(1).uri(), "vehicle_journey:vj:1");
+
+    // Check if the vehicule_journey with sp2 is not present
+    data = b.data.get();
+    depth = 3;
+    start_page = 0;
+    count = 10;
+
+    navitia::PbCreator pb_creator2(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator2, nt::Type_e::VehicleJourney, "stop_point.uri=sp1", {}, nt::OdtLevel_e::all, depth, start_page,
+                             count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    resp = pb_creator2.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys().size(), 1);
+    BOOST_CHECK_EQUAL(resp.vehicle_journeys(0).uri(), "vehicle_journey:vj:0");
+
+    // Check if the vehicule_journey with sp1 is not present
+    data = b.data.get();
+    depth = 3;
+    start_page = 0;
+    count = 10;
+
+    navitia::PbCreator pb_creator3(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator3, nt::Type_e::VehicleJourney, "stop_point.uri=sp2", {}, nt::OdtLevel_e::all, depth, start_page,
+                             count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    resp = pb_creator3.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys().size(), 1);
+    BOOST_CHECK_EQUAL(resp.vehicle_journeys(0).uri(), "vehicle_journey:vj:1");
+}

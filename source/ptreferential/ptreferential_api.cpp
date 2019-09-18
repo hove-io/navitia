@@ -158,9 +158,11 @@ void query_pb(navitia::PbCreator& pb_creator,
         final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
     } catch (const parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more);
+        LOG4CPLUS_WARN(logger, "Unable to parse: " + parse_error.more);
         return;
     } catch (const ptref_error& pt_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more);
+        LOG4CPLUS_WARN(logger, "Bad filter: " + pt_error.more);
         return;
     }
     total_result = final_indexes.size();
