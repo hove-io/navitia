@@ -108,3 +108,43 @@ BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
     BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170107T080600"_pts);
     BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170107T090600"_pts);
 }
+
+BOOST_AUTO_TEST_CASE(passages_with_direction_type) {
+    ed::builder b("20190101");
+
+    // Add forward direction type for L1 route
+    b.vj("L1").direction_type("forward").name("vj:0")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(),
+                                                      true, true, 900, 0)(
+        "stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+    b.vj("L1").name("vj:1")("stop1", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
+        "stop2", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+
+    b.make();
+
+    // Direction type request param = All, direction type into data = Forward
+    // Return All next departures for stop2
+    navitia::PbCreator pb_creator_all(b.data.get(), bt::second_clock::universal_time(), null_time_period);
+    passages(pb_creator_all, "stop_point.uri=stop1", {}, "20190101T073000"_dt, 86400, 10, 3,
+             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_DEPARTURES, 10, 0,
+             navitia::type::DirectionType::All);
+    auto resp = pb_creator_all.get_response();
+    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
+
+    // Direction type request param = Forward, direction type into data = Forward
+    // Return All next departures for stop2
+    navitia::PbCreator pb_creator_forward(b.data.get(), bt::second_clock::universal_time(), null_time_period);
+    passages(pb_creator_forward, "stop_point.uri=stop1", {}, "20190101T073000"_dt, 86400, 10, 3,
+             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_DEPARTURES, 10, 0,
+             navitia::type::DirectionType::Forward);
+    resp = pb_creator_forward.get_response();
+    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
+
+    // Direction type request param = Backward, direction type into data = Forward
+    // There is no results, all are filtered.
+    navitia::PbCreator pb_creator_backward(b.data.get(), bt::second_clock::universal_time(), null_time_period);
+    passages(pb_creator_backward, "stop_point.uri=stop1", {}, "20190101T073000"_dt, 86400, 10, 3,
+             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_DEPARTURES, 10, 0,
+             navitia::type::DirectionType::Backward);
+    resp = pb_creator_backward.get_response();
+    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 0);
+}
