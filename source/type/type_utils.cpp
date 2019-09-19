@@ -85,28 +85,17 @@ pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_le
 
 namespace type {
 
-type::DirectionType get_direction_type(pbnavitia::DirectionType direction_type) {
-    switch (direction_type) {
-        case pbnavitia::DirectionType::ALL:
-            return type::DirectionType::All;
-        case pbnavitia::DirectionType::FORWARD:
-            return type::DirectionType::Forward;
-        case pbnavitia::DirectionType::BACKWARD:
-            return type::DirectionType::Backward;
-        default:
-            throw navitia::recoverable_exception("unhandled protobuf direction type");
-    }
-}
-
-type::DirectionType get_direction_type(std::string& direction_type) {
-    if (boost::iequals(direction_type, "all")) {
-        return type::DirectionType::All;
-    } else if (boost::iequals(direction_type, "forward")) {
-        return type::DirectionType::Forward;
-    } else if (boost::iequals(direction_type, "backward")) {
-        return type::DirectionType::Backward;
+pbnavitia::DirectionType get_direction_type(std::string& direction_type) {
+    if (direction_type == "all") {
+        return pbnavitia::DirectionType::ALL;
+    } else if ((direction_type == "forward") || (direction_type == "clockwise") || (direction_type == "inbound")) {
+        return pbnavitia::DirectionType::FORWARD;
+    } else if ((direction_type == "backward") || (direction_type == "anticlockwise")
+               || (direction_type == "outbound")) {
+        return pbnavitia::DirectionType::BACKWARD;
     } else {
-        throw navitia::recoverable_exception("unhandled direction type string");
+        // by default we select all direction
+        return pbnavitia::DirectionType::ALL;
     }
 }
 

@@ -52,10 +52,7 @@ pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_le
 
 namespace type {
 
-enum class DirectionType { All = 0, Forward, Backward };
-
-type::DirectionType get_direction_type(pbnavitia::DirectionType direction_type);
-type::DirectionType get_direction_type(std::string& direction_type);
+pbnavitia::DirectionType get_direction_type(std::string& direction_type);
 
 }  // namespace type
 

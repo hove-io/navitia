@@ -133,7 +133,7 @@ void passages(PbCreator& pb_creator,
               const pbnavitia::API api_pb,
               const uint32_t count,
               const uint32_t start_page,
-              const boost::optional<type::DirectionType>& direction_type) {
+              const boost::optional<pbnavitia::DirectionType>& direction_type) {
     const PassagesVisitor vis{api_pb, *pb_creator.data};
     RequestHandle handler(pb_creator, datetime, duration, {}, true);
     handler.init_jpp(request, forbidden_uris);
@@ -156,7 +156,7 @@ void passages(PbCreator& pb_creator,
     std::sort(passages_dt_st.begin(), passages_dt_st.end(), sort_predicate);
 
     auto is_handleable_with_direction_type = [&direction_type](const type::VehicleJourney* vj) {
-        return !direction_type || (direction_type && *direction_type == type::DirectionType::All)
+        return !direction_type || (direction_type && *direction_type == pbnavitia::DirectionType::ALL)
                || (direction_type && *direction_type == type::get_direction_type(vj->route->direction_type));
     };
 

@@ -432,13 +432,12 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
     try {
         switch (api) {
             case pbnavitia::NEXT_DEPARTURES:
-                timetables::passages(
-                    this->pb_creator, request.departure_filter(), forbidden_uri, from_datetime, request.duration(),
-                    request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), rt_level, api,
-                    request.count(), request.start_page(),
-                    request.has_direction_type()
-                        ? boost::make_optional<nt::DirectionType>(nt::get_direction_type(request.direction_type()))
-                        : boost::none);
+                timetables::passages(this->pb_creator, request.departure_filter(), forbidden_uri, from_datetime,
+                                     request.duration(), request.nb_stoptimes(), request.depth(),
+                                     type::AccessibiliteParams(), rt_level, api, request.count(), request.start_page(),
+                                     request.has_direction_type()
+                                         ? boost::make_optional<pbnavitia::DirectionType>(request.direction_type())
+                                         : boost::none);
                 break;
             case pbnavitia::NEXT_ARRIVALS:
                 timetables::passages(this->pb_creator, request.arrival_filter(), forbidden_uri, from_datetime,

@@ -46,6 +46,6 @@ void passages(PbCreator& pb_creator,
               const pbnavitia::API api_pb,
               const uint32_t count,
               const uint32_t start_page,
-              const boost::optional<type::DirectionType>& direction_type = boost::none);
+              const boost::optional<pbnavitia::DirectionType>& direction_type = boost::none);
 }
 }  // namespace navitia
