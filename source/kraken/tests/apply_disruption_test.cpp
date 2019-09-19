@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
 /*
  * In case we have a pretty complex line with repeated stops, since a line_section is only defined by
- * a line, two stop areas and an optional list of routes, we're impacting the longest section possible for each
+ * a line, two stop areas and an optional list of routes, we're impacting the shortest sections possible for each
  * route. Let's take a look at the line A below, with 4 routes, all departing from s1 and ending at s6.
  *
  * 1st route s1/s2/s3/s2/s3/s4/s5/s4/s5/s6 :
@@ -1563,7 +1563,8 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);
+    // 6 stop_times since we don't impact the first iteration of each loop
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 6);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "s1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "s6");
 
