@@ -145,7 +145,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
             }
 
             // Filtering each journey to see if it's impacted by the section.
-            auto section = vj.get_sections_stop_points(ls.start_point, ls.end_point);
+            auto section = vj.get_sections_ranks(ls.start_point, ls.end_point);
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
             if (!section.empty()) {
@@ -200,10 +200,13 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);
             }
-            for (auto* sp : impacted_vj.impacted_stops) {
-                if (impacted_stop_points.insert(sp).second) {
+            // Get base vj to impact all stop_points
+            auto base_vj = vj->get_corresponding_base();
+            for (const auto& st : base_vj->stop_time_list) {
+                // if the stop_point is impacted and it's the first time we see it
+                if (impacted_vj.impacted_ranks.count(st.order()) && impacted_stop_points.insert(st.stop_point).second) {
                     // it's the first time we see this stoppoint, we add the impact to it
-                    sp->add_impact(impact);
+                    st.stop_point->add_impact(impact);
                 }
             }
         }
@@ -339,9 +342,13 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
     std::set<StopPoint*> res;
     for (const auto* route : routes) {
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-            res = vj.get_sections_stop_points(start_point, end_point);
-            if (res.empty()) {
+            auto ranks = vj.get_sections_ranks(start_point, end_point);
+            if (ranks.empty()) {
                 return true;
+            } else {
+                for (const auto& rank : ranks) {
+                    res.insert(vj.stop_time_list.at(rank).stop_point);
+                }
             }
             return false;
         });

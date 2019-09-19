@@ -411,9 +411,9 @@ public:
 struct ImpactedVJ {
     const VehicleJourney* vj;  // vj before impact
     ValidityPattern new_vp;
-    std::set<StopPoint*> impacted_stops;
-    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<StopPoint*> r)
-        : vj(vj), new_vp(vp), impacted_stops(std::move(r)) {}
+    std::set<uint16_t> impacted_ranks;
+    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<uint16_t> r)
+        : vj(vj), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*
  * return the list of vehicle journey that are impacted by the linesection
