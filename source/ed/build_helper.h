@@ -131,7 +131,7 @@ struct VJ {
         return *this;
     }
 
-    VJ& route(const std::string& r, const std::string& d = "forward") {
+    VJ& route(const std::string& r, const std::string& d = "") {
         _route_name = r;
         _direction_type = d;
         return *this;

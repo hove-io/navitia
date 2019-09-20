@@ -66,7 +66,7 @@ class TestSytralSchedules(AbstractTestFixture):
     def test_stop_schedule_with_realtime_only(self):
         mock_requests = MockRequests(
             {
-                'http://XXXX?stop_id=syn_stoppoint1&direction_type=forward': (
+                'http://XXXX?stop_id=syn_stoppoint1': (
                     {
                         "departures": [
                             {
@@ -74,7 +74,6 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "3341",
                                 "direction_name": "Piscine Chambéry",
-                                "direction_type": "forward",
                                 "datetime": "2016-01-02T10:17:17+02:00",
                                 "type": "E",
                             },
@@ -83,7 +82,6 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "3341",
                                 "direction_name": "Piscine Chambéry",
-                                "direction_type": "forward",
                                 "type": "E",
                                 "datetime": "2016-01-02T11:17:17+02:00",
                             },
@@ -116,7 +114,7 @@ class TestSytralSchedules(AbstractTestFixture):
     def test_stop_schedule_with_theoric_and_realtime(self):
         mock_requests = MockRequests(
             {
-                'http://XXXX?stop_id=syn_stoppoint1&direction_type=forward': (
+                'http://XXXX?stop_id=syn_stoppoint1': (
                     {
                         "departures": [
                             {
@@ -124,7 +122,6 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "3341",
                                 "direction_name": "Piscine Chambéry",
-                                "direction_type": "forward",
                                 "datetime": "2016-01-02T09:17:17+01:00",
                                 "type": "E",
                             },
@@ -133,7 +130,6 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "3341",
                                 "direction_name": "Piscine Chambéry",
-                                "direction_type": "forward",
                                 "datetime": "2016-01-02T10:17:17+01:00",
                                 "type": "T",
                             },
