@@ -133,7 +133,7 @@ class Taxi(AbstractStreetNetworkService):
         # Because Jormun does not do it afterwards
         journey.sections[-1].destination.CopyFrom(pt_object)
 
-        self._update_journey(journey, additional_section, 1)
+        self._update_journey(journey, additional_section, True)
 
     def _add_additional_section_before_last_section_taxi(self, journey, pt_object, additional_time):
         logging.getLogger(__name__).info("Creating additional section_before_last_section_taxi")
@@ -150,7 +150,7 @@ class Taxi(AbstractStreetNetworkService):
             s.begin_date_time += additional_time
             s.end_date_time += additional_time
 
-        self._update_journey(journey, additional_section, 0)
+        self._update_journey(journey, additional_section, False)
 
     def _create_additional_section(self, pt_object, additional_time, begin_date_time, section_id):
         additional_section = response_pb2.Section()
@@ -165,12 +165,19 @@ class Taxi(AbstractStreetNetworkService):
 
         return additional_section
 
-    def _update_journey(self, journey, additional_section, additional_section_index):
+    def _update_journey(self, journey, additional_section, is_add_after):
         journey.duration += additional_section.duration
         journey.durations.total += additional_section.duration
         journey.arrival_date_time += additional_section.duration
 
-        journey.sections.insert(additional_section_index, additional_section)
+        if is_add_after:
+            # We want [taxi_section, additional_section]
+            journey.sections.extend([additional_section])
+        else:
+            # We want [additional_section, taxi_section]
+            # Since journey.sections.insert(0, additional_section) does not seem to work
+            journey.sections.extend([journey.sections[0]])
+            journey.sections[0].CopyFrom(additional_section)
 
         journey.nb_sections += 1
 
