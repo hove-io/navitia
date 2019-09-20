@@ -32,6 +32,7 @@ import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils, fallback_modes as fm
+from jormungandr.utils import SectionSorter
 
 
 from navitiacommon import response_pb2
@@ -133,7 +134,7 @@ class Taxi(AbstractStreetNetworkService):
         # Because Jormun does not do it afterwards
         journey.sections[-1].destination.CopyFrom(pt_object)
 
-        self._update_journey(journey, additional_section, True)
+        self._update_journey(journey, additional_section)
 
     def _add_additional_section_before_last_section_taxi(self, journey, pt_object, additional_time):
         logging.getLogger(__name__).info("Creating additional section_before_last_section_taxi")
@@ -150,7 +151,7 @@ class Taxi(AbstractStreetNetworkService):
             s.begin_date_time += additional_time
             s.end_date_time += additional_time
 
-        self._update_journey(journey, additional_section, False)
+        self._update_journey(journey, additional_section)
 
     def _create_additional_section(self, pt_object, additional_time, begin_date_time, section_id):
         additional_section = response_pb2.Section()
@@ -165,19 +166,13 @@ class Taxi(AbstractStreetNetworkService):
 
         return additional_section
 
-    def _update_journey(self, journey, additional_section, is_add_after):
+    def _update_journey(self, journey, additional_section):
         journey.duration += additional_section.duration
         journey.durations.total += additional_section.duration
         journey.arrival_date_time += additional_section.duration
 
-        if is_add_after:
-            # We want [taxi_section, additional_section]
-            journey.sections.extend([additional_section])
-        else:
-            # We want [additional_section, taxi_section]
-            # Since journey.sections.insert(0, additional_section) does not seem to work
-            journey.sections.extend([journey.sections[0]])
-            journey.sections[0].CopyFrom(additional_section)
+        journey.sections.extend([additional_section])
+        journey.sections.sort(SectionSorter())
 
         journey.nb_sections += 1
 
