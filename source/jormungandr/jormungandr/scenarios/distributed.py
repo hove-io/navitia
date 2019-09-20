@@ -97,6 +97,9 @@ class Distributed(object):
             mode for _, mode, direct_path_type in krakens_call if direct_path_type != "only"
         }
 
+        # These are the modes in first_section_modes[] and direct_path_modes[]
+        # We need to compute direct_paths for them either because we requested it with direct_path_modes[]
+        # Or because we need them to optimize the pt_journey computation
         requested_direct_path_modes = {
             mode for mode, _, direct_path_type in krakens_call if direct_path_type == "only"
         }
