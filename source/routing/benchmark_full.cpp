@@ -38,6 +38,8 @@ www.navitia.io
 #include "utils/timer.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include "type/pb_converter.h"
+#include "type/meta_data.h"
 #ifdef __BENCH_WITH_CALGRIND__
 #include "valgrind/callgrind.h"
 #endif
@@ -52,28 +54,22 @@ using namespace routing;
 namespace po = boost::program_options;
 namespace ba = boost::algorithm;
 
-struct PathDemand {
+struct Request {
     std::string start;
     std::string target;
 
-    unsigned int date{};
-    unsigned int hour{};
+    pt::ptime departure_posix_time;
 
     type::Mode_e start_mode = type::Mode_e::Walking;
     type::Mode_e target_mode = type::Mode_e::Walking;
 };
 
 struct Result {
-    int duration;
-    int time;
-    int arrival;
-    int nb_changes;
+    int nb_of_journeys_found;
+    int computing_time_in_ms;
 
-    explicit Result(const pbnavitia::Journey& journey)
-        : duration(journey.duration()),
-          time(-1),
-          arrival(journey.arrival_date_time()),
-          nb_changes(journey.nb_transfers()) {}
+    Result(int nb_of_journeys_found_, int computing_time_in_ms_)
+        : nb_of_journeys_found(nb_of_journeys_found_), computing_time_in_ms(computing_time_in_ms_) {}
 };
 
 static type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entry_point,
@@ -139,34 +135,36 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
 
 int main(int argc, char** argv) {
     navitia::init_app();
-    po::options_description desc("Options de l'outil de benchmark");
-    std::string file, output, stop_input_file, start, target, demands_output_file;
-    int iterations, date, hour, nb_second_pass;
-
-    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
+    po::options_description desc("Benchmark tool options");
+    std::string data_file, benchmark_output_file, requests_input_file, requests_output_file;
+    int iterations, nb_second_pass;
 
     // clang-format off
     desc.add_options()
-            ("help", "Show this message")
+            ("help", "Show this message.")
             ("iterations,i", po::value<int>(&iterations)->default_value(100),
-                     "Number of iterations (10 requests by iteration)")
-            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"),
+                     "Number of (start, target) pairs to be generated. Default = 100.\n"
+                     "10 requests will be created for each (start, target) pair, with different departure date_time.")
+            ("file,f", po::value<std::string>(&data_file)->default_value("data.nav.lz4"),
                      "Path to data.nav.lz4")
-            ("start,s", po::value<std::string>(&start),
-                    "Start of a particular journey")
-            ("target,t", po::value<std::string>(&target),
-                    "Target of a particular journey")
-            ("date,d", po::value<int>(&date)->default_value(-1),
-                    "Beginning date of a particular journey")
-            ("hour,h", po::value<int>(&hour)->default_value(-1),
-                    "Beginning hour of a particular journey")
-            ("verbose,v", "Verbose debugging output")
+            ("verbose,v", "Verbose debugging output.")
             ("nb_second_pass", po::value<int>(&nb_second_pass)->default_value(0), "nb second pass")
-            ("stop_files", po::value<std::string>(&stop_input_file), "File with list of start and target")
-            ("dump_demands", po::value<std::string>(&demands_output_file), "Write a csv file with the list of demands (start, target, time) used")
-            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"),
-                     "Output file");
+            ("requests", po::value<std::string>(&requests_input_file),
+                        "List of requests to benchmark on.\n"
+                        "Must be a comma-separated csv file where the first 3 columns are :  start point uri, target point uri, departure posix time.\n"
+                        "For example, a line could be :\n"
+                        "stop_area:SAR:SA:1443, stop_area:GT5:SA:4253, 20190717T080000\n"
+                        "The first line of the csv file is assumed to be column headers and is skipped.\n"
+                        "Can contains more than the 3 aforementionned columns.")
+            ("dump_requests", po::value<std::string>(&requests_output_file),
+                                "Write a csv file with the list of requests to be used, before starting the benchmark.\n"
+                                "Each line contains : start uri, target uri, departure posix time."
+                                )
+            ("output,o", po::value<std::string>(&benchmark_output_file),
+                     "Write a csv file with the list of requests used, the computing time (in ms) needed to answer each request, "
+                     "and the number of journey found.\n"
+                     "Each line contains : start uri, target uri, departure posix time, computing time, number of journeys found."
+                     );
     // clang-format on
 
     po::variables_map vm;
@@ -182,135 +180,139 @@ int main(int argc, char** argv) {
 
     type::Data data;
     {
-        Timer t("Chargement des données : " + file);
-        data.load_nav(file);
+        Timer t("Loading data from : " + data_file);
+        data.load_nav(data_file);
         data.build_raptor();
     }
-    std::vector<PathDemand> demands;
+    std::vector<Request> requests;
 
-    if (!stop_input_file.empty()) {
+    if (!requests_input_file.empty()) {
         // csv file should be the same as the output one
-        CsvReader csv(stop_input_file, ',');
+        CsvReader csv(requests_input_file, ',');
         csv.next();
         size_t cpt_not_found = 0;
         for (auto it = csv.next(); !csv.eof(); it = csv.next()) {
-            PathDemand demand;
-            demand.start = it[0];
-            demand.target = it[1];
-            demand.hour = boost::lexical_cast<unsigned int>(it[5]);
-            demand.date = boost::lexical_cast<unsigned int>(it[4]);
-            demands.push_back(demand);
+            Request request;
+            request.start = it[0];
+            request.target = it[1];
+            request.departure_posix_time = boost::posix_time::from_iso_string(it[2]);
+            requests.push_back(request);
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
-    } else if (!start.empty() && !target.empty() && date != -1 && hour != -1) {
-        PathDemand demand;
-        demand.start = start;
-        demand.target = target;
-        demand.hour = hour;
-        demand.date = date;
-        std::cout << "we use the entry param " << start << " -> " << target << std::endl;
-        demands.push_back(demand);
     } else {
-        // Génération des instances
+        // Generating random requests
         std::random_device rd;
         std::mt19937 rng(31442);
         std::uniform_int_distribution<> gen(0, data.pt_data->stop_areas.size() - 1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days({date != -1 ? unsigned(date) : 7});
-        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6) {
+        std::vector<unsigned int> days({7});
+        if (data.meta->production_date.begin().day_of_week().as_number() == 6)
             days.push_back(days.front() + 1);
         } else {
             days.push_back(days.front() + 6);
         }
 
         for (int i = 0; i < iterations; ++i) {
-            PathDemand demand;
+            Request request;
             const type::StopArea* sa_start;
             const type::StopArea* sa_dest;
             do {
                 sa_start = data.pt_data->stop_areas[gen(rng)];
                 sa_dest = data.pt_data->stop_areas[gen(rng)];
-                demand.start = sa_start->uri;
-                demand.target = sa_dest->uri;
+                request.start = sa_start->uri;
+                request.target = sa_dest->uri;
             } while (sa_start == sa_dest || ba::starts_with(sa_dest->uri, "stop_area:SNC:")
                      || ba::starts_with(sa_start->uri, "stop_area:SNC:"));
 
             for (auto day : days) {
                 for (auto hour : hours) {
-                    demand.date = day;
-                    demand.hour = hour;
-                    demands.push_back(demand);
+                    const DateTime departure_datetime = DateTimeUtils::set(day + 1, hour);
+                    request.departure_posix_time = to_posix_time(departure_datetime, data);
+                    requests.push_back(request);
                 }
             }
         }
     }
 
-    // ecriture des requetes
-    if (vm.count("dump_demands")) {
-        std::fstream out_file(demands_output_file, std::ios::out);
-        out_file << "Start id, Target id, , , Day, Hour" << std::endl;
+    std::cout << data.meta->production_date << std::endl;
 
-        for (size_t i = 0; i < demands.size(); ++i) {
-            PathDemand demand = demands[i];
-            out_file << demand.start << ", " << demand.target << ", "
-                     << " "
-                     << ","
-                     << " "
-                     << "," << demand.date << ", " << demand.hour << std::endl;
+    // writing requests to a file
+    if (vm.count("dump_requests")) {
+        std::fstream out_file(requests_output_file, std::ios::out);
+        out_file << "Start point uri, Target uri, Departure posix date time"
+                 << "\n";
+
+        for (const Request& request : requests) {
+            out_file << request.start << ", " << request.target << ", " << to_iso_string(request.departure_posix_time)
+                     << "\n";
         }
         out_file.close();
     }
 
-    // Calculs des itinéraires
+    // Journeys computation
     std::vector<Result> results;
     data.build_raptor();
-    RAPTOR router(data);
+    RAPTOR raptor(data);
     auto georef_worker = georef::StreetNetwork(*data.geo_ref);
 
-    std::cout << "On lance le benchmark de l'algo " << std::endl;
-    boost::progress_display show_progress(demands.size());
-    Timer t("Calcul avec l'algorithme ");
+    // disabling logging, to not pollute std::cout
+    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    logger.setLogLevel(log4cplus::WARN_LOG_LEVEL);
+    auto logger_raptor = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+    logger_raptor.setLogLevel(log4cplus::WARN_LOG_LEVEL);
+
+    std::cout << "Launching benchmark " << std::endl;
+    boost::progress_display show_progress(requests.size());
+
     // ProfilerStart("bench.prof");
     int nb_reponses = 0, nb_journeys = 0;
 #ifdef __BENCH_WITH_CALGRIND__
     CALLGRIND_START_INSTRUMENTATION;
 #endif
-    for (auto demand : demands) {
+    for (auto request : requests) {
         ++show_progress;
         Timer t2;
-        auto date = data.pt_data->validity_patterns.front()->beginning_date + boost::gregorian::days(demand.date + 1)
-                    - boost::gregorian::date(1970, 1, 1);
+
         if (verbose) {
-            std::cout << demand.start << ", " << demand.start << ", " << demand.target << ", "
-                      << static_cast<int>(demand.start_mode) << ", " << static_cast<int>(demand.target_mode) << ", "
-                      << date << ", " << demand.hour << "\n";
+            std::cout << request.start << ", " << request.target << ", " << request.departure_posix_time << "\n";
         }
 
-        type::EntryPoint origin = make_entry_point(demand.start, data);
-        type::EntryPoint destination = make_entry_point(demand.target, data);
+        type::EntryPoint origin = make_entry_point(request.start, data);
+        type::EntryPoint destination = make_entry_point(request.target, data);
 
-        origin.streetnetwork_params.mode = demand.start_mode;
-        origin.streetnetwork_params.offset = data.geo_ref->offsets[demand.start_mode];
+        origin.streetnetwork_params.mode = request.start_mode;
+        origin.streetnetwork_params.offset = data.geo_ref->offsets[request.start_mode];
         origin.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
         origin.streetnetwork_params.speed_factor = 1;
-        destination.streetnetwork_params.mode = demand.target_mode;
-        destination.streetnetwork_params.offset = data.geo_ref->offsets[demand.target_mode];
+        destination.streetnetwork_params.mode = request.target_mode;
+        destination.streetnetwork_params.offset = data.geo_ref->offsets[request.target_mode];
         destination.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
         destination.streetnetwork_params.speed_factor = 1;
         type::AccessibiliteParams accessibilite_params;
-        const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
         navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-        make_response(pb_creator, router, origin, destination, {departure_datetime}, true, accessibilite_params, {}, {},
-                      georef_worker, type::RTLevel::Base, 2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
+
+        int days_since_epoch = (request.departure_posix_time.date() - boost::gregorian::date(1970, 1, 1)).days();
+        int total_second_in_day = request.departure_posix_time.time_of_day().total_seconds();
+
+        const DateTime departure_datetime = DateTimeUtils::set(days_since_epoch, total_second_in_day);
+        make_response(pb_creator, raptor, origin, destination, {departure_datetime},
+                      true,                      // clockwise ?
+                      accessibilite_params, {},  // forbidden
+                      {},                        // allowed
+                      georef_worker,
+                      type::RTLevel::Base,             // real time level
+                      2_min,                           // transfer penalty
+                      DateTimeUtils::SECONDS_PER_DAY,  // max_duration
+                      10,                              // max_transfers
+                      nb_second_pass);
         auto resp = pb_creator.get_response();
+
+        Result result(resp.journeys().size(), t2.ms());
+        results.push_back(result);
 
         if (resp.journeys_size() > 0) {
             ++nb_reponses;
             nb_journeys += resp.journeys_size();
-
-            Result result(resp.journeys(0));
-            result.time = t2.ms();
-            results.push_back(result);
         }
     }
     // ProfilerStop();
@@ -318,7 +320,21 @@ int main(int argc, char** argv) {
     CALLGRIND_STOP_INSTRUMENTATION;
 #endif
 
-    std::cout << "Number of requests: " << demands.size() << std::endl;
+    if (vm.count("output")) {
+        std::fstream out_file(benchmark_output_file, std::ios::out);
+        out_file << "Start point uri, Target uri, Departure posix date time, Computing time (ms), Nb of journeys found"
+                 << "\n";
+
+        for (size_t i = 0; i < requests.size(); ++i) {
+            const Request& request = requests[i];
+            const Result& result = results[i];
+            out_file << request.start << ", " << request.target << ", " << to_iso_string(request.departure_posix_time)
+                     << ", " << result.computing_time_in_ms << ", " << result.nb_of_journeys_found << "\n";
+        }
+        out_file.close();
+    }
+
+    std::cout << "Number of requests: " << requests.size() << std::endl;
     std::cout << "Number of results with solution: " << nb_reponses << std::endl;
     std::cout << "Number of journey found: " << nb_journeys << std::endl;
 }
