@@ -90,8 +90,20 @@ class Distributed(object):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
-        requested_dep_modes = {mode for mode, _, _ in krakens_call}
-        requested_arr_modes = {mode for _, mode, _ in krakens_call}
+        requested_dep_modes_with_pt = {
+            mode for mode, _, direct_path_type in krakens_call if direct_path_type != "only"
+        }
+        requested_arr_modes_with_pt = {
+            mode for _, mode, direct_path_type in krakens_call if direct_path_type != "only"
+        }
+
+        # These are the modes in first_section_modes[] and direct_path_modes[]
+        # We need to compute direct_paths for them either because we requested it with direct_path_modes[]
+        # Or because we need them to optimize the pt_journey computation
+        requested_direct_path_modes = {
+            mode for mode, _, direct_path_type in krakens_call if direct_path_type == "only"
+        }
+        requested_direct_path_modes.update(requested_dep_modes_with_pt)
 
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
@@ -112,7 +124,7 @@ class Distributed(object):
 
             period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-            for mode in requested_dep_modes:
+            for mode in requested_direct_path_modes:
                 context.streetnetwork_path_pool.add_async_request(
                     requested_orig_obj=context.requested_orig_obj,
                     requested_dest_obj=context.requested_dest_obj,
@@ -134,7 +146,7 @@ class Distributed(object):
                         period_extremity=period_extremity,
                         streetnetwork_path_type=StreetNetworkPathType.DIRECT,
                     )
-                    for mode in requested_dep_modes
+                    for mode in requested_direct_path_modes
                 ]
 
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
@@ -146,7 +158,7 @@ class Distributed(object):
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_orig_obj,
-                modes=requested_dep_modes,
+                modes=requested_dep_modes_with_pt,
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
@@ -156,7 +168,7 @@ class Distributed(object):
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_dest_obj,
-                modes=requested_arr_modes,
+                modes=requested_arr_modes_with_pt,
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
@@ -173,7 +185,7 @@ class Distributed(object):
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_orig_obj,
-                modes=requested_dep_modes,
+                modes=requested_dep_modes_with_pt,
                 proximities_by_crowfly_pool=context.orig_proximities_by_crowfly,
                 places_free_access=context.orig_places_free_access,
                 direct_paths_by_mode=context.direct_paths_by_mode,
@@ -185,7 +197,7 @@ class Distributed(object):
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_dest_obj,
-                modes=requested_arr_modes,
+                modes=requested_arr_modes_with_pt,
                 proximities_by_crowfly_pool=context.dest_proximities_by_crowfly,
                 places_free_access=context.dest_places_free_access,
                 direct_paths_by_mode=context.direct_paths_by_mode,
@@ -221,7 +233,7 @@ class Distributed(object):
         # At the stage, all types of journeys have been computed thus we build the final result here
         res = []
         if context.partial_response_is_empty:
-            for mode in requested_dep_modes:
+            for mode in requested_direct_path_modes:
                 dp = context.direct_paths_by_mode.get(mode).wait_and_get()
                 if getattr(dp, "journeys", None):
                     res.append(dp)
