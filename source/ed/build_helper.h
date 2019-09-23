@@ -68,6 +68,7 @@ struct VJ {
     const std::string line_name;
     std::string _block_id;
     std::string _route_name;
+    std::string _direction_type;
     const bool is_frequency;
     const bool wheelchair_boarding;
     std::string _name;
@@ -130,8 +131,9 @@ struct VJ {
         return *this;
     }
 
-    VJ& route(const std::string& r) {
+    VJ& route(const std::string& r, const std::string d = "") {
         _route_name = r;
+        _direction_type = d;
         return *this;
     }
     VJ& bike_accepted(bool b) {
