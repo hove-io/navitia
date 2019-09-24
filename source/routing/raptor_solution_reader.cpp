@@ -644,7 +644,7 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
        << "transfer_dur : " << j.transfer_dur << "], ["
        << "nb sections : " << j.sections.size() << ", "
        << "nb extensions : " << unsigned(j.nb_vj_extentions) << "], "
-       << "foot duration : " << j.sn_dur << ")" << std::endl;
+       << "fallback duration : " << j.sn_dur << ")" << std::endl;
     for (const auto& s : j.sections) {
         if (s.get_in_st) {
             os << "(" << s.get_in_st->vehicle_journey->route->line->uri << ": " << s.get_in_st->stop_point->uri;

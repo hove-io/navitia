@@ -1394,15 +1394,15 @@ void make_response(navitia::PbCreator& pb_creator,
         return;
     }
 
-    for (const auto stop_point_iter : *departures) {
+    for (const auto& stop_point_iter : *departures) {
         SpIdx sp_idx = stop_point_iter.first;
-        navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
+        auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
         LOG4CPLUS_TRACE(logger, "departure : " << stop_point->uri << " distance : " << stop_point_iter.second);
     }
 
-    for (const auto stop_point_iter : *destinations) {
+    for (const auto& stop_point_iter : *destinations) {
         SpIdx sp_idx = stop_point_iter.first;
-        navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
+        auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
         LOG4CPLUS_TRACE(logger, "destination : " << stop_point->uri << " distance : " << stop_point_iter.second);
     }
 

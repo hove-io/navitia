@@ -113,16 +113,20 @@ private:
 
     // All these vectors are indexed by sp_idx
     //
-    // At what time can we reach this label with public transport
+    // dt_pts[stop_point] stores the earliest arrival time to stop_point.
+    // More precisely, at time dt_pts[stop_point], we just alighted from
+    // a vehicle going through stop_point, but we need to do a transfer
+    // before being able to board a new vehicle.
     IdxMap<type::StopPoint, DateTime> dt_pts;
-    // At what time wan we reach this label with a transfer
+    // dt_transfers[stop_point] stores the earliest time at which we are able
+    // to board a vehicle leaving from stop_point (i.e. a transfer to stop_point has been done).
     IdxMap<type::StopPoint, DateTime> dt_transfers;
 
-    // fallback_duration_pts[stop_point] stores the fallback duration at departure of the
-    // journey from the starting point which reaches stop point at DateTime dt_pts[stop_point] with public transport
+    // fallback_duration_pts[stop_point] stores the fallback duration at departure of a
+    // journey that alight to stop_point at DateTime dt_pts[stop_point]
     IdxMap<type::StopPoint, DateTime> fallback_duration_pts;
-    // fallback_duration_pts[stop_point] stores the fallback duration at departure of the
-    // journey from the starting point which reaches stop point at DateTime transfers_pts[stop_point] with transfers
+    // fallback_duration_pts[stop_point] stores the fallback duration at departure of a
+    // journey that allows to board a vehicle at stop_point at DateTime transfers_pts[stop_point]
     IdxMap<type::StopPoint, DateTime> fallback_duration_transfers;
 };
 

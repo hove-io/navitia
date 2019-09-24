@@ -491,11 +491,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     LOG4CPLUS_TRACE(logger, "starting points 2nd phase " << std::endl
                                                          << print_starting_points_snd_phase(starting_points));
 
-    unsigned lower_bound_fb = std::numeric_limits<unsigned>::max();
-    for (const auto& pair_sp_dt : calc_dep) {
-        lower_bound_fb = std::min(lower_bound_fb, unsigned(pair_sp_dt.second.seconds()));
-    }
-
     LOG4CPLUS_TRACE(logger, "Before second pass, nb of solutions : " << solutions.size());
 
     size_t nb_snd_pass = 0, nb_useless = 0, last_usefull_2nd_pass = 0, supplementary_2nd_pass = 0;
@@ -539,8 +534,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         init(init_map, working_labels.dt_pt(start.sp_idx), !clockwise, accessibilite_params.properties);
         boucleRAPTOR(!clockwise, rt_level, max_transfers);
 
-        // LOG4CPLUS_TRACE(logger, std::endl << "before solution_reader " << std::endl << print_all_labels() );
-
         read_solutions(*this, solutions, !clockwise, departure_datetime, departures, destinations, rt_level,
                        accessibilite_params, transfer_penalty, start);
 
@@ -549,9 +542,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         ++nb_snd_pass;
     }
 
-    LOG4CPLUS_DEBUG(logger, "[2nd pass] lower bound fallback duration = "
-                                << lower_bound_fb << " s, lower bound connection duration = "
-                                << data.dataRaptor->min_connection_time << " s");
     LOG4CPLUS_DEBUG(logger, "[2nd pass] number of 2nd pass = "
                                 << nb_snd_pass << " / " << starting_points.size() << " (nb useless = " << nb_useless
                                 << ", last usefull try = " << last_usefull_2nd_pass << ")");
