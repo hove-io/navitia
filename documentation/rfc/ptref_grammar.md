@@ -82,6 +82,7 @@ In the following table, if the invocation starts with `collection`, any collecti
 |`poi.within(distance, coord)`|all the POIs within `distance` meters from `coord`|`distance` in a positive integer, `coord` is a navitia coord (`lon;lat`)|
 |`stop_area.within(distance, coord)`|as above for the stop areas|as above|
 |`stop_point.within(distance, coord)`|as above for the stop points|as above|
+|`route.has_direction_type(type1, type2, ...)`|all the `route` containing a given `direction_type` into list|at least one direction type must be given|
 
 #### Interpretation
 
