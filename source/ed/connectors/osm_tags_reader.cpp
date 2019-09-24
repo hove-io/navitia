@@ -73,6 +73,7 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     int bike_direct = unknown;
     int bike_reverse = unknown;
     int foot = unknown;
+    bool visible = true;
 
     for (std::pair<std::string, std::string> pair : tags) {
         std::string key = pair.first, val = pair.second;
@@ -205,6 +206,15 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
                 foot = foot_allowed;
             }
         }
+
+        // We do not want to autocomplete on public transport objects
+        if (key == "public_transport") {
+            visible = false;
+        } else if (key == "railway") {
+            if (val == "platform") {
+                visible = false;
+            }
+        }
     }
 
     update_if_unknown(car_reverse, car_direct);
@@ -222,6 +232,9 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     result[CAR_BWD] = (car_reverse != car_forbiden);
     result[FOOT_FWD] = (foot != foot_forbiden);
     result[FOOT_BWD] = (foot != foot_forbiden);
+    if (result.any()) {  // only set visibility if the road is usable
+        result[VISIBLE] = visible;
+    }
     return result;
 }
 

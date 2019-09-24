@@ -165,6 +165,7 @@ struct OSMWay {
     const static uint8_t CAR_BWD = 3;
     const static uint8_t FOOT_FWD = 4;
     const static uint8_t FOOT_BWD = 5;
+    const static uint8_t VISIBLE = 6;
 
     const u_int64_t osm_id;
 
@@ -178,7 +179,9 @@ struct OSMWay {
     mutable ls_type ls;
     mutable const OSMWay* way_ref = nullptr;
 
-    OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {}
+    OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {
+        properties[VISIBLE] = true;  // By default way are visible
+    }
     OSMWay(const u_int64_t osm_id, const std::bitset<8>& properties, const std::string& name)
         : osm_id(osm_id), properties(properties), name(name) {}
 
@@ -194,6 +197,9 @@ struct OSMWay {
     void set_properties(const std::bitset<8>& properties) const { this->properties = properties; }
 
     void set_name(const std::string& name) const { this->name = name; }
+
+    void set_visible(bool visible) { properties[VISIBLE] = visible; }
+    bool visible() const { return properties[VISIBLE]; }
 
     std::string coord_to_string() const {
         std::stringstream geog;
