@@ -346,8 +346,8 @@ struct Eval : boost::static_visitor<Indexes> {
             indexes = get_indexes_from_code(type, f.args.at(0), f.args.at(1), data);
         } else if (f.method == "has_code_type") {
             indexes = get_indexes_from_code_type(type, f.args, data);
-        } else if (f.method == "has_direction_type") {
-            indexes = get_indexes_from_direction_type(type, f.args, data);
+        } else if ((type == Type_e::Route) && (f.method == "has_direction_type")) {
+            indexes = get_indexes_from_route_direction_type(f.args, data);
         } else {
             std::stringstream ss;
             ss << "Unknown function: " << f;
