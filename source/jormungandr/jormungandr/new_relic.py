@@ -33,6 +33,7 @@ import flask
 import os
 import timeit
 import functools
+from typing import Text, Callable
 
 try:
     from newrelic import agent
@@ -96,6 +97,26 @@ def ignore():
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while ignoring transaction')
+
+
+def background_task(name, group):  # type: (Text, Text) -> Callable
+    """
+    Create a newrelic background task if we aren't already in a Transaction
+    This is usefull for function that might be run in a greenlet to not loose instrumentation
+    """
+
+    def wrap(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if agent and agent.current_transaction() is None:
+                with agent.BackgroundTask(agent.application(), name=name, group=group):
+                    return func(*args, **kwargs)
+            else:
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    return wrap
 
 
 def distributedEvent(call_name, group_name):

@@ -210,6 +210,7 @@ class MixedSchedule(object):
             return None
         return rt_system
 
+    @new_relic.background_task("get_next_realtime_passages", "schedules")
     def _get_next_realtime_passages(self, rt_system, route_point, request):
         log = logging.getLogger(__name__)
         next_rt_passages = None
