@@ -670,7 +670,7 @@ void OSMAdminRelation::build_polygon(OSMCache& cache) {
     std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
-               && in(r.role, {"outer", "enclave", ""});
+               && navitia::contains({"outer", "enclave", ""}, r.role);
     };
     auto pickable_way = [&](const CanalTP::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;

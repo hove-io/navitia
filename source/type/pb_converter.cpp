@@ -99,10 +99,11 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
     }
 
     bool is_detour(nd::StopTimeUpdate::Status dep_status, nd::StopTimeUpdate::Status arr_status) const {
-        return (in(dep_status,
-                   {nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR, nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR})
-                || in(arr_status,
-                      {nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR, nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR}));
+        return (
+            contains({nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR, nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                     dep_status)
+            || contains({nd::StopTimeUpdate::Status::ADDED_FOR_DETOUR, nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                        arr_status));
     }
 
     void operator()(const nd::UnknownPtObj&) const {}

@@ -80,7 +80,7 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
         std::transform(val.begin(), val.end(), val.begin(), ::tolower);
 
         if (key == "highway") {
-            if (in(val, {"footway", "pedestrian"})) {
+            if (navitia::contains({"footway", "pedestrian"}, val)) {
                 update_if_unknown(foot, foot_allowed);
             } else if (val == "cycleway") {
                 update_if_unknown(bike_direct, bike_track);
@@ -92,37 +92,39 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
                 update_if_unknown(foot, foot_allowed);
             } else if (val == "steps") {
                 update_if_unknown(foot, foot_allowed);
-            } else if (in(val, {"primary", "primary_link"})) {
+            } else if (navitia::contains({"primary", "primary_link"}, val)) {
                 update_if_unknown(car_direct, car_primary);
                 update_if_unknown(foot, foot_allowed);
                 update_if_unknown(bike_direct, bike_allowed);
-            } else if (in(val, {"secondary", "secondary_link"})) {
+            } else if (navitia::contains({"secondary", "secondary_link"}, val)) {
                 update_if_unknown(car_direct, car_secondary);
                 update_if_unknown(foot, foot_allowed);
                 update_if_unknown(bike_direct, bike_allowed);
-            } else if (in(val, {"tertiary", "tertiary_link"})) {
+            } else if (navitia::contains({"tertiary", "tertiary_link"}, val)) {
                 update_if_unknown(car_direct, car_tertiary);
                 update_if_unknown(foot, foot_allowed);
                 update_if_unknown(bike_direct, bike_allowed);
-            } else if (in(val, {"unclassified", "residential", "living_street", "road", "service", "track"})) {
+            } else if (navitia::contains({"unclassified", "residential", "living_street", "road", "service", "track"},
+                                         val)) {
                 update_if_unknown(car_direct, car_residential);
                 update_if_unknown(foot, foot_allowed);
                 update_if_unknown(bike_direct, bike_allowed);
-            } else if (in(val, {"motorway", "motorway_link"})) {
+            } else if (navitia::contains({"motorway", "motorway_link"}, val)) {
                 update_if_unknown(car_direct, car_motorway);
                 update_if_unknown(foot, foot_forbiden);
                 update_if_unknown(bike_direct, bike_forbiden);
-            } else if (in(val, {"trunk", "trunk_link"})) {
+            } else if (navitia::contains({"trunk", "trunk_link"}, val)) {
                 update_if_unknown(car_direct, car_trunk);
                 update_if_unknown(foot, foot_forbiden);
                 update_if_unknown(bike_direct, bike_forbiden);
             }
         }
 
-        else if (in(key, {"pedestrian", "foot"})) {
-            if (in(val, {"yes", "designated", "permissive", "lane", "official", "allowed", "destination"})) {
+        else if (navitia::contains({"pedestrian", "foot"}, key)) {
+            if (navitia::contains({"yes", "designated", "permissive", "lane", "official", "allowed", "destination"},
+                                  val)) {
                 foot = foot_allowed;
-            } else if (in(val, {"no", "private"})) {
+            } else if (navitia::contains({"no", "private"}, val)) {
                 foot = foot_forbiden;
             } else {
                 std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
@@ -163,9 +165,9 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
         }
 
         else if (key == "busway") {
-            if (in(val, {"yes", "track", "lane"})) {
+            if (navitia::contains({"yes", "track", "lane"}, val)) {
                 update_if_unknown(bike_direct, bike_busway);
-            } else if (in(val, {"opposite_lane", "opposite_track"})) {
+            } else if (navitia::contains({"opposite_lane", "opposite_track"}, val)) {
                 update_if_unknown(bike_reverse, bike_busway);
             } else {
                 update_if_unknown(bike_direct, bike_busway);

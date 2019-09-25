@@ -257,7 +257,7 @@ void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
     std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
-               && in(r.role, {"outer", "enclave", ""});
+               && contains({"outer", "enclave", ""}, r.role);
     };
     auto pickable_way = [&](const CanalTP::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
@@ -381,7 +381,7 @@ void OSMRelation::build_geometry(OSMCache& cache, OSMId osm_id) {
             if (!node_it->second.is_defined()) {
                 continue;
             }
-            if (in(ref.role, {"admin_centre", "admin_center"})) {
+            if (contains({"admin_centre", "admin_center"}, ref.role)) {
                 set_centre(node_it->second.lon(), node_it->second.lat());
                 this->add_postal_code(node_it->second.postal_code);
                 break;
