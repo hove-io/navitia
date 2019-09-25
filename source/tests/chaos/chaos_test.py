@@ -44,7 +44,7 @@ def postgres_docker():
     a docker providing a database is started once for all tests
     """
     sql_mount = docker.types.Mount(
-        "/docker-entrypoint-initdb.d/chaos_loading.sql", abspath("chaos_loading.sql"), type="bind"
+        "/docker-entrypoint-initdb.d/chaos_loading.sql.gz", abspath("chaos_loading.sql.gz"), type="bind"
     )
     with closing(PostgresDocker("chaos_loading", mounts=[sql_mount])) as chaos_docker:
         yield chaos_docker
