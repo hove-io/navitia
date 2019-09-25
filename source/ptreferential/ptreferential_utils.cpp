@@ -335,11 +335,8 @@ type::Indexes get_indexes_from_code_type(const type::Type_e type,
 type::Indexes get_indexes_from_route_direction_type(const std::vector<std::string>& keys, const type::Data& data) {
     Indexes indexes;
     for (const auto* route : data.pt_data->routes) {
-        for (const auto& key : keys) {
-            if (key == route->direction_type) {
-                indexes.insert(route->idx);
-                break;
-            }
+        if (contains(keys, route->direction_type)) {
+            indexes.insert(route->idx);
         }
     }
 
