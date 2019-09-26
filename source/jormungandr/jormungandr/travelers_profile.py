@@ -145,8 +145,6 @@ class TravelerProfile(object):
         )
 
     @classmethod
-    @memory_cache.memoize(app.config.get(str('MEMORY_CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 30))
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 300))
     def get_profiles_by_coverage(cls, coverage):
         traveler_profiles = []
         for traveler_type in acceptable_traveler_types:
