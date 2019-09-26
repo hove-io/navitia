@@ -35,6 +35,7 @@ from navitiacommon.default_traveler_profile_params import (
     acceptable_traveler_types,
 )
 from six.moves import map
+from six import text_type
 
 
 class TravelerProfile(object):
@@ -83,6 +84,9 @@ class TravelerProfile(object):
             self.last_section_mode = last_section_mode or []
 
         self.wheelchair = wheelchair
+
+    def __repr__(self):
+        return text_type(self.__dict__)
 
     def override_params(self, args):
         arg_2_profile_attr = (
