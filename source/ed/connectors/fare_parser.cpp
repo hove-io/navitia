@@ -127,6 +127,7 @@ void fare_parser::load_od() {
     // .... (with any number of ticket)
 
     int count = 0;
+    std::locale locale;
     for (row = reader.next(); !reader.eof(); row = reader.next()) {
         if (row.size() < 7) {
             LOG4CPLUS_WARN(logger, "wrongly formated OD line : " << boost::algorithm::join(row, ", "));
@@ -134,6 +135,8 @@ void fare_parser::load_od() {
         }
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[3]);
+        boost::algorithm::to_lower(start_saec, locale);
+        boost::algorithm::to_lower(dest_saec, locale);
         // col 1 and 4 are the human readable name of the start/end, and are not used
 
         std::string start_mode = boost::algorithm::trim_copy(row[2]);
