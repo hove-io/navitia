@@ -34,6 +34,7 @@ from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1 import add_common_status
+import logging
 
 
 class Status(StatedResource):
@@ -52,4 +53,5 @@ class Status(StatedResource):
         response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(
             region_str
         )
+        logging.getLogger(__name__).info("status reponse: %s", response)
         return response, 200
