@@ -197,8 +197,7 @@ struct OSMWay {
     void set_properties(const std::bitset<8>& properties) const { this->properties = properties; }
 
     void set_name(const std::string& name) const { this->name = name; }
-
-    void set_visible(bool visible) { properties[VISIBLE] = visible; }
+    
     bool visible() const { return properties[VISIBLE]; }
 
     std::string coord_to_string() const {
