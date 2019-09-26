@@ -64,6 +64,7 @@ type::Indexes get_indexes_from_name(const type::Type_e type, const std::string& 
 type::Indexes get_indexes_from_code_type(const type::Type_e type,
                                          const std::vector<std::string>& keys,
                                          const type::Data& data);
+type::Indexes get_indexes_from_route_direction_type(const std::vector<std::string>& keys, const type::Data& data);
 
 }  // namespace ptref
 }  // namespace navitia

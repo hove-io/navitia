@@ -332,6 +332,17 @@ type::Indexes get_indexes_from_code_type(const type::Type_e type,
     }
 }
 
+type::Indexes get_indexes_from_route_direction_type(const std::vector<std::string>& keys, const type::Data& data) {
+    Indexes indexes;
+    for (const auto* route : data.pt_data->routes) {
+        if (contains(keys, route->direction_type)) {
+            indexes.insert(route->idx);
+        }
+    }
+
+    return indexes;
+}
+
 type::Indexes get_indexes_from_id(const type::Type_e type, const std::string& id, const type::Data& data) {
     switch (type) {
 #define GET_INDEXES(type_name, collection_name)                                    \

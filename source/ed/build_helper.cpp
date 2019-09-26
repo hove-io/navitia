@@ -102,10 +102,10 @@ nt::VehicleJourney* VJ::make() {
         } else {
             // Create a new one based on the name of the line
             const auto route_uri = line_name + ":" + std::to_string(pt_data.routes.size());
-            route = pt_data.get_or_create_route(route_uri, line_name, line);
+            route = pt_data.get_or_create_route(route_uri, line_name, line, nullptr, _direction_type);
         }
     } else {
-        route = pt_data.get_or_create_route(_route_name, _route_name, line);
+        route = pt_data.get_or_create_route(_route_name, _route_name, line, nullptr, _direction_type);
     }
 
     std::string mvj_name;
