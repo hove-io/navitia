@@ -39,11 +39,13 @@ struct departure_board_fixture {
     departure_board_fixture() : b("20160101") {
         b.sa("SA1")("S1")("S2");
 
-        b.vj("A").name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
+        b.vj("A")
+            .route("A:0", "forward")
+            .name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
         b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
         b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
 
-        b.vj("B").name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
+        b.vj("B").route("B:1", "backward").name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
         b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
         b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
