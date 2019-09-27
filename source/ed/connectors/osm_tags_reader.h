@@ -42,6 +42,7 @@ constexpr uint8_t CAR_FWD = 2;
 constexpr uint8_t CAR_BWD = 3;
 constexpr uint8_t FOOT_FWD = 4;
 constexpr uint8_t FOOT_BWD = 5;
+constexpr uint8_t VISIBLE = 6;
 
 /// return properties on modes and directions that are possible on a way
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags);
