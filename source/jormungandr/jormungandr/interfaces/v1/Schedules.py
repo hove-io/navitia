@@ -174,6 +174,10 @@ class Schedules(ResourceUri, ResourceUtc):
 
     def _add_direction_type_filter(self, direction_type, filter):
 
+        # Don't need a direction type filter
+        if direction_type == 'all':
+            return filter
+
         # (forward, clockwise, inbound) are equivalent and
         # (backward, anticlockwise, outbound) are equivalent too.
         def create_direction_type_filter(direction_type):
@@ -181,8 +185,6 @@ class Schedules(ResourceUri, ResourceUtc):
                 values = 'forward,clockwise,inbound'
             elif direction_type == 'backward':
                 values = 'backward,anticlockwise,outbound'
-            elif direction_type == 'all':
-                values = 'all'
             else:
                 abort(
                     404,
@@ -239,7 +241,7 @@ class Schedules(ResourceUri, ResourceUtc):
         timezone.set_request_timezone(self.region)
 
         # create direction type filter
-        if args['direction_type'] and args['direction_type'] != 'all':
+        if args['direction_type']:
             args['filter'] = self._add_direction_type_filter(args['direction_type'], args['filter'])
         logging.getLogger(__name__).debug("Schedule filter: %s", args["filter"])
 
