@@ -81,3 +81,63 @@ BOOST_AUTO_TEST_CASE(frequency_vehicle_journeys_test) {
     BOOST_REQUIRE_EQUAL(vehicle_journey.has_headway_secs(), true);
     BOOST_CHECK_EQUAL(vehicle_journey.headway_secs(), "00:30:00"_t);
 }
+
+/*
+ * Test to check if a stop_point served by only one of 2 vehicle_journeys of the same route is linked only
+ * to the good one, not all of them when using PTRef
+ *
+ * StopPoints (3) :  sp0          Journeys (2) :  vj0 (sp0) ──── (sp1)          Map (1) :                 ┌── sp1 (8:05)
+ *                   sp1                          vj1 (sp0) ──── (sp2)                     sp0 (8:00) ────┤
+ *                   sp2                                                                                  └── sp2 (8:05)
+ */
+BOOST_AUTO_TEST_CASE(stop_points_in_vehicle_journeys_test) {
+    ed::builder b("20190101");
+    b.vj("L1").name("vj0")("sp0", "8:00"_t)("sp1", "8:05"_t);
+    b.vj("L1").name("vj1")("sp0", "8:00"_t)("sp2", "8:05"_t);
+    b.make();
+
+    // Check that stop_points are correctly linked to the route
+    auto* data = b.data.get();
+    uint depth = 3;
+    uint start_page = 0;
+    uint count = 10;
+
+    navitia::PbCreator pb_creator_route(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator_route, nt::Type_e::StopPoint, "route.uri=L1:0", {}, nt::OdtLevel_e::all, depth,
+                             start_page, count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    const auto resp_route = pb_creator_route.get_response();
+    BOOST_REQUIRE_EQUAL(resp_route.stop_points().size(), 3);
+    BOOST_CHECK_EQUAL(resp_route.stop_points(0).uri(), "sp0");
+    BOOST_CHECK_EQUAL(resp_route.stop_points(1).uri(), "sp1");
+    BOOST_CHECK_EQUAL(resp_route.stop_points(2).uri(), "sp2");
+
+    // Check that vj0 is only linked to its 2 stop_points, no more no less
+    navitia::PbCreator pb_creator_vj(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator_vj, nt::Type_e::StopPoint, "vehicle_journey.uri=vehicle_journey:vj0", {},
+                             nt::OdtLevel_e::all, depth, start_page, count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    const auto resp_vj = pb_creator_vj.get_response();
+    BOOST_REQUIRE_EQUAL(resp_vj.stop_points().size(), 2);
+    BOOST_CHECK_EQUAL(resp_vj.stop_points(0).uri(), "sp0");
+    BOOST_CHECK_EQUAL(resp_vj.stop_points(1).uri(), "sp1");
+
+    // Check that only vj1 is linked to sp2
+    navitia::PbCreator pb_creator_sp2(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator_sp2, nt::Type_e::VehicleJourney, "stop_point.uri=sp2", {}, nt::OdtLevel_e::all,
+                             depth, start_page, count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    const auto resp_sp2 = pb_creator_sp2.get_response();
+    BOOST_REQUIRE_EQUAL(resp_sp2.vehicle_journeys().size(), 1);
+    BOOST_CHECK_EQUAL(resp_sp2.vehicle_journeys(0).uri(), "vehicle_journey:vj1");
+
+    // Check that both vj0 and vj1 are linked to sp0
+    navitia::PbCreator pb_creator_sp0(data, bt::second_clock::universal_time(), null_time_period);
+    navitia::ptref::query_pb(pb_creator_sp0, nt::Type_e::VehicleJourney, "stop_point.uri=sp0", {}, nt::OdtLevel_e::all,
+                             depth, start_page, count, boost::make_optional("20190101T000000"_dt),
+                             boost::make_optional("20190102T000000"_dt), navitia::type::RTLevel::Base, *data);
+    const auto resp_sp0 = pb_creator_sp0.get_response();
+    BOOST_REQUIRE_EQUAL(resp_sp0.vehicle_journeys().size(), 2);
+    BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(0).uri(), "vehicle_journey:vj0");
+    BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(1).uri(), "vehicle_journey:vj1");
+}

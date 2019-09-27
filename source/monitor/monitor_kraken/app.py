@@ -87,6 +87,8 @@ def monitor():
         response['disruption_error'] = resp.status.disruption_error
         response['publication_date'] = resp.status.publication_date
         response['is_realtime_loaded'] = resp.status.is_realtime_loaded
+        response['kraken_version'] = resp.status.navitia_version
+        response['data_version'] = resp.status.data_version
 
         if resp.status.last_load_status == False and 'status' not in response:
             response['status'] = 'last load failed'

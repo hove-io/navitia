@@ -32,7 +32,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 #include "type/fwd_type.h"
 #include "type/rt_level.h"
-#include <set>
+#include <boost/container/flat_set.hpp>
 
 namespace navitia {
 namespace type {
@@ -44,7 +44,7 @@ struct Dataset : public Header, Nameable {
     boost::gregorian::date_period validation_period{boost::gregorian::date(), boost::gregorian::date()};
     std::string desc;
     std::string system;
-    std::set<VehicleJourney*> vehiclejourney_list;
+    boost::container::flat_set<VehicleJourney*> vehiclejourney_list;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

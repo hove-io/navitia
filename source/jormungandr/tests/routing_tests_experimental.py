@@ -570,6 +570,52 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
 
+    def test_last_section_mode_taxi(self):
+        query = journey_basic_query + "&walking_speed=0.5" + "&last_section_mode[]=taxi"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        taxi_fallback = journeys[0]
+
+        assert taxi_fallback.get('departure_date_time') == '20120614T080021'
+        assert taxi_fallback.get('arrival_date_time') == '20120614T080612'
+
+        assert taxi_fallback.get('durations', {}).get('taxi') == 10
+        assert taxi_fallback.get('durations', {}).get('walking') == 39
+        assert taxi_fallback.get('durations', {}).get('total') == 351
+
+        assert taxi_fallback.get('distances', {}).get('taxi') == 117
+        assert taxi_fallback.get('distances', {}).get('walking') == 19
+
+        sections = taxi_fallback.get('sections')
+        assert len(sections) == 4
+        assert sections[0].get('mode') == 'walking'
+        assert sections[0].get('departure_date_time') == '20120614T080021'
+        assert sections[0].get('arrival_date_time') == '20120614T080100'
+        assert sections[0].get('duration') == 39
+        assert sections[0].get('type') == 'street_network'
+
+        assert sections[1].get('departure_date_time') == '20120614T080100'
+        assert sections[1].get('arrival_date_time') == '20120614T080102'
+        assert sections[1].get('duration') == 2
+        assert sections[1].get('type') == 'public_transport'
+
+        assert sections[2].get('departure_date_time') == '20120614T080102'
+        assert sections[2].get('arrival_date_time') == '20120614T080602'
+        assert sections[2].get('duration') == 300
+        assert sections[2].get('type') == 'waiting'
+
+        assert sections[3].get('mode') == 'taxi'
+        assert sections[3].get('departure_date_time') == '20120614T080602'
+        assert sections[3].get('arrival_date_time') == '20120614T080612'
+        assert sections[3].get('duration') == 10
+        assert sections[3].get('type') == 'street_network'
+
     def test_min_taxi(self):
         query = (
             sub_query

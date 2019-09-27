@@ -29,12 +29,15 @@ www.navitia.io
 */
 
 #pragma once
+#include <boost/container/flat_set.hpp>
 #include <type/type_interfaces.h>
 #include <type/fwd_type.h>
 #include <type/geographical_coord.h>
 
 namespace navitia {
 namespace type {
+
+struct Route;
 
 struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopArea;
@@ -46,11 +49,12 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     // name of the time zone of the stop area
     // the name must respect the format of the tz db, for example "Europe/Paris"
     std::string timezone;
+    boost::container::flat_set<Route*> route_list;
+    std::vector<StopPoint*> stop_point_list;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 
-    std::vector<StopPoint*> stop_point_list;
     Indexes get(Type_e type, const PT_Data& data) const;
     bool operator<(const StopArea& other) const;
 };

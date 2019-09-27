@@ -396,7 +396,7 @@ void OSMCache::insert_ways() {
         values.push_back(way.name);
         values.push_back("way:" + std::to_string(way.osm_id));
         values.push_back("");
-        values.push_back("true");
+        values.push_back(way.visible() ? "true" : "false");
         this->lotus->insert(values);
         ++n_inserted;
         if ((n_inserted % max_n_inserted) == 0) {

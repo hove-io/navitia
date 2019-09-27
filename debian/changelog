@@ -1,3 +1,20 @@
+navitia2 (2.86.0) unstable; urgency=low
+
+  * Osm2ed: do not put transport object from OSM in autocompletion  <https://github.com/CanalTP/navitia/pull/2961>
+  * Jormun: add a log of the response status to track our current bug on it  <https://github.com/CanalTP/navitia/pull/2966>
+  * ptref: Add new method for filtering route direction type  <https://github.com/CanalTP/navitia/pull/2960>
+  * Removed unused files for ed models  <https://github.com/CanalTP/navitia/pull/2963>
+  * gzip chaos db dump used as fixture  <https://github.com/CanalTP/navitia/pull/2964>
+  * [Jormun] Fix crash last_section_mode[]=taxi  <https://github.com/CanalTP/navitia/pull/2954>
+  * Jormun: restore newrelic instrumentation on schedules and departures  <https://github.com/CanalTP/navitia/pull/2953>
+  * [Jormun] Fix direct_path_mode with distributed  <https://github.com/CanalTP/navitia/pull/2950>
+  * Add kraken and data version to monitor app  <https://github.com/CanalTP/navitia/pull/2958>
+  * PTRef: Add functionnal tests to check filters are not corrupted by shortcut in graph  <https://github.com/CanalTP/navitia/pull/2957>
+  * PTRef: Some perf improvements for /line_reports  <https://github.com/CanalTP/navitia/pull/2949>
+  * Jormun: minor fixes on travelers_profile  <https://github.com/CanalTP/navitia/pull/2952>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 27 Sep 2019 14:09:35 +0100
+
 navitia2 (2.85.1) unstable; urgency=low
 
   * ed: convert fare OD to lower case too <https://github.com/CanalTP/navitia/pull/2962>
