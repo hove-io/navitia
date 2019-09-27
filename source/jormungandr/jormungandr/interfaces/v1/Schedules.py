@@ -157,7 +157,7 @@ class Schedules(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "direction_type",
-            help='Provide a route direction to filter results.',
+            help='Provide a route direction type to filter results.',
             type=OptionValue(['all', 'forward', 'backward']),
         )
 
@@ -186,10 +186,10 @@ class Schedules(ResourceUri, ResourceUtc):
                         direction_type
                     ),
                 )
-            return "route.has_direction_type(" + values + ")"
+            return 'route.has_direction_type({})'.format(values)
 
-        if filter != "":
-            return filter + " and " + create_direction_type_filter(direction_type)
+        if filter:
+            return '({}) and ({})'.format(filter, create_direction_type_filter(direction_type))
         else:
             return create_direction_type_filter(direction_type)
 
@@ -237,7 +237,7 @@ class Schedules(ResourceUri, ResourceUtc):
         # create direction type filter
         if args['direction_type'] and args['direction_type'] != 'all':
             args['filter'] = self._add_direction_type_filter(args['direction_type'], args['filter'])
-        logging.getLogger(__name__).debug("Schedule filter: {}".format(args["filter"]))
+        logging.getLogger(__name__).debug("Schedule filter: %s", args["filter"])
 
         if not args["from_datetime"] and not args["until_datetime"]:
             # no datetime given, default is the current time, and we activate the realtime
