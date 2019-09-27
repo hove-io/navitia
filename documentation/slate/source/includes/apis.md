@@ -1447,7 +1447,7 @@ nop      | items_per_schedule | int       | Maximum number of columns per schedu
 nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                                                          |
 nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>                                    | base_schedule
 nop      | disable_geojson    | boolean   | remove geojson fields from the response                                                                                    | False
-nop      | direction_type     | enum      | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul> | all
+nop      | direction_type     | enum      | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. when you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 ### Objects
 
@@ -1581,7 +1581,7 @@ nop      | forbidden_uris[]   | id                              | If you want to
 nop      | items_per_schedule | int                             | Maximum number of datetimes per schedule.                                                                                  |
 nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul>                   | realtime
 nop      | disable_geojson    | boolean                         | remove geojson fields from the response                                                                                    | False
-nop      | direction_type     | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul> | all
+nop      | direction_type     | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 
 ### <a name="stop-schedule"></a>Stop_schedule object
@@ -1683,7 +1683,7 @@ nop      | depth            | int                             | Json response [d
 nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                                                     |
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul>                              | realtime
 nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                                               | false
-nop      | direction_type   | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>            | all
+nop      | direction_type   | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 
 ### Departure objects

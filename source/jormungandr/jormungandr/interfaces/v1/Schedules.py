@@ -157,7 +157,11 @@ class Schedules(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "direction_type",
-            help='Provide a route direction type to filter results.',
+            help='Provide a route direction type to filter results. '
+            'Note: forward is equivalent to clockwise and inbound. '
+            'When you select forward, you filter with: [forward, clockwise, inbound]. '
+            'On the other hand, backward is equivalent to anticlockwise and outbound. '
+            'When you select backward, you filter with: [backward, anticlockwise, outbound].',
             type=OptionValue(['all', 'forward', 'backward']),
         )
 
@@ -170,8 +174,8 @@ class Schedules(ResourceUri, ResourceUtc):
 
     def _add_direction_type_filter(self, direction_type, filter):
 
-        # (forward, clokwise, inbound) are equivalent and
-        # (backward, anticlokwise, outbound) are equivalent too.
+        # (forward, clockwise, inbound) are equivalent and
+        # (backward, anticlockwise, outbound) are equivalent too.
         def create_direction_type_filter(direction_type):
             if direction_type == 'forward':
                 values = 'forward,clockwise,inbound'
