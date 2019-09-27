@@ -77,7 +77,7 @@ class ReleaseManager:
 
         print("checking that release was merged into dev...")
         unmerged = self.git.branch("--no-merged", "dev", '--no-color')
-        is_release_unmerged = re.search("  release(\n|$)", unmerged)
+        is_release_unmerged = re.search(" release(\n|$)", unmerged)
         if is_release_unmerged:
             print(is_release_unmerged.group(0))
             print("ABORTING: {rem}/release branch was not merged in {rem}/dev".format(rem=remote_name))
