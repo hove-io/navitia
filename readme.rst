@@ -70,7 +70,7 @@ More information
 * technical documentation https://github.com/CanalTP/navitia/tree/dev/documentation/rfc
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia
-* channel `#navitia` on irc.freenode.net
+* channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 
 
 Getting started
