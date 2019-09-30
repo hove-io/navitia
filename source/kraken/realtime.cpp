@@ -105,8 +105,8 @@ static bool is_circulating_trip(const transit_realtime::TripUpdate& trip_update)
 
 static bool is_deleted(const transit_realtime::TripUpdate_StopTimeEvent& event) {
     if (event.HasExtension(kirin::stop_time_event_status)) {
-        return in(event.GetExtension(kirin::stop_time_event_status),
-                  {kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR});
+        return contains({kirin::StopTimeEventStatus::DELETED, kirin::StopTimeEventStatus::DELETED_FOR_DETOUR},
+                        event.GetExtension(kirin::stop_time_event_status));
     } else {
         return false;
     }
@@ -161,8 +161,8 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
         for (const auto& stu : impact->aux_info.stop_times) {
             const auto& st = stu.stop_time;
 
-            bool arr_deleted =
-                in(stu.arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            bool arr_deleted = contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                                        stu.arrival_status);
             if (!arr_deleted) {
                 if (last_stop_event_time > st.arrival_time) {
                     LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding arrival");
@@ -170,8 +170,8 @@ static bool check_disruption(const nt::disruption::Disruption& disruption) {
                 }
                 last_stop_event_time = st.arrival_time;
             }
-            bool dep_deleted =
-                in(stu.departure_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR});
+            bool dep_deleted = contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                                        stu.departure_status);
             if (!dep_deleted) {
                 if (last_stop_event_time > st.departure_time) {
                     LOG4CPLUS_WARN(log, "stop time " << st << " is not correctly ordered regarding departure");
@@ -303,10 +303,10 @@ static bool is_added_stop_time(const transit_realtime::TripUpdate& trip_update) 
     if (trip_update.stop_time_update_size()) {
         for (const auto& st : trip_update.stop_time_update()) {
             // adding a stop_time event (adding departure or/and arrival) is adding service
-            if (in(get_status(st.departure(), st),
-                   {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})
-                || in(get_status(st.arrival(), st),
-                      {StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR})) {
+            if (contains({StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR},
+                         get_status(st.departure(), st))
+                || contains({StopTimeUpdate::Status::ADDED, StopTimeUpdate::Status::ADDED_FOR_DETOUR},
+                            get_status(st.arrival(), st))) {
                 LOG4CPLUS_TRACE(log, "Disruption has ADDED stop_time event");
                 return true;
             }
@@ -581,14 +581,15 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if (in(arrival_status, {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                             arrival_status)) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (in(departure_status,
-                       {StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR})) {
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                             departure_status)) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
