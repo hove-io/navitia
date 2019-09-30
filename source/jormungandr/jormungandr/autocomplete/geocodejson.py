@@ -256,7 +256,15 @@ class GeocodeJson(AbstractAutocomplete):
     @classmethod
     def response_marshaler(cls, response_bragi, uri=None, depth=1):
         cls._check_response(response_bragi, uri)
-        json_response = response_bragi.json()
+        try:
+            json_response = response_bragi.json()
+        except ValueError:
+            logging.getLogger(__name__).error(
+                "impossible to get json for response %s with body: %s",
+                response_bragi.status_code,
+                response_bragi.text,
+            )
+            raise
         # Clean dict objects depending on depth passed in request parameter.
         json_response = cls._clean_response(json_response, depth)
         from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
