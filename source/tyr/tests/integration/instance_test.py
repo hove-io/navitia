@@ -390,12 +390,12 @@ def test_update_additional_time_for_taxi(create_instance):
 
 def test_update_max_mode_direct_path_duration(create_instance):
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['max_walking_direct_path_duration'] == 789
-    assert resp[0]['max_bike_direct_path_duration'] == 856
-    assert resp[0]['max_bss_direct_path_duration'] == 6489
-    assert resp[0]['max_car_direct_path_duration'] == 2323
-    assert resp[0]['max_taxi_direct_path_duration'] == 4206
-    assert resp[0]['max_ridesharing_direct_path_duration'] == 456
+    assert resp[0]['max_walking_direct_path_duration'] == 86400
+    assert resp[0]['max_bike_direct_path_duration'] == 86400
+    assert resp[0]['max_bss_direct_path_duration'] == 86400
+    assert resp[0]['max_car_direct_path_duration'] == 86400
+    assert resp[0]['max_taxi_direct_path_duration'] == 86400
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 86400
 
     params = {
         'max_walking_direct_path_duration': 3475,
@@ -406,12 +406,12 @@ def test_update_max_mode_direct_path_duration(create_instance):
         'max_ridesharing_direct_path_duration': 4456,
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert resp[0]['max_walking_direct_path_duration'] == 3475
-    assert resp[0]['max_bike_direct_path_duration'] == 9512
-    assert resp[0]['max_bss_direct_path_duration'] == 7456
-    assert resp[0]['max_car_direct_path_duration'] == 3214
-    assert resp[0]['max_taxi_direct_path_duration'] == 1523
-    assert resp[0]['max_ridesharing_direct_path_duration'] == 4456
+    assert resp['max_walking_direct_path_duration'] == 3475
+    assert resp['max_bike_direct_path_duration'] == 9512
+    assert resp['max_bss_direct_path_duration'] == 7456
+    assert resp['max_car_direct_path_duration'] == 3214
+    assert resp['max_taxi_direct_path_duration'] == 1523
+    assert resp['max_ridesharing_direct_path_duration'] == 4456
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['max_walking_direct_path_duration'] == 3475

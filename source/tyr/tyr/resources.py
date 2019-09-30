@@ -643,6 +643,13 @@ class Instance(flask_restful.Resource):
                 location=('json', 'values'),
                 default=getattr(instance, "street_network_{}".format(mode)),
             )
+            parser.add_argument(
+                'max_{}_direct_path_duration'.format(mode),
+                type=int,
+                help='maximum duration of direct path for the mode {}'.format(mode),
+                location=('json', 'values'),
+                default=getattr(instance, "max_{}_direct_path_duration".format(mode)),
+            )
 
         args = parser.parse_args()
 
@@ -702,6 +709,12 @@ class Instance(flask_restful.Resource):
                     'street_network_bss',
                     'street_network_ridesharing',
                     'street_network_taxi',
+                    'max_walking_direct_path_duration',
+                    'max_bike_direct_path_duration',
+                    'max_bss_direct_path_duration',
+                    'max_car_direct_path_duration',
+                    'max_taxi_direct_path_duration',
+                    'max_ridesharing_direct_path_duration',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
