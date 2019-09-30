@@ -1,0 +1,30 @@
+pull_request_rules:
+  - name: automatic merge when CI passes and 2 reviews
+    conditions:
+      - "#approved-reviews-by>=2"
+      - "#review-requested=0"
+      - "#changes-requested-reviews-by=0"
+      - "#commented-reviews-by=0"
+      - status-success=Travis CI - Pull Request
+      - status-success=default
+      - status-success=codecov/project
+      - status-success=codecov/patch
+      - base=dev
+      - label!=dot_not_merge
+      - label!=wip
+      - label!=waiting
+      - label!=merge_after_release
+      - author=@CoreTeam
+    actions:
+      merge:
+        method: merge
+        strict: true
+  - name: delete head branch after merge
+    conditions: []
+    actions:
+      delete_head_branch: {}
+  - name: remove outdated reviews
+    conditions:
+      - base=master
+    actions:
+      dismiss_reviews: {}
