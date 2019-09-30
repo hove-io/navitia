@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
         R"#(vehicle_journey . has_code_type ( external_code ) )#",
         R"#(vehicle_journey.has_code_type("external_code"))#");
     assert_expr(
-        R"#(route . has_code_type ( forward ) )#",
-        R"#(route.has_code_type("forward"))#");
+        R"#(route . has_direction_type ( forward ) )#",
+        R"#(route.has_direction_type("forward"))#");
     assert_expr(R"#(stop_area . uri ( "OIF:42" ) )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = "OIF:42" )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = OIF:42 )#", R"#(stop_area.uri("OIF:42"))#");
