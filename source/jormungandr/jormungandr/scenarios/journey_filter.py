@@ -37,6 +37,7 @@ from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
 from jormungandr.fallback_modes import FallbackModes
+from jormungandr.scenarios.qualifier import get_ASAP_journey
 
 
 def delete_journeys(responses, request):
@@ -390,15 +391,15 @@ class FilterTooLongDirectPath(SingleJourneyFilter):
         return max_duration > journey.duration
 
 
-def get_min_connections(journeys):
+def get_best_connections(journeys, request):
     """
     Returns min connection count among journeys
     Returns None if journeys empty
     """
     if not journeys:
         return None
-
-    return portable_min((get_nb_connections(j) for j in journeys if not to_be_deleted(j)), default=0)
+    best = get_ASAP_journey(journeys, request)
+    return get_nb_connections(best) if best else 0
 
 
 def get_nb_connections(journey):
@@ -720,7 +721,7 @@ def _filter_too_much_connections(journeys, instance, request):
     import itertools
 
     it1, it2 = itertools.tee(journeys, 2)
-    min_connections = get_min_connections(it1)
+    min_connections = get_best_connections(it1, request)
     is_debug = request.get('debug', False)
     if min_connections is not None:
         max_connections_allowed = max_additional_connections + min_connections

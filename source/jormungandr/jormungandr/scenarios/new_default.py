@@ -67,6 +67,7 @@ from jormungandr.scenarios.qualifier import (
     non_pt_journey,
     has_walk,
     and_filters,
+    get_ASAP_journey,
 )
 import numpy as np
 import collections
@@ -746,7 +747,7 @@ def type_journeys(resp, req):
             best.type = name
 
     # Finally, we want exactly one best, the ASAP one
-    best = min_from_criteria(resp.journeys, [best_crit, duration_crit, transfers_crit, nonTC_crit])
+    best = get_ASAP_journey(resp.journeys, req)
     if best is not None:
         best.type = "best"
 

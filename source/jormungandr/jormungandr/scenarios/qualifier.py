@@ -228,3 +228,8 @@ def nonTC_crit(j_1, j_2):
 
 def duration_crit(j_1, j_2):
     return compare_minus(j_1.duration, j_2.duration)
+
+
+def get_ASAP_journey(journeys, req):
+    best_crit = arrival_crit if req["clockwise"] else departure_crit
+    return min_from_criteria(journeys, [best_crit, duration_crit, transfers_crit, nonTC_crit])
