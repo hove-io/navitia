@@ -116,13 +116,9 @@ def test_equipments_provider_put(default_equipments_config):
 
     # Update existing provider
     new_provider['args']['url'] = 'sytral3.url.update'
-    resp, status = api_put(
-        'v0/equipments_providers/sytral3',
-        data=ujson.dumps(new_provider),
-        content_type='application/json',
-        check=False,
+    resp = api_put(
+        'v0/equipments_providers/sytral3', data=ujson.dumps(new_provider), content_type='application/json'
     )
-    assert status == 200
     assert 'equipments_provider' in resp
     assert len(resp['equipments_provider']) == 1
     for key in new_provider.keys():

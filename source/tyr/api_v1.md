@@ -46,7 +46,7 @@ If lots of elements expected in the response:
 ```
 
 - POST /v1/<endpoints>:  
-Used to create a new element of the endpoint. Returned status code should **201**.
+Used to create a new element of the endpoint. Returned status code should be **201**.
 ```
 {
     "endpoint": [
@@ -58,7 +58,7 @@ Used to create a new element of the endpoint. Returned status code should **201*
 ```
 
 - PUT /v1/<endpoints>:  
-Used to update a new element of the endpoint. Returned status code should **200**.  
+Used to update a new element of the endpoint. Returned status code should be **200**.  
 Note: If the POST method isn't available for an endpoint, PUT can be used to create a new element. In this case, the returned status code should be **201**
 ```
 {
