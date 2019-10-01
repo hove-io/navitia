@@ -2543,7 +2543,7 @@ BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
     // of rank 1 for the stop_time initially of rank 3 (both are on stop_point:20).
     // We are lead to believe it is impacted even if it is not in reality.
     // Nothing we can do really since there is no hard link between the adapted stop_time and base one
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2); // Should be 3 [10, 20, 40]
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);  // Should be 3 [10, 20, 40]
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
 }
