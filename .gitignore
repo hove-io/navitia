@@ -31,3 +31,4 @@ source/jormungandr/jormungandr/_version.py
 .cache
 *.gcov
 .mypy_cache
+.pytest_cache
