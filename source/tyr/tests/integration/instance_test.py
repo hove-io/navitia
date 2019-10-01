@@ -406,20 +406,12 @@ def test_update_max_mode_direct_path_duration(create_instance):
         'max_ridesharing_direct_path_duration': 4456,
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert resp['max_walking_direct_path_duration'] == 3475
-    assert resp['max_bike_direct_path_duration'] == 9512
-    assert resp['max_bss_direct_path_duration'] == 7456
-    assert resp['max_car_direct_path_duration'] == 3214
-    assert resp['max_taxi_direct_path_duration'] == 1523
-    assert resp['max_ridesharing_direct_path_duration'] == 4456
+    for key in params.keys():
+        assert resp[key] == params[key]
 
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['max_walking_direct_path_duration'] == 3475
-    assert resp[0]['max_bike_direct_path_duration'] == 9512
-    assert resp[0]['max_bss_direct_path_duration'] == 7456
-    assert resp[0]['max_car_direct_path_duration'] == 3214
-    assert resp[0]['max_taxi_direct_path_duration'] == 1523
-    assert resp[0]['max_ridesharing_direct_path_duration'] == 4456
+    for key in params.keys():
+        assert resp[0][key] == params[key]
 
 
 def test_update_forgotten_attributs_in_backend(create_instance):
