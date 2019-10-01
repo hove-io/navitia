@@ -227,10 +227,10 @@ BOOST_AUTO_TEST_CASE(tz_handler_overflow_test) {
 BOOST_AUTO_TEST_CASE(get_sections_ranks) {
     ed::builder b("20120614");
 
-    b.sa("0", 0, 0, false, true)("01")("02")("03");
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
-    const auto* vj = b.vj("A")("01", "09:00"_t)("02", "09:00"_t)("1", "09:00"_t)("01", "09:00"_t)("2", "09:00"_t)(
-                          "3", "09:00"_t)("01", "09:00"_t)("02", "09:00"_t)("03", "09:00"_t)("4", "09:00"_t)(
+    b.sa("0", 0, 0, false, true)("0a")("0b")("0c");
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    const auto* vj = b.vj("A")("0a", "09:00"_t)("0b", "09:00"_t)("1", "09:00"_t)("0a", "09:00"_t)("2", "09:00"_t)(
+                          "3", "09:00"_t)("0a", "09:00"_t)("0b", "09:00"_t)("0c", "09:00"_t)("4", "09:00"_t)(
                           "2", "09:00"_t)("5", "09:00"_t)("2", "09:00"_t)
                          .make();
     b.data->pt_data->sort_and_index();
@@ -239,27 +239,27 @@ BOOST_AUTO_TEST_CASE(get_sections_ranks) {
 
     auto sa = [&](const std::string& id) { return b.get<type::StopArea>(id); };
 
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //       *
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("1")), std::set<uint16_t>({2}));
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //       ********
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("3")), std::set<uint16_t>({2, 3, 4, 5}));
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //
     // 4 is after 0 -> empty
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("4"), sa("0")), std::set<uint16_t>({}));
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     // ** **   **     ** ** **
     // route point, only the corresponding stop point
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("0")), std::set<uint16_t>({0, 1, 3, 6, 7, 8}));
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //         ******
     // shortest sections, thus we don't have 1
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("3")), std::set<uint16_t>({3, 4, 5}));
-    // 01 02 1 01 2 3 01 02 03 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //         ****   ************
     // shortest sections, thus we don't have 1, 3 and 5
-    // We still have 01 02 03 in the second section since they are in the same area
+    // We still have 0a 0b 0c in the second section since they are in the same area
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("2")), std::set<uint16_t>({3, 4, 6, 7, 8, 9, 10}));
 }

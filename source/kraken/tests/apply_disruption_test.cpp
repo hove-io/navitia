@@ -1565,8 +1565,12 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
     // 6 stop_times since we don't impact the first iteration of each loop
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 6);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "s1");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "s6");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(0).stop_point->uri, "s1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "s2");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "s3");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(3).stop_point->uri, "s4");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(4).stop_point->uri, "s5");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(5).stop_point->uri, "s6");
 
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
@@ -2533,13 +2537,13 @@ BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
     // The adapted vj should have 3 stop_times
-    // But since the previous vj is adapted we must found the base stop time associated to the adapted
+    // But since the previous vj is adapted we must find the base stop time associated to the adapted
     // one to impact it.
     // However each stop_time have the same departure_time, so we are finding the base stop_time
     // of rank 1 for the stop_time initially of rank 3 (both are on stop_point:20).
     // We are lead to believe it is impacted even if it is not in reality.
     // Nothing we can do really since there is no hard link between the adapted stop_time and base one
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2); // Should be 3 [10, 20, 40]
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
 }

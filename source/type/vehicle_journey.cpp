@@ -229,10 +229,10 @@ ValidityPattern VehicleJourney::get_vp_for_section(const std::set<uint16_t>& sec
     return vp_for_section;
 }
 
-std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_stop, const StopArea* end_stop) const {
+std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
     /*
-     * Identify all the smallest sections starting with start_stop and
-     * ending with end_stop. Then we return the list of ranks
+     * Identify all the smallest sections starting with start_sa and
+     * ending with end_sa. Then we return the list of ranks
      * corresponding to the identified sections.
      *
      * For example, if we want the section A B:
@@ -279,9 +279,8 @@ std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_stop
      *  - s1/s2/s5 from the 11th to the 15th
      * */
     std::set<uint16_t> res;
-    boost::optional<uint16_t> start_idx;
-    boost::optional<uint16_t> last_area_idx;
-    bool section_ending = false;
+    boost::optional<uint16_t> section_start_rank;
+    bool section_starting = false, section_ending = false;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;
     for (const auto& st : vj->stop_time_list) {
@@ -292,34 +291,40 @@ std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_stop
         const auto* sa = st.stop_point->stop_area;
 
         // Must close section before potentially starting a new one
-        if (section_ending && *last_area_idx != sa->idx) {
-            for (uint16_t i = *start_idx, last = st.order() - 1; i <= last; ++i) {
+        // Keep going if where are still in the end stop area
+        if (section_ending && end_sa->idx != sa->idx) {
+            for (uint16_t i = *section_start_rank, last = st.order() - 1; i <= last; ++i) {
                 res.insert(i);
             }
             // the section is finished, we are no more in a section
-            start_idx = boost::none;
+            section_start_rank = boost::none;
+            section_starting = false;
             section_ending = false;
         }
 
         // we want the shortest section, thus, we set the idx each
         // time we see it, except if we are in the same area than the start idx
-        // Reset start_idx if the previous area was different
-        if (sa->idx == start_stop->idx && (!start_idx || !last_area_idx || *last_area_idx != sa->idx)) {
-            start_idx = st.order();
+        // Reset section_start_rank if the previous area was different
+        if (sa->idx == start_sa->idx) {
+            if (!section_starting) {
+                section_starting = true;
+                section_start_rank = st.order();
+            }
+        } else {
+            section_starting = false;
         }
 
         // we want the shortest section, thus, we mark the section
         // as ending as soon as we see the end stop
         // We must continue until we leave the stop_area
-        if (start_idx && sa->idx == end_stop->idx) {
+        if (section_start_rank && sa->idx == end_sa->idx) {
             section_ending = true;
         }
-        last_area_idx = sa->idx;
     }
 
     // Must close a potential section
     if (section_ending) {
-        for (uint16_t i = *start_idx; i <= vj->stop_time_list.size() - 1; ++i) {
+        for (uint16_t i = *section_start_rank; i <= vj->stop_time_list.size() - 1; ++i) {
             res.insert(i);
         }
     }
