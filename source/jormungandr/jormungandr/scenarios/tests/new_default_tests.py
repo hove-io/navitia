@@ -151,6 +151,11 @@ def build_mocked_response():
                 section.street_network.mode = network_mode
             if line_uri:
                 section.uris.line = line_uri
+
+    new_default._tag_by_mode([response])
+    new_default._tag_direct_path([response])
+    new_default._tag_bike_in_pt([response])
+
     return response
 
 
@@ -528,7 +533,7 @@ def filter_too_much_connections_test():
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
     assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 8
     # the best journey must be kept
-    assert mocked_pb_response.journeys[14].tags == []
+    assert mocked_pb_response.journeys[14].tags == [u'bike']
 
     instance.max_additional_connections = 0
     mocked_pb_response = build_mocked_response()
@@ -536,4 +541,4 @@ def filter_too_much_connections_test():
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
     assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 16
     # the best journey must be kept
-    assert mocked_pb_response.journeys[14].tags == []
+    assert mocked_pb_response.journeys[14].tags == [u'bike']
