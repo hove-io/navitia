@@ -230,6 +230,10 @@ struct StopsGtfsHandler : public GenericHandler {
     bool parse_common_data(const csv_row& row, T* stop);
 
     void handle_stop_point_without_area(Data& data);  // might be different between stops parser
+
+    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
+    ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    bool check_duplicate(const csv_row& row);
 };
 
 struct RouteGtfsHandler : public GenericHandler {
