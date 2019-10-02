@@ -120,11 +120,11 @@ JOURNEYS = (
     # 10/15/2015 @ 12:08pm (UTC)
     (1444903680, 'best', (0, 8, 9)),
     # J16
-    # 10/15/2015 @ 12:09pm (UTC)
-    (1444903740, 'non_pt_bike', (0,)),
+    # 10/15/2015 @ 12:08pm (UTC)
+    (1444903680, 'non_pt_bike', (0,)),
     # J17
-    # 10/15/2015 @ 12:09pm (UTC)
-    (1444903740, 'non_pt_walk', (10,)),
+    # 10/15/2015 @ 12:05pm (UTC)
+    (1444903500, 'non_pt_walk', (10,)),
     # J18 -> same as J15 but arrive later than J15
     # 10/15/2015 @ 12:10pm (UTC)
     (1444903800, 'rapid', (0, 8, 9)),
@@ -252,8 +252,8 @@ def culling_jounreys_3_test():
         ((u'bike', u'uri_2', u'uri_7', u'walking'), 1444907700),
         ((u'bike', u'uri_9'), 1444905000),
         ((u'bike', u'uri_8', u'uri_9'), 1444903680),
-        ((u'bike',), 1444903740),
-        ((u'walking',), 1444903740),
+        ((u'bike',), 1444903680),
+        ((u'walking',), 1444903500),
     }
     for j in mocked_pb_response.journeys:
         assert (tuple(s.uris.line for s in j.sections), j.arrival_date_time) in journey_uris
