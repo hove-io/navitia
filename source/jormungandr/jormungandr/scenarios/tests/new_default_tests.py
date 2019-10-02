@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
-from jormungandr.scenarios import new_default
+from jormungandr.scenarios import new_default, journey_filter
 from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from werkzeug.exceptions import HTTPException
@@ -120,11 +120,11 @@ JOURNEYS = (
     # 10/15/2015 @ 12:08pm (UTC)
     (1444903680, 'best', (0, 8, 9)),
     # J16
-    # 10/15/2015 @ 12:08pm (UTC)
-    (1444903680, 'non_pt_bike', (0,)),
+    # 10/15/2015 @ 12:09pm (UTC)
+    (1444903740, 'non_pt_bike', (0,)),
     # J17
-    # 10/15/2015 @ 12:05pm (UTC)
-    (1444903500, 'non_pt_walk', (10,)),
+    # 10/15/2015 @ 12:09pm (UTC)
+    (1444903740, 'non_pt_walk', (10,)),
     # J18 -> same as J15 but arrive later than J15
     # 10/15/2015 @ 12:10pm (UTC)
     (1444903800, 'rapid', (0, 8, 9)),
@@ -140,6 +140,7 @@ def build_mocked_response():
         arrival_time, jrny_type, sections_idx = jrny
         pb_j = response.journeys.add()
         pb_j.arrival_date_time = arrival_time
+        pb_j.nb_transfers = len(sections_idx) - 1
         if jrny_type:
             pb_j.type = jrny_type
         for idx in sections_idx:
@@ -246,8 +247,8 @@ def culling_jounreys_3_test():
         ((u'bike', u'uri_2', u'uri_7', u'walking'), 1444907700),
         ((u'bike', u'uri_9'), 1444905000),
         ((u'bike', u'uri_8', u'uri_9'), 1444903680),
-        ((u'bike',), 1444903680),
-        ((u'walking',), 1444903500),
+        ((u'bike',), 1444903740),
+        ((u'walking',), 1444903740),
     }
     for j in mocked_pb_response.journeys:
         assert (tuple(s.uris.line for s in j.sections), j.arrival_date_time) in journey_uris
@@ -509,3 +510,30 @@ def crowfly_in_ridesharing_test():
     assert journey.durations.car == 0
     assert journey.distances.ridesharing == 43
     assert journey.distances.car == 0
+
+
+def filter_too_much_connections_test():
+    # yes, it's a hack...
+    instance = lambda: None
+
+    instance.max_additional_connections = 10
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert all('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys)
+
+    instance.max_additional_connections = 0
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 8
+    # the best journey must be kept
+    assert mocked_pb_response.journeys[14].tags == []
+
+    instance.max_additional_connections = 0
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'_max_additional_connections': 1, 'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 16
+    # the best journey must be kept
+    assert mocked_pb_response.journeys[14].tags == []
