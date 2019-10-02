@@ -40,6 +40,7 @@ namespace type {
 struct StopPoint;
 struct StopTime;
 struct Route;
+struct Line;
 struct VehicleJourney;
 struct MetaVehicleJourney;
 struct PhysicalMode;
@@ -53,6 +54,7 @@ using JppIdx = Idx<JourneyPatternPoint>;
 using JpIdx = Idx<JourneyPattern>;
 using SpIdx = Idx<type::StopPoint>;
 using RouteIdx = Idx<type::Route>;
+using LineIdx = Idx<type::Line>;
 using VjIdx = Idx<type::VehicleJourney>;
 using MvjIdx = Idx<type::MetaVehicleJourney>;
 using PhyModeIdx = Idx<type::PhysicalMode>;

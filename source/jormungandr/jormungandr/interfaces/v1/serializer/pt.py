@@ -618,6 +618,7 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     text_color = jsonschema.Field(schema_type=str)
+    description = jsonschema.Field(schema_type=str)
 
 
 class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):

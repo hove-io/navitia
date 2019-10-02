@@ -65,9 +65,9 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
 }
 
 static void render(PbCreator& pb_creator,
-                   const std::map<RoutePointIdx, pbnavitia::ResponseStatus>& response_status,
-                   const std::map<RoutePointIdx, vector_dt_st>& map_route_stop_point,
-                   const std::map<RoutePointIdx, first_and_last_stop_time>& map_route_point_first_last_st,
+                   const std::map<routing::JppIdx, pbnavitia::ResponseStatus>& response_status,
+                   const std::map<routing::JppIdx, vector_dt_st>& map_route_stop_point,
+                   const std::map<routing::JppIdx, first_and_last_stop_time>& map_route_point_first_last_st,
                    const DateTime datetime,
                    const DateTime max_datetime,
                    const boost::optional<const std::string> calendar_id,
@@ -75,11 +75,13 @@ static void render(PbCreator& pb_creator,
     pb_creator.action_period =
         pt::time_period(to_posix_time(datetime, *pb_creator.data), to_posix_time(max_datetime, *pb_creator.data));
 
-    for (auto id_vec : map_route_stop_point) {
+    for (const auto& id_vec : map_route_stop_point) {
         auto schedule = pb_creator.add_stop_schedules();
         // Each schedule has a stop_point and a route
-        const auto* stop_point = pb_creator.data->pt_data->stop_points[id_vec.first.second.val];
-        const auto* route = pb_creator.data->pt_data->routes[id_vec.first.first.val];
+        const auto& jpp_dir = pb_creator.data->dataRaptor->jp_container.get(id_vec.first);
+        const auto& jp_dir = pb_creator.data->dataRaptor->jp_container.get(jpp_dir.jp_idx);
+        const type::Route* route = pb_creator.data->pt_data->routes[jp_dir.route_idx.val];
+        const type::StopPoint* stop_point = pb_creator.data->pt_data->stop_points[jpp_dir.sp_idx.val];
         pb_creator.fill(stop_point, schedule->mutable_stop_point(), depth);
 
         auto m_route = schedule->mutable_route();
@@ -92,6 +94,13 @@ static void render(PbCreator& pb_creator,
         auto pt_display_information = schedule->mutable_pt_display_informations();
 
         pb_creator.fill(route, pt_display_information, 0);
+
+        // add informations for debug. TODO : clean that
+        const auto& jpc = pb_creator.data->dataRaptor->jp_container;
+        pt_display_information->set_direction(
+            pb_creator.data->pt_data->stop_points[jpc.get(jp_dir.jpps.back()).sp_idx.val]->stop_area->name);
+        pt_display_information->set_description(std::string("JP = ") + std::to_string(jpp_dir.jp_idx.val)
+                                                + " JPP = " + std::to_string(id_vec.first.val));
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
@@ -195,6 +204,37 @@ static std::vector<routing::JppIdx> get_jpp_from_route_point(const RoutePointIdx
     return routepoint_jpps;
 }
 
+// JppIdx represents here the final part of a Journey Pattern (from JPP to the end), blind from what's before JPP.
+struct JourneyPatternEndsByDirection {
+    JourneyPatternEndsByDirection(const routing::JppIdx& direction) : direction(direction), jp_ends() {}
+    // direction is the "richest" JP's final part (the one with the most JPP after given JPP)
+    routing::JppIdx direction;
+    // jp_ends groups JP omnibus and direct JP if they use the same succession of SP in the same order
+    std::vector<routing::JppIdx> jp_ends;
+};
+
+// For the JP of 'tested', check if all the JPP following 'tested' itself are included in the same order
+// in the JP 'direction', starting from  JPP 'direction' itself
+static bool is_jp_end_included_in_direction(const routing::JourneyPatternPoint& tested,
+                                            const routing::JourneyPatternPoint& direction,
+                                            const routing::JourneyPatternContainer& jpc) {
+    const auto& jp_tested = jpc.get(tested.jp_idx);
+    uint16_t tested_it = tested.order;
+
+    const auto& jp_direction = jpc.get(direction.jp_idx);
+    for (uint16_t direction_it = direction.order; direction_it < jp_direction.jpps.size(); ++direction_it) {
+        const auto& jpp_tested = jpc.get(jp_tested.jpps[tested_it]);
+        const auto& jpp_direction = jpc.get(jp_direction.jpps[direction_it]);
+        if (jpp_tested.sp_idx == jpp_direction.sp_idx) {
+            ++tested_it;
+            if (tested_it >= jp_tested.jpps.size()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void departure_board(PbCreator& pb_creator,
                      const std::string& request,
                      const boost::optional<const std::string> calendar_id,
@@ -222,32 +262,94 @@ void departure_board(PbCreator& pb_creator,
         }
     }
     //  <stop_point_route, status>
-    std::map<RoutePointIdx, pbnavitia::ResponseStatus> response_status;
+    std::map<routing::JppIdx, pbnavitia::ResponseStatus> response_status;
 
-    std::map<RoutePointIdx, vector_dt_st> map_route_stop_point;
-    std::map<RoutePointIdx, first_and_last_stop_time> map_route_point_first_last_st;
+    std::map<routing::JppIdx, vector_dt_st> map_route_stop_point;
+    std::map<routing::JppIdx, first_and_last_stop_time> map_route_point_first_last_st;
 
-    // Mapping route/stop_point
-    boost::container::flat_set<RoutePointIdx> route_points;
-    for (auto jpp_idx : handler.journey_pattern_points) {
-        const auto& jpp = pb_creator.data->dataRaptor->jp_container.get(jpp_idx);
-        const auto& jp = pb_creator.data->dataRaptor->jp_container.get(jpp.jp_idx);
-        RoutePointIdx key = {jp.route_idx, jpp.sp_idx};
-        route_points.insert(key);
+    using LinePointIdx = std::pair<routing::LineIdx, routing::SpIdx>;
+    // group JourneyPatternEndsByDirection by StopPoint and Line so that directions at different
+    // stop points or different lines stay separated
+    std::map<LinePointIdx, std::vector<JourneyPatternEndsByDirection>> jp_ends_by_directions_from_lp;
+    // Iterate over all JP final parts (from JPP to the end)
+    for (const auto& jpp_idx : handler.journey_pattern_points) {
+        const auto& jp_end = pb_creator.data->dataRaptor->jp_container.get(jpp_idx);
+        const auto& jp = pb_creator.data->dataRaptor->jp_container.get(jp_end.jp_idx);
+        if (jp_end.order == jp.jpps.size() - 1) {  // no use considering cases where JPP is the terminus for departures
+            continue;
+        }
+        const type::Route* route = pb_creator.data->pt_data->routes[jp.route_idx.val];
+        LinePointIdx key_lp = {routing::LineIdx(route->line->idx), jp_end.sp_idx};
+        auto jp_ends_by_directions_it = jp_ends_by_directions_from_lp.find(key_lp);
+        bool is_jp_end_associated_to_a_direction = false;
+        if (jp_ends_by_directions_it != jp_ends_by_directions_from_lp.end()) {
+            // StopPoint already has directions associated, exploring them to see if:
+            // 1. current JP's final part is included in one direction
+            // 2. or if JP's final part includes some already existing directions
+            std::vector<size_t> to_erase;
+            boost::optional<JourneyPatternEndsByDirection&> referent_direction_for = boost::none;
+            for (size_t jp_ends_by_dir_it = 0; jp_ends_by_dir_it < jp_ends_by_directions_it->second.size();
+                 ++jp_ends_by_dir_it) {
+                auto& jp_ends_by_direction = jp_ends_by_directions_it->second[jp_ends_by_dir_it];
+                const auto& direction = pb_creator.data->dataRaptor->jp_container.get(jp_ends_by_direction.direction);
+                // 1. jp_end is included in one direction :  associate that JP's final part to this direction
+                if (is_jp_end_included_in_direction(jp_end, direction, pb_creator.data->dataRaptor->jp_container)) {
+                    jp_ends_by_direction.jp_ends.push_back(jpp_idx);  // associate to direction
+                    is_jp_end_associated_to_a_direction = true;
+                    break;
+                }
+                // 2. If a jp_end includes a referent direction it becomes referent direction for that group of jp_ends.
+                // NB: A new jp_end can "reconciliate" multiple group of jp_ends that were separated
+                // (include their referent directions), in that case they are all merged.
+                if (is_jp_end_included_in_direction(direction, jp_end, pb_creator.data->dataRaptor->jp_container)) {
+                    if (!referent_direction_for) {
+                        referent_direction_for = jp_ends_by_direction;  // richest direction is the first one we found
+                        referent_direction_for->direction = jpp_idx;    // jp_end is now the referent direction
+                        referent_direction_for->jp_ends.push_back(jpp_idx);  // associate to direction
+                    } else {
+                        // merge into richest direction and list direction to be erased
+                        referent_direction_for->jp_ends.insert(referent_direction_for->jp_ends.end(),
+                                                               jp_ends_by_direction.jp_ends.begin(),
+                                                               jp_ends_by_direction.jp_ends.end());
+                        to_erase.push_back(jp_ends_by_dir_it);
+                    }
+                    is_jp_end_associated_to_a_direction = true;
+                }
+            }
+            while (to_erase.size()) {
+                // erase from the end to keep valid indexes to erase
+                jp_ends_by_directions_it->second.erase(jp_ends_by_directions_it->second.begin() + to_erase.back());
+                to_erase.pop_back();
+            }
+        }
+        if (!is_jp_end_associated_to_a_direction) {
+            // StopPoint has no direction associated yet, creating it and associate current direction
+            // (with only one JP final part: the direction itself)
+            jp_ends_by_directions_from_lp[key_lp].emplace_back(jpp_idx);
+            jp_ends_by_directions_from_lp[key_lp].back().jp_ends.push_back(jpp_idx);
+        }
     }
-    size_t total_result = route_points.size();
-    route_points = paginate(route_points, count, start_page);
+
+    std::vector<JourneyPatternEndsByDirection> jp_ends_by_directions;
+    for (auto vec_jp_ends_by_dirs : jp_ends_by_directions_from_lp) {
+        jp_ends_by_directions.insert(jp_ends_by_directions.end(), vec_jp_ends_by_dirs.second.begin(),
+                                     vec_jp_ends_by_dirs.second.end());
+    }
+
+    size_t total_result = jp_ends_by_directions.size();
+    jp_ends_by_directions = paginate(jp_ends_by_directions, count, start_page);
     auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
         return dt1.first < dt2.first;
     };
-    // we group the stoptime belonging to the same pair (stop_point, route)
-    // since we want to display the departures grouped by route
-    // the route being a loose commercial direction
-    for (const auto& route_point : route_points) {
-        const type::StopPoint* stop_point = pb_creator.data->pt_data->stop_points[route_point.second.val];
-        const type::Route* route = pb_creator.data->pt_data->routes[route_point.first.val];
 
-        const auto routepoint_jpps = get_jpp_from_route_point(route_point, *pb_creator.data->dataRaptor);
+    for (const auto& jp_ends_one_dir : jp_ends_by_directions) {
+        const auto& jpp_dir = pb_creator.data->dataRaptor->jp_container.get(jp_ends_one_dir.direction);
+        const auto& jp_dir = pb_creator.data->dataRaptor->jp_container.get(jpp_dir.jp_idx);
+        const type::Route* route = pb_creator.data->pt_data->routes[jp_dir.route_idx.val];
+        const type::StopPoint* stop_point = pb_creator.data->pt_data->stop_points[jpp_dir.sp_idx.val];
+
+        const auto routepoint_jpps = jp_ends_one_dir.jp_ends;
+        const auto& route_point = jp_ends_one_dir.direction;
 
         std::vector<routing::datetime_stop_time> stop_times;
         int32_t utc_offset = 0;
@@ -293,7 +395,7 @@ void departure_board(PbCreator& pb_creator,
             }
         }
 
-        // If there is no departure for a request with "RealTime", Test existance of any departure with "base_schedule"
+        // If there is no departure for a request with "RealTime", Test existence of any departure with "base_schedule"
         // If departure with base_schedule is not empty, additional_information = active_disruption
         // Else additional_information = no_departure_this_day
         if (stop_times.empty() && (response_status.find(route_point) == response_status.end())) {
