@@ -728,3 +728,25 @@ def _filter_too_much_connections(journeys, instance, request):
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
                 mark_as_dead(j, is_debug, "too_much_connections")
+
+def remove_excess_tickets_or_ticket_links(responses):
+    """
+    Remove excess tickets or ticket_links, if journey has to be deleted
+    """
+    logger = logging.getLogger(__name__)
+
+    def _remove_ticket_or_ticket_link(journey_section_id_list, tickets):
+        for t in tickets:
+                for s_id in t.section_id:
+                    if s_id in journey_section_id_list:
+                        if len(t.section_id) > 1:
+                            logger.debug('remove excess section id %s inside %s ticket after journeys filtering', s_id, t.id)
+                            t.section_id.remove(s_id)
+                        else:
+                            logger.debug('remove excess ticket %s after journeys filtering', t.id)
+                            tickets.remove(t)
+
+    for j in responses.journeys:
+        if to_be_deleted(j):
+                _remove_ticket_or_ticket_link([s.id for s in j.sections], responses.tickets)
+

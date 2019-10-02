@@ -793,6 +793,8 @@ def merge_responses(responses, debug):
                 continue
             merged_response.impacts.extend([i])
 
+    journey_filter.remove_excess_tickets_or_ticket_links(merged_response)
+
     if not merged_response.journeys:
         # we aggregate the errors found
         errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
