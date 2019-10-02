@@ -82,4 +82,3 @@ def remove_excess_tickets_or_ticket_links_test():
     assert len(response.tickets) == 1
     assert response.tickets[0].id == "ticket_1"
     assert response.tickets[0].section_id == ["section_1", "section_2"]
-
