@@ -319,6 +319,13 @@ void StopsGtfsHandler::finish(Data& data) {
         }
     }
 
+    // associate entrances
+    for (auto* sa : data.stop_areas) {
+        for (const auto* entrance : entrances_map[sa->uri]) {
+            sa->entrances.push_back(*entrance);
+        }
+    }
+
     handle_stop_point_without_area(data);
 
     LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");
@@ -457,6 +464,17 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     return sp;
 }
 
+void StopsGtfsHandler::build_entrance(Data& data, const csv_row& row) {
+    nt::Entrance* entrance = new nt::Entrance();
+    if (!parse_common_data(row, entrance)) {
+        delete entrance;
+    }
+
+    if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
+        entrances_map[row[parent_c]].push_back(entrance);
+    }
+}
+
 bool StopsGtfsHandler::check_duplicate(const csv_row& row) {
     // In GTFS the file contains the stop_area and the stop_point
     // We test if it's a duplicate
@@ -491,6 +509,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             return_wrapper.first = sp;
         }
         return return_wrapper;
+    } else if (has_col(type_c, row) && row[type_c] == "2") {
+        build_entrance(data, row);
+        return {};
     } else {
         // we ignore pathways nodes
         return {};

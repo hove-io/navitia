@@ -119,6 +119,7 @@ private:
     void fill_stop_points(navitia::type::Data& data, pqxx::work& work);
     void fill_lines(navitia::type::Data& data, pqxx::work& work);
     void fill_line_groups(navitia::type::Data& data, pqxx::work& work);
+    void fill_entrances(nt::Data& data, pqxx::work& work);
 
     void fill_routes(navitia::type::Data& data, pqxx::work& work);
     void fill_validity_patterns(navitia::type::Data& data, pqxx::work& work);

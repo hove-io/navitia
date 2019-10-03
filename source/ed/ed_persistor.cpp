@@ -331,6 +331,9 @@ void EdPersistor::persist(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
     LOG4CPLUS_INFO(logger, "End: insert stop points");
+    LOG4CPLUS_INFO(logger, "Begin: insert entrances");
+    this->insert_entrances(data.stop_areas);
+    LOG4CPLUS_INFO(logger, "End: insert entrances");
     LOG4CPLUS_INFO(logger, "Begin: insert lines");
     this->insert_lines(data.lines);
     LOG4CPLUS_INFO(logger, "End: insert lines");
@@ -696,6 +699,27 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         values.push_back(std::to_string(sa->visible));
         values.push_back(sa->time_zone_with_name.first);
         this->lotus.insert(values);
+    }
+
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_entrances(const std::vector<types::StopArea*>& stop_areas) {
+    this->lotus.prepare_bulk_insert("navitia.entrance", {"id", "uri", "name", "coord", "code", "stop_area_id"});
+    idx_t idx = 0;
+    for (const types::StopArea* sa : stop_areas) {
+        for (const nt::Entrance entrance : sa->entrances) {
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(navitia::encode_uri(entrance.uri));  // TODO: normalize uri in ed::complete
+            values.push_back(entrance.name);
+            values.push_back("POINT(" + std::to_string(entrance.coord.lon()) + " "
+                             + std::to_string(entrance.coord.lat()) + ")");
+            values.push_back(entrance.code);
+            values.push_back(std::to_string(sa->idx));
+            this->lotus.insert(values);
+            ++idx;
+        }
     }
 
     this->lotus.finish_bulk_insert();

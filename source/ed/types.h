@@ -45,6 +45,7 @@ www.navitia.io
 #include "type/vehicle_journey.h"
 #include "type/calendar.h"
 #include "limits.h"
+#include "type/indoor.h"
 
 namespace nt = navitia::type;
 using nt::idx_t;
@@ -145,6 +146,7 @@ struct StopArea : public Header, Nameable, hasProperties {
     const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
+    std::vector<nt::Entrance> entrances;
 
     StopArea() {}
 

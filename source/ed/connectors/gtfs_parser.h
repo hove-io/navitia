@@ -216,6 +216,7 @@ struct DefaultContributorHandler : public GenericHandler {
 struct StopsGtfsHandler : public GenericHandler {
     StopsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     using stop_point_and_area = std::pair<ed::types::StopPoint*, ed::types::StopArea*>;
+    std::map<std::string, std::vector<nt::Entrance*>> entrances_map;
 
     int id_c, code_c, name_c, desc_c, lat_c, lon_c, zone_c, type_c, parent_c, wheelchair_c, platform_c, timezone_c,
         ext_code_c;
@@ -233,6 +234,7 @@ struct StopsGtfsHandler : public GenericHandler {
 
     ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    void build_entrance(Data& data, const csv_row& line);
     bool check_duplicate(const csv_row& row);
 };
 

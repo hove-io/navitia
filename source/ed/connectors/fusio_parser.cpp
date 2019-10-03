@@ -318,6 +318,8 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         if (sp) {
             return_wrapper.first = sp;
         }
+    } else if (has_col(type_c, row) && row[type_c] == "3") {
+        build_entrance(data, row);
     } else {
         // we ignore pathways nodes
         return {};

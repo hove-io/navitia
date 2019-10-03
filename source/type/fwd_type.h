@@ -76,6 +76,7 @@ struct Calendar;
 struct AssociatedCalendar;
 struct PT_Data;
 struct EntryPoint;
+struct Entrance;
 namespace disruption {
 struct Impact;
 struct Message;

@@ -72,6 +72,7 @@ void EdReader::fill(navitia::type::Data& data,
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
+    this->fill_entrances(data, work);
 
     this->fill_lines(data, work);
     this->fill_line_groups(data, work);
@@ -476,6 +477,27 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work) {
 
         data.pt_data->companies.push_back(company);
         this->company_map[const_it["id"].as<idx_t>()] = company;
+    }
+}
+
+void EdReader::fill_entrances(nt::Data& data, pqxx::work& work) {
+    std::string request =
+        "SELECT e.id as id, e.name as name, e.uri as uri, "
+        "e.code as code, e.stop_area_id as stop_area_id,"
+        "ST_X(e.coord::geometry) as lon, ST_Y(e.coord::geometry) as lat "
+        "FROM navitia.entrance as e";
+
+    pqxx::result result = work.exec(request);
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        nt::Entrance entrance;
+        const_it["id"].to(entrance.idx);
+        const_it["uri"].to(entrance.uri);
+        const_it["name"].to(entrance.name);
+        const_it["code"].to(entrance.code);
+        entrance.coord.set_lon(const_it["lon"].as<double>());
+        entrance.coord.set_lat(const_it["lat"].as<double>());
+
+        this->stop_area_map[const_it["stop_area_id"].as<idx_t>()]->entrances.push_back(entrance);
     }
 }
 

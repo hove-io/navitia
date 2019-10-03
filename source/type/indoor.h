@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -27,47 +27,23 @@ IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-#include "type/stop_area.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/serialization.h"
-#include "type/stop_point.h"
-#include "type/route.h"
-#include "georef/adminref.h"
-#include "type/indoor.h"
+
+#pragma once
+#include <type/type_interfaces.h>
+#include <type/fwd_type.h>
+#include <type/geographical_coord.h>
 
 namespace navitia {
 namespace type {
 
-template <class Archive>
-void StopArea::serialize(Archive& ar, const unsigned int) {
-    ar& idx& label& uri& name& coord& stop_point_list& admin_list& _properties& wheelchair_boarding& impacts& visible&
-        timezone& entrances;
-}
-SERIALIZABLE(StopArea)
+struct Entrance : public Header, Nameable {
+    const static Type_e type = Type_e::Entrance;
+    GeographicalCoord coord;
+    std::string code;
 
-bool StopArea::operator<(const StopArea& other) const {
-    if (name != other.name) {
-        return name < other.name;
-    }
-    return uri < other.uri;
-}
-
-Indexes StopArea::get(Type_e type, const PT_Data& data) const {
-    Indexes result;
-    switch (type) {
-        case Type_e::StopPoint:
-            return indexes(stop_point_list);
-        case Type_e::Route:
-            return indexes(route_list);
-        case Type_e::Impact:
-            return data.get_impacts_idx(get_impacts());
-
-        default:
-            break;
-    }
-    return result;
-}
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
 
 }  // namespace type
 }  // namespace navitia

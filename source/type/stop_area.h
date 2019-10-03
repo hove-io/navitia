@@ -33,6 +33,7 @@ www.navitia.io
 #include <type/type_interfaces.h>
 #include <type/fwd_type.h>
 #include <type/geographical_coord.h>
+#include <type/indoor.h>
 
 namespace navitia {
 namespace type {
@@ -51,6 +52,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     std::string timezone;
     boost::container::flat_set<Route*> route_list;
     std::vector<StopPoint*> stop_point_list;
+    std::vector<Entrance> entrances;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
