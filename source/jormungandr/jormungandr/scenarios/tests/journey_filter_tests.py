@@ -44,6 +44,7 @@ def remove_excess_tickets_or_ticket_links_test():
     journey1.sections.add()
     journey1.sections[2].id = "section_3"
     journey1.sections[2].type = response_pb2.PUBLIC_TRANSPORT
+    journey1.fare.ticket_id.extend(["ticket_1"])
 
     journey2 = response.journeys.add()
     journey2.sections.add()
@@ -55,6 +56,7 @@ def remove_excess_tickets_or_ticket_links_test():
     journey2.sections.add()
     journey2.sections[2].id = "section_6"
     journey2.sections[2].type = response_pb2.PUBLIC_TRANSPORT
+    journey2.fare.ticket_id.extend(["ticket_1", "ticket_2"])
 
     ticket1 = response.tickets.add()
     ticket1.id = "ticket_1"
@@ -68,9 +70,12 @@ def remove_excess_tickets_or_ticket_links_test():
     ticket2.cost.currency = "centime"
     ticket2.section_id.extend(["section_6"])
 
-    jf.remove_excess_tickets_or_ticket_links(response)
+    jf.remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(response)
 
     # Nothing has been removed
+    assert len(response.journeys) == 2
+    assert response.journeys[0].fare.ticket_id == ["ticket_1"]
+    assert response.journeys[1].fare.ticket_id == ["ticket_1", "ticket_2"]
     assert len(response.tickets) == 2
     assert response.tickets[0].section_id == ["section_1", "section_2", "section_5"]
     assert response.tickets[1].section_id == ["section_6"]
@@ -78,8 +83,11 @@ def remove_excess_tickets_or_ticket_links_test():
     # Now journey2 is to be deleted
     journey2.tags.extend(["to_delete"])
 
-    jf.remove_excess_tickets_or_ticket_links(response)
+    jf.remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(response)
 
+    assert len(response.journeys) == 2
+    assert response.journeys[0].fare.ticket_id == ["ticket_1"]
+    assert response.journeys[1].fare.ticket_id == ["ticket_1"]
     assert len(response.tickets) == 1
     assert response.tickets[0].id == "ticket_1"
     assert response.tickets[0].section_id == ["section_1", "section_2"]

@@ -793,7 +793,7 @@ def merge_responses(responses, debug):
                 continue
             merged_response.impacts.extend([i])
 
-    journey_filter.remove_excess_tickets_or_ticket_links(merged_response)
+    journey_filter.remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(merged_response)
 
     if not merged_response.journeys:
         # we aggregate the errors found

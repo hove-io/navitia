@@ -375,8 +375,7 @@ class AbstractTestFixture(unittest.TestCase):
             is_valid_ticket(f, self.tester)
             all_tickets[f['id']] = f
 
-        # TODO: Implement NAVP-974 to handle tickets-sections internal links
-        # check_internal_links(response, self.tester)
+        check_internal_links(response, self.tester)
 
         # check other links
         if check_journey_links:

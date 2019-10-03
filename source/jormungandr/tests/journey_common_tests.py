@@ -922,6 +922,9 @@ class JourneyCommon(object):
         query += '&bike_speed=1.5'
         response = self.query_region(query)
         check_best(response)
+        import json
+
+        print("kikou", json.dumps(response, indent=3))
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 4
         assert len(response['journeys'][0]['sections']) == 3

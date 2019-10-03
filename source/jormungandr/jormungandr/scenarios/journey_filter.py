@@ -730,7 +730,7 @@ def _filter_too_much_connections(journeys, instance, request):
                 mark_as_dead(j, is_debug, "too_much_connections")
 
 
-def remove_excess_tickets_or_ticket_links(responses):
+def remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(responses):
     """
     Remove excess tickets or ticket_links, if journey has to be deleted
     """
@@ -749,6 +749,14 @@ def remove_excess_tickets_or_ticket_links(responses):
                         logger.debug('remove excess ticket %s after journeys filtering', t.id)
                         tickets.remove(t)
 
+    def _remove_excess_fare_links(ticket_id_list, fare):
+        for fl in fare.ticket_id:
+            if fl not in ticket_id_list:
+                logger.debug('remove excess fare ticket link %s after journeys filtering', fl)
+                fare.ticket_id.remove(fl)
+
     for j in responses.journeys:
         if to_be_deleted(j):
             _remove_ticket_or_ticket_link([s.id for s in j.sections], responses.tickets)
+            # clean dead fare links
+            _remove_excess_fare_links([t.id for t in responses.tickets], j.fare)
