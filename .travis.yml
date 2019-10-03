@@ -14,6 +14,8 @@ addons:
     packages:
     - clang-format-6.0
     - rabbitmq-server
+    - jq
+    - curl
 
 services:
   - docker
@@ -30,6 +32,8 @@ before_install:
   - git submodule update --init --recursive
 
 before_script:
+  - ./source/scripts/checkJenkinsJob.sh Artemis 
+  - ./source/scripts/checkJenkinsJob.sh Artemis_idfm
   - pip install -r source/tyr/requirements_dev.txt
   - bash source/scripts/build_protobuf.sh
 
