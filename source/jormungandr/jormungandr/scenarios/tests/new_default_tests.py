@@ -140,7 +140,8 @@ def build_mocked_response():
         arrival_time, jrny_type, sections_idx = jrny
         pb_j = response.journeys.add()
         pb_j.arrival_date_time = arrival_time
-        pb_j.nb_transfers = len(sections_idx) - 1
+        # we remove the street network section
+        pb_j.nb_transfers = len(sections_idx) - 1 - (1 in sections_idx) - (10 in sections_idx)
         if jrny_type:
             pb_j.type = jrny_type
         for idx in sections_idx:
@@ -531,14 +532,14 @@ def filter_too_much_connections_test():
     mocked_pb_response = build_mocked_response()
     mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
-    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 8
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 17
     # the best journey must be kept
-    assert mocked_pb_response.journeys[14].tags == [u'bike']
+    assert 'deleted_because_too_much_connections' not in mocked_pb_response.journeys[14].tags
 
     instance.max_additional_connections = 0
     mocked_pb_response = build_mocked_response()
     mocked_request = {'_max_additional_connections': 1, 'debug': True, 'datetime': 1444903200, 'clockwise': True}
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
-    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 16
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 19
     # the best journey must be kept
-    assert mocked_pb_response.journeys[14].tags == [u'bike']
+    assert 'deleted_because_too_much_connections' not in mocked_pb_response.journeys[14].tags
