@@ -273,6 +273,56 @@ class Distributed(object):
             journeys=journeys_to_complete,
         )
 
+    def _isochrone(future_manager, request, instance, krakens_call, context):
+            logger = logging.getLogger(__name__)
+            logger.debug('request datetime: %s', request['datetime'])
+
+            requested_modes = { mode for mode, _, _ in krakens_call }
+
+            # context.direct_paths_by_mode = context.streetnetwork_path_pool.get_all_direct_paths()
+            context.direct_paths_by_mode = None
+
+            context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                modes=requested_modes,
+                request=request,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+            )
+
+            context.orig_places_free_access = PlacesFreeAccess(
+                future_manager=future_manager, instance=instance, requested_place_obj=context.requested_orig_obj
+            )
+
+            context.orig_fallback_durations_pool = FallbackDurationsPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                modes=requested_modes,
+                proximities_by_crowfly_pool=context.orig_proximities_by_crowfly,
+                places_free_access=context.orig_places_free_access,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                request=request,
+                direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+            )
+            
+            # Here ptJourneyPool should call isochrone of Raptor
+            pt_journey_pool = PtJourneyPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_orig_obj=context.requested_orig_obj,
+                requested_dest_obj=None,
+                streetnetwork_path_pool=context.streetnetwork_path_pool,
+                krakens_call=krakens_call,
+                orig_fallback_durations_pool=context.orig_fallback_durations_pool,
+                dest_fallback_durations_pool=None,
+                request=request,
+            )
+
+            # wait_and_get.. blablabla
+
 
 class Scenario(new_default.Scenario):
     def __init__(self):
@@ -296,7 +346,10 @@ class Scenario(new_default.Scenario):
         """
         try:
             with FutureManager() as future_manager:
-                return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
+                if request_type ==  type_pb2.ISOCHRONE:
+                    return self._scenario._isochrone(future_manager, request, instance, krakens_call, context)
+                else:
+                    return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
         except PtException as e:
             logger.exception('')
             return [e.get()]
@@ -319,6 +372,3 @@ class Scenario(new_default.Scenario):
             logging.getLogger(__name__).exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
-
-    def isochrone(self, request, instance):
-        return new_default.Scenario().isochrone(request, instance)
