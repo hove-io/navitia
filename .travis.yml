@@ -32,8 +32,6 @@ before_install:
   - git submodule update --init --recursive
 
 before_script:
-  - ./source/scripts/checkJenkinsJob.sh Artemis 
-  - ./source/scripts/checkJenkinsJob.sh Artemis_idfm
   - pip install -r source/tyr/requirements_dev.txt
   - bash source/scripts/build_protobuf.sh
 
@@ -51,5 +49,7 @@ matrix:
         - bash source/scripts/build_protobuf.sh
       script:
         - pre-commit run --all --show-diff-on-failure
+        - ./source/scripts/checkJenkinsJob.sh Artemis 
+        - ./source/scripts/checkJenkinsJob.sh Artemis_idfm
   exclude:
     - python: "3.6"
