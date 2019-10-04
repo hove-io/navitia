@@ -753,7 +753,9 @@ def remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(response):
         for fare_t_id in journey.fare.ticket_id:
             if fare_t_id not in ticket_id_list:
                 logger.debug(
-                    'remove excess fare ticket link %s into journey %s to be deleted', fare_t_id, j.internal_id
+                    'remove excess fare ticket link %s into journey %s to be deleted',
+                    fare_t_id,
+                    journey.internal_id,
                 )
                 journey.fare.ticket_id.remove(fare_t_id)
 
