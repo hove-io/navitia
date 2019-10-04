@@ -239,27 +239,30 @@ BOOST_AUTO_TEST_CASE(get_sections_ranks) {
 
     auto sa = [&](const std::string& id) { return b.get<type::StopArea>(id); };
 
+    using rst = Rank<StopTime>;
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //       *
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("1")), std::set<uint16_t>({2}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("1")), std::set<rst>({rst(2)}));
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //       ********
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("3")), std::set<uint16_t>({2, 3, 4, 5}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("3")), std::set<rst>({rst(2), rst(3), rst(4), rst(5)}));
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //
     // 4 is after 0 -> empty
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("4"), sa("0")), std::set<uint16_t>({}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("4"), sa("0")), std::set<rst>());
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     // ** **   **     ** ** **
     // route point, only the corresponding stop point
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("0")), std::set<uint16_t>({0, 1, 3, 6, 7, 8}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("0")),
+                      std::set<rst>({rst(0), rst(1), rst(3), rst(6), rst(7), rst(8)}));
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //         ******
     // shortest sections, thus we don't have 1
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("3")), std::set<uint16_t>({3, 4, 5}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("3")), std::set<rst>({rst(3), rst(4), rst(5)}));
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //         ****   ************
     // shortest sections, thus we don't have 1, 3 and 5
     // We still have 0a 0b 0c in the second section since they are in the same area
-    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("2")), std::set<uint16_t>({3, 4, 6, 7, 8, 9, 10}));
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("2")),
+                      std::set<rst>({rst(3), rst(4), rst(6), rst(7), rst(8), rst(9), rst(10)}));
 }

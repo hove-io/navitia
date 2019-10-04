@@ -73,7 +73,7 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
 
 const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
     const auto& jp = get(jp_from_vj[VjIdx(*st.vehicle_journey)]);
-    return jp.jpps.at(st.order());
+    return jp.jpps.at(st.order().val);
 }
 
 std::string JourneyPatternContainer::get_id(const JpIdx& jp_idx) const {

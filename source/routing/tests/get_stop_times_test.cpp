@@ -62,17 +62,17 @@ BOOST_AUTO_TEST_CASE(test1) {
                                  navitia::DateTimeUtils::set(1, 0), 100, *b.data, nt::RTLevel::Base);
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 0; }));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == Rank<nt::StopTime>(0); }));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 1; }));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == Rank<nt::StopTime>(1); }));
 
     result = get_stop_times(StopEvent::drop_off, jpps, navitia::DateTimeUtils::set(0, 86399),
                             navitia::DateTimeUtils::min, 100, *b.data, nt::RTLevel::Base, {});
     BOOST_REQUIRE_EQUAL(result.size(), 2);
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 1; }));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == Rank<nt::StopTime>(1); }));
     BOOST_CHECK(std::any_of(result.begin(), result.end(),
-                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == 2; }));
+                            [](datetime_stop_time& dt_st) { return dt_st.second->order() == Rank<nt::StopTime>(2); }));
 }
 
 /**

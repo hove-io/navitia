@@ -199,7 +199,7 @@ ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
     return vp_for_stop_time;
 }
 
-ValidityPattern VehicleJourney::get_vp_for_section(const std::set<uint16_t>& section,
+ValidityPattern VehicleJourney::get_vp_for_section(const std::set<Rank<StopTime>>& section,
                                                    RTLevel rt_level,
                                                    const boost::posix_time::time_period& period) const {
     ValidityPattern vp_for_section{validity_patterns[rt_level]->beginning_date};
@@ -229,7 +229,7 @@ ValidityPattern VehicleJourney::get_vp_for_section(const std::set<uint16_t>& sec
     return vp_for_section;
 }
 
-std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
+std::set<Rank<StopTime>> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
     /*
      * Identify all the smallest sections starting with start_sa and
      * ending with end_sa. Then we return the list of ranks
@@ -278,8 +278,8 @@ std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_sa, 
      *  - s1/s2 from the 5th to the 10th,
      *  - s1/s2/s5 from the 11th to the 15th
      * */
-    std::set<uint16_t> res;
-    boost::optional<uint16_t> section_start_rank;
+    std::set<Rank<StopTime>> res;
+    boost::optional<Rank<StopTime>> section_start_rank;
     bool section_starting = false, section_ending = false;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;
@@ -293,7 +293,7 @@ std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_sa, 
         // Must close section before potentially starting a new one
         // Keep going if where are still in the end stop area
         if (section_ending && end_sa->idx != sa->idx) {
-            for (uint16_t i = *section_start_rank, last = st.order() - 1; i <= last; ++i) {
+            for (auto i = *section_start_rank, last = st.order() - 1; i <= last; ++i) {
                 res.insert(i);
             }
             // the section is finished, we are no more in a section
@@ -324,7 +324,7 @@ std::set<uint16_t> VehicleJourney::get_sections_ranks(const StopArea* start_sa, 
 
     // Must close a potential section
     if (section_ending) {
-        for (uint16_t i = *section_start_rank; i <= vj->stop_time_list.size() - 1; ++i) {
+        for (auto i = *section_start_rank; i <= Rank<StopTime>(vj->stop_time_list.size() - 1); ++i) {
             res.insert(i);
         }
     }
