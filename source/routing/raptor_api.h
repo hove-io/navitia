@@ -114,6 +114,19 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     int max_duration = 3600,
                     uint32_t max_transfers = std::numeric_limits<uint32_t>::max());
 
+void make_isochrone_distributed(navitia::PbCreator& pb_creator,
+                                RAPTOR& raptor,
+                                const type::EntryPoint& isochrone_origin,
+                                const std::vector<type::EntryPoint>& origins,
+                                const uint64_t datetime_timestamp,
+                                bool clockwise,
+                                const type::AccessibiliteParams& accessibilite_params,
+                                std::vector<std::string> forbidden,
+                                std::vector<std::string> allowed,
+                                const type::RTLevel rt_level,
+                                int max_duration = 3600,
+                                uint32_t max_transfers = std::numeric_limits<uint32_t>::max());
+
 /**
  * @brief Used for Pt with distributed mode
  */

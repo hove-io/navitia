@@ -1451,6 +1451,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
 
 void make_isochrone_distributed(navitia::PbCreator& pb_creator,
                                 RAPTOR& raptor,
+                                const type::EntryPoint& isochrone_origin,
                                 const std::vector<type::EntryPoint>& origins,
                                 const uint64_t datetime_timestamp,
                                 bool clockwise,
@@ -1478,10 +1479,8 @@ void make_isochrone_distributed(navitia::PbCreator& pb_creator,
     raptor.isochrone(departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, allowed, clockwise,
                      rt_level);
 
-    // DOES NOT COMPILE
-    // origin must be en EntryPoint, not a vector
-    add_isochrone_response(raptor, origin, pb_creator, raptor.data.pt_data->stop_points, clockwise, init_dt, bound,
-                           max_duration);
+    add_isochrone_response(raptor, isochrone_origin, pb_creator, raptor.data.pt_data->stop_points, clockwise, init_dt,
+                           bound, max_duration);
     pb_creator.sort_journeys();
     if (pb_creator.empty_journeys()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,

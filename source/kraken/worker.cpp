@@ -990,6 +990,17 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              dp_request.clockwise());
 }
 
+void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
+    navitia::JourneysArg arg = fill_journeys(request);
+    auto departures = journeys
+
+        // This doesn't compile beacause isochrone_origin does not exist in journeyRequest.
+        routing::make_isochrone_distributed(this->pb_creator, *planner, request.isochrone_origin(), arg.origins,
+                                            request.datetimes(0), request.clockwise(), arg.accessibilite_params,
+                                            arg.forbidden, arg.allowed, *street_network_worker, arg.rt_level,
+                                            request.max_duration(), request.max_transfers());
+}
+
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
@@ -1080,6 +1091,8 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
         case pbnavitia::equipment_reports:
             equipment_reports(request.equipment_reports());
             break;
+        case pbnavitia::isochrone_distributed:
+            isochrone_distributed(request.journeys());
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
