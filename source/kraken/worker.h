@@ -122,7 +122,7 @@ private:
     void heat_map(const pbnavitia::HeatMapRequest& request);
     void car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
     void direct_path(const pbnavitia::Request& request);
-    void isochrone_distributed(const pbnavitia::Request& request);
+    void isochrone_distributed(const pbnavitia::JourneysRequest& request);
 
     /*
      * Given N origins and M destinations and street network mode, it returns a NxM matrix which contains durations

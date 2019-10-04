@@ -992,13 +992,12 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 
 void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
     navitia::JourneysArg arg = fill_journeys(request);
-    auto departures = journeys
 
-        // This doesn't compile beacause isochrone_origin does not exist in journeyRequest.
-        routing::make_isochrone_distributed(this->pb_creator, *planner, request.isochrone_origin(), arg.origins,
-                                            request.datetimes(0), request.clockwise(), arg.accessibilite_params,
-                                            arg.forbidden, arg.allowed, *street_network_worker, arg.rt_level,
-                                            request.max_duration(), request.max_transfers());
+    // This doesn't compile beacause isochrone_origin does not exist in journeyRequest.
+    routing::make_isochrone_distributed(this->pb_creator, *planner, request.isochrone_origin(), arg.origins,
+                                        request.datetimes(0), request.clockwise(), arg.accessibilite_params,
+                                        arg.forbidden, arg.allowed, *street_network_worker, arg.rt_level,
+                                        request.max_duration(), request.max_transfers());
 }
 
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
