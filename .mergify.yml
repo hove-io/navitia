@@ -14,7 +14,7 @@ pull_request_rules:
       - label!=wip
       - label!=waiting
       - label!=merge_after_release
-      - author=@CoreTeam
+      - author=@coreteam
     actions:
       merge:
         method: merge
