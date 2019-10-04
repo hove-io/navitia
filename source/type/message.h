@@ -41,6 +41,7 @@ www.navitia.io
 #include <set>
 
 #include "utils/exception.h"
+#include "utils/rank.h"
 
 #include "type/type_interfaces.h"
 #include "type/fwd_type.h"
@@ -411,8 +412,8 @@ public:
 struct ImpactedVJ {
     const VehicleJourney* vj;  // vj before impact
     ValidityPattern new_vp;
-    std::set<uint16_t> impacted_ranks;
-    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<uint16_t> r)
+    std::set<Rank<StopTime>> impacted_ranks;
+    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<Rank<StopTime>> r)
         : vj(vj), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*

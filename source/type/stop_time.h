@@ -77,14 +77,14 @@ struct StopTime {
     inline void set_odt(bool value) { properties[ODT] = value; }
     inline void set_is_frequency(bool value) { properties[IS_FREQUENCY] = value; }
     inline void set_date_time_estimated(bool value) { properties[DATE_TIME_ESTIMATED] = value; }
-    inline uint16_t order() const {
+    inline Rank<StopTime> order() const {
         static_assert(std::is_same<decltype(vehicle_journey->stop_time_list), std::vector<StopTime>>::value,
                       "vehicle_journey->stop_time_list must be a std::vector<StopTime>");
         assert(vehicle_journey);
         // as vehicle_journey->stop_time_list is a vector, pointer
         // arithmetic gives us the order of the stop time in the
         // vector.
-        return this - &vehicle_journey->stop_time_list.front();
+        return Rank<StopTime>(this - &vehicle_journey->stop_time_list.front());
     }
 
     StopTime clone() const;
