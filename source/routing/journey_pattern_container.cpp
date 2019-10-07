@@ -213,7 +213,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     JourneyPattern jp;
     jp.route_idx = key.route_idx;
     jp.phy_mode_idx = key.phy_mode_idx;
-    uint16_t order = 0;
+    Rank<JourneyPatternPoint> order(0);
     for (const auto& jpp_key : key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
@@ -223,7 +223,9 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     return jp_idx;
 }
 
-JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx, const SpIdx& sp_idx, uint16_t order) {
+JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx,
+                                         const SpIdx& sp_idx,
+                                         const Rank<JourneyPatternPoint>& order) {
     const auto idx = JppIdx(jpps.size());
     jpps.push_back({jp_idx, sp_idx, order});
     return idx;

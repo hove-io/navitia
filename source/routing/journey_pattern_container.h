@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "raptor_utils.h"
 #include <boost/optional.hpp>
+#include "utils/rank.h"
 
 namespace navitia {
 namespace type {
@@ -51,7 +52,7 @@ namespace routing {
 struct JourneyPatternPoint {
     JpIdx jp_idx;
     SpIdx sp_idx;
-    uint16_t order;
+    Rank<JourneyPatternPoint> order;
     bool operator==(const JourneyPatternPoint& other) const { return sp_idx == other.sp_idx && order == other.order; }
 };
 std::ostream& operator<<(std::ostream&, const JourneyPatternPoint&);
@@ -193,7 +194,7 @@ private:
     template <typename VJ>
     static JpKey make_key(const VJ&);
     JpIdx make_jp(const JpKey&);
-    JppIdx make_jpp(const JpIdx&, const SpIdx&, uint16_t order);
+    JppIdx make_jpp(const JpIdx&, const SpIdx&, const Rank<JourneyPatternPoint>& order);
     JourneyPattern& get_mut(const JpIdx&);
 };
 

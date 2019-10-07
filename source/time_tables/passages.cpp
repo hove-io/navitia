@@ -76,7 +76,7 @@ struct PassagesVisitor {
                 }
                 return jpp_idx == jp.jpps.back();
             case StopEvent::drop_off:
-                return jpp.order == 0;
+                return jpp.order == navitia::Rank<navitia::routing::JourneyPatternPoint>(0);
         }
     }
 };
