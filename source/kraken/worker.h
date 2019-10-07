@@ -59,13 +59,15 @@ struct JourneysArg {
     type::RTLevel rt_level;
     std::vector<type::EntryPoint> destinations;
     std::vector<uint64_t> datetimes;
+    type::EntryPoint isochrone_center;
     JourneysArg(std::vector<type::EntryPoint> origins,
                 type::AccessibiliteParams accessibilite_params,
                 std::vector<std::string> forbidden,
                 std::vector<std::string> allowed,
                 type::RTLevel rt_level,
                 std::vector<type::EntryPoint> destinations,
-                std::vector<uint64_t> datetimes);
+                std::vector<uint64_t> datetimes,
+                type::EntryPoint isochrone_center);
     JourneysArg();
 };
 
@@ -122,6 +124,7 @@ private:
     void heat_map(const pbnavitia::HeatMapRequest& request);
     void car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
     void direct_path(const pbnavitia::Request& request);
+    void isochrone_distributed(const pbnavitia::JourneysRequest& request);
 
     /*
      * Given N origins and M destinations and street network mode, it returns a NxM matrix which contains durations

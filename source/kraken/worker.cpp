@@ -642,14 +642,16 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          std::vector<std::string> allowed,
                          type::RTLevel rt_level,
                          std::vector<type::EntryPoint> destinations,
-                         std::vector<uint64_t> datetimes)
+                         std::vector<uint64_t> datetimes,
+                         type::EntryPoint isochrone_center)
     : origins(origins),
       accessibilite_params(accessibilite_params),
       forbidden(forbidden),
       allowed(allowed),
       rt_level(rt_level),
       destinations(destinations),
-      datetimes(datetimes) {}
+      datetimes(datetimes),
+      isochrone_center(isochrone_center) {}
 JourneysArg::JourneysArg() {}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
@@ -691,8 +693,14 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
+    type::EntryPoint isochrone_center;
+    const auto* ic = request.has_isochrone_center() ? &request.isochrone_center() : nullptr;
+    if (ic) {
+        isochrone_center = create_journeys_entry_point(*ic, sn_params, data, true);
+    }
+
     return JourneysArg(std::move(origins), std::move(accessibilite_params), std::move(forbidden), std::move(allowed),
-                       rt_level, std::move(destinations), std::move(datetimes));
+                       rt_level, std::move(destinations), std::move(datetimes), std::move(isochrone_center));
 }
 
 void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg) {
@@ -990,6 +998,16 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              dp_request.clockwise());
 }
 
+void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
+    navitia::JourneysArg arg = fill_journeys(request);
+
+    // This doesn't compile beacause isochrone_origin does not exist in journeyRequest.
+    routing::make_isochrone_distributed(this->pb_creator, *planner, arg.isochrone_center, arg.origins,
+                                        request.datetimes(0), request.clockwise(), arg.accessibilite_params,
+                                        arg.forbidden, arg.allowed, arg.rt_level, request.max_duration(),
+                                        request.max_transfers());
+}
+
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
@@ -1079,6 +1097,9 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
             break;
         case pbnavitia::equipment_reports:
             equipment_reports(request.equipment_reports());
+            break;
+        case pbnavitia::isochrone_distributed:
+            isochrone_distributed(request.journeys());
             break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
