@@ -399,7 +399,7 @@ def get_best_pt_journey_connections(journeys, request):
     if not journeys:
         return None
     best = get_ASAP_journey((j for j in journeys if 'non_pt' not in j.tags), request)
-    return get_nb_connections(best) if best else 0
+    return get_nb_connections(best) if best else None
 
 
 def get_nb_connections(journey):
