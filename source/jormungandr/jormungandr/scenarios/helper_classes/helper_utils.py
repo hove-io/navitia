@@ -37,6 +37,7 @@ from .helper_exceptions import *
 import copy
 import logging
 import six
+from functools import cmp_to_key
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -142,7 +143,7 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
     journey.sections.extend(fallback_sections)
-    journey.sections.sort(SectionSorter())
+    journey.sections.sort(key=cmp_to_key(SectionSorter()))
 
 
 def _get_fallback_logic(fallback_type):
@@ -223,7 +224,7 @@ def _build_crowflies(pt_journeys, orig, dest):
         crowflies = [c for c in crowflies if c]
 
         pt_journey.sections.extend(crowflies)
-        pt_journey.sections.sort(SectionSorter())
+        pt_journey.sections.sort(key=cmp_to_key(SectionSorter()))
         pt_journey.departure_date_time = pt_journey.sections[0].begin_date_time
         pt_journey.arrival_date_time = pt_journey.sections[-1].end_date_time
 

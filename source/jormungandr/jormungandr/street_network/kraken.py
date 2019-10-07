@@ -41,6 +41,7 @@ from jormungandr.street_network.street_network import (
 )
 from jormungandr import utils
 import six
+from functools import cmp_to_key
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -66,7 +67,7 @@ class Kraken(AbstractStreetNetworkService):
                 s.destination.CopyFrom(o)
                 s.end_date_time = previous_section_begin
                 previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
-            j.sections.sort(utils.SectionSorter())
+            j.sections.sort(key=cmp_to_key(utils.SectionSorter()))
         return response
 
     def _direct_path(

@@ -34,6 +34,7 @@ import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils, fallback_modes as fm
 from jormungandr.utils import SectionSorter
+from functools import cmp_to_key
 
 
 from navitiacommon import response_pb2
@@ -173,7 +174,7 @@ class Taxi(AbstractStreetNetworkService):
         journey.arrival_date_time += additional_section.duration
 
         journey.sections.extend([additional_section])
-        journey.sections.sort(SectionSorter())
+        journey.sections.sort(key=cmp_to_key(SectionSorter()))
 
         journey.nb_sections += 1
 

@@ -33,6 +33,7 @@ from navitiacommon import response_pb2
 from collections import namedtuple
 import copy
 import logging
+from functools import cmp_to_key
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
@@ -299,7 +300,7 @@ class PtJourneyPool:
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
 
-        self._value.sort(_PtJourneySorter())
+        self._value.sort(key=cmp_to_key(_PtJourneySorter()))
 
     def __iter__(self):
         return self._value.__iter__()

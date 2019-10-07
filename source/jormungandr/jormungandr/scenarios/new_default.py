@@ -85,6 +85,7 @@ from jormungandr import fallback_modes
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
+from functools import cmp_to_key
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -237,7 +238,7 @@ def _has_pt(j):
 
 def sort_journeys(resp, journey_order, clockwise):
     if resp.journeys:
-        resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
+        resp.journeys.sort(key=cmp_to_key(journey_sorter[journey_order](clockwise=clockwise)))
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance):
