@@ -40,17 +40,49 @@ expected_streetnetworks_status = [
     {'modes': ['bss'], 'id': 'krakenBss', 'class': 'Kraken'},
 ]
 
+instant_system_ridesharing_config = [
+    {
+        "args": {
+            "rating_scale_min": 0,
+            "crowfly_radius": 500,
+            "network": "Network 1",
+            "feed_publisher": {
+                "url": "https://url_for_publisher",
+                "id": "publisher id",
+                "license": "Private",
+                "name": "Feed publisher name",
+            },
+            "service_url": "https://service_url",
+            "api_key": "private_key",
+            "rating_scale_max": 5,
+        },
+        "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
+    }
+]
+expected_ridesharing_status = [
+    {
+        "circuit_breaker": {"current_state": "closed", "fail_counter": 0, "reset_timeout": 60},
+        "class": "InstantSystem",
+        "crowfly_radius": 500,
+        "id": "Instant System",
+        "network": "Network 1",
+        "rating_scale_max": 5,
+        "rating_scale_min": 0,
+    }
+]
+
+
 # The only purpose of this class is to override get_all_street_networks()
 # To bypass the app.config[str('DISABLE_DATABASE')] and the get_models()
 # Of the real implementation
 class FakeInstance(Instance):
-    def __init__(self, disable_database):
+    def __init__(self, disable_database, ridesharing_configurations=None):
         super(FakeInstance, self).__init__(
             context=None,
             name="instance",
             zmq_socket=None,
             street_network_configurations=[],
-            ridesharing_configurations=None,
+            ridesharing_configurations=ridesharing_configurations,
             realtime_proxies_configuration=[],
             zmq_socket_type=None,
             autocomplete_type='kraken',
@@ -90,7 +122,7 @@ def add_common_status_test():
 
 
 def call_add_common_status(disable_database):
-    instance = FakeInstance(disable_database)
+    instance = FakeInstance(disable_database, ridesharing_configurations=instant_system_ridesharing_config)
     response = {}
     response['status'] = {}
     add_common_status(response, instance)
@@ -105,7 +137,12 @@ def call_add_common_status(disable_database):
     streetnetworks_status.sort()
     assert streetnetworks_status == expected_streetnetworks_status
 
-    assert response['status']['ridesharing_services'] == []
+    # We sort this list because the order is not important
+    # And it is easier to compare
+    ridesharing_status = response['status']["ridesharing_services"]
+    ridesharing_status.sort()
+    assert ridesharing_status == expected_ridesharing_status
+
     assert response['status']['autocomplete'] == {'class': 'Kraken'}
 
     # We sort the response because the order is not important

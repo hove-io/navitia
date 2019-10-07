@@ -131,7 +131,22 @@ class StreetNetworkSerializer(OutsideServiceCommon):
 
 
 class RidesharingServicesSerializer(OutsideServiceCommon):
-    pass
+    rating_scale_min = MethodField(schema_type=int, display_none=False)
+    rating_scale_max = MethodField(schema_type=int, display_none=False)
+    crowfly_radius = MethodField(schema_type=int, display_none=False)
+    network = MethodField(schema_type=str, display_none=False)
+
+    def get_rating_scale_min(self, obj):
+        return obj.get('rating_scale_min', None)
+
+    def get_rating_scale_max(self, obj):
+        return obj.get('rating_scale_max', None)
+
+    def get_crowfly_radius(self, obj):
+        return obj.get('crowfly_radius', None)
+
+    def get_network(self, obj):
+        return obj.get('network', None)
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
