@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import os, sys
+from jormungandr import logging_utils  # Imported to be used by configuration, py3 doesn't load it...
 
 """
     Import in this module should be done as late as possible to prevent side effect with the monkey patching

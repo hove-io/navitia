@@ -35,7 +35,6 @@ class Gender(object):
     Used as an enum
     """
 
-    __slots__ = ('UNKNOWN', 'MALE', 'FEMALE')
     UNKNOWN = 0
     MALE = 1
     FEMALE = 2
