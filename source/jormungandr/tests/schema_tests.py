@@ -37,7 +37,9 @@ import flex
 from flex.exceptions import ValidationError
 
 from tests.tests_mechanism import dataset, AbstractTestFixture, mock_bss_providers, mock_car_park_providers
-from itertools import chain, ifilter
+from itertools import chain
+from six.moves import filter
+import six
 
 
 def get_params(schema):
@@ -133,8 +135,8 @@ class SchemaChecker:
             )
             assert param.has_key('type')
 
-            assert type(param['name']) is unicode
-            assert type(param['description']) is unicode
+            assert type(param['name']) is six.text_type
+            assert type(param['description']) is six.text_type
 
             assert any(
                 param['type'] == t

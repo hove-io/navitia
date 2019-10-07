@@ -49,6 +49,7 @@ import flask
 from contextlib import contextmanager
 import functools
 import sys
+import six
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -425,7 +426,7 @@ def get_pt_object_coord(pt_object):
 
 
 def record_external_failure(message, connector_type, connector_name):
-    params = {'{}_system_id'.format(connector_type): unicode(connector_name), 'message': message}
+    params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
 
 

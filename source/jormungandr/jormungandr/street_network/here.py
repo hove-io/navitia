@@ -39,6 +39,7 @@ from jormungandr.exceptions import TechnicalError
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
+from six import text_type
 
 DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
@@ -101,12 +102,12 @@ class Here(AbstractStreetNetworkService):
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
         )
 
-        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': unicode(id)})
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': text_type(id)})
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
         return {
-            'id': unicode(self.sn_system_id),
+            'id': text_type(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
             'timeout': self.timeout,

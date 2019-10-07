@@ -30,6 +30,7 @@ from jormungandr import new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from abc import abstractmethod
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
+import six
 
 
 class BssProxyError(RuntimeError):
@@ -55,6 +56,6 @@ class CommonBssProvider(AbstractParkingPlacesProvider):
         """
         status can be in: ok, failure
         """
-        params = {'bss_system_id': unicode(self.network), 'status': status}
+        params = {'bss_system_id': six.text_type(self.network), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('bss_status', params)

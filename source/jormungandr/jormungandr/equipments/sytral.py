@@ -38,6 +38,7 @@ import pybreaker
 import logging
 import jmespath
 import requests as requests
+import six
 
 
 class SytralProvider(object):
@@ -172,7 +173,7 @@ class SytralProvider(object):
             Because we report equipments on a stop area basis, we  don't want them duplicated
             """
 
-            unique_codes = {unicode(code): code for st in sae.stop_area.stop_points for code in st.codes}
+            unique_codes = {six.text_type(code): code for st in sae.stop_area.stop_points for code in st.codes}
             for code in unique_codes.values():
                 if code.type in self.code_types:
                     equipments_list = jmespath.search("equipments_details[?id=='{}']".format(code.value), data)

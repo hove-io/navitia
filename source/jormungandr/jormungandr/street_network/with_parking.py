@@ -32,6 +32,7 @@ import itertools
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils
 from jormungandr.utils import get_pt_object_coord
+import six
 
 from navitiacommon import response_pb2
 
@@ -52,7 +53,7 @@ class WithParking(AbstractStreetNetworkService):
         self.street_network = utils.create_object(config)
 
     def status(self):
-        return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
+        return {'id': six.text_type(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _direct_path(
         self,

@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import six
 import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
@@ -57,7 +58,7 @@ class Taxi(AbstractStreetNetworkService):
 
     def status(self):
         return {
-            'id': unicode(self.sn_system_id),
+            'id': six.text_type(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
             'backend_class': self.street_network.__class__.__name__,

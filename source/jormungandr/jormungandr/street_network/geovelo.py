@@ -32,6 +32,7 @@ import logging
 import requests as requests
 import pybreaker
 import ujson
+import six
 
 import itertools
 import sys
@@ -78,7 +79,7 @@ class Geovelo(AbstractStreetNetworkService):
 
     def status(self):
         return {
-            'id': unicode(self.sn_system_id),
+            'id': six.text_type(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
             'timeout': self.timeout,

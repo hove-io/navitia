@@ -40,6 +40,7 @@ from jormungandr.street_network.street_network import (
     StreetNetworkPathKey,
 )
 from jormungandr import utils
+import six
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -49,7 +50,7 @@ class Kraken(AbstractStreetNetworkService):
         self.sn_system_id = id or 'kraken'
 
     def status(self):
-        return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
+        return {'id': six.text_type(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _reverse_journeys(self, response):
         if not getattr(response, "journeys"):
