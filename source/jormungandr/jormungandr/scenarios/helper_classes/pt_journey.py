@@ -112,7 +112,7 @@ class PtJourney:
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
 
-        if resp.HasField(b"error"):
+        if resp.HasField(str("error")):
             logger.debug("pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode)
             # Here needs to modify error message of no_solution
             if not orig_fallback_durations:
