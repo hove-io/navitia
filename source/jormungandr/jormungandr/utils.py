@@ -41,7 +41,7 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
-from six.moves import zip
+from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request
 import re
@@ -327,7 +327,7 @@ def realtime_level_to_pbf(level):
 # we can't use reverse(enumerate(list)) without creating a temporary
 # list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return zip(xrange(len(l) - 1, -1, -1), reversed(l))
+    return zip(range(len(l) - 1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):

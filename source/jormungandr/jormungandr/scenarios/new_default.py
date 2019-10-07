@@ -404,10 +404,7 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
         i, c = pair
         selected_journeys_matrix[i] = c
 
-    # replace line by line
-    from itertools import izip
-
-    map(f, izip(xrange(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+    map(f, zip(range(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
     """
     We should cut out those combinations that don't contain must-keep journeys
     """
