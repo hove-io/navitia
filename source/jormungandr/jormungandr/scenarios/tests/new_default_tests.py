@@ -518,7 +518,7 @@ def crowfly_in_ridesharing_test():
     assert journey.distances.car == 0
 
 
-def filter_too_much_connections_test():
+def filter_too_many_connections_test():
     # yes, it's a hack...
     instance = lambda: None
 
