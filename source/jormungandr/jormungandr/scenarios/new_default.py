@@ -68,7 +68,7 @@ from jormungandr.scenarios.qualifier import (
     has_walk,
     and_filters,
     get_ASAP_journey,
-    comfort,
+    comfort_crit,
 )
 import numpy as np
 import collections
@@ -704,7 +704,7 @@ def type_journeys(resp, req):
     # Then, we want something like the old types
     trip_caracs = [
         # comfort tends to limit the number of transfers and fallback
-        ("comfort", trip_carac([has_no_car], [comfort, best_crit, duration_crit])),
+        ("comfort", trip_carac([has_no_car], [comfort_crit, best_crit, duration_crit])),
         # for car we want at most one journey, the earliest one
         (
             "car",
