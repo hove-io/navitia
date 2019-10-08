@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from six.moves.urllib.parse import quote
-import itertools
+from six.moves import zip_longest
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 import datetime
@@ -636,7 +636,7 @@ def check_stop_schedule(response, reference):
             and r.route == get_not_null(get_not_null(resp, 'route'), 'id')
         )
 
-        for (resp_dt, ref_st) in itertools.izip_longest(resp['date_times'], ref.date_times):
+        for (resp_dt, ref_st) in zip_longest(resp['date_times'], ref.date_times):
             assert get_not_null(resp_dt, 'date_time') == ref_st.dt
             assert get_not_null(resp_dt, 'links')[0]['id'] == ref_st.vj
 
@@ -645,7 +645,7 @@ def check_departures(response, reference):
     """
     check the values in a departures
     """
-    for (resp, ref) in itertools.izip_longest(response, reference):
+    for (resp, ref) in zip_longest(response, reference):
         assert get_not_null(get_not_null(resp, 'stop_point'), 'id') == ref.sp
         assert get_not_null(get_not_null(resp, 'route'), 'id') == ref.route
         assert get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time') == ref.dt
