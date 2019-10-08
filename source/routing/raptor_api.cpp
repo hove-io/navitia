@@ -1452,7 +1452,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
 void make_isochrone_distributed(navitia::PbCreator& pb_creator,
                                 RAPTOR& raptor,
                                 const type::EntryPoint& isochrone_center,
-                                const std::vector<type::EntryPoint>& origins,
+                                const std::vector<type::EntryPoint>& stop_points,
                                 const uint64_t datetime_timestamp,
                                 bool clockwise,
                                 const type::AccessibiliteParams& accessibilite_params,
@@ -1462,19 +1462,18 @@ void make_isochrone_distributed(navitia::PbCreator& pb_creator,
                                 int max_duration,
                                 uint32_t max_transfers) {
     // Create datetime
-    auto datetimes = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);
+    auto const datetimes = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);
     if (pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return;
     }
 
     // Get stop points for departure and destination
-    // Or destinations instead of origins
-    auto departures = make_map_stop_point_duration(origins, raptor.data.pt_data->stop_points_map);
-    auto datetime = datetimes.front();
+    auto const departures = make_map_stop_point_duration(stop_points, raptor.data.pt_data->stop_points_map);
+    auto const datetime = datetimes.front();
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
-    DateTime init_dt = DateTimeUtils::set(day, time);
-    DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
+    const DateTime init_dt = DateTimeUtils::set(day, time);
+    const DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, allowed, clockwise,
                      rt_level);
