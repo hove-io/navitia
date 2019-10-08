@@ -644,13 +644,13 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          std::vector<type::EntryPoint> destinations,
                          std::vector<uint64_t> datetimes,
                          boost::optional<type::EntryPoint> isochrone_center)
-    : origins(origins),
-      accessibilite_params(accessibilite_params),
-      forbidden(forbidden),
-      allowed(allowed),
+    : origins(std::move(origins)),
+      accessibilite_params(std::move(accessibilite_params)),
+      forbidden(std::move(forbidden)),
+      allowed(std::move(allowed)),
       rt_level(rt_level),
-      destinations(destinations),
-      datetimes(datetimes),
+      destinations(std::move(destinations)),
+      datetimes(std::move(datetimes)),
       isochrone_center(isochrone_center) {}
 JourneysArg::JourneysArg() {}
 
