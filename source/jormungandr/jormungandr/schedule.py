@@ -325,10 +325,10 @@ class MixedSchedule(object):
             rt_proxy._update_passages(resp.next_departures, route_point, template, next_rt_passages)
 
         # sort
-        def comparator(p1, p2):
-            return cmp(p1.stop_date_time.departure_date_time, p2.stop_date_time.departure_date_time)
+        def sorter(p):
+            return p.stop_date_time.departure_date_time
 
-        resp.next_departures.sort(comparator)
+        resp.next_departures.sort(key=sorter)
         count = request['count']
         if len(resp.next_departures) > count:
             del resp.next_departures[count:]
