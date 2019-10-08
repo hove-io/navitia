@@ -115,6 +115,7 @@ void find(navitia::PbCreator& pb_creator,
 
         vector_idx_coord list;
         type::Indexes indexes;
+        int search_count = count;
         if (!filter.empty()) {
             try {
                 indexes = ptref::make_query(type, filter, *pb_creator.data);
@@ -126,16 +127,18 @@ void find(navitia::PbCreator& pb_creator,
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more);
                 return;
             }
+            // We have to find all objects within distance, then apply the filter
+            search_count = -1;
         }
         switch (type) {
             case nt::Type_e::StopArea:
-                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, search_count);
                 break;
             case nt::Type_e::StopPoint:
-                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, search_count);
                 break;
             case nt::Type_e::POI:
-                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, search_count);
                 break;
             default:
                 break;
@@ -149,13 +152,14 @@ void find(navitia::PbCreator& pb_creator,
             // we sort the proximity list on the indexes
             auto comp = [](idx_coord a, idx_coord b) { return a.first < b.first; };
             std::sort(list.begin(), list.end(), comp);
+            size_t added = 0;
 
             for (auto idx : indexes) {
                 auto it = std::lower_bound(list.begin(), list.end(), std::make_pair(idx, nt::GeographicalCoord()),
                                            comp);  // we create a mock pair and only compare the first elt
                 if (it != list.end() && (*it).first == idx) {
                     final_list.push_back(*it);
-                    if (final_list.size() == list.size()) {
+                    if (final_list.size() == list.size() || ++added == count) {
                         // small speedup, if all geographical elt have been added we can stop
                         //(since the indexes list might be way bigger than the proximity list)
                         break;
