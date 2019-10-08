@@ -1912,6 +1912,14 @@ BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T093500"_pts);
+
+    // We ask the same request in distributed
+    // And check that the response are exactly equivalent
+    const std::vector<navitia::type::EntryPoint> origins{{ep}};
+    navitia::PbCreator pb_creator_distributed(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    nr::make_isochrone_distributed(pb_creator_distributed, raptor, ep, origins, "20150615T082000"_pts, true, {}, {}, {},
+                                   nt::RTLevel::Base, 3 * 60 * 60);
+    BOOST_CHECK_EQUAL(result.DebugString(), pb_creator_distributed.get_response().DebugString());
 }
 
 /**
@@ -1934,6 +1942,14 @@ BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T110000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082600"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T110000"_pts);
+
+    // We ask the same request in distributed
+    // And check that the response are exactly equivalent
+    const std::vector<navitia::type::EntryPoint> origins{{ep}};
+    navitia::PbCreator pb_creator_distributed(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    nr::make_isochrone_distributed(pb_creator_distributed, raptor, ep, origins, "20150615T110000"_pts, false, {}, {},
+                                   {}, nt::RTLevel::Base, 3 * 60 * 60);
+    BOOST_CHECK_EQUAL(result.DebugString(), pb_creator_distributed.get_response().DebugString());
 }
 
 /**
