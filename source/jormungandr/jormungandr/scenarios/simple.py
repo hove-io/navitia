@@ -426,7 +426,8 @@ class Scenario(object):
             return
 
         # NOTE: we use request.args and not the parser parameters not to have the default values of the params
-        cloned_params = dict(request.args)
+        # request.args is a MultiDict, we want to flatten it by having list as value when needed (flat=True)
+        cloned_params = request.args.to_dict(flat=False)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
         self._add_next_link(resp, cloned_params, clockwise)
