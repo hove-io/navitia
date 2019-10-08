@@ -32,7 +32,7 @@ import json
 import logging
 import os
 import jsonschema
-
+import re
 import flex
 from flex.exceptions import ValidationError
 
@@ -128,12 +128,12 @@ class SchemaChecker:
 
         params = get_params(response)
 
-        for name, param in params.iteritems():
-            assert param.has_key('name')
-            assert param.has_key('description'), (
+        for name, param in params.items():
+            assert 'name' in param
+            assert 'description' in param, (
                 "API parameter '" + param['name'] + "' should have a description in the schema!"
             )
-            assert param.has_key('type')
+            assert 'type' in param
 
             assert type(param['name']) is six.text_type
             assert type(param['description']) is six.text_type
@@ -212,7 +212,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         response = self.tester.options('/v1/coverage')
         assert response.status_code == 200
         assert response.allow.as_set() == {'head', 'options', 'get'}
-        assert response.data == ''  # no schema dumped
+        assert response.data == six.b('')  # no schema dumped
 
     def test_places_schema(self):
         """
@@ -278,11 +278,14 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             hard_check=False,
         )
 
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
+        )
         # we have some errors, but only on additional_informations
         assert len(errors) == 4
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert pattern_error.match(e)
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
@@ -303,11 +306,14 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             hard_check=False,
         )
 
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
+        )
         # we have some errors, but only on additional_informations
         assert len(errors) == 1
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert pattern_error.match(e)
 
     def test_departures(self):
         self._check_schema(
@@ -342,15 +348,16 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
         _, errors = self._check_schema(query, hard_check=False)
 
-        import re
-
         pattern = re.compile(
             ".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type"
+        )
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'integer',\)`"
         )
 
         for k, e in errors.items():
             assert pattern.match(k)
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'integer',)`"
+            assert pattern_error.match(e)
 
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
@@ -392,7 +399,7 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
         assert len(errors) == 10
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert "Got value `None` of type `null`. Value must be of type(s):" in e
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
