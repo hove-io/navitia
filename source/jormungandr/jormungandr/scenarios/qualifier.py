@@ -230,6 +230,22 @@ def duration_crit(j_1, j_2):
     return compare_minus(j_1.duration, j_2.duration)
 
 
+def comfort_crit(j_1, j_2):
+    # this filter tends to limit the nb of transfers
+    # Case 1:
+    #   if j_1 and j_2 have PT sections and nb_transfers ARE NOT equal: return the journey has minimum nb transfer
+    # Case 2:
+    #   if j_1 and j_2 have PT sections and nb_transfers ARE equal: return the journey has minimum non tc duration
+    # Case 3:
+    #   if one of journeys is direct_path: return the journey has minimum non tc duration
+
+    transfer = compare_minus(j_1.nb_transfers, j_2.nb_transfers)
+    if transfer != 0 and has_pt(j_1) and has_pt(j_2):
+        return transfer
+    # j_1 is better than j_2 and j_1 is not pt
+    return nonTC_crit(j_1, j_2)
+
+
 def get_ASAP_journey(journeys, req):
     best_crit = arrival_crit if req["clockwise"] else departure_crit
     return min_from_criteria(journeys, [best_crit, duration_crit, transfers_crit, nonTC_crit])
