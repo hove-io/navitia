@@ -1811,7 +1811,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags            |
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1967,12 +1966,8 @@ For example:
 
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
--   overall public transport traffic report on Ile de France coverage with disruptions having tags passed in parameter values
-    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
--   Is there any perturbations on the RER network with disruptions having tags passed in parameter values ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
@@ -1984,7 +1979,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                       | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.   |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response             | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags              |
 
 The response is made of an array of [traffic_reports](#traffic-reports),
 and another one of [disruptions](#disruption).
