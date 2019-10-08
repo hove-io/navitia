@@ -643,7 +643,7 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          type::RTLevel rt_level,
                          std::vector<type::EntryPoint> destinations,
                          std::vector<uint64_t> datetimes,
-                         type::EntryPoint isochrone_center)
+                         boost::optional<type::EntryPoint> isochrone_center)
     : origins(origins),
       accessibilite_params(accessibilite_params),
       forbidden(forbidden),
@@ -693,11 +693,9 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
-    type::EntryPoint isochrone_center;
-    const auto* ic = request.has_isochrone_center() ? &request.isochrone_center() : nullptr;
-    if (ic) {
-        isochrone_center = create_journeys_entry_point(*ic, sn_params, data, true);
-    }
+    const auto isochrone_center = request.has_isochrone_center()
+                                      ? create_journeys_entry_point(request.isochrone_center(), sn_params, data, true)
+                                      : boost::optional<type::EntryPoint>{};
 
     return JourneysArg(std::move(origins), std::move(accessibilite_params), std::move(forbidden), std::move(allowed),
                        rt_level, std::move(destinations), std::move(datetimes), std::move(isochrone_center));
@@ -1000,10 +998,13 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 
 void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
     navitia::JourneysArg arg = fill_journeys(request);
-    auto const& stop_points = arg.origins.empty() ? arg.destinations : arg.origins;
+    if (!arg.isochrone_center) {
+        err_msg_isochron(this->pb_creator, "isochrone_distributed needs an isochrone_center");
+        return;
+    }
 
-    // This doesn't compile beacause isochrone_origin does not exist in journeyRequest.
-    routing::make_isochrone_distributed(this->pb_creator, *planner, arg.isochrone_center, stop_points,
+    auto const& stop_points = arg.origins.empty() ? arg.destinations : arg.origins;
+    routing::make_isochrone_distributed(this->pb_creator, *planner, arg.isochrone_center.get(), stop_points,
                                         request.datetimes(0), request.clockwise(), arg.accessibilite_params,
                                         arg.forbidden, arg.allowed, arg.rt_level, request.max_duration(),
                                         request.max_transfers());

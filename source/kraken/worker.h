@@ -59,7 +59,7 @@ struct JourneysArg {
     type::RTLevel rt_level;
     std::vector<type::EntryPoint> destinations;
     std::vector<uint64_t> datetimes;
-    type::EntryPoint isochrone_center;
+    boost::optional<type::EntryPoint> isochrone_center;
     JourneysArg(std::vector<type::EntryPoint> origins,
                 type::AccessibiliteParams accessibilite_params,
                 std::vector<std::string> forbidden,
@@ -67,7 +67,7 @@ struct JourneysArg {
                 type::RTLevel rt_level,
                 std::vector<type::EntryPoint> destinations,
                 std::vector<uint64_t> datetimes,
-                type::EntryPoint isochrone_center);
+                boost::optional<type::EntryPoint> isochrone_center);
     JourneysArg();
 };
 
