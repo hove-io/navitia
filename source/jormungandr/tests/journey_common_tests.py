@@ -2285,7 +2285,7 @@ class JourneysDirectPathMode:
 class JourneysTickets:
     def test_journey_tickets(self):
         """
-        2 solutions are founded with 1 ticket for each journey
+        2 solutions are found with 1 ticket for each journey
         """
         query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000'
         response = self.query_region(query)
@@ -2377,7 +2377,7 @@ class JourneysTicketsWithDebug:
         assert response['tickets'][0]['id'] == response['journeys'][0]['fare']['links'][0]['id']
 
         # debug = true
-        # We send all journeys found and its associated tickets
+        # All solutions are retreived with their associated tickets
         query = (
             "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&debug=true"
         )
