@@ -1045,7 +1045,7 @@ class Scenario(simple.Scenario):
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
         # need to clean extra tickets after culling journeys
-        journey_filter.remove_excess_tickets_after_culling(pb_resp)
+        journey_filter.remove_excess_tickets(pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

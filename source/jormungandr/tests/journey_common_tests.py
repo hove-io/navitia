@@ -2317,9 +2317,9 @@ class JourneysTickets:
 
     def test_journey_tickets_with_max_nb_journeys(self):
         """
-        2 solutions found, but with max_nb_journeys option, it remains 1 journey.
+        2 solutions found, but with max_nb_journeys option, only 1 journey remains.
         Check there is only one ticket.
-        The max_nb_journeys option force to filter one journey and the associated ticket too
+        The max_nb_journeys option forces filtering of one journey and the associated ticket too
         """
         query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&max_nb_journeys=1'
         response = self.query_region(query)

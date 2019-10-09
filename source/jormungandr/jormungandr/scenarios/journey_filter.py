@@ -730,9 +730,9 @@ def _filter_too_much_connections(journeys, instance, request):
                 mark_as_dead(j, is_debug, "too_much_connections")
 
 
-def remove_excess_tickets_after_culling(response):
+def remove_excess_tickets(response):
     """
-    Remove excess tickets after culling journeys process
+    Remove excess tickets
     """
     logger = logging.getLogger(__name__)
 
@@ -746,5 +746,5 @@ def remove_excess_tickets_after_culling(response):
 
     for t in response.tickets:
         if not t.id in fare_ticket_id_list:
-            logger.debug('remove excess ticket id %s after culling journeys', t.id)
+            logger.debug('remove excess ticket id %s', t.id)
             response.tickets.remove(t)
