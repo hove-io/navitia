@@ -602,6 +602,27 @@ void builder::connection(const std::string& name1, const std::string& name2, flo
     connexion->destination->stop_point_connection_list.push_back(connexion);
 }
 
+void builder::add_ticket(const std::string& ticket_id,
+                         const std::string& line,
+                         const int cost,
+                         const std::string& comment,
+                         const std::string& currency) {
+    boost::gregorian::date start_date(boost::gregorian::neg_infin);
+    boost::gregorian::date end_date(boost::gregorian::pos_infin);
+
+    auto ticket = navitia::fare::Ticket(ticket_id, ticket_id + " name", cost, comment);
+    ticket.currency = currency;
+    data->fare->fare_map[ticket_id].add(start_date, end_date, ticket);
+
+    navitia::fare::Transition ticket_transition;
+    navitia::fare::State ticket_state;
+    ticket_state.line = boost::algorithm::to_lower_copy(line);
+    ticket_transition.ticket_key = ticket_id;
+
+    auto ticket_state_v = boost::add_vertex(ticket_state, data->fare->g);
+    boost::add_edge(data->fare->begin_v, ticket_state_v, ticket_transition, data->fare->g);
+}
+
 static double get_co2_emission(const std::string& uri) {
     if (uri == "0x0") {
         return 4.;
