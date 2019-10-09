@@ -736,13 +736,15 @@ def remove_excess_tickets(response):
     """
     logger = logging.getLogger(__name__)
 
-    fare_ticket_id_list = []
+    fare_ticket_id_list = set()
     for j in response.journeys:
-        fare_ticket_id_list.extend([t_id for t_id in j.fare.ticket_id])
+        for t_id in j.fare.ticket_id:
+            fare_ticket_id_list.add(t_id)
         # ridesharing case
-        fare_ticket_id_list.extend(
-            [t_id for s in j.sections for rj in s.ridesharing_journeys for t_id in rj.fare.ticket_id]
-        )
+        for s in j.sections:
+            for rj in s.ridesharing_journeys:
+                for t_id in rj.fare.ticket_id:
+                    fare_ticket_id_list.add(t_id)
 
     for t in response.tickets:
         if not t.id in fare_ticket_id_list:
