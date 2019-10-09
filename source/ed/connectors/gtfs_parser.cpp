@@ -436,7 +436,7 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     if (has_col(platform_c, row)) {
         sp->platform_code = row[platform_c];
     }
-    gtfs_data.stop_map[sp->uri] = sp;
+    gtfs_data.stop_point_map[sp->uri] = sp;
     data.stop_points.push_back(sp);
     if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
         auto it = gtfs_data.sa_spmap.find(row[parent_c]);
@@ -457,10 +457,10 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     return sp;
 }
 
-bool StopsGtfsHandler::check_duplicate(const csv_row& row) {
+bool StopsGtfsHandler::is_duplicate(const csv_row& row) {
     // In GTFS the file contains the stop_area and the stop_point
     // We test if it's a duplicate
-    if (gtfs_data.stop_map.find(row[id_c]) != gtfs_data.stop_map.end()
+    if (gtfs_data.stop_point_map.find(row[id_c]) != gtfs_data.stop_point_map.end()
         || gtfs_data.stop_area_map.find(row[id_c]) != gtfs_data.stop_area_map.end()) {
         LOG4CPLUS_WARN(logger, "The stop " + row[id_c] + " has been ignored");
         ignored++;
@@ -472,7 +472,7 @@ bool StopsGtfsHandler::check_duplicate(const csv_row& row) {
 StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     stop_point_and_area return_wrapper{};
 
-    if (check_duplicate(row)) {
+    if (is_duplicate(row)) {
         return return_wrapper;
     }
 
@@ -613,8 +613,8 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Invalid connection time: " + row[time_c]);
         return;
     }
-    auto it = gtfs_data.stop_map.find(row[from_c]);
-    if (it == gtfs_data.stop_map.end()) {
+    auto it = gtfs_data.stop_point_map.find(row[from_c]);
+    if (it == gtfs_data.stop_point_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[from_c]);
         if (it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (from) " + row[from_c]);
@@ -625,8 +625,8 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         departures.push_back(it->second);
     }
 
-    it = gtfs_data.stop_map.find(row[to_c]);
-    if (it == gtfs_data.stop_map.end()) {
+    it = gtfs_data.stop_point_map.find(row[to_c]);
+    if (it == gtfs_data.stop_point_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[to_c]);
         if (it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (to) " + row[to_c]);
@@ -1048,8 +1048,8 @@ static int to_utc(const std::string& local_time, int utc_offset) {
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
-    auto stop_it = gtfs_data.stop_map.find(row[stop_c]);
-    if (stop_it == gtfs_data.stop_map.end()) {
+    auto stop_it = gtfs_data.stop_point_map.find(row[stop_c]);
+    if (stop_it == gtfs_data.stop_point_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the stop_point " + row[stop_c] + "!");
         return {};
     }

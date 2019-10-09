@@ -223,7 +223,7 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
     }
     int num_elements = data.stop_points.size();
     for (size_t to_erase : erase_sp) {
-        gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
+        gtfs_data.stop_point_map.erase(data.stop_points[to_erase]->uri);
         delete data.stop_points[to_erase];
         data.stop_points[to_erase] = data.stop_points[num_elements - 1];
         num_elements--;
@@ -302,7 +302,7 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     stop_point_and_area return_wrapper{};
 
-    if (check_duplicate(row)) {
+    if (is_duplicate(row)) {
         return return_wrapper;
     }
     // location_type == 1 => StopArea
@@ -1285,7 +1285,7 @@ void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, b
             return;
         }
     } else if (enum_type == nt::Type_e::StopPoint) {
-        object = get_object(gtfs_data.stop_map, object_id, "object property");
+        object = get_object(gtfs_data.stop_point_map, object_id, "object property");
         if (!object) {
             return;
         }
@@ -1718,7 +1718,7 @@ void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool)
         }
         data.add_pt_object_comment(object, comment_id);
     } else if (navitia_type == nt::Type_e::StopPoint) {
-        const auto object = get_object(gtfs_data.stop_map, object_id, "comment");
+        const auto object = get_object(gtfs_data.stop_point_map, object_id, "comment");
         if (!object) {
             return;
         }
@@ -1824,8 +1824,8 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "stop_point") {
-        const auto& it_object = gtfs_data.stop_map.find(row[object_uri_c]);
-        if (it_object != gtfs_data.stop_map.end()) {
+        const auto& it_object = gtfs_data.stop_point_map.find(row[object_uri_c]);
+        if (it_object != gtfs_data.stop_point_map.end()) {
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "company") {
