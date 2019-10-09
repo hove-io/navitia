@@ -208,7 +208,7 @@ void StopsFusioHandler::init(Data& data) {
     comment_id_c = csv.get_pos_col("comment_id");
     visible_c = csv.get_pos_col("visible");
     geometry_id_c = csv.get_pos_col("geometry_id");
-    // For NTFS v0.9, we sould use fare_zone_id instead of zone_id if present
+    // Since NTFS v0.9, using fare_zone_id (if absent, fallback to zone_id)
     zone_c = csv.get_pos_col("fare_zone_id");
     if (zone_c == UNKNOWN_COLUMN) {
         zone_c = csv.get_pos_col("zone_id");

@@ -420,6 +420,8 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     has_properties.set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
     BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+    // ntfs_v5 retrocompatibility test on zone_id as fare_zone_id is absent in stops.txt
+    BOOST_CHECK_EQUAL(data.stop_points[0]->fare_zone, "4");
 
     for (int i = 1; i < 8; i++) {
         BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
