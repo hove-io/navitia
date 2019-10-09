@@ -730,37 +730,21 @@ def _filter_too_much_connections(journeys, instance, request):
                 mark_as_dead(j, is_debug, "too_much_connections")
 
 
-def remove_excess_tickets_or_ticket_links_with_journeys_to_be_deleted(response):
+def remove_excess_tickets_after_culling(response):
     """
-    Remove excess tickets or ticket_links if needed with journeys has to be deleted
+    Remove excess tickets after culling journeys process
     """
     logger = logging.getLogger(__name__)
 
-    def _remove_excess_tickets_or_ticket_links(journey_section_id_list, tickets):
-        for t in tickets:
-            for s_id in t.section_id:
-                if s_id in journey_section_id_list:
-                    if len(t.section_id) > 1:
-                        logger.debug(
-                            'remove excess section id %s inside %s ticket after journey filtering', s_id, t.id
-                        )
-                        t.section_id.remove(s_id)
-                    else:
-                        logger.debug('remove excess ticket %s after journey filtering', t.id)
-                        tickets.remove(t)
-
-    def _remove_excess_fare_ticket_links(ticket_id_list, journey):
-        for fare_t_id in journey.fare.ticket_id:
-            if fare_t_id not in ticket_id_list:
-                logger.debug(
-                    'remove excess fare ticket link %s into journey %s to be deleted',
-                    fare_t_id,
-                    journey.internal_id,
-                )
-                journey.fare.ticket_id.remove(fare_t_id)
-
+    fare_ticket_id_list = []
     for j in response.journeys:
-        if to_be_deleted(j):
-            _remove_excess_tickets_or_ticket_links([s.id for s in j.sections], response.tickets)
-            # clean dead fare links
-            _remove_excess_fare_ticket_links([t.id for t in response.tickets], j)
+        fare_ticket_id_list.extend([t_id for t_id in j.fare.ticket_id])
+        # ridesharing case
+        fare_ticket_id_list.extend(
+            [t_id for s in j.sections for rj in s.ridesharing_journeys for t_id in rj.fare.ticket_id]
+        )
+
+    for t in response.tickets:
+        if not t.id in fare_ticket_id_list:
+            logger.debug('remove excess ticket id %s after culling journeys', t.id)
+            response.tickets.remove(t)
