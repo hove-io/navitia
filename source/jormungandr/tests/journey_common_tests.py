@@ -1218,18 +1218,6 @@ class JourneyCommon(object):
 
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
 
-    def test_journey_ticket(self):
-        """
-        Test that the ticket info are correctly serialized in the response
-        """
-        query = "journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120614080101&"
-        response = self.query_region(query)
-
-        assert len(response['tickets']) == 1
-        assert response['tickets'][0]['name'] == 'M-Ticket name'
-        assert response['tickets'][0]['source_id'] == 'M-Ticket'
-        assert response['tickets'][0]['comment'] == 'This is M-Ticket'
-
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -2291,3 +2279,130 @@ class JourneysDirectPathMode:
         assert len(response["journeys"]) == 1
         assert "walking" in response["journeys"][0]["tags"]
         assert "non_pt" not in response["journeys"][0]["tags"]
+
+
+@dataset({"min_nb_journeys_test": {}})
+class JourneysTickets:
+    def test_journey_tickets(self):
+        """
+        2 solutions are founded with 1 ticket for each journey
+        """
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+
+        # Journeys
+        assert len(response['journeys']) == 2
+        assert 'fare' in response['journeys'][0]
+        assert response['journeys'][0]['fare']['total']['value'] == '120.0'
+        assert response['journeys'][0]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][0]['fare']['links']) == 1
+        assert 'fare' in response['journeys'][1]
+        assert response['journeys'][1]['fare']['total']['value'] == '100.0'
+        assert response['journeys'][1]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][1]['fare']['links']) == 1
+
+        # Tickets
+        assert len(response['tickets']) == 2
+        assert response['tickets'][0]['name'] == 'A-Ticket name'
+        assert response['tickets'][0]['source_id'] == 'A-Ticket'
+        assert response['tickets'][0]['comment'] == 'A-Ticket comment'
+        assert response['tickets'][1]['name'] == 'B-Ticket name'
+        assert response['tickets'][1]['source_id'] == 'B-Ticket'
+        assert response['tickets'][1]['comment'] == 'B-Ticket comment'
+
+        # Links between journeys.fare and journeys.tickets
+        assert response['tickets'][0]['id'] == response['journeys'][1]['fare']['links'][0]['id']
+        assert response['tickets'][1]['id'] == response['journeys'][0]['fare']['links'][0]['id']
+
+    def test_journey_tickets_with_max_nb_journeys(self):
+        """
+        2 solutions found, but with max_nb_journeys option, it remains 1 journey.
+        Check there is only one ticket.
+        The max_nb_journeys option force to filter one journey and the associated ticket too
+        """
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&max_nb_journeys=1'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+
+        # Journeys
+        assert len(response['journeys']) == 1
+        assert 'fare' in response['journeys'][0]
+        assert response['journeys'][0]['fare']['total']['value'] == '120.0'
+        assert response['journeys'][0]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][0]['fare']['links']) == 1
+
+        # Tickets
+        assert len(response['tickets']) == 1
+        assert response['tickets'][0]['name'] == 'B-Ticket name'
+        assert response['tickets'][0]['source_id'] == 'B-Ticket'
+        assert response['tickets'][0]['comment'] == 'B-Ticket comment'
+
+        # Links between journeys.fare and journeys.tickets
+        assert response['tickets'][0]['id'] == response['journeys'][0]['fare']['links'][0]['id']
+
+
+@dataset({"main_stif_test": {}})
+class JourneysTicketsWithDebug:
+    def test_journey_tickets_with_debug_true(self):
+        """
+              Line P         Line Q         Line R         Line S
+              P-Ticket       Q-Ticket       R-Ticket       S-Ticket
+        stopP -------> stopQ -------> stopR -------> stopS -------> stopT
+        15:00          16:00          17:00          18:00          19:00
+
+                                     Line T
+                                     T-Ticket
+        stopP ----------------------------------------------------> stopT
+        15:00                                                       20:00
+        Goal : Test if tickets work correctly with the debug option
+        """
+        # debug = false
+        # Tickets have to be filtered like journeys
+        query = "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3"
+        response = self.query_region(query)
+
+        # Journeys
+        assert len(response['journeys']) == 1
+        assert 'fare' in response['journeys'][0]
+        assert response['journeys'][0]['fare']['total']['value'] == '99.0'
+        assert response['journeys'][0]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][0]['fare']['links']) == 1
+
+        # Tickets
+        assert len(response['tickets']) == 1
+        assert response['tickets'][0]['source_id'] == 'T-Ticket'
+
+        # Links between journeys.fare and journeys.tickets
+        assert response['tickets'][0]['id'] == response['journeys'][0]['fare']['links'][0]['id']
+
+        # debug = true
+        # We send all journeys found and its associated tickets
+        query = (
+            "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&debug=true"
+        )
+        response = self.query_region(query)
+
+        # Journeys
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['fare']['total']['value'] == '400.0'
+        assert response['journeys'][0]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][0]['fare']['links']) == 4
+        assert response['journeys'][1]['fare']['total']['value'] == '99.0'
+        assert response['journeys'][1]['fare']['total']['currency'] == 'euro'
+        assert len(response['journeys'][1]['fare']['links']) == 1
+
+        # Tickets
+        assert len(response['tickets']) == 5
+        assert response['tickets'][0]['source_id'] == 'P-Ticket'
+        assert response['tickets'][1]['source_id'] == 'Q-Ticket'
+        assert response['tickets'][2]['source_id'] == 'R-Ticket'
+        assert response['tickets'][3]['source_id'] == 'S-Ticket'
+        assert response['tickets'][4]['source_id'] == 'T-Ticket'
+
+        # Links between journeys.fare and journeys.tickets
+        assert response['tickets'][0]['id'] == response['journeys'][0]['fare']['links'][0]['id']
+        assert response['tickets'][1]['id'] == response['journeys'][0]['fare']['links'][1]['id']
+        assert response['tickets'][2]['id'] == response['journeys'][0]['fare']['links'][2]['id']
+        assert response['tickets'][3]['id'] == response['journeys'][0]['fare']['links'][3]['id']
+        assert response['tickets'][4]['id'] == response['journeys'][1]['fare']['links'][0]['id']
