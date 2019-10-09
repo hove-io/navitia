@@ -23,14 +23,14 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
-from jormungandr.scenarios import new_default
+from jormungandr.scenarios import new_default, journey_filter
 from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from werkzeug.exceptions import HTTPException
@@ -140,6 +140,8 @@ def build_mocked_response():
         arrival_time, jrny_type, sections_idx = jrny
         pb_j = response.journeys.add()
         pb_j.arrival_date_time = arrival_time
+        # we remove the street network section
+        pb_j.nb_transfers = len(sections_idx) - 1 - (1 in sections_idx) - (10 in sections_idx)
         if jrny_type:
             pb_j.type = jrny_type
         for idx in sections_idx:
@@ -150,6 +152,11 @@ def build_mocked_response():
                 section.street_network.mode = network_mode
             if line_uri:
                 section.uris.line = line_uri
+
+    new_default._tag_by_mode([response])
+    new_default._tag_direct_path([response])
+    new_default._tag_bike_in_pt([response])
+
     return response
 
 
@@ -509,3 +516,30 @@ def crowfly_in_ridesharing_test():
     assert journey.durations.car == 0
     assert journey.distances.ridesharing == 43
     assert journey.distances.car == 0
+
+
+def filter_too_many_connections_test():
+    # yes, it's a hack...
+    instance = lambda: None
+
+    instance.max_additional_connections = 10
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert all('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys)
+
+    instance.max_additional_connections = 0
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 17
+    # the best journey must be kept
+    assert 'deleted_because_too_much_connections' not in mocked_pb_response.journeys[14].tags
+
+    instance.max_additional_connections = 0
+    mocked_pb_response = build_mocked_response()
+    mocked_request = {'_max_additional_connections': 1, 'debug': True, 'datetime': 1444903200, 'clockwise': True}
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 19
+    # the best journey must be kept
+    assert 'deleted_because_too_much_connections' not in mocked_pb_response.journeys[14].tags

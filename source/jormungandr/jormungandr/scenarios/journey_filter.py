@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -37,6 +37,7 @@ from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
 from jormungandr.fallback_modes import FallbackModes
+from jormungandr.scenarios.qualifier import get_ASAP_journey
 
 
 def delete_journeys(responses, request):
@@ -390,15 +391,15 @@ class FilterTooLongDirectPath(SingleJourneyFilter):
         return max_duration > journey.duration
 
 
-def get_min_connections(journeys):
+def get_best_pt_journey_connections(journeys, request):
     """
-    Returns min connection count among journeys
+    Returns the nb of connection of the best pt_journey
     Returns None if journeys empty
     """
     if not journeys:
         return None
-
-    return portable_min((get_nb_connections(j) for j in journeys if not to_be_deleted(j)), default=0)
+    best = get_ASAP_journey((j for j in journeys if 'non_pt' not in j.tags), request)
+    return get_nb_connections(best) if best else None
 
 
 def get_nb_connections(journey):
@@ -711,7 +712,7 @@ def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_genera
 def _filter_too_much_connections(journeys, instance, request):
     """
     eliminates journeys with a number of connections strictly superior to the
-    minimum number of connections among all journeys + _max_additional_connections
+    the number of connections of the best pt_journey + _max_additional_connections
     """
     logger = logging.getLogger(__name__)
     max_additional_connections = get_or_default(
@@ -720,10 +721,10 @@ def _filter_too_much_connections(journeys, instance, request):
     import itertools
 
     it1, it2 = itertools.tee(journeys, 2)
-    min_connections = get_min_connections(it1)
+    best_pt_journey_connections = get_best_pt_journey_connections(it1, request)
     is_debug = request.get('debug', False)
-    if min_connections is not None:
-        max_connections_allowed = max_additional_connections + min_connections
+    if best_pt_journey_connections is not None:
+        max_connections_allowed = max_additional_connections + best_pt_journey_connections
         for j in it2:
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))

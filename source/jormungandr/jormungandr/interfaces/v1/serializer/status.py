@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -76,6 +76,7 @@ class ParametersSerializer(serpy.Serializer):
     max_car_direct_path_duration = Field(schema_type=int)
     max_taxi_direct_path_duration = Field(schema_type=int)
     max_ridesharing_direct_path_duration = Field(schema_type=int)
+    max_nb_crowfly_by_mode = Field(schema_type=dict)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):
