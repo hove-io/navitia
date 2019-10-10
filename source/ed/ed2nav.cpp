@@ -170,23 +170,21 @@ bool write_data_to_file(const std::string& output_filename, navitia::type::Data&
     std::string temp_output = output_filename + ".temp";
     try {
         data.save(temp_output);
-        try {
-            remove(output_filename.c_str());
-            rename(temp_output.c_str(), output_filename.c_str());
-            LOG4CPLUS_INFO(logger, "Data saved");
-        } catch (const navitia::exception& e) {
+        if (remove(output_filename.c_str()) == 0) {
+            if (rename(temp_output.c_str(), output_filename.c_str()) == 0)
+                LOG4CPLUS_INFO(logger, "Data saved");
+            else
+                LOG4CPLUS_ERROR(logger, "Unable to rename the new data file");
+        } else {
             LOG4CPLUS_ERROR(logger, "Error deleting file: No such file or directory");
-            LOG4CPLUS_ERROR(logger, e.what());
         }
-    } catch (const navitia::exception& f) {
+    } catch (const navitia::exception& e) {
         LOG4CPLUS_ERROR(logger, "Unable to save");
-        LOG4CPLUS_ERROR(logger, f.what());
-        try {
-            remove("temp.data.nav.lz4");
+        LOG4CPLUS_ERROR(logger, e.what());
+        if (remove(temp_output.c_str()) == 0)
             LOG4CPLUS_INFO(logger, "Temp data removed because it was corrupted");
-        } catch (const navitia::exception& g) {
-            LOG4CPLUS_ERROR(logger, "Error deleting file: No such file or directory");
-        }
+        else
+            LOG4CPLUS_ERROR(logger, "Error deleting temp file: No such file or directory");
         return false;
     }
     return true;
