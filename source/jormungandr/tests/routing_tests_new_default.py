@@ -408,6 +408,16 @@ class TestNewDefaultTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScena
     pass
 
 
+@config({"scenario": "new_default"})
+class TestNewDefaultJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "new_default"})
+class TestNewDefaultJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
 @dataset({"main_routing_test": {"scenario": "new_default"}})
 class TestTaxiNewDefault(NewDefaultScenarioAbstractTestFixture):
     def test_taxi_with_new_default(self):

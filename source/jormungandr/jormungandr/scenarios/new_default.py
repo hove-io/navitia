@@ -771,7 +771,13 @@ def merge_responses(responses, debug):
 
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
-        tickets_to_add = set(t for j in r.journeys for t in j.fare.ticket_id)
+        # and if the journey is not to be deleted in debug mode
+        tickets_to_add = set(
+            t
+            for j in r.journeys
+            if not (journey_filter.to_be_deleted(j) and not debug)
+            for t in j.fare.ticket_id
+        )
         merged_response.tickets.extend((t for t in r.tickets if t.id in tickets_to_add))
 
         initial_feed_publishers = {}
@@ -1040,6 +1046,8 @@ class Scenario(simple.Scenario):
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+        # need to clean extra tickets after culling journeys
+        journey_filter.remove_excess_tickets(pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

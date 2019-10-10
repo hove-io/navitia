@@ -36,27 +36,29 @@ from navitiacommon.default_traveler_profile_params import (
 )
 from six.moves import map
 from six import text_type
+from typing import Dict, Text, List, Optional
 
 
 class TravelerProfile(object):
     def __init__(
         self,
-        walking_speed=1.12,
-        bike_speed=3.33,
-        bss_speed=3.33,
-        car_speed=11.11,
-        max_duration_to_pt=None,
-        first_section_mode=None,
-        last_section_mode=None,
-        wheelchair=False,
-        first_and_last_section_mode=None,
-        max_walking_duration_to_pt=15 * 60,
-        max_bike_duration_to_pt=15 * 60,
-        max_bss_duration_to_pt=15 * 60,
-        max_car_duration_to_pt=15 * 60,
-        traveler_type='',
-        is_from_db=False,
+        walking_speed=1.12,  # type: float
+        bike_speed=3.33,  # type: float
+        bss_speed=3.33,  # type: float
+        car_speed=11.11,  # type: float
+        max_duration_to_pt=None,  # type: Optional[int]
+        first_section_mode=None,  # type: Optional[List[Text]]
+        last_section_mode=None,  # type: Optional[List[Text]]
+        wheelchair=False,  # type: bool
+        first_and_last_section_mode=None,  # type: Optional[List[Text]]
+        max_walking_duration_to_pt=15 * 60,  # type: int
+        max_bike_duration_to_pt=15 * 60,  # type: int
+        max_bss_duration_to_pt=15 * 60,  # type: int
+        max_car_duration_to_pt=15 * 60,  # type: int
+        traveler_type='',  # type: Text
+        is_from_db=False,  # type: bool
     ):
+
         self.walking_speed = walking_speed
         self.bike_speed = bike_speed
         self.bss_speed = bss_speed
@@ -115,11 +117,12 @@ class TravelerProfile(object):
     @memory_cache.memoize(app.config.get(str('MEMORY_CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 30))
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PARAMS'), 300))
     def make_traveler_profile(cls, coverage, traveler_type):
+        # type: (Text, Text) -> TravelerProfile
         """
         travelers_profile factory method,
         Return a traveler_profile constructed with default params or params retrieved from db
         """
-        if app.config['DISABLE_DATABASE']:
+        if app.config[str('DISABLE_DATABASE')]:
             return default_traveler_profiles[traveler_type]
 
         # retrieve TravelerProfile from db with coverage and traveler_type
@@ -146,6 +149,7 @@ class TravelerProfile(object):
 
     @classmethod
     def get_profiles_by_coverage(cls, coverage):
+        # type: (Text) -> List[TravelerProfile]
         traveler_profiles = []
         for traveler_type in acceptable_traveler_types:
             profile = cls.make_traveler_profile(coverage, traveler_type)
@@ -153,7 +157,7 @@ class TravelerProfile(object):
         return traveler_profiles
 
 
-default_traveler_profiles = {}
+default_traveler_profiles = {}  # type: Dict[Text, TravelerProfile]
 
 for (traveler_type_id, params) in default_traveler_profile_params.items():
-    default_traveler_profiles[traveler_type_id] = TravelerProfile(is_from_db=False, **params)
+    default_traveler_profiles[traveler_type_id] = TravelerProfile(is_from_db=False, **params)  # type: ignore

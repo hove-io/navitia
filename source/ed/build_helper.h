@@ -348,6 +348,12 @@ struct builder {
         return obj;
     }
 
+    void add_ticket(const std::string& ticket_id,
+                    const std::string& line,
+                    const int cost = 100,
+                    const std::string& comment = "",
+                    const std::string& currency = "euro");
+
     template <typename T>
     T* get(const std::string& uri) const {
         const auto& collection = data->get_assoc_data<T>();

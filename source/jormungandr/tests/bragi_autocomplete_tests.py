@@ -705,6 +705,15 @@ def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=2
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
+    def test_autocomplete_no_json(self):
+        """
+        """
+        with requests_mock.Mocker() as m:
+            m.post('https://host_of_bragi/autocomplete', text="this isn't a json")
+            resp, status = self.query_region('places?q=bob&from=3.25;49.84', check=False)
+            assert status == 500
+            assert m.called
+
     def test_autocomplete_call(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE):
             response = self.query_region(

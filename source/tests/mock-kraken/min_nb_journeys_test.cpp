@@ -138,6 +138,10 @@ int main(int argc, const char* const argv[]) {
     b.lines["N"]->color = "BC5AC8";
     b.lines["N"]->text_color = "FFFFFF";
 
+    // Add tickets
+    b.add_ticket("A-Ticket", "A", 100, "A-Ticket comment");
+    b.add_ticket("B-Ticket", "B", 120, "B-Ticket comment");
+
     // build data
     b.data->complete();
     b.manage_admin();

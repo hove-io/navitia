@@ -364,11 +364,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             std::vector<nt::StopTime> new_stop_times;
             const auto* vj = impacted_vj.vj;
             auto& new_vp = impacted_vj.new_vp;
-            const auto& stop_points_section = impacted_vj.impacted_stops;
 
             for (const auto& st : vj->stop_time_list) {
+                // We need to get the associated base stop_time to compare its rank
+                const auto base_st = st.get_base_stop_time();
                 // stop is ignored if its stop_point is not in impacted_stops
-                if (stop_points_section.count(st.stop_point)) {
+                // if we don't find an associated base we keep it
+                if (base_st && impacted_vj.impacted_ranks.count(base_st->order())) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     continue;
                 }
