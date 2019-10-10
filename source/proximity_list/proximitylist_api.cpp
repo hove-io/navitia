@@ -127,15 +127,17 @@ void find(navitia::PbCreator& pb_creator,
                 return;
             }
         }
+        // We have to find all objects within distance, then apply the filter
+        int search_count = -1;
         switch (type) {
             case nt::Type_e::StopArea:
-                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, search_count);
                 break;
             case nt::Type_e::StopPoint:
-                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, search_count);
                 break;
             case nt::Type_e::POI:
-                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, count);
+                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, search_count);
                 break;
             default:
                 break;
