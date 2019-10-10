@@ -313,6 +313,16 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
     pass
 
 
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
 def _make_function_over_upper_limit(from_coord, to_coord, mode, op):
     def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
