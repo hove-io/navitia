@@ -1,4 +1,4 @@
-stop_id,visible,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,stop_timezone,property_id,contributor_id,geometry_id
+stop_id,visible,stop_name,stop_lat,stop_lon,fare_zone_id,location_type,parent_station,stop_timezone,property_id,contributor_id,geometry_id
 SA:A,1,"Arrêt A",45.0296,0.5881,,1,,,,,
 SA:B,1,"Arrêt B",45.0245,0.5725,,1,,,,,
 SA:C,1,"Arrêt C",45.0211,0.5469,,1,,,,,
