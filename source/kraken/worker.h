@@ -124,6 +124,9 @@ private:
     void heat_map(const pbnavitia::HeatMapRequest& request);
     void car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
     void direct_path(const pbnavitia::Request& request);
+    bool set_isochrone_distributed_args(const pbnavitia::JourneysRequest& request,
+                                        JourneysArg& arg,
+                                        const std::string& name);
     void isochrone_distributed(const pbnavitia::JourneysRequest& request);
 
     /*
