@@ -1106,8 +1106,11 @@ class Scenario(simple.Scenario):
         updated_request_with_default(request, instance)
         # we don't want to filter anything!
         krakens_call = get_kraken_calls(request)
+        # Initialize a context for distributed
+        distributed_context = self.get_context()
         resp = merge_responses(
-            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug']
+            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call, distributed_context),
+            request['debug'],
         )
         if not request['debug']:
             # on isochrone we can filter the number of max journeys
