@@ -134,6 +134,7 @@ class TestPlaces(AbstractTestFixture):
 
         query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&count=1"
         response = self.query(query)
+        assert response['pagination']['total_result'] == 4
         places_nearby = response['places_nearby']
         assert len(places_nearby) == 1
         is_valid_places(places_nearby)
@@ -141,6 +142,7 @@ class TestPlaces(AbstractTestFixture):
         assert places_nearby[0]["id"] == "stop_point:stopB"
 
         response = self.query(query + "&start_page=1")
+        assert response['pagination']['total_result'] == 4
         places_nearby = response['places_nearby']
         assert len(places_nearby) == 1
         is_valid_places(places_nearby)
