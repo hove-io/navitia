@@ -18,7 +18,8 @@ pull_request_rules:
     actions:
       merge:
         method: merge
-        strict: true
+        strict: smart   # To avoid multiple builds at once on the CI
+        strict_method: rebase # We want Dev rebased onto the PR
   - name: delete head branch after merge
     conditions: []
     actions:
