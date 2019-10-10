@@ -11,6 +11,7 @@ repos:
         exclude: ^source/tests/chaos/chaos_loading.sql # Otherwise, Sql commands get corrupted
     -   id: check-ast
     -   id: check-merge-conflict
+    -   id: check-yaml
     -   id: flake8
         language_version: python2.7
 -   repo: https://github.com/CanalTP/navitia-pre-commit
