@@ -165,6 +165,33 @@ struct FindAdminWithCities {
     }
 };
 
+bool write_data_to_file(const std::string& output_filename, navitia::type::Data& data) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    std::string temp_output = output_filename + ".temp";
+    try {
+        data.save(temp_output);
+        try {
+            remove(output_filename.c_str());
+            rename(temp_output.c_str(), output_filename.c_str());
+            LOG4CPLUS_INFO(logger, "Data saved");
+        } catch (const navitia::exception& e) {
+            LOG4CPLUS_ERROR(logger, "Error deleting file: No such file or directory");
+            LOG4CPLUS_ERROR(logger, e.what());
+        }
+    } catch (const navitia::exception& f) {
+        LOG4CPLUS_ERROR(logger, "Unable to save");
+        LOG4CPLUS_ERROR(logger, f.what());
+        try {
+            remove("temp.data.nav.lz4");
+            LOG4CPLUS_INFO(logger, "Temp data removed because it was corrupted");
+        } catch (const navitia::exception& g) {
+            LOG4CPLUS_ERROR(logger, "Error deleting file: No such file or directory");
+        }
+        return false;
+    }
+    return true;
+}
+
 int ed2nav(int argc, const char* argv[]) {
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
@@ -273,15 +300,9 @@ int ed2nav(int argc, const char* argv[]) {
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
-    try {
-        data.save(output);
-    } catch (const navitia::exception& e) {
-        LOG4CPLUS_ERROR(logger, "Unable to save");
-        LOG4CPLUS_ERROR(logger, e.what());
+    if (!write_data_to_file(output, data))
         return 1;
-    }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    LOG4CPLUS_INFO(logger, "Data saved");
 
     LOG4CPLUS_INFO(logger, "Computing times");
     LOG4CPLUS_INFO(logger, "\t File reading: " << read << "ms");
