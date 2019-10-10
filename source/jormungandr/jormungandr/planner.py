@@ -38,6 +38,7 @@ class JourneyParameters(object):
         min_nb_journeys=None,
         timeframe=None,
         depth=1,
+        isochrone_center=None,
     ):
 
         self.max_duration = max_duration
@@ -53,6 +54,7 @@ class JourneyParameters(object):
         self.min_nb_journeys = min_nb_journeys
         self.timeframe = timeframe
         self.depth = depth
+        self.isochrone_center = isochrone_center
 
 
 class Kraken(object):
@@ -62,15 +64,17 @@ class Kraken(object):
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
-        for stop_point_id, access_duration in origins.items():
-            location = req.journeys.origin.add()
-            location.place = stop_point_id
-            location.access_duration = access_duration
+        if origins:
+            for stop_point_id, access_duration in origins.items():
+                location = req.journeys.origin.add()
+                location.place = stop_point_id
+                location.access_duration = access_duration
 
-        for stop_point_id, access_duration in destinations.items():
-            location = req.journeys.destination.add()
-            location.place = stop_point_id
-            location.access_duration = access_duration
+        if destinations:
+            for stop_point_id, access_duration in destinations.items():
+                location = req.journeys.destination.add()
+                location.place = stop_point_id
+                location.access_duration = access_duration
 
         req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
         req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
@@ -103,5 +107,10 @@ class Kraken(object):
 
         if journey_parameters.depth:
             req.journeys.depth = journey_parameters.depth
+
+        if journey_parameters.isochrone_center:
+            req.journeys.isochrone_center.place = journey_parameters.isochrone_center
+            req.journeys.isochrone_center.access_duration = 0
+            req.requested_api = type_pb2.isochrone_distributed
 
         return self.instance.send_and_receive(req)
