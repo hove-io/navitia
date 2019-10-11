@@ -85,6 +85,7 @@ class LineReports(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "tags[]",
             type=six.text_type,
+            hidden=True,
             action="append",
             help="If filled, will restrain the search within the given disruption tags",
         )
