@@ -31,9 +31,12 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE ed2nav
 
-#include <boost/test/unit_test.hpp>
-#include "ed/ed2nav.h"
 #include "utils/logger.h"
+#include "ed/data.h"
+#include "ed/ed2nav.h"
+#include <iostream>
+#include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
@@ -49,4 +52,11 @@ BOOST_AUTO_TEST_CASE(ed2nav_with_no_param_should_start_without_throwing) {
 BOOST_AUTO_TEST_CASE(should_throw_on_bad_connection_string) {
     const char* argv[] = {"ed2nav_test", "--connection-string=\"blahblah\""};
     BOOST_CHECK_THROW(ed::ed2nav(2, argv), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(writing_test_ed2nav_should_not_throw) {
+    navitia::type::Data data(0);
+    std::string test = "ed2nav_test.nav.lz4";
+    bool b = ed::write_data_to_file(test, data);
+    BOOST_CHECK(b);
 }

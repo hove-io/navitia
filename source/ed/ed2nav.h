@@ -27,11 +27,12 @@ IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-
 #pragma once
+#include "type/data.h"
 
 namespace ed {
 
+bool write_data_to_file(const std::string& output_filename, navitia::type::Data& data);
 int ed2nav(int argc, const char** argv);
 
 }  // namespace ed
