@@ -14,6 +14,8 @@ addons:
     packages:
     - clang-format-6.0
     - rabbitmq-server
+    - jq
+    - curl
 
 services:
   - docker
@@ -47,5 +49,7 @@ matrix:
         - bash source/scripts/build_protobuf.sh
       script:
         - pre-commit run --all --show-diff-on-failure
+        - ./source/scripts/checkJenkinsJob.sh Artemis
+        - ./source/scripts/checkJenkinsJob.sh Artemis_idfm
   exclude:
     - python: "3.6"

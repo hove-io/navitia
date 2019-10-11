@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -492,20 +492,8 @@ struct routing_api_data {
                 r->destination = b.sas.find("stopA")->second;
             }
 
-            // Add Fare
-            boost::gregorian::date start_date(boost::gregorian::neg_infin);
-            boost::gregorian::date end_date(boost::gregorian::pos_infin);
-
-            b.data->fare->fare_map["M-Ticket"].add(
-                start_date, end_date, navitia::fare::Ticket("M-Ticket", "M-Ticket name", 100, "This is M-Ticket"));
-
-            navitia::fare::Transition ticket_transition;
-            navitia::fare::State ticket_state;
-            ticket_state.line = "m";
-            ticket_transition.ticket_key = "M-Ticket";
-
-            auto ticket_state_v = boost::add_vertex(ticket_state, b.data->fare->g);
-            boost::add_edge(b.data->fare->begin_v, ticket_state_v, ticket_transition, b.data->fare->g);
+            // Add tickets
+            b.add_ticket("M-Ticket", "M", 100, "This is M-Ticket");
         }
 
         b.data->complete();

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -310,6 +310,16 @@ class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultSc
 
 @config({"scenario": "distributed"})
 class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefaultScenarioAbstractTestFixture):
     pass
 
 

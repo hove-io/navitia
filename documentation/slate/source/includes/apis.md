@@ -1438,15 +1438,16 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 ### Parameters
 
-Required | Name               | Type      | Description                                                                              | Default Value
----------|--------------------|-----------|------------------------------------------------------------------------------------------|--------------
-nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                    | the current datetime
-nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.           | 86400
-nop      | depth              | int       | Json response [depth](#depth)                                                            | 1
-nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
-nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        |
-nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
-nop      | disable_geojson    | boolean   | remove geojson fields from the response                                                  | False
+Required | Name               | Type      | Description                                                                                                                | Default Value
+---------|--------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|--------------
+nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                      | the current datetime
+nop      | duration           | int       | Maximum duration in seconds between from_datetime and the retrieved datetimes.                                             | 86400
+nop      | depth              | int       | Json response [depth](#depth)                                                                                              | 1
+nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                                                    |
+nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                                                          |
+nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>                                    | base_schedule
+nop      | disable_geojson    | boolean   | remove geojson fields from the response                                                                                    | False
+nop      | direction_type     | enum      | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. when you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 ### Objects
 
@@ -1571,15 +1572,16 @@ See how disruptions affect stop schedules in the [real time](#realtime) section.
 
 ### Parameters
 
-Required | Name               | Type                            | Description        | Default Value
----------|--------------------|---------------------------------|--------------------|--------------
-nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules | the current datetime
-nop      | duration           | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | depth              | int                             | Json response [depth](#depth) | 1
-nop      | forbidden_uris[]   | id                              | If you want to avoid lines, modes, networks, etc.    |
-nop      | items_per_schedule | int                             | Maximum number of datetimes per schedule.                                                  |
-nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
-nop      | disable_geojson    | boolean                         | remove geojson fields from the response | False
+Required | Name               | Type                            | Description                                                                                                                | Default Value
+---------|--------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------|--------------
+nop      | from_datetime      | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                                            | the current datetime
+nop      | duration           | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                                             | 86400
+nop      | depth              | int                             | Json response [depth](#depth)                                                                                              | 1
+nop      | forbidden_uris[]   | id                              | If you want to avoid lines, modes, networks, etc.                                                                          |
+nop      | items_per_schedule | int                             | Maximum number of datetimes per schedule.                                                                                  |
+nop      | data_freshness     | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul>                   | realtime
+nop      | disable_geojson    | boolean                         | remove geojson fields from the response                                                                                    | False
+nop      | direction_type     | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 
 ### <a name="stop-schedule"></a>Stop_schedule object
@@ -1672,15 +1674,16 @@ See how disruptions affect the next departures in the [real time](#realtime) sec
 
 ### Parameters
 
-Required | Name             | Type                            | Description                                                                                              | Default Value
----------|------------------|---------------------------------|----------------------------------------------------------------------------------------------------------|--------------
-nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                          | the current datetime
-nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                           | 86400
-nop      | count            | int                             | Maximum number of results.                                                                               | 10
-nop      | depth            | int                             | Json response [depth](#depth)                                                                            | 1
-nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        |
-nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
-nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                  | false
+Required | Name             | Type                            | Description                                                                                                                           | Default Value
+---------|------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|--------------
+nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                                                       | the current datetime
+nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                                                        | 86400
+nop      | count            | int                             | Maximum number of results.                                                                                                            | 10
+nop      | depth            | int                             | Json response [depth](#depth)                                                                                                         | 1
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                                                     |
+nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul>                              | realtime
+nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                                               | false
+nop      | direction_type   | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
 
 ### Departure objects
@@ -1808,7 +1811,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags            |
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1964,12 +1966,8 @@ For example:
 
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
--   overall public transport traffic report on Ile de France coverage with disruptions having tags passed in parameter values
-    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
--   Is there any perturbations on the RER network with disruptions having tags passed in parameter values ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
@@ -1981,7 +1979,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                       | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.   |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response             | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags              |
 
 The response is made of an array of [traffic_reports](#traffic-reports),
 and another one of [disruptions](#disruption).

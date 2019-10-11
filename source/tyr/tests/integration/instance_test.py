@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -124,6 +124,12 @@ def test_update_instances(create_instance):
         "max_extra_second_pass": 1,
         "additional_time_after_first_section_taxi": 42,
         "additional_time_before_last_section_taxi": 789,
+        "max_walking_direct_path_duration": 789,
+        "max_bike_direct_path_duration": 856,
+        "max_bss_direct_path_duration": 6489,
+        "max_car_direct_path_duration": 2323,
+        "max_taxi_direct_path_duration": 4206,
+        "max_ridesharing_direct_path_duration": 456,
         "street_network_car": "taxiKraken",
         "street_network_walking": "taxiKraken",
         "street_network_bike": "taxiKraken",
@@ -380,6 +386,32 @@ def test_update_additional_time_for_taxi(create_instance):
     resp = api_get('/v0/instances/fr')
     assert resp[0]['additional_time_after_first_section_taxi'] == 42
     assert resp[0]['additional_time_before_last_section_taxi'] == 3637
+
+
+def test_update_max_mode_direct_path_duration(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['max_walking_direct_path_duration'] == 86400
+    assert resp[0]['max_bike_direct_path_duration'] == 86400
+    assert resp[0]['max_bss_direct_path_duration'] == 86400
+    assert resp[0]['max_car_direct_path_duration'] == 86400
+    assert resp[0]['max_taxi_direct_path_duration'] == 86400
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 86400
+
+    params = {
+        'max_walking_direct_path_duration': 3475,
+        'max_bike_direct_path_duration': 9512,
+        'max_bss_direct_path_duration': 7456,
+        'max_car_direct_path_duration': 3214,
+        'max_taxi_direct_path_duration': 1523,
+        'max_ridesharing_direct_path_duration': 4456,
+    }
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    for key in params.keys():
+        assert resp[key] == params[key]
+
+    resp = api_get('/v0/instances/fr')
+    for key in params.keys():
+        assert resp[0][key] == params[key]
 
 
 def test_update_forgotten_attributs_in_backend(create_instance):

@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -643,6 +643,13 @@ class Instance(flask_restful.Resource):
                 location=('json', 'values'),
                 default=getattr(instance, "street_network_{}".format(mode)),
             )
+            parser.add_argument(
+                'max_{}_direct_path_duration'.format(mode),
+                type=int,
+                help='maximum duration of direct path for the mode {}'.format(mode),
+                location=('json', 'values'),
+                default=getattr(instance, "max_{}_direct_path_duration".format(mode)),
+            )
 
         args = parser.parse_args()
 
@@ -702,6 +709,12 @@ class Instance(flask_restful.Resource):
                     'street_network_bss',
                     'street_network_ridesharing',
                     'street_network_taxi',
+                    'max_walking_direct_path_duration',
+                    'max_bike_direct_path_duration',
+                    'max_bss_direct_path_duration',
+                    'max_car_direct_path_duration',
+                    'max_taxi_direct_path_duration',
+                    'max_ridesharing_direct_path_duration',
                 ],
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
@@ -1190,13 +1203,15 @@ class Authorization(flask_restful.Resource):
 
 
 class EndPoint(flask_restful.Resource):
-    @marshal_with(end_point_fields)
-    def get(self):
-        return models.EndPoint.query.all()
+    def get(self, version=0):
+        resp = marshal(models.EndPoint.query.all(), end_point_fields)
+        if version == 1:
+            return {'end_points': resp}
+        return resp
 
-    def post(self):
+    def post(self, version=0):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location=('json'))
+        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location='json')
         args = parser.parse_args()
 
         try:
@@ -1214,13 +1229,19 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
-            return ({'error': str(e)}, 409)
+            return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(end_point, end_point_fields)
+        resp = marshal(end_point, end_point_fields)
+        if version == 1:
+            return {'end_point': [resp]}, 201
+        return resp
 
-    def put(self, id):
+    def put(self, version=0, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
         end_point = models.EndPoint.query.get_or_404(id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1243,13 +1264,19 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
-            return ({'error': str(e)}, 409)
+            return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(end_point, end_point_fields)
+        resp = marshal(end_point, end_point_fields)
+        if version == 1:
+            return {'end_point': [resp]}
+        return resp
 
-    def delete(self, id):
+    def delete(self, version=0, id=None):
+        if not id:
+            abort(400, status="error", message='id is required')
+
         end_point = models.EndPoint.query.get_or_404(id)
         try:
             db.session.delete(end_point)
@@ -1262,7 +1289,7 @@ class EndPoint(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class TravelerProfile(flask_restful.Resource):
@@ -1437,15 +1464,17 @@ class TravelerProfile(flask_restful.Resource):
 
 
 class BillingPlan(flask_restful.Resource):
-    def get(self, billing_plan_id=None):
+    def get(self, version=0, billing_plan_id=None):
         if billing_plan_id:
-            billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
-            return marshal(billing_plan, billing_plan_fields_full)
+            billing_plans = models.BillingPlan.query.get_or_404(billing_plan_id)
         else:
             billing_plans = models.BillingPlan.query.all()
-            return marshal(billing_plans, billing_plan_fields_full)
+        resp = marshal(billing_plans, billing_plan_fields_full)
+        if version == 1:
+            return {'billing_plans': resp}
+        return resp
 
-    def post(self):
+    def post(self, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
@@ -1488,7 +1517,7 @@ class BillingPlan(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         try:
             billing_plan = models.BillingPlan(
@@ -1500,12 +1529,18 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields_full)
+            resp = marshal(billing_plan, billing_plan_fields_full)
+            if version == 1:
+                return {'billing_plan': [resp]}, 201
+            return resp
         except Exception:
             logging.exception("fail")
             raise
 
-    def put(self, billing_plan_id=None):
+    def put(self, version=0, billing_plan_id=None):
+        if not id:
+            abort(400, status="error", message='billing_plan_id is required')
+
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1551,7 +1586,7 @@ class BillingPlan(flask_restful.Resource):
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
-            return ({'error': 'end_point doesn\'t exist'}, 400)
+            return {'error': 'end_point doesn\'t exist'}, 400
 
         try:
             billing_plan.name = args['name']
@@ -1560,34 +1595,39 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.default = args['default']
             billing_plan.end_point = end_point
             db.session.commit()
-            return marshal(billing_plan, billing_plan_fields_full)
+            resp = marshal(billing_plan, billing_plan_fields_full)
+            if version == 1:
+                return {'billing_plan': [resp]}
+            return resp
         except Exception:
             logging.exception("fail")
             raise
 
-    def delete(self, billing_plan_id=None):
+    def delete(self, version=0, billing_plan_id=None):
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         try:
             db.session.delete(billing_plan)
             db.session.commit()
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'billing_plan used'}, 409)  # Conflict
+            return {'error': 'billing_plan used'}, 409  # Conflict
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return {}, 204
 
 
 class AutocompleteParameter(flask_restful.Resource):
-    def get(self, name=None):
+    def get(self, version=0, name=None):
         if name:
-            autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
-            return marshal(autocomplete_param, autocomplete_parameter_fields)
+            autocomplete_params = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         else:
             autocomplete_params = models.AutocompleteParameter.query.all()
-            return marshal(autocomplete_params, autocomplete_parameter_fields)
+        resp = marshal(autocomplete_params, autocomplete_parameter_fields)
+        if version == 1:
+            return {'autocomplete_parameters': resp}
+        return resp
 
-    def post(self):
+    def post(self, version=0):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
@@ -1650,13 +1690,17 @@ class AutocompleteParameter(flask_restful.Resource):
             create_autocomplete_depot.delay(autocomplete_parameter.name)
 
         except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
-            return ({'error': 'duplicate name'}, 409)
+            return {'error': 'duplicate name'}, 409
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete_parameter, autocomplete_parameter_fields)
 
-    def put(self, name=None):
+        resp = marshal(autocomplete_parameter, autocomplete_parameter_fields)
+        if version == 1:
+            return {'autocomplete_parameters': [resp]}, 201
+        return resp
+
+    def put(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -1713,9 +1757,13 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return marshal(autocomplete_param, autocomplete_parameter_fields)
 
-    def delete(self, name=None):
+        resp = marshal(autocomplete_param, autocomplete_parameter_fields)
+        if version == 1:
+            return {'autocomplete_parameters': [resp]}
+        return resp
+
+    def delete(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         try:
             remove_autocomplete_depot.delay(name)
@@ -1724,7 +1772,7 @@ class AutocompleteParameter(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        return ({}, 204)
+        return None, 204
 
 
 class InstanceDataset(flask_restful.Resource):
@@ -2023,11 +2071,9 @@ class EquipmentsProvider(flask_restful.Resource):
         try:
             provider = models.EquipmentsProvider.find_by_id(id)
             status = 200
-            message["message"] = "Provider {} from db is updated".format(id)
         except sqlalchemy.orm.exc.NoResultFound:
             provider = models.EquipmentsProvider(id)
             models.db.session.add(provider)
-            message["message"] = "Provider {} is created".format(id)
             status = 201
 
         provider.from_json(input_json)
@@ -2035,7 +2081,7 @@ class EquipmentsProvider(flask_restful.Resource):
             models.db.session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
-        return message, status
+        return {'equipments_provider': [marshal(provider, equipment_provider_fields)]}, status
 
     def delete(self, id=None):
         """

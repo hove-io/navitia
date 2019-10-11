@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -411,9 +411,9 @@ public:
 struct ImpactedVJ {
     const VehicleJourney* vj;  // vj before impact
     ValidityPattern new_vp;
-    std::set<StopPoint*> impacted_stops;
-    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<StopPoint*> r)
-        : vj(vj), new_vp(vp), impacted_stops(std::move(r)) {}
+    std::set<uint16_t> impacted_ranks;
+    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<uint16_t> r)
+        : vj(vj), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*
  * return the list of vehicle journey that are impacted by the linesection

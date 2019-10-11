@@ -26,7 +26,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -63,7 +63,12 @@ api.add_resource(resources.Status, '/v0/status')
 
 api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint=str('jobs'))
 
-api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint=str('end_points'))
+api.add_resource(
+    resources.EndPoint,
+    '/v<int:version>/end_points/',
+    '/v<int:version>/end_points/<int:id>/',
+    endpoint=str('end_points'),
+)
 
 api.add_resource(
     resources.TravelerProfile,
@@ -71,12 +76,18 @@ api.add_resource(
     '/v0/instances/<string:name>/traveler_profiles/<string:traveler_type>',
 )
 
-api.add_resource(resources.BillingPlan, '/v0/billing_plans/', '/v0/billing_plans/<int:billing_plan_id>')
+api.add_resource(
+    resources.BillingPlan,
+    '/v<int:version>/billing_plans/',
+    '/v<int:version>/billing_plans/<int:billing_plan_id>',
+)
 
 api.add_resource(resources.InstancePoiType, '/v0/instances/<string:instance_name>/poi_types')
 
 api.add_resource(
-    resources.AutocompleteParameter, '/v0/autocomplete_parameters/', '/v0/autocomplete_parameters/<string:name>'
+    resources.AutocompleteParameter,
+    '/v<int:version>/autocomplete_parameters/',
+    '/v<int:version>/autocomplete_parameters/<string:name>',
 )
 
 api.add_resource(resources.AutocompletePoiType, '/v0/autocomplete_parameters/<string:name>/poi_types')

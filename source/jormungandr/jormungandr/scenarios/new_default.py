@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -67,6 +67,8 @@ from jormungandr.scenarios.qualifier import (
     non_pt_journey,
     has_walk,
     and_filters,
+    get_ASAP_journey,
+    comfort_crit,
 )
 import numpy as np
 import collections
@@ -702,7 +704,7 @@ def type_journeys(resp, req):
     # Then, we want something like the old types
     trip_caracs = [
         # comfort tends to limit the number of transfers and fallback
-        ("comfort", trip_carac([has_no_car], [transfers_crit, nonTC_crit, best_crit, duration_crit])),
+        ("comfort", trip_carac([has_no_car], [comfort_crit, best_crit, duration_crit])),
         # for car we want at most one journey, the earliest one
         (
             "car",
@@ -746,7 +748,7 @@ def type_journeys(resp, req):
             best.type = name
 
     # Finally, we want exactly one best, the ASAP one
-    best = min_from_criteria(resp.journeys, [best_crit, duration_crit, transfers_crit, nonTC_crit])
+    best = get_ASAP_journey(resp.journeys, req)
     if best is not None:
         best.type = "best"
 
@@ -769,7 +771,13 @@ def merge_responses(responses, debug):
 
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
-        tickets_to_add = set(t for j in r.journeys for t in j.fare.ticket_id)
+        # and if the journey is not to be deleted in debug mode
+        tickets_to_add = set(
+            t
+            for j in r.journeys
+            if not (journey_filter.to_be_deleted(j) and not debug)
+            for t in j.fare.ticket_id
+        )
         merged_response.tickets.extend((t for t in r.tickets if t.id in tickets_to_add))
 
         initial_feed_publishers = {}
@@ -1038,6 +1046,8 @@ class Scenario(simple.Scenario):
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+        # need to clean extra tickets after culling journeys
+        journey_filter.remove_excess_tickets(pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

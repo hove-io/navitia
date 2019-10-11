@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -171,8 +171,8 @@ class TestStif(AbstractTestFixture):
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
-        # As we modify the value of _max_additional_connections to 2 we delete the second journey because
-        # it contains more then nb_connections + 2 ()
+        # As we modify the value of _max_additional_connections to 2
+        # since the best journey is the one with 6 connexions, we will find 2 journeys
         query = (
             "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
             "&_max_successive_physical_mode=5&_max_additional_connections=2".format(
@@ -181,4 +181,4 @@ class TestStif(AbstractTestFixture):
         )
 
         response = self.query_region(query)
-        assert len(response['journeys']) == 1
+        assert len(response['journeys']) == 2

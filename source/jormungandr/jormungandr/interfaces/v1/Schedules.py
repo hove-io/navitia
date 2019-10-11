@@ -25,12 +25,12 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_restful import reqparse
+from flask_restful import reqparse, abort
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
@@ -57,6 +57,7 @@ from navitiacommon.parser_args_type import (
 )
 from jormungandr.exceptions import InvalidArguments
 import six
+import logging
 
 
 class Schedules(ResourceUri, ResourceUtc):
@@ -154,6 +155,15 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
+        parser_get.add_argument(
+            "direction_type",
+            help='Provide a route direction type to filter results. '
+            'Note: forward is equivalent to clockwise and inbound. '
+            'When you select forward, you filter with: [forward, clockwise, inbound]. '
+            'On the other hand, backward is equivalent to anticlockwise and outbound. '
+            'When you select backward, you filter with: [backward, anticlockwise, outbound].',
+            type=OptionValue(['all', 'forward', 'backward']),
+        )
 
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
@@ -161,6 +171,33 @@ class Schedules(ResourceUri, ResourceUtc):
 
     def options(self, **kwargs):
         return self.api_description(**kwargs)
+
+    def _add_direction_type_filter(self, direction_type, filter):
+
+        # Don't need a direction type filter
+        if direction_type == 'all':
+            return filter
+
+        # (forward, clockwise, inbound) are equivalent and
+        # (backward, anticlockwise, outbound) are equivalent too.
+        def create_direction_type_filter(direction_type):
+            if direction_type == 'forward':
+                values = 'forward,clockwise,inbound'
+            elif direction_type == 'backward':
+                values = 'backward,anticlockwise,outbound'
+            else:
+                abort(
+                    404,
+                    message='wrong direction type parameter selected : {}, it should be [forward, backward, all]]'.format(
+                        direction_type
+                    ),
+                )
+            return 'route.has_direction_type({})'.format(values)
+
+        if filter:
+            return '({}) and ({})'.format(filter, create_direction_type_filter(direction_type))
+        else:
+            return create_direction_type_filter(direction_type)
 
     def _get_default_freshness(self):
         # The data freshness depends on the endpoint
@@ -202,6 +239,11 @@ class Schedules(ResourceUri, ResourceUtc):
             args["filter"] = self.get_filter(split_uri(uri), args)
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
+
+        # create direction type filter
+        if args['direction_type']:
+            args['filter'] = self._add_direction_type_filter(args['direction_type'], args['filter'])
+        logging.getLogger(__name__).debug("Schedule filter: %s", args["filter"])
 
         if not args["from_datetime"] and not args["until_datetime"]:
             # no datetime given, default is the current time, and we activate the realtime

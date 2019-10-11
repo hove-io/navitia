@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
 /*
  * In case we have a pretty complex line with repeated stops, since a line_section is only defined by
- * a line, two stop areas and an optional list of routes, we're impacting the longest section possible for each
+ * a line, two stop areas and an optional list of routes, we're impacting the shortest sections possible for each
  * route. Let's take a look at the line A below, with 4 routes, all departing from s1 and ending at s6.
  *
  * 1st route s1/s2/s3/s2/s3/s4/s5/s4/s5/s6 :
@@ -1563,9 +1563,14 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "s1");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "s6");
+    // 6 stop_times since we don't impact the first iteration of each loop
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 6);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(0).stop_point->uri, "s1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "s2");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "s3");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(3).stop_point->uri, "s4");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(4).stop_point->uri, "s5");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(5).stop_point->uri, "s6");
 
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:2:Adapted:0:line_section_sa1_sa5_routesA1-2-3");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_impacts().size(), 1);
@@ -2325,4 +2330,220 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:1")->get_impacts().size(), 0);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:2")->get_impacts().size(), 0);
+}
+
+/*
+ * The real life use case associated with this test is when we have a line ending
+ * with two stop_points in the same stop_area (mainly we have a drop off stop and
+ * a different parking stop just after).
+ *
+ * Route :
+ *
+ * sp:10 ---> sp:20 ---> sp:30 ---> sp:31 ---> sp:40 ---> sp:50 ---> sp:51
+ *
+ * Each sp:<X><Y> are in the corresponding stop_area sa:<X>.
+ *
+ * If we a have a line_section impacting sa:3 to sa:5 we need to impact sp:30 to sp:51.
+ * Even if we work on the shortest line_section the section is defined by stop_areas.
+ */
+BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_successive_stop_in_same_area) {
+    ed::builder b("20190901");
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30")("stop_point:31");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50")("stop_point:51");
+
+    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
+        "stop_point:31", "08:31"_t, "08:32"_t)("stop_point:40", "08:40"_t, "08:41"_t)(
+        "stop_point:50", "08:50"_t, "08:51"_t)("stop_point:51", "08:51"_t, "08:52"_t);
+
+    b.make();
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+                                  .on_line_section("line:A", "stop_area:3", "stop_area:5", {"line:A:0"})
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    // Check the adapted vj
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+    // The adapted vj should have only 2 stop_times
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:20");
+}
+
+/*
+ * When we have a vj A/B/C/B/D :
+ *
+ *                D
+ *                ^
+ *                |
+ *                |
+ * A -----------> B -----------> C
+ *                |              |
+ *                |              |
+ *                '--------------'
+ *
+ * If we impact B/C, since we want the smallest sections, we need to have an adapted vj A/B/D
+ * We have B since the second passage through B should not be impacted
+ */
+BOOST_AUTO_TEST_CASE(add_impact_lollipop_vj_impact_stop_only_once) {
+    ed::builder b("20190901");
+
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+
+    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
+        "stop_point:20", "08:40"_t, "08:41"_t)("stop_point:40", "08:50"_t, "08:51"_t);
+
+    b.make();
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    // Check the adapted vj
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+    // The adapted vj should have 3 stop_times
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+}
+
+// Show a limitation of the current algorithm
+// If we impact a non-base vehicle_journey we need to find the base stop_time associated
+// to each stop_time of the vj to be able to know if its origin rank is impacted or not.
+// Since get_base_stop_time is not perfect (we only check stop_point and departure_time)
+// there is some (dumb) cases where we impact some stops we should not.
+BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
+    ed::builder b("20190901");
+
+    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+
+    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+        "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:30", "08:10"_t, "08:11"_t)(
+        "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:40", "08:10"_t, "08:11"_t);
+
+    b.make();
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    // Impact from 2 to 3 once
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    // Check the adapted vj
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+    // The adapted vj should have 3 stop_times
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+
+    // And a second time on a slightly different calendar
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted_twice")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20190901T000000"_dt, "20190910T090000"_dt))
+                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
+
+    // Check the original vj
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000000"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    for (auto* vj : b.data->pt_data->vehicle_journeys) {
+        std::cerr << vj->uri << std::endl;
+    }
+
+    // Check the adapted vj
+    vj = b.get<nt::VehicleJourney>(
+        "vehicle_journey:vj:1:Adapted:0:line_section_on_line:A_diverted:Adapted:2:line_section_on_line:A_diverted_"
+        "twice");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+    // The adapted vj should have 3 stop_times
+    // But since the previous vj is adapted we must find the base stop time associated to the adapted
+    // one to impact it.
+    // However each stop_time have the same departure_time, so we are finding the base stop_time
+    // of rank 1 for the stop_time initially of rank 3 (both are on stop_point:20).
+    // We are lead to believe it is impacted even if it is not in reality.
+    // Nothing we can do really since there is no hard link between the adapted stop_time and base one
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);  // Should be 3 [10, 20, 40]
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
 }

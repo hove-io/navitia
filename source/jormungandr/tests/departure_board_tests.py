@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -930,6 +930,42 @@ class TestSchedules(AbstractTestFixture):
         assert not [l for l in response.get('links') if l.get('rel') == 'prev']
         assert not [l for l in response.get('links') if l.get('rel') == 'next']
         self.check_departure_rt_sol(departures)
+
+    def test_departures_with_direction_type(self):
+        """
+        Test direction type parameter for filtering departures response
+        data contains :
+           - route A (direction type = forward)
+                * 3 departures on stop uri : S1
+           - route B (direction type = backward)
+                * 1 departure on stop uri : S1
+        """
+
+        # Without direction type parameter
+        response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000")
+        assert "departures" in response
+        assert len(response["departures"]) == 4
+
+        # With direction type = all (same as without direction type parameter)
+        response = self.query_region(
+            "stop_points/S1/departures?direction_type=all&_current_datetime=20160101T080000"
+        )
+        assert "departures" in response
+        assert len(response["departures"]) == 4
+
+        # With direction type = forward
+        response = self.query_region(
+            "stop_points/S1/departures?direction_type=forward&_current_datetime=20160101T080000"
+        )
+        assert "departures" in response
+        assert len(response["departures"]) == 3
+
+        # With direction type = backward
+        response = self.query_region(
+            "stop_points/S1/departures?direction_type=backward&_current_datetime=20160101T080000"
+        )
+        assert "departures" in response
+        assert len(response["departures"]) == 1
 
     def test_departure_base_sched(self):
         """

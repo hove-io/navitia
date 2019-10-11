@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -224,42 +224,42 @@ BOOST_AUTO_TEST_CASE(tz_handler_overflow_test) {
     BOOST_CHECK_EQUAL(build_dst_periods.begin()->first, 60 * 60 * 12);
 }
 
-BOOST_AUTO_TEST_CASE(get_sections_stop_points) {
+BOOST_AUTO_TEST_CASE(get_sections_ranks) {
     ed::builder b("20120614");
-    // 0 1 0 2 3 0 4 2
-    const auto* vj = b.vj("A")("0", "09:00"_t)("1", "09:00"_t)("0", "09:00"_t)("2", "09:00"_t)("3", "09:00"_t)(
-                          "0", "09:00"_t)("4", "09:00"_t)("2", "09:00"_t)("5", "09:00"_t)("2", "09:00"_t)
+
+    b.sa("0", 0, 0, false, true)("0a")("0b")("0c");
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    const auto* vj = b.vj("A")("0a", "09:00"_t)("0b", "09:00"_t)("1", "09:00"_t)("0a", "09:00"_t)("2", "09:00"_t)(
+                          "3", "09:00"_t)("0a", "09:00"_t)("0b", "09:00"_t)("0c", "09:00"_t)("4", "09:00"_t)(
+                          "2", "09:00"_t)("5", "09:00"_t)("2", "09:00"_t)
                          .make();
     b.data->pt_data->sort_and_index();
     b.data->complete();
     b.finish();
 
     auto sa = [&](const std::string& id) { return b.get<type::StopArea>(id); };
-    auto sp = [&](const std::string& id) { return b.get<type::StopPoint>(id); };
 
-    // 0 1 0 2 3 0 4 2 5 2
-    //   *
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("1"), sa("1")), std::set<type::StopPoint*>({sp("1")}));
-    // 0 1 0 2 3 0 4 2 5 2
-    //   *******
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("1"), sa("3")),
-                      std::set<type::StopPoint*>({sp("1"), sp("0"), sp("2"), sp("3")}));
-    // 0 1 0 2 3 0 4 2 5 2
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    //       *
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("1")), std::set<uint16_t>({2}));
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    //       ********
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("3")), std::set<uint16_t>({2, 3, 4, 5}));
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //
     // 4 is after 0 -> empty
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("4"), sa("0")), std::set<type::StopPoint*>({}));
-    // 0 1 0 2 3 0 4 2 5 2
-    // *   *     *
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("4"), sa("0")), std::set<uint16_t>({}));
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    // ** **   **     ** ** **
     // route point, only the corresponding stop point
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("0")), std::set<type::StopPoint*>({sp("0")}));
-    // 0 1 0 2 3 0 4 2 5 2
-    //     *****
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("0")), std::set<uint16_t>({0, 1, 3, 6, 7, 8}));
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    //         ******
     // shortest sections, thus we don't have 1
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("3")),
-                      std::set<type::StopPoint*>({sp("0"), sp("2"), sp("3")}));
-    // 0 1 0 2 3 0 4 2 5 2
-    //     ***   *****
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("3")), std::set<uint16_t>({3, 4, 5}));
+    // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
+    //         ****   ************
     // shortest sections, thus we don't have 1, 3 and 5
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("2")),
-                      std::set<type::StopPoint*>({sp("0"), sp("2"), sp("4")}));
+    // We still have 0a 0b 0c in the second section since they are in the same area
+    BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("0"), sa("2")), std::set<uint16_t>({3, 4, 6, 7, 8, 9, 10}));
 }

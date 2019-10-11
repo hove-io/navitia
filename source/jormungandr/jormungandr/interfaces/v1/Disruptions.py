@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -95,6 +95,7 @@ class TrafficReport(ResourceUri):
         parser_get.add_argument(
             "tags[]",
             type=six.text_type,
+            hidden=True,
             action="append",
             help="If filled, will restrain the search within the given disruption tags",
         )

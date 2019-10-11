@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -491,8 +491,8 @@ void Data::aggregate_odt() {
         }
         // we add it for the ODT type where the vehicle comes directly to the user
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-            if (in(vj.vehicle_journey_type,
-                   {VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point})) {
+            if (contains({VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point},
+                         vj.vehicle_journey_type)) {
                 for (const auto& st : vj.stop_time_list) {
                     for (auto* admin : st.stop_point->admin_list) {
                         odt_stops_by_admin[admin].insert(st.stop_point);

@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -208,6 +208,11 @@ void StopsFusioHandler::init(Data& data) {
     comment_id_c = csv.get_pos_col("comment_id");
     visible_c = csv.get_pos_col("visible");
     geometry_id_c = csv.get_pos_col("geometry_id");
+    // Since NTFS v0.9, using fare_zone_id (if absent, fallback to zone_id)
+    zone_c = csv.get_pos_col("fare_zone_id");
+    if (zone_c == UNKNOWN_COLUMN) {
+        zone_c = csv.get_pos_col("zone_id");
+    }
 }
 
 // in fusio we want to delete all stop points without stop area

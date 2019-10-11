@@ -1,3 +1,26 @@
+navitia2 (2.87.0) unstable; urgency=low
+
+  * Jormun: Hide Tags=[] option for /line_reports and /trafic_reports  <https://github.com/CanalTP/navitia/pull/2998>
+  * Jormun: Add type annotation on traveler_profile  <https://github.com/CanalTP/navitia/pull/2990>
+  * Jormun: Remove excess tickets and ticket links inside response  <https://github.com/CanalTP/navitia/pull/2982>
+  * Ed: use fare_zone_id instead of zone_id in fusio_parser  <https://github.com/CanalTP/navitia/pull/2994>
+  * [Kraken] fix count in places_nearby  <https://github.com/CanalTP/navitia/pull/2993>
+  * [Kraken] Update metadatas for /status requests  <https://github.com/CanalTP/navitia/pull/2992>
+  * Jormun: log response from bragi that aren't json  <https://github.com/CanalTP/navitia/pull/2971>
+  * Handle disruption with multiple stop_points in same area / repeated stop_points  <https://github.com/CanalTP/navitia/pull/2959>
+  * [Jormun]: Adding max_nb_crowfly_by_mode in status  <https://github.com/CanalTP/navitia/pull/2987>
+  * [Eitri] Fix cities file type  <https://github.com/CanalTP/navitia/pull/2980>
+  * [Jormungandr] Update comfort criteria  <https://github.com/CanalTP/navitia/pull/2988>
+  * [Jormungandr] use best PT journey for too_many_connections_filter  <https://github.com/CanalTP/navitia/pull/2977>
+  * Artemis and Artemis_idfm as requirements  <https://github.com/CanalTP/navitia/pull/2984>
+  * [Jormun] Adding max_mode_direct_path_duration in /status and /instances  <https://github.com/CanalTP/navitia/pull/2968>
+  * Minor edit - .gitignore update  <https://github.com/CanalTP/navitia/pull/2976>
+  * [Tyr] New endpoints in API v1  <https://github.com/CanalTP/navitia/pull/2951>
+  * utils: replace in() function by contains() to standardize  <https://github.com/CanalTP/navitia/pull/2965>
+  * jormun: add direction_type parameter for departures/arrivals/stop_schedules/route_schedules Api  <https://github.com/CanalTP/navitia/pull/2967>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 11 Oct 2019 11:10:25 +0100
+
 navitia2 (2.86.0) unstable; urgency=low
 
   * Osm2ed: do not put transport object from OSM in autocompletion  <https://github.com/CanalTP/navitia/pull/2961>

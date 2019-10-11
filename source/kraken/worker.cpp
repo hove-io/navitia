@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -999,6 +999,8 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
         status();
+        // Metadatas are needed for /status requests to update timezone
+        metadatas();
         return;
     }
     if (request.requested_api() == pbnavitia::METADATAS) {

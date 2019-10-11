@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -364,11 +364,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             std::vector<nt::StopTime> new_stop_times;
             const auto* vj = impacted_vj.vj;
             auto& new_vp = impacted_vj.new_vp;
-            const auto& stop_points_section = impacted_vj.impacted_stops;
 
             for (const auto& st : vj->stop_time_list) {
+                // We need to get the associated base stop_time to compare its rank
+                const auto base_st = st.get_base_stop_time();
                 // stop is ignored if its stop_point is not in impacted_stops
-                if (stop_points_section.count(st.stop_point)) {
+                // if we don't find an associated base we keep it
+                if (base_st && impacted_vj.impacted_ranks.count(base_st->order())) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     continue;
                 }
@@ -565,10 +567,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
 static bool is_modifying_effect(nt::disruption::Effect e) {
     // check if the effect needs to modify the model
-    return in(e, {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::UNKNOWN_EFFECT,
-                  nt::disruption::Effect::SIGNIFICANT_DELAYS, nt::disruption::Effect::MODIFIED_SERVICE,
-                  nt::disruption::Effect::DETOUR, nt::disruption::Effect::REDUCED_SERVICE,
-                  nt::disruption::Effect::ADDITIONAL_SERVICE});
+    return contains({nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::UNKNOWN_EFFECT,
+                     nt::disruption::Effect::SIGNIFICANT_DELAYS, nt::disruption::Effect::MODIFIED_SERVICE,
+                     nt::disruption::Effect::DETOUR, nt::disruption::Effect::REDUCED_SERVICE,
+                     nt::disruption::Effect::ADDITIONAL_SERVICE},
+                    e);
 }
 
 void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact, nt::PT_Data& pt_data, const nt::MetaData& meta) {

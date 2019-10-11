@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -392,8 +392,8 @@ BOOST_AUTO_TEST_CASE(Faute_de_frappe_One) {
     auto res1 = ac.find_partial_with_pattern("gare patea", word_weight, nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 3);
     std::initializer_list<unsigned> best_res = {1, 4};  // they are equivalent
-    BOOST_CHECK(in(res1.at(0).idx, best_res));
-    BOOST_CHECK(in(res1.at(1).idx, best_res));
+    BOOST_CHECK(navitia::contains(best_res, res1.at(0).idx));
+    BOOST_CHECK(navitia::contains(best_res, res1.at(1).idx));
     BOOST_CHECK_NE(res1.at(0).idx, res1.at(1).idx);
     BOOST_CHECK_EQUAL(res1.at(2).idx, 0);
     BOOST_CHECK_EQUAL(res1.at(0).quality, 94);

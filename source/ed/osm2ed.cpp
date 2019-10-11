@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -670,7 +670,7 @@ void OSMAdminRelation::build_polygon(OSMCache& cache) {
     std::set<u_int64_t> explored_ids;
     auto is_outer_way = [](const CanalTP::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
-               && in(r.role, {"outer", "enclave", ""});
+               && navitia::contains({"outer", "enclave", ""}, r.role);
     };
     auto pickable_way = [&](const CanalTP::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;

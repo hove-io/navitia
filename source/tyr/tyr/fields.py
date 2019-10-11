@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -167,6 +167,12 @@ instance_fields = {
     'street_network_bss': FieldUrlStreetNetworkBackend(),
     'street_network_ridesharing': FieldUrlStreetNetworkBackend(),
     'street_network_taxi': FieldUrlStreetNetworkBackend(),
+    'max_walking_direct_path_duration': fields.Raw,
+    'max_bike_direct_path_duration': fields.Raw,
+    'max_bss_direct_path_duration': fields.Raw,
+    'max_car_direct_path_duration': fields.Raw,
+    'max_taxi_direct_path_duration': fields.Raw,
+    'max_ridesharing_direct_path_duration': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

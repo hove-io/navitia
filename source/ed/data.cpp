@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -282,8 +282,8 @@ void Data::complete() {
     // set StopPoint from old zonal ODT to is_zonal
     for (const auto* vj : vehicle_journeys) {
         using nt::VehicleJourneyType;
-        if (in(vj->vehicle_journey_type,
-               {VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point})) {
+        if (navitia::contains({VehicleJourneyType::adress_to_stop_point, VehicleJourneyType::odt_point_to_point},
+                              vj->vehicle_journey_type)) {
             for (const auto* st : vj->stop_time_list) {
                 st->stop_point->is_zonal = true;
             }

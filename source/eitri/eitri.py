@@ -26,7 +26,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -124,10 +124,7 @@ def get_params():
         help="the output file path (default: './data.nav.lz4')",
     )
     parser.add_argument(
-        '-i',
-        '--cities-file',
-        type=argparse.FileType,
-        help='the path to the "cities" file to load  (usually a *.osm.pbf)',
+        '-i', '--cities-file', type=str, help='the path to the "cities" file to load  (usually a *.osm.pbf)'
     )
     parser.add_argument(
         '-f', '--cities-dir', type=is_directory, help='the path to the directory containing the "cities" binary'
