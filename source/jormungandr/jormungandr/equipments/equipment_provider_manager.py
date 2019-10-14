@@ -172,3 +172,16 @@ class EquipmentProviderManager(object):
         self.update_config()
 
         return dict(self._equipment_providers, **self._equipment_providers_legacy)
+
+    def status(self):
+        providers_status = []
+        for provider in self.providers_config:
+            providers_status.append(
+                {
+                    'key': provider['key'],
+                    'codes_types': provider['args']['codes_types'],
+                    'timeout': provider['args']['timeout'],
+                    'fail_max': provider['args']['fail_max'],
+                }
+            )
+        return providers_status

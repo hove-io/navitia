@@ -30,6 +30,7 @@
 from jormungandr.instance import Instance
 from jormungandr.interfaces.v1 import add_common_status
 from jormungandr.street_network.kraken import Kraken
+from jormungandr.equipments import EquipmentProviderManager
 
 from collections import OrderedDict
 
@@ -71,25 +72,49 @@ expected_ridesharing_status = [
     }
 ]
 
+sytral_equipment_details_config = [
+    {
+        "class": "jormungandr.equipments.sytral.SytralProvider",
+        "key": "sytral",
+        "args": {
+            "url": "https://url_for_equipment_details",
+            "fail_max": 5,
+            "codes_types": ["TCL_ESCALIER", "TCL_ASCENSEUR"],
+            "timeout": 1,
+        },
+    }
+]
+expected_equipment_providers_keys = ['sytral']
+expected_equipment_providers = [
+    {"codes_types": ["TCL_ESCALIER", "TCL_ASCENSEUR"], "fail_max": 5, "key": "sytral", "timeout": 1}
+]
 
 # The only purpose of this class is to override get_all_street_networks()
 # To bypass the app.config[str('DISABLE_DATABASE')] and the get_models()
 # Of the real implementation
 class FakeInstance(Instance):
-    def __init__(self, disable_database, ridesharing_configurations=None):
+    def __init__(
+        self,
+        disable_database,
+        ridesharing_configurations=None,
+        equipment_details_config=None,
+        instance_equipment_providers=None,
+    ):
         super(FakeInstance, self).__init__(
             context=None,
             name="instance",
             zmq_socket=None,
             street_network_configurations=[],
             ridesharing_configurations=ridesharing_configurations,
+            instance_equipment_providers=[],
             realtime_proxies_configuration=[],
             zmq_socket_type=None,
             autocomplete_type='kraken',
-            instance_equipment_providers=[],
             streetnetwork_backend_manager=None,
         )
         self.disable_database = disable_database
+        self.equipment_provider_manager = EquipmentProviderManager(equipment_details_config)
+        self.equipment_provider_manager.init_providers(instance_equipment_providers)
 
     def get_models(self):
         return None
@@ -122,7 +147,12 @@ def add_common_status_test():
 
 
 def call_add_common_status(disable_database):
-    instance = FakeInstance(disable_database, ridesharing_configurations=instant_system_ridesharing_config)
+    instance = FakeInstance(
+        disable_database,
+        ridesharing_configurations=instant_system_ridesharing_config,
+        equipment_details_config=sytral_equipment_details_config,
+        instance_equipment_providers=["sytral"],
+    )
     response = {}
     response['status'] = {}
     add_common_status(response, instance)
@@ -137,11 +167,15 @@ def call_add_common_status(disable_database):
     streetnetworks_status.sort()
     assert streetnetworks_status == expected_streetnetworks_status
 
-    # We sort this list because the order is not important
-    # And it is easier to compare
     ridesharing_status = response['status']["ridesharing_services"]
     ridesharing_status.sort()
     assert ridesharing_status == expected_ridesharing_status
+
+    equipment_providers_keys = response['status']["equipment_providers_services"]['equipment_providers_keys']
+    assert equipment_providers_keys == expected_equipment_providers_keys
+    equipment_providers = response['status']["equipment_providers_services"]['equipment_providers']
+    equipment_providers.sort()
+    assert equipment_providers == expected_equipment_providers
 
     assert response['status']['autocomplete'] == {'class': 'Kraken'}
 
