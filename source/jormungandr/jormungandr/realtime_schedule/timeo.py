@@ -109,6 +109,9 @@ class Timeo(RealtimeProxy):
         else:
             self.rate_limiter = FakeRateLimiter()
 
+        # We consider that all errors, greater than or equal to 100, are blocking
+        self.INTERNAL_TIMEO_ERROR_CODE_LIMIT = 100
+
     def __repr__(self):
         """
          used as the cache key. we use the rt_system_id to share the cache between servers in production
@@ -196,6 +199,17 @@ class Timeo(RealtimeProxy):
             'timeo response: {}'.format(timeo_resp), extra={'rt_system_id': unicode(self.rt_system_id)}
         )
 
+        # internal timeo error handling
+        message_responses = timeo_resp.get('MessageResponse')
+        for message_response in message_responses:
+            if message_response['ResponseCode'] >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT:
+                logging.getLogger(__name__).error(
+                    'Timeo RT internal service error, code: {} - comment: {}'.format(
+                        message_response['ResponseCode'], message_response['ResponseComment']
+                    )
+                )
+                raise RealtimeProxyError('Timeo RT internal service error')
+
         st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
@@ -206,6 +220,10 @@ class Timeo(RealtimeProxy):
             raise RealtimeProxyError('invalid response')
 
         next_st = st_responses[0]['NextStopTimesMessage']
+
+        # if realtime list is empty, only base results will send
+        if 'NextExpectedStopTime' not in next_st:
+            return None
 
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
