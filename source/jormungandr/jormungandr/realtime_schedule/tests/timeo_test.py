@@ -133,7 +133,7 @@ def make_url_invalid_code_test():
 def mock_good_timeo_response():
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
         "StopTimesResponse": [
             {
                 "StopID": "StopPoint_OLS01070201",
@@ -195,7 +195,7 @@ def get_passages_no_passages_test():
 
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
         "StopTimesResponse": [
             {
                 "StopID": "StopPoint_OLS01070201",
