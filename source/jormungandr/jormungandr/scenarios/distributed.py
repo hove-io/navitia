@@ -46,6 +46,7 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import type_pb2
+from flask_restful import abort
 
 
 class PartialResponseContext(object):
@@ -79,7 +80,7 @@ class Distributed(object):
             for pt_j in e.pt_journeys.journeys
         }
 
-    def _compute_all(self, future_manager, request, instance, krakens_call, context):
+    def _compute_journeys(self, future_manager, request, instance, krakens_call, context):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -384,7 +385,9 @@ class Scenario(new_default.Scenario):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone(future_manager, request, instance, krakens_call)
                 elif request_type == type_pb2.PLANNER:
-                    return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
+                    return self._scenario._compute_journeys(
+                        future_manager, request, instance, krakens_call, context
+                    )
                 else:
                     abort(400, message="This type of request is not supported with distributed")
         except PtException as e:
