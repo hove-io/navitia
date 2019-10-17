@@ -803,10 +803,13 @@ bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, Journe
     }
 
     if (!arg.origins.empty() && !request.clockwise()) {
-        err_msg_isochron(this->pb_creator, name + " works only for clockwise request");
+        err_msg_isochron(this->pb_creator,
+                         name + " works only for clockwise request (use '&datetime_represents=departure')");
         return false;
     } else if (arg.origins.empty() && request.clockwise()) {
-        err_msg_isochron(this->pb_creator, "reverse " + name + " works only for anti-clockwise request");
+        err_msg_isochron(
+            this->pb_creator,
+            "reverse " + name + " works only for anti-clockwise request (use '&datetime_represents=arrival')");
         return false;
     }
     return true;
@@ -1001,7 +1004,7 @@ void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
     }
 
     auto arg = JourneysArg();
-    if (!set_journeys_args(request, arg, "isochrone_distributed")) {
+    if (!set_journeys_args(request, arg, "isochrone")) {
         return;
     }
 
