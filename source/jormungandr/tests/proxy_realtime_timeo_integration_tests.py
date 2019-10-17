@@ -208,17 +208,14 @@ class TestDepartures(AbstractTestFixture):
 
     def test_stop_schedule_with_rt_empty_list(self):
         """
-        When timeo service responds a empty list, we return base schedule results
+        When timeo service responds a empty list, we return the empty rt list
         """
         query = self.query_template.format(sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
         stop_times = stop_schedules[0]['date_times']
-        assert len(stop_times) == 1
-        stop_time = stop_times[0]
-        assert stop_time['data_freshness'] == 'base_schedule'
-        assert stop_time['date_time'] == '20160102T110000'
+        assert len(stop_times) == 0
 
     def test_stop_schedule_with_rt_and_without_destination(self):
         query = self.query_template.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')

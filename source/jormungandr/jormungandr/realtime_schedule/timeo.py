@@ -221,10 +221,6 @@ class Timeo(RealtimeProxy):
 
         next_st = st_responses[0]['NextStopTimesMessage']
 
-        # if realtime list is empty, only base results will send
-        if 'NextExpectedStopTime' not in next_st:
-            return None
-
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
