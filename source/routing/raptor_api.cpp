@@ -1162,7 +1162,7 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
     return clockwise ? earliest_departure : lastest_arrival;
 }
 
-static std::vector<bt::ptime> parse_datetimes(RAPTOR& raptor,
+static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
                                               const std::vector<uint64_t>& timestamps,
                                               navitia::PbCreator& pb_creator,
                                               bool clockwise) {
@@ -1409,12 +1409,12 @@ void make_response(navitia::PbCreator& pb_creator,
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,
-                    type::EntryPoint origin,
+                    const type::EntryPoint& origin,
                     const uint64_t datetime_timestamp,
                     bool clockwise,
                     const type::AccessibiliteParams& accessibilite_params,
-                    std::vector<std::string> forbidden,
-                    std::vector<std::string> allowed,
+                    const std::vector<std::string>& forbidden,
+                    const std::vector<std::string>& allowed,
                     georef::StreetNetwork& worker,
                     const type::RTLevel rt_level,
                     int max_duration,
@@ -1456,8 +1456,8 @@ void make_isochrone_distributed(navitia::PbCreator& pb_creator,
                                 const uint64_t datetime_timestamp,
                                 bool clockwise,
                                 const type::AccessibiliteParams& accessibilite_params,
-                                std::vector<std::string> forbidden,
-                                std::vector<std::string> allowed,
+                                const std::vector<std::string>& forbidden,
+                                const std::vector<std::string>& allowed,
                                 const type::RTLevel rt_level,
                                 int max_duration,
                                 uint32_t max_transfers) {
