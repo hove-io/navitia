@@ -64,17 +64,15 @@ class Kraken(object):
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
-        if origins:
-            for stop_point_id, access_duration in origins.items():
-                location = req.journeys.origin.add()
-                location.place = stop_point_id
-                location.access_duration = access_duration
+        for stop_point_id, access_duration in origins.items():
+            location = req.journeys.origin.add()
+            location.place = stop_point_id
+            location.access_duration = access_duration
 
-        if destinations:
-            for stop_point_id, access_duration in destinations.items():
-                location = req.journeys.destination.add()
-                location.place = stop_point_id
-                location.access_duration = access_duration
+        for stop_point_id, access_duration in destinations.items():
+            location = req.journeys.destination.add()
+            location.place = stop_point_id
+            location.access_duration = access_duration
 
         req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
         req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
