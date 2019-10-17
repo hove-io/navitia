@@ -128,7 +128,6 @@ class PtJourney:
 
     def _do_isochrone_request(self):
         logger = logging.getLogger(__name__)
-
         fallback_durations_pool = (
             self._orig_fallback_durtaions_pool
             if self._orig_fallback_durtaions_pool is not None
@@ -143,13 +142,13 @@ class PtJourney:
 
         fallback_durations = {k: v.duration for k, v in fallback_duration_status.items()}
 
-        if (
-            not fallback_durations
-            or not self._request.get('max_duration', 0)
-        ):
+        if not fallback_durations or not self._request.get('max_duration', 0):
             return None
 
-        resp = self._journeys(self._instance.planner, fallback_durations, None)
+        if self._orig_fallback_durtaions_pool is not None:
+            resp = self._journeys(self._instance.planner, fallback_durations, {})
+        else:
+            resp = self._journeys(self._instance.planner, {}, fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())

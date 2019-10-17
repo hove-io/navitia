@@ -33,7 +33,7 @@ try:
     from typing import Dict, Text, Any, Tuple
 except ImportError:
     pass
-import logging
+import logging, operator
 from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -279,31 +279,31 @@ class Distributed(object):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
-        isochrone_center = request['origin'] if request['origin'] else request['destination']
-        requested_modes = (
-            {mode for mode, _, _ in krakens_call} if request['origin'] else {mode for _, mode, _ in krakens_call}
-        )
+        isochrone_center = request['origin'] or request['destination']
+
+        mode_getter = operator.itemgetter(0 if request['origin'] else 1)
+        requested_modes = {mode_getter(call) for call in krakens_call}
 
         logger.debug('requesting places by uri orig: %s', isochrone_center)
 
         requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=isochrone_center)
 
-        requested_orig_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
+        requested_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
 
         direct_paths_by_mode = {}
 
-        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
+        proximities_by_crowfly = ProximitiesByCrowflyPool(
             future_manager=future_manager,
             instance=instance,
-            requested_place_obj=requested_orig_obj,
+            requested_place_obj=requested_obj,
             modes=requested_modes,
             request=request,
             direct_paths_by_mode=direct_paths_by_mode,
             max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
         )
 
-        orig_places_free_access = PlacesFreeAccess(
-            future_manager=future_manager, instance=instance, requested_place_obj=requested_orig_obj
+        places_free_access = PlacesFreeAccess(
+            future_manager=future_manager, instance=instance, requested_place_obj=requested_obj
         )
 
         direct_path_type = (
@@ -311,44 +311,40 @@ class Distributed(object):
             if request['origin']
             else StreetNetworkPathType.ENDING_FALLBACK
         )
-        orig_fallback_durations_pool = FallbackDurationsPool(
+
+        fallback_durations_pool = FallbackDurationsPool(
             future_manager=future_manager,
             instance=instance,
-            requested_place_obj=requested_orig_obj,
+            requested_place_obj=requested_obj,
             modes=requested_modes,
-            proximities_by_crowfly_pool=orig_proximities_by_crowfly,
-            places_free_access=orig_places_free_access,
+            proximities_by_crowfly_pool=proximities_by_crowfly,
+            places_free_access=places_free_access,
             direct_paths_by_mode=direct_paths_by_mode,
             request=request,
             direct_path_type=direct_path_type,
         )
 
+        # We don't need requested_orig_obj or requested_dest_obj for isochrone
+        pt_journey_args = {
+            "future_manager": future_manager,
+            "instance": instance,
+            "requested_orig_obj": None,
+            "requested_dest_obj": None,
+            "streetnetwork_path_pool": None,
+            "krakens_call": krakens_call,
+            "request": request,
+            "isochrone_center": isochrone_center,
+        }
         if request['origin']:
-            pt_journey_pool = PtJourneyPool(
-                future_manager=future_manager,
-                instance=instance,
-                requested_orig_obj=requested_orig_obj,
-                requested_dest_obj=[],
-                streetnetwork_path_pool=None,
-                krakens_call=krakens_call,
-                orig_fallback_durations_pool=orig_fallback_durations_pool,
-                dest_fallback_durations_pool=None,
-                request=request,
-                isochrone_center=isochrone_center,
+            pt_journey_args.update(
+                {"orig_fallback_durations_pool": fallback_durations_pool, "dest_fallback_durations_pool": None}
             )
         else:
-            pt_journey_pool = PtJourneyPool(
-                future_manager=future_manager,
-                instance=instance,
-                requested_orig_obj=[],
-                requested_dest_obj=requested_orig_obj,
-                streetnetwork_path_pool=None,
-                krakens_call=krakens_call,
-                orig_fallback_durations_pool=None,
-                dest_fallback_durations_pool=orig_fallback_durations_pool,
-                request=request,
-                isochrone_center=isochrone_center,
+            pt_journey_args.update(
+                {"orig_fallback_durations_pool": None, "dest_fallback_durations_pool": fallback_durations_pool}
             )
+
+        pt_journey_pool = PtJourneyPool(**pt_journey_args)
 
         res = []
         for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
@@ -387,8 +383,10 @@ class Scenario(new_default.Scenario):
             with FutureManager() as future_manager:
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone(future_manager, request, instance, krakens_call)
-                else:
+                elif request_type == type_pb2.PLANNER:
                     return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
+                else:
+                    abort(400, message="This type of request is not supported with distributed")
         except PtException as e:
             logger.exception('')
             return [e.get()]
