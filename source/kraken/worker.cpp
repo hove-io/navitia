@@ -787,19 +787,6 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
 }
 
 // returns true if there is an error
-bool Worker::set_isochrone_distributed_args(const pbnavitia::JourneysRequest& request,
-                                            JourneysArg& arg,
-                                            const std::string& name) {
-    auto has_error = set_journeys_args(request, arg, name);
-    if (!has_error && !arg.isochrone_center) {
-        err_msg_isochron(this->pb_creator, "isochrone_distributed needs an isochrone_center");
-        return true;
-    }
-
-    return has_error;
-}
-
-// returns true if there is an error
 bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, JourneysArg& arg, const std::string& name) {
     try {
         arg = fill_journeys(request);
@@ -1010,8 +997,13 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 }
 
 void Worker::isochrone_distributed(const pbnavitia::JourneysRequest& request) {
+    if (!request.has_isochrone_center()) {
+        err_msg_isochron(this->pb_creator, "isochrone_distributed needs an isochrone_center");
+        return;
+    }
+    
     auto arg = JourneysArg();
-    bool has_error = set_isochrone_distributed_args(request, arg, "isochrone_distributed");
+    bool has_error = set_journeys_args(request, arg, "isochrone_distributed");
     if (has_error) {
         return;
     }
