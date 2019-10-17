@@ -157,8 +157,12 @@ class PtJourney:
             logger.debug("pt journey has error mode: %s", mode)
             # Here needs to modify error message of no_solution
             if not fallback_durations:
-                resp.error.id = response_pb2.Error.no_origin
-                resp.error.message = "no origin point"
+                if self._orig_fallback_durtaions_pool is not None:
+                    resp.error.id = response_pb2.Error.no_origin
+                    resp.error.message = "no origin point"
+                else:
+                    resp.error.id = response_pb2.Error.no_destination
+                    resp.error.message = "no destination point"
 
         logger.debug("finish public transport journey with mode: %s", mode)
         return resp

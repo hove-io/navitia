@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from .tests_mechanism import AbstractTestFixture, dataset
+from .tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
 from .check_utils import *
 
 
@@ -162,3 +162,8 @@ class TestIsochrone(AbstractTestFixture):
         response, code = self.query_no_assert(query)
         assert code == 400
         assert "invalid literal for int() with base 10: 'toto'" in response['message']
+
+
+@config({"scenario": "distributed"})
+class TestIsochroneDistributed(TestIsochrone, NewDefaultScenarioAbstractTestFixture):
+    pass
