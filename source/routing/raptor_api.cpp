@@ -1189,13 +1189,13 @@ static routing::map_stop_point_duration make_map_stop_point_duration(
     const std::unordered_map<std::string, type::StopPoint*>& raptor_stop_points_map) {
     routing::map_stop_point_duration results;
     for (const auto& entryPoint : entryPointList) {
-        auto it = raptor_stop_points_map.find(entryPoint.uri);
-        if (it != raptor_stop_points_map.end()) {
-            results[SpIdx{*it->second}] = navitia::seconds(entryPoint.access_duration);
-        } else {
-            // for now we throw, maybe we should ignore them
-            throw navitia::recoverable_exception("stop_point " + entryPoint.uri + " not found");
-        }
+        utils::make_map_find(raptor_stop_points_map, entryPoint.uri)
+            .if_found(
+                [&](const type::StopPoint* sp) { results[SpIdx{*sp}] = navitia::seconds(entryPoint.access_duration); })
+            .if_not_found([&]() {
+                // for now we throw, maybe we should ignore them
+                throw navitia::recoverable_exception("stop_point " + entryPoint.uri + " not found");
+            });
     }
     return results;
 }
