@@ -78,7 +78,7 @@ struct data_set {
         // add lines
         b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
         b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
-        b.vj("line:A", "", "", true, "vj1", "", "physical_mode:Car")(
+        b.vj_with_network("network:A", "line:A", "", "", true, "vj1", "", "physical_mode:Car")(
             "stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60,
                                                                          11 * 3600 + 10 * 60);
         b.lines["line:A"]->calendar_list.push_back(wednesday_cal);
@@ -86,11 +86,12 @@ struct data_set {
 
         // we add a stop area with a strange name (with space and special char)
         b.sa("stop_with name bob \" , é", 20, 20);
-        b.vj("line:B").physical_mode("physical_mode:Car")("stop_point:stop_with name bob \" , é", "8:00"_t)(
-            "stop_area:stop1", "9:00"_t);
+        b.vj_with_network("network:B", "line:B")
+            .physical_mode("physical_mode:Car")("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1",
+                                                                                                  "9:00"_t);
 
         // add a line with a unicode name
-        b.vj("line:Ça roule")
+        b.vj_with_network("network:CaRoule", "line:Ça roule")
             .name("vj_b")("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)(
                 "stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
         b.lines["line:Ça roule"]->commercial_mode = nullptr;  // remove commercial_mode to allow label testing
@@ -139,6 +140,8 @@ struct data_set {
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "Bise");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeC", "C");
         b.data->pt_data->codes.add(b.sps.at("stop_area:stop1"), "code_uic", "bobette");
+        b.data->pt_data->codes.add(b.lines["line:A"]->network, "external_code", "A");
+        b.data->pt_data->codes.add(b.lines["line:B"]->network, "external_code", "B");
 
         b.data->build_uri();
 

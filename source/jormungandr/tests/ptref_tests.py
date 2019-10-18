@@ -574,14 +574,14 @@ class TestPtRef(AbstractTestFixture):
         is_valid_pt_objects_response(response)
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
-        assert get_not_null(pt_objs[0], 'name') == 'base_network Car line:A'
+        assert get_not_null(pt_objs[0], 'name') == 'network:A Car line:A'
         self.check_context(response)
 
         response = self.query_region('pt_objects?q=line:Ca roule&type[]=line')
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
         # not valid as there is no commercial mode (which impacts name)
-        assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
+        assert get_not_null(pt_objs[0], 'name') == 'network:CaRoule line:Ça roule'
 
     def test_query_with_strange_char(self):
         q = u'stop_points/stop_point:stop_with name bob \" , é'.encode('utf-8')
@@ -777,6 +777,32 @@ class TestPtRef(AbstractTestFixture):
             'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=false'
         )
         assert len(response['disruptions']) == 1
+
+    def test_networks(self):
+        """test networks API"""
+        response = self.query_region("networks")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 4
+        assert networks[0]['id'] == 'network:A'
+        assert networks[1]['id'] == 'network:B'
+        assert networks[2]['id'] == 'network:CaRoule'
+        assert networks[3]['id'] == 'network:freq'
+
+    def test_networks_with_external_code(self):
+        """test networks with external_code parameter"""
+        response = self.query_region("networks?external_code=A")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:A'
+
+        response = self.query_region("networks?external_code=B")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:B'
+
+        response = self.query_region("networks?external_code=wrong_code")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 4
 
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
