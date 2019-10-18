@@ -184,25 +184,32 @@ class Timeo(RealtimeProxy):
         if not r:
             return None
 
-        if r.status_code != 200:
-            # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error(
-                'Timeo RT service unavailable, impossible to query : {}'.format(r.url),
-                extra={'rt_system_id': unicode(self.rt_system_id), 'status_code': r.status_code},
-            )
-            raise RealtimeProxyError('non 200 response')
+        return self._get_passages(r, current_dt, route_point.fetch_line_uri())
 
-        return self._get_passages(r.json(), current_dt, route_point.fetch_line_uri())
+    def _get_passages(self, response, current_dt, line_uri=None):
 
-    def _get_passages(self, timeo_resp, current_dt, line_uri=None):
+        status_code = response.status_code
+        timeo_resp = response.json()
+
         logging.getLogger(__name__).debug(
             'timeo response: {}'.format(timeo_resp), extra={'rt_system_id': unicode(self.rt_system_id)}
         )
 
+        # Handling http error
+        if status_code != 200:
+            logging.getLogger(__name__).error(
+                'Timeo RT service unavailable, impossible to query : {}'.format(response.url),
+                extra={'rt_system_id': unicode(self.rt_system_id), 'status_code': status_code},
+            )
+            raise RealtimeProxyError('non 200 response')
+
         # internal timeo error handling
         message_responses = timeo_resp.get('MessageResponse')
         for message_response in message_responses:
-            if message_response['ResponseCode'] >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT:
+            if (
+                'ResponseCode' in message_response
+                and message_response['ResponseCode'] >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT
+            ):
                 logging.getLogger(__name__).error(
                     'Timeo RT internal service error, code: {} - comment: {}'.format(
                         message_response['ResponseCode'], message_response['ResponseComment']
