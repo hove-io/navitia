@@ -804,6 +804,13 @@ class TestPtRef(AbstractTestFixture):
         networks = get_not_null(response, 'networks')
         assert len(networks) == 4
 
+        # without coverage
+        response, code = self.query_no_assert("v1/networks?external_code=A")
+        assert code == 200
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:A'
+
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
