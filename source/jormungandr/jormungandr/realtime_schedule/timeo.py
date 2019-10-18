@@ -210,10 +210,16 @@ class Timeo(RealtimeProxy):
                 'ResponseCode' in message_response
                 and message_response['ResponseCode'] >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT
             ):
+                resp_code = message_response['ResponseCode']
+                if 'ResponseComment' in message_response:
+                    resp_comment = message_response['ResponseComment']
+                else:
+                    resp_comment = ''
                 logging.getLogger(__name__).error(
-                    'Timeo RT internal service error, code: {} - comment: {}'.format(
-                        message_response['ResponseCode'], message_response['ResponseComment']
-                    )
+                    'Timeo RT internal service error, code: {} - comment: {}'.format(resp_code, resp_comment)
+                )
+                self.record_internal_failure(
+                    'internal timeo error', 'code {} - {}'.format(resp_code, resp_comment)
                 )
                 raise RealtimeProxyError('Timeo RT internal service error')
 
