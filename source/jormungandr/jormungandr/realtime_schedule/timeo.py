@@ -215,13 +215,15 @@ class Timeo(RealtimeProxy):
                     resp_comment = message_response['ResponseComment']
                 else:
                     resp_comment = ''
-                logging.getLogger(__name__).error(
-                    'Timeo RT internal service error, code: {} - comment: {}'.format(resp_code, resp_comment)
-                )
                 self.record_internal_failure(
-                    'internal timeo error', 'code {} - {}'.format(resp_code, resp_comment)
+                    'Timeo RT internal service error',
+                    'ResponseCode: {} - ResponseComment: {}'.format(resp_code, resp_comment),
                 )
-                raise RealtimeProxyError('Timeo RT internal service error')
+                timeo_internal_error_message = 'Timeo RT internal service error, ResponseCode: {} - ResponseComment: {}'.format(
+                    resp_code, resp_comment
+                )
+                logging.getLogger(__name__).error(timeo_internal_error_message)
+                raise RealtimeProxyError(timeo_internal_error_message)
 
         st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
