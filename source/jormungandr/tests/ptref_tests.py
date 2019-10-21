@@ -811,6 +811,17 @@ class TestPtRef(AbstractTestFixture):
         assert len(networks) == 1
         assert networks[0]['id'] == 'network:A'
 
+        response, code = self.query_no_assert("v1/networks?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the uri wrong_code' in message
+
+        # Without coverage, networks have to work with external_code
+        response, code = self.query_no_assert("v1/networks")
+        assert code == 400
+        message = get_not_null(response, 'message')
+        assert 'parameter \"external_code\" invalid: Missing required parameter' in message
+
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):

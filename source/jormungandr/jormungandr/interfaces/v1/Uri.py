@@ -163,9 +163,9 @@ class Uri(ResourceUri, ResourceUtc):
         if "odt_level" in args and args["odt_level"] != "all" and "lines" not in self.collection:
             abort(404, message="bad request: odt_level filter can only be applied to lines")
 
-        if "external_code" in args and args["external_code"]:
+        if args.get("external_code") is not None:
             type_ = collections_to_resource_type[self.collection]
-            if region is None and lat is None and lon is None:
+            if all(obj is None for obj in (region, lat, lon)):
                 for instance in i_manager.get_regions():
                     res = i_manager.instances[instance].has_external_code(type_, args["external_code"])
                     if res:
