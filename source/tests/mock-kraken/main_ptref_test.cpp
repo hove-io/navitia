@@ -140,6 +140,7 @@ struct data_set {
         b.data->pt_data->codes.add(b.lines["line:A"], "codeB", "Bise");
         b.data->pt_data->codes.add(b.lines["line:A"], "codeC", "C");
         b.data->pt_data->codes.add(b.sps.at("stop_area:stop1"), "code_uic", "bobette");
+        b.data->pt_data->codes.add(b.sps.at("stop_area:stop1"), "external_code", "stop1_code");
         b.data->pt_data->codes.add(b.lines["line:A"]->network, "external_code", "A");
         b.data->pt_data->codes.add(b.lines["line:B"]->network, "external_code", "B");
 
