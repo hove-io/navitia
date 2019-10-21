@@ -103,6 +103,10 @@ class InstantSystem(AbstractRidesharingService):
                 'fail_counter': self.breaker.fail_counter,
                 'reset_timeout': self.breaker.reset_timeout,
             },
+            'rating_scale_min': self.rating_scale_min,
+            'rating_scale_max': self.rating_scale_max,
+            'crowfly_radius': self.crowfly_radius,
+            'network': self.network,
         }
 
     def _call_service(self, params):
