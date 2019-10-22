@@ -724,7 +724,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                         "reverse isochrone works only for anti-clockwise request (use '&datetime_represents=arrival')");
                     return;
                 }
-                type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+                auto const& ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
                 navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0),
                                                  request.clockwise(), arg.accessibilite_params, arg.forbidden,
                                                  arg.allowed, *street_network_worker, arg.rt_level,
