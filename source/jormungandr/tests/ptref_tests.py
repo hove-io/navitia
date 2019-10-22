@@ -798,9 +798,10 @@ class TestPtRef(AbstractTestFixture):
         assert len(networks) == 1
         assert networks[0]['id'] == 'network:B'
 
-        response = self.query_region("networks?external_code=wrong_code")
-        networks = get_not_null(response, 'networks')
-        assert len(networks) == 4
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/networks?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the uri wrong_code' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/networks?external_code=A")
@@ -835,9 +836,10 @@ class TestPtRef(AbstractTestFixture):
         assert len(lines) == 1
         assert lines[0]['id'] == 'line:A'
 
-        response = self.query_region("lines?external_code=wrong_code")
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 4
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the uri wrong_code' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/lines?external_code=A")
@@ -871,9 +873,10 @@ class TestPtRef(AbstractTestFixture):
         assert len(stop_points) == 1
         assert stop_points[0]['id'] == 'stop_area:stop1'
 
-        response = self.query_region("stop_points?external_code=wrong_code")
-        stop_points = get_not_null(response, 'stop_points')
-        assert len(stop_points) == 3
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/stop_points?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the uri wrong_code' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/stop_points?external_code=stop1_code")
