@@ -1488,9 +1488,6 @@ void make_isochrone(navitia::PbCreator& pb_creator,
         return;
     }
 
-    raptor.isochrone(isochrone_common->departures, isochrone_common->init_dt, isochrone_common->bound, max_transfers,
-                     accessibilite_params, forbidden, allowed, clockwise, rt_level);
-
     add_isochrone_response(raptor, origin, pb_creator, raptor.data.pt_data->stop_points, clockwise,
                            isochrone_common->init_dt, isochrone_common->bound, max_duration);
     pb_creator.sort_journeys();
