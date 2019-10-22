@@ -98,7 +98,7 @@ struct RAPTOR {
         first_pass_labels.assign(10, data.dataRaptor->labels_const);
     }
 
-    void clear(bool clockwise, DateTime bound);
+    void clear(const bool clockwise, const DateTime bound);
 
     /// Initialize starting points
     void init(const map_stop_point_duration& dep,
@@ -172,11 +172,11 @@ struct RAPTOR {
     void isochrone(const map_stop_point_duration& departures_,
                    const DateTime& departure_datetime,
                    const DateTime& bound = DateTimeUtils::min,
-                   uint32_t max_transfers = 10,
+                   const uint32_t max_transfers = 10,
                    const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                    const std::vector<std::string>& forbidden = std::vector<std::string>(),
                    const std::vector<std::string>& allowed = std::vector<std::string>(),
-                   bool clockwise = true,
+                   const bool clockwise = true,
                    const nt::RTLevel rt_level = nt::RTLevel::Base);
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
@@ -188,7 +188,7 @@ struct RAPTOR {
                               const nt::RTLevel rt_level);
 
     /// Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(bool clockwise, const nt::RTLevel rt_level, const uint32_t max_transfers);
+    void boucleRAPTOR(const bool clockwise, const nt::RTLevel rt_level, const uint32_t max_transfers);
 
     /// Apply foot pathes to labels
     /// Return true if it improves at least one label, false otherwise
@@ -221,7 +221,7 @@ struct RAPTOR {
                            const DateTime& bound_limit,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
-                           bool clockwise);
+                           const bool clockwise);
 
     ~RAPTOR() = default;
 };
