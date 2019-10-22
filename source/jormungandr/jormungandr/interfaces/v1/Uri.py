@@ -173,11 +173,15 @@ class Uri(ResourceUri, ResourceUtc):
                         id = res
                         break
                 if not region:
-                    abort(404, message="Unable to find an object for the uri %s" % args["external_code"])
+                    abort(
+                        404, message="Unable to find an object for the external_code %s" % args["external_code"]
+                    )
             else:
                 id = i_manager.instances[region].has_external_code(type_, args["external_code"])
                 if id == None:
-                    abort(404, message="Unable to find an object for the uri %s" % args["external_code"])
+                    abort(
+                        404, message="Unable to find an object for the external_code %s" % args["external_code"]
+                    )
 
         self.region = i_manager.get_region(region, lon, lat)
 
