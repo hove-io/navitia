@@ -1459,12 +1459,7 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
         return boost::optional<IsochroneCommon>{};
-    } else if (departures->empty()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
-                                 pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT, "no origin point nor destination point");
-        return boost::optional<IsochroneCommon>{};
     }
-
     DateTime init_dt = to_datetime(datetime, raptor.data);
     DateTime bound = build_bound(clockwise, max_duration, init_dt);
     raptor.isochrone(*departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, allowed, clockwise,
