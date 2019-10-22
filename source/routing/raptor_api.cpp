@@ -1445,24 +1445,23 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     const nt::RTLevel rt_level,
     georef::StreetNetwork& worker,
     PbCreator& pb_creator) {
-    auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
+    auto const tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
     if (pb_creator.has_error() || tmp_datetime.size() == 0
         || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return boost::optional<IsochroneCommon>{};
     }
-    auto datetime = tmp_datetime.front();
+    auto const datetime = tmp_datetime.front();
     worker.init(center);
-    auto departures = get_stop_points(center, raptor.data, worker);
+    auto const departures = get_stop_points(center, raptor.data, worker);
     if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
         return boost::optional<IsochroneCommon>{};
     }
-    DateTime init_dt = to_datetime(datetime, raptor.data);
-    DateTime bound = build_bound(clockwise, max_duration, init_dt);
+    auto const init_dt = to_datetime(datetime, raptor.data);
+    auto const bound = build_bound(clockwise, max_duration, init_dt);
     raptor.isochrone(*departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, allowed, clockwise,
                      rt_level);
-    type::GeographicalCoord coord_origin = center.coordinates;
-    return IsochroneCommon(clockwise, coord_origin, *departures, init_dt, center, bound, datetime);
+    return IsochroneCommon(clockwise, center.coordinates, *departures, init_dt, center, bound, datetime);
 }
 
 void make_isochrone(navitia::PbCreator& pb_creator,
