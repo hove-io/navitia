@@ -1366,7 +1366,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    const int32_t night_bus_filter_base_factor,
                    const boost::optional<uint32_t>& timeframe_duration,
                    const uint32_t depth) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 
     // Create datetime
     auto datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
@@ -1397,13 +1397,15 @@ void make_response(navitia::PbCreator& pb_creator,
     for (const auto& stop_point_iter : *departures) {
         SpIdx sp_idx = stop_point_iter.first;
         auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
-        LOG4CPLUS_TRACE(logger, "departure : " << stop_point->uri << " distance : " << stop_point_iter.second);
+        LOG4CPLUS_DEBUG(logger, "departure : " << stop_point->uri << " distance : "
+                                               << navitia::str(stop_point_iter.second.total_seconds()));
     }
 
     for (const auto& stop_point_iter : *destinations) {
         SpIdx sp_idx = stop_point_iter.first;
         auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
-        LOG4CPLUS_TRACE(logger, "destination : " << stop_point->uri << " distance : " << stop_point_iter.second);
+        LOG4CPLUS_DEBUG(logger, "destination : " << stop_point->uri << " distance : "
+                                                 << navitia::str(stop_point_iter.second.total_seconds()));
     }
 
     // case 3 : departure or destination are emtpy

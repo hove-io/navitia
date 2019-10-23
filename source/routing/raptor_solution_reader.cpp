@@ -618,15 +618,15 @@ void read_solutions(const RAPTOR& raptor,
                 make_bound_journey(working_labels.dt_pt(a.first), a.second,
                                    raptor.labels[0].dt_transfer(end_point.sp_idx), end_point_street_network_duration,
                                    count, raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
-            LOG4CPLUS_TRACE(logger, "Journey from " << stop_point->uri << " count : " << count << std::endl << j);
+            LOG4CPLUS_DEBUG(logger, "Journey from " << stop_point->uri << " count : " << count << std::endl << j);
 
             if (reader.solutions.contains_better_than(j)) {
-                LOG4CPLUS_TRACE(logger, "Journey discarded");
+                LOG4CPLUS_DEBUG(logger, "Journey discarded");
 
                 continue;
             }
             try {
-                LOG4CPLUS_TRACE(logger, "try to build journey ");
+                LOG4CPLUS_DEBUG(logger, "try to build journey ");
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             } catch (stop_search&) {
             }
