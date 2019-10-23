@@ -37,7 +37,19 @@ from collections import namedtuple
 
 
 class RidesharingServiceError(RuntimeError):
-    pass
+    def __init__(self, reason, http_status=None, http_reason=None, http_txt=None):
+        super(RuntimeError, self).__init__(reason)
+        self.http_status = http_status
+        self.http_reason = http_reason
+        self.http_txt = http_txt
+
+    def get_params(self):
+        return {
+            'reason': str(self),
+            'http_status': self.http_status,
+            'http_reason': self.http_reason,
+            'http_response': self.http_txt,
+        }
 
 
 RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
@@ -66,7 +78,7 @@ class AbstractRidesharingService(object):
 
             return journeys, feed_publisher
         except RidesharingServiceError as e:
-            self.record_call('failure', reason=str(e))
+            self.record_call('failure', **e.get_params())
             return [], None
 
     @abc.abstractmethod
