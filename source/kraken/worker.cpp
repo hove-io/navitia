@@ -642,14 +642,16 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          std::vector<std::string> allowed,
                          type::RTLevel rt_level,
                          std::vector<type::EntryPoint> destinations,
-                         std::vector<uint64_t> datetimes)
-    : origins(origins),
-      accessibilite_params(accessibilite_params),
-      forbidden(forbidden),
-      allowed(allowed),
+                         std::vector<uint64_t> datetimes,
+                         boost::optional<type::EntryPoint> isochrone_center)
+    : origins(std::move(origins)),
+      accessibilite_params(std::move(accessibilite_params)),
+      forbidden(std::move(forbidden)),
+      allowed(std::move(allowed)),
       rt_level(rt_level),
-      destinations(destinations),
-      datetimes(datetimes) {}
+      destinations(std::move(destinations)),
+      datetimes(std::move(datetimes)),
+      isochrone_center(isochrone_center) {}
 JourneysArg::JourneysArg() {}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
@@ -691,8 +693,12 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
+    const auto isochrone_center = request.has_isochrone_center()
+                                      ? create_journeys_entry_point(request.isochrone_center(), sn_params, data, true)
+                                      : boost::optional<type::EntryPoint>{};
+
     return JourneysArg(std::move(origins), std::move(accessibilite_params), std::move(forbidden), std::move(allowed),
-                       rt_level, std::move(destinations), std::move(datetimes));
+                       rt_level, std::move(destinations), std::move(datetimes), std::move(isochrone_center));
 }
 
 void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg) {
