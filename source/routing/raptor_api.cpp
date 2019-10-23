@@ -1124,6 +1124,21 @@ boost::optional<routing::map_stop_point_duration> get_stop_points(const type::En
     return result;
 }
 
+static boost::optional<routing::map_stop_point_duration> get_stop_points_if_not_already_done(
+    const navitia::type::EntryPoint& center,
+    const navitia::type::Data& data,
+    navitia::georef::StreetNetwork& worker,
+    const boost::optional<routing::map_stop_point_duration>& stop_points) {
+    boost::optional<routing::map_stop_point_duration> departures;
+    // If stop_points have already been computed, we don't need to do it here again.
+    if (stop_points) {
+        return stop_points;
+    }
+
+    worker.init(center);
+    return get_stop_points(center, data, worker);
+}
+
 void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         georef::PathFinder& path_finder,
                         const type::EntryPoint& ep,
@@ -1452,15 +1467,7 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
         return boost::optional<IsochroneCommon>{};
     }
 
-    boost::optional<routing::map_stop_point_duration> departures;
-    // If stop_points have already been computed, we don't need to do here again.
-    if (stop_points) {
-        departures = *stop_points;
-    } else {
-        worker.init(center);
-        departures = get_stop_points(center, raptor.data, worker);
-    }
-
+    const auto departures = get_stop_points_if_not_already_done(center, raptor.data, worker, stop_points);
     if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
         return boost::optional<IsochroneCommon>{};
