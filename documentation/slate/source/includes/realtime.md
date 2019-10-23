@@ -25,18 +25,19 @@ A disruption is present in the response of the endpoints described if the reques
 
 ## <a name="PT_object_collections_data_freshness"></a>Public transport object collections
 
-Several public transport objects have separate collections for `base_schedule` and `realtime`.
-So the data_freshness parameter may affect the number of objects returned depanding on the request.
+Several public transport objects have separate collections for `base_schedule` and `realtime`.  
+So the data_freshness parameter may affect the number of objects returned depending on the request.
 
-For exemple when looking for a specific circulation with the collection vehicle_journey with the request like
+For example when looking for a specific circulation with the collection vehicle_journey using the request:  
 `http://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
-A vehicle_journey circulating between since and until that is fully deleted by a disruption will
-of course be visible if `data_freshness=base_schedule`
-But it will not appear with the parameter `data_freshness=realtime` as it does not exist in that collection.
 
-On the other hand, a vehicle_journey that is created by a realtime feed will only be visible if
-`data_freshness=realtime` on that same request.
-And it will not appear if `data_freshness=base_schedule`.
+A vehicle_journey circulating between since and until that is **fully deleted** by a disruption will
+of course be **visible** if `data_freshness=base_schedule`.  
+But it **will not appear** with the parameter `data_freshness=realtime` as it does not exist in that collection.
+
+On the other hand, a vehicle_journey that is **created** by a realtime feed will only be **visible** if
+`data_freshness=realtime` on that same request.  
+And it will **not appear** if `data_freshness=base_schedule`.
 
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
