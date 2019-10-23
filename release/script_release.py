@@ -53,6 +53,7 @@ class ReleaseManager:
     def __init__(self, release_type, remote_name="canalTP"):
         self.directory = ".."
         self.changelog_filename = self.directory + "/debian/changelog"
+        self.data_version_filename = self.directory + "/source/type/data.cpp"
         self.release_type = release_type
         self.repo = Repo(self.directory)
         self.git = self.repo.git
@@ -68,6 +69,7 @@ class ReleaseManager:
 
         # TODO quit on error
         self.git.rebase(remote_name + "/dev", "dev")
+        self.dev_data_version = self.get_data_version()
         try:
             self.git.checkout("release")
         except Exception as e:
@@ -97,6 +99,27 @@ class ReleaseManager:
         # self.auth = ('user', 'pass')
         self.auth = None
 
+    def get_data_version(self):
+        f_data_version = codecs.open(self.data_version_filename, 'r', 'utf-8')
+        version = None
+        for line in f_data_version:
+            res = re.search('^ *const .*data_version *= *([0-9]+) *;.*$', line)
+            if res:
+                version = res.group(1)
+                break
+
+        if version is None:
+            print("ABORTING: data_version could not be retrieved from {f}".format(f=self.data_version_filename))
+            exit(1)
+
+        print("Current data_version is " + version)
+
+        try:
+            return int(version)
+        except ValueError:
+            print("ABORTING: data_version {d} is not an Integer".format(d=version))
+            exit(1)
+
     def get_new_version_number(self):
         latest_version = None
         last_tag = self.git.describe('--tags', abbrev=0)
@@ -117,14 +140,25 @@ class ReleaseManager:
         self.latest_tag = get_tag_name(self.version)
         print("last tag is " + self.latest_tag)
 
-        if self.release_type == "major":
-            self.version[0] += 1
-            self.version[1] = version_n[2] = 0
-        elif self.release_type == "minor":
-            self.version[1] += 1
-            self.version[2] = 0
+        if self.release_type == "regular":
+            if self.version[0] > self.dev_data_version:
+                print(
+                    "ABORTING: data_version {d} is < to latest tag {t}".format(
+                        d=self.dev_data_version, t=self.latest_tag
+                    )
+                )
+                exit(1)
+            elif self.version[0] < self.dev_data_version:  # major version
+                self.version[0] = self.dev_data_version
+                self.version[1] = version_n[2] = 0
+            else:  # versions equal: minor version
+                self.version[0] = self.dev_data_version
+                self.version[1] += 1
+                self.version[2] = 0
+
         elif self.release_type == "hotfix":
             self.version[2] += 1
+
         else:
             exit(5)
 
@@ -132,12 +166,12 @@ class ReleaseManager:
             maj=self.version[0], min=self.version[1], hf=self.version[2]
         )
 
-        print("current version is {}".format(self.str_version))
+        print("New version is {}".format(self.str_version))
         return self.str_version
 
     def checkout_parent_branch(self):
         parent = ""
-        if self.release_type == "major" or self.release_type == "minor":
+        if self.release_type == "regular":
             parent = "dev"
         else:
             parent = "release"
@@ -364,11 +398,9 @@ class ReleaseManager:
 if __name__ == '__main__':
 
     if len(argv) < 2:
-        print("mandatory argument: {major|minor|hotfix}")
-        print("possible additional argument: remote (default is canalTP)")
+        print("mandatory argument: {regular|hotfix}")
+        print("possible additional argument: remote (default is CanalTP)")
         exit(5)
-
-    # the git lib used bug when not in english
 
     logging.basicConfig(level=logging.INFO)
 
