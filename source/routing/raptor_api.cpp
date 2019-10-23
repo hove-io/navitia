@@ -1184,6 +1184,22 @@ static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
     return datetimes;
 }
 
+static routing::map_stop_point_duration make_map_stop_point_duration(
+    const std::vector<type::EntryPoint>& entryPointList,
+    const std::unordered_map<std::string, type::StopPoint*>& raptor_stop_points_map) {
+    routing::map_stop_point_duration results;
+    for (const auto& entryPoint : entryPointList) {
+        utils::make_map_find(raptor_stop_points_map, entryPoint.uri)
+            .if_found(
+                [&](const type::StopPoint* sp) { results[SpIdx{*sp}] = navitia::seconds(entryPoint.access_duration); })
+            .if_not_found([&]() {
+                // for now we throw, maybe we should ignore them
+                throw navitia::recoverable_exception("stop_point " + entryPoint.uri + " not found");
+            });
+    }
+    return results;
+}
+
 void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR& raptor,
                       const std::vector<type::EntryPoint>& origins,
@@ -1213,27 +1229,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     }
 
     // Get stop points for departure and destination
-    routing::map_stop_point_duration departures;
-    routing::map_stop_point_duration arrivals;
-
-    for (const auto& origin : origins) {
-        auto it = raptor.data.pt_data->stop_points_map.find(origin.uri);
-        if (it != raptor.data.pt_data->stop_points_map.end()) {
-            departures[SpIdx{*it->second}] = navitia::seconds(origin.access_duration);
-        } else {
-            // for now we throw, maybe we should ignore them
-            throw navitia::recoverable_exception("stop_point " + origin.uri + " not found");
-        }
-    }
-    for (const auto& destination : destinations) {
-        auto it = raptor.data.pt_data->stop_points_map.find(destination.uri);
-        if (it != raptor.data.pt_data->stop_points_map.end()) {
-            arrivals[SpIdx{*it->second}] = navitia::seconds(destination.access_duration);
-        } else {
-            // for now we throw, maybe we should ignore them
-            throw navitia::recoverable_exception("stop_point " + destination.uri + " not found");
-        }
-    }
+    auto departures = make_map_stop_point_duration(origins, raptor.data.pt_data->stop_points_map);
+    auto arrivals = make_map_stop_point_duration(destinations, raptor.data.pt_data->stop_points_map);
 
     // Call Raptor loop
     const auto pathes =
@@ -1448,24 +1445,23 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     const nt::RTLevel rt_level,
     georef::StreetNetwork& worker,
     PbCreator& pb_creator) {
-    auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
+    auto const tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
     if (pb_creator.has_error() || tmp_datetime.size() == 0
         || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return boost::optional<IsochroneCommon>{};
     }
-    auto datetime = tmp_datetime.front();
+    auto const datetime = tmp_datetime.front();
     worker.init(center);
-    auto departures = get_stop_points(center, raptor.data, worker);
+    auto const departures = get_stop_points(center, raptor.data, worker);
     if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
         return boost::optional<IsochroneCommon>{};
     }
-    DateTime init_dt = to_datetime(datetime, raptor.data);
-    DateTime bound = build_bound(clockwise, max_duration, init_dt);
+    auto const init_dt = to_datetime(datetime, raptor.data);
+    auto const bound = build_bound(clockwise, max_duration, init_dt);
     raptor.isochrone(*departures, init_dt, bound, max_transfers, accessibilite_params, forbidden, allowed, clockwise,
                      rt_level);
-    type::GeographicalCoord coord_origin = center.coordinates;
-    return IsochroneCommon(clockwise, coord_origin, *departures, init_dt, center, bound, datetime);
+    return IsochroneCommon(clockwise, center.coordinates, *departures, init_dt, center, bound, datetime);
 }
 
 void make_isochrone(navitia::PbCreator& pb_creator,
