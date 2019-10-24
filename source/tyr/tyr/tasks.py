@@ -385,8 +385,13 @@ def update_autocomplete():
 @celery.task()
 def purge_datasets():
     instances = models.Instance.query_existing().all()
+    current_app.logger.info("Instances to purge: {}".format(instances))
     for instance in instances:
-        purge_instance(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP'])
+        try:
+            purge_instance(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP'])
+        except Exception as e:
+            # Do not stop the task for all other instances if only one instance is missing
+            current_app.logger.error("Dataset purge failed for instance {i}: {e}".format(i=instance, e=e))
 
 
 @celery.task()
@@ -394,7 +399,12 @@ def purge_instance(instance_id, nb_to_keep):
     instance = models.Instance.query.get(instance_id)
     logger = get_instance_logger(instance)
     logger.info('purge of backup directories for %s', instance.name)
-    instance_config = load_instance_config(instance.name)
+    try:
+        instance_config = load_instance_config(instance.name)
+    except Exception as e:
+        logger.error("Impossible to load instance configuration for {i}: {e}".format(i=instance.name, e=e))
+        return
+
     backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
     logger.info('backups are: %s', backups)
     # we add the realpath not to have problems with double / or stuff like that
@@ -594,10 +604,13 @@ def heartbeat():
         task.action = task_pb2.HEARTBEAT
 
         for instance in instances:
-            config = load_instance_config(instance.name)
-            exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
-            producer = connection.Producer(exchange=exchange)
-            producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            try:
+                config = load_instance_config(instance.name)
+                exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
+                producer = connection.Producer(exchange=exchange)
+                producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            except Exception as e:
+                logging.error("Could not ping krakens for instance {i}: {e}".format(i=instance, e=e))
 
 
 @celery.task()
