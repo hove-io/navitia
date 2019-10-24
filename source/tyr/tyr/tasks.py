@@ -604,10 +604,13 @@ def heartbeat():
         task.action = task_pb2.HEARTBEAT
 
         for instance in instances:
-            config = load_instance_config(instance.name)
-            exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
-            producer = connection.Producer(exchange=exchange)
-            producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            try:
+                config = load_instance_config(instance.name)
+                exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
+                producer = connection.Producer(exchange=exchange)
+                producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            except Exception as e:
+                logging.error("Could not ping krakens for instance {i}: {e}".format(i=instance, e=e))
 
 
 @celery.task()
