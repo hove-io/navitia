@@ -275,7 +275,7 @@ class InstantSystem(AbstractRidesharingService):
                 resp.url,
                 extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code},
             )
-            raise RidesharingServiceError('non 200 response')
+            raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
             r = self._make_response(resp.json())
