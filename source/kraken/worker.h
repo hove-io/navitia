@@ -112,6 +112,7 @@ private:
     JourneysArg fill_journeys(const pbnavitia::JourneysRequest& request);
     void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
     void journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API api);
+    void isochrone(const pbnavitia::JourneysRequest& request);
     void pt_ref(const pbnavitia::PTRefRequest& request);
     void traffic_reports(const pbnavitia::TrafficReportsRequest& request);
     void line_reports(const pbnavitia::LineReportsRequest& request);

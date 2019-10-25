@@ -718,26 +718,6 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
         }
 
         switch (api) {
-            case pbnavitia::ISOCHRONE: {
-                if (!arg.origins.empty() && !request.clockwise()) {
-                    err_msg_isochron(
-                        this->pb_creator,
-                        "isochrone works only for clockwise request (use '&datetime_represents=departure')");
-                    return;
-                } else if (arg.origins.empty() && request.clockwise()) {
-                    err_msg_isochron(
-                        this->pb_creator,
-                        "reverse isochrone works only for anti-clockwise request (use '&datetime_represents=arrival')");
-                    return;
-                }
-                auto const& ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-                navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0),
-                                                 request.clockwise(), arg.accessibilite_params, arg.forbidden,
-                                                 arg.allowed, *street_network_worker, arg.rt_level,
-                                                 request.max_duration(), request.max_transfers());
-                break;
-            }
-
             case pbnavitia::pt_planner:
                 routing::make_pt_response(
                     this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0], request.clockwise(),
@@ -770,6 +750,17 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
     }
+}
+
+void Worker::isochrone(const pbnavitia::JourneysRequest& request) {
+    navitia::JourneysArg arg = JourneysArg();
+    if (!set_journeys_args(request, arg, "isochrone")) {
+        return;
+    }
+    auto const& ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+    navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0), request.clockwise(),
+                                     arg.accessibilite_params, arg.forbidden, arg.allowed, *street_network_worker,
+                                     arg.rt_level, request.max_duration(), request.max_transfers());
 }
 
 void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
@@ -1032,11 +1023,13 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
         case pbnavitia::DEPARTURE_BOARDS:
             next_stop_times(request.next_stop_times(), request.requested_api());
             break;
-        case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER:
             journeys(request.journeys(), request.requested_api());
+            break;
+        case pbnavitia::ISOCHRONE:
+            isochrone(request.journeys());
             break;
         case pbnavitia::places_nearby:
             proximity_list(request.places_nearby());
