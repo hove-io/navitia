@@ -724,7 +724,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                         "reverse isochrone works only for anti-clockwise request (use '&datetime_represents=arrival')");
                     return;
                 }
-                type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+                auto const& ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
                 navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0),
                                                  request.clockwise(), arg.accessibilite_params, arg.forbidden,
                                                  arg.allowed, *street_network_worker, arg.rt_level,
@@ -780,37 +780,36 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
         boost::make_optional(request.has_until_datetime(), bt::from_time_t(request.until_datetime())), rt_level, *data);
 }
 
-// returns true if there is an error
+// returns false if there is an error
 bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, JourneysArg& arg, const std::string& name) {
     try {
         arg = fill_journeys(request);
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-        return true;
+        return false;
     }
     if (arg.origins.empty() && arg.destinations.empty()) {
         // should never happen, jormungandr filters that, but it never hurts to double check
         this->pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                        pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                        "no origin point nor destination point given");
-        return true;
+        return false;
     }
 
     if (!arg.origins.empty() && !request.clockwise()) {
         err_msg_isochron(this->pb_creator, name + " works only for clockwise request");
-        return true;
+        return false;
     } else if (arg.origins.empty() && request.clockwise()) {
         err_msg_isochron(this->pb_creator, "reverse " + name + " works only for anti-clockwise request");
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg = JourneysArg();
-    bool has_error = set_journeys_args(request_journey, arg, "isochrone");
-    if (has_error) {
+    if (!set_journeys_args(request_journey, arg, "isochrone")) {
         return;
     }
 
@@ -832,8 +831,7 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg;
-    bool has_error = set_journeys_args(request_journey, arg, "heat_map");
-    if (has_error) {
+    if (!set_journeys_args(request_journey, arg, "heat_map")) {
         return;
     }
 

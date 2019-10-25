@@ -1,3 +1,16 @@
+navitia2 (2.88.0) unstable; urgency=low
+
+  * Tyr: Robustify purge and heartbeat  <https://github.com/CanalTP/navitia/pull/3016>
+  * NewRelic: Expose http status, reasons and response to NewRelic on Ridesharing  <https://github.com/CanalTP/navitia/pull/3014>
+  * Kraken: Refacto isochrone  <https://github.com/CanalTP/navitia/pull/3009>
+  * Kraken: Fix A* heuristic cost  <https://github.com/CanalTP/navitia/pull/3002>
+  * Jormun: robustify Timeo mechanism with interval errors handling and empty response  <https://github.com/CanalTP/navitia/pull/3001>
+  * Jormun: Log error code and body on geocodejson error != 200  <https://github.com/CanalTP/navitia/pull/3003>
+  * Jormun: Upgrade status with equipment details and ridesharing informations  <https://github.com/CanalTP/navitia/pull/2999>
+  * Jormun: fix ticket remove process with reversed method  <https://github.com/CanalTP/navitia/pull/3000>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 25 Oct 2019 10:10:33 +0100
+
 navitia2 (2.87.0) unstable; urgency=low
 
   * Jormun: Hide Tags=[] option for /line_reports and /trafic_reports  <https://github.com/CanalTP/navitia/pull/2998>

@@ -103,6 +103,10 @@ class InstantSystem(AbstractRidesharingService):
                 'fail_counter': self.breaker.fail_counter,
                 'reset_timeout': self.breaker.reset_timeout,
             },
+            'rating_scale_min': self.rating_scale_min,
+            'rating_scale_max': self.rating_scale_max,
+            'crowfly_radius': self.crowfly_radius,
+            'network': self.network,
         }
 
     def _call_service(self, params):
@@ -271,7 +275,7 @@ class InstantSystem(AbstractRidesharingService):
                 resp.url,
                 extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code},
             )
-            raise RidesharingServiceError('non 200 response')
+            raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
             r = self._make_response(resp.json())

@@ -213,7 +213,10 @@ class GeocodeJson(AbstractAutocomplete):
         if response.status_code == 503:
             raise GeocodeJsonUnavailable('geocodejson responded with 503')
         if response.status_code != 200:
-            raise GeocodeJsonError('error in autocomplete request')
+            error_msg = 'Autocomplete request failed with HTTP code {}'.format(response.status_code)
+            if response.text:
+                error_msg += ' ({})'.format(response.text)
+            raise GeocodeJsonError(error_msg)
 
     @classmethod
     def _clean_response(cls, response, depth=1):

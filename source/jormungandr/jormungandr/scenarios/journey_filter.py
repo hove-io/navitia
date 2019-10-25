@@ -747,7 +747,7 @@ def remove_excess_tickets(response):
                 for t_id in rj.fare.ticket_id:
                     fare_ticket_id_list.add(t_id)
 
-    for t in response.tickets:
+    for t in reversed(response.tickets):
         if not t.id in fare_ticket_id_list:
             logger.debug('remove excess ticket id %s', t.id)
             response.tickets.remove(t)
