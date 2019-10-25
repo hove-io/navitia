@@ -1129,7 +1129,6 @@ static boost::optional<routing::map_stop_point_duration> get_stop_points_if_not_
     const navitia::type::Data& data,
     navitia::georef::StreetNetwork& worker,
     const boost::optional<routing::map_stop_point_duration>& stop_points) {
-    boost::optional<routing::map_stop_point_duration> departures;
     // If stop_points have already been computed, we don't need to do it here again.
     if (stop_points) {
         return stop_points;
