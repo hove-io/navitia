@@ -1124,15 +1124,31 @@ boost::optional<routing::map_stop_point_duration> get_stop_points(const type::En
     return result;
 }
 
-static boost::optional<routing::map_stop_point_duration> get_stop_points_if_not_already_done(
+static routing::map_stop_point_duration make_map_stop_point_duration(
+    const std::vector<type::EntryPoint>& entryPointList,
+    const std::unordered_map<std::string, type::StopPoint*>& raptor_stop_points_map) {
+    routing::map_stop_point_duration results;
+    for (const auto& entryPoint : entryPointList) {
+        utils::make_map_find(raptor_stop_points_map, entryPoint.uri)
+            .if_found(
+                [&](const type::StopPoint* sp) { results[SpIdx{*sp}] = navitia::seconds(entryPoint.access_duration); })
+            .if_not_found([&]() {
+                // for now we throw, maybe we should ignore them
+                throw navitia::recoverable_exception("stop_point " + entryPoint.uri + " not found");
+            });
+    }
+    return results;
+}
+
+static const boost::optional<routing::map_stop_point_duration> get_stop_points_if_not_already_done(
     const navitia::type::EntryPoint& center,
     const navitia::type::Data& data,
     navitia::georef::StreetNetwork& worker,
-    const boost::optional<routing::map_stop_point_duration>& stop_points) {
+    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
     boost::optional<routing::map_stop_point_duration> departures;
     // If stop_points have already been computed, we don't need to do it here again.
     if (stop_points) {
-        return stop_points;
+        return make_map_stop_point_duration(*stop_points, data.pt_data->stop_points_map);
     }
 
     worker.init(center);
@@ -1197,22 +1213,6 @@ static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
         std::sort(datetimes.begin(), datetimes.end());
 
     return datetimes;
-}
-
-static routing::map_stop_point_duration make_map_stop_point_duration(
-    const std::vector<type::EntryPoint>& entryPointList,
-    const std::unordered_map<std::string, type::StopPoint*>& raptor_stop_points_map) {
-    routing::map_stop_point_duration results;
-    for (const auto& entryPoint : entryPointList) {
-        utils::make_map_find(raptor_stop_points_map, entryPoint.uri)
-            .if_found(
-                [&](const type::StopPoint* sp) { results[SpIdx{*sp}] = navitia::seconds(entryPoint.access_duration); })
-            .if_not_found([&]() {
-                // for now we throw, maybe we should ignore them
-                throw navitia::recoverable_exception("stop_point " + entryPoint.uri + " not found");
-            });
-    }
-    return results;
 }
 
 void make_pt_response(navitia::PbCreator& pb_creator,
@@ -1460,7 +1460,7 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     const nt::RTLevel rt_level,
     georef::StreetNetwork& worker,
     PbCreator& pb_creator,
-    const boost::optional<routing::map_stop_point_duration>& stop_points) {
+    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
     const auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
     if (pb_creator.has_error() || tmp_datetime.size() == 0
         || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1493,7 +1493,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     const type::RTLevel rt_level,
                     const int max_duration,
                     const uint32_t max_transfers,
-                    const boost::optional<routing::map_stop_point_duration>& stop_points) {
+                    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
     const auto isochrone_common =
         make_isochrone_common(raptor, center, datetime_timestamp, max_duration, max_transfers, accessibilite_params,
                               forbidden, allowed, clockwise, rt_level, worker, pb_creator, stop_points);
@@ -1593,7 +1593,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork& worker,
                               const double& speed,
-                              const boost::optional<routing::map_stop_point_duration>& stop_points) {
+                              const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
     const auto isochrone_common = make_isochrone_common(raptor, center, departure_datetime, boundary_duration[0],
                                                         max_transfers, accessibilite_params, forbidden, allowed,
                                                         clockwise, rt_level, worker, pb_creator, stop_points);
@@ -1628,7 +1628,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const double& end_speed,
                    const navitia::type::Mode_e end_mode,
                    const uint32_t resolution,
-                   const boost::optional<routing::map_stop_point_duration>& stop_points) {
+                   const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
     const auto isochrone_common =
         make_isochrone_common(raptor, center, departure_datetime, max_duration, max_transfers, accessibilite_params,
                               forbidden, allowed, clockwise, rt_level, worker, pb_creator, stop_points);
