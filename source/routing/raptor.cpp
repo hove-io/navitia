@@ -195,8 +195,8 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 
     boost::fill(best_labels_pts.values(), bound);
     boost::fill(best_labels_transfers.values(), bound);
-    boost::fill(best_labels_pts.values(), DateTimeUtils::not_valid);
-    boost::fill(best_labels_transfers.values(), DateTimeUtils::not_valid);
+    boost::fill(best_labels_pts_fallback.values(), DateTimeUtils::not_valid);
+    boost::fill(best_labels_transfers_fallback.values(), DateTimeUtils::not_valid);
 }
 
 void RAPTOR::init(const map_stop_point_duration& dep,
