@@ -574,14 +574,14 @@ class TestPtRef(AbstractTestFixture):
         is_valid_pt_objects_response(response)
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
-        assert get_not_null(pt_objs[0], 'name') == 'base_network Car line:A'
+        assert get_not_null(pt_objs[0], 'name') == 'network:A Car line:A'
         self.check_context(response)
 
         response = self.query_region('pt_objects?q=line:Ca roule&type[]=line')
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
         # not valid as there is no commercial mode (which impacts name)
-        assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
+        assert get_not_null(pt_objs[0], 'name') == 'network:CaRoule line:Ça roule'
 
     def test_query_with_strange_char(self):
         q = u'stop_points/stop_point:stop_with name bob \" , é'.encode('utf-8')
@@ -777,6 +777,124 @@ class TestPtRef(AbstractTestFixture):
             'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=false'
         )
         assert len(response['disruptions']) == 1
+
+    def test_networks_with_external_code(self):
+        """test networks with external_code parameter"""
+        response = self.query_region("networks")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 4
+        assert networks[0]['id'] == 'network:A'
+        assert networks[1]['id'] == 'network:B'
+        assert networks[2]['id'] == 'network:CaRoule'
+        assert networks[3]['id'] == 'network:freq'
+
+        response = self.query_region("networks?external_code=A")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:A'
+
+        response = self.query_region("networks?external_code=B")
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:B'
+
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/networks?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # without coverage
+        response, code = self.query_no_assert("v1/networks?external_code=A")
+        assert code == 200
+        networks = get_not_null(response, 'networks')
+        assert len(networks) == 1
+        assert networks[0]['id'] == 'network:A'
+
+        response, code = self.query_no_assert("v1/networks?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # Without coverage, networks have to work with external_code
+        response, code = self.query_no_assert("v1/networks")
+        assert code == 400
+        message = get_not_null(response, 'message')
+        assert 'parameter \"external_code\" invalid: Missing required parameter' in message
+
+    def test_lines_with_external_code(self):
+        """test lines with external_code parameter"""
+        response = self.query_region("lines")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 4
+        assert lines[0]['id'] == 'line:A'
+        assert lines[1]['id'] == 'line:B'
+        assert lines[2]['id'] == 'line:Ça roule'
+        assert lines[3]['id'] == 'line:freq'
+
+        response = self.query_region("lines?external_code=A")
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert lines[0]['id'] == 'line:A'
+
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # without coverage
+        response, code = self.query_no_assert("v1/lines?external_code=A")
+        assert code == 200
+        lines = get_not_null(response, 'lines')
+        assert len(lines) == 1
+        assert lines[0]['id'] == 'line:A'
+
+        response, code = self.query_no_assert("v1/lines?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # Without coverage, networks have to work with external_code
+        response, code = self.query_no_assert("v1/lines")
+        assert code == 400
+        message = get_not_null(response, 'message')
+        assert 'parameter \"external_code\" invalid: Missing required parameter' in message
+
+    def test_stop_points_with_external_code(self):
+        """test stop_points with external_code parameter"""
+        response = self.query_region("stop_points")
+        stop_points = get_not_null(response, 'stop_points')
+        assert len(stop_points) == 3
+        assert stop_points[0]['id'] == 'stop_area:stop1'
+        assert stop_points[1]['id'] == 'stop_area:stop2'
+        assert stop_points[2]['id'] == 'stop_point:stop_with name bob " , é'
+
+        response = self.query_region("stop_points?external_code=stop1_code")
+        stop_points = get_not_null(response, 'stop_points')
+        assert len(stop_points) == 1
+        assert stop_points[0]['id'] == 'stop_area:stop1'
+
+        response, code = self.query_no_assert("v1/coverage/main_ptref_test/stop_points?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # without coverage
+        response, code = self.query_no_assert("v1/stop_points?external_code=stop1_code")
+        assert code == 200
+        stop_points = get_not_null(response, 'stop_points')
+        assert len(stop_points) == 1
+        assert stop_points[0]['id'] == 'stop_area:stop1'
+
+        response, code = self.query_no_assert("v1/stop_points?external_code=wrong_code")
+        assert code == 404
+        message = get_not_null(response, 'message')
+        assert 'Unable to find an object for the external_code wrong_code' in message
+
+        # Without coverage, networks have to work with external_code
+        response, code = self.query_no_assert("v1/stop_points")
+        assert code == 400
+        message = get_not_null(response, 'message')
+        assert 'parameter \"external_code\" invalid: Missing required parameter' in message
 
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
