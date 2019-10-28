@@ -228,17 +228,20 @@ const Journey& make_journey(const PathElt& path, RaptorSolutionReader<Visitor>& 
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
-    j.transfer_dur = reader.transfer_penalty * (j.sections.size() + j.nb_vj_extentions);
+    j.transfer_dur = reader.transfer_penalty * (j.nb_vj_extentions);
+    j.total_waiting_dur = 0_s;
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
         const auto first_transfer_waiting = get_transfer_waiting(data, j.sections[0], j.sections[1]);
         j.transfer_dur += first_transfer_waiting.first;
         j.min_waiting_dur = first_transfer_waiting.second;
+        j.total_waiting_dur += first_transfer_waiting.second;
         const auto* prev = &j.sections[1];
         for (auto it = j.sections.begin() + 2; it != j.sections.end(); prev = &*it, ++it) {
             const auto cur_transfer_waiting = get_transfer_waiting(data, *prev, *it);
             j.transfer_dur += cur_transfer_waiting.first;
             j.min_waiting_dur = std::min(j.min_waiting_dur, cur_transfer_waiting.second);
+            j.total_waiting_dur += cur_transfer_waiting.second;
         }
     }
 

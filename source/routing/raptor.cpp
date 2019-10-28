@@ -344,6 +344,7 @@ Journey convert_to_bound(const StartingPointSndPhase& sp,
     journey.transfer_dur = transfer_penalty * sp.count + navitia::seconds(nb_conn * lower_bound_conn);
     // provide best values on unknown criteria
     journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
+    journey.total_waiting_dur = 0_s;
     journey.nb_vj_extentions = 0;
     return journey;
 }
