@@ -82,6 +82,9 @@ struct RAPTOR {
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
+    IdxMap<type::StopPoint, DateTime> best_labels_pts_fallback;
+    IdxMap<type::StopPoint, DateTime> best_labels_transfers_fallback;
+
     /// Number of transfers done for the moment
     unsigned int count;
     /// Are the journey pattern valid
@@ -97,6 +100,8 @@ struct RAPTOR {
         : data(data),
           best_labels_pts(data.pt_data->stop_points),
           best_labels_transfers(data.pt_data->stop_points),
+          best_labels_pts_fallback(data.pt_data->stop_points),
+          best_labels_transfers_fallback(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),

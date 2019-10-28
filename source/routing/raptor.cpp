@@ -93,21 +93,23 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             if (!valid_stop_points[sp_idx.val]) {
                 continue;
             }
-            if (!v.comp(workingDt, best_labels_pts[sp_idx])) {
-                continue;
+            if (v.comp(workingDt, best_labels_pts[sp_idx])
+                || (workingDt == best_labels_pts[sp_idx]
+                    && working_fallback_duration < best_labels_pts_fallback[sp_idx])) {
+                LOG4CPLUS_TRACE(
+                    logger, "Updating label dt count : "
+                                << count << " sp " << data.pt_data->stop_points[sp_idx.val]->uri << " from "
+                                << iso_string(working_labels.dt_pt(sp_idx), data) << " to "
+                                << iso_string(workingDt, data) << " throught : " << st.vehicle_journey->route->line->uri
+                                << " boarding_stop_point : " << data.pt_data->stop_points[boarding_stop_point.val]->uri
+                                << " fallback : " << navitia::str(working_fallback_duration));
+                working_labels.mut_dt_pt(sp_idx) = workingDt;
+                working_labels.mut_fallback_duration_pt(sp_idx) = working_fallback_duration;
+                BOOST_ASSERT(working_fallback_duration != DateTimeUtils::not_valid);
+                best_labels_pts[sp_idx] = workingDt;
+                best_labels_pts_fallback[sp_idx] = working_fallback_duration;
+                result = true;
             }
-            LOG4CPLUS_TRACE(
-                logger, "Updating label dt count : "
-                            << count << " sp " << data.pt_data->stop_points[sp_idx.val]->uri << " from "
-                            << iso_string(working_labels.dt_pt(sp_idx), data) << " to " << iso_string(workingDt, data)
-                            << " throught : " << st.vehicle_journey->route->line->uri
-                            << " boarding_stop_point : " << data.pt_data->stop_points[boarding_stop_point.val]->uri
-                            << " fallback : " << navitia::str(working_fallback_duration));
-            working_labels.mut_dt_pt(sp_idx) = workingDt;
-            working_labels.mut_fallback_duration_pt(sp_idx) = working_fallback_duration;
-            BOOST_ASSERT(working_fallback_duration != DateTimeUtils::not_valid);
-            best_labels_pts[sp_idx] = workingDt;
-            result = true;
         }
         vj = v.get_extension_vj(vj);
     }
@@ -132,31 +134,35 @@ bool RAPTOR::foot_path(const Visitor& v) {
         }
 
         const DateTime start_connection_date = working_labels.dt_pt(sp_idx);
-        const DateTime candidate_fallback_duration = working_labels.fallback_duration_pt(sp_idx);
 
         for (const auto& conn : sp_cnx.second) {
             const SpIdx destination_sp_idx = conn.sp_idx;
             const DateTime end_connection_date = v.combine(start_connection_date, conn.duration);
+            const DateTime candidate_fallback_duration =
+                working_labels.fallback_duration_pt(sp_idx);  // + conn.duration;
+            if (v.comp(end_connection_date, best_labels_transfers[destination_sp_idx])
+                || (end_connection_date == best_labels_transfers[destination_sp_idx]
+                    && candidate_fallback_duration < best_labels_transfers_fallback[destination_sp_idx])) {
+                // TODO ? : continue if end_connection_date == best_labels_transfers[destination_sp_idx]
+                // and candidate_fallback_duration > working_labels.mut_fallback_duration_transfer(destination_sp_idx)
 
-            if (!v.comp(end_connection_date, best_labels_transfers[destination_sp_idx])) {
-                continue;
+                LOG4CPLUS_TRACE(
+                    logger, "Updating label transfer count : "
+                                << count << " sp " << data.pt_data->stop_points[destination_sp_idx.val]->uri << " from "
+                                << iso_string(working_labels.dt_transfer(destination_sp_idx), data) << " to "
+                                << iso_string(end_connection_date, data)
+                                << " throught connection : " << data.pt_data->stop_points[sp_idx.val]->uri
+                                << " fallback : " << navitia::str(candidate_fallback_duration)
+                                << " previous best : " << iso_string(best_labels_transfers[destination_sp_idx], data));
+
+                // if we can improve the best label, we mark it
+                working_labels.mut_dt_transfer(destination_sp_idx) = end_connection_date;
+                // TODO ? : add conn.duration to fallback_duration_transfer ?
+                working_labels.mut_fallback_duration_transfer(destination_sp_idx) = candidate_fallback_duration;
+                best_labels_transfers[destination_sp_idx] = end_connection_date;
+                best_labels_transfers_fallback[destination_sp_idx] = candidate_fallback_duration;
+                result = true;
             }
-            // TODO ? : continue if end_connection_date == best_labels_transfers[destination_sp_idx]
-            // and candidate_fallback_duration > working_labels.mut_fallback_duration_transfer(destination_sp_idx)
-
-            LOG4CPLUS_TRACE(logger, "Updating label transfer count : "
-                                        << count << " sp " << data.pt_data->stop_points[destination_sp_idx.val]->uri
-                                        << " from " << iso_string(working_labels.dt_transfer(destination_sp_idx), data)
-                                        << " to " << iso_string(end_connection_date, data)
-                                        << " throught connection : " << data.pt_data->stop_points[sp_idx.val]->uri
-                                        << " fallback : " << navitia::str(candidate_fallback_duration));
-
-            // if we can improve the best label, we mark it
-            working_labels.mut_dt_transfer(destination_sp_idx) = end_connection_date;
-            // TODO ? : add conn.duration to fallback_duration_transfer ?
-            working_labels.mut_fallback_duration_transfer(destination_sp_idx) = candidate_fallback_duration;
-            best_labels_transfers[destination_sp_idx] = end_connection_date;
-            result = true;
         }
     }
 
@@ -189,6 +195,8 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
 
     boost::fill(best_labels_pts.values(), bound);
     boost::fill(best_labels_transfers.values(), bound);
+    boost::fill(best_labels_pts.values(), DateTimeUtils::not_valid);
+    boost::fill(best_labels_transfers.values(), DateTimeUtils::not_valid);
 }
 
 void RAPTOR::init(const map_stop_point_duration& dep,
@@ -203,7 +211,8 @@ void RAPTOR::init(const map_stop_point_duration& dep,
         const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
         labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
         labels[0].mut_fallback_duration_transfer(sp_dt.first) = sn_dur;
-        best_labels_transfers[sp_dt.first] = begin_dt;
+        // best_labels_transfers[sp_dt.first] = begin_dt;
+        // best_labels_transfers_fallback[sp_dt.first] = begin_dt;
         for (const auto& jpp : jpps_from_sp[sp_dt.first]) {
             if (clockwise && Q[jpp.jp_idx] > jpp.order) {
                 Q[jpp.jp_idx] = jpp.order;
@@ -435,7 +444,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                               const size_t max_extra_second_pass) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 
-    LOG4CPLUS_TRACE(logger, "departure_datetime : " << iso_string(departure_datetime, data)
+    LOG4CPLUS_DEBUG(logger, "departure_datetime : " << iso_string(departure_datetime, data)
                                                     << " bound : " << iso_string(bound, data));
 
     auto start_raptor = std::chrono::system_clock::now();
@@ -465,11 +474,11 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
 
     LOG4CPLUS_TRACE(logger, "labels after first pass : " << std::endl << print_all_labels());
 
-    LOG4CPLUS_TRACE(logger, "best labels : \n" << print_best_labels());
+    // LOG4CPLUS_TRACE(logger, "best labels : \n" << print_best_labels());
 
     auto end_first_pass = std::chrono::system_clock::now();
 
-    LOG4CPLUS_DEBUG(logger, "end first pass");
+    LOG4CPLUS_DEBUG(logger, "end first pass with count : " << count);
 
     // Now, we do the second pass.  In case of clockwise (resp
     // anticlockwise) search, the goal of the second pass is to find
@@ -486,8 +495,10 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto starting_points = make_starting_points_snd_phase(*this, calc_dest, accessibilite_params, clockwise);
     swap(labels, first_pass_labels);
     auto best_labels_pts_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_transfers);
+    IdxMap<type::StopPoint, DateTime> best_labels_pts_fallback_for_snd_pass = best_labels_transfers_fallback;
     init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_pts_for_snd_pass);
     auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
+    IdxMap<type::StopPoint, DateTime> best_labels_transfers_fallback_for_snd_pass = best_labels_pts_fallback;
 
     LOG4CPLUS_DEBUG(logger, "starting points 2nd phase " << std::endl
                                                          << print_starting_points_snd_phase(starting_points));
@@ -532,6 +543,8 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         init_map[start.sp_idx] = 0_s;
         best_labels_pts = best_labels_pts_for_snd_pass;
         best_labels_transfers = best_labels_transfers_for_snd_pass;
+        best_labels_pts_fallback = best_labels_pts_fallback_for_snd_pass;
+        best_labels_transfers_fallback = best_labels_transfers_fallback_for_snd_pass;
         init(init_map, working_labels.dt_pt(start.sp_idx), !clockwise, accessibilite_params.properties);
         boucleRAPTOR(!clockwise, rt_level, max_transfers);
 
@@ -777,25 +790,32 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                         const type::StopTime& st = *it_st;
                         workingDt = st.section_end(base_dt, visitor.clockwise());
                         // We check if there are no drop_off_only and if the local_zone is okay
+
+                        const bool has_better_label =
+                            visitor.comp(workingDt, best_labels_pts[jpp.sp_idx])
+                            || (workingDt == best_labels_pts[jpp.sp_idx]
+                                && working_fallback_duration < best_labels_pts_fallback[jpp.sp_idx]);
                         if (st.valid_end(visitor.clockwise())
                             && (l_zone == std::numeric_limits<uint16_t>::max() || l_zone != st.local_traffic_zone)
-                            && visitor.comp(workingDt, best_labels_pts[jpp.sp_idx])
+                            && has_better_label
                             && valid_stop_points[jpp.sp_idx.val])  // we need to check the accessibility
                         {
-                            LOG4CPLUS_TRACE(logger, "Updating label dt "
-                                                        << "count : " << count << " sp "
-                                                        << data.pt_data->stop_points[jpp.sp_idx.val]->uri << " from "
-                                                        << iso_string(working_labels.dt_pt(jpp.sp_idx), data) << " to "
-                                                        << iso_string(workingDt, data)
-                                                        << " throught : " << st.vehicle_journey->route->line->uri
-                                                        << " boarding_stop_point : "
-                                                        << data.pt_data->stop_points[boarding_stop_point.val]->uri
-                                                        << " fallback : " << navitia::str(working_fallback_duration));
+                            LOG4CPLUS_TRACE(logger,
+                                            "Updating label dt "
+                                                << "count : " << count << " sp "
+                                                << data.pt_data->stop_points[jpp.sp_idx.val]->uri << " from "
+                                                << iso_string(working_labels.dt_pt(jpp.sp_idx), data) << " to "
+                                                << iso_string(workingDt, data) << " throught : "
+                                                << st.vehicle_journey->route->line->uri << " boarding_stop_point : "
+                                                << data.pt_data->stop_points[boarding_stop_point.val]->uri
+                                                << " fallback : " << navitia::str(working_fallback_duration)
+                                                << " old best : " << iso_string(best_labels_pts[jpp.sp_idx], data));
 
                             working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                             working_labels.mut_fallback_duration_pt(jpp.sp_idx) = working_fallback_duration;
                             BOOST_ASSERT(working_fallback_duration != DateTimeUtils::not_valid);
-                            best_labels_pts[jpp.sp_idx] = working_labels.dt_pt(jpp.sp_idx);
+                            best_labels_pts[jpp.sp_idx] = workingDt;
+                            best_labels_pts_fallback[jpp.sp_idx] = working_fallback_duration;
                             continue_algorithm = true;
                         }
                     }
@@ -900,7 +920,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
             /// mark the journey_pattern as visited, no need to explore it in the next round
             q_elt.second = visitor.init_queue_item();
         }
-        continue_algorithm = continue_algorithm && this->foot_path(visitor);
+        if (continue_algorithm) {
+            continue_algorithm = this->foot_path(visitor);
+        }
     }
 }
 
