@@ -512,28 +512,29 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         LOG4CPLUS_DEBUG(logger, std::endl
                                     << "Second pass from " << start_stop_point->uri << "   count : " << start.count);
 
-        Journey fake_journey =
-            convert_to_bound(start, data.dataRaptor->min_connection_time, transfer_penalty, clockwise);
-
-        LOG4CPLUS_DEBUG(logger, " fake journey : " << fake_journey);
-
-        if (solutions.contains_better_than(fake_journey)) {
-            LOG4CPLUS_DEBUG(logger, "has better solution than fake journey from " << start_stop_point->uri);
-            for (const auto& solution : solutions) {
-                if (dominator(solution, fake_journey)) {
-                    LOG4CPLUS_DEBUG(logger, "  dominated by : " << solution);
-                    break;
-                }
-            }
-            continue;
-        }
-
         if (!start.has_priority) {
+            Journey fake_journey =
+                convert_to_bound(start, data.dataRaptor->min_connection_time, transfer_penalty, clockwise);
+
+            LOG4CPLUS_DEBUG(logger, " fake journey : " << fake_journey);
+
+            if (solutions.contains_better_than(fake_journey)) {
+                LOG4CPLUS_DEBUG(logger, "has better solution than fake journey from " << start_stop_point->uri);
+                for (const auto& solution : solutions) {
+                    if (dominator(solution, fake_journey)) {
+                        LOG4CPLUS_DEBUG(logger, "  dominated by : " << solution);
+                        break;
+                    }
+                }
+                continue;
+            }
+
             ++supplementary_2nd_pass;
-        }
-        if (supplementary_2nd_pass > max_extra_second_pass) {
-            LOG4CPLUS_TRACE(logger, "max second pass reached");
-            break;
+
+            if (supplementary_2nd_pass > max_extra_second_pass) {
+                LOG4CPLUS_TRACE(logger, "max second pass reached");
+                break;
+            }
         }
 
         const auto& working_labels = first_pass_labels[start.count];
