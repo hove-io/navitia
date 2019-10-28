@@ -82,7 +82,7 @@ struct TzHandler {
  */
 struct GtfsData {
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
-    std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
+    std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
@@ -230,6 +230,10 @@ struct StopsGtfsHandler : public GenericHandler {
     bool parse_common_data(const csv_row& row, T* stop);
 
     void handle_stop_point_without_area(Data& data);  // might be different between stops parser
+
+    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
+    ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    bool is_duplicate(const csv_row& row);
 };
 
 struct RouteGtfsHandler : public GenericHandler {
