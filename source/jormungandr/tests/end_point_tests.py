@@ -227,3 +227,15 @@ class TestEndPoint(AbstractTestFixture):
         self.check_context(response)
         assert response.get("equipment_reports", None) is not None
         assert response['context']['timezone'] == 'UTC'
+
+    def test_region_coord_addresses(self):
+        '''
+        To get an address, you have to use the reverse API as in : /coord/<lat>;<lon>.
+        '''
+        response = self.tester.get(
+            'v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609/addresses'
+        )
+        assert response.status_code == 404, '/addresses has never been supported, and is now deprecated'
+
+        response = self.query('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609/')
+        assert response.has_key('address')

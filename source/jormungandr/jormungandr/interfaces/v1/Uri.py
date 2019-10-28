@@ -504,16 +504,6 @@ def datasets(is_collection):
     return Datasets
 
 
-def addresses(is_collection):
-    class Addresses(Coord):
-
-        """ Not implemented yet"""
-
-        pass
-
-    return Addresses
-
-
 def coords(is_collection):
     class Coords(Coord):
         """ Not implemented yet"""

@@ -40,7 +40,6 @@ collections_to_resource_type = {
     "stop_areas": "stop_area",
     "lines": "line",
     "line_groups": "line_group",
-    "addresses": "address",
     "coords": "coord",
     "trips": "trip",
     "contributors": "contributor",

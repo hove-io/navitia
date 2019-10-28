@@ -39,7 +39,6 @@ collections_to_resource_type = {
     "stop_areas": "stop_area",
     "lines": "line",
     "line_groups": "line_group",
-    "addresses": "address",
     "coords": "coord",
     "coord": "coord",
     "journey_pattern_points": "journey_pattern_point",
