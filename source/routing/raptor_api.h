@@ -103,7 +103,7 @@ void make_response(navitia::PbCreator& pb_creator,
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,
-                    const type::EntryPoint& origin,
+                    const type::EntryPoint& center,
                     const uint64_t datetime,
                     const bool clockwise,
                     const type::AccessibiliteParams& accessibilite_params,
@@ -112,7 +112,8 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     georef::StreetNetwork& worker,
                     const type::RTLevel rt_level,
                     const int max_duration = 3600,
-                    const uint32_t max_transfers = std::numeric_limits<uint32_t>::max());
+                    const uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+                    const boost::optional<routing::map_stop_point_duration>& stop_points = boost::none);
 
 /**
  * @brief Used for Pt with distributed mode
@@ -192,7 +193,7 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR& raptor_max,
-                              const type::EntryPoint& origin,
+                              const type::EntryPoint& center,
                               const uint64_t departure_datetime,
                               const std::vector<DateTime>& boundary_duration,
                               const uint32_t max_transfers,
@@ -202,7 +203,8 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               const bool clockwise,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork& worker,
-                              const double& speed);
+                              const double& speed,
+                              const boost::optional<routing::map_stop_point_duration>& stop_points = boost::none);
 
 void make_heat_map(navitia::PbCreator& pb_creator,
                    RAPTOR& raptor,
@@ -218,7 +220,8 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    georef::StreetNetwork& worker,
                    const double& speed,
                    const navitia::type::Mode_e mode,
-                   const uint32_t resolution);
+                   const uint32_t resolution,
+                   const boost::optional<routing::map_stop_point_duration>& stop_points = boost::none);
 
 void make_pathes(PbCreator& pb_creator,
                  const std::vector<navitia::routing::Path>& paths,
