@@ -448,7 +448,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         if args['data_freshness'] is None:
             # retrocompatibilty handling
-            args['data_freshness'] = 'adapted_schedule' if args['disruption_active'] is True else 'base_schedule'
+            args['data_freshness'] = 'realtime' if args['disruption_active'] is True else 'base_schedule'
 
         # TODO : Changer le protobuff pour que ce soit propre
         if args['destination_mode'] == 'vls':
