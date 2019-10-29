@@ -69,10 +69,10 @@ bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     // FIXME: I don't like this objective, for me, this is a
     // transfer objective, but then you can return some solutions
     // that we didn't return before.
-    if (!(better_on_transfer(that) && that.better_on_transfer(*this))) {
-        // if they are not equal on transfer, we don't check min_waiting_dur
-        return true;
-    }
+    // if (!(better_on_transfer(that, request_clockwise) && that.better_on_transfer(*this, request_clockwise))) {
+    //     // if they are not equal on transfer, we don't check min_waiting_dur
+    //     return true;
+    // }
     return min_waiting_dur >= that.min_waiting_dur;
 }
 
