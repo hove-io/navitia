@@ -211,8 +211,8 @@ void RAPTOR::init(const map_stop_point_duration& dep,
         const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
         labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
         labels[0].mut_fallback_duration_transfer(sp_dt.first) = sn_dur;
-        // best_labels_transfers[sp_dt.first] = begin_dt;
-        // best_labels_transfers_fallback[sp_dt.first] = begin_dt;
+        best_labels_transfers[sp_dt.first] = begin_dt;
+        best_labels_transfers_fallback[sp_dt.first] = begin_dt;
         for (const auto& jpp : jpps_from_sp[sp_dt.first]) {
             if (clockwise && Q[jpp.jp_idx] > jpp.order) {
                 Q[jpp.jp_idx] = jpp.order;
