@@ -150,17 +150,33 @@ class ReleaseManager:
                 exit(1)
             elif self.version[0] < self.dev_data_version:  # major version
                 self.version[0] = self.dev_data_version
-                self.version[1] = version_n[2] = 0
+                self.version[1] = version[2] = 0
             else:  # versions equal: minor version
                 self.version[0] = self.dev_data_version
                 self.version[1] += 1
                 self.version[2] = 0
+
+        elif self.release_type == "major":
+            self.version[0] += 1
+            self.version[1] = version[2] = 0
+
+        elif self.release_type == "minor":
+            self.version[1] += 1
+            self.version[2] = 0
 
         elif self.release_type == "hotfix":
             self.version[2] += 1
 
         else:
             exit(5)
+
+        if self.version[0] > self.dev_data_version:
+            print(
+                "ABORTING: data_version {d} is < to tag {t} to be published".format(
+                    d=self.dev_data_version, t=self.latest_tag
+                )
+            )
+            exit(1)
 
         self.str_version = "{maj}.{min}.{hf}".format(
             maj=self.version[0], min=self.version[1], hf=self.version[2]
@@ -171,10 +187,10 @@ class ReleaseManager:
 
     def checkout_parent_branch(self):
         parent = ""
-        if self.release_type == "regular":
-            parent = "dev"
-        else:
+        if self.release_type == "hotfix":
             parent = "release"
+        else:
+            parent = "dev"
 
         self.git.checkout(parent)
         self.git.submodule('update', '--recursive')
@@ -398,7 +414,7 @@ class ReleaseManager:
 if __name__ == '__main__':
 
     if len(argv) < 2:
-        print("mandatory argument: {regular|hotfix}")
+        print("mandatory argument: {regular|major|minor|hotfix}")
         print("possible additional argument: remote (default is CanalTP)")
         exit(5)
 

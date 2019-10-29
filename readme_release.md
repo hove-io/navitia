@@ -22,6 +22,8 @@ Then follow the instructions given by the script, and also:
 * don't forget to make `git submodule update --recursive` when necessary
 * check that `release` branch COMPILES and TESTS (unit, docker and tyr) before pushing it!
 
+Nota: `major` and `minor` invocations are possible but deprecated.
+
 ## For hotfix
 
 Note: It is preferable but not mandatory to merge the hotfix PR before.
