@@ -316,8 +316,9 @@ Journey make_bound_journey(DateTime beg,
     }
 
     // for the rest KPI, we don't know yet the accurate values, so we'll provide the best lb possible
-    journey.transfer_dur = transfer_penalty * count + navitia::seconds((count - 1) * lower_bound_conn);
+    journey.transfer_dur = navitia::seconds((count - 1) * lower_bound_conn);
     journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
+    journey.total_waiting_dur = navitia::seconds(0);
     journey.nb_vj_extentions = 0;
     return journey;
 }
