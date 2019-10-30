@@ -767,7 +767,7 @@ void Worker::isochrone(const pbnavitia::JourneysRequest& request) {
 
     navitia::routing::make_isochrone(this->pb_creator, *planner, center, request.datetimes(0), request.clockwise(),
                                      arg.accessibilite_params, arg.forbidden, arg.allowed, *street_network_worker,
-                                     arg.rt_level, request.max_duration(), request.max_transfers(), *stop_points);
+                                     arg.rt_level, request.max_duration(), request.max_transfers(), stop_points);
 }
 
 void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
@@ -834,7 +834,7 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
     navitia::routing::make_graphical_isochrone(
         this->pb_creator, *planner, center, request_journey.datetimes(0), boundary_duration,
         request_journey.max_transfers(), arg.accessibilite_params, arg.forbidden, arg.allowed,
-        request_journey.clockwise(), arg.rt_level, *street_network_worker, end_speed, *stop_points);
+        request_journey.clockwise(), arg.rt_level, *street_network_worker, end_speed, stop_points);
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
@@ -858,7 +858,7 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
                                     request_journey.max_duration(), request_journey.max_transfers(),
                                     arg.accessibilite_params, arg.forbidden, arg.allowed, request_journey.clockwise(),
                                     arg.rt_level, *street_network_worker, end_speed, end_mode, request.resolution(),
-                                    *stop_points);
+                                    stop_points);
 }
 
 void Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
