@@ -15,6 +15,7 @@ you may also run `make docker_test` for important contributions), and have a wee
 For a proposed PR, we require 2 approvals by repository owners.
 If you have the rights, once your PR has 2 approvals, you are encouraged to merge it yourself.
 
+
 ## Build Navitia
 
 If you want to build navitia, please refer to the
@@ -38,6 +39,7 @@ navitia_dir/run/jormungandr/jormungandr_settings.jon
 navitia_dir/run/jormungandr/venv_jormungandr/
 ```
 
+
 ## Code Organisation
 
 At the root of the repository, several directories can be found:
@@ -47,6 +49,18 @@ At the root of the repository, several directories can be found:
 3. release: contains [script_release.py](https://github.com/canaltp/navitia/blob/dev/release/script_release.py) to run the release process
 4. scripts: different useful scripts
 
+### `data_version` management
+
+The data_version stored into [source/type/data.cpp](source/type/data.cpp) is used to know if a given `nav` file
+is readable using a given kraken (both contain their version).
+
+So this number **must** be incremented when data serialization changes.  
+In case multiple changes occur between 2 releases, only one increment is enough.
+
+This number is also used to tag major versions of Navitia.  
+Major version is tracked externally to know if nav-files must be regenerated.  
+So please update this `data_version` to indicate a need for re-binarization.
+
 
 ## Tools
 
@@ -54,6 +68,10 @@ At the root of the repository, several directories can be found:
 * CMake for the build system
 * Python for the api
 
+
+## Release a new version
+
+Please follow instructions from [readme_release.md](readme_release.md).
 
 ## Git hooks
 
@@ -65,7 +83,7 @@ Then, install the hooks with:
 pre-commit install
 ```
 
-## Python formatting
+### Python formatting
 
 Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/)
 You should enable the pre-commit git hook to make sure it's being run before commiting your changes, it's
@@ -81,7 +99,7 @@ pre-commit run black --all
 You can also [install Black traditionally](https://black.readthedocs.io/en/stable/installation_and_usage.html)
 But bare in mind, it requires python 3.6+ to run.
 
-## C++ formatting
+### C++ formatting
 
 Our pre-commit hooks are running [Clang-format](https://releases.llvm.org/6.0.0/tools/clang/docs/ClangFormat.html) to format our c++ codebase. You'll need version 6.0 in order to pass our CI.
 ```sh
