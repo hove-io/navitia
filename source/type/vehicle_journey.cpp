@@ -199,7 +199,7 @@ ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
     return vp_for_stop_time;
 }
 
-ValidityPattern VehicleJourney::get_vp_for_section(const std::set<Rank<StopTime>>& section,
+ValidityPattern VehicleJourney::get_vp_for_section(const std::set<RankStopTime>& section,
                                                    RTLevel rt_level,
                                                    const boost::posix_time::time_period& period) const {
     ValidityPattern vp_for_section{validity_patterns[rt_level]->beginning_date};
@@ -229,7 +229,15 @@ ValidityPattern VehicleJourney::get_vp_for_section(const std::set<Rank<StopTime>
     return vp_for_section;
 }
 
-std::set<Rank<StopTime>> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
+const StopTime& VehicleJourney::get_stop_time(const RankStopTime& order) const {
+    return stop_time_list.at(order.val);
+}
+
+const StopTime& VehicleJourney::get_corresponding_stop_time(const routing::RankJourneyPatternPoint& jpp_order) const {
+    return stop_time_list.at(jpp_order.val);
+}
+
+std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
     /*
      * Identify all the smallest sections starting with start_sa and
      * ending with end_sa. Then we return the list of ranks
@@ -278,8 +286,8 @@ std::set<Rank<StopTime>> VehicleJourney::get_sections_ranks(const StopArea* star
      *  - s1/s2 from the 5th to the 10th,
      *  - s1/s2/s5 from the 11th to the 15th
      * */
-    std::set<Rank<StopTime>> res;
-    boost::optional<Rank<StopTime>> section_start_rank;
+    std::set<RankStopTime> res;
+    boost::optional<RankStopTime> section_start_rank;
     bool section_starting = false, section_ending = false;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;
@@ -324,7 +332,7 @@ std::set<Rank<StopTime>> VehicleJourney::get_sections_ranks(const StopArea* star
 
     // Must close a potential section
     if (section_ending) {
-        for (auto i = *section_start_rank; i <= Rank<StopTime>(vj->stop_time_list.size() - 1); ++i) {
+        for (auto i = *section_start_rank; i <= RankStopTime(vj->stop_time_list.size() - 1); ++i) {
             res.insert(i);
         }
     }

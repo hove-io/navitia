@@ -53,6 +53,10 @@ std::ostream& operator<<(std::ostream& os, const JourneyPattern& jp) {
     return os << "Jp(" << jp.jpps << ", " << jp.discrete_vjs << ", " << jp.freq_vjs << ")";
 }
 
+const JppIdx& JourneyPattern::get_jpp_idx(const RankJourneyPatternPoint& order) const {
+    return jpps.at(order.val);
+}
+
 void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     map.clear();
     jps.clear();
@@ -213,7 +217,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     JourneyPattern jp;
     jp.route_idx = key.route_idx;
     jp.phy_mode_idx = key.phy_mode_idx;
-    Rank<JourneyPatternPoint> order(0);
+    RankJourneyPatternPoint order(0);
     for (const auto& jpp_key : key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
@@ -225,7 +229,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
 
 JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx,
                                          const SpIdx& sp_idx,
-                                         const Rank<JourneyPatternPoint>& order) {
+                                         const RankJourneyPatternPoint& order) {
     const auto idx = JppIdx(jpps.size());
     jpps.push_back({jp_idx, sp_idx, order});
     return idx;

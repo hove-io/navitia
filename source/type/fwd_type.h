@@ -29,6 +29,8 @@ www.navitia.io
 */
 #pragma once
 
+#include "utils/rank.h"
+
 // forward declare
 //
 template <class DATATYPE, class ELEMTYPE, int NUMDIMS, class ELEMTYPEREAL, int TMAXNODES, int TMINNODES>
@@ -61,6 +63,7 @@ struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
+using RankStopTime = Rank<StopTime>;
 struct Dataset;
 struct StopPoint;
 struct ExceptionDate;

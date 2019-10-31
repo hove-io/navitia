@@ -110,8 +110,7 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
 }
 
 struct HeadsignHandlerTest : nt::HeadsignHandler {
-    const std::unordered_map<const nt::VehicleJourney*,
-                             boost::container::flat_map<navitia::Rank<nt::StopTime>, std::string>>&
+    const std::unordered_map<const nt::VehicleJourney*, boost::container::flat_map<nt::RankStopTime, std::string>>&
     get_headsign_changes() const {
         return headsign_changes;
     }

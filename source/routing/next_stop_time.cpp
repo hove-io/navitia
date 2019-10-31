@@ -62,7 +62,7 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp, co
     const auto jpp_order = jpp.order;
     stop_times.reserve(jp.discrete_vjs.size());
     for (const auto& vj : jp.discrete_vjs) {
-        const auto& st = vj->stop_time_list[jpp_order.val];
+        const auto& st = vj->get_corresponding_stop_time(jpp_order);
         if (!getter.is_valid(st)) {
             continue;
         }
@@ -165,7 +165,7 @@ static std::pair<const type::StopTime*, DateTime> next_valid_frequency(const Sto
 
     while (best.first == nullptr && base_dt <= bound) {
         for (const auto& freq_vj : jp.freq_vjs) {
-            const auto& st = freq_vj->stop_time_list[jpp.order.val];
+            const auto& st = freq_vj->get_corresponding_stop_time(jpp.order);
 
             if (!freq_vj->accessible(vehicle_props)) {
                 continue;
@@ -202,7 +202,7 @@ static std::pair<const type::StopTime*, DateTime> previous_valid_frequency(const
 
     while (best.first == nullptr && base_dt >= bound) {
         for (const auto& freq_vj : jp.freq_vjs) {
-            const auto& st = freq_vj->stop_time_list[jpp.order.val];
+            const auto& st = freq_vj->get_corresponding_stop_time(jpp.order);
 
             if (!freq_vj->accessible(vehicle_props)) {
                 continue;
@@ -381,9 +381,9 @@ static void fill_cache(const DateTime from,
                 continue;
             }
             const auto shift = navitia::DateTimeUtils::SECONDS_PER_DAY * day;
-            size_t i = 0;
+            RankJourneyPatternPoint i{0};
             for (const auto& st : vj->stop_time_list) {
-                auto jpp_idx = jp.jpps[i];
+                auto jpp_idx = jp.get_jpp_idx(i);
                 auto loop_impl = [&](long freq_shift) {
                     if (st.drop_off_allowed()) {
                         auto arrival_time = st.alighting_time + shift + freq_shift;

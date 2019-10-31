@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #include "utils/serialization_fusion_map.h"
-#include "utils/rank.h"
 #include "type/fwd_type.h"
 #include <vector>
 #include <map>
@@ -76,7 +75,7 @@ private:
     template <typename T>
     using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
 
-    using stop_time_key = std::pair<const navitia::type::VehicleJourney*, Rank<StopTime>>;
+    using stop_time_key = std::pair<const navitia::type::VehicleJourney*, RankStopTime>;
 
     template <typename T>
     const T* get_as_key(const T& obj) const {

@@ -282,7 +282,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
                 return res;
             }
         }
-        order = Rank<type::StopTime>(0);  // for the stay in vj's, we start from the first stop time
+        order = type::RankStopTime(0);  // for the stay in vj's, we start from the first stop time
     }
     throw navitia::recoverable_exception("impossible to rebuild path");
 }

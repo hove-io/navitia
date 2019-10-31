@@ -41,7 +41,6 @@ www.navitia.io
 #include <set>
 
 #include "utils/exception.h"
-#include "utils/rank.h"
 
 #include "type/type_interfaces.h"
 #include "type/fwd_type.h"
@@ -263,6 +262,7 @@ struct AuxInfoForMetaVJ {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
+    const StopTimeUpdate& get_stop_time_update(const RankStopTime& order) const { return stop_times.at(order.val); }
 };
 }  // namespace detail
 
@@ -412,8 +412,8 @@ public:
 struct ImpactedVJ {
     const VehicleJourney* vj;  // vj before impact
     ValidityPattern new_vp;
-    std::set<Rank<StopTime>> impacted_ranks;
-    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<Rank<StopTime>> r)
+    std::set<RankStopTime> impacted_ranks;
+    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<RankStopTime> r)
         : vj(vj), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*

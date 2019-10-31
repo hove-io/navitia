@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(get_sections_ranks) {
 
     auto sa = [&](const std::string& id) { return b.get<type::StopArea>(id); };
 
-    using rst = Rank<StopTime>;
+    using rst = RankStopTime;
     // 0a 0b 1 0a 2 3 0a 0b 0c 4 2 5 2
     //       *
     BOOST_CHECK_EQUAL(vj->get_sections_ranks(sa("1"), sa("1")), std::set<rst>({rst(2)}));

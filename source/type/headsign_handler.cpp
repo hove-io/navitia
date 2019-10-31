@@ -130,7 +130,7 @@ bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj, const std::
         return false;
     }
 
-    auto has_headsign = [&](const std::pair<Rank<StopTime>, std::string>& it_change) {
+    auto has_headsign = [&](const std::pair<RankStopTime, std::string>& it_change) {
         return it_change.second == headsign;
     };
     if (navitia::contains_if(it_vj_changes->second, has_headsign)) {

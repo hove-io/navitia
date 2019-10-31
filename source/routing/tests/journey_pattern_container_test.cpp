@@ -53,16 +53,16 @@ static void check_vj(const nr::JourneyPatternContainer& jp_container,
     BOOST_CHECK_EQUAL(jp_container.get_jp_from_vj()[nr::VjIdx(vj)], jp.first);
 
     // jpps checks
-    navitia::Rank<nr::JourneyPatternPoint> order(0);
+    nr::RankJourneyPatternPoint order(0);
     BOOST_REQUIRE_EQUAL(jp.second.jpps.size(), vj.stop_time_list.size());
     for (const auto& jpp_idx : jp.second.jpps) {
         const auto& jpp = jp_container.get(jpp_idx);
-        BOOST_CHECK_EQUAL(jpp.order, order);                                                // order is coherent
-        BOOST_CHECK_EQUAL(jpp.jp_idx, jp.first);                                            // jpp.jp_idx is coherent
-        BOOST_CHECK_EQUAL(jp_container.get_jpp(vj.stop_time_list.at(order.val)), jpp_idx);  // st->jpp
+        BOOST_CHECK_EQUAL(jpp.order, order);      // order is coherent
+        BOOST_CHECK_EQUAL(jpp.jp_idx, jp.first);  // jpp.jp_idx is coherent
+        BOOST_CHECK_EQUAL(jp_container.get_jpp(vj.get_corresponding_stop_time(order)), jpp_idx);  // st->jpp
 
         // stop point of the jpp is coherent with the vj
-        BOOST_CHECK_EQUAL(jpp.sp_idx, nr::SpIdx(*vj.stop_time_list.at(order.val).stop_point));
+        BOOST_CHECK_EQUAL(jpp.sp_idx, nr::SpIdx(*vj.get_corresponding_stop_time(order).stop_point));
         ++order;
     }
 }
