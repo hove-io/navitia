@@ -1125,7 +1125,7 @@ boost::optional<routing::map_stop_point_duration> get_stop_points(const type::En
 }
 
 static routing::map_stop_point_duration make_map_stop_point_duration(
-    const std::vector<type::EntryPoint>& entryPointList,
+    const type::EntryPoints& entryPointList,
     const std::unordered_map<std::string, type::StopPoint*>& raptor_stop_points_map) {
     routing::map_stop_point_duration results;
     for (const auto& entryPoint : entryPointList) {
@@ -1144,7 +1144,7 @@ static const boost::optional<routing::map_stop_point_duration> get_stop_points_i
     const navitia::type::EntryPoint& center,
     const navitia::type::Data& data,
     navitia::georef::StreetNetwork& worker,
-    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
+    const boost::optional<const type::EntryPoints&>& stop_points) {
     // If stop_points have already been computed, we don't need to do it here again.
     if (stop_points) {
         return make_map_stop_point_duration(*stop_points, data.pt_data->stop_points_map);
@@ -1216,8 +1216,8 @@ static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
 
 void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR& raptor,
-                      const std::vector<type::EntryPoint>& origins,
-                      const std::vector<type::EntryPoint>& destinations,
+                      const type::EntryPoints& origins,
+                      const type::EntryPoints& destinations,
                       const uint64_t timestamp,
                       const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
@@ -1459,7 +1459,7 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     const nt::RTLevel rt_level,
     georef::StreetNetwork& worker,
     PbCreator& pb_creator,
-    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
+    const boost::optional<const type::EntryPoints&>& stop_points) {
     const auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
     if (pb_creator.has_error() || tmp_datetime.size() == 0
         || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1492,7 +1492,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     const type::RTLevel rt_level,
                     const int max_duration,
                     const uint32_t max_transfers,
-                    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
+                    const boost::optional<const type::EntryPoints&>& stop_points) {
     const auto isochrone_common =
         make_isochrone_common(raptor, center, datetime_timestamp, max_duration, max_transfers, accessibilite_params,
                               forbidden, allowed, clockwise, rt_level, worker, pb_creator, stop_points);
@@ -1592,7 +1592,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork& worker,
                               const double& speed,
-                              const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
+                              const boost::optional<const type::EntryPoints&>& stop_points) {
     const auto isochrone_common = make_isochrone_common(raptor, center, departure_datetime, boundary_duration[0],
                                                         max_transfers, accessibilite_params, forbidden, allowed,
                                                         clockwise, rt_level, worker, pb_creator, stop_points);
@@ -1627,7 +1627,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const double& end_speed,
                    const navitia::type::Mode_e end_mode,
                    const uint32_t resolution,
-                   const boost::optional<const std::vector<type::EntryPoint>&>& stop_points) {
+                   const boost::optional<const type::EntryPoints&>& stop_points) {
     const auto isochrone_common =
         make_isochrone_common(raptor, center, departure_datetime, max_duration, max_transfers, accessibilite_params,
                               forbidden, allowed, clockwise, rt_level, worker, pb_creator, stop_points);

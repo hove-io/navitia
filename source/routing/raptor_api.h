@@ -113,15 +113,15 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     const type::RTLevel rt_level,
                     const int max_duration = 3600,
                     const uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
-                    const boost::optional<const std::vector<type::EntryPoint>&>& stop_points = boost::none);
+                    const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 /**
  * @brief Used for Pt with distributed mode
  */
 void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR& raptor,
-                      const std::vector<type::EntryPoint>& origins,
-                      const std::vector<type::EntryPoint>& destinations,
+                      const type::EntryPoints& origins,
+                      const type::EntryPoints& destinations,
                       const uint64_t timestamp,
                       const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
@@ -204,7 +204,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork& worker,
                               const double& speed,
-                              const boost::optional<const std::vector<type::EntryPoint>&>& stop_points = boost::none);
+                              const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 void make_heat_map(navitia::PbCreator& pb_creator,
                    RAPTOR& raptor,
@@ -221,7 +221,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const double& speed,
                    const navitia::type::Mode_e mode,
                    const uint32_t resolution,
-                   const boost::optional<const std::vector<type::EntryPoint>&>& stop_points = boost::none);
+                   const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 void make_pathes(PbCreator& pb_creator,
                  const std::vector<navitia::routing::Path>& paths,

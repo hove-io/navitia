@@ -636,12 +636,12 @@ static type::EntryPoint create_journeys_entry_point(const ::pbnavitia::LocationC
     return entry_point;
 }
 
-JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
+JourneysArg::JourneysArg(type::EntryPoints origins,
                          type::AccessibiliteParams accessibilite_params,
                          std::vector<std::string> forbidden,
                          std::vector<std::string> allowed,
                          type::RTLevel rt_level,
-                         std::vector<type::EntryPoint> destinations,
+                         type::EntryPoints destinations,
                          std::vector<uint64_t> datetimes,
                          boost::optional<type::EntryPoint> isochrone_center)
     : origins(std::move(origins)),
@@ -656,13 +656,13 @@ JourneysArg::JourneysArg() {}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
     const auto* data = this->pb_creator.data;
-    std::vector<type::EntryPoint> origins;
+    type::EntryPoints origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for (int i = 0; i < request.origin().size(); i++) {
         origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
     }
 
-    std::vector<type::EntryPoint> destinations;
+    type::EntryPoints destinations;
     for (int i = 0; i < request.destination().size(); i++) {
         destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
     }
@@ -752,14 +752,14 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
     }
 }
 
-static std::pair<const type::EntryPoint, const boost::optional<const std::vector<type::EntryPoint>&>>
-get_center_and_stop_points(const JourneysArg& arg) {
+static std::pair<const type::EntryPoint, const boost::optional<const type::EntryPoints&>> get_center_and_stop_points(
+    const JourneysArg& arg) {
     // If we have a center
     // Origins or destinations are already computed stop_points
     const auto& center =
         arg.isochrone_center ? *arg.isochrone_center : (arg.origins.empty() ? arg.destinations[0] : arg.origins[0]);
     const auto& stop_points = arg.isochrone_center ? (arg.origins.empty() ? arg.destinations : arg.origins)
-                                                   : boost::optional<const std::vector<type::EntryPoint>&>{};
+                                                   : boost::optional<const type::EntryPoints&>{};
 
     return std::make_pair(center, stop_points);
 }
