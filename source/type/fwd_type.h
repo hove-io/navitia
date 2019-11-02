@@ -29,13 +29,13 @@ www.navitia.io
 */
 #pragma once
 
-#include "utils/rank.h"
-
 // forward declare
 //
 template <class DATATYPE, class ELEMTYPE, int NUMDIMS, class ELEMTYPEREAL, int TMAXNODES, int TMINNODES>
 class RTree;
 namespace navitia {
+template <typename T>
+struct Rank;
 namespace georef {
 struct GeoRef;
 struct POI;

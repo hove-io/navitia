@@ -35,9 +35,13 @@ www.navitia.io
 #include "validity_pattern.h"
 #include <set>
 #include <boost/serialization/split_member.hpp>
-#include "routing/journey_pattern_container.h"
 
 namespace navitia {
+
+namespace routing {
+using RankJourneyPatternPoint = Rank<JourneyPatternPoint>;
+}
+
 namespace type {
 
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1

@@ -301,7 +301,7 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
         // Must close section before potentially starting a new one
         // Keep going if where are still in the end stop area
         if (section_ending && end_sa->idx != sa->idx) {
-            for (auto i = *section_start_rank, last = st.order() - 1; i <= last; ++i) {
+            for (auto i = *section_start_rank; i < st.order(); ++i) {
                 res.insert(i);
             }
             // the section is finished, we are no more in a section
@@ -332,7 +332,7 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
 
     // Must close a potential section
     if (section_ending) {
-        for (auto i = *section_start_rank; i <= RankStopTime(vj->stop_time_list.size() - 1); ++i) {
+        for (auto i = *section_start_rank; i < RankStopTime(vj->stop_time_list.size()); ++i) {
             res.insert(i);
         }
     }

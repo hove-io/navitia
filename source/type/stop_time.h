@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include "type/datetime.h"
 #include "type/vehicle_journey.h"  //required to inline order()
+#include "utils/rank.h"
 
 namespace navitia {
 namespace type {
