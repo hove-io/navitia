@@ -37,11 +37,6 @@ www.navitia.io
 #include <boost/serialization/split_member.hpp>
 
 namespace navitia {
-
-namespace routing {
-using RankJourneyPatternPoint = Rank<JourneyPatternPoint>;
-}
-
 namespace type {
 
 // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
@@ -138,7 +133,6 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
                                        const boost::posix_time::time_period& period) const;
 
     const StopTime& get_stop_time(const RankStopTime& order) const;
-    const StopTime& get_corresponding_stop_time(const routing::RankJourneyPatternPoint& jpp_order) const;
 
     // return all the sections of the base vj between the 2 stop areas
     std::set<RankStopTime> get_sections_ranks(const StopArea*, const StopArea*) const;

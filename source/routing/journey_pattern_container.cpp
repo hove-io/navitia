@@ -38,6 +38,11 @@ namespace routing {
 
 namespace nt = navitia::type;
 
+const type::StopTime& get_corresponding_stop_time(const type::VehicleJourney& vj,
+                                                  const RankJourneyPatternPoint& order) {
+    return vj.stop_time_list.at(order.val);
+}
+
 template <>
 std::vector<const nt::DiscreteVehicleJourney*>& JourneyPattern::get_vjs<nt::DiscreteVehicleJourney>() {
     return discrete_vjs;

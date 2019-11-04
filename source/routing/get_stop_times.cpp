@@ -172,7 +172,7 @@ std::vector<std::pair<uint32_t, const type::StopTime*>> get_all_calendar_stop_ti
     std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj : vjs) {
         // loop through stop times for stop jpp->stop_point
-        const auto& st = vj->get_corresponding_stop_time(jpp.order);
+        const auto& st = get_corresponding_stop_time(*vj, jpp.order);
         if (!st.vehicle_journey->accessible(vehicle_properties)) {
             continue;  // the stop time must be accessible
         }

@@ -233,10 +233,6 @@ const StopTime& VehicleJourney::get_stop_time(const RankStopTime& order) const {
     return stop_time_list.at(order.val);
 }
 
-const StopTime& VehicleJourney::get_corresponding_stop_time(const routing::RankJourneyPatternPoint& jpp_order) const {
-    return stop_time_list.at(jpp_order.val);
-}
-
 std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_sa, const StopArea* end_sa) const {
     /*
      * Identify all the smallest sections starting with start_sa and

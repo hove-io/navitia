@@ -50,6 +50,9 @@ namespace routing {
 
 using RankJourneyPatternPoint = Rank<JourneyPatternPoint>;
 
+// Accessor method to retrieve the StopTime of a VJ corresponding to a given JPP rank
+const type::StopTime& get_corresponding_stop_time(const type::VehicleJourney& vj, const RankJourneyPatternPoint& order);
+
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPatternPoint {
     JpIdx jp_idx;
