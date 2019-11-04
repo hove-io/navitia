@@ -55,8 +55,24 @@ BOOST_AUTO_TEST_CASE(should_throw_on_bad_connection_string) {
 }
 
 BOOST_AUTO_TEST_CASE(writing_test_ed2nav_should_not_throw) {
+    // Cleans previous test binaries
+    if (boost::filesystem::exists("ed2nav_test.nav.lz4")) {
+        remove("ed2nav_test.nav.lz4");
+    }
+    if (boost::filesystem::exists("ed2nav_test.nav.lz4.bak")) {
+        remove("ed2nav_test.nav.lz4.bak");
+    }
+
+    // Checks if the first binary is created
     navitia::type::Data data(0);
     std::string test = "ed2nav_test.nav.lz4";
     bool b = ed::write_data_to_file(test, data);
     BOOST_CHECK(b);
+
+    // Checks if the already existing binary is renamed and the new one is created
+    if (boost::filesystem::exists("ed2nav_test.nav.lz4")) {
+        b = ed::write_data_to_file(test, data);
+        BOOST_CHECK(b);
+        BOOST_CHECK(boost::filesystem::exists("ed2nav_test.nav.lz4.bak"));
+    }
 }
