@@ -756,8 +756,8 @@ static std::pair<const type::EntryPoint, const boost::optional<const type::Entry
     const JourneysArg& arg) {
     // If we have a center
     // Origins or destinations are already computed stop_points
-    const auto& center =
-        arg.isochrone_center ? *arg.isochrone_center : (arg.origins.empty() ? arg.destinations[0] : arg.origins[0]);
+    const auto& center = arg.isochrone_center ? *arg.isochrone_center
+                                              : (arg.origins.empty() ? arg.destinations.front() : arg.origins.front());
     const auto& stop_points = arg.isochrone_center ? (arg.origins.empty() ? arg.destinations : arg.origins)
                                                    : boost::optional<const type::EntryPoints&>{};
 
