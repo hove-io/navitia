@@ -91,8 +91,11 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 SET_SOURCE_FILES_PROPERTIES(${PROTO_SRCS} PROPERTIES COMPILE_FLAGS ${PROTO_CMAKE_CXX_FLAGS})
 
-add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
-target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY})
+add_library(pb_lib ${PROTO_SRCS})
+target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
+
+add_library(pb_converter pb_converter.cpp)
+target_link_libraries(pb_converter thermometer vptranslator pthread pb_lib)
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
     validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
@@ -109,67 +112,71 @@ SET(DATA_SRC
     headsign_handler.cpp
 )
 
-SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY})
-
-SET(BOOST_DEV_LIBS ${BOOST_LIBS} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_library(data ${DATA_SRC})
-target_link_libraries(data types fill_disruption_from_database fare routing autocomplete ${BOOST_LIBS})
+target_link_libraries(data
+    fill_disruption_from_database
+    routing
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_DATE_TIME_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+)
 
 # >>>>> Tests <<<<<
+set(TYPES_TEST_LINK_LIBS
+    ed
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
 
 add_executable(fill_pb_placemark_test tests/fill_pb_placemark_test.cpp)
-target_link_libraries(fill_pb_placemark_test ed data types routing fare georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib thermometer protobuf)
+target_link_libraries(fill_pb_placemark_test
+    routing
+    thermometer
+    pb_converter
+    ${TYPES_TEST_LINK_LIBS}
+)
 ADD_BOOST_TEST(fill_pb_placemark_test)
 
 add_executable(type_test tests/test.cpp)
-target_link_libraries(type_test types data ed utils ${BOOST_DEV_LIBS} log4cplus)
-add_dependencies(type_test protobuf_files)
+target_link_libraries(type_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(type_test)
 
 add_executable(datetime_test tests/datetime.cpp)
-target_link_libraries(datetime_test types ${BOOST_DEV_LIBS} log4cplus)
+target_link_libraries(datetime_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(datetime_test)
 
-
 add_executable(accessible_test tests/accessible.cpp)
-target_link_libraries(accessible_test ${BOOST_DEV_LIBS} log4cplus utils)
-add_dependencies(accessible_test protobuf_files)
+target_link_libraries(accessible_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(accessible_test)
 
 add_executable(multi_polygon_map_test tests/multi_polygon_map_test.cpp)
-target_link_libraries(multi_polygon_map_test ${BOOST_DEV_LIBS} log4cplus)
+target_link_libraries(multi_polygon_map_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(multi_polygon_map_test)
 
-
 add_executable(fill_pb_object_tests tests/fill_pb_object_tests.cpp)
-target_link_libraries(fill_pb_object_tests pb_lib ed thermometer time_tables data types fare routing georef autocomplete ${BOOST_DEV_LIBS} log4cplus)
-add_dependencies(fill_pb_object_tests protobuf_files)
+target_link_libraries(fill_pb_object_tests pb_converter ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(fill_pb_object_tests)
 
-
 add_executable(aggregation_odt_test tests/aggregation_odt_test.cpp)
-target_link_libraries(aggregation_odt_test ed data types georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(aggregation_odt_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(aggregation_odt_test)
 
 add_executable(comments_test tests/comments_test.cpp)
-target_link_libraries(comments_test ed data types georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(comments_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(comments_test)
 
 add_executable(data_test tests/data_test.cpp)
-target_link_libraries(data_test ed data types utils ${BOOST_DEV_LIBS} log4cplus)
+target_link_libraries(data_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(data_test)
 
 add_executable(code_container_test tests/code_container_test.cpp)
-target_link_libraries(code_container_test ${BOOST_DEV_LIBS})
+target_link_libraries(code_container_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(code_container_test)
 
 add_executable(headsign_test tests/headsign_test.cpp)
-target_link_libraries(headsign_test ed data types georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(headsign_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(headsign_test)
 
 add_executable(create_vj_test tests/create_vj_test.cpp)
-target_link_libraries(create_vj_test ed data types georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(create_vj_test ${TYPES_TEST_LINK_LIBS})
 ADD_BOOST_TEST(create_vj_test)

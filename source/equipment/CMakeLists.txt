@@ -1,3 +1,3 @@
 add_library(equipment_api equipment_api.cpp)
-add_dependencies(equipment_api protobuf_files)
+target_link_libraries(equipment_api pb_lib)
 add_subdirectory(tests)

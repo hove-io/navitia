@@ -31,7 +31,6 @@ www.navitia.io
 #include "proximitylist_api.h"
 #include "type/pb_converter.h"
 #include "utils/paginate.h"
-#include "ptreferential/ptreferential.h"
 
 namespace navitia {
 namespace proximitylist {
