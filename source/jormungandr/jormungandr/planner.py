@@ -109,6 +109,6 @@ class Kraken(object):
         if journey_parameters.isochrone_center:
             req.journeys.isochrone_center.place = journey_parameters.isochrone_center
             req.journeys.isochrone_center.access_duration = 0
-            req.requested_api = type_pb2.isochrone_distributed
+            req.requested_api = type_pb2.ISOCHRONE
 
         return self.instance.send_and_receive(req)
