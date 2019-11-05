@@ -47,6 +47,7 @@ from jormungandr.scenarios.utils import (
     mode_weight,
     switch_back_to_ridesharing,
     nCr,
+    updated_common_journey_request_with_default,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -900,6 +901,46 @@ def filter_journeys(responses, new_resp, instance, api_request):
     journey_filter.filter_similar_vj_journeys(journey_pairs_pool, api_request)
 
 
+def isochrone_common(isochrone, request, instance, journey_req):
+
+    if request.get("origin"):
+        origin = journey_req.origin.add()
+        origin.place = request["origin"]
+        origin.access_duration = 0
+        journey_req.clockwise = True
+    if request.get("destination"):
+        destination = journey_req.destination.add()
+        destination.place = request["destination"]
+        destination.access_duration = 0
+        journey_req.clockwise = False
+    journey_req.datetimes.append(request["datetime"])
+    journey_req.wheelchair = request["wheelchair"] or False
+    journey_req.realtime_level = get_pb_data_freshness(request)
+    updated_common_journey_request_with_default(request, instance)
+    sn_params = journey_req.streetnetwork_params
+    sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
+    sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
+    sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
+    sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
+    sn_params.walking_speed = request["walking_speed"]
+    sn_params.bike_speed = request["bike_speed"]
+    sn_params.car_speed = request["car_speed"]
+    sn_params.bss_speed = request["bss_speed"]
+
+    journey_req.max_transfers = request["max_transfers"]
+    isochrone.origin_modes = request["origin_mode"]
+    isochrone.destination_modes = request["destination_mode"]
+    if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
+        for forbidden_uri in request["forbidden_uris[]"]:
+            journey_req.forbidden_uris.append(forbidden_uri)
+    if "allowed_id[]" in request and request["allowed_id[]"]:
+        for allowed_id in request["allowed_id[]"]:
+            journey_req.allowed_id.append(allowed_id)
+
+    journey_req.streetnetwork_params.origin_mode = isochrone.origin_modes[0]
+    journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
+
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -1201,3 +1242,36 @@ class Scenario(simple.Scenario):
             if r.HasField('next_request_date_time'):
                 request_datetime_list.append(r.next_request_date_time)
         return min(request_datetime_list) if request_datetime_list else None
+
+    def graphical_isochrones(self, request, instance):
+        req = request_pb2.Request()
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
+        journey_req = req.isochrone.journeys_request
+        isochrone_common(self, request, instance, journey_req)
+        req.requested_api = type_pb2.graphical_isochrone
+        journey_req = req.isochrone.journeys_request
+
+        if request.get("max_duration"):
+            journey_req.max_duration = request["max_duration"]
+        else:
+            journey_req.max_duration = max(request["boundary_duration[]"], key=int)
+        if request.get("boundary_duration[]"):
+            for duration in sorted(request["boundary_duration[]"], key=int, reverse=True):
+                if request["min_duration"] < duration < journey_req.max_duration:
+                    req.isochrone.boundary_duration.append(duration)
+        req.isochrone.boundary_duration.insert(0, journey_req.max_duration)
+        req.isochrone.boundary_duration.append(request["min_duration"])
+        resp = instance.send_and_receive(req)
+        return resp
+
+    def heat_maps(self, request, instance):
+        req = request_pb2.Request()
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
+        journey_req = req.heat_map.journeys_request
+        isochrone_common(self, request, instance, journey_req)
+        req.requested_api = type_pb2.heat_map
+        max_resolution = 1000
+        req.heat_map.resolution = min(request["resolution"], max_resolution)
+        req.heat_map.journeys_request.max_duration = request["max_duration"]
+        resp = instance.send_and_receive(req)
+        return resp
