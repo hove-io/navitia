@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon.parser_args_type import UnsignedInteger
+import six
 
 
 class GraphicalIsochrone(JourneyCommon):
@@ -52,6 +53,12 @@ class GraphicalIsochrone(JourneyCommon):
             type=UnsignedInteger(),
             action="append",
             help="To provide multiple duration parameters",
+        )
+        parser_get.add_argument(
+            "_override_scenario",
+            type=six.text_type,
+            hidden=True,
+            help="debug param to specify a custom scenario",
         )
 
     @get_serializer(serpy=GraphicalIsrochoneSerializer)
