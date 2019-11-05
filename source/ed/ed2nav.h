@@ -28,7 +28,14 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
-#include "type/data.h"
+
+#include <string>
+
+namespace navitia {
+    namespace type {
+        struct Data;
+    }
+}
 
 namespace ed {
 
