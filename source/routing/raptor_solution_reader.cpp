@@ -263,7 +263,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     DateTime current_dep;
     DateTime current_arr;
 
-    size_t order = current_st->order();
+    auto order = current_st->order();
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
         if (!res.empty()) {
             // only update base_dt for vj extensions
@@ -272,7 +272,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
         res.emplace_back(section, current_st->vehicle_journey);
 
         for (const auto& st :
-             boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
+             boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
             current_dep = st.departure(base_dt);
             current_arr = st.arrival(base_dt);
             res.back().stop_times_and_dt.emplace_back(st, current_dep + st.get_boarding_duration(),
@@ -282,7 +282,7 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
                 return res;
             }
         }
-        order = 0;  // for the stay in vj's, we start from the first stop time
+        order = type::RankStopTime(0);  // for the stay in vj's, we start from the first stop time
     }
     throw navitia::recoverable_exception("impossible to rebuild path");
 }

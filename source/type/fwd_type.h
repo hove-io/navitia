@@ -34,6 +34,8 @@ www.navitia.io
 template <class DATATYPE, class ELEMTYPE, int NUMDIMS, class ELEMTYPEREAL, int TMAXNODES, int TMINNODES>
 class RTree;
 namespace navitia {
+template <typename T>
+struct Rank;
 namespace georef {
 struct GeoRef;
 struct POI;
@@ -61,6 +63,7 @@ struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
+using RankStopTime = Rank<StopTime>;
 struct Dataset;
 struct StopPoint;
 struct ExceptionDate;

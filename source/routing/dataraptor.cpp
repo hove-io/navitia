@@ -57,7 +57,7 @@ void dataRAPTOR::JppsFromSp::load(const type::PT_Data& data, const JourneyPatter
     for (const auto jp : jp_container.get_jps()) {
         for (const auto& jpp_idx : jp.second.jpps) {
             const auto& jpp = jp_container.get(jpp_idx);
-            jpps_from_sp[jpp.sp_idx].push_back({jpp_idx, jp.first, jpp.order});
+            jpps_from_sp[jpp.sp_idx].push_back({jpp_idx, jp.first, jpp.order.val});
         }
     }
     for (auto& jpps : jpps_from_sp.values()) {
