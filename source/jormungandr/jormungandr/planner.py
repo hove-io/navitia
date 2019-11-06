@@ -38,6 +38,7 @@ class JourneyParameters(object):
         min_nb_journeys=None,
         timeframe=None,
         depth=1,
+        isochrone_center=None,
     ):
 
         self.max_duration = max_duration
@@ -53,6 +54,7 @@ class JourneyParameters(object):
         self.min_nb_journeys = min_nb_journeys
         self.timeframe = timeframe
         self.depth = depth
+        self.isochrone_center = isochrone_center
 
 
 class Kraken(object):
@@ -103,5 +105,10 @@ class Kraken(object):
 
         if journey_parameters.depth:
             req.journeys.depth = journey_parameters.depth
+
+        if journey_parameters.isochrone_center:
+            req.journeys.isochrone_center.place = journey_parameters.isochrone_center
+            req.journeys.isochrone_center.access_duration = 0
+            req.requested_api = type_pb2.ISOCHRONE
 
         return self.instance.send_and_receive(req)
