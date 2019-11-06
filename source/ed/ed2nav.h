@@ -32,10 +32,10 @@ www.navitia.io
 #include <string>
 
 namespace navitia {
-    namespace type {
-        struct Data;
-    }
+namespace type {
+struct Data;
 }
+}  // namespace navitia
 
 namespace ed {
 
