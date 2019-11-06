@@ -52,20 +52,20 @@ struct RAPTOR;
 namespace navitia {
 
 struct JourneysArg {
-    std::vector<type::EntryPoint> origins;
+    type::EntryPoints origins;
     type::AccessibiliteParams accessibilite_params;
     std::vector<std::string> forbidden;
     std::vector<std::string> allowed;
     type::RTLevel rt_level;
-    std::vector<type::EntryPoint> destinations;
+    type::EntryPoints destinations;
     std::vector<uint64_t> datetimes;
     boost::optional<type::EntryPoint> isochrone_center;
-    JourneysArg(std::vector<type::EntryPoint> origins,
+    JourneysArg(type::EntryPoints origins,
                 type::AccessibiliteParams accessibilite_params,
                 std::vector<std::string> forbidden,
                 std::vector<std::string> allowed,
                 type::RTLevel rt_level,
-                std::vector<type::EntryPoint> destinations,
+                type::EntryPoints destinations,
                 std::vector<uint64_t> datetimes,
                 boost::optional<type::EntryPoint> isochrone_center);
     JourneysArg();
@@ -112,6 +112,7 @@ private:
     JourneysArg fill_journeys(const pbnavitia::JourneysRequest& request);
     void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
     void journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API api);
+    void isochrone(const pbnavitia::JourneysRequest& request);
     void pt_ref(const pbnavitia::PTRefRequest& request);
     void traffic_reports(const pbnavitia::TrafficReportsRequest& request);
     void line_reports(const pbnavitia::LineReportsRequest& request);

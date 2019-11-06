@@ -22,7 +22,7 @@ struct raptor_visitor {
 
     inline stop_time_range st_range(const type::StopTime& st) const {
         const type::VehicleJourney* vj = st.vehicle_journey;
-        return boost::make_iterator_range(vj->stop_time_list.begin() + st.order(), vj->stop_time_list.end());
+        return boost::make_iterator_range(vj->stop_time_list.begin() + st.order().val, vj->stop_time_list.end());
     }
 
     template <typename T1, typename T2>
@@ -77,7 +77,7 @@ struct raptor_reverse_visitor {
 
     inline stop_time_range st_range(const type::StopTime& st) const {
         const type::VehicleJourney* vj = st.vehicle_journey;
-        return boost::make_iterator_range(vj->stop_time_list.rbegin() + vj->stop_time_list.size() - st.order() - 1,
+        return boost::make_iterator_range(vj->stop_time_list.rbegin() + vj->stop_time_list.size() - st.order().val - 1,
                                           vj->stop_time_list.rend());
     }
 

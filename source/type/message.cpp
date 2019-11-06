@@ -263,10 +263,10 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
                 return true;
             }
             const auto idx = base_st->order();
-            if (idx >= nb_aux) {
+            if (idx.val >= nb_aux) {
                 return true;
             }
-            const auto& amended_st = aux_info.stop_times.at(idx).stop_time;
+            const auto& amended_st = aux_info.get_stop_time_update(idx).stop_time;
             if (base_st->arrival_time != amended_st.arrival_time) {
                 return true;
             }
@@ -347,7 +347,7 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
                 return true;
             } else {
                 for (const auto& rank : ranks) {
-                    res.insert(vj.stop_time_list.at(rank).stop_point);
+                    res.insert(vj.get_stop_time(rank).stop_point);
                 }
             }
             return false;

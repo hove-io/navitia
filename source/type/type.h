@@ -256,6 +256,8 @@ struct EntryPoint {
     static bool is_coord(const std::string&);
 };
 
+using EntryPoints = std::vector<EntryPoint>;
+
 template <typename T>
 std::string get_admin_name(const T* v) {
     std::string admin_name = "";
