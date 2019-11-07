@@ -363,7 +363,7 @@ def import_in_mimir(_file, instance, async=True):
     elif family_type == 'poi':
         action = poi2mimir.si(instance.name, _file)
     else:
-        current_app.logger.warn("Unsupported family_type {}".format(family_type))
+        current_app.logger.warning("Unsupported family_type {}".format(family_type))
 
     if async:
         return action.delay()
@@ -641,9 +641,9 @@ def remove_autocomplete_depot(name):
         if os.path.exists(main_dir):
             shutil.rmtree(main_dir)
         else:
-            logging.warn('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
+            logging.warning('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
     else:
-        logging.warn('no main autocomplete directory, removing nothing')
+        logging.warning('no main autocomplete directory, removing nothing')
 
 
 @celery.task()

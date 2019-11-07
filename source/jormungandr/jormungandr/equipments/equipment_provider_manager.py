@@ -75,14 +75,14 @@ class EquipmentProviderManager(object):
         """
         try:
             if '.' not in cls:
-                self.logger.warn('impossible to build, wrongly formated class: {}'.format(cls))
+                self.logger.warning('impossible to build, wrongly formated class: {}'.format(cls))
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.logger.warn('impossible to build, cannot find class: {}'.format(cls))
+            self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
     def _update_provider(self, provider):
         self.logger.info('updating/adding {} equipment provider'.format(provider.id))

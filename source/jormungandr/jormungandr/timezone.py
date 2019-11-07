@@ -51,7 +51,7 @@ def set_request_instance_timezone(instance):
         raise RegionNotFound()
 
     if not instance.timezone:
-        logger.warn("region {} has no timezone".format(instance.name))
+        logger.warning("region {} has no timezone".format(instance.name))
         try:
             g.timezone = None
         except RuntimeError:
@@ -61,7 +61,9 @@ def set_request_instance_timezone(instance):
     tz = pytz.timezone(instance.timezone)
 
     if not tz:
-        logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, instance.name))
+        logger.warning(
+            "impossible to find timezone: '{}' for region {}".format(instance.timezone, instance.name)
+        )
 
     try:
         g.timezone = tz
