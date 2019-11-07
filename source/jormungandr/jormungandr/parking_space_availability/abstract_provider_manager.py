@@ -96,4 +96,4 @@ class AbstractProviderManager(six.with_metaclass(ABCMeta, object)):
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.log.warn('impossible to build, cannot find class: {}'.format(cls))
+            self.log.warning('impossible to build, cannot find class: {}'.format(cls))
