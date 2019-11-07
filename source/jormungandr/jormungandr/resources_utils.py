@@ -60,7 +60,7 @@ class ResourceUtc(object):
             tz_name = instance.timezone  # TODO store directly the tz?
 
             if not tz_name:
-                logging.Logger(__name__).warn("unknown timezone for region {}".format(self.region))
+                logging.Logger(__name__).warning("unknown timezone for region {}".format(self.region))
                 return None
             self._tz = (pytz.timezone(tz_name),)
         return self._tz[0]

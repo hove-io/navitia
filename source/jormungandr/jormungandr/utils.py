@@ -351,7 +351,7 @@ def create_object(configuration):
     log = logging.getLogger(__name__)
     class_path = configuration.get('class') or configuration.get('klass')
     if class_path is None:
-        log.warn('impossible to build object, class_path is empty')
+        log.warning('impossible to build object, class_path is empty')
         raise KeyError(
             'impossible to build a StreetNetwork, missing mandatory field in configuration: class or klass'
         )
@@ -360,14 +360,14 @@ def create_object(configuration):
 
     try:
         if '.' not in class_path:
-            log.warn('impossible to build object {}, wrongly formated class'.format(class_path))
+            log.warning('impossible to build object {}, wrongly formated class'.format(class_path))
             raise ConfigException(class_path)
 
         module_path, name = class_path.rsplit('.', 1)
         module = import_module(module_path)
         attr = getattr(module, name)
     except AttributeError as e:
-        log.warn('impossible to build object {} : {}'.format(class_path, e))
+        log.warning('impossible to build object {} : {}'.format(class_path, e))
         raise ConfigException(class_path)
     except ImportError:
         log.exception('impossible to build object {}, cannot find class'.format(class_path))
@@ -376,7 +376,7 @@ def create_object(configuration):
     try:
         obj = attr(**kwargs)  # call to the contructor, with all the args
     except TypeError as e:
-        log.warn('impossible to build object {}, wrong arguments: {}'.format(class_path, e.message))
+        log.warning('impossible to build object {}, wrong arguments: {}'.format(class_path, e.message))
         raise ConfigException(class_path)
 
     return obj

@@ -209,7 +209,7 @@ class Siri(RealtimeProxy):
                 code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
                 description_node = error_condition.find('.//siri:Description', ns)
                 description = description_node.text if description_node is not None else None
-                logging.getLogger(__name__).warn('error in siri response: %s/%s', code, description)
+                logging.getLogger(__name__).warning('error in siri response: %s/%s', code, description)
             monitored_stops = stop_monitoring_delivery.findall('.//siri:MonitoredStopVisit', ns)
             if monitored_stops is None or len(monitored_stops) < 1:
                 # we might want to ignore error that match siri:NoInfoForTopicError,

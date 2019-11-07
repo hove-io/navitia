@@ -113,7 +113,7 @@ class RateLimiter(object):
 
             if seconds > 0:
                 if requests == 0:
-                    self.log.warn('added block all condition (%s/%s)', requests, seconds)
+                    self.log.warning('added block all condition (%s/%s)', requests, seconds)
                 else:
                     self.log.debug('added condition (%s/%s)', requests, seconds)
 
@@ -122,7 +122,7 @@ class RateLimiter(object):
                 if seconds > self.list_ttl:
                     self.list_ttl = seconds
             else:
-                self.log.warn('time period of 0 seconds. not adding condition')
+                self.log.warning('time period of 0 seconds. not adding condition')
 
         # sort by requests so we query redis list in order as well as know max and min requests by position
         self.conditions.sort()
@@ -143,14 +143,14 @@ class RateLimiter(object):
             seconds = self.list_ttl
 
             if not seconds:
-                self.log.warn('block called but no default block time. not blocking')
+                self.log.warning('block called but no default block time. not blocking')
                 return 0
 
         if not isinstance(seconds, int):
             seconds = int(math.ceil(seconds))
 
         key = ':'.join((self.namespace, key, 'block'))
-        self.log.warn('block key (%s) for %ds', key, seconds)
+        self.log.warning('block key (%s) for %ds', key, seconds)
         with self.redis.pipeline() as pipe:
             pipe.set(key, '1')
             pipe.expire(key, seconds)
@@ -187,7 +187,7 @@ class RateLimiter(object):
         # short cut if we are limiting to 0 requests
         min_requests, min_request_seconds = self.conditions[0]
         if min_requests == 0:
-            self.log.warn('(%s) hit block all limit (%s/%s)', key, min_requests, min_request_seconds)
+            self.log.warning('(%s) hit block all limit (%s/%s)', key, min_requests, min_request_seconds)
             return False, min_request_seconds
 
         log_key = ':'.join((self.namespace, key, 'log'))
@@ -212,7 +212,7 @@ class RateLimiter(object):
                 # block_ttl is None for last second of a keys life. set min of 0.5
                 if block_ttl is None:
                     block_ttl = 0.5
-                self.log.warn('(%s) hit manual block. %ss remaining', key, block_ttl)
+                self.log.warning('(%s) hit manual block. %ss remaining', key, block_ttl)
                 return False, block_ttl
 
             timestamp = time.time()
@@ -222,7 +222,7 @@ class RateLimiter(object):
                 if boundry_timestamp is not None:
                     boundry_timestamp = float(boundry_timestamp)
                     if boundry_timestamp + seconds > timestamp:
-                        self.log.warn(
+                        self.log.warning(
                             '(%s) hit limit (%s/%s) time to allow %.1fs',
                             key,
                             requests,

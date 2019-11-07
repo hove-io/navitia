@@ -594,7 +594,7 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     working_directory = unzip_if_needed(filename)
 
     if autocomplete_instance.address != 'BANO':
-        logger.warn(
+        logger.warning(
             'no bano data will be loaded for instance {} because the address are read from {}'.format(
                 autocomplete_instance.name, autocomplete_instance.address
             )
@@ -634,7 +634,7 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
     working_directory = unzip_if_needed(filename)
 
     if autocomplete_instance.address != 'OA':
-        logger.warn(
+        logger.warning(
             'no open addresses data will be loaded for instance {} because the address are read from {}'.format(
                 autocomplete_instance.name, autocomplete_instance.address
             )
