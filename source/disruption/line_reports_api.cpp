@@ -29,10 +29,7 @@ www.navitia.io
 */
 
 #include "line_reports_api.h"
-#include "type/meta_data.h"
 #include "utils/paginate.h"
-
-#include <boost/optional.hpp>
 
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;
@@ -105,8 +102,8 @@ struct LineReport {
         pb_creator.fill(stop_points, report->mutable_pt_objects(), 0, with_line_sections);
     }
 
-    std::set<std::string> all_uris() const {
-        std::set<std::string> uris;
+    nt::UrisList all_uris() const {
+        nt::UrisList uris;
         uris.insert(line->uri);
         for (auto& network : networks) {
             uris.insert(network->uri);
@@ -128,13 +125,13 @@ void filter_excess_impacts_in_uri_filtering_mode(const std::string& filter,
                                                  navitia::PbCreator& pb_creator,
                                                  const std::vector<LineReport>& line_reports) {
     if (!filter.empty()) {
-        std::set<std::string> line_report_uris;
+        nt::UrisList line_report_uris;
         for (auto& line_report : line_reports) {
             auto uris = line_report.all_uris();
             line_report_uris.insert(uris.cbegin(), uris.cend());
         }
 
-        auto erase_allowed = [](const std::set<std::string>& uris, const std::set<std::string>& impacted_uris) -> bool {
+        auto erase_allowed = [](const nt::UrisList& uris, const nt::UrisList& impacted_uris) -> bool {
             for (const auto& impacted_uri : impacted_uris) {
                 if (std::find(uris.cbegin(), uris.cend(), impacted_uri) == uris.cend()) {
                     return true;
