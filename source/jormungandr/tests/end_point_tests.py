@@ -249,3 +249,8 @@ class TestEndPoint(AbstractTestFixture):
         assert all(
             r.get_json()['address']['name'] == address_name for r in resp
         ), 'All requests should return the same result...'
+
+    def test_coord_without_region_shouldnt_call_places_nearby(self):
+        r1 = self.tester.get('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609')
+        r2 = self.tester.get('v1/coord/0.001077974378345651;0.0005839027882705609')
+        assert r1.get_json()['address'] == r2.get_json()['address']
