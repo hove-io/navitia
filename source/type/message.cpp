@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/type.h"
 #include "utils/logger.h"
 
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
@@ -180,7 +181,7 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
 
     template <typename NavitiaPTObject>
     void operator()(NavitiaPTObject* bo) const {
-        // the the ptobject that match a navitia object, we can just add the impact to the object
+        // the ptobject that match a navitia object, we can just add the impact to the object
         bo->add_impact(impact);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
@@ -400,6 +401,33 @@ Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
     }
 
     return result;
+}
+
+struct InformedEntitieUriVisitor : boost::static_visitor<> {
+    InformedEntitieUriVisitor(std::set<std::string>& uris) : uris(uris) {}
+
+    void operator()(const disruption::UnknownPtObj) {}
+    void operator()(const Network* n) { uris.insert(n->uri); }
+    void operator()(const StopArea* sa) { uris.insert(sa->uri); }
+    void operator()(const StopPoint* sp) { uris.insert(sp->uri); }
+    void operator()(const LineSection ls) {
+        if (ls.line != nullptr) {
+            uris.insert(ls.line->uri);
+        }
+    }
+    void operator()(const Line* l) { uris.insert(l->uri); }
+    void operator()(const Route* r) { uris.insert(r->uri); }
+    void operator()(const MetaVehicleJourney*) {}
+
+private:
+    std::set<std::string>& uris;
+};
+
+std::set<std::string> Impact::informed_entities_uris() {
+    std::set<std::string> uris;
+    InformedEntitieUriVisitor vis(uris);
+    boost::for_each(mut_informed_entities(), boost::apply_visitor(vis));
+    return uris;
 }
 
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {

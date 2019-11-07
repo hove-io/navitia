@@ -299,6 +299,8 @@ struct Impact {
         return boost::make_iterator_range(_informed_entities.begin(), _informed_entities.end());
     }
 
+    std::set<std::string> informed_entities_uris();
+
     // add the ptobj to the informed entities and make all the needed backref
     // Note: it's a static method because we need the shared_ptr to the impact
     static void link_informed_entity(PtObj ptobj,

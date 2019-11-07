@@ -104,7 +104,55 @@ struct LineReport {
         pb_creator.fill(stop_areas, report->mutable_pt_objects(), 0);
         pb_creator.fill(stop_points, report->mutable_pt_objects(), 0, with_line_sections);
     }
+
+    std::set<std::string> all_uris() const {
+        std::set<std::string> uris;
+        uris.insert(line->uri);
+        for (auto& network : networks) {
+            uris.insert(network->uri);
+        }
+        for (auto& route : routes) {
+            uris.insert(route->uri);
+        }
+        for (auto& stop_area : stop_areas) {
+            uris.insert(stop_area->uri);
+        }
+        for (auto& stop_point : stop_points) {
+            uris.insert(stop_point->uri);
+        }
+        return uris;
+    }
 };
+
+void filter_excess_impacts_in_uri_filtering_mode(const std::string& filter,
+                                                 navitia::PbCreator& pb_creator,
+                                                 const std::vector<LineReport>& line_reports) {
+    if (!filter.empty()) {
+        std::set<std::string> line_report_uris;
+        for (auto& line_report : line_reports) {
+            auto uris = line_report.all_uris();
+            line_report_uris.insert(uris.cbegin(), uris.cend());
+        }
+
+        auto erase_allowed = [](const std::set<std::string>& uris, const std::set<std::string>& impacted_uris) -> bool {
+            for (const auto& impacted_uri : impacted_uris) {
+                if (std::find(uris.cbegin(), uris.cend(), impacted_uri) == uris.cend()) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Clean impacts if needed
+        for (auto it = pb_creator.impacts.begin(); it != pb_creator.impacts.end();) {
+            if (erase_allowed(line_report_uris, (*it).get()->informed_entities_uris())) {
+                it = pb_creator.impacts.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
 
 void line_reports(navitia::PbCreator& pb_creator,
                   const navitia::type::Data& d,
@@ -147,6 +195,9 @@ void line_reports(navitia::PbCreator& pb_creator,
     for (const auto& line_report : paged_line_reports) {
         line_report.to_pb(pb_creator, depth);
     }
+
+    filter_excess_impacts_in_uri_filtering_mode(filter, pb_creator, line_reports);
+
     pb_creator.make_paginate(total_results, start_page, count, pb_creator.line_reports_size());
     if (pb_creator.line_reports_size() == 0) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION, "no result for this request");
