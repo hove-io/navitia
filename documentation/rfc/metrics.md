@@ -2,7 +2,7 @@
 
 ## Kraken
 
-Kraken expose its metrics by using the [prometheus interface]{https://prometheus.io/docs/concepts/data_model/}.
+Kraken expose its metrics by using the [prometheus interface](https://prometheus.io/docs/concepts/data_model/).
 All kraken's metrics have a label `coverage` associated to them that correspond to the coverage name.
 
 
