@@ -1,3 +1,20 @@
+navitia2 (3.0.0) unstable; urgency=low
+
+  * jormun: Change log.warn() to log.warning() because warn() function is deprecated  <https://github.com/CanalTP/navitia/pull/3024>
+  * jormun: update default settings  <https://github.com/CanalTP/navitia/pull/3022>
+  * Jormun: Add isochrone distributed jormun  <https://github.com/CanalTP/navitia/pull/3017>
+  * Kraken: Strong-type Rank<> for StopTime and JourneyPatternPoint  <https://github.com/CanalTP/navitia/pull/2986>
+  * Kraken: Fix A* heuristic cost  <https://github.com/CanalTP/navitia/pull/3011>
+  * Kraken: Parse center and stop points for isochrone  <https://github.com/CanalTP/navitia/pull/3020>
+  * Release: major version number to match data_version  <https://github.com/CanalTP/navitia/pull/3015>
+  * Jormun: Fix 500 error returned when combining coords with addresses  <https://github.com/CanalTP/navitia/pull/3021>
+  * Doc: Update to explain more data_freshness impact on collection filters  <https://github.com/CanalTP/navitia/pull/3010>
+  * Kraken: Add Isochrone distributed  <https://github.com/CanalTP/navitia/pull/3013>
+  * jormun: external_code finally works with coverage on every Uri API  <https://github.com/CanalTP/navitia/pull/3006>
+  * ed: do not import stops from pathways  <https://github.com/CanalTP/navitia/pull/2978>
+
+ -- mbounabi <Mehdi.Bounabi@Kisio.org>  Fri, 08 Nov 2019 14:11:15 +0100
+
 navitia2 (2.88.0) unstable; urgency=low
 
   * Tyr: Robustify purge and heartbeat  <https://github.com/CanalTP/navitia/pull/3016>
