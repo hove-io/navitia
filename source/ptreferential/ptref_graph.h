@@ -30,9 +30,8 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type.h"
+#include "type/type_interfaces.h"
 #include <boost/graph/adjacency_list.hpp>
-#include "utils/flat_enum_map.h"
 
 namespace navitia {
 namespace ptref {

@@ -315,49 +315,6 @@ void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::
     }
 }
 
-static_data* static_data::instance = nullptr;
-static_data* static_data::get() {
-    if (instance == nullptr) {
-        static_data* temp = new static_data();
-
-        boost::assign::insert(temp->types_string)(Type_e::ValidityPattern, "validity_pattern")(Type_e::Line, "line")(
-            Type_e::LineGroup, "line_group")(Type_e::JourneyPattern, "journey_pattern")(
-            Type_e::VehicleJourney, "vehicle_journey")(Type_e::StopPoint, "stop_point")(Type_e::StopArea, "stop_area")(
-            Type_e::Network, "network")(Type_e::PhysicalMode, "physical_mode")(
-            Type_e::CommercialMode, "commercial_mode")(Type_e::Connection, "connection")(
-            Type_e::JourneyPatternPoint, "journey_pattern_point")(Type_e::Company, "company")(Type_e::Route, "route")(
-            Type_e::POI, "poi")(Type_e::POIType, "poi_type")(Type_e::Contributor, "contributor")(
-            Type_e::Calendar, "calendar")(Type_e::MetaVehicleJourney, "trip")(Type_e::Impact, "disruption")(
-            Type_e::Dataset, "dataset");
-
-        boost::assign::insert(temp->modes_string)(Mode_e::Walking, "walking")(Mode_e::Bike, "bike")(Mode_e::Car, "car")(
-            Mode_e::Bss, "bss")(Mode_e::CarNoPark, "ridesharing")(Mode_e::CarNoPark, "car_no_park")(Mode_e::CarNoPark,
-                                                                                                    "taxi");
-        instance = temp;
-    }
-    return instance;
-}
-
-Type_e static_data::typeByCaption(const std::string& type_str) {
-    const auto it_type = instance->types_string.right.find(type_str);
-    if (it_type == instance->types_string.right.end()) {
-        throw navitia::recoverable_exception("The type " + type_str + " is not managed by kraken");
-    }
-    return it_type->second;
-}
-
-std::string static_data::captionByType(Type_e type) {
-    return instance->types_string.left.at(type);
-}
-
-Mode_e static_data::modeByCaption(const std::string& mode_str) {
-    const auto it_mode = instance->modes_string.right.find(mode_str);
-    if (it_mode == instance->modes_string.right.end()) {
-        throw navitia::recoverable_exception("The mode " + mode_str + " is not managed by kraken");
-    }
-    return it_mode->second;
-}
-
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri, int access_duration)
     : type(type), uri(uri), access_duration(access_duration) {
     if (type == Type_e::Address) {
@@ -394,7 +351,7 @@ void StreetNetworkParams::set_filter(const std::string& param_uri) {
         type_filter = Type_e::Unknown;
     else {
         uri_filter = param_uri;
-        type_filter = static_data::get()->typeByCaption(param_uri.substr(0, pos));
+        type_filter = navitia::type::static_data::get()->typeByCaption(param_uri.substr(0, pos));
     }
 }
 

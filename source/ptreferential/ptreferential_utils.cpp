@@ -79,9 +79,8 @@ Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const D
 }
 
 Type_e type_by_caption(const std::string& type) {
-    type::static_data* static_data = type::static_data::get();
     try {
-        return static_data->typeByCaption(type);
+        return navitia::type::static_data::get()->typeByCaption(type);
     } catch (...) {
         throw parsing_error(parsing_error::error_type::unknown_object, "Filter Unknown object type: " + type);
     }
