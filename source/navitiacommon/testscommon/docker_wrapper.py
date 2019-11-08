@@ -133,13 +133,15 @@ class DockerWrapper(object):
 
         except docker.errors.APIError as e:
             if e.is_server_error():
-                logger.warn("[docker server error] A server error occcured, maybe missing internet connection?")
-                logger.warn("[docker server error] Details: {}".format(e))
-                logger.warn(
+                logger.warning(
+                    "[docker server error] A server error occcured, maybe missing internet connection?"
+                )
+                logger.warning("[docker server error] Details: {}".format(e))
+                logger.warning(
                     "[docker server error] Checking if '{}' docker image is already built".format(image_name)
                 )
                 self.docker_client.images.get(image_name)
-                logger.warn(
+                logger.warning(
                     "[docker server error] Going on, as '{}' docker image is already built".format(image_name)
                 )
             else:

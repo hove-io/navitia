@@ -356,25 +356,13 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
     def test_schema_parameters_sctructure(self):
         """
-        Get the main schema, extract all path with no parameter, or only {region}
-        and check for each endpoint the schema's structure
+        Check for each endpoint the schema's structure
         """
         schema = self.get_schema()
         paths = schema['paths']
 
-        # Filter endpoints with a parameter (ie. /v1/coverage/{lon}:{lat}/...)
-        def endpoints_with_no_param(path):
-            return '{' not in path
-
-        # Filter endpoints with only a {region} parameter (ie. /v1/coverage/{region}/journeys)
-        def endpoints_with_only_region_param(path):
-            other_param = any(elem in path for elem in ['{id}', '{uri}'])
-            return '{region}' in path and not other_param
-
-        urls = chain(ifilter(endpoints_with_no_param, paths), ifilter(endpoints_with_only_region_param, paths))
-
-        for u in urls:
-            url = '/v1' + u.format(region='main_routing_test') + '?schema=true'
+        for u in paths:
+            url = '/v1' + u.format(region='main_routing_test', lon=0, lat=0, id=0, uri='_') + '?schema=true'
             self.check_schema_parameters_structure(url)
 
 

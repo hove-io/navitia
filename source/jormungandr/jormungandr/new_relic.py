@@ -39,7 +39,7 @@ try:
     from newrelic import agent
 except ImportError:
     logger = logging.getLogger(__name__)
-    logger.warn('New Relic is not available')
+    logger.warning('New Relic is not available')
     agent = None
 
 

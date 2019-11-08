@@ -55,6 +55,7 @@ class PtJourney:
         journey_params,
         bike_in_pt,
         request,
+        isochrone_center,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -67,6 +68,7 @@ class PtJourney:
         self._bike_in_pt = bike_in_pt
         self._request = request
         self._value = None
+        self._isochrone_center = isochrone_center
 
         self._async_request()
 
@@ -81,7 +83,7 @@ class PtJourney:
             self._bike_in_pt,
         )
 
-    def _do_request(self):
+    def _do_journeys_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
         orig_fallback_duration_status = self._orig_fallback_durtaions_pool.wait_and_get(self._dep_mode)
@@ -124,8 +126,52 @@ class PtJourney:
         )
         return resp
 
+    def _do_isochrone_request(self):
+        logger = logging.getLogger(__name__)
+        fallback_durations_pool = (
+            self._orig_fallback_durtaions_pool
+            if self._orig_fallback_durtaions_pool is not None
+            else self._dest_fallback_durations_pool
+        )
+        mode = self._dep_mode if self._orig_fallback_durtaions_pool else self._arr_mode
+
+        logger.debug("waiting for fallback durations with %s", mode)
+        fallback_duration_status = fallback_durations_pool.wait_and_get(mode)
+
+        logger.debug("requesting public transport journey with dep_mode: %s", mode)
+
+        fallback_durations = {k: v.duration for k, v in fallback_duration_status.items()}
+
+        if not fallback_durations or not self._request.get('max_duration', 0):
+            return None
+
+        if self._orig_fallback_durtaions_pool is not None:
+            resp = self._journeys(self._instance.planner, fallback_durations, {})
+        else:
+            resp = self._journeys(self._instance.planner, {}, fallback_durations)
+
+        for j in resp.journeys:
+            j.internal_id = str(utils.generate_id())
+
+        if resp.HasField(b"error"):
+            logger.debug("pt journey has error mode: %s", mode)
+            # Here needs to modify error message of no_solution
+            if not fallback_durations:
+                if self._orig_fallback_durtaions_pool is not None:
+                    resp.error.id = response_pb2.Error.no_origin
+                    resp.error.message = "no origin point"
+                else:
+                    resp.error.id = response_pb2.Error.no_destination
+                    resp.error.message = "no destination point"
+
+        logger.debug("finish public transport journey with mode: %s", mode)
+        return resp
+
     def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+        if self._isochrone_center:
+            self._value = self._future_manager.create_future(self._do_isochrone_request)
+        else:
+            self._value = self._future_manager.create_future(self._do_journeys_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()
@@ -176,6 +222,7 @@ class PtJourneyPool:
         orig_fallback_durations_pool,
         dest_fallback_durations_pool,
         request,
+        isochrone_center=None,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -185,14 +232,15 @@ class PtJourneyPool:
         self._krakens_call = krakens_call
         self._orig_fallback_durations_pool = orig_fallback_durations_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
-        self._journey_params = self._create_parameters(request)
+        self._isochrone_center = isochrone_center
+        self._journey_params = self._create_parameters(request, self._isochrone_center)
         self._request = request
         self._value = []
 
         self._async_request()
 
     @staticmethod
-    def _create_parameters(request):
+    def _create_parameters(request, isochrone_center):
         from jormungandr.planner import JourneyParameters
 
         return JourneyParameters(
@@ -209,6 +257,7 @@ class PtJourneyPool:
             min_nb_journeys=request['min_nb_journeys'],
             timeframe=request['timeframe_duration'],
             depth=request['depth'],
+            isochrone_center=isochrone_center,
         )
 
     def _async_request(self):
@@ -218,18 +267,20 @@ class PtJourneyPool:
             if dp_type == "only":
                 continue
 
-            dp = self._streetnetwork_path_pool.wait_and_get(
-                self._requested_orig_obj,
-                self._requested_dest_obj,
-                dep_mode,
-                periode_extremity,
-                direct_path_type,
-                request=self._request,
-            )
-            if dp and dp.journeys:
-                self._journey_params.direct_path_duration = dp.journeys[0].durations.total
-            else:
-                self._journey_params.direct_path_duration = None
+            # We don't need direct_paths in isochrone
+            if not self._isochrone_center:
+                dp = self._streetnetwork_path_pool.wait_and_get(
+                    self._requested_orig_obj,
+                    self._requested_dest_obj,
+                    dep_mode,
+                    periode_extremity,
+                    direct_path_type,
+                    request=self._request,
+                )
+                if dp and dp.journeys:
+                    self._journey_params.direct_path_duration = dp.journeys[0].durations.total
+                else:
+                    self._journey_params.direct_path_duration = None
 
             bike_in_pt = dep_mode == 'bike' and arr_mode == 'bike'
             pt_journey = PtJourney(
@@ -243,6 +294,7 @@ class PtJourneyPool:
                 journey_params=self._journey_params,
                 bike_in_pt=bike_in_pt,
                 request=self._request,
+                isochrone_center=self._isochrone_center,
             )
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))

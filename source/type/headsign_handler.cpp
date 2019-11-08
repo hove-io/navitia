@@ -84,7 +84,7 @@ const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) cons
 
     // otherwise use headsign change map
     const auto& map_stop_time_headsign_change = headsign_changes.at(stop_time.vehicle_journey);
-    uint16_t order_stop_time = stop_time.order();
+    auto order_stop_time = stop_time.order();
 
     // if no headsign change stored: return name
     if (map_stop_time_headsign_change.empty()) {
@@ -113,7 +113,7 @@ std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* v
     }
     for (const auto& change : it_changes->second) {
         // ignore last headsign (vj.name) as it does not concern a stop_time
-        if (change.first < vj->stop_time_list.size()) {
+        if (change.first.val < vj->stop_time_list.size()) {
             res.insert(change.second);
         }
     }
@@ -130,7 +130,9 @@ bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj, const std::
         return false;
     }
 
-    auto has_headsign = [&](const std::pair<uint16_t, std::string>& it_change) { return it_change.second == headsign; };
+    auto has_headsign = [&](const std::pair<RankStopTime, std::string>& it_change) {
+        return it_change.second == headsign;
+    };
     if (navitia::contains_if(it_vj_changes->second, has_headsign)) {
         return true;
     }
@@ -162,7 +164,7 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, co
         return;
     }
 
-    uint16_t order = stop_time.order();
+    auto order = stop_time.order();
     auto& vj_headsign_changes = headsign_changes[vj];
     // erase change if exists
     if (navitia::contains(vj_headsign_changes, order)) {
@@ -192,10 +194,10 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, co
 }
 
 void HeadsignHandler::forget_vj(const VehicleJourney*) {
-    // actually we never wants to forget vj
+    // currently we never want to forget VJ
     // it would be MANDATORY to do it if we added realtime vjs to the headsigns handler,
     // but for the moment we only index base schedule VJ
-    // if that change be sure to add the mechanism here to remove the useless VJ before we delete it
+    // if that changes be sure to add the mechanism here to remove the useless VJ before we delete it
 }
 
 }  // namespace type

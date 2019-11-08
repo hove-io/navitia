@@ -37,6 +37,8 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
+namespace nm = ed::types;
+
 template <typename C>
 typename C::mapped_type get_object(const C& map, const std::string& obj_id, const std::string& property) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
@@ -226,7 +228,7 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
     }
     int num_elements = data.stop_points.size();
     for (size_t to_erase : erase_sp) {
-        gtfs_data.stop_map.erase(data.stop_points[to_erase]->uri);
+        gtfs_data.stop_point_map.erase(data.stop_points[to_erase]->uri);
         delete data.stop_points[to_erase];
         data.stop_points[to_erase] = data.stop_points[num_elements - 1];
         num_elements--;
@@ -235,55 +237,95 @@ void StopsFusioHandler::handle_stop_point_without_area(Data& data) {
     LOG4CPLUS_INFO(logger, "Deletion of " << erase_sp.size() << " stop_point wihtout stop_area");
 }
 
-StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
-                                                                     const csv_row& row,
-                                                                     bool is_first_line) {
-    auto return_wrapper = StopsGtfsHandler::handle_line(data, row, is_first_line);
+nm::StopArea* StopsFusioHandler::build_stop_area(Data& data, const csv_row& row) {
+    auto* sa = StopsGtfsHandler::build_stop_area(data, row);
+    if (!sa) {
+        return nullptr;
+    }
 
     if (is_valid(ext_code_c, row)) {
-        if (return_wrapper.second) {
-            data.add_object_code(return_wrapper.second, row[ext_code_c]);
-        } else if (return_wrapper.first) {
-            data.add_object_code(return_wrapper.first, row[ext_code_c]);
-        }
+        data.add_object_code(sa, row[ext_code_c]);
     }
     if (is_valid(property_id_c, row)) {
         auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
         if (it_property != gtfs_data.hasProperties_map.end()) {
-            if (return_wrapper.first != nullptr) {
-                return_wrapper.first->set_properties(it_property->second.properties());
-            }
-            if (return_wrapper.second != nullptr) {
-                return_wrapper.second->set_properties(it_property->second.properties());
-            }
+            sa->set_properties(it_property->second.properties());
         }
     }
 
     if (is_valid(comment_id_c, row)) {
         auto it_comment = data.comment_by_id.find(row[comment_id_c]);
         if (it_comment != data.comment_by_id.end()) {
-            if (return_wrapper.first != nullptr) {
-                data.add_pt_object_comment(return_wrapper.first, row[comment_id_c]);
-            }
-            if (return_wrapper.second != nullptr) {
-                data.add_pt_object_comment(return_wrapper.second, row[comment_id_c]);
-            }
+            data.add_pt_object_comment(sa, row[comment_id_c]);
         }
     }
 
-    if (return_wrapper.second != nullptr && is_valid(visible_c, row)) {
-        return_wrapper.second->visible = (row[visible_c] == "1");
+    if (is_valid(visible_c, row)) {
+        sa->visible = (row[visible_c] == "1");
     }
-    if (return_wrapper.first != nullptr && has_col(type_c, row) && row[type_c] == "2") {
-        return_wrapper.first->is_zonal = true;
+    return sa;
+}
+
+nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& row) {
+    auto* sp = StopsGtfsHandler::build_stop_point(data, row);
+    if (!sp) {
+        return nullptr;
     }
-    if (return_wrapper.first != nullptr && is_valid(geometry_id_c, row)) {
+
+    if (is_valid(ext_code_c, row)) {
+        data.add_object_code(sp, row[ext_code_c]);
+    }
+    if (is_valid(property_id_c, row)) {
+        auto it_property = gtfs_data.hasProperties_map.find(row[property_id_c]);
+        if (it_property != gtfs_data.hasProperties_map.end()) {
+            sp->set_properties(it_property->second.properties());
+        }
+    }
+
+    if (is_valid(comment_id_c, row)) {
+        auto it_comment = data.comment_by_id.find(row[comment_id_c]);
+        if (it_comment != data.comment_by_id.end()) {
+            data.add_pt_object_comment(sp, row[comment_id_c]);
+        }
+    }
+
+    if (has_col(type_c, row) && row[type_c] == "2") {
+        sp->is_zonal = true;
+    }
+    if (is_valid(geometry_id_c, row)) {
         const auto search = data.areas.find(row.at(geometry_id_c));
         if (search != data.areas.end()) {
-            return_wrapper.first->area = search->second;
+            sp->area = search->second;
         } else {
             LOG4CPLUS_WARN(logger, "geometry_id " << row.at(geometry_id_c) << " not found");
         }
+    }
+
+    return sp;
+}
+
+StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
+    stop_point_and_area return_wrapper{};
+
+    if (is_duplicate(row)) {
+        return return_wrapper;
+    }
+    // location_type == 1 => StopArea
+    if (has_col(type_c, row) && row[type_c] == "1") {
+        auto* sa = build_stop_area(data, row);
+        if (sa != nullptr) {
+            return_wrapper.second = sa;
+        }
+    } else if (has_col(type_c, row) && navitia::contains({"0", "2"}, row[type_c])) {
+        // location_type == 0 => StopPoint
+        // location_type == 2 => geographical zone, handled like stop points
+        auto* sp = build_stop_point(data, row);
+        if (sp) {
+            return_wrapper.first = sp;
+        }
+    } else {
+        // we ignore pathways nodes
+        return {};
     }
 
     return return_wrapper;
@@ -1248,7 +1290,7 @@ void ObjectPropertiesFusioHandler::handle_line(Data& data, const csv_row& row, b
             return;
         }
     } else if (enum_type == nt::Type_e::StopPoint) {
-        object = get_object(gtfs_data.stop_map, object_id, "object property");
+        object = get_object(gtfs_data.stop_point_map, object_id, "object property");
         if (!object) {
             return;
         }
@@ -1681,7 +1723,7 @@ void CommentLinksFusioHandler::handle_line(Data& data, const csv_row& row, bool)
         }
         data.add_pt_object_comment(object, comment_id);
     } else if (navitia_type == nt::Type_e::StopPoint) {
-        const auto object = get_object(gtfs_data.stop_map, object_id, "comment");
+        const auto object = get_object(gtfs_data.stop_point_map, object_id, "comment");
         if (!object) {
             return;
         }
@@ -1787,8 +1829,8 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "stop_point") {
-        const auto& it_object = gtfs_data.stop_map.find(row[object_uri_c]);
-        if (it_object != gtfs_data.stop_map.end()) {
+        const auto& it_object = gtfs_data.stop_point_map.find(row[object_uri_c]);
+        if (it_object != gtfs_data.stop_point_map.end()) {
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "company") {

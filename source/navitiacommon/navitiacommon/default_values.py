@@ -155,7 +155,7 @@ def get_value_or_default(attr, instance, instance_name):
         value = getattr(sys.modules[__name__], attr)
         if not instance:
             logger = logging.getLogger(__name__)
-            logger.warn(
+            logger.warning(
                 'instance %s not found in db, we use the default value (%s) for the param %s',
                 instance_name,
                 value,
