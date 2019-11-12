@@ -305,8 +305,6 @@ class Scenario(object):
         else:
             journey_req.max_duration = max(request["boundary_duration[]"], key=int)
         if request.get("boundary_duration[]"):
-            if len(request["boundary_duration[]"]) > 10:
-                abort(400, message="you cannot provide more than 10 'boundary_duration[]'")
             for duration in sorted(request["boundary_duration[]"], key=int, reverse=True):
                 if request["min_duration"] < duration < journey_req.max_duration:
                     req.isochrone.boundary_duration.append(duration)

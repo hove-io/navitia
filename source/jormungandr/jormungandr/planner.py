@@ -18,24 +18,24 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import utils
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, type_pb2, default_values
 
 
 class JourneyParameters(object):
     def __init__(
         self,
-        max_duration=86400,
+        max_duration=default_values.max_duration,
         max_transfers=10,
         wheelchair=False,
         forbidden_uris=None,
         allowed_id=None,
         realtime_level='base_schedule',
-        max_extra_second_pass=None,
-        walking_transfer_penalty=120,
+        max_extra_second_pass=default_values.max_extra_second_pass,
+        walking_transfer_penalty=default_values.walking_transfer_penalty,
         direct_path_duration=None,
-        night_bus_filter_max_factor=None,
-        night_bus_filter_base_factor=None,
-        min_nb_journeys=None,
+        night_bus_filter_max_factor=default_values.night_bus_filter_max_factor,
+        night_bus_filter_base_factor=default_values.night_bus_filter_base_factor,
+        min_nb_journeys=default_values.min_nb_journeys,
         timeframe=None,
         depth=1,
         isochrone_center=None,
@@ -57,11 +57,20 @@ class JourneyParameters(object):
         self.isochrone_center = isochrone_center
 
 
+class GraphicalIsochronesParameters(object):
+    def __init__(self, journeys_parameters=JourneyParameters(), min_duration=0, boundary_duration=None):
+        self.journeys_parameters = journeys_parameters
+        self.min_duration = min_duration
+        self.boundary_duration = boundary_duration
+
+
 class Kraken(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
+    def _create_journeys_request(
+        self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
+    ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
         for stop_point_id, access_duration in origins.items():
@@ -111,4 +120,45 @@ class Kraken(object):
             req.journeys.isochrone_center.access_duration = 0
             req.requested_api = type_pb2.ISOCHRONE
 
+        return req
+
+    def _create_graphical_isochrones_request(
+        self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
+    ):
+        req = self._create_journeys_request(
+            origins,
+            destinations,
+            datetime,
+            clockwise,
+            graphical_isochrones_parameters.journeys_parameters,
+            bike_in_pt,
+        )
+        req.requested_api = type_pb2.graphical_isochrone
+        max_duration = graphical_isochrones_parameters.journeys_parameters.max_duration
+        if max_duration:
+            req.journeys.max_duration = max_duration
+        else:
+            req.journeys.max_duration = max(graphical_isochrones_parameters.boundary_duration, key=int)
+        if graphical_isochrones_parameters.boundary_duration:
+            for duration in sorted(graphical_isochrones_parameters.boundary_duration, key=int, reverse=True):
+                if graphical_isochrones_parameters.min_duration < duration < req.journeys.max_duration:
+                    req.isochrone.boundary_duration.append(duration)
+        req.isochrone.boundary_duration.insert(0, req.journeys.max_duration)
+        req.isochrone.boundary_duration.append(graphical_isochrones_parameters.min_duration)
+
+        req.isochrone.journeys_request.CopyFrom(req.journeys)
+        return req
+
+    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
+        req = self._create_journeys_request(
+            origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
+        )
+        return self.instance.send_and_receive(req)
+
+    def graphical_isochrones(
+        self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
+    ):
+        req = self._create_graphical_isochrones_request(
+            origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
+        )
         return self.instance.send_and_receive(req)
