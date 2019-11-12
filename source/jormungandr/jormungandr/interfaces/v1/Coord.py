@@ -69,48 +69,27 @@ class Coord(ResourceUri):
                 return {"address": new_address["places_nearby"][0]["address"]}
         return None
 
-    def _get_args(self, lon=None, lat=None, id=None):
-        args = {"uri": "{};{}".format(lon, lat), "_current_datetime": datetime.datetime.utcnow()}
-        if all([lon, lat, is_coord(id)]):
-            return args
-        args.update(
-            {
-                "count": 1,
-                "distance": 200,
-                "type[]": ["address"],
-                "depth": 1,
-                "start_page": 0,
-                "filter": "",
-                "count": 1,
-            }
-        )
-        return args
+    def _get_args(self, lon=None, lat=None):
+        return {"uri": "{};{}".format(lon, lat), "_current_datetime": datetime.datetime.utcnow()}
 
     @get_serializer(serpy=api.DictAddressesSerializer)
     def get(self, region=None, lon=None, lat=None, id=None):
-        args = self.parsers["get"].parse_args()
-
         if is_coord(id):
             lon, lat = get_lon_lat(id)
 
-        regions = self._get_regions(region=region, lon=lon, lat=lat)
+        params = self._get_args(lon=lon, lat=lat)
 
-        params = self._get_args(id=id, lon=lon, lat=lat)
+        args = self.parsers["get"].parse_args()
         args.update(params)
         self._register_interpreted_parameters(args)
+
+        regions = self._get_regions(region=region, lon=lon, lat=lat)
         for r in regions:
-            if all([lon, lat, is_coord(id)]):
-                response = self._response_from_place_uri(r, args)
-                if response:
-                    response.update({"regions": [r]})
-                    break
-            else:
-                response = self._response_from_places_nearby(r, args)
-                if response:
-                    response.update({"regions": [r]})
-                    break
-        if response:
-            return response, 200
+            response = self._response_from_place_uri(r, args)
+            if response:
+                response.update({"regions": [r]})
+                return response, 200
+
         return {"regions": regions, "message": "No address for these coords"}, 404
 
     def options(self, **kwargs):
