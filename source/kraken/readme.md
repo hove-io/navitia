@@ -101,6 +101,16 @@ By example if we want to define the number of thread we have to set ` GENERAL_nb
 
 ## Startup
 
+At startup kraken do the following actions:
+1. load configuration
+2. open connection to rabbitmq
+3. load data.nav.lz4
+4. load disruptions from chaos's database
+5. load realtime from kirin
+6. start background thread that handle disruptions, realtime and data reloading
+7. bind zmq sockets: at this point the configured tcp port start acceptint connection
+8. start worker threads to handle resquests
+
 ## Data loading
 
 ## Realtime integration
