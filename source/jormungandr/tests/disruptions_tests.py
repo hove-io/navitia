@@ -871,3 +871,57 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         )
         assert code == 404
         assert response['error']['message'] == 'invalid filtering period (since > until)'
+
+    def test_line_reports_with_uri_filter(self):
+        # Without filter
+        response = self.query_region("line_reports?_current_datetime=20170101T120000")
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 2
+        # line:1
+        assert line_reports[0]['line']['id'] == 'line:1'
+        assert len(line_reports[0]['line']['links']) == 2
+        assert line_reports[0]['line']['links'][0]['id'] == 'line_section_on_line_1'
+        assert line_reports[0]['line']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
+        # line:2
+        assert line_reports[1]['line']['id'] == 'line:2'
+        assert len(line_reports[1]['line']['links']) == 1
+        assert line_reports[1]['line']['links'][0]['id'] == 'line_section_on_line_2'
+        # Associated disruptions
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 3
+        assert disruptions[0]['id'] == 'line_section_on_line_1'
+        assert disruptions[1]['id'] == 'line_section_on_line_1_other_effect'
+        assert disruptions[2]['id'] == 'line_section_on_line_2'
+
+        # With lines=line:1 filter
+        response = self.query_region("lines/line:1/line_reports?_current_datetime=20170101T120000")
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 1
+        assert line_reports[0]['line']['id'] == 'line:1'
+        assert len(line_reports[0]['line']['links']) == 2
+        assert line_reports[0]['line']['links'][0]['id'] == 'line_section_on_line_1'
+        assert line_reports[0]['line']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
+        # Associated disruptions
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 2
+        assert disruptions[0]['id'] == 'line_section_on_line_1'
+        assert disruptions[1]['id'] == 'line_section_on_line_1_other_effect'
+
+        # With routes=route:line:2:1 filter
+        response = self.query_region("routes/route:line:2:1/line_reports?_current_datetime=20170101T120000")
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 1
+        assert line_reports[0]['line']['id'] == 'line:2'
+        assert len(line_reports[0]['line']['links']) == 1
+        assert line_reports[0]['line']['links'][0]['id'] == 'line_section_on_line_2'
+        # The associated disruption
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+        assert disruptions[0]['id'] == 'line_section_on_line_2'
+
+        # With wrong filter
+        response, code = self.query_region(
+            "lines/wrong_uri/line_reports?_current_datetime=20170101T120000", check=False
+        )
+        assert code == 404
+        assert response['error']['message'] == 'ptref : Filters: Unable to find object'
