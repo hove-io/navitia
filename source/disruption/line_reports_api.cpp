@@ -31,6 +31,9 @@ www.navitia.io
 #include "line_reports_api.h"
 #include "utils/paginate.h"
 
+#include <boost/range/algorithm.hpp>
+#include <iterator>
+
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;
 
@@ -132,12 +135,9 @@ void filter_excess_impacts_in_uri_filtering_mode(const std::string& filter,
         }
 
         auto erase_allowed = [](const nt::UrisList& uris, const nt::UrisList& impacted_uris) -> bool {
-            for (const auto& impacted_uri : impacted_uris) {
-                if (std::find(uris.cbegin(), uris.cend(), impacted_uri) == uris.cend()) {
-                    return true;
-                }
-            }
-            return false;
+            std::vector<std::string> intersect;
+            boost::range::set_intersection(uris, impacted_uris, std::back_inserter(intersect));
+            return intersect.size() == 0;
         };
 
         // Clean impacts if needed
