@@ -139,16 +139,6 @@ BOOST_AUTO_TEST_CASE(regex_tests) {
     BOOST_CHECK(boost::regex_search("a c c a", re));
 }
 
-BOOST_AUTO_TEST_CASE(regex_strip_accents_tests) {
-    std::map<char, char> map_accents;
-
-    Autocomplete<unsigned int> ac;
-    std::string test("républiquê");
-    BOOST_CHECK_EQUAL(ac.strip_accents(test), "republique");
-    test = "ÂâÄäçÇÉéÈèÊêËëÖöÔôÜüÎîÏïæœ";
-    BOOST_CHECK_EQUAL(ac.strip_accents(test), "aaaacceeeeeeeeoooouuiiiiaeoe");
-}
-
 BOOST_AUTO_TEST_CASE(regex_replace_tests) {
     boost::regex re("\\<c c\\>");
     BOOST_CHECK_EQUAL(boost::regex_replace(std::string("c c"), re, "centre commercial"), "centre commercial");
@@ -2046,7 +2036,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
     auto* data_ptr = b.data.get();
 
     std::string search("Jean Jaurès Toulouse");
-    std::string search_low = data_ptr->pt_data->stop_area_autocomplete.strip_accents_and_lower(search);
+    std::string search_low = navitia::strip_accents_and_lower(search);
 
     // No accents, one less byte
     BOOST_REQUIRE_EQUAL(search.size(), search_low.size() + 1);
@@ -2075,7 +2065,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
 
     // we should have the same result on stop_points
     std::string sp_search("stop_point:Jean Jaurès Toulouse");
-    std::string sp_search_low = data_ptr->pt_data->stop_area_autocomplete.strip_accents_and_lower(sp_search);
+    std::string sp_search_low = navitia::strip_accents_and_lower(sp_search);
 
     std::vector<navitia::type::Type_e> sp_type_filter;
     sp_type_filter.push_back(navitia::type::Type_e::StopPoint);

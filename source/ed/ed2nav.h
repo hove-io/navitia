@@ -28,15 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-<<<<<<< HEAD
 #pragma once
-=======
-namespace navitia {
-namespace type {
-struct Data;
-}
-}  // namespace navitia
->>>>>>> 2e6fce303... Human sort on stop_areas
 
 namespace ed {
 
