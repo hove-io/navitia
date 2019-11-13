@@ -29,6 +29,7 @@
 
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils, fallback_modes as fm
+import six
 
 
 class Ridesharing(AbstractStreetNetworkService):
@@ -49,7 +50,7 @@ class Ridesharing(AbstractStreetNetworkService):
 
     def status(self):
         return {
-            'id': unicode(self.sn_system_id),
+            'id': six.text_type(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
             'backend_class': self.street_network.__class__.__name__,

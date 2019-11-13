@@ -35,6 +35,7 @@ import geojson
 import flask
 from dateutil import parser
 from flask_restful.inputs import boolean
+import six
 
 
 class TypeSchema(object):
@@ -83,11 +84,12 @@ class BooleanType(CustomSchemaType):
 
 class OptionValue(CustomSchemaType):
     def __init__(self, optional_values):
+
         self.optional_values = optional_values
 
     def __call__(self, value, name):
         # if input value is iterable
-        if hasattr(value, '__iter__'):
+        if hasattr(value, '__iter__') and not isinstance(value, six.text_type):
             if not all((v in self.optional_values for v in value)):
                 error = "The {} argument must be in list {}, you gave {}".format(
                     name, str(self.optional_values), value
@@ -107,7 +109,7 @@ class OptionValue(CustomSchemaType):
 class DescribedOptionValue(OptionValue):
     def __init__(self, optional_values):
         self.description = "Possible values:\n"
-        self.description += '\n'.join([" * '{}' - {}".format(k, v) for k, v in optional_values.iteritems()])
+        self.description += '\n'.join([" * '{}' - {}".format(k, v) for k, v in optional_values.items()])
         super(DescribedOptionValue, self).__init__(optional_values.keys())
 
     def schema(self):

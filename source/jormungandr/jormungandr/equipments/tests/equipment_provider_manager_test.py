@@ -55,7 +55,7 @@ def equipments_provider_manager_env_test():
     manager.init_providers(['SytralRT'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
-    assert manager._equipment_providers_legacy.keys()[0] == 'SytralRT'
+    assert list(manager._equipment_providers_legacy)[0] == 'SytralRT'
     assert manager._get_providers() == {'SytralRT': 'Provider'}
 
     # Provider already created
@@ -174,7 +174,7 @@ def equipments_provider_manager_env_vs_db_test():
     manager.init_providers(['sytral'])
     assert not manager._equipment_providers
     assert len(manager._equipment_providers_legacy) == 1
-    assert manager._equipment_providers_legacy.keys()[0] == 'sytral'
+    assert list(manager._equipment_providers_legacy)[0] == 'sytral'
 
     # Provider 'sytral' will be created in providers list and deleted from legacy
     manager._providers_getter = providers_getter_ok

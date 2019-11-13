@@ -295,4 +295,4 @@ class TestPlaces(AbstractTestFixture):
         response = self.query_region("places?q=rue ab")
         places = response['places']
         assert len(places) == 1
-        assert places[0].has_key('distance') == False
+        assert 'distance' not in places[0]

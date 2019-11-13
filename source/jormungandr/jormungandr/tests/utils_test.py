@@ -28,15 +28,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-from jormungandr.utils import timestamp_to_datetime
+from jormungandr.utils import timestamp_to_datetime, make_namedtuple, walk_dict
 import pytz
 from jormungandr import app
 import datetime
+import io
 
 from navitiacommon import models
+import pytest
 
 
 class MockResponse(object):
@@ -157,3 +159,75 @@ def test_timestamp_to_datetime():
         g.timezone = None
         # test valid date but no timezone
         assert timestamp_to_datetime(1493296245) is None
+
+
+def test_make_named_tuple():
+    Bob = make_namedtuple('Bob', 'a', 'b', c=2, d=14)
+    b = Bob(b=14, a=12)
+    assert b.a == 12
+    assert b.b == 14
+    assert b.c == 2
+    assert b.d == 14
+    b = Bob(14, 12)  # non named argument also works
+    assert b.a == 14
+    assert b.b == 12
+    assert b.c == 2
+    assert b.d == 14
+    b = Bob(12, b=14, d=123)
+    assert b.a == 12
+    assert b.b == 14
+    assert b.c == 2
+    assert b.d == 123
+    with pytest.raises(TypeError):
+        Bob(a=12)
+    with pytest.raises(TypeError):
+        Bob()
+
+
+def test_walk_dict():
+    bob = {
+        'tutu': 1,
+        'tata': [1, 2],
+        'toto': {'bob': 12, 'bobette': 13, 'nested_bob': {'bob': 3}},
+        'tete': ('tuple1', ['ltuple1', 'ltuple2']),
+        'titi': [{'a': 1}, {'b': 1}],
+    }
+    result = io.StringIO()
+
+    def my_visitor(name, val):
+        result.write("{}={}\n".format(name, val))
+
+    walk_dict(bob, my_visitor)
+    expected = """titi={u'b': 1}
+b=1
+titi={u'a': 1}
+a=1
+tete=ltuple2
+tete=ltuple1
+tete=tuple1
+tutu=1
+toto={u'bobette': 13, u'bob': 12, u'nested_bob': {u'bob': 3}}
+nested_bob={u'bob': 3}
+bob=3
+bob=12
+bobette=13
+tata=2
+tata=1
+"""
+    assert result.getvalue() == expected
+
+    result = io.StringIO()
+
+    def my_stoper_visitor(name, val):
+        result.write("{}={}\n".format(name, val))
+        if name == 'tete':
+            return True
+
+    walk_dict(bob, my_stoper_visitor)
+    expected = """titi={u'b': 1}
+b=1
+titi={u'a': 1}
+a=1
+tete=ltuple2
+"""
+    assert result.getvalue() == expected

@@ -108,7 +108,7 @@ class BssProviderManager(AbstractProviderManager):
     def _get_providers(self):
         self.update_config()
         # providers from the database have priority on legacies providers
-        return self._bss_providers.values() + self._bss_providers_legacy
+        return list(self._bss_providers.values()) + self._bss_providers_legacy
 
     def get_providers(self):
         return self._get_providers()

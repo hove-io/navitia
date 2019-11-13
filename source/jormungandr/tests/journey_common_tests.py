@@ -189,14 +189,8 @@ class JourneyCommon(object):
 
         assert status == 400, "the response should not be valid"
 
-        m = (
-            "parameter \"type\" invalid: The type argument must be in list [u'all', u'non_pt_bss', "
-            "u'non_pt_bike', u'fastest', u'less_fallback_bss', u'best', u'less_fallback_bike', "
-            "u'rapid', u'car', u'comfort', u'no_train', u'less_fallback_walk', u'non_pt_walk'], "
-            "you gave sponge_bob\n"
-            "type description: DEPRECATED, desired type of journey."
-        )
-        assert response['message'] == m
+        m = 'parameter "type" invalid: The type argument must be in list'
+        assert m in response['message']
 
     def test_journeys_no_bss_and_walking(self):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
@@ -350,7 +344,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert "Unable to parse datetime, year is out of range" in response['message']
+        assert "Unable to parse datetime, year" in response['message']
 
     def test_journeys_do_not_loose_precision(self):
         """do we have a good precision given back in the id"""

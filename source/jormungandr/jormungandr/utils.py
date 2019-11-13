@@ -41,7 +41,7 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
-from six.moves import zip
+from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request
 import re
@@ -49,6 +49,7 @@ import flask
 from contextlib import contextmanager
 import functools
 import sys
+import six
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -193,43 +194,6 @@ def walk_dict(tree, visitor):
 
     if the visitor returns True, stop the search
 
-    >>> bob = {'tutu': 1,
-    ... 'tata': [1, 2],
-    ... 'toto': {'bob':12, 'bobette': 13, 'nested_bob': {'bob': 3}},
-    ... 'tete': ('tuple1', ['ltuple1', 'ltuple2']),
-    ... 'titi': [{'a':1}, {'b':1}]}
-
-    >>> def my_visitor(name, val):
-    ...     print("{}={}".format(name, val))
-
-    >>> walk_dict(bob, my_visitor)
-    titi={u'b': 1}
-    b=1
-    titi={u'a': 1}
-    a=1
-    tete=ltuple2
-    tete=ltuple1
-    tete=tuple1
-    tutu=1
-    toto={u'bobette': 13, u'bob': 12, u'nested_bob': {u'bob': 3}}
-    nested_bob={u'bob': 3}
-    bob=3
-    bob=12
-    bobette=13
-    tata=2
-    tata=1
-
-    >>> def my_stoper_visitor(name, val):
-    ...     print("{}={}".format(name, val))
-    ...     if name == 'tete':
-    ...         return True
-
-    >>> walk_dict(bob, my_stoper_visitor)
-    titi={u'b': 1}
-    b=1
-    titi={u'a': 1}
-    a=1
-    tete=ltuple2
     """
     queue = deque()
 
@@ -326,7 +290,7 @@ def realtime_level_to_pbf(level):
 # we can't use reverse(enumerate(list)) without creating a temporary
 # list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return zip(xrange(len(l) - 1, -1, -1), reversed(l))
+    return zip(range(len(l) - 1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):
@@ -425,7 +389,7 @@ def get_pt_object_coord(pt_object):
 
 
 def record_external_failure(message, connector_type, connector_name):
-    params = {'{}_system_id'.format(connector_type): unicode(connector_name), 'message': message}
+    params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
 
 
@@ -486,19 +450,6 @@ def make_namedtuple(typename, *fields, **fields_with_default):
     :param fields_with_default: positional arguments with fields and their default value
     :return: the namedtuple
 
-    >>> Bob = make_namedtuple('Bob', 'a', 'b', c=2, d=14)
-    >>> Bob(b=14, a=12)
-    Bob(a=12, b=14, c=2, d=14)
-    >>> Bob(14, 12)  # non named argument also works
-    Bob(a=14, b=12, c=2, d=14)
-    >>> Bob(12, b=14, d=123)
-    Bob(a=12, b=14, c=2, d=123)
-    >>> Bob(a=12)  # Note: the error message is not the same in python 3 (they are better in python 3)
-    Traceback (most recent call last):
-    TypeError: __new__() takes at least 3 arguments (2 given)
-    >>> Bob()
-    Traceback (most recent call last):
-    TypeError: __new__() takes at least 3 arguments (1 given)
     """
     import collections
 

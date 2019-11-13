@@ -33,6 +33,7 @@ from navitiacommon import response_pb2
 from collections import namedtuple
 import copy
 import logging
+from functools import cmp_to_key
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
@@ -111,7 +112,7 @@ class PtJourney:
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
 
-        if resp.HasField(b"error"):
+        if resp.HasField(str("error")):
             logger.debug("pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode)
             # Here needs to modify error message of no_solution
             if not orig_fallback_durations:
@@ -299,7 +300,7 @@ class PtJourneyPool:
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
 
-        self._value.sort(_PtJourneySorter())
+        self._value.sort(key=cmp_to_key(_PtJourneySorter()))
 
     def __iter__(self):
         return self._value.__iter__()

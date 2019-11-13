@@ -351,7 +351,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert 'Unable to parse datetime, year is out of range' in normal_response['message']
+        assert 'Unable to parse datetime, year' in normal_response['message']
 
         p = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         p = p.format('toto', s_coord, 3600)
