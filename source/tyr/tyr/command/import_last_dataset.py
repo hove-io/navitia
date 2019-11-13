@@ -63,7 +63,7 @@ def import_last_dataset(
         files,
         instance,
         backup_file=False,
-        async=background,
+        asynchronous=background,
         reload=reload_kraken,
         custom_output_dir=custom_output_dir,
         skip_mimir=skip_mimir,
