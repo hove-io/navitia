@@ -31,7 +31,7 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_proximity_list
 
-#include <boost/test/unit_test.hpp>
+#include <algorithm>
 #include "type/type.h"
 #include "type/message.h"
 #include "type/data.h"
@@ -42,6 +42,9 @@ www.navitia.io
 
 #include <boost/geometry.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -139,6 +142,47 @@ BOOST_AUTO_TEST_CASE(projection) {
     BOOST_CHECK_SMALL(pp.lon(), 1e-3);
     BOOST_CHECK_SMALL(pp.lat(), 1e-3);
     BOOST_CHECK_CLOSE(d, pp.distance_to(p), 1e-3);
+}
+
+std::shared_ptr<StopArea> create_stop_area (std::string const &name) {
+    auto sa = std::make_shared<StopArea>();
+    sa->name = name;
+    return sa;
+}
+
+bool operator==(const navitia::type::StopArea& sa, const std::string& sa_name) {
+    return sa.name == sa_name;
+}
+
+bool operator!=(const navitia::type::StopArea& sa, const std::string& sa_name) {
+    return !(sa.name == sa_name);
+}
+
+BOOST_AUTO_TEST_CASE(human_sort_on_stop_areas_should_not_throw) {
+    std::vector<std::shared_ptr<StopArea>> stop_areas {
+        create_stop_area("AVENUE DU NID (Sarcelles)"),
+        create_stop_area("Alésia (Paris)"),
+        create_stop_area("Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)"),
+        create_stop_area("Aéroport de Marseille (Marseille)"),
+        create_stop_area("ZURICH (Rueil-Malmaison)"),
+        create_stop_area("Église de Pantin (Pantin)"),
+    };
+
+    boost::sort(stop_areas, Less());
+
+    std::vector<std::string> stop_areas_name;
+    boost::transform(stop_areas, std::back_inserter(stop_areas_name), [](const auto& sa){ return sa->name; });
+
+    std::vector<std::string> stop_areas_sorted {
+        "Aéroport de Marseille (Marseille)",
+        "Alésia (Paris)",
+        "Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)",
+        "AVENUE DU NID (Sarcelles)",
+        "Église de Pantin (Pantin)",
+        "ZURICH (Rueil-Malmaison)",
+    };
+
+    BOOST_CHECK_EQUAL_RANGE(stop_areas_name, stop_areas_sorted);
 }
 
 struct disruption_fixture {
