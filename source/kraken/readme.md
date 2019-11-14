@@ -91,12 +91,12 @@ database =
 ```
 ### CLI arguments
 The parameters are based on the configuration file, they have the following form: `--section.option value`
-By example if we want to define the database we have to do ` --GENERAL.database database.nav.lz4`.
+By example if we want to define the database we have to do `--GENERAL.database database.nav.lz4`.
 
 ### Environment variables
 The environment variables are based on the configuration file, they have the following form:
 `KRAKEN_SECTION_OPTION`
-By example if we want to define the number of thread we have to set ` GENERAL_nb_threads=1`.
+By example if we want to define the number of thread we have to set `GENERAL_nb_threads=1`.
 
 
 ## Startup
@@ -104,15 +104,36 @@ By example if we want to define the number of thread we have to set ` GENERAL_nb
 At startup kraken do the following actions:
 1. load configuration
 2. open connection to rabbitmq
-3. load data.nav.lz4
-4. load disruptions from chaos's database
-5. load realtime from kirin
-6. start background thread that handle disruptions, realtime and data reloading
-7. bind zmq sockets: at this point the configured tcp port start acceptint connection
-8. start worker threads to handle resquests
+3. Data loading
+4. start background thread that handle disruptions, realtime and data reloading
+5. bind zmq sockets: at this point the configured tcp port start accepting connection
+6. start worker threads to handle requests
 
 ## Data loading
 
+Data loading is triggered by two events:
+  - at startup
+  - by an order received from rabbitmq
+
+kraken start by reading the `nav.lz4` file configured, it then apply disruptions by loading them from the chaos
+database.
+Kraken will do the following actions:
+
+1. load data.nav.lz4
+2. load disruptions from chaos's database
+3. load realtime from kirin:
+    1. kraken create a anonimous queue in rabbitmq
+    2. kraken send a request to kirin via rabbitmq with the queue name as parameter
+    3. kraken wait for a message in the queue
+    4. kirin build a "ntfs-rt" and send it to the queue previously created
+    5. kraken receive the message and apply the realtime data
+4. build raptor
+5. build relations
+6. build proximitylist
+
+When a data loading occur after startup the processus is the same but is done on another. There is no service
+interuption as we have two dataset in memory.
+
 ## Realtime integration
 
-## Request handling
+# Request handling
