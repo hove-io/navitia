@@ -150,14 +150,6 @@ std::shared_ptr<StopArea> create_stop_area (std::string const &name) {
     return sa;
 }
 
-bool operator==(const navitia::type::StopArea& sa, const std::string& sa_name) {
-    return sa.name == sa_name;
-}
-
-bool operator!=(const navitia::type::StopArea& sa, const std::string& sa_name) {
-    return !(sa.name == sa_name);
-}
-
 BOOST_AUTO_TEST_CASE(human_sort_on_stop_areas_should_not_throw) {
     std::vector<std::shared_ptr<StopArea>> stop_areas {
         create_stop_area("AVENUE DU NID (Sarcelles)"),
