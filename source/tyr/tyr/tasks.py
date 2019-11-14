@@ -77,16 +77,20 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None, skip_mimir=False):
+def import_data(
+    files, instance, backup_file, asynchronous=True, reload=True, custom_output_dir=None, skip_mimir=False
+):
     """
     import the data contains in the list of 'files' in the 'instance'
 
     :param files: files to import
     :param instance: instance to receive the data
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
-    :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
+    :param asynchronous: If True all jobs are run in background, else the jobs are run in sequence the function
+     will only return when all of them are finish
     :param reload: If True kraken would be reload at the end of the treatment
     :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
+    :param skip_mimir: skip importing data into mimir
 
     run the whole data import process:
 
@@ -164,7 +168,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             current_app.logger.info("skipping mimir import")
 
         actions.append(finish_job.si(job.id))
-        if async:
+        if asynchronous:
             return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
@@ -290,7 +294,7 @@ def type_of_autocomplete_data(filename):
 
 
 @celery.task()
-def import_autocomplete(files, autocomplete_instance, async=True, backup_file=True):
+def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_file=True):
     """
     Import the autocomplete'instance data files
     """
@@ -336,7 +340,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     for action in actions:
         action.kwargs['job_id'] = job.id
     actions.append(finish_job.si(job.id))
-    if async:
+    if asynchronous:
         return chain(*actions).delay(), job
     else:
         # all job are run in sequence and import_data will only return when all the jobs are finish
@@ -344,7 +348,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
 
 
 @celery.task()
-def import_in_mimir(_file, instance, async=True):
+def import_in_mimir(_file, instance, asynchronous=True):
     """
     Import pt data stops to autocomplete
     """
@@ -365,7 +369,7 @@ def import_in_mimir(_file, instance, async=True):
     else:
         current_app.logger.warning("Unsupported family_type {}".format(family_type))
 
-    if async:
+    if asynchronous:
         return action.delay()
     else:
         # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
@@ -543,7 +547,7 @@ def build_data(instance):
 def load_data(instance_id, data_dirs):
     instance = models.Instance.query.get(instance_id)
 
-    import_data(data_dirs, instance, backup_file=False, async=False)
+    import_data(data_dirs, instance, backup_file=False, asynchronous=False)
 
 
 @celery.task()
