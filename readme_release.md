@@ -1,4 +1,4 @@
-# HOWTO Release navitia
+# HOW TO Release navitia
 
 ## "Regular" release
 
@@ -15,8 +15,13 @@ Then the script should take over:
 cd <path/to/repo/navitia>
 # to be sure to trigger the correct version of the release script
 git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/dev dev
+```
+At this point, you may build and run tests to check that everything is OK. If you're confident, proceed with:
+```sh
 ./release_navitia.sh regular <canaltp_distant_repo_name>
 ```
+Note: this script uses "vim", make sure it's installed on your machine.
+
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
 * don't forget to make `git submodule update --recursive` when necessary

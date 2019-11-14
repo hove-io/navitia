@@ -150,7 +150,7 @@ class ReleaseManager:
                 exit(1)
             elif self.version[0] < self.dev_data_version:  # major version
                 self.version[0] = self.dev_data_version
-                self.version[1] = version[2] = 0
+                self.version[1] = self.version[2] = 0
             else:  # versions equal: minor version
                 self.version[0] = self.dev_data_version
                 self.version[1] += 1
@@ -158,7 +158,7 @@ class ReleaseManager:
 
         elif self.release_type == "major":
             self.version[0] += 1
-            self.version[1] = version[2] = 0
+            self.version[1] = self.version[2] = 0
 
         elif self.release_type == "minor":
             self.version[1] += 1
