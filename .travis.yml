@@ -44,7 +44,6 @@ matrix:
     - python: "3.6"
       before_script:
         - pip install -r requirements_pre-commit.txt
-        - pip install pre-commit
         - pre-commit install
         - bash source/scripts/build_protobuf.sh
       script:
