@@ -1019,7 +1019,6 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | max_nb_transfers      | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
 | nop     | max_duration         | int     | Maximum duration of journeys in seconds (from `datetime` parameter).<br>More usefull when computing an isochrone (only `from` or `to` is provided).<br>On a classic journey (from-to), it will mostly speedup Navitia: You may have journeys a bit longer than that value (you would have to filter them).    | 86400       |
-| nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if Navitia should suggest direct paths (= only fallback modes are used).<br>Possible values: <ul><li>`indifferent`</li><li>`none` for only journeys using some PT</li><li>`only` for only journeys without PT</li></ul>      | indifferent |
 | nop     | direct_path_mode[]	     | array of strings     | Force direct-path modes. If this list is not empty, we only compute direct_path for modes in this list and filter all the direct_paths of modes in first_section_mode[]. It can take the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`. It's an array, you can give multiple modes. If this list is empty, we will compute direct_path for modes of the first_section_modes.  | first_section_modes[]           |
@@ -1133,7 +1132,7 @@ Field                    | Type                                          | Descr
 -------------------------|-----------------------------------------------|------------
 type                     | *enum* string                                 | Type of the section.<ul><li>`public_transport`: public transport section</li><li>`street_network`: street section</li><li>`waiting`: waiting section between transport</li><li><p>`stay_in`: this “stay in the vehicle” section occurs when the traveller has to stay in the vehicle when the bus change its routing. Here is an exemple for a journey from A to B: (lollipop line)</p><p>![image](stay_in.png)</p></li><li>`transfer`: transfert section</li><li><p>`crow_fly`: teleportation section, most of the time. Useful to make navitia idempotent when starting from or arriving to a city or a stop_area (“potato shaped” objects) in order to route to the nearest stop_point. Be careful: neither “path” nor “geojson” available in a crow_fly section.</p><p> Can also be used when no street_network data are available and not be considered as teleportation. The distance of such a crow_fly section will be a straight line between the point of departure and arrival (hence the name 'crow_fly'). The duration of the section will be calculated with the Manhattan distance of the section (distance x √2). In this case, “geojson” is available.</p><p>![image](crow_fly.png)</p></li><li>`on_demand_transport`: vehicle may not drive along: traveler will have to call agency to confirm journey</li><li>`bss_rent`: taking a bike from a bike sharing system (bss)</li><li>`bss_put_back`: putting back a bike from a bike sharing system (bss)</li><li>`boarding`: boarding on plane</li><li>`landing`: landing off the plane</li><li>`alighting`: getting off a vehicle (boat, on-demand-transport, plane, ...)</li><li>`park`: parking a car</li><li>`ridesharing`: car-pooling section</li></ul>
 id                       | string                                        | Id of the section
-mode                     | *enum* string                                 | Mode of the street network: `Walking`, `Bike`, `Car`
+mode                     | *enum* string                                 | Mode of the street network and crow_fly: `Walking`, `Bike`, `Car`, 'Taxi'
 duration                 | int                                           | Duration of this section
 from                     | [places](#place)                              | Origin place of this section
 to                       | [places](#place)                              | Destination place of this section
@@ -1811,7 +1810,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                     | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags            |
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1967,12 +1965,8 @@ For example:
 
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
--   overall public transport traffic report on Ile de France coverage with disruptions having tags passed in parameter values
-    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
--   Is there any perturbations on the RER network with disruptions having tags passed in parameter values ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
@@ -1984,7 +1978,6 @@ no       | count            | int                             | Maximum number o
 no       | depth            | int                             | Json response [depth](#depth)                       | 1
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.   |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response             | false
-no       | tags[]           | array of string                 | Filter disruptions with the given tags              |
 
 The response is made of an array of [traffic_reports](#traffic-reports),
 and another one of [disruptions](#disruption).

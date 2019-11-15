@@ -22,6 +22,7 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "don't build example of librabbimq-c")
 set(BUILD_TOOLS OFF CACHE BOOL "don't build tool of librabbimq-c")
 set(BUILD_TESTS OFF CACHE BOOL "don't build tests of librabbimq-c")
 set(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
+set(Rabbitmqc_LIBRARY rabbitmq-static)
 add_subdirectory(third_party/librabbitmq-c EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/SimpleAmqpClient EXCLUDE_FROM_ALL)
 

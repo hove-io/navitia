@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -383,13 +383,6 @@ class unique_dict(dict):
 def query_from_str(str):
     """
     for convenience, convert a url to a dict
-
-    >>> query_from_str("toto/tata?bob=toto&bobette=tata&bobinos=tutu")
-    {u'bobette': u'tata', u'bobinos': u'tutu', u'bob': u'toto'}
-    >>> query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
-    {u'bobinos': u'tutu', u'bob': [u'toto', u'tata', u'titi', u'tata']}
-    >>> query_from_str("?bob%5B%5D=toto titi&bob[]=tata%2Btutu")
-    {u'bob[]': [u'toto titi', u'tata+tutu']}
 
     Note: the query can be encoded, so the split it either on the encoded or the decoded value
     """

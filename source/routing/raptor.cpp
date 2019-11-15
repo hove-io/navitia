@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -193,7 +193,7 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& bound_limit,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
-                               bool clockwise) {
+                               const bool clockwise) {
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
     assert(data.dataRaptor->cached_next_st_manager);
@@ -499,11 +499,11 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
 void RAPTOR::isochrone(const map_stop_point_duration& departures,
                        const DateTime& departure_datetime,
                        const DateTime& b,
-                       uint32_t max_transfers,
+                       const uint32_t max_transfers,
                        const type::AccessibiliteParams& accessibilite_params,
                        const std::vector<std::string>& forbidden,
                        const std::vector<std::string>& allowed,
-                       bool clockwise,
+                       const bool clockwise,
                        const nt::RTLevel rt_level) {
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), accessibilite_params, forbidden, allowed, rt_level);
 
@@ -750,7 +750,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
     }
 }
 
-void RAPTOR::boucleRAPTOR(bool clockwise, const nt::RTLevel rt_level, uint32_t max_transfers) {
+void RAPTOR::boucleRAPTOR(const bool clockwise, const nt::RTLevel rt_level, uint32_t max_transfers) {
     if (clockwise) {
         raptor_loop(raptor_visitor(), rt_level, max_transfers);
     } else {

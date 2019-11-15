@@ -46,7 +46,7 @@ add_custom_target(datanav_files DEPENDS ${FILES_CREATED})
 SET(BOOST_LIBS ${BOOST_LIBS} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_executable(ed_integration_test ed_integration_tests.cpp)
-target_link_libraries(ed_integration_test data georef types utils ${BOOST_LIBS} log4cplus)
+target_link_libraries(ed_integration_test ed ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} )
 
 # the test is not added with 'add_test', because we don't want 'make test' to handle it
 # it is added as a post build command to 'make docker_test', called after all the build

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -68,6 +68,7 @@ from jormungandr.scenarios.qualifier import (
     has_walk,
     and_filters,
     get_ASAP_journey,
+    comfort_crit,
 )
 import numpy as np
 import collections
@@ -84,6 +85,7 @@ from jormungandr import fallback_modes
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
+from functools import cmp_to_key
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -236,7 +238,7 @@ def _has_pt(j):
 
 def sort_journeys(resp, journey_order, clockwise):
     if resp.journeys:
-        resp.journeys.sort(journey_sorter[journey_order](clockwise=clockwise))
+        resp.journeys.sort(key=cmp_to_key(journey_sorter[journey_order](clockwise=clockwise)))
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance):
@@ -402,10 +404,7 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
         i, c = pair
         selected_journeys_matrix[i] = c
 
-    # replace line by line
-    from itertools import izip
-
-    map(f, izip(xrange(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+    map(f, zip(range(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
     """
     We should cut out those combinations that don't contain must-keep journeys
     """
@@ -703,7 +702,7 @@ def type_journeys(resp, req):
     # Then, we want something like the old types
     trip_caracs = [
         # comfort tends to limit the number of transfers and fallback
-        ("comfort", trip_carac([has_no_car], [transfers_crit, nonTC_crit, best_crit, duration_crit])),
+        ("comfort", trip_carac([has_no_car], [comfort_crit, best_crit, duration_crit])),
         # for car we want at most one journey, the earliest one
         (
             "car",
@@ -770,7 +769,13 @@ def merge_responses(responses, debug):
 
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
-        tickets_to_add = set(t for j in r.journeys for t in j.fare.ticket_id)
+        # and if the journey is not to be deleted in debug mode
+        tickets_to_add = set(
+            t
+            for j in r.journeys
+            if not (journey_filter.to_be_deleted(j) and not debug)
+            for t in j.fare.ticket_id
+        )
         merged_response.tickets.extend((t for t in r.tickets if t.id in tickets_to_add))
 
         initial_feed_publishers = {}
@@ -1039,6 +1044,8 @@ class Scenario(simple.Scenario):
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+        # need to clean extra tickets after culling journeys
+        journey_filter.remove_excess_tickets(pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
@@ -1107,8 +1114,11 @@ class Scenario(simple.Scenario):
         updated_request_with_default(request, instance)
         # we don't want to filter anything!
         krakens_call = get_kraken_calls(request)
+        # Initialize a context for distributed
+        distributed_context = self.get_context()
         resp = merge_responses(
-            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug']
+            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call, distributed_context),
+            request['debug'],
         )
         if not request['debug']:
             # on isochrone we can filter the number of max journeys

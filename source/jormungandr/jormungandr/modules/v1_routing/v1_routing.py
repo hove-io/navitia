@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -128,7 +128,14 @@ class V1Routing(AModule):
 
         self.add_resource(Coverage.Coverage, coverage, region, coord, endpoint='coverage')
 
-        self.add_resource(Coord.Coord, '/coord/' + lon_lat, '/coords/' + lon_lat, endpoint='coord')
+        self.add_resource(
+            Coord.Coord,
+            '/coord/' + lon_lat,
+            '/coords/' + lon_lat,
+            region + 'coord/' + lon_lat + 'addresses',
+            region + 'coords/' + lon_lat + 'addresses',
+            endpoint='coord',
+        )
 
         collecs = list(converters_collection_type.collections_to_resource_type.keys())
         for collection in collecs:

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -39,7 +39,7 @@ try:
     from newrelic import agent
 except ImportError:
     logger = logging.getLogger(__name__)
-    logger.warn('New Relic is not available')
+    logger.warning('New Relic is not available')
     agent = None
 
 

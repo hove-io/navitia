@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -172,7 +172,7 @@ std::vector<std::pair<uint32_t, const type::StopTime*>> get_all_calendar_stop_ti
     std::vector<std::pair<DateTime, const type::StopTime*>> res;
     for (const auto vj : vjs) {
         // loop through stop times for stop jpp->stop_point
-        const auto& st = vj->stop_time_list[jpp.order];
+        const auto& st = get_corresponding_stop_time(*vj, jpp.order);
         if (!st.vehicle_journey->accessible(vehicle_properties)) {
             continue;  // the stop time must be accessible
         }

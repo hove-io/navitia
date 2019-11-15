@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -461,22 +461,25 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
         port=instance_conf.pg_port,
     )
     engine = sqlalchemy.create_engine(connection_string)
-    # create the line if it does not exists
-    engine.execute(
+    try:
+        # create the line if it does not exists
+        engine.execute(
+            """
+        INSERT INTO navitia.parameters (shape)
+        SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
         """
-    INSERT INTO navitia.parameters (shape)
-    SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
-    """
-    ).close()
-    # update the line, simplified to approx 100m
-    engine.execute(
-        """
-    UPDATE navitia.parameters
-    SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
-    """.format(
-            shape=wkt.dumps(shape)
-        )
-    ).close()
+        ).close()
+        # update the line, simplified to approx 100m
+        engine.execute(
+            """
+        UPDATE navitia.parameters
+        SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
+        """.format(
+                shape=wkt.dumps(shape)
+            )
+        ).close()
+    finally:
+        engine.dispose()
 
 
 @celery.task(bind=True)
@@ -594,7 +597,7 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     working_directory = unzip_if_needed(filename)
 
     if autocomplete_instance.address != 'BANO':
-        logger.warn(
+        logger.warning(
             'no bano data will be loaded for instance {} because the address are read from {}'.format(
                 autocomplete_instance.name, autocomplete_instance.address
             )
@@ -634,7 +637,7 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
     working_directory = unzip_if_needed(filename)
 
     if autocomplete_instance.address != 'OA':
-        logger.warn(
+        logger.warning(
             'no open addresses data will be loaded for instance {} because the address are read from {}'.format(
                 autocomplete_instance.name, autocomplete_instance.address
             )

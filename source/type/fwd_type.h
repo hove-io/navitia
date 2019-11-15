@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -34,6 +34,8 @@ www.navitia.io
 template <class DATATYPE, class ELEMTYPE, int NUMDIMS, class ELEMTYPEREAL, int TMAXNODES, int TMINNODES>
 class RTree;
 namespace navitia {
+template <typename T>
+struct Rank;
 namespace georef {
 struct GeoRef;
 struct POI;
@@ -61,6 +63,7 @@ struct ValidityPattern;
 struct Route;
 struct VehicleJourney;
 struct StopTime;
+using RankStopTime = Rank<StopTime>;
 struct Dataset;
 struct StopPoint;
 struct ExceptionDate;

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -37,7 +37,19 @@ from collections import namedtuple
 
 
 class RidesharingServiceError(RuntimeError):
-    pass
+    def __init__(self, reason, http_status=None, http_reason=None, http_txt=None):
+        super(RuntimeError, self).__init__(reason)
+        self.http_status = http_status
+        self.http_reason = http_reason
+        self.http_txt = http_txt
+
+    def get_params(self):
+        return {
+            'reason': str(self),
+            'http_status': self.http_status,
+            'http_reason': self.http_reason,
+            'http_response': self.http_txt,
+        }
 
 
 RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
@@ -66,7 +78,7 @@ class AbstractRidesharingService(object):
 
             return journeys, feed_publisher
         except RidesharingServiceError as e:
-            self.record_call('failure', reason=str(e))
+            self.record_call('failure', **e.get_params())
             return [], None
 
     @abc.abstractmethod
@@ -84,7 +96,7 @@ class AbstractRidesharingService(object):
         pass
 
     def _get_rs_id(self):
-        return '{}_{}'.format(unicode(self.system_id), unicode(self.network))
+        return '{}_{}'.format(six.text_type(self.system_id), six.text_type(self.network))
 
     def record_internal_failure(self, message):
         params = {'ridesharing_service_id': self._get_rs_id(), 'message': message}

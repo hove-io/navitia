@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -76,7 +76,7 @@ struct PassagesVisitor {
                 }
                 return jpp_idx == jp.jpps.back();
             case StopEvent::drop_off:
-                return jpp.order == 0;
+                return jpp.order == navitia::routing::RankJourneyPatternPoint(0);
         }
     }
 };

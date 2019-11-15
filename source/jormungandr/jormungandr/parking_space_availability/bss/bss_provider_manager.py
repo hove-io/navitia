@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -108,7 +108,7 @@ class BssProviderManager(AbstractProviderManager):
     def _get_providers(self):
         self.update_config()
         # providers from the database have priority on legacies providers
-        return self._bss_providers.values() + self._bss_providers_legacy
+        return list(self._bss_providers.values()) + self._bss_providers_legacy
 
     def get_providers(self):
         return self._get_providers()

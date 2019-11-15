@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -75,14 +75,14 @@ class EquipmentProviderManager(object):
         """
         try:
             if '.' not in cls:
-                self.logger.warn('impossible to build, wrongly formated class: {}'.format(cls))
+                self.logger.warning('impossible to build, wrongly formated class: {}'.format(cls))
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.logger.warn('impossible to build, cannot find class: {}'.format(cls))
+            self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
     def _update_provider(self, provider):
         self.logger.info('updating/adding {} equipment provider'.format(provider.id))
@@ -172,3 +172,16 @@ class EquipmentProviderManager(object):
         self.update_config()
 
         return dict(self._equipment_providers, **self._equipment_providers_legacy)
+
+    def status(self):
+        providers_status = []
+        for provider in self.providers_config:
+            providers_status.append(
+                {
+                    'key': provider['key'],
+                    'codes_types': provider['args']['codes_types'],
+                    'timeout': provider['args']['timeout'],
+                    'fail_max': provider['args']['fail_max'],
+                }
+            )
+        return providers_status

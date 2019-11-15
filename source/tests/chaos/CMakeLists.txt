@@ -2,7 +2,12 @@
 ## Setup the BOOST tests that will exercise Chaos database
 #
 add_executable(chaos_db_tests chaos_db_tests.cpp)
-target_link_libraries(chaos_db_tests make_disruption_from_chaos apply_disruption ed workers data types pb_lib utils log4cplus ${NAVITIA_ALLOCATOR} ${Boost_LIBRARIES} ${Boost_DATE_TIME_LIBRARY} protobuf)
+target_link_libraries(chaos_db_tests
+    make_disruption_from_chaos
+    ed
+    workers
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+)
 
 target_link_libraries(chaos_db_tests ${ALL_LIBS})
 

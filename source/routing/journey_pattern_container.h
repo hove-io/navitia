@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "raptor_utils.h"
 #include <boost/optional.hpp>
+#include "utils/rank.h"
 
 namespace navitia {
 namespace type {
@@ -47,11 +48,16 @@ struct StopTime;
 namespace navitia {
 namespace routing {
 
+using RankJourneyPatternPoint = Rank<JourneyPatternPoint>;
+
+// Accessor method to retrieve the StopTime of a VJ corresponding to a given JPP rank
+const type::StopTime& get_corresponding_stop_time(const type::VehicleJourney& vj, const RankJourneyPatternPoint& order);
+
 // TODO: constructor private with JourneyPatternContainer friend?
 struct JourneyPatternPoint {
     JpIdx jp_idx;
     SpIdx sp_idx;
-    uint16_t order;
+    RankJourneyPatternPoint order;
     bool operator==(const JourneyPatternPoint& other) const { return sp_idx == other.sp_idx && order == other.order; }
 };
 std::ostream& operator<<(std::ostream&, const JourneyPatternPoint&);
@@ -64,6 +70,9 @@ struct JourneyPattern {
     RouteIdx route_idx;
     PhyModeIdx phy_mode_idx;
 
+    std::vector<JppIdx>::const_iterator jpps_begin() const { return jpps.begin(); }
+    std::vector<JppIdx>::const_iterator jpps_end() const { return jpps.end(); }
+    const JppIdx& get_jpp_idx(const RankJourneyPatternPoint& order) const;
     bool operator==(const JourneyPattern& other) const {
         return jpps == other.jpps && discrete_vjs == other.discrete_vjs && freq_vjs == other.freq_vjs
                && route_idx == other.route_idx;
@@ -193,7 +202,7 @@ private:
     template <typename VJ>
     static JpKey make_key(const VJ&);
     JpIdx make_jp(const JpKey&);
-    JppIdx make_jpp(const JpIdx&, const SpIdx&, uint16_t order);
+    JppIdx make_jpp(const JpIdx&, const SpIdx&, const RankJourneyPatternPoint& order);
     JourneyPattern& get_mut(const JpIdx&);
 };
 

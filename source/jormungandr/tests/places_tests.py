@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -128,6 +128,52 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(places_nearby)
         for place in places_nearby:
             assert place["embedded_type"] == "stop_area"
+
+    def test_places_nearby_with_coords_with_type_and_pagination(self):
+        """check the pagination"""
+
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&count=1"
+        response = self.query(query)
+        assert response['pagination']['total_result'] == 4
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 1
+        is_valid_places(places_nearby)
+        assert places_nearby[0]["embedded_type"] == "stop_point"
+        assert places_nearby[0]["id"] == "stop_point:stopB"
+
+        response = self.query(query + "&start_page=1")
+        assert response['pagination']['total_result'] == 4
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 1
+        is_valid_places(places_nearby)
+        assert places_nearby[0]["embedded_type"] == "stop_point"
+        assert places_nearby[0]["id"] == "stop_point:stopC"
+
+    def test_places_nearby_with_coords_with_type_filter_and_count(self):
+        """
+        check places_nearby with /coords and type[]=stop_point, filter=line.uri=D, count=1
+
+        from the coord, you can find:
+
+        stop_B -> 70m
+        stop_C -> 72m ( <- it's the stop_point that we are expecting with filter=line.uri=D)
+        stop_A -> 121m
+        stop_uselessA -> 121m
+        """
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&count=1"
+        response = self.query(query)
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 1
+        is_valid_places(places_nearby)
+        assert places_nearby[0]["embedded_type"] == "stop_point"
+        assert places_nearby[0]["id"] == "stop_point:stopB"
+
+        response = self.query(query + "&filter=line.uri=D")
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 1
+        is_valid_places(places_nearby)
+        assert places_nearby[0]["embedded_type"] == "stop_point"
+        assert places_nearby[0]["id"] == "stop_point:stopC"
 
     def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
@@ -249,4 +295,4 @@ class TestPlaces(AbstractTestFixture):
         response = self.query_region("places?q=rue ab")
         places = response['places']
         assert len(places) == 1
-        assert places[0].has_key('distance') == False
+        assert 'distance' not in places[0]

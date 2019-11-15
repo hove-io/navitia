@@ -24,7 +24,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, division
@@ -38,6 +38,16 @@ from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 from jormungandr.tests.utils_test import MockRequests
 from pytest import raises
 from six.moves import range
+
+
+class MockResponse:
+    def __init__(self, status_code, url, json_data):
+        self.status_code = status_code
+        self.url = url
+        self.json_data = json_data
+
+    def json(self):
+        return self.json_data
 
 
 def make_url_test():
@@ -133,7 +143,7 @@ def make_url_invalid_code_test():
 def mock_good_timeo_response():
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
         "StopTimesResponse": [
             {
                 "StopID": "StopPoint_OLS01070201",
@@ -176,13 +186,30 @@ def get_passages_test():
     with mock.patch(
         'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
     ):
-        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
+        passages = timeo._get_passages(
+            MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
 
         assert len(passages) == 3
 
         assert passages[0].datetime == _dt('15:40:04')
         assert passages[1].datetime == _dt('15:55:04')
         assert passages[2].datetime == _dt('16:10:04')
+
+    # http error raise an error
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ), raises(RealtimeProxyError):
+        passages = timeo._get_passages(
+            MockResponse(404, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
+
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ), raises(RealtimeProxyError):
+        passages = timeo._get_passages(
+            MockResponse(504, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
 
 
 def get_passages_no_passages_test():
@@ -195,7 +222,7 @@ def get_passages_no_passages_test():
 
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
         "StopTimesResponse": [
             {
                 "StopID": "StopPoint_OLS01070201",
@@ -220,7 +247,9 @@ def get_passages_no_passages_test():
     with mock.patch(
         'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
     ):
-        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
+        passages = timeo._get_passages(
+            MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
 
         assert len(passages) == 0
 
@@ -243,7 +272,9 @@ def get_passages_wrong_response_test():
     with mock.patch(
         'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
     ), raises(RealtimeProxyError):
-        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
+        passages = timeo._get_passages(
+            MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
 
 
 def next_passage_for_route_point_test():

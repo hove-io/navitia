@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -729,3 +729,25 @@ def _filter_too_much_connections(journeys, instance, request):
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
                 mark_as_dead(j, is_debug, "too_much_connections")
+
+
+def remove_excess_tickets(response):
+    """
+    Remove excess tickets
+    """
+    logger = logging.getLogger(__name__)
+
+    fare_ticket_id_list = set()
+    for j in response.journeys:
+        for t_id in j.fare.ticket_id:
+            fare_ticket_id_list.add(t_id)
+        # ridesharing case
+        for s in j.sections:
+            for rj in s.ridesharing_journeys:
+                for t_id in rj.fare.ticket_id:
+                    fare_ticket_id_list.add(t_id)
+
+    for t in reversed(response.tickets):
+        if not t.id in fare_ticket_id_list:
+            logger.debug('remove excess ticket id %s', t.id)
+            response.tickets.remove(t)

@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -1005,7 +1005,7 @@ void PbCreator::Filler::fill_pb_object(const jp_pair* jp, pbnavitia::JourneyPatt
 
 void PbCreator::Filler::fill_pb_object(const jpp_pair* jpp, pbnavitia::JourneyPatternPoint* journey_pattern_point) {
     journey_pattern_point->set_uri(pb_creator.data->dataRaptor->jp_container.get_id(jpp->first));
-    journey_pattern_point->set_order(jpp->second.order);
+    journey_pattern_point->set_order(jpp->second.order.val);
 
     if (depth > 0) {
         fill(pb_creator.data->pt_data->stop_points[jpp->second.sp_idx.val], journey_pattern_point);

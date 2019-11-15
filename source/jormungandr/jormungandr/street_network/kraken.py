@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -40,6 +40,8 @@ from jormungandr.street_network.street_network import (
     StreetNetworkPathKey,
 )
 from jormungandr import utils
+import six
+from functools import cmp_to_key
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -49,7 +51,7 @@ class Kraken(AbstractStreetNetworkService):
         self.sn_system_id = id or 'kraken'
 
     def status(self):
-        return {'id': unicode(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
+        return {'id': six.text_type(self.sn_system_id), 'class': self.__class__.__name__, 'modes': self.modes}
 
     def _reverse_journeys(self, response):
         if not getattr(response, "journeys"):
@@ -65,7 +67,7 @@ class Kraken(AbstractStreetNetworkService):
                 s.destination.CopyFrom(o)
                 s.end_date_time = previous_section_begin
                 previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
-            j.sections.sort(utils.SectionSorter())
+            j.sections.sort(key=cmp_to_key(utils.SectionSorter()))
         return response
 
     def _direct_path(

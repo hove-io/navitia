@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -89,11 +89,11 @@ class AbstractProviderManager(six.with_metaclass(ABCMeta, object)):
     def _init_class(self, cls, arguments):
         try:
             if '.' not in cls:
-                self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
+                self.log.warning('impossible to build, wrongly formated class: {}'.format(cls))
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.log.warn('impossible to build, cannot find class: {}'.format(cls))
+            self.log.warning('impossible to build, cannot find class: {}'.format(cls))

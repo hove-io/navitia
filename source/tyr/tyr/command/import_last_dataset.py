@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -63,7 +63,7 @@ def import_last_dataset(
         files,
         instance,
         backup_file=False,
-        async=background,
+        asynchronous=background,
         reload=reload_kraken,
         custom_output_dir=custom_output_dir,
         skip_mimir=skip_mimir,

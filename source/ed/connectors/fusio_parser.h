@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -73,6 +73,12 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
     void handle_stop_point_without_area(Data& data);
+    const std::vector<std::string> required_headers() const {
+        return {"stop_id", "stop_name", "location_type", "stop_lat", "stop_lon"};
+    }
+
+    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
+    ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
 };
 
 struct RouteFusioHandler : public GenericHandler {

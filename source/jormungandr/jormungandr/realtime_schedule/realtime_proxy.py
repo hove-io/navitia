@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -234,17 +234,19 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         pass
 
     def record_external_failure(self, message):
-        record_external_failure(message, 'realtime', unicode(self.rt_system_id))
+        record_external_failure(message, 'realtime', six.text_type(self.rt_system_id))
 
-    def record_internal_failure(self, message):
-        params = {'realtime_system_id': unicode(self.rt_system_id), 'message': message}
+    def record_internal_failure(self, message, comment=None):
+        params = {'realtime_system_id': six.text_type(self.rt_system_id), 'message': message}
+        if comment is not None:
+            params['comment'] = comment
         new_relic.record_custom_event('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'realtime_system_id': unicode(self.rt_system_id), 'status': status}
+        params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_status', params)
 
@@ -252,6 +254,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         status can be in: ok, failure
         """
-        params = {'realtime_system_id': unicode(self.rt_system_id), 'status': status}
+        params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_proxy_additional_info', params)

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -35,7 +35,6 @@ class Gender(object):
     Used as an enum
     """
 
-    __slots__ = ('UNKNOWN', 'MALE', 'FEMALE')
     UNKNOWN = 0
     MALE = 1
     FEMALE = 2

@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -137,6 +137,10 @@ int main(int argc, const char* const argv[]) {
     b.lines["N"]->code = "N";
     b.lines["N"]->color = "BC5AC8";
     b.lines["N"]->text_color = "FFFFFF";
+
+    // Add tickets
+    b.add_ticket("A-Ticket", "A", 100, "A-Ticket comment");
+    b.add_ticket("B-Ticket", "B", 120, "B-Ticket comment");
 
     // build data
     b.data->complete();

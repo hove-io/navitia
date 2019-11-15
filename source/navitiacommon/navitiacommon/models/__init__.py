@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -589,19 +589,13 @@ class Instance(db.Model):  # type: ignore
 
         if not result:
             return 0
-        job_list = {}
         for dataset, job in result:
             # Cascade Delete not working so delete Metric associated manually
             db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
             db.session.delete(dataset)
 
             # Delete a job without any dataset
-            if job.id not in job_list:
-                job_list[job.id] = 1
-            else:
-                job_list[job.id] += 1
-
-            if not (len(job.data_sets.all()) - job_list[job.id]):
+            if not len(job.data_sets.all()):
                 db.session.delete(job)
 
         db.session.commit()

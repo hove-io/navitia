@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -636,31 +636,33 @@ static type::EntryPoint create_journeys_entry_point(const ::pbnavitia::LocationC
     return entry_point;
 }
 
-JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
+JourneysArg::JourneysArg(type::EntryPoints origins,
                          type::AccessibiliteParams accessibilite_params,
                          std::vector<std::string> forbidden,
                          std::vector<std::string> allowed,
                          type::RTLevel rt_level,
-                         std::vector<type::EntryPoint> destinations,
-                         std::vector<uint64_t> datetimes)
-    : origins(origins),
-      accessibilite_params(accessibilite_params),
-      forbidden(forbidden),
-      allowed(allowed),
+                         type::EntryPoints destinations,
+                         std::vector<uint64_t> datetimes,
+                         boost::optional<type::EntryPoint> isochrone_center)
+    : origins(std::move(origins)),
+      accessibilite_params(std::move(accessibilite_params)),
+      forbidden(std::move(forbidden)),
+      allowed(std::move(allowed)),
       rt_level(rt_level),
-      destinations(destinations),
-      datetimes(datetimes) {}
+      destinations(std::move(destinations)),
+      datetimes(std::move(datetimes)),
+      isochrone_center(isochrone_center) {}
 JourneysArg::JourneysArg() {}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
     const auto* data = this->pb_creator.data;
-    std::vector<type::EntryPoint> origins;
+    type::EntryPoints origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for (int i = 0; i < request.origin().size(); i++) {
         origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
     }
 
-    std::vector<type::EntryPoint> destinations;
+    type::EntryPoints destinations;
     for (int i = 0; i < request.destination().size(); i++) {
         destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
     }
@@ -691,8 +693,12 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
+    const auto isochrone_center = request.has_isochrone_center()
+                                      ? create_journeys_entry_point(request.isochrone_center(), sn_params, data, true)
+                                      : boost::optional<type::EntryPoint>{};
+
     return JourneysArg(std::move(origins), std::move(accessibilite_params), std::move(forbidden), std::move(allowed),
-                       rt_level, std::move(destinations), std::move(datetimes));
+                       rt_level, std::move(destinations), std::move(datetimes), std::move(isochrone_center));
 }
 
 void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg) {
@@ -712,26 +718,6 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
         }
 
         switch (api) {
-            case pbnavitia::ISOCHRONE: {
-                if (!arg.origins.empty() && !request.clockwise()) {
-                    err_msg_isochron(
-                        this->pb_creator,
-                        "isochrone works only for clockwise request (use '&datetime_represents=departure')");
-                    return;
-                } else if (arg.origins.empty() && request.clockwise()) {
-                    err_msg_isochron(
-                        this->pb_creator,
-                        "reverse isochrone works only for anti-clockwise request (use '&datetime_represents=arrival')");
-                    return;
-                }
-                type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-                navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0),
-                                                 request.clockwise(), arg.accessibilite_params, arg.forbidden,
-                                                 arg.allowed, *street_network_worker, arg.rt_level,
-                                                 request.max_duration(), request.max_transfers());
-                break;
-            }
-
             case pbnavitia::pt_planner:
                 routing::make_pt_response(
                     this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0], request.clockwise(),
@@ -766,6 +752,31 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
     }
 }
 
+static std::pair<const type::EntryPoint, const boost::optional<const type::EntryPoints&>> get_center_and_stop_points(
+    const JourneysArg& arg) {
+    // If we have a center
+    // Origins or destinations are already computed stop_points
+    const auto& center = arg.isochrone_center ? *arg.isochrone_center
+                                              : (arg.origins.empty() ? arg.destinations.front() : arg.origins.front());
+    const auto& stop_points = arg.isochrone_center ? (arg.origins.empty() ? arg.destinations : arg.origins)
+                                                   : boost::optional<const type::EntryPoints&>{};
+
+    return std::make_pair(center, stop_points);
+}
+
+void Worker::isochrone(const pbnavitia::JourneysRequest& request) {
+    navitia::JourneysArg arg = JourneysArg();
+    if (!set_journeys_args(request, arg, "isochrone")) {
+        return;
+    }
+
+    auto const center_and_stop_points = get_center_and_stop_points(arg);
+    navitia::routing::make_isochrone(this->pb_creator, *planner, center_and_stop_points.first, request.datetimes(0),
+                                     request.clockwise(), arg.accessibilite_params, arg.forbidden, arg.allowed,
+                                     *street_network_worker, arg.rt_level, request.max_duration(),
+                                     request.max_transfers(), center_and_stop_points.second);
+}
+
 void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uri;
@@ -780,41 +791,40 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
         boost::make_optional(request.has_until_datetime(), bt::from_time_t(request.until_datetime())), rt_level, *data);
 }
 
-// returns true if there is an error
+// returns false if there is an error
 bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, JourneysArg& arg, const std::string& name) {
     try {
         arg = fill_journeys(request);
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-        return true;
+        return false;
     }
     if (arg.origins.empty() && arg.destinations.empty()) {
         // should never happen, jormungandr filters that, but it never hurts to double check
         this->pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                        pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                        "no origin point nor destination point given");
-        return true;
+        return false;
     }
 
     if (!arg.origins.empty() && !request.clockwise()) {
         err_msg_isochron(this->pb_creator, name + " works only for clockwise request");
-        return true;
+        return false;
     } else if (arg.origins.empty() && request.clockwise()) {
         err_msg_isochron(this->pb_creator, "reverse " + name + " works only for anti-clockwise request");
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg = JourneysArg();
-    bool has_error = set_journeys_args(request_journey, arg, "isochrone");
-    if (has_error) {
+    if (!set_journeys_args(request_journey, arg, "isochrone")) {
         return;
     }
 
-    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+    auto const center_and_stop_points = get_center_and_stop_points(arg);
     std::vector<DateTime> boundary_duration;
     for (int i = 0; i < request.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request.boundary_duration(i));
@@ -824,28 +834,28 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
     const auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
     const double end_speed = get_speed(sn, end_mode);
     navitia::routing::make_graphical_isochrone(
-        this->pb_creator, *planner, ep, request_journey.datetimes(0), boundary_duration,
+        this->pb_creator, *planner, center_and_stop_points.first, request_journey.datetimes(0), boundary_duration,
         request_journey.max_transfers(), arg.accessibilite_params, arg.forbidden, arg.allowed,
-        request_journey.clockwise(), arg.rt_level, *street_network_worker, end_speed);
+        request_journey.clockwise(), arg.rt_level, *street_network_worker, end_speed, center_and_stop_points.second);
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
     auto request_journey = request.journeys_request();
     navitia::JourneysArg arg;
-    bool has_error = set_journeys_args(request_journey, arg, "heat_map");
-    if (has_error) {
+    if (!set_journeys_args(request_journey, arg, "heat_map")) {
         return;
     }
 
-    type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
+    auto const center_and_stop_points = get_center_and_stop_points(arg);
     auto streetnetwork = request_journey.streetnetwork_params();
     auto end_mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
     auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
     auto end_speed = get_speed(streetnetwork, end_mode);
-    navitia::routing::make_heat_map(this->pb_creator, *planner, ep, request_journey.datetimes(0),
-                                    request_journey.max_duration(), request_journey.max_transfers(),
-                                    arg.accessibilite_params, arg.forbidden, arg.allowed, request_journey.clockwise(),
-                                    arg.rt_level, *street_network_worker, end_speed, end_mode, request.resolution());
+    navitia::routing::make_heat_map(this->pb_creator, *planner, center_and_stop_points.first,
+                                    request_journey.datetimes(0), request_journey.max_duration(),
+                                    request_journey.max_transfers(), arg.accessibilite_params, arg.forbidden,
+                                    arg.allowed, request_journey.clockwise(), arg.rt_level, *street_network_worker,
+                                    end_speed, end_mode, request.resolution(), center_and_stop_points.second);
 }
 
 void Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
@@ -999,6 +1009,8 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
         status();
+        // Metadatas are needed for /status requests to update timezone
+        metadatas();
         return;
     }
     if (request.requested_api() == pbnavitia::METADATAS) {
@@ -1026,11 +1038,13 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
         case pbnavitia::DEPARTURE_BOARDS:
             next_stop_times(request.next_stop_times(), request.requested_api());
             break;
-        case pbnavitia::ISOCHRONE:
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER:
             journeys(request.journeys(), request.requested_api());
+            break;
+        case pbnavitia::ISOCHRONE:
+            isochrone(request.journeys());
             break;
         case pbnavitia::places_nearby:
             proximity_list(request.places_nearby());

@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -273,7 +273,7 @@ class StatManager(object):
                 filter.operator = match.group(3)
                 filter.value = match.group(4)
             else:
-                logging.getLogger(__name__).warn('impossible to parse: %s', elem)
+                logging.getLogger(__name__).warning('impossible to parse: %s', elem)
 
     def fill_coverages(self, stat_request):
         coverages = get_used_coverages()
@@ -482,7 +482,7 @@ class StatManager(object):
             stat_coord.lon = float(to_lon)
 
         except ValueError as e:
-            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', six.text_type(e))
+            logging.getLogger(__name__).warning('Unable to parse coordinates: %s', six.text_type(e))
 
     def fill_sections(self, stat_journey, resp_journey):
         previous_section = None

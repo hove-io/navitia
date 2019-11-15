@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -55,5 +55,13 @@ def add_common_status(response, instance):
     response['status']['ridesharing_services'] = []
     for rs in instance.ridesharing_services:
         response['status']['ridesharing_services'].append(rs.status())
+
+    response['status']['equipment_providers_services'] = {}
+    response['status']['equipment_providers_services'][
+        'equipment_providers_keys'
+    ] = instance.equipment_provider_manager.providers_keys
+    response['status']['equipment_providers_services'][
+        'equipment_providers'
+    ] = instance.equipment_provider_manager.status()
 
     response['status']['autocomplete'] = instance.autocomplete.status()

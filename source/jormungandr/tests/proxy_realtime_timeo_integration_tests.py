@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -89,13 +89,14 @@ class MockTimeo(Timeo):
                         },
                     }
                 ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
             }
         if url == 'S42':
             json = {
                 "CorrelationID": "AA",
                 "StopTimesResponse": [
                     {
-                        "StopID": "C:S0",
+                        "StopID": "S42",
                         "StopTimeoCode": "AAAAA",
                         "StopLongName": "Malraux",
                         "StopShortName": "Malraux",
@@ -120,6 +121,29 @@ class MockTimeo(Timeo):
                         },
                     }
                 ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
+        if url == 'C:S1':
+            json = {"MessageResponse": [{"ResponseCode": 208, "ResponseComment": "no serviceID number found"}]}
+        if url == 'S40':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "S40",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
             }
         resp.json = MagicMock(return_value=json)
         return resp
@@ -164,6 +188,34 @@ class TestDepartures(AbstractTestFixture):
         stop_time = stop_times[0]
         assert stop_time['data_freshness'] == 'base_schedule'
         assert stop_time['date_time'] == '20160102T113000'
+
+    def test_stop_schedule_with_rt_in_error(self):
+        """
+        When timeo service responds a error code >= 100 (into MessageResponse.ResponseCode field),
+        we return base schedule results
+        """
+        query = self.query_template.format(
+            sp='C:S1', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules']
+        assert len(stop_schedules) == 1
+        stop_times = stop_schedules[0]['date_times']
+        assert len(stop_times) == 1
+        stop_time = stop_times[0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160102T123000'
+
+    def test_stop_schedule_with_rt_empty_list(self):
+        """
+        When timeo service responds a empty list, we return the empty rt list
+        """
+        query = self.query_template.format(sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules']
+        assert len(stop_schedules) == 1
+        stop_times = stop_schedules[0]['date_times']
+        assert len(stop_times) == 0
 
     def test_stop_schedule_with_rt_and_without_destination(self):
         query = self.query_template.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')

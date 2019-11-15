@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -66,7 +66,7 @@ void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duratio
     // We start astar from source and target nodes
     try {
         astar({starting_edge[source_e], starting_edge[target_e]},
-              astar_distance_heuristic(geo_ref.graph, dest_projected, 1. / double(default_speed[mode] * speed_factor)),
+              astar_distance_heuristic(geo_ref.graph, dest_projected, 1. / double(default_speed[mode])),
               astar_distance_or_target_visitor(radius, distances, destinations));
     } catch (DestinationFound&) {
     }

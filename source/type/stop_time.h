@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include "type/datetime.h"
 #include "type/vehicle_journey.h"  //required to inline order()
+#include "utils/rank.h"
 
 namespace navitia {
 namespace type {
@@ -77,14 +78,14 @@ struct StopTime {
     inline void set_odt(bool value) { properties[ODT] = value; }
     inline void set_is_frequency(bool value) { properties[IS_FREQUENCY] = value; }
     inline void set_date_time_estimated(bool value) { properties[DATE_TIME_ESTIMATED] = value; }
-    inline uint16_t order() const {
+    inline RankStopTime order() const {
         static_assert(std::is_same<decltype(vehicle_journey->stop_time_list), std::vector<StopTime>>::value,
                       "vehicle_journey->stop_time_list must be a std::vector<StopTime>");
         assert(vehicle_journey);
         // as vehicle_journey->stop_time_list is a vector, pointer
         // arithmetic gives us the order of the stop time in the
         // vector.
-        return this - &vehicle_journey->stop_time_list.front();
+        return RankStopTime(this - &vehicle_journey->stop_time_list.front());
     }
 
     StopTime clone() const;

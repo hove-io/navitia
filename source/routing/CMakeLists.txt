@@ -1,6 +1,3 @@
-SET(BOOST_LIBS
-  ${Boost_THREAD_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_REGEX_LIBRARY}
-  ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 
 SET(ROUTING_SRC
   routing.cpp raptor_solution_reader.cpp raptor.cpp raptor_api.cpp
@@ -9,18 +6,15 @@ SET(ROUTING_SRC
   journey.cpp)
 
 add_library(routing ${ROUTING_SRC})
-add_dependencies(routing protobuf_files)
-target_link_libraries(routing types fare georef utils autocomplete ${BOOST_LIBS})
+target_link_libraries(routing fare georef autocomplete pthread)
 
 add_executable(benchmark benchmark.cpp)
-target_link_libraries(benchmark routing  boost_program_options data routing)
+target_link_libraries(benchmark data boost_program_options)
 
 add_executable(benchmark_raptor_cache benchmark_raptor_cache.cpp)
-target_link_libraries(benchmark_raptor_cache routing  boost_program_options data profiler)
+target_link_libraries(benchmark_raptor_cache boost_program_options data profiler)
 
 add_executable(benchmark_full benchmark_full.cpp)
-target_link_libraries(benchmark_full
-  routing  boost_program_options data fare routing georef utils autocomplete time_tables
-  ${BOOST_LIBS} log4cplus pb_lib protobuf)
+target_link_libraries(benchmark_full boost_program_options data)
 
 add_subdirectory(tests)

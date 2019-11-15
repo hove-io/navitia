@@ -5,21 +5,24 @@ SET(BOOST_LIBS ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
 
 
 add_executable(thermometer_test thermometer.cpp)
-target_link_libraries(thermometer_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus protobuf)
+target_link_libraries(thermometer_test thermometer ${BOOST_LIBS})
 ADD_BOOST_TEST(thermometer_test)
 
-
+set(TIME_TABLE_LINK_LIBS
+    time_tables
+    ed
+    data
+    ${BOOST_LIBS}
+)
 add_executable(departure_boards_test departure_boards_test.cpp)
-target_link_libraries(departure_boards_test rt_handling time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread protobuf)
+target_link_libraries(departure_boards_test rt_handling ${TIME_TABLE_LINK_LIBS})
 ADD_BOOST_TEST(departure_boards_test)
 
-
-
 add_executable(route_schedules_test route_schedules_test.cpp)
-target_link_libraries(route_schedules_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread protobuf)
+target_link_libraries(route_schedules_test ${TIME_TABLE_LINK_LIBS})
 ADD_BOOST_TEST(route_schedules_test)
 
 
 add_executable(passages_test passages_test.cpp)
-target_link_libraries(passages_test time_tables ptreferential ed data fare routing utils pb_lib thermometer georef ${BOOST_LIBS} log4cplus pthread protobuf)
+target_link_libraries(passages_test ${TIME_TABLE_LINK_LIBS})
 ADD_BOOST_TEST(passages_test)

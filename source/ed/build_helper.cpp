@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -600,6 +600,27 @@ void builder::connection(const std::string& name1, const std::string& name2, flo
     data->pt_data->stop_point_connections.push_back(connexion);
     connexion->departure->stop_point_connection_list.push_back(connexion);
     connexion->destination->stop_point_connection_list.push_back(connexion);
+}
+
+void builder::add_ticket(const std::string& ticket_id,
+                         const std::string& line,
+                         const int cost,
+                         const std::string& comment,
+                         const std::string& currency) {
+    boost::gregorian::date start_date(boost::gregorian::neg_infin);
+    boost::gregorian::date end_date(boost::gregorian::pos_infin);
+
+    auto ticket = navitia::fare::Ticket(ticket_id, ticket_id + " name", cost, comment);
+    ticket.currency = currency;
+    data->fare->fare_map[ticket_id].add(start_date, end_date, ticket);
+
+    navitia::fare::Transition ticket_transition;
+    navitia::fare::State ticket_state;
+    ticket_state.line = boost::algorithm::to_lower_copy(line);
+    ticket_transition.ticket_key = ticket_id;
+
+    auto ticket_state_v = boost::add_vertex(ticket_state, data->fare->g);
+    boost::add_edge(data->fare->begin_v, ticket_state_v, ticket_transition, data->fare->g);
 }
 
 static double get_co2_emission(const std::string& uri) {

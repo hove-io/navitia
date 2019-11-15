@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -44,6 +44,7 @@ from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from navitiacommon import type_pb2
 from navitiacommon.parser_args_type import DateTimeFormat
 import redis
+import six
 
 
 class SyntheseRoutePoint(object):
@@ -259,7 +260,7 @@ class Synthese(RealtimeProxy):
 
     def status(self):
         return {
-            'id': unicode(self.rt_system_id),
+            'id': six.text_type(self.rt_system_id),
             'timeout': self.timeout,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,

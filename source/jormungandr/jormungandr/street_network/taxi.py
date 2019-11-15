@@ -23,16 +23,18 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import six
 import logging
 import copy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr import utils, fallback_modes as fm
 from jormungandr.utils import SectionSorter
+from functools import cmp_to_key
 
 
 from navitiacommon import response_pb2
@@ -57,7 +59,7 @@ class Taxi(AbstractStreetNetworkService):
 
     def status(self):
         return {
-            'id': unicode(self.sn_system_id),
+            'id': six.text_type(self.sn_system_id),
             'class': self.__class__.__name__,
             'modes': self.modes,
             'backend_class': self.street_network.__class__.__name__,
@@ -172,7 +174,7 @@ class Taxi(AbstractStreetNetworkService):
         journey.arrival_date_time += additional_section.duration
 
         journey.sections.extend([additional_section])
-        journey.sections.sort(SectionSorter())
+        journey.sections.sort(key=cmp_to_key(SectionSorter()))
 
         journey.nb_sections += 1
 

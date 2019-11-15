@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -75,7 +75,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         response = self.query_region(query)
         check_best(response)
 
-        # Without optimization (context.partial_response_is_empty = True in distributed._compute_all()
+        # Without optimization (context.partial_response_is_empty = True in distributed._compute_journeys()
         # journey count = 18 / direct_path_call_count = 26 / routing_matrix_call_count = 20
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
@@ -107,7 +107,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         response = self.query_region(query)
         check_best(response)
 
-        # Without optimization (context.partial_response_is_empty = True in distributed._compute_all()
+        # Without optimization (context.partial_response_is_empty = True in distributed._compute_journeys()
         # journey count = 18 / direct_path_call_count = 26 / routing_matrix_call_count = 20
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
@@ -293,7 +293,6 @@ class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbst
 
 @config({"scenario": "distributed"})
 class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
-    @skip("temporarily disabled")
     def test_isochrone(self):
         super(TestDistributedOnBasicRouting, self).test_isochrone()
 
@@ -310,6 +309,16 @@ class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultSc
 
 @config({"scenario": "distributed"})
 class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
+@config({"scenario": "distributed"})
+class TestDistributedJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefaultScenarioAbstractTestFixture):
     pass
 
 

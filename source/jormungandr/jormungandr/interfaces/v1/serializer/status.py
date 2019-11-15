@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -76,6 +76,7 @@ class ParametersSerializer(serpy.Serializer):
     max_car_direct_path_duration = Field(schema_type=int)
     max_taxi_direct_path_duration = Field(schema_type=int)
     max_ridesharing_direct_path_duration = Field(schema_type=int)
+    max_nb_crowfly_by_mode = Field(schema_type=dict)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):
@@ -131,7 +132,40 @@ class StreetNetworkSerializer(OutsideServiceCommon):
 
 
 class RidesharingServicesSerializer(OutsideServiceCommon):
-    pass
+    rating_scale_min = MethodField(schema_type=int, display_none=False)
+    rating_scale_max = MethodField(schema_type=int, display_none=False)
+    crowfly_radius = Field(schema_type=int, display_none=False)
+    network = Field(schema_type=str, display_none=False)
+
+    def get_rating_scale_min(self, obj):
+        return obj.get('rating_scale_min', None)
+
+    def get_rating_scale_max(self, obj):
+        return obj.get('rating_scale_max', None)
+
+
+class EquipmentProvidersSerializer(NullableDictSerializer):
+    key = Field(schema_type=str, display_none=False)
+    codes_types = Field(schema_type=str, many=True, display_none=True)
+    timeout = MethodField(schema_type=int, display_none=False)
+    fail_max = MethodField(schema_type=int, display_none=False)
+
+    def get_timeout(self, obj):
+        return obj.get('timeout', None)
+
+    def get_fail_max(self, obj):
+        return obj.get('fail_max', None)
+
+
+class EquipmentProvidersServicesSerializer(NullableDictSerializer):
+    equipment_providers_keys = MethodField(schema_type=str, many=True, display_none=True)
+    equipment_providers = EquipmentProvidersSerializer(many=True, display_none=False)
+
+    def get_equipment_providers_keys(self, obj):
+        return obj.get('equipment_providers_keys', [])
+
+    def get_equipment_providers(self, obj):
+        return obj.get('equipment_providers', [])
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
@@ -154,6 +188,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     publication_date = Field(schema_type=str, display_none=False)
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
+    equipment_providers_services = EquipmentProvidersServicesSerializer()
     start_production_date = Field(schema_type=str, display_none=False)
     last_load_status = Field(schema_type=bool, display_none=False)
     is_open_data = Field(schema_type=bool, display_none=False)

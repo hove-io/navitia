@@ -24,7 +24,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -33,7 +33,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem, DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
-from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing, RsFeedPublisher
+from jormungandr.scenarios.ridesharing.ridesharing_service import (
+    Ridesharing,
+    RsFeedPublisher,
+    RidesharingServiceError,
+)
 
 import mock
 from jormungandr.tests import utils_test
@@ -325,3 +329,29 @@ def instant_system_test():
         assert ridesharing_journeys[1].available_seats == 4
 
         assert feed_publisher == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
+
+
+import requests_mock
+import pytest
+
+
+def test_request_journeys_should_raise_on_non_200():
+    with requests_mock.Mocker() as mock:
+        instant_system = InstantSystem(
+            DummyInstance(), service_url='http://instant.sys', api_key='ApiKey', network='Network'
+        )
+
+        mock.get('http://instant.sys', status_code=401, text='{this is the http response}')
+
+        with pytest.raises(RidesharingServiceError) as e:
+            instant_system._request_journeys(
+                '1.2,3.4',
+                '5.6,7.8',
+                utils.PeriodExtremity(
+                    datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+                ),
+            )
+
+        exception_params = e.value.get_params().values()
+        assert 401 in exception_params
+        assert '{this is the http response}' in exception_params

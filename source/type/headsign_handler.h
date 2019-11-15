@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -73,7 +73,7 @@ protected:
     // stop times       : 1 2 3 4 5 6 7 8 (potential 9)
     // headsigns        : A A A B B C B B
     // headsign_changes :       B   C B   A
-    std::unordered_map<const VehicleJourney*, boost::container::flat_map<uint16_t, std::string>> headsign_changes;
+    std::unordered_map<const VehicleJourney*, boost::container::flat_map<RankStopTime, std::string>> headsign_changes;
     // headsign to meta-vj map
     std::unordered_map<std::string, std::unordered_set<const MetaVehicleJourney*>> headsign_mvj;
 };

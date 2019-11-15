@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -38,6 +38,11 @@ namespace routing {
 
 namespace nt = navitia::type;
 
+const type::StopTime& get_corresponding_stop_time(const type::VehicleJourney& vj,
+                                                  const RankJourneyPatternPoint& order) {
+    return vj.stop_time_list.at(order.val);
+}
+
 template <>
 std::vector<const nt::DiscreteVehicleJourney*>& JourneyPattern::get_vjs<nt::DiscreteVehicleJourney>() {
     return discrete_vjs;
@@ -51,6 +56,10 @@ std::ostream& operator<<(std::ostream& os, const JourneyPatternPoint& jpp) {
 }
 std::ostream& operator<<(std::ostream& os, const JourneyPattern& jp) {
     return os << "Jp(" << jp.jpps << ", " << jp.discrete_vjs << ", " << jp.freq_vjs << ")";
+}
+
+const JppIdx& JourneyPattern::get_jpp_idx(const RankJourneyPatternPoint& order) const {
+    return jpps.at(order.val);
 }
 
 void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
@@ -73,7 +82,7 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
 
 const JppIdx& JourneyPatternContainer::get_jpp(const type::StopTime& st) const {
     const auto& jp = get(jp_from_vj[VjIdx(*st.vehicle_journey)]);
-    return jp.jpps.at(st.order());
+    return jp.jpps.at(st.order().val);
 }
 
 std::string JourneyPatternContainer::get_id(const JpIdx& jp_idx) const {
@@ -213,7 +222,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     JourneyPattern jp;
     jp.route_idx = key.route_idx;
     jp.phy_mode_idx = key.phy_mode_idx;
-    uint16_t order = 0;
+    RankJourneyPatternPoint order(0);
     for (const auto& jpp_key : key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
@@ -223,7 +232,9 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     return jp_idx;
 }
 
-JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx, const SpIdx& sp_idx, uint16_t order) {
+JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx,
+                                         const SpIdx& sp_idx,
+                                         const RankJourneyPatternPoint& order) {
     const auto idx = JppIdx(jpps.size());
     jpps.push_back({jp_idx, sp_idx, order});
     return idx;

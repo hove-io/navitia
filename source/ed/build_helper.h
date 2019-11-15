@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -347,6 +347,12 @@ struct builder {
         collection.push_back(obj);
         return obj;
     }
+
+    void add_ticket(const std::string& ticket_id,
+                    const std::string& line,
+                    const int cost = 100,
+                    const std::string& comment = "",
+                    const std::string& currency = "euro");
 
     template <typename T>
     T* get(const std::string& uri) const {

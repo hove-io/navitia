@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -1858,8 +1858,10 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
                 port=instance_conf.pg_port,
             )
             engine = sqlalchemy.create_engine(connection_string)
-
-            engine.execute("""UPDATE navitia.parameters SET parse_pois_from_osm = TRUE""").close()
+            try:
+                engine.execute("""UPDATE navitia.parameters SET parse_pois_from_osm = TRUE""").close()
+            finally:
+                engine.dispose()
 
             return_msg = 'Parameter parse_pois_from_osm activated'
             return_status = 200
@@ -1884,6 +1886,8 @@ def check_cities_db():
     except Exception as e:
         logging.exception("cities db not created : {}".format(e.message))
         return None
+    finally:
+        cities_db.dispose()
 
 
 @marshal_with(job_fields)

@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -40,6 +40,7 @@ import xml.etree.ElementTree as et
 import aniso8601
 from datetime import datetime
 from flask_restful.inputs import boolean
+import six
 
 
 def to_bool(b):
@@ -179,7 +180,7 @@ class Siri(RealtimeProxy):
 
     def status(self):
         return {
-            'id': unicode(self.rt_system_id),
+            'id': six.text_type(self.rt_system_id),
             'timeout': self.timeout,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
@@ -209,7 +210,7 @@ class Siri(RealtimeProxy):
                 code = " ".join([e.tag for e in list(error_condition) if 'Description' not in e.tag])
                 description_node = error_condition.find('.//siri:Description', ns)
                 description = description_node.text if description_node is not None else None
-                logging.getLogger(__name__).warn('error in siri response: %s/%s', code, description)
+                logging.getLogger(__name__).warning('error in siri response: %s/%s', code, description)
             monitored_stops = stop_monitoring_delivery.findall('.//siri:MonitoredStopVisit', ns)
             if monitored_stops is None or len(monitored_stops) < 1:
                 # we might want to ignore error that match siri:NoInfoForTopicError,

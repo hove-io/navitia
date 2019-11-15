@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -388,85 +388,113 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     return true;
 }
 
-StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) {
+    nm::StopArea* sa = new nm::StopArea();
+    if (!parse_common_data(row, sa)) {
+        delete sa;  // don't forget to free the data
+        return nullptr;
+    }
+
+    if (has_col(wheelchair_c, row) && row[wheelchair_c] == "1") {
+        sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    }
+    gtfs_data.stop_area_map[sa->uri] = sa;
+    data.stop_areas.push_back(sa);
+
+    if (has_col(timezone_c, row)) {
+        auto tz_name = row[timezone_c];
+        sa->time_zone_with_name = gtfs_data.tz.get_tz(tz_name);
+    }
+    if (!sa->time_zone_with_name.second) {
+        // if no timezone has been found, we set the default one
+        sa->time_zone_with_name = {data.tz_wrapper.tz_name, data.tz_wrapper.boost_timezone};
+    }
+    if (has_col(desc_c, row)) {
+        add_gtfs_comment(gtfs_data, data, sa, row[desc_c]);
+    }
+    return sa;
+}
+
+nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row) {
+    nm::StopPoint* sp = new nm::StopPoint();
+    if (!parse_common_data(row, sp)) {
+        delete sp;
+        return nullptr;
+    }
+
+    if (has_col(zone_c, row) && row[zone_c] != "") {
+        sp->fare_zone = row[zone_c];
+    }
+
+    if (has_col(wheelchair_c, row)) {
+        if (row[wheelchair_c] == "0") {
+            wheelchair_heritance.push_back(sp);
+        } else if (row[wheelchair_c] == "1") {
+            sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        }
+    }
+    if (has_col(platform_c, row)) {
+        sp->platform_code = row[platform_c];
+    }
+    gtfs_data.stop_point_map[sp->uri] = sp;
+    data.stop_points.push_back(sp);
+    if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
+        auto it = gtfs_data.sa_spmap.find(row[parent_c]);
+        if (it == gtfs_data.sa_spmap.end()) {
+            it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
+        }
+        it->second.push_back(sp);
+    }
+
+    if (has_col(desc_c, row)) {
+        add_gtfs_comment(gtfs_data, data, sp, row[desc_c]);
+    }
+
+    // we save the tz in case the stop point is later promoted to stop area
+    if (has_col(timezone_c, row) && !row[timezone_c].empty()) {
+        gtfs_data.tz.stop_point_tz[sp] = row[timezone_c];
+    }
+    return sp;
+}
+
+bool StopsGtfsHandler::is_duplicate(const csv_row& row) {
     // In GTFS the file contains the stop_area and the stop_point
     // We test if it's a duplicate
-    if (gtfs_data.stop_map.find(row[id_c]) != gtfs_data.stop_map.end()
+    if (gtfs_data.stop_point_map.find(row[id_c]) != gtfs_data.stop_point_map.end()
         || gtfs_data.stop_area_map.find(row[id_c]) != gtfs_data.stop_area_map.end()) {
         LOG4CPLUS_WARN(logger, "The stop " + row[id_c] + " has been ignored");
         ignored++;
+        return true;
+    }
+    return false;
+}
+
+StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+    stop_point_and_area return_wrapper{};
+
+    if (is_duplicate(row)) {
+        return return_wrapper;
+    }
+
+    // location_type == 1 => StopArea
+    if (has_col(type_c, row) && row[type_c] == "1") {
+        auto* sa = build_stop_area(data, row);
+        if (sa) {
+            return_wrapper.second = sa;
+        }
+        return return_wrapper;
+
+    } else if ((has_col(type_c, row) && row[type_c] == "0") || !has_col(type_c, row)) {
+        // location_type == 0 => StopPoint
+        auto* sp = build_stop_point(data, row);
+        if (sp) {
+            return_wrapper.first = sp;
+        }
+        return return_wrapper;
+    } else {
+        // we ignore pathways nodes
         return {};
     }
-
-    stop_point_and_area return_wrapper{};
-    // Si c'est un stopArea
-    if (has_col(type_c, row) && row[type_c] == "1") {
-        nm::StopArea* sa = new nm::StopArea();
-        if (!parse_common_data(row, sa)) {
-            delete sa;  // don't forget to free the data
-            return {};
-        }
-
-        if (has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
-            sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-        gtfs_data.stop_area_map[sa->uri] = sa;
-        data.stop_areas.push_back(sa);
-        return_wrapper.second = sa;
-
-        if (has_col(timezone_c, row)) {
-            auto tz_name = row[timezone_c];
-            sa->time_zone_with_name = gtfs_data.tz.get_tz(tz_name);
-        }
-        if (!sa->time_zone_with_name.second) {
-            // if no timezone has been found, we set the default one
-            sa->time_zone_with_name = {data.tz_wrapper.tz_name, data.tz_wrapper.boost_timezone};
-        }
-        if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, sa, row[desc_c]);
-        }
-    }
-    // C'est un StopPoint
-    else {
-        nm::StopPoint* sp = new nm::StopPoint();
-        if (!parse_common_data(row, sp)) {
-            delete sp;
-            return {};
-        }
-
-        if (has_col(zone_c, row) && row[zone_c] != "") {
-            sp->fare_zone = row[zone_c];
-        }
-
-        if (has_col(wheelchair_c, row)) {
-            if (row[wheelchair_c] == "0") {
-                wheelchair_heritance.push_back(sp);
-            } else if (row[wheelchair_c] == "1") {
-                sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-            }
-        }
-        if (has_col(platform_c, row))
-            sp->platform_code = row[platform_c];
-        gtfs_data.stop_map[sp->uri] = sp;
-        data.stop_points.push_back(sp);
-        if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
-            auto it = gtfs_data.sa_spmap.find(row[parent_c]);
-            if (it == gtfs_data.sa_spmap.end()) {
-                it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
-            }
-            it->second.push_back(sp);
-        }
-
-        if (has_col(desc_c, row)) {
-            add_gtfs_comment(gtfs_data, data, sp, row[desc_c]);
-        }
-
-        // we save the tz in case the stop point is later promoted to stop area
-        if (has_col(timezone_c, row) && !row[timezone_c].empty()) {
-            gtfs_data.tz.stop_point_tz[sp] = row[timezone_c];
-        }
-        return_wrapper.first = sp;
-    }
-    return return_wrapper;
 }
 
 void RouteGtfsHandler::init(Data&) {
@@ -585,8 +613,8 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Invalid connection time: " + row[time_c]);
         return;
     }
-    auto it = gtfs_data.stop_map.find(row[from_c]);
-    if (it == gtfs_data.stop_map.end()) {
+    auto it = gtfs_data.stop_point_map.find(row[from_c]);
+    if (it == gtfs_data.stop_point_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[from_c]);
         if (it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (from) " + row[from_c]);
@@ -597,8 +625,8 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         departures.push_back(it->second);
     }
 
-    it = gtfs_data.stop_map.find(row[to_c]);
-    if (it == gtfs_data.stop_map.end()) {
+    it = gtfs_data.stop_point_map.find(row[to_c]);
+    if (it == gtfs_data.stop_point_map.end()) {
         auto it_sa = gtfs_data.sa_spmap.find(row[to_c]);
         if (it_sa == gtfs_data.sa_spmap.end()) {
             LOG4CPLUS_WARN(logger, "Impossible de find the stop point (to) " + row[to_c]);
@@ -1020,8 +1048,8 @@ static int to_utc(const std::string& local_time, int utc_offset) {
 }
 
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
-    auto stop_it = gtfs_data.stop_map.find(row[stop_c]);
-    if (stop_it == gtfs_data.stop_map.end()) {
+    auto stop_it = gtfs_data.stop_point_map.find(row[stop_c]);
+    if (stop_it == gtfs_data.stop_point_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the stop_point " + row[stop_c] + "!");
         return {};
     }

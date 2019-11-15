@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -75,7 +75,7 @@ private:
     template <typename T>
     using fusion_pair_comment_map = boost::fusion::pair<T, pt_object_comment_map<T>>;
 
-    using stop_time_key = std::pair<const navitia::type::VehicleJourney*, uint16_t>;
+    using stop_time_key = std::pair<const navitia::type::VehicleJourney*, RankStopTime>;
 
     template <typename T>
     const T* get_as_key(const T& obj) const {

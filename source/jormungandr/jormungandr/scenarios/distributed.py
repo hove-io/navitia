@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -33,17 +33,20 @@ try:
     from typing import Dict, Text, Any, Tuple
 except ImportError:
     pass
-import logging
+import logging, operator
 from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.helper_classes.complete_pt_journey import (
+    wait_and_get_pt_journeys,
     wait_and_build_crowflies,
     get_journeys_to_complete,
 )
 from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 from jormungandr.new_relic import record_custom_parameter
+from navitiacommon import type_pb2
+from flask_restful import abort
 
 
 class PartialResponseContext(object):
@@ -77,7 +80,7 @@ class Distributed(object):
             for pt_j in e.pt_journeys.journeys
         }
 
-    def _compute_all(self, future_manager, request, instance, krakens_call, context):
+    def _compute_journeys(self, future_manager, request, instance, krakens_call, context):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -273,6 +276,89 @@ class Distributed(object):
             journeys=journeys_to_complete,
         )
 
+    def _compute_isochrone(self, future_manager, request, instance, krakens_call):
+        logger = logging.getLogger(__name__)
+        logger.debug('request datetime: %s', request['datetime'])
+
+        isochrone_center = request['origin'] or request['destination']
+
+        mode_getter = operator.itemgetter(0 if request['origin'] else 1)
+        requested_modes = {mode_getter(call) for call in krakens_call}
+
+        logger.debug('requesting places by uri orig: %s', isochrone_center)
+
+        requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=isochrone_center)
+
+        requested_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
+
+        direct_paths_by_mode = {}
+
+        proximities_by_crowfly = ProximitiesByCrowflyPool(
+            future_manager=future_manager,
+            instance=instance,
+            requested_place_obj=requested_obj,
+            modes=requested_modes,
+            request=request,
+            direct_paths_by_mode=direct_paths_by_mode,
+            max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+        )
+
+        places_free_access = PlacesFreeAccess(
+            future_manager=future_manager, instance=instance, requested_place_obj=requested_obj
+        )
+
+        direct_path_type = (
+            StreetNetworkPathType.BEGINNING_FALLBACK
+            if request['origin']
+            else StreetNetworkPathType.ENDING_FALLBACK
+        )
+
+        fallback_durations_pool = FallbackDurationsPool(
+            future_manager=future_manager,
+            instance=instance,
+            requested_place_obj=requested_obj,
+            modes=requested_modes,
+            proximities_by_crowfly_pool=proximities_by_crowfly,
+            places_free_access=places_free_access,
+            direct_paths_by_mode=direct_paths_by_mode,
+            request=request,
+            direct_path_type=direct_path_type,
+        )
+
+        # We don't need requested_orig_obj or requested_dest_obj for isochrone
+        pt_journey_args = {
+            "future_manager": future_manager,
+            "instance": instance,
+            "requested_orig_obj": None,
+            "requested_dest_obj": None,
+            "streetnetwork_path_pool": None,
+            "krakens_call": krakens_call,
+            "request": request,
+            "isochrone_center": isochrone_center,
+        }
+        if request['origin']:
+            pt_journey_args.update(
+                {"orig_fallback_durations_pool": fallback_durations_pool, "dest_fallback_durations_pool": None}
+            )
+        else:
+            pt_journey_args.update(
+                {"orig_fallback_durations_pool": None, "dest_fallback_durations_pool": fallback_durations_pool}
+            )
+
+        pt_journey_pool = PtJourneyPool(**pt_journey_args)
+
+        res = []
+        for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
+            logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
+            pt_journeys = wait_and_get_pt_journeys(future_pt_journey, False)
+            if pt_journeys:
+                res.append(pt_journeys)
+
+        for r in res:
+            fill_uris(r)
+
+        return res
+
 
 class Scenario(new_default.Scenario):
     def __init__(self):
@@ -296,7 +382,14 @@ class Scenario(new_default.Scenario):
         """
         try:
             with FutureManager() as future_manager:
-                return self._scenario._compute_all(future_manager, request, instance, krakens_call, context)
+                if request_type == type_pb2.ISOCHRONE:
+                    return self._scenario._compute_isochrone(future_manager, request, instance, krakens_call)
+                elif request_type == type_pb2.PLANNER:
+                    return self._scenario._compute_journeys(
+                        future_manager, request, instance, krakens_call, context
+                    )
+                else:
+                    abort(400, message="This type of request is not supported with distributed")
         except PtException as e:
             logger.exception('')
             return [e.get()]
@@ -319,6 +412,3 @@ class Scenario(new_default.Scenario):
             logging.getLogger(__name__).exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
-
-    def isochrone(self, request, instance):
-        return new_default.Scenario().isochrone(request, instance)

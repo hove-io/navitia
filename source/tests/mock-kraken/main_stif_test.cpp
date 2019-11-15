@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -66,6 +66,13 @@ int main(int argc, const char* const argv[]) {
     b.connection("stopU", "stopU", 0);
     b.connection("stopV", "stopV", 0);
     b.vj("PW", "11111111", "", true, "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopW", "21:00"_t);  // Bus
+
+    // Add tickets
+    b.add_ticket("P-Ticket", "P", 100, "P-Ticket comment");
+    b.add_ticket("Q-Ticket", "Q", 100, "Q-Ticket comment");
+    b.add_ticket("R-Ticket", "R", 100, "R-Ticket comment");
+    b.add_ticket("S-Ticket", "S", 100, "S-Ticket comment");
+    b.add_ticket("T-Ticket", "T", 99, "T-Ticket comment");
 
     b.make();
 

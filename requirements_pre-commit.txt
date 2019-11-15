@@ -1,4 +1,5 @@
-black==18.9b0; python_version > '3.6'
-mypy==0.670; python_version > '3.0'
-mypy-extensions==0.4.1; python_version > '3.0'
+black==18.9b0; python_version >= '3.6'
+mypy==0.670; python_version >= '3.5'
+mypy-extensions==0.4.1; python_version >= '3.5'
 flake8==3.5.0
+pre-commit==1.18.3

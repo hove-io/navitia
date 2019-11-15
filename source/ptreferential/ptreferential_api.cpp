@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -206,7 +206,7 @@ std::vector<const type::Route*> get_matching_routes(const type::Data* data,
         if (r->line != line) {
             continue;
         }
-        for (const auto& next_jpp_idx : boost::make_iterator_range(jp.jpps.begin() + jpp.order, jp.jpps.end())) {
+        for (const auto& next_jpp_idx : boost::make_iterator_range(jp.jpps_begin() + jpp.order, jp.jpps_end())) {
             const auto next_jpp = data_raptor->jp_container.get(next_jpp_idx);
             const auto sp = data->get_data<nt::StopPoint>()[next_jpp.sp_idx.val];
             if (contains(possible_stop_points, sp) || contains(possible_stop_areas, sp->stop_area)) {

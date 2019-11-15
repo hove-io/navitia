@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -63,7 +63,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 72;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 3;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),

@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -128,12 +128,14 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
                                  const boost::posix_time::time_period& period) const;
 
     // Return the vp for all the stops of the section
-    ValidityPattern get_vp_for_section(const std::set<StopPoint*>& bounds_st,
+    ValidityPattern get_vp_for_section(const std::set<RankStopTime>& bounds_st,
                                        RTLevel rt_level,
                                        const boost::posix_time::time_period& period) const;
 
-    // return all the stoppoints of the base vj between the 2 stop areas
-    std::set<StopPoint*> get_sections_stop_points(const StopArea*, const StopArea*) const;
+    const StopTime& get_stop_time(const RankStopTime& order) const;
+
+    // return all the sections of the base vj between the 2 stop areas
+    std::set<RankStopTime> get_sections_ranks(const StopArea*, const StopArea*) const;
 
     // return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;

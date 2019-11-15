@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -110,7 +110,7 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
 }
 
 struct HeadsignHandlerTest : nt::HeadsignHandler {
-    const std::unordered_map<const nt::VehicleJourney*, boost::container::flat_map<uint16_t, std::string>>&
+    const std::unordered_map<const nt::VehicleJourney*, boost::container::flat_map<nt::RankStopTime, std::string>>&
     get_headsign_changes() const {
         return headsign_changes;
     }

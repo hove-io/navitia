@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -32,12 +32,14 @@ import json
 import logging
 import os
 import jsonschema
-
+import re
 import flex
 from flex.exceptions import ValidationError
 
 from tests.tests_mechanism import dataset, AbstractTestFixture, mock_bss_providers, mock_car_park_providers
-from itertools import chain, ifilter
+from itertools import chain
+from six.moves import filter
+import six
 
 
 def get_params(schema):
@@ -126,15 +128,15 @@ class SchemaChecker:
 
         params = get_params(response)
 
-        for name, param in params.iteritems():
-            assert param.has_key('name')
-            assert param.has_key('description'), (
+        for name, param in params.items():
+            assert 'name' in param
+            assert 'description' in param, (
                 "API parameter '" + param['name'] + "' should have a description in the schema!"
             )
-            assert param.has_key('type')
+            assert 'type' in param
 
-            assert type(param['name']) is unicode
-            assert type(param['description']) is unicode
+            assert type(param['name']) is six.text_type
+            assert type(param['description']) is six.text_type
 
             assert any(
                 param['type'] == t
@@ -210,7 +212,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         response = self.tester.options('/v1/coverage')
         assert response.status_code == 200
         assert response.allow.as_set() == {'head', 'options', 'get'}
-        assert response.data == ''  # no schema dumped
+        assert response.data == six.b('')  # no schema dumped
 
     def test_places_schema(self):
         """
@@ -276,11 +278,14 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             hard_check=False,
         )
 
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
+        )
         # we have some errors, but only on additional_informations
         assert len(errors) == 4
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert pattern_error.match(e)
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
@@ -301,11 +306,14 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             hard_check=False,
         )
 
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
+        )
         # we have some errors, but only on additional_informations
         assert len(errors) == 1
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert pattern_error.match(e)
 
     def test_departures(self):
         self._check_schema(
@@ -340,15 +348,16 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
         _, errors = self._check_schema(query, hard_check=False)
 
-        import re
-
         pattern = re.compile(
             ".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type"
+        )
+        pattern_error = re.compile(
+            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'integer',\)`"
         )
 
         for k, e in errors.items():
             assert pattern.match(k)
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'integer',)`"
+            assert pattern_error.match(e)
 
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
@@ -356,25 +365,13 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
     def test_schema_parameters_sctructure(self):
         """
-        Get the main schema, extract all path with no parameter, or only {region}
-        and check for each endpoint the schema's structure
+        Check for each endpoint the schema's structure
         """
         schema = self.get_schema()
         paths = schema['paths']
 
-        # Filter endpoints with a parameter (ie. /v1/coverage/{lon}:{lat}/...)
-        def endpoints_with_no_param(path):
-            return '{' not in path
-
-        # Filter endpoints with only a {region} parameter (ie. /v1/coverage/{region}/journeys)
-        def endpoints_with_only_region_param(path):
-            other_param = any(elem in path for elem in ['{id}', '{uri}'])
-            return '{region}' in path and not other_param
-
-        urls = chain(ifilter(endpoints_with_no_param, paths), ifilter(endpoints_with_only_region_param, paths))
-
-        for u in urls:
-            url = '/v1' + u.format(region='main_routing_test') + '?schema=true'
+        for u in paths:
+            url = '/v1' + u.format(region='main_routing_test', lon=0, lat=0, id=0, uri='_') + '?schema=true'
             self.check_schema_parameters_structure(url)
 
 
@@ -402,7 +399,7 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
         assert len(errors) == 10
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
-            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+            assert "Got value `None` of type `null`. Value must be of type(s):" in e
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))

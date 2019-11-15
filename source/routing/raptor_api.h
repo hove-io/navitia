@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -103,24 +103,25 @@ void make_response(navitia::PbCreator& pb_creator,
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,
-                    type::EntryPoint origin,
+                    const type::EntryPoint& center,
                     const uint64_t datetime,
-                    bool clockwise,
+                    const bool clockwise,
                     const type::AccessibiliteParams& accessibilite_params,
-                    std::vector<std::string> forbidden,
-                    std::vector<std::string> allowed,
+                    const std::vector<std::string>& forbidden,
+                    const std::vector<std::string>& allowed,
                     georef::StreetNetwork& worker,
                     const type::RTLevel rt_level,
-                    int max_duration = 3600,
-                    uint32_t max_transfers = std::numeric_limits<uint32_t>::max());
+                    const int max_duration = 3600,
+                    const uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+                    const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 /**
  * @brief Used for Pt with distributed mode
  */
 void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR& raptor,
-                      const std::vector<type::EntryPoint>& origins,
-                      const std::vector<type::EntryPoint>& destinations,
+                      const type::EntryPoints& origins,
+                      const type::EntryPoints& destinations,
                       const uint64_t timestamp,
                       const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
@@ -192,33 +193,35 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR& raptor_max,
-                              const type::EntryPoint& origin,
+                              const type::EntryPoint& center,
                               const uint64_t departure_datetime,
                               const std::vector<DateTime>& boundary_duration,
-                              uint32_t max_transfers,
+                              const uint32_t max_transfers,
                               const type::AccessibiliteParams& accessibilite_params,
                               const std::vector<std::string>& forbidden,
                               const std::vector<std::string>& allowed,
-                              bool clockwise,
+                              const bool clockwise,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork& worker,
-                              const double& speed);
+                              const double& speed,
+                              const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 void make_heat_map(navitia::PbCreator& pb_creator,
                    RAPTOR& raptor,
                    const type::EntryPoint& center,
                    const uint64_t departure_datetime,
-                   DateTime max_duration,
-                   uint32_t max_transfers,
+                   const DateTime max_duration,
+                   const uint32_t max_transfers,
                    const type::AccessibiliteParams& accessibilite_params,
                    const std::vector<std::string>& forbidden,
                    const std::vector<std::string>& allowed,
-                   bool clockwise,
+                   const bool clockwise,
                    const nt::RTLevel rt_level,
                    georef::StreetNetwork& worker,
                    const double& speed,
                    const navitia::type::Mode_e mode,
-                   const uint32_t resolution);
+                   const uint32_t resolution,
+                   const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 
 void make_pathes(PbCreator& pb_creator,
                  const std::vector<navitia::routing::Path>& paths,

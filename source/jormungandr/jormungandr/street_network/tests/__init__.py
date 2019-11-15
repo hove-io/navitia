@@ -23,9 +23,11 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from streetnetwork_test_utils import MockKraken
+from __future__ import absolute_import, print_function, unicode_literals, division
+
+from jormungandr.street_network.tests.streetnetwork_test_utils import MockKraken
 from jormungandr.street_network.tests.streetnetwork_backend_mock import StreetNetworkBackendMock

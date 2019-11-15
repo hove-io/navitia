@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -52,6 +52,7 @@ namespace nr = navitia::routing;
 namespace ntest = navitia::test;
 namespace bt = boost::posix_time;
 namespace ng = navitia::georef;
+namespace nt = navitia::type;
 using navitia::type::disruption::ChannelType;
 
 static void dump_response(pbnavitia::Response resp, std::string test_name, bool debug_info = false) {
@@ -1912,6 +1913,25 @@ BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T093500"_pts);
+
+    {
+        // We ask the same request with stop_point == center
+        // And check that the response are exactly equivalent
+        const navitia::type::EntryPoints stop_points{{ep}};
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts, true, {}, {}, {}, sn_worker,
+                           nt::RTLevel::Base, 3 * 60 * 60, std::numeric_limits<uint32_t>::max(), stop_points);
+        BOOST_CHECK_EQUAL(result.DebugString(), pb_creator.get_response().DebugString());
+    }
+    {
+        // We ask the same request with different stop_points
+        // And check that the responses are not the same
+        const navitia::type::EntryPoints stop_points{{navitia::type::Type_e::StopPoint, "B"}};
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts, true, {}, {}, {}, sn_worker,
+                           nt::RTLevel::Base, 3 * 60 * 60, std::numeric_limits<uint32_t>::max(), stop_points);
+        BOOST_CHECK_NE(result.DebugString(), pb_creator.get_response().DebugString());
+    }
 }
 
 /**
@@ -1934,6 +1954,26 @@ BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T110000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082600"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T110000"_pts);
+
+    {
+        // We ask the same request with stop_point == center
+        // And check that the responses are exactly equivalent
+        const navitia::type::EntryPoints stop_points{{ep}};
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        nr::make_isochrone(pb_creator, raptor, ep, "20150615T110000"_pts, false, {}, {}, {}, sn_worker,
+                           nt::RTLevel::Base, 3 * 60 * 60, std::numeric_limits<uint32_t>::max(), stop_points);
+        BOOST_CHECK_EQUAL(result.DebugString(), pb_creator.get_response().DebugString());
+    }
+
+    {
+        // We ask the same request with different stop_points
+        // And check that the responses are not the same
+        const navitia::type::EntryPoints stop_points{{navitia::type::Type_e::StopPoint, "C"}};
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        nr::make_isochrone(pb_creator, raptor, ep, "20150615T110000"_pts, false, {}, {}, {}, sn_worker,
+                           nt::RTLevel::Base, 3 * 60 * 60, std::numeric_limits<uint32_t>::max(), stop_points);
+        BOOST_CHECK_NE(result.DebugString(), pb_creator.get_response().DebugString());
+    }
 }
 
 /**

@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
@@ -45,9 +45,13 @@ def wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths):
     """
     pt_journeys = future_pt_journey.wait_and_get()
 
-    if pt_journeys and pt_journeys.HasField(b"error"):
+    if (
+        pt_journeys
+        and pt_journeys.HasField(str("error"))
+        and pt_journeys.error.id != response_pb2.Error.error_id.Value('bad_format')
+    ):
         if pt_journeys.error.id == response_pb2.Error.error_id.Value('no_solution') and has_valid_direct_paths:
-            pt_journeys.ClearField(b"error")
+            pt_journeys.ClearField(str("error"))
         elif pt_journeys.error.id == response_pb2.Error.error_id.Value('date_out_of_bounds'):
             raise InvalidDateBoundException(pt_journeys)
         else:

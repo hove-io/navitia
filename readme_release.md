@@ -1,6 +1,10 @@
-# HOWTO Release navitia
+# HOW TO Release navitia
 
-## "Normal" release (minor)
+## "Regular" release
+
+This lets the script decide if it's major or minor release.
+The decision is based on the data_version located in source/type/data.cpp
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how data_version is managed.
 
 First have a look on github's repo at PRs about to be released https://github.com/CanalTP/navitia/pulls?q=is%3Apr+is%3Aclosed+sort%3Aupdated-desc
 * Check that `not_in_changelog` and `hotfix` labels are correct and none is missing on PRs that are gonna be released
@@ -11,21 +15,22 @@ Then the script should take over:
 cd <path/to/repo/navitia>
 # to be sure to trigger the correct version of the release script
 git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/dev dev
-./release_navitia.sh minor <canaltp_distant_repo_name>
 ```
+At this point, you may build and run tests to check that everything is OK. If you're confident, proceed with:
+```sh
+./release_navitia.sh regular <canaltp_distant_repo_name>
+```
+Note: this script uses "vim", make sure it's installed on your machine.
+
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
 * don't forget to make `git submodule update --recursive` when necessary
 * check that `release` branch COMPILES and TESTS (unit, docker and tyr) before pushing it!
 
-## Other releases
+Nota: `major` and `minor` invocations are possible but deprecated.
 
-### For a major release, same as minor, but major:
-```sh
-./release_navitia.sh major <canaltp_distant_repo_name>
-```
+## For hotfix
 
-### For hotfix:
 Note: It is preferable but not mandatory to merge the hotfix PR before.
 ```sh
 ./release_navitia.sh hotfix <canaltp_distant_repo_name>

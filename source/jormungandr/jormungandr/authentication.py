@@ -25,7 +25,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
@@ -40,6 +40,7 @@ import datetime
 import base64
 from navitiacommon.models import User, Instance, Key
 from jormungandr import cache, memory_cache, app as current_app
+import six
 
 
 def authentication_required(func):
@@ -250,7 +251,7 @@ def get_used_coverages():
 
 
 def register_used_coverages(coverages):
-    if hasattr(coverages, '__iter__'):
+    if hasattr(coverages, '__iter__') and not isinstance(coverages, six.text_type):
         g.used_coverages = coverages
     else:
         g.used_coverages = [coverages]

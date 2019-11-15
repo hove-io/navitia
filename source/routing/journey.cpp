@@ -23,7 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
 twitter @navitia
-IRC #navitia on freenode
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
@@ -96,10 +96,10 @@ bool Journey::operator!=(const Journey& rhs) const {
 }
 
 size_t SectionHash::operator()(const Journey::Section& s, size_t seed) const {
-    boost::hash_combine(seed, s.get_in_st->order());
+    boost::hash_combine(seed, s.get_in_st->order().val);
     boost::hash_combine(seed, s.get_in_st->vehicle_journey);
     boost::hash_combine(seed, s.get_in_dt);
-    boost::hash_combine(seed, s.get_out_st->order());
+    boost::hash_combine(seed, s.get_out_st->order().val);
     boost::hash_combine(seed, s.get_out_st->vehicle_journey);
     boost::hash_combine(seed, s.get_out_dt);
 

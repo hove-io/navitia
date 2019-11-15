@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -227,3 +227,30 @@ class TestEndPoint(AbstractTestFixture):
         self.check_context(response)
         assert response.get("equipment_reports", None) is not None
         assert response['context']['timezone'] == 'UTC'
+
+    def test_region_coord_addresses(self):
+        resp = [
+            self.tester.get('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609'),
+            self.tester.get('v1/coverage/main_routing_test/coords/0.001077974378345651;0.0005839027882705609'),
+            self.tester.get(
+                'v1/coverage/main_routing_test/addresses/0.001077974378345651;0.0005839027882705609'
+            ),
+            self.tester.get(
+                'v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609/addresses'
+            ),
+            self.tester.get(
+                'v1/coverage/main_routing_test/coords/0.001077974378345651;0.0005839027882705609/addresses'
+            ),
+        ]
+        assert all(r.status_code < 300 for r in resp)
+        assert all('address' in r.get_json() for r in resp)
+
+        address_name = resp[0].get_json()['address']['name']
+        assert all(
+            r.get_json()['address']['name'] == address_name for r in resp
+        ), 'All requests should return the same result...'
+
+    def test_coord_without_region_shouldnt_call_places_nearby(self):
+        r1 = self.tester.get('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609')
+        r2 = self.tester.get('v1/coord/0.001077974378345651;0.0005839027882705609')
+        assert r1.get_json()['address'] == r2.get_json()['address']

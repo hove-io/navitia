@@ -23,7 +23,7 @@
 #
 # Stay tuned using
 # twitter @navitia
-# IRC #navitia on freenode
+# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
@@ -77,16 +77,20 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(files, instance, backup_file, async=True, reload=True, custom_output_dir=None, skip_mimir=False):
+def import_data(
+    files, instance, backup_file, asynchronous=True, reload=True, custom_output_dir=None, skip_mimir=False
+):
     """
     import the data contains in the list of 'files' in the 'instance'
 
     :param files: files to import
     :param instance: instance to receive the data
     :param backup_file: If True the files are moved to a backup directory, else they are not moved
-    :param async: If True all jobs are run in background, else the jobs are run in sequence the function will only return when all of them are finish
+    :param asynchronous: If True all jobs are run in background, else the jobs are run in sequence the function
+     will only return when all of them are finish
     :param reload: If True kraken would be reload at the end of the treatment
     :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
+    :param skip_mimir: skip importing data into mimir
 
     run the whole data import process:
 
@@ -164,7 +168,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
             current_app.logger.info("skipping mimir import")
 
         actions.append(finish_job.si(job.id))
-        if async:
+        if asynchronous:
             return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
@@ -290,7 +294,7 @@ def type_of_autocomplete_data(filename):
 
 
 @celery.task()
-def import_autocomplete(files, autocomplete_instance, async=True, backup_file=True):
+def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_file=True):
     """
     Import the autocomplete'instance data files
     """
@@ -336,7 +340,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     for action in actions:
         action.kwargs['job_id'] = job.id
     actions.append(finish_job.si(job.id))
-    if async:
+    if asynchronous:
         return chain(*actions).delay(), job
     else:
         # all job are run in sequence and import_data will only return when all the jobs are finish
@@ -344,7 +348,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
 
 
 @celery.task()
-def import_in_mimir(_file, instance, async=True):
+def import_in_mimir(_file, instance, asynchronous=True):
     """
     Import pt data stops to autocomplete
     """
@@ -363,9 +367,9 @@ def import_in_mimir(_file, instance, async=True):
     elif family_type == 'poi':
         action = poi2mimir.si(instance.name, _file)
     else:
-        current_app.logger.warn("Unsupported family_type {}".format(family_type))
+        current_app.logger.warning("Unsupported family_type {}".format(family_type))
 
-    if async:
+    if asynchronous:
         return action.delay()
     else:
         # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
@@ -385,8 +389,13 @@ def update_autocomplete():
 @celery.task()
 def purge_datasets():
     instances = models.Instance.query_existing().all()
+    current_app.logger.info("Instances to purge: {}".format(instances))
     for instance in instances:
-        purge_instance(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP'])
+        try:
+            purge_instance(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP'])
+        except Exception as e:
+            # Do not stop the task for all other instances if only one instance is missing
+            current_app.logger.error("Dataset purge failed for instance {i}: {e}".format(i=instance, e=e))
 
 
 @celery.task()
@@ -394,7 +403,12 @@ def purge_instance(instance_id, nb_to_keep):
     instance = models.Instance.query.get(instance_id)
     logger = get_instance_logger(instance)
     logger.info('purge of backup directories for %s', instance.name)
-    instance_config = load_instance_config(instance.name)
+    try:
+        instance_config = load_instance_config(instance.name)
+    except Exception as e:
+        logger.error("Impossible to load instance configuration for {i}: {e}".format(i=instance.name, e=e))
+        return
+
     backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
     logger.info('backups are: %s', backups)
     # we add the realpath not to have problems with double / or stuff like that
@@ -533,7 +547,7 @@ def build_data(instance):
 def load_data(instance_id, data_dirs):
     instance = models.Instance.query.get(instance_id)
 
-    import_data(data_dirs, instance, backup_file=False, async=False)
+    import_data(data_dirs, instance, backup_file=False, asynchronous=False)
 
 
 @celery.task()
@@ -594,10 +608,13 @@ def heartbeat():
         task.action = task_pb2.HEARTBEAT
 
         for instance in instances:
-            config = load_instance_config(instance.name)
-            exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
-            producer = connection.Producer(exchange=exchange)
-            producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            try:
+                config = load_instance_config(instance.name)
+                exchange = kombu.Exchange(config.exchange, 'topic', durable=True)
+                producer = connection.Producer(exchange=exchange)
+                producer.publish(task.SerializeToString(), routing_key='{}.task.heartbeat'.format(instance.name))
+            except Exception as e:
+                logging.error("Could not ping krakens for instance {i}: {e}".format(i=instance, e=e))
 
 
 @celery.task()
@@ -628,9 +645,9 @@ def remove_autocomplete_depot(name):
         if os.path.exists(main_dir):
             shutil.rmtree(main_dir)
         else:
-            logging.warn('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
+            logging.warning('no autocomplete directory for {}, removing nothing'.format(autocomplete_dir))
     else:
-        logging.warn('no main autocomplete directory, removing nothing')
+        logging.warning('no main autocomplete directory, removing nothing')
 
 
 @celery.task()
