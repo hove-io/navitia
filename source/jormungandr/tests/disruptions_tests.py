@@ -882,6 +882,11 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert len(line_reports[0]['line']['links']) == 2
         assert line_reports[0]['line']['links'][0]['id'] == 'line_section_on_line_1'
         assert line_reports[0]['line']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
+        for o in line_reports[0]['pt_objects']:
+            links = o[o['embedded_type']]['links']
+            assert links
+            for l in links:
+                assert l['id'] != 'line_section_on_line_2'
         # line:2
         assert line_reports[1]['line']['id'] == 'line:2'
         assert len(line_reports[1]['line']['links']) == 1
@@ -901,6 +906,11 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert len(line_reports[0]['line']['links']) == 2
         assert line_reports[0]['line']['links'][0]['id'] == 'line_section_on_line_1'
         assert line_reports[0]['line']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
+        for o in line_reports[0]['pt_objects']:
+            links = o[o['embedded_type']]['links']
+            assert links
+            for l in links:
+                assert l['id'] != 'line_section_on_line_2'
         # Associated disruptions
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 2
