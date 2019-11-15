@@ -708,7 +708,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         pb_property->set_value(property.second);
     }
 
-    if (dump_message_options == DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes}) {
+    if (dump_message_options.dump_message == DumpMessage::Yes
+        && dump_message_options.dump_line_section == DumpLineSectionMessage::Yes) {
         /*
          * Here we dump the impacts which impact LineSection.
          * We could have link the LineSection impact with the line, but that would change the code and
