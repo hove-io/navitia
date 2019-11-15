@@ -416,7 +416,7 @@ std::string make_request(const Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::RTLevel rt_level,
                          const type::Data& data) {
-    auto* static_data = navitia::type::static_data::get();
+    const auto* static_data = navitia::type::static_data::get();
     std::string res = request.empty() ? std::string("all") : request;
 
     switch (requested_type) {
