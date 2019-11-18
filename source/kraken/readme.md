@@ -1,14 +1,14 @@
 # Kraken
-Kraken is the public transport trip planner and much more, it can provide schedules, timetables and expose public
+Kraken is a public transport trip planner and much more, it provides schedules, timetables and expose public
 transport data via
 [PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).
-It also provide:
+It also provides:
   - (bad) street network routing that will be replaced by [asgard](https://github.com/CanalTP/asgard)
   - autocomplete that will be replaced by [mimir](https://github.com/CanalTP/mimirsbrunn)
 
 
 ## Configuration
-Kraken can be configured by multiple way:
+Kraken can be configured in multiple ways:
   - configuration file
   - command line arguments
   - environment variables
@@ -18,7 +18,7 @@ Kraken will try to load a configuration file named the same way as the binary wi
 current directory, so by default it will search for a `kraken.ini` file. Alternatively the file can be passed as
 the first positional argument.
 
-Example of configuration file, the values are the defaults:
+Example of configuration file, defaults values are:
 ```
 [GENERAL]
 # Path to data file
@@ -90,7 +90,7 @@ queue =
 database =
 ```
 ### CLI arguments
-The parameters are based on the configuration file, they have the following form: `--section.option value`
+Parameters are based on the configuration file with the following form: `--section.option value`
 By example if we want to define the database we have to do `--GENERAL.database database.nav.lz4`.
 
 ### Environment variables
@@ -105,8 +105,8 @@ At startup kraken do the following actions:
 1. load configuration
 2. open connection to rabbitmq
 3. Data loading
-4. start background thread that handle disruptions, realtime and data reloading
-5. bind zmq sockets: at this point the configured tcp port start accepting connection
+4. start background thread that handles disruptions, realtime and data reloading
+5. bind zmq sockets: at this point the configured tcp port starts accepting connection
 6. start worker threads to handle requests
 
 ## Data loading
@@ -115,7 +115,7 @@ Data loading is triggered by two events:
   - at startup
   - by an order received from rabbitmq
 
-kraken start by reading the `nav.lz4` file configured, it then applies disruptions by loading them from the chaos
+kraken starts by reading the `nav.lz4` file configured, it then applies disruptions by loading them from the chaos
 database.
 Kraken will do the following actions:
 
@@ -124,25 +124,25 @@ Kraken will do the following actions:
 3. load realtime from kirin:
     1. kraken creates an anonymous queue in rabbitmq
     2. kraken sends a request to kirin via rabbitmq with the queue name as parameter
-    3. kraken wait for a message in the queue
-    4. kirin builds a "ntfs-rt" and send it to the queue previously created
+    3. kraken waits for a message in the queue
+    4. kirin builds a "ntfs-rt" and sends it to the queue previously created
     5. kraken receives the message and apply the realtime data
 4. build raptor
 5. build relations
 6. build proximitylist
 
-When a data loading occur after startup the process is the same but is done on another dataset, this mean that
+When a data loading occurs after startup the process is the same but is done on another dataset, this means that
 memory usage will double during reload.
 There is no service interruption as we have two datasets in memory, there is no locking done to prevent blocking
 requests. Swap of dataset is done by an atomic swap of pointer.
 
 ## Realtime integration
 
-realtime in this chapter mean any modification of the static data, so it can be disruptions from Chaos or
+In this chapter, 'realtime' means any modification of the static data, hence disruptions from Chaos or
 realtime_update from Kirin.
 
 These data are received from rabbitmq, kraken will handle multiple messages in batch (up to 5000).
-The processes is very similar to a data reloading, it is done in background on another dataset to prevent impacts
+The process is very similar to a data reload, it is done in background on another dataset to prevent impacts
 on requests.
 
 The following actions are done:
@@ -155,7 +155,7 @@ The following actions are done:
 7. rebuild raptor cache from the previous Data
 8. switch `Data`
 
-Rebuild of raptor cache is not strictly required, but reduce the slowdown of the first few request on the new
+Rebuilding raptor's cache is not strictly required, but it reducse the slowdown of the first few requests on the new
 dataset.
 
 ## Request handling
