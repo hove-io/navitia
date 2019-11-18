@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from .tests_mechanism import AbstractTestFixture, dataset
+from .tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
 from .check_utils import *
 from jormungandr import app
 from shapely.geometry import asShape, Point
@@ -386,3 +386,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
 
         assert error_code == 400
         assert normal_response['message'] == 'you cannot provide more than 10 \'boundary_duration[]\''
+
+
+@config({"scenario": "distributed"})
+class TestGraphicalIsochroneDistributed(TestGraphicalIsochrone, NewDefaultScenarioAbstractTestFixture):
+    pass

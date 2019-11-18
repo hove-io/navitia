@@ -43,7 +43,11 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
     wait_and_build_crowflies,
     get_journeys_to_complete,
 )
-from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
+from jormungandr.scenarios.utils import (
+    fill_uris,
+    switch_back_to_ridesharing,
+    updated_common_journey_request_with_default,
+)
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import type_pb2
 from flask_restful import abort
@@ -80,7 +84,7 @@ class Distributed(object):
             for pt_j in e.pt_journeys.journeys
         }
 
-    def _compute_journeys(self, future_manager, request, instance, krakens_call, context):
+    def _compute_journeys(self, future_manager, request, instance, krakens_call, context, request_type):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -218,6 +222,7 @@ class Distributed(object):
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
+            request_type=request_type,
         )
 
         pt_journey_elements = wait_and_build_crowflies(
@@ -276,7 +281,7 @@ class Distributed(object):
             journeys=journeys_to_complete,
         )
 
-    def _compute_isochrone(self, future_manager, request, instance, krakens_call):
+    def _compute_isochrone_common(self, future_manager, request, instance, krakens_call, request_type):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
@@ -300,7 +305,7 @@ class Distributed(object):
             modes=requested_modes,
             request=request,
             direct_paths_by_mode=direct_paths_by_mode,
-            max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+            max_nb_crowfly_by_mode=request.get('max_nb_crowfly_by_mode', {}),
         )
 
         places_free_access = PlacesFreeAccess(
@@ -334,6 +339,7 @@ class Distributed(object):
             "streetnetwork_path_pool": None,
             "krakens_call": krakens_call,
             "request": request,
+            "request_type": request_type,
             "isochrone_center": isochrone_center,
         }
         if request['origin']:
@@ -354,8 +360,12 @@ class Distributed(object):
             if pt_journeys:
                 res.append(pt_journeys)
 
-        for r in res:
-            fill_uris(r)
+            for r in res:
+                fill_uris(r)
+
+        # Graphical isochrone returns one response, not a list of responses
+        if request_type == type_pb2.graphical_isochrone:
+            return res[0]
 
         return res
 
@@ -383,10 +393,12 @@ class Scenario(new_default.Scenario):
         try:
             with FutureManager() as future_manager:
                 if request_type == type_pb2.ISOCHRONE:
-                    return self._scenario._compute_isochrone(future_manager, request, instance, krakens_call)
+                    return self._scenario._compute_isochrone_common(
+                        future_manager, request, instance, krakens_call, type_pb2.ISOCHRONE
+                    )
                 elif request_type == type_pb2.PLANNER:
                     return self._scenario._compute_journeys(
-                        future_manager, request, instance, krakens_call, context
+                        future_manager, request, instance, krakens_call, context, type_pb2.PLANNER
                     )
                 else:
                     abort(400, message="This type of request is not supported with distributed")
@@ -412,3 +424,31 @@ class Scenario(new_default.Scenario):
             logging.getLogger(__name__).exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
+
+    def graphical_isochrones(self, request, instance):
+        logger = logging.getLogger(__name__)
+        logger.warning("using experimental scenario!!")
+        """
+        All spawned futures must be started(if they're not yet started) when leaving the scope.
+
+        We do this to prevent the programme from being blocked in case where some un-started futures may hold
+        threading locks. If we leave the scope without cleaning these futures, they may hold locks forever.
+
+        Note that the cleaning process depends on the implementation of futures.
+        """
+        updated_common_journey_request_with_default(request, instance)
+        krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
+        if request.get("max_duration") is None:
+            request["max_duration"] = max(request["boundary_duration[]"], key=int)
+
+        try:
+            with FutureManager() as future_manager:
+                return self._scenario._compute_isochrone_common(
+                    future_manager, request, instance, krakens_call, type_pb2.graphical_isochrone
+                )
+        except PtException as e:
+            logger.exception('')
+            return e.get()
+        except EntryPointException as e:
+            logger.exception('')
+            return e.get()
