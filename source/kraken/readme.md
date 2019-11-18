@@ -159,3 +159,43 @@ Rebuild of raptor cache is not strictly required, but reduce the slowdown of the
 dataset.
 
 ## Request handling
+The main thread execute the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
+dispatch requests to available worker threads, it only forward the request to a worker and respond to the client
+once the worker have finished. There is no serialization done here, only (unneeded) copy of bytes.
+Wait queue is not handled by the load balancer, it won't accept a request if there is no worker available, the
+queue is managed by zmq.
+Communication between threads is done with [zmq inproc sockets](http://api.zeromq.org/2-1:zmq-inproc).
+
+Workers threads start by registering themselves to the load balancer and start waiting for requests. Each threads
+can only handle one request concurrently.
+
+When a request is received the following actions occur:
+1. read request and deserialize it
+2. if enabled create a deadline object to terminate requests
+3. acquire a readonly Data object that will be used for this request
+4. check if deadline has expired
+5. initialize worker if needed: first request with a new dataset
+    1. creation of raptor planner
+    2. creation of streetnetwork planner
+6. initialisation of `pb_creator` used to build the response
+7. execute handler of this API
+8. build response from `pb_creator`
+9. respond to LB
+
+In case of error the thread will respond with the error message, termination by deadline is handled like an
+error.
+
+### Raptor cache
+The raptor cache is a structure shared between every raptor planner of kraken that contains an optimized
+reprensation of stoptimes for a specific period of time. Every request that compute stoptimes (journeys,
+departures, *_schedules) will need a raptor cache for the date of the request as raptor cache only contains 48
+hours of data.
+These stoptimes are sorted and contiguous in memory to maximize cpu caching.
+
+By default we can create at most 10 raptor caches, these are kept by a simple LRU that will discard "unused"
+values. Creation of raptor cache is quite costly, it will take a few hundred milliseconds on somethings like
+fr-idf.
+
+The raptor cache is quite special in kraken's design as it is the only data structure writable by multiple
+threads.
+
