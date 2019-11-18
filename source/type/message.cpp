@@ -33,7 +33,6 @@ www.navitia.io
 #include "type/type.h"
 #include "utils/logger.h"
 
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
@@ -401,33 +400,6 @@ Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
     }
 
     return result;
-}
-
-struct InformedEntitieUriVisitor : boost::static_visitor<> {
-    InformedEntitieUriVisitor(UrisList& uris) : uris(uris) {}
-
-    void operator()(const disruption::UnknownPtObj) {}
-    void operator()(const Network* n) { uris.insert(n->uri); }
-    void operator()(const StopArea* sa) { uris.insert(sa->uri); }
-    void operator()(const StopPoint* sp) { uris.insert(sp->uri); }
-    void operator()(const LineSection ls) {
-        if (ls.line != nullptr) {
-            uris.insert(ls.line->uri);
-        }
-    }
-    void operator()(const Line* l) { uris.insert(l->uri); }
-    void operator()(const Route* r) { uris.insert(r->uri); }
-    void operator()(const MetaVehicleJourney*) {}
-
-private:
-    UrisList& uris;
-};
-
-UrisList Impact::informed_entities_uris() {
-    UrisList uris;
-    InformedEntitieUriVisitor vis(uris);
-    boost::for_each(mut_informed_entities(), boost::apply_visitor(vis));
-    return uris;
 }
 
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
