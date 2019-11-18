@@ -34,8 +34,8 @@ sudo apt-get install -y \
     libgeos-dev \
     python \
     python-pip \
-    rabbitmq-server
-
+    rabbitmq-server \
+    2to3 \
 # Install docker.io for Tyr tests and eitri
 echo "** install docker.io"
 if [ -x "$(command -v docker)" ]; then
