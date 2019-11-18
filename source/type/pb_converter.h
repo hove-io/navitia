@@ -49,12 +49,11 @@ enum class DumpLineSectionMessage : bool { Yes, No };
 struct DumpMessageOptions {
     DumpMessage dump_message;
     DumpLineSectionMessage dump_line_section;
+    const nt::Line* line;  // specific line to retrieve only related line-sections
     constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes,
-                                 DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No)
-        : dump_message(dump_message), dump_line_section(dump_line_section) {}
-    constexpr bool operator==(const DumpMessageOptions& rhs) const {
-        return dump_message == rhs.dump_message && dump_line_section == rhs.dump_line_section;
-    }
+                                 DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No,
+                                 const nt::Line* line = nullptr)
+        : dump_message(dump_message), dump_line_section(dump_line_section), line(line) {}
 };
 
 static const auto null_time_period = pt::time_period(pt::not_a_date_time, pt::seconds(0));
@@ -410,8 +409,14 @@ private:
             }
             const bool dump_line_sections = dump_message_options.dump_line_section == DumpLineSectionMessage::Yes;
             for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
-                if (!dump_line_sections && message->is_only_line_section()) {
-                    continue;
+                if (message->is_only_line_section()) {
+                    if (!dump_line_sections) {
+                        continue;
+                    }
+                    if (dump_message_options.line != nullptr
+                        && !message->is_line_section_of(*dump_message_options.line)) {
+                        continue;  // if a specific line is requested: dumping only related line_sections' disruptions
+                    }
                 }
                 fill_message(message, pb_obj);
             }

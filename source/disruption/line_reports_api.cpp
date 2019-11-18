@@ -87,13 +87,13 @@ struct LineReport {
     }
 
     bool has_disruption(const boost::posix_time::ptime& current_time,
-                        const boost::posix_time::time_period& filter_peiod) const {
-        return line->has_applicable_message(current_time, filter_peiod) || !networks.empty() || !routes.empty()
+                        const boost::posix_time::time_period& filter_period) const {
+        return line->has_applicable_message(current_time, filter_period) || !networks.empty() || !routes.empty()
                || !stop_areas.empty() || !stop_points.empty();
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
-        const auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes};
+        const auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes, line};
         auto* report = pb_creator.add_line_reports();
         pb_creator.fill(line, report->mutable_line(), depth - 1, with_line_sections);
         if (line->has_applicable_message(pb_creator.now, pb_creator.action_period)) {
@@ -193,7 +193,7 @@ void line_reports(navitia::PbCreator& pb_creator,
         line_report.to_pb(pb_creator, depth);
     }
 
-    filter_excess_impacts_in_uri_filtering_mode(filter, pb_creator, line_reports);
+    //    filter_excess_impacts_in_uri_filtering_mode(filter, pb_creator, line_reports);
 
     pb_creator.make_paginate(total_results, start_page, count, pb_creator.line_reports_size());
     if (pb_creator.line_reports_size() == 0) {
