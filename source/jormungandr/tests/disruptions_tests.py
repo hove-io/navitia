@@ -758,7 +758,7 @@ class TestDisruptions(AbstractTestFixture):
 
 @dataset({"line_sections_test": {}})
 class TestDisruptionsLineSections(AbstractTestFixture):
-    def _check_response(self, response):
+    def _check_line_reports_response(self, response):
         line_reports = get_not_null(response, 'line_reports')
         assert len(line_reports) == 2
         # line:1
@@ -774,31 +774,30 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert len(pt_objects) == 5
         # C_1
         assert pt_objects[0]['id'] == 'C_1'
-        assert len(pt_objects[0][pt_objects[0]['embedded_type']]['links']) == 1
-        link = pt_objects[0][pt_objects[0]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_1'
+        assert [l['id'] for l in pt_objects[0][pt_objects[0]['embedded_type']]['links']] == [
+            'line_section_on_line_1'
+        ]
         # D_1
         assert pt_objects[1]['id'] == 'D_1'
-        assert len(pt_objects[1][pt_objects[1]['embedded_type']]['links']) == 1
-        link = pt_objects[1][pt_objects[1]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_1'
+        assert [l['id'] for l in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
+            'line_section_on_line_1'
+        ]
         # D_3
         assert pt_objects[2]['id'] == 'D_3'
-        assert len(pt_objects[2][pt_objects[2]['embedded_type']]['links']) == 1
-        link = pt_objects[2][pt_objects[2]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_1'
+        assert [l['id'] for l in pt_objects[2][pt_objects[2]['embedded_type']]['links']] == [
+            'line_section_on_line_1'
+        ]
         # E_1
         assert pt_objects[3]['id'] == 'E_1'
-        assert len(pt_objects[3][pt_objects[3]['embedded_type']]['links']) == 2
-        link = pt_objects[3][pt_objects[3]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_1'
-        link = pt_objects[3][pt_objects[3]['embedded_type']]['links'][1]
-        assert link['id'] == 'line_section_on_line_1_other_effect'
+        assert [l['id'] for l in pt_objects[3][pt_objects[3]['embedded_type']]['links']] == [
+            'line_section_on_line_1',
+            'line_section_on_line_1_other_effect',
+        ]
         # F_1
         assert pt_objects[4]['id'] == 'F_1'
-        assert len(pt_objects[4][pt_objects[4]['embedded_type']]['links']) == 1
-        link = pt_objects[4][pt_objects[4]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_1_other_effect'
+        assert [l['id'] for l in pt_objects[4][pt_objects[4]['embedded_type']]['links']] == [
+            'line_section_on_line_1_other_effect'
+        ]
 
         # line:2
         line_report = line_reports[1]
@@ -812,14 +811,14 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert len(pt_objects) == 2
         # B_1
         assert pt_objects[0]['id'] == 'B_1'
-        assert len(pt_objects[0][pt_objects[0]['embedded_type']]['links']) == 1
-        link = pt_objects[0][pt_objects[0]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_2'
+        assert [l['id'] for l in pt_objects[0][pt_objects[0]['embedded_type']]['links']] == [
+            'line_section_on_line_2'
+        ]
         # F_1
         assert pt_objects[1]['id'] == 'F_1'
-        assert len(pt_objects[1][pt_objects[1]['embedded_type']]['links']) == 1
-        link = pt_objects[1][pt_objects[1]['embedded_type']]['links'][0]
-        assert link['id'] == 'line_section_on_line_2'
+        assert [l['id'] for l in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
+            'line_section_on_line_2'
+        ]
 
         # Associated disruptions
         disruptions = get_not_null(response, 'disruptions')
@@ -830,19 +829,42 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert len(disruption['impacted_objects']) == 1
         impacted_object = disruption['impacted_objects']
         assert impacted_object[0]['pt_object']['id'] == 'line:1'
+        assert impacted_object[0]['impacted_section']['from']['id'] == 'C'
+        assert impacted_object[0]['impacted_section']['to']['id'] == 'E'
+        assert [r['id'] for r in impacted_object[0]['impacted_section']['routes']] == [
+            'route:line:1:1',
+            'route:line:1:3',
+        ]
         # disruption : line_section_on_line_1_other_effect
         disruption = disruptions[1]
         assert disruption['id'] == 'line_section_on_line_1_other_effect'
-        assert len(disruption['impacted_objects']) == 2  # E -> F and F -> E
+        assert len(disruption['impacted_objects']) == 2
         impacted_object = disruption['impacted_objects']
+        # E -> F
         assert impacted_object[0]['pt_object']['id'] == 'line:1'
+        assert impacted_object[0]['impacted_section']['from']['id'] == 'E'
+        assert impacted_object[0]['impacted_section']['to']['id'] == 'F'
+        assert [r['id'] for r in impacted_object[0]['impacted_section']['routes']] == [
+            'route:line:1:1',
+            'route:line:1:3',
+        ]
+        # F -> E
         assert impacted_object[1]['pt_object']['id'] == 'line:1'
+        assert impacted_object[1]['impacted_section']['from']['id'] == 'F'
+        assert impacted_object[1]['impacted_section']['to']['id'] == 'E'
+        assert [r['id'] for r in impacted_object[0]['impacted_section']['routes']] == [
+            'route:line:1:1',
+            'route:line:1:3',
+        ]
         # disruption : line_section_on_line_2
         disruption = disruptions[2]
         assert disruption['id'] == 'line_section_on_line_2'
         assert len(disruption['impacted_objects']) == 1
         impacted_object = disruption['impacted_objects']
         assert impacted_object[0]['pt_object']['id'] == 'line:2'
+        assert impacted_object[0]['impacted_section']['from']['id'] == 'B'
+        assert impacted_object[0]['impacted_section']['to']['id'] == 'F'
+        assert [r['id'] for r in impacted_object[0]['impacted_section']['routes']] == ['route:line:2:1']
 
     # Information about the data in line_section_test
     # The data is valid from "20170101T000000" to "20170131T000000"
@@ -850,7 +872,7 @@ class TestDisruptionsLineSections(AbstractTestFixture):
     # and one application_period from "20170102T000000" to "20170105T000000"
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20170103T120000")
-        self._check_response(response)
+        self._check_line_reports_response(response)
 
     def test_line_reports_with_current_datetime_outof_application_period(self):
         # without since/until we use since=production_date.begin and until = production_date.end
@@ -862,11 +884,11 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         response = self.query_region(
             "line_reports?_current_datetime=20170101T120000" "&since=20170104T130000&until=20170106T000000"
         )
-        self._check_response(response)
+        self._check_line_reports_response(response)
 
     def test_line_reports_with_since_intersects_application_period(self):
         response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170104T130000")
-        self._check_response(response)
+        self._check_line_reports_response(response)
 
     def test_line_reports_with_since_until_outof_application_period(self):
         response = self.query_region(
@@ -885,7 +907,7 @@ class TestDisruptionsLineSections(AbstractTestFixture):
     def test_line_reports_with_uri_filter(self):
         # Without filter
         response = self.query_region("line_reports?_current_datetime=20170101T120000")
-        self._check_response(response)
+        self._check_line_reports_response(response)
 
         # With lines=line:1 filter
         response = self.query_region("lines/line:1/line_reports?_current_datetime=20170101T120000")
