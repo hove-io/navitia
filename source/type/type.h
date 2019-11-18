@@ -45,8 +45,6 @@ www.navitia.io
 
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/multiset_of.hpp>
 #include <boost/range/algorithm/for_each.hpp>
 #include "type/fwd_type.h"
 #include "type/stop_point.h"
@@ -63,6 +61,7 @@ www.navitia.io
 #include "type/route.h"
 #include "type/vehicle_journey.h"
 #include "type/stop_time.h"
+#include "type/static_data.h"
 
 namespace navitia {
 namespace type {
@@ -165,21 +164,6 @@ private:
                        PT_Data&);
 
     navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
-};
-
-struct static_data {
-private:
-    static static_data* instance;
-
-public:
-    static static_data* get();
-    // static std::string getListNameByType(Type_e type);
-    static boost::posix_time::ptime parse_date_time(const std::string& s);
-    static Type_e typeByCaption(const std::string& type_str);
-    static std::string captionByType(Type_e type);
-    boost::bimap<Type_e, std::string> types_string;
-    static Mode_e modeByCaption(const std::string& mode_str);
-    boost::bimap<boost::bimaps::multiset_of<Mode_e>, boost::bimaps::set_of<std::string>> modes_string;
 };
 
 /**

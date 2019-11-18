@@ -37,8 +37,8 @@ www.navitia.io
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include "type/line.h"
-#include "type/type.h"  //TODO: move static_data
-
+#include "type/type_interfaces.h"
+#include "type/static_data.h"
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 using navitia::type::Indexes;
@@ -416,7 +416,7 @@ std::string make_request(const Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::RTLevel rt_level,
                          const type::Data& data) {
-    type::static_data* static_data = type::static_data::get();
+    const auto* static_data = navitia::type::static_data::get();
     std::string res = request.empty() ? std::string("all") : request;
 
     switch (requested_type) {
