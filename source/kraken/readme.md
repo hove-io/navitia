@@ -14,7 +14,7 @@ Kraken can be configured by multiple way:
   - environment variables
 
 ### Configuration file
-Kraken will try to load a configuration file named the same way than the binary with a `.ini` prefix in the
+Kraken will try to load a configuration file named the same way as the binary with a `.ini` prefix in the
 current directory, so by default it will search for a `kraken.ini` file. Alternatively the file can be passed as
 the first positional argument.
 
@@ -115,25 +115,47 @@ Data loading is triggered by two events:
   - at startup
   - by an order received from rabbitmq
 
-kraken start by reading the `nav.lz4` file configured, it then apply disruptions by loading them from the chaos
+kraken start by reading the `nav.lz4` file configured, it then applies disruptions by loading them from the chaos
 database.
 Kraken will do the following actions:
 
 1. load data.nav.lz4
 2. load disruptions from chaos's database
 3. load realtime from kirin:
-    1. kraken create a anonimous queue in rabbitmq
-    2. kraken send a request to kirin via rabbitmq with the queue name as parameter
+    1. kraken creates an anonymous queue in rabbitmq
+    2. kraken sends a request to kirin via rabbitmq with the queue name as parameter
     3. kraken wait for a message in the queue
-    4. kirin build a "ntfs-rt" and send it to the queue previously created
-    5. kraken receive the message and apply the realtime data
+    4. kirin builds a "ntfs-rt" and send it to the queue previously created
+    5. kraken receives the message and apply the realtime data
 4. build raptor
 5. build relations
 6. build proximitylist
 
-When a data loading occur after startup the processus is the same but is done on another. There is no service
-interuption as we have two dataset in memory.
+When a data loading occur after startup the process is the same but is done on another dataset, this mean that
+memory usage will double during reload.
+There is no service interruption as we have two datasets in memory, there is no locking done to prevent blocking
+requests. Swap of dataset is done by an atomic swap of pointer.
 
 ## Realtime integration
 
-# Request handling
+realtime in this chapter mean any modification of the static data, so it can be disruptions from Chaos or
+realtime_update from Kirin.
+
+These data are received from rabbitmq, kraken will handle multiple messages in batch (up to 5000).
+The processes is very similar to a data reloading, it is done in background on another dataset to prevent impacts
+on requests.
+
+The following actions are done:
+1. clone `Data` to have a writable dataset, this is quite slow
+2. update `Data` with the realtime data
+3. build relations
+4. build autocomplete
+5. build raptor
+6. build proximitylist
+7. rebuild raptor cache from the previous Data
+8. switch `Data`
+
+Rebuild of raptor cache is not strictly required, but reduce the slowdown of the first few request on the new
+dataset.
+
+## Request handling
