@@ -1,7 +1,7 @@
 # Kraken
 Kraken is a public transport trip planner and much more, it provides schedules, timetables and expose public
 transport data via
-[PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).
+[PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).  
 It also provides:
   - (bad) street network routing that will be replaced by [asgard](https://github.com/CanalTP/asgard)
   - autocomplete that will be replaced by [mimir](https://github.com/CanalTP/mimirsbrunn)
@@ -15,7 +15,7 @@ Kraken can be configured in multiple ways:
 
 ### Configuration file
 Kraken will try to load a configuration file named the same way as the binary with a `.ini` prefix in the
-current directory, so by default it will search for a `kraken.ini` file. Alternatively the file can be passed in as
+current directory, so by default it will search for a `kraken.ini` file. Alternatively the file path can be passed in as
 the first positional argument.
 
 Example of configuration file, defaults values are:
@@ -32,7 +32,7 @@ nb_threads = 1
 
 # enable loading of realtime data
 is_realtime_enabled = false
-# enable loading of realtime data that add stop_times
+# enable loading of realtime data that add stop_times (only if is_realtime_enabled is activated)
 is_realtime_add_enabled = false
 # enable loading of realtime data that add trips (only if is_realtime_add_enabled is activated)
 is_realtime_add_trip_enabled = false
@@ -48,11 +48,11 @@ display_contributors = True
 raptor_cache_size = 10
 # binding for metrics http server, format: IP:PORT
 metrics_binding =
-# ulimit that define the maximum size of a core file<Paste>
+# ulimit that defines the maximum size of a core file<Paste>
 core_file_size_limit = 0
-# log level, mostly use when configurating kraken by cli or envvar
+# log level, mostly used when configurating kraken by cli or envvar
 log_level =
-# log format, mostly use when configurating kraken by cli or envvar
+# log format, mostly used when configurating kraken by cli or envvar
 log_format = [%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n
 
 
@@ -72,7 +72,7 @@ username = guest
 password = guest
 vhost = /
 exchange = navitia
-# realtime contributors to listen, repeat the line to add multiple contributor
+# realtime contributors to listen, repeat the line to add multiple contributors
 rt_topics =
 
 # should we delete the queue at shutdown, useful only for tests
@@ -155,18 +155,18 @@ The following actions are done:
 7. rebuild raptor cache from the previous Data
 8. switch `Data`
 
-Rebuilding raptor's cache is not strictly required, but it reducse the slowdown of the first few requests on the new
+Rebuilding raptor's cache is not strictly required, but it reduces the slowdown of the first few requests on the new
 dataset.
 
 ## Request handling
 The main thread execute the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
-dispatch requests to available worker threads, it only forward the requests to a worker and respond to the client
+dispatches requests to available worker threads, it only forwards the requests to a worker and responds to the client
 once the worker have finished. There is no serialization done here, only (unneeded) copy of bytes.
 Wait queue is not handled by the load balancer, it won't accept a request if there is no worker available, the
 queue is managed by zmq.
 Communication between threads is done with [zmq inproc sockets](http://api.zeromq.org/2-1:zmq-inproc).
 
-Workers threads start by registering themselves to the load balancer and start waiting for requests. Each threads
+Workers threads start by registering themselves to the load balancer and start waiting for requests. Each thread
 can only handle one request concurrently.
 
 When a request is received the following actions occur:
@@ -187,8 +187,8 @@ error.
 
 ### Raptor cache
 The raptor cache is a structure shared between every raptor planner that contains an optimized
-reprensation of stoptimes for a specific period of time. Every request that compute stoptimes (journeys,
-departures, *_schedules) will need a raptor cache for the date of the request as raptor cache only contains 48
+representation of stoptimes for a specific period of time. Every request that computes stoptimes (journeys,
+departures, *_schedules) will use the raptor cache attached the starting day of the request (raptor cache only contains 48 hours of data to handle pass-midnight journeys)
 hours of data.
 These stoptimes are sorted and contiguous in memory to maximize cpu caching.
 
