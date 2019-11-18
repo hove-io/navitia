@@ -15,7 +15,7 @@ Kraken can be configured in multiple ways:
 
 ### Configuration file
 Kraken will try to load a configuration file named the same way as the binary with a `.ini` prefix in the
-current directory, so by default it will search for a `kraken.ini` file. Alternatively the file can be passed as
+current directory, so by default it will search for a `kraken.ini` file. Alternatively the file can be passed in as
 the first positional argument.
 
 Example of configuration file, defaults values are:
