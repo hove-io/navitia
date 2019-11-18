@@ -160,7 +160,7 @@ dataset.
 
 ## Request handling
 The main thread execute the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
-dispatch requests to available worker threads, it only forward the request to a worker and respond to the client
+dispatch requests to available worker threads, it only forward the requests to a worker and respond to the client
 once the worker have finished. There is no serialization done here, only (unneeded) copy of bytes.
 Wait queue is not handled by the load balancer, it won't accept a request if there is no worker available, the
 queue is managed by zmq.
@@ -186,7 +186,7 @@ In case of error the thread will respond with the error message, termination by 
 error.
 
 ### Raptor cache
-The raptor cache is a structure shared between every raptor planner of kraken that contains an optimized
+The raptor cache is a structure shared between every raptor planner that contains an optimized
 reprensation of stoptimes for a specific period of time. Every request that compute stoptimes (journeys,
 departures, *_schedules) will need a raptor cache for the date of the request as raptor cache only contains 48
 hours of data.
