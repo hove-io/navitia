@@ -29,17 +29,37 @@ www.navitia.io
 */
 #pragma once
 
+#include "utils/exception.h"
 #include <string>
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 
 namespace navitia {
 namespace type {
 struct Data;
-}
+}  // namespace type
 }  // namespace navitia
 
 namespace ed {
 
-bool write_data_to_file(const std::string& output_filename, navitia::type::Data& data);
+template <class T = navitia::type::Data>
+bool try_save_file(std::string& filename, T& data) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    try {
+        data.save(filename);
+    } catch (const navitia::exception& e) {
+        LOG4CPLUS_ERROR(logger, "Unable to save " << filename);
+        LOG4CPLUS_ERROR(logger, e.what());
+        return false;
+    }
+    return true;
+}
+
+bool rename_old_file(std::string& output_filename, std::string& backup_output_filename);
+bool rename_temp_file(std::string& temp_output_filename, std::string& output_filename);
+
+template <class T = navitia::type::Data>
+bool write_data_to_file(const std::string& output_filename, T& data);
 int ed2nav(int argc, const char** argv);
 
 }  // namespace ed

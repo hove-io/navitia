@@ -76,3 +76,15 @@ BOOST_AUTO_TEST_CASE(writing_test_ed2nav_should_not_throw) {
         BOOST_CHECK(boost::filesystem::exists("ed2nav_test.nav.lz4.bak"));
     }
 }
+
+class DataThrowOnSave {
+public:
+    DataThrowOnSave(size_t) {}
+    void save(const std::string&) const { throw navitia::exception("Throw on save"); }
+};
+
+BOOST_AUTO_TEST_CASE(throw_on_save) {
+    std::string filename = "throw_on_save.nav.lz4";
+    DataThrowOnSave data(0);
+    BOOST_CHECK_EQUAL(ed::try_save_file(filename, data), false);
+}

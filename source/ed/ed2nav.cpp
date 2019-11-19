@@ -164,39 +164,38 @@ struct FindAdminWithCities {
     }
 };
 
-bool write_data_to_file(const std::string& output_filename, navitia::type::Data& data) {
+bool rename_old_file(const std::string& output_filename, std::string& backup_output_filename) {
     auto logger = log4cplus::Logger::getInstance("log");
-    std::string temp_output_filename = output_filename + ".temp";
-    std::string backup_output_filename = output_filename;
     if (boost::filesystem::exists(output_filename)) {
-        if (rename(output_filename.c_str(), (output_filename + ".bak").c_str()) != 0) {
-            LOG4CPLUS_INFO(logger, "Unable to rename old data file: " << std::strerror(errno));
+        if (rename(output_filename.c_str(), backup_output_filename.c_str()) != 0) {
+            LOG4CPLUS_ERROR(logger, "Unable to rename old data file: " << std::strerror(errno));
             return false;
         }
         LOG4CPLUS_INFO(logger, "Old data file successfully renamed to " << output_filename << ".bak");
     }
-    try {
-        data.save(temp_output_filename);
-        if (rename(temp_output_filename.c_str(), backup_output_filename.c_str()) != 0) {
-            LOG4CPLUS_ERROR(logger, "Unable to rename temp data file: " << std::strerror(errno));
-            return false;
-        }
-        LOG4CPLUS_INFO(logger, "File: " << output_filename << " saved");
-    } catch (const navitia::exception& e) {
-        LOG4CPLUS_ERROR(logger, "Unable to save, going back to previous state...");
-        LOG4CPLUS_ERROR(logger, e.what());
-        if (remove(temp_output_filename.c_str()) != 0) {
-            LOG4CPLUS_ERROR(logger, "Unable to remove temp data file: " << std::strerror(errno));
-            return false;
-        }
-        LOG4CPLUS_INFO(logger, "Temp file removed");
-        if (rename(output_filename.c_str(), (backup_output_filename).c_str()) != 0) {
-            LOG4CPLUS_INFO(logger, "Unable to rename old data file: " << std::strerror(errno));
-            return false;
-        }
-        LOG4CPLUS_INFO(logger, "Old data file successfully renamed");
+    return true;
+}
+
+bool rename_temp_file(std::string& temp_output_filename, const std::string& output_filename) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    if (rename(temp_output_filename.c_str(), output_filename.c_str()) != 0) {
+        LOG4CPLUS_ERROR(logger, "Unable to rename temp data file: " << temp_output_filename << std::strerror(errno));
         return false;
     }
+    LOG4CPLUS_INFO(logger, "File: " << output_filename << " saved");
+    return true;
+}
+
+template <class T = navitia::type::Data>
+bool write_data_to_file(const std::string& output_filename, T& data) {
+    std::string temp_output_filename = output_filename + ".temp";
+    std::string backup_output_filename = output_filename + ".bak";
+    if (!try_save_file(temp_output_filename, data))
+        return false;
+    if (!rename_old_file(output_filename, backup_output_filename))
+        return false;
+    if (!rename_temp_file(temp_output_filename, output_filename))
+        return false;
     return true;
 }
 
@@ -308,6 +307,7 @@ int ed2nav(int argc, const char* argv[]) {
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
+
     if (!write_data_to_file(output, data)) {
         return 1;
     }
