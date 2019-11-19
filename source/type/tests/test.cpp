@@ -144,18 +144,6 @@ BOOST_AUTO_TEST_CASE(projection) {
     BOOST_CHECK_CLOSE(d, pp.distance_to(p), 1e-3);
 }
 
-// std::shared_ptr<StopArea> create_stop_area (std::string const &name) {
-//     auto sa = std::make_shared<StopArea>();
-//     sa->name = name;
-//     return sa;
-// }
-
-// std::shared_ptr<StopPoint> create_stop_point (std::string const &name) {
-//     auto sp = std::make_shared<StopPoint>();
-//     sp->name = name;
-//     return sp;
-// }
-
 template <typename T>
 std::shared_ptr<T> create_obj_with_name(std::string const& name) {
     auto obj = std::make_shared<T>();
