@@ -159,10 +159,10 @@ Rebuilding raptor's cache is not strictly required, but it reduces the slowdown 
 dataset.
 
 ## Request handling
-The main thread execute the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
+The main thread executes the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
 dispatches requests to available worker threads, it only forwards the requests to a worker and responds to the client
 once the worker have finished. There is no serialization done here, only (unneeded) copy of bytes.
-Wait queue is not handled by the load balancer, it won't accept a request if there is no worker available, the
+The waiting queue is not handled by the load balancer, it won't accept a request if there is no worker available, the
 queue is managed by zmq.
 Communication between threads is done with [zmq inproc sockets](http://api.zeromq.org/2-1:zmq-inproc).
 
@@ -173,7 +173,7 @@ When a request is received the following actions occur:
 1. read request and deserialize it
 2. if enabled create a deadline object to terminate requests
 3. acquire a readonly Data object that will be used for this request
-4. check if deadline has expired
+4. check if the deadline has expired
 5. initialize worker if needed: first request with a new dataset
     1. creation of raptor planner
     2. creation of streetnetwork planner
