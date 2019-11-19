@@ -66,6 +66,8 @@ class GraphicalIsochrone(JourneyCommon):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration'] and not args["boundary_duration[]"]:
             abort(400, message="you should provide a 'boundary_duration[]' or a 'max_duration' argument")
+        if args["boundary_duration[]"] and len(args["boundary_duration[]"]) > 10:
+            abort(400, message="you cannot provide more than 10 'boundary_duration[]'")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
         if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
