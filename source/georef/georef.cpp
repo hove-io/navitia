@@ -702,8 +702,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     // The number indicates the number of nearest vertices that should be returned by find_with
     // This number is determined by balancing the performance and the practical results (Artemis)
     // The bigger the number is, the better the projection will be and slower it will run.
-    // With 30, we have broken less than 1% tests on Artemis_idfm.
-    constexpr int nb_nearest_vertices = 30;
+    constexpr int nb_nearest_vertices = 50;
 
     for (const auto& u : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, nb_nearest_vertices)) {
         BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
