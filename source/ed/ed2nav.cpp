@@ -165,7 +165,7 @@ struct FindAdminWithCities {
 };
 
 bool rename_old_file(const std::string& output_filename, std::string& backup_output_filename) {
-    auto logger = log4cplus::Logger::getInstance("log");
+    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_old_file");
     if (boost::filesystem::exists(output_filename)) {
         if (rename(output_filename.c_str(), backup_output_filename.c_str()) != 0) {
             LOG4CPLUS_ERROR(logger, "Unable to rename old data file: " << std::strerror(errno));
@@ -176,8 +176,8 @@ bool rename_old_file(const std::string& output_filename, std::string& backup_out
     return true;
 }
 
-bool rename_temp_file(std::string& temp_output_filename, const std::string& output_filename) {
-    auto logger = log4cplus::Logger::getInstance("log");
+bool rename_temp_file(const std::string& temp_output_filename, const std::string& output_filename) {
+    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_temp_file");
     if (rename(temp_output_filename.c_str(), output_filename.c_str()) != 0) {
         LOG4CPLUS_ERROR(logger, "Unable to rename temp data file: " << temp_output_filename << std::strerror(errno));
         return false;
@@ -187,7 +187,7 @@ bool rename_temp_file(std::string& temp_output_filename, const std::string& outp
 }
 
 template <class T = navitia::type::Data>
-bool write_data_to_file(const std::string& output_filename, T& data) {
+bool write_data_to_file(const std::string& output_filename, const T& data) {
     std::string temp_output_filename = output_filename + ".temp";
     std::string backup_output_filename = output_filename + ".bak";
     if (!try_save_file(temp_output_filename, data))
