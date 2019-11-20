@@ -1244,6 +1244,9 @@ class Scenario(simple.Scenario):
         return min(request_datetime_list) if request_datetime_list else None
 
     def graphical_isochrones(self, request, instance):
+        if "taxi" in request["origin_mode"] or "taxi" in request["destination_mode"]:
+            abort(400, message="taxi is not available with new_default scenario")
+
         req = request_pb2.Request()
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
         journey_req = req.isochrone.journeys_request

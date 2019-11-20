@@ -437,10 +437,18 @@ class Scenario(new_default.Scenario):
         Note that the cleaning process depends on the implementation of futures.
         """
         updated_common_journey_request_with_default(request, instance)
-        krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         if request.get("max_duration") is None:
             request["max_duration"] = max(request["boundary_duration[]"], key=int)
+        if request.get('additional_time_after_first_section_taxi') is None:
+            request[
+                'additional_time_after_first_section_taxi'
+            ] = instance.additional_time_after_first_section_taxi
+        if request.get('additional_time_before_last_section_taxi') is None:
+            request[
+                'additional_time_before_last_section_taxi'
+            ] = instance.additional_time_after_first_section_taxi
 
+        krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         try:
             with FutureManager() as future_manager:
                 return self._scenario._compute_isochrone_common(

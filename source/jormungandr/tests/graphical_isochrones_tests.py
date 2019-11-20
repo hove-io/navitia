@@ -388,6 +388,41 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert normal_response['message'] == 'you cannot provide more than 10 \'boundary_duration[]\''
 
 
+@dataset({"main_routing_test": {"scenario": "new_default"}})
+class TestGraphicalIsochroneTaxiNewDefault(NewDefaultScenarioAbstractTestFixture):
+    def test_graphical_isochrone_taxi_with_new_default(self):
+        query = "isochrones?from={}&datetime={}&max_duration={}&first_section_mode[]=taxi"
+        query = query.format(s_coord, "20120614T080000", "3600")
+        response = self.query_region(query, check=False)
+        print(response)
+        assert response[1] == 400
+        assert "taxi is not available with new_default scenario" in response[0]['message']
+
+
 @config({"scenario": "distributed"})
 class TestGraphicalIsochroneDistributed(TestGraphicalIsochrone, NewDefaultScenarioAbstractTestFixture):
     pass
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestGraphicalIsochroneTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_graphical_isochrone_taxi_with_new_default(self):
+        # We should have the same response as "test_graphical_isochrone_section_mode"
+        q_section_mode = (
+            "v1/coverage/main_routing_test/" + isochrone_basic_query + "&first_section_mode[]=taxi"
+            "&last_section_mode[]=taxi&taxi_speed=4.1"
+        )
+        q_basic = "v1/coverage/main_routing_test/" + isochrone_basic_query
+        response_section_mode = self.query(q_section_mode)
+        response_basic = self.query(q_basic)
+
+        is_valid_graphical_isochrone(response_section_mode, self.tester, q_section_mode)
+        is_valid_graphical_isochrone(response_basic, self.tester, q_basic)
+
+        for isochrone_basic, isochrone_section_mode in zip(
+            response_basic['isochrones'], response_section_mode['isochrones']
+        ):
+            multi_poly_basic = asShape(isochrone_basic['geojson'])
+            multi_poly_section_mode = asShape(isochrone_section_mode['geojson'])
+
+            assert not multi_poly_basic.contains(multi_poly_section_mode)
