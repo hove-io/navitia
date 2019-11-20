@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include "type/datetime.h"
+#include "routing/routing.h"
 
 namespace greg = boost::gregorian;
 
@@ -129,6 +130,8 @@ results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);
 
+    LOG4CPLUS_TRACE(logger, "Computing fare for journey : \n" << path);
+
     if (nb_nodes < 2) {
         LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
         return res;
@@ -138,12 +141,13 @@ results Fare::compute_fare(const routing::Path& path) const {
     labels[0].push_back(Label());
     size_t section_idx(0);
 
-    for (const auto& item : path.items) {
+    for (const navitia::routing::PathItem & item : path.items) {
         if (item.type != routing::ItemType::public_transport) {
             section_idx++;
             continue;
         }
 
+        LOG4CPLUS_TRACE(logger, "In section " << section_idx << " " << item);
         SectionKey section_key(item, section_idx++);
 
         std::vector<std::vector<Label>> new_labels(nb_nodes);
@@ -465,6 +469,63 @@ void Fare::add_default_ticket() {
                 boost::gregorian::date(boost::gregorian::pos_infin), default_ticket);
     fare_map.insert({default_ticket.key, dticket});
 }
+
+std::ostream& operator<<(std::ostream& ss, const Label & l) {
+    ss << " cost : " << l.cost
+       << " nb_undef_cost : " << l.nb_undefined_sub_cost
+       << " start time : " << l.start_time
+       << " nb_changes : " << l.nb_changes
+       << " stop_area : " << l.stop_area
+       << " zone : " << l.zone
+       << " mode : " << l.mode
+       << " line : " << l.line
+       << " network : " << l.network
+       << " current_type " << l.current_type;
+    
+    ss << " Tickets : ";
+    for(auto ticket : l.tickets) {
+        ss << ticket << ", ";
+    }
+       
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const Ticket& t) {
+    ss << " key : " << t.key
+       << " caption : " << t.caption
+       << " currency : " << t.currency
+       << " value : " << t.value
+       << " comment : " << t.comment
+       << " type : " << t.type;
+
+    ss << " sections :" ;
+    for(const SectionKey & section_key : t.sections) {
+        ss << section_key << ", ";
+    }
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const SectionKey & k){
+    ss << " network : " << k.network
+       << " start_stop_area : " << k.start_stop_area
+       << " dest_stop_area : " << k.dest_stop_area
+       << " line : " << k.line
+       << " start_time : " << k.start_time
+       << " dest_time : " << k.dest_time
+       << " start_zone : " << k.start_zone
+       << " dest_zone : " << k.dest_zone
+       << " mode : " << k.mode
+       << " date : " << k.date
+       << " path_item_idx : " << k.path_item_idx;
+       
+    return ss;
+}
+
+
+
+
+
+
 
 }  // namespace fare
 }  // namespace navitia

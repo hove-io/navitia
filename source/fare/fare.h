@@ -119,6 +119,9 @@ struct Ticket {
     }
 };
 
+
+std::ostream& operator<<(std::ostream& ss, const Ticket & t); 
+
 inline Ticket make_default_ticket() {
     Ticket default_t("unknown_ticket", "unknown ticket", 0, "unknown ticket");
     default_t.value = Cost();  // undefined cost
@@ -263,6 +266,8 @@ struct Label {
     }
 };
 
+std::ostream& operator<<(std::ostream& ss, const Label & l);
+
 /// Contient les données retournées par navitia
 struct SectionKey {
     std::string network;
@@ -281,6 +286,8 @@ struct SectionKey {
     int duration_at_begin(int ticket_start_time) const;
     int duration_at_end(int ticket_start_time) const;
 };
+
+std::ostream& operator<<(std::ostream& ss, const SectionKey & k); 
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
