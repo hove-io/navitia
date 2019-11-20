@@ -30,23 +30,11 @@ www.navitia.io
 
 #pragma once
 
-#include "type_interfaces.h"
+#include "type/type_interfaces.h"
 #include "type/time_duration.h"
-#include "datetime.h"
-#include "rt_level.h"
-#include "validity_pattern.h"
-#include "timezone_manager.h"
-#include "geographical_coord.h"
-#include "utils/flat_enum_map.h"
-#include "utils/exception.h"
-#include "utils/functions.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <vector>
-
-#include <boost/weak_ptr.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include "type/fwd_type.h"
+#include "type/validity_pattern.h"
+#include "type/timezone_manager.h"
+#include "type/geographical_coord.h"
 #include "type/stop_point.h"
 #include "type/connection.h"
 #include "type/calendar.h"
@@ -59,112 +47,15 @@ www.navitia.io
 #include "type/physical_mode.h"
 #include "type/line.h"
 #include "type/route.h"
+#include "type/meta_vehicle_journey.h"
 #include "type/vehicle_journey.h"
 #include "type/stop_time.h"
 #include "type/static_data.h"
 
+#include <vector>
+
 namespace navitia {
 namespace type {
-
-std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
-
-/**
- * A meta vj is a shell around some vehicle journeys
- *
- * It has 2 purposes:
- *
- *  - to store the adapted and real time vj
- *
- *  - sometime we have to split a vj.
- *    For example we have to split a vj because of dst (day saving light see gtfs parser for that)
- *    the meta vj can thus make the link between the split vjs
- *    *NOTE*: An IMPORTANT prerequisite is that ALL theoric vj have the same local time
- *            (even if the UTC time is different because of DST)
- *            That prerequisite is very important for calendar association and departure board over period
- *
- *
- */
-struct MetaVehicleJourney : public Header, HasMessages {
-    const static Type_e type = Type_e::MetaVehicleJourney;
-    const TimeZoneHandler* tz_handler = nullptr;
-
-    // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
-    // because it's not really on the vj
-    std::vector<boost::weak_ptr<disruption::Impact>> modified_by;
-
-    /// map of the calendars that nearly match union of the validity pattern
-    /// of the theoric vj, key is the calendar name
-    std::map<std::string, AssociatedCalendar*> associated_calendars;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-
-    FrequencyVehicleJourney* create_frequency_vj(const std::string& uri,
-                                                 const std::string& name,
-                                                 const RTLevel,
-                                                 const ValidityPattern& canceled_vp,
-                                                 Route*,
-                                                 std::vector<StopTime>,
-                                                 PT_Data&);
-    DiscreteVehicleJourney* create_discrete_vj(const std::string& uri,
-                                               const std::string& name,
-                                               const RTLevel,
-                                               const ValidityPattern& canceled_vp,
-                                               Route*,
-                                               std::vector<StopTime>,
-                                               PT_Data&);
-
-    void clean_up_useless_vjs(PT_Data&);
-
-    template <typename T>
-    void for_all_vjs(T fun) const {
-        for (const auto rt_vjs : rtlevel_to_vjs_map) {
-            auto& vjs = rt_vjs.second;
-            boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj) { fun(*vj); });
-        }
-    }
-
-    const std::vector<std::unique_ptr<VehicleJourney>>& get_vjs_at(RTLevel rt_level) const {
-        return rtlevel_to_vjs_map[rt_level];
-    }
-
-    const std::vector<std::unique_ptr<VehicleJourney>>& get_base_vj() const {
-        return rtlevel_to_vjs_map[RTLevel::Base];
-    }
-    const std::vector<std::unique_ptr<VehicleJourney>>& get_adapted_vj() const {
-        return rtlevel_to_vjs_map[RTLevel::Adapted];
-    }
-    const std::vector<std::unique_ptr<VehicleJourney>>& get_rt_vj() const {
-        return rtlevel_to_vjs_map[RTLevel::RealTime];
-    }
-
-    void cancel_vj(RTLevel level,
-                   const std::vector<boost::posix_time::time_period>& periods,
-                   PT_Data& pt_data,
-                   const Route* filtering_route = nullptr);
-
-    VehicleJourney* get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
-
-    const std::string& get_label() const { return uri; }  // for the moment the label is just the uri
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-
-    void push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact);
-
-    bool is_already_modified_by(const boost::shared_ptr<disruption::Impact>& impact);
-
-private:
-    template <typename VJ>
-    VJ* impl_create_vj(const std::string& uri,
-                       const std::string& name,
-                       const RTLevel,
-                       const ValidityPattern& canceled_vp,
-                       Route*,
-                       std::vector<StopTime>,
-                       PT_Data&);
-
-    navitia::flat_enum_map<RTLevel, std::vector<std::unique_ptr<VehicleJourney>>> rtlevel_to_vjs_map;
-};
 
 /**
  * fallback params
@@ -251,40 +142,6 @@ std::string get_admin_name(const T* v) {
         }
     }
     return admin_name;
-}
-
-template <typename T>
-inline Type_e get_type_e() {
-    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
-    return Type_e::Unknown;
-}
-template <>
-inline Type_e get_type_e<PhysicalMode>() {
-    return Type_e::PhysicalMode;
-}
-template <>
-inline Type_e get_type_e<CommercialMode>() {
-    return Type_e::CommercialMode;
-}
-template <>
-inline Type_e get_type_e<Contributor>() {
-    return Type_e::Contributor;
-}
-template <>
-inline Type_e get_type_e<Network>() {
-    return Type_e::Network;
-}
-template <>
-inline Type_e get_type_e<Route>() {
-    return Type_e::Route;
-}
-template <>
-inline Type_e get_type_e<StopArea>() {
-    return Type_e::StopArea;
-}
-template <>
-inline Type_e get_type_e<StopPoint>() {
-    return Type_e::StopPoint;
 }
 
 }  // namespace type

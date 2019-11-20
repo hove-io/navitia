@@ -30,7 +30,8 @@ www.navitia.io
 
 #include "headsign_handler.h"
 #include "utils/functions.h"
-#include "type/type.h"  //TODO reduce include once metavj has been move
+#include "type/meta_vehicle_journey.h"
+#include "type/stop_time.h"
 #include "type/serialization.h"
 #include "utils/serialization_flat_map.h"
 #include "utils/serialization_unordered_map.h"
