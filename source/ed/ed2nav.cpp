@@ -164,25 +164,14 @@ struct FindAdminWithCities {
     }
 };
 
-bool rename_old_file(const std::string& output_filename, std::string& backup_output_filename) {
-    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_old_file");
-    if (boost::filesystem::exists(output_filename)) {
-        if (rename(output_filename.c_str(), backup_output_filename.c_str()) != 0) {
-            LOG4CPLUS_ERROR(logger, "Unable to rename old data file: " << std::strerror(errno));
+bool rename_file(const std::string& source_name, const std::string& dest_name) {
+    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");
+    if (boost::filesystem::exists(source_name)) {
+        if (rename(source_name.c_str(), dest_name.c_str()) != 0) {
+            LOG4CPLUS_ERROR(logger, "Unable to rename data file: " << source_name << std::strerror(errno));
             return false;
         }
-        LOG4CPLUS_INFO(logger, "Old data file successfully renamed to " << output_filename << ".bak");
     }
-    return true;
-}
-
-bool rename_temp_file(const std::string& temp_output_filename, const std::string& output_filename) {
-    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_temp_file");
-    if (rename(temp_output_filename.c_str(), output_filename.c_str()) != 0) {
-        LOG4CPLUS_ERROR(logger, "Unable to rename temp data file: " << temp_output_filename << std::strerror(errno));
-        return false;
-    }
-    LOG4CPLUS_INFO(logger, "File: " << output_filename << " saved");
     return true;
 }
 
@@ -192,9 +181,9 @@ bool write_data_to_file(const std::string& output_filename, const T& data) {
     std::string backup_output_filename = output_filename + ".bak";
     if (!try_save_file(temp_output_filename, data))
         return false;
-    if (!rename_old_file(output_filename, backup_output_filename))
+    if (!rename_file(output_filename, backup_output_filename))
         return false;
-    if (!rename_temp_file(temp_output_filename, output_filename))
+    if (!rename_file(temp_output_filename, output_filename))
         return false;
     return true;
 }
