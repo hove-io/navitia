@@ -56,8 +56,10 @@ bool StopPoint::operator<(const StopPoint& other) const {
     if (this->stop_area != other.stop_area) {
         return *this->stop_area < *other.stop_area;
     }
-    if (this->name != other.name) {
-        return this->name < other.name;
+    std::string lower_name = strip_accents_and_lower(this->name);
+    std::string lower_other_name = strip_accents_and_lower(other.name);
+    if (lower_name != lower_other_name) {
+        return lower_name < lower_other_name;
     }
     return this->uri < other.uri;
 }
