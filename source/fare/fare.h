@@ -203,6 +203,8 @@ struct State {
     }
 };
 
+std::ostream& operator<<(std::ostream& ss, const State & k);
+
 /// Type de comparaison possible entre un arc et une valeur
 enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True };
 
@@ -305,6 +307,8 @@ struct Transition {
         ar& start_conditions& end_conditions& ticket_key& global_condition;
     }
 };
+
+std::ostream& operator<<(std::ostream& ss, const Transition & k);
 
 struct OD_key {
     enum od_type { Zone, StopArea, Mode };  // NOTE: don't forget to change the bdd enum if this change
