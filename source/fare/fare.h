@@ -264,7 +264,12 @@ struct Label {
             return nb_undefined_sub_cost < l.nb_undefined_sub_cost;
         if (cost.value != l.cost.value)
             return cost.value < l.cost.value;
+        if (tickets.size() !=  l.tickets.size()) {
+            return tickets.size() < l.tickets.size();
+        }
+
         return nb_changes < l.nb_changes;
+        
     }
 };
 
