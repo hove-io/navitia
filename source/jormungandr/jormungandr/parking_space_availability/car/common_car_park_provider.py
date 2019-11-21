@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import pybreaker
 import requests as requests
+import shapely
 
 from jormungandr import cache, app, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
@@ -60,6 +61,15 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
 
         self.api_key = kwargs.get('api_key')
 
+        self.shape = None
+        arg_geometry = kwargs.get('geometry')
+        if arg_geometry:
+            try:
+                self.shape = shapely.geometry.shape(arg_geometry)
+            except Exception as e:
+                self.log.error("Enable to parse geometry object from : {}".format(arg_geometry))
+                self.log.error(str(e))
+
     @abstractmethod
     def process_data(self, data, poi):
         pass
@@ -73,9 +83,32 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         if data:
             return self.process_data(data, poi)
 
-    def support_poi(self, poi):
+    def _is_poi_coords_within_shape(self, poi):
+        if self.shape is None:
+            return True
+
+        try:
+            coord = poi['coord']
+            coords = [float(coord['lon']), float(coord['lat'])]
+            return self.shape.contains(shapely.geometry.Point(coords))
+        except KeyError as e:
+            self.log.error(
+                "Coords illformed, 'poi' needs a coords dict with 'lon' and 'lat' attributes' : {}".format(
+                    str(e)
+                )
+            )
+        except Exception as e:
+            self.log.error("Cannot find if coords is within shape: {}".format(str(e)))
+
+        return False
+
+    def _has_supported_poi_operator(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '').lower() in self.operators
+        operator = properties.get('operator', '').lower()
+        return operator in self.operators
+
+    def support_poi(self, poi):
+        return self._has_supported_poi_operator(poi) and self._is_poi_coords_within_shape(poi)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CAR_PARK'), 30))
     def _call_webservice(self, request_url):
