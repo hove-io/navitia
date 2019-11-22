@@ -1,3 +1,21 @@
+navitia2 (3.1.0) unstable; urgency=low
+
+  * Revert "Kraken: Case/accents sensitive sort on stop_areas"  <https://github.com/CanalTP/navitia/pull/3043>
+  * Kraken: line_reports, filter excess impacts in URI filtering mode  <https://github.com/CanalTP/navitia/pull/3025>
+  * Kraken: Case/accents sensitive sort on stop_areas  <https://github.com/CanalTP/navitia/pull/3032>
+  * Jormun: Refacto planner for future graphical isochrone implementations  <https://github.com/CanalTP/navitia/pull/3031>
+  * Doc: kraken internals  <https://github.com/CanalTP/navitia/pull/3028>
+  * Add 2to3  <https://github.com/CanalTP/navitia/pull/3038>
+  * Kraken: replace type.h header by smaller headers for ptref  <https://github.com/CanalTP/navitia/pull/3029>
+  * Tyr: dispose db engines  <https://github.com/CanalTP/navitia/pull/3035>
+  * Tyr: Rename 'async' as it's reserved from python 3.7  <https://github.com/CanalTP/navitia/pull/3034>
+  * Fix release script + doc  <https://github.com/CanalTP/navitia/pull/3030>
+  * Jormun: prepare migration to python3  <https://github.com/CanalTP/navitia/pull/2989>
+  * Jormun: Remove underlying call to places_nearby call on a Coord  <https://github.com/CanalTP/navitia/pull/3026>
+  * Cmake: Clean Lib dependencies  <https://github.com/CanalTP/navitia/pull/3023>
+
+ -- Nonifier <olivier.georget@kisio.org>  Fri, 22 Nov 2019 16:11:59 +0100
+
 navitia2 (3.0.0) unstable; urgency=low
 
   * jormun: Change log.warn() to log.warning() because warn() function is deprecated  <https://github.com/CanalTP/navitia/pull/3024>
