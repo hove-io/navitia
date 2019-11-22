@@ -305,8 +305,6 @@ class Scenario(object):
         else:
             journey_req.max_duration = max(request["boundary_duration[]"], key=int)
         if request.get("boundary_duration[]"):
-            if len(request["boundary_duration[]"]) > 10:
-                abort(400, message="you cannot provide more than 10 'boundary_duration[]'")
             for duration in sorted(request["boundary_duration[]"], key=int, reverse=True):
                 if request["min_duration"] < duration < journey_req.max_duration:
                     req.isochrone.boundary_duration.append(duration)
@@ -426,7 +424,8 @@ class Scenario(object):
             return
 
         # NOTE: we use request.args and not the parser parameters not to have the default values of the params
-        cloned_params = dict(request.args)
+        # request.args is a MultiDict, we want to flatten it by having list as value when needed (flat=True)
+        cloned_params = request.args.to_dict(flat=False)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
         self._add_next_link(resp, cloned_params, clockwise)

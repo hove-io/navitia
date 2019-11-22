@@ -148,42 +148,50 @@ HERE_ROUTING_RESPONSE_DIRECT_PATH = {
 QUERY_DATETIME_STR = "20120614T070000"
 
 
-def mock_here(_, url, params):
-    s = 'geo!8.98312e-05,8.98312e-05'
-    r = 'geo!0.00071865,0.00188646'
+def check_here_point(value, expected):
+    assert value.startswith('geo!')
+    x, y = value[4:].split(',')
+    x = float(x)
+    y = float(y)
+    return pytest.approx(x) == expected[0] and pytest.approx(y) == expected[1]
 
-    a = 'geo!0.000718649585564,0.00107797437835'
-    b = 'geo!0.000269493594586,8.98311981955e-05'
-    c = 'geo!0.00107797437835,0.000628818387368'
+
+def mock_here(_, url, params):
+    s = (8.98312e-05, 8.98312e-05)
+    r = (0.00071865, 0.00188646)
+
+    a = (0.000718649585564, 0.00107797437835)
+    b = (0.000269493594586, 8.98311981955e-05)
+    c = (0.00107797437835, 0.000628818387368)
     useless_a = a
 
     if url == 'https://matrix.route.bob.here.com/routing/7.2/calculatematrix.json':
-        if params['start0'] == s:
+        if check_here_point(params['start0'], s):
             # we check that the destinations are correct since the order is important
-            assert params.get('destination0') == b
-            assert params.get('destination1') == c
-            assert params.get('destination2') == a
-            assert params.get('destination3') == useless_a
+            assert check_here_point(params.get('destination0'), b)
+            assert check_here_point(params.get('destination1'), c)
+            assert check_here_point(params.get('destination2'), a)
+            assert check_here_point(params.get('destination3'), useless_a)
 
             # we also check that we gave HERE the departure datetime (to get realtime info)
             # NOTE: since the instance has no timezone we consider the request as UTC
             assert params.get('departure') == '2012-06-14T07:00:00Z'
 
             return MockResponse(HERE_BEGGINING_MATRIX_RESPONSE, 200)
-        if params['destination0'] == r:
-            assert params.get('start0') == a
-            assert params.get('start1') == useless_a
-            assert params.get('start2') == c
+        if check_here_point(params['destination0'], r):
+            assert check_here_point(params.get('start0'), a)
+            assert check_here_point(params.get('start1'), useless_a)
+            assert check_here_point(params.get('start2'), c)
             assert params.get('departure') == '2012-06-14T07:00:00Z'
             return MockResponse(HERE_END_MATRIX_RESPONSE, 200)
     elif url == 'https://route.bob.here.com/routing/7.2/calculateroute.json':
-        if params['waypoint0'] == s and params['waypoint1'] == r:
+        if check_here_point(params['waypoint0'], s) and check_here_point(params['waypoint1'], r):
             assert params.get('departure') == '2012-06-14T07:00:00Z'
             return MockResponse(HERE_ROUTING_RESPONSE_DIRECT_PATH, 200)
-        if params['waypoint0'] == s and params['waypoint1'] == b:
+        if check_here_point(params['waypoint0'], s) and check_here_point(params['waypoint1'], b):
             assert params.get('departure') == '2012-06-14T08:01:00Z'
             return MockResponse(HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH, 200)
-        if params['waypoint0'] == a and params['waypoint1'] == r:
+        if check_here_point(params['waypoint0'], a) and check_here_point(params['waypoint1'], r):
             assert params.get('departure') == '2012-06-14T08:01:02Z'
             return MockResponse(HERE_ROUTING_RESPONSE_END_FALLBACK_PATH, 200)
     assert False, 'invalid url'

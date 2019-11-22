@@ -1,4 +1,4 @@
-/* Copyright © 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -27,22 +27,30 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-
 #pragma once
-#include "type/data.h"
-#include "type/pb_converter.h"
+
+#include "type_interfaces.h"
+
+#include <boost/bimap.hpp>
+#include <boost/bimap/multiset_of.hpp>
 
 namespace navitia {
-namespace disruption {
+namespace type {
 
-void line_reports(navitia::PbCreator& pb_creator,
-                  const navitia::type::Data& d,
-                  const size_t depth,
-                  size_t count,
-                  size_t start_page,
-                  const std::string& filter,
-                  const std::vector<std::string>& forbidden_uris,
-                  const boost::optional<boost::posix_time::ptime>& since,
-                  const boost::optional<boost::posix_time::ptime>& until);
-}  // namespace disruption
+struct static_data {
+private:
+    static static_data* instance;
+
+public:
+    static static_data* get();
+    static boost::posix_time::ptime parse_date_time(const std::string& s);
+    static Type_e typeByCaption(const std::string& type_str);
+    static std::string captionByType(Type_e type);
+    boost::bimap<Type_e, std::string> types_string;
+    static Mode_e modeByCaption(const std::string& mode_str);
+    boost::bimap<boost::bimaps::multiset_of<Mode_e>, boost::bimaps::set_of<std::string>> modes_string;
+};
+
+}  // namespace type
+
 }  // namespace navitia

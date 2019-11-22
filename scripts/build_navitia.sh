@@ -151,7 +151,7 @@ git submodule update --init --recursive
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-3.5.0 clang-format-6.0
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-3.5.0 clang-format-6.0 2to3
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'

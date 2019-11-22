@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2002-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -23,11 +23,18 @@
 #
 # Stay tuned using
 # twitter @navitia
-# channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
+# IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from . import check_utils
 
-from jormungandr.street_network.tests.streetnetwork_test_utils import MockKraken
-from jormungandr.street_network.tests.streetnetwork_backend_mock import StreetNetworkBackendMock
+
+def test_query_from_str():
+    r = check_utils.query_from_str("toto/tata?bob=toto&bobette=tata&bobinos=tutu")
+    assert r == {'bobette': 'tata', 'bobinos': 'tutu', 'bob': u'toto'}
+    r = check_utils.query_from_str("toto/tata?bob=toto&bob=tata&bob=titi&bob=tata&bobinos=tutu")
+    assert r == {'bobinos': 'tutu', 'bob': ['toto', 'tata', 'titi', 'tata']}
+    r = check_utils.query_from_str("?bob%5B%5D=toto titi&bob[]=tata%2Btutu")
+    assert r == {'bob[]': ['toto titi', 'tata+tutu']}

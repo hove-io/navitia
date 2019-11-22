@@ -461,22 +461,25 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
         port=instance_conf.pg_port,
     )
     engine = sqlalchemy.create_engine(connection_string)
-    # create the line if it does not exists
-    engine.execute(
+    try:
+        # create the line if it does not exists
+        engine.execute(
+            """
+        INSERT INTO navitia.parameters (shape)
+        SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
         """
-    INSERT INTO navitia.parameters (shape)
-    SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
-    """
-    ).close()
-    # update the line, simplified to approx 100m
-    engine.execute(
-        """
-    UPDATE navitia.parameters
-    SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
-    """.format(
-            shape=wkt.dumps(shape)
-        )
-    ).close()
+        ).close()
+        # update the line, simplified to approx 100m
+        engine.execute(
+            """
+        UPDATE navitia.parameters
+        SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
+        """.format(
+                shape=wkt.dumps(shape)
+            )
+        ).close()
+    finally:
+        engine.dispose()
 
 
 @celery.task(bind=True)

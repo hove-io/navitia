@@ -37,6 +37,7 @@ import requests as requests
 from jormungandr import cache, app
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime
+import six
 
 
 class SiriLite(RealtimeProxy):
@@ -201,7 +202,7 @@ class SiriLite(RealtimeProxy):
 
     def status(self):
         return {
-            'id': unicode(self.rt_system_id),
+            'id': six.text_type(self.rt_system_id),
             'timeout': self.timeout,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,

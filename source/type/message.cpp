@@ -180,7 +180,7 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
 
     template <typename NavitiaPTObject>
     void operator()(NavitiaPTObject* bo) const {
-        // the the ptobject that match a navitia object, we can just add the impact to the object
+        // the ptobject that match a navitia object, we can just add the impact to the object
         bo->add_impact(impact);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {

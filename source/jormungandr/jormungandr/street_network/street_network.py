@@ -34,6 +34,7 @@ import logging
 from jormungandr import utils, new_relic
 import abc
 from enum import Enum
+import six
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
 # http://stackoverflow.com/a/38668373/1614576
@@ -121,13 +122,13 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         return None
 
     def record_external_failure(self, message):
-        utils.record_external_failure(message, 'streetnetwork', unicode(self.sn_system_id))
+        utils.record_external_failure(message, 'streetnetwork', six.text_type(self.sn_system_id))
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'streetnetwork_id': unicode(self.sn_system_id), 'status': status}
+        params = {'streetnetwork_id': six.text_type(self.sn_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('streetnetwork', params)
 

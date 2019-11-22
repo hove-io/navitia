@@ -17,6 +17,5 @@ SET(SOURCE_LIB
 )
 
 add_library(connectors ${SOURCE_LIB})
-target_link_libraries(connectors ${PROJ})
-
+target_link_libraries(connectors fare ed types ${PROJ})
 

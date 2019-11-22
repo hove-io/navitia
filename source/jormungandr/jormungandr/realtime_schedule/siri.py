@@ -40,6 +40,7 @@ import xml.etree.ElementTree as et
 import aniso8601
 from datetime import datetime
 from flask_restful.inputs import boolean
+import six
 
 
 def to_bool(b):
@@ -179,7 +180,7 @@ class Siri(RealtimeProxy):
 
     def status(self):
         return {
-            'id': unicode(self.rt_system_id),
+            'id': six.text_type(self.rt_system_id),
             'timeout': self.timeout,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,

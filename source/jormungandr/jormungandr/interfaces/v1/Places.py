@@ -89,7 +89,7 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("q", type=six.text_type, required=True, help="The data to search")
         self.parsers["get"].add_argument(
             "type[]",
-            type=OptionValue(list(places_type.keys())),
+            type=OptionValue(list(places_type)),
             action="append",
             default=["stop_area", "address", "poi", "administrative_region"],
             help="The type of data to search",
