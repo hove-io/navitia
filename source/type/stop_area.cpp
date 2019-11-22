@@ -46,10 +46,8 @@ void StopArea::serialize(Archive& ar, const unsigned int) {
 SERIALIZABLE(StopArea)
 
 bool StopArea::operator<(const StopArea& other) const {
-    std::string lower_name = strip_accents_and_lower(name);
-    std::string lower_other_name = strip_accents_and_lower(other.name);
-    if (lower_name != lower_other_name) {
-        return lower_name < lower_other_name;
+    if (name != other.name) {
+        return name < other.name;
     }
     return uri < other.uri;
 }
