@@ -695,7 +695,7 @@ Differents kind of objects can be returned (sorted as):
 <aside class="warning">
     Until now, you have to specify the right coverage to get `/places`.<br>
     If you like to play, you can test the "beta" `/places`, without any coverage:
-    it will soon be able to request entire Earth on adresses, POIs, stop areas... with geographical sort.
+    it will soon be able to request entire Earth on addresses, POIs, stop areas... with geographical sort.
 </aside>
 
 

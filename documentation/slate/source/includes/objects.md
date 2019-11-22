@@ -607,7 +607,7 @@ Poi = Point Of Interest
 |-----|----|-----------|
 |id|string|Identifier of the address|
 |name|string|Name of the address|
-|label|string|Label of the adress. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
+|label|string|Label of the address. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the address|
 |house_number|int|House number of the address|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the address in which is the stop area|
