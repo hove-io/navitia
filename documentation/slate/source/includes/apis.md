@@ -712,7 +712,7 @@ Differents kind of objects can be returned (sorted as):
 
 
 
-<a name="places-nearby-api"></a>Places Nearby
+<a name="places-nearby-api"></a>Places nearby
 -----------------------------------------
 
 >[Try it on Navitia playground (click on "MAP" buttons to see places)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%3ARAT%3ASA%3ACAMPO%2Fplaces_nearby)

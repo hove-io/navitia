@@ -19,7 +19,7 @@ includes:
   - journey_planning
   - departures
   - timetables
-  - nearby-places
+  - nearby
   - explore
   - isochrones
   - interface
