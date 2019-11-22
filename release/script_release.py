@@ -71,6 +71,7 @@ class ReleaseManager:
         self.git.rebase(remote_name + "/dev", "dev")
         self.dev_data_version = self.get_data_version()
         try:
+            self.git.pull("release")
             self.git.checkout("release")
         except Exception as e:
             print("Cannot checkout 'release':{}, creating from distant branch".format(str(e)))
