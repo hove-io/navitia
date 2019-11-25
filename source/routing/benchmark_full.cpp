@@ -263,63 +263,65 @@ int main(int argc, char** argv) {
 
     std::cout << "Launching benchmark " << std::endl;
     boost::progress_display show_progress(requests.size());
-
-    // ProfilerStart("bench.prof");
     int nb_reponses = 0, nb_journeys = 0;
+    {
+        Timer total_compute_timer("Total computing time");
+        // ProfilerStart("bench.prof");
+
 #ifdef __BENCH_WITH_CALGRIND__
-    CALLGRIND_START_INSTRUMENTATION;
+        CALLGRIND_START_INSTRUMENTATION;
 #endif
-    for (auto request : requests) {
-        ++show_progress;
-        Timer t2;
+        for (auto request : requests) {
+            ++show_progress;
+            Timer t2;
 
-        if (verbose) {
-            std::cout << request.start << ", " << request.target << ", " << request.departure_posix_time << "\n";
+            if (verbose) {
+                std::cout << request.start << ", " << request.target << ", " << request.departure_posix_time << "\n";
+            }
+
+            type::EntryPoint origin = make_entry_point(request.start, data);
+            type::EntryPoint destination = make_entry_point(request.target, data);
+
+            origin.streetnetwork_params.mode = request.start_mode;
+            origin.streetnetwork_params.offset = data.geo_ref->offsets[request.start_mode];
+            origin.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
+            origin.streetnetwork_params.speed_factor = 1;
+            destination.streetnetwork_params.mode = request.target_mode;
+            destination.streetnetwork_params.offset = data.geo_ref->offsets[request.target_mode];
+            destination.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
+            destination.streetnetwork_params.speed_factor = 1;
+            type::AccessibiliteParams accessibilite_params;
+            navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
+
+            int days_since_epoch = (request.departure_posix_time.date() - boost::gregorian::date(1970, 1, 1)).days();
+            int total_second_in_day = request.departure_posix_time.time_of_day().total_seconds();
+
+            const DateTime departure_datetime = DateTimeUtils::set(days_since_epoch, total_second_in_day);
+            make_response(pb_creator, raptor, origin, destination, {departure_datetime},
+                          true,                      // clockwise ?
+                          accessibilite_params, {},  // forbidden
+                          {},                        // allowed
+                          georef_worker,
+                          type::RTLevel::Base,             // real time level
+                          2_min,                           // transfer penalty
+                          DateTimeUtils::SECONDS_PER_DAY,  // max_duration
+                          10,                              // max_transfers
+                          nb_second_pass);
+            auto resp = pb_creator.get_response();
+
+            Result result(resp.journeys().size(), t2.ms());
+            results.push_back(result);
+
+            if (resp.journeys_size() > 0) {
+                ++nb_reponses;
+                nb_journeys += resp.journeys_size();
+            }
         }
-
-        type::EntryPoint origin = make_entry_point(request.start, data);
-        type::EntryPoint destination = make_entry_point(request.target, data);
-
-        origin.streetnetwork_params.mode = request.start_mode;
-        origin.streetnetwork_params.offset = data.geo_ref->offsets[request.start_mode];
-        origin.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
-        origin.streetnetwork_params.speed_factor = 1;
-        destination.streetnetwork_params.mode = request.target_mode;
-        destination.streetnetwork_params.offset = data.geo_ref->offsets[request.target_mode];
-        destination.streetnetwork_params.max_duration = navitia::seconds(30 * 60);
-        destination.streetnetwork_params.speed_factor = 1;
-        type::AccessibiliteParams accessibilite_params;
-        navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-
-        int days_since_epoch = (request.departure_posix_time.date() - boost::gregorian::date(1970, 1, 1)).days();
-        int total_second_in_day = request.departure_posix_time.time_of_day().total_seconds();
-
-        const DateTime departure_datetime = DateTimeUtils::set(days_since_epoch, total_second_in_day);
-        make_response(pb_creator, raptor, origin, destination, {departure_datetime},
-                      true,                      // clockwise ?
-                      accessibilite_params, {},  // forbidden
-                      {},                        // allowed
-                      georef_worker,
-                      type::RTLevel::Base,             // real time level
-                      2_min,                           // transfer penalty
-                      DateTimeUtils::SECONDS_PER_DAY,  // max_duration
-                      10,                              // max_transfers
-                      nb_second_pass);
-        auto resp = pb_creator.get_response();
-
-        Result result(resp.journeys().size(), t2.ms());
-        results.push_back(result);
-
-        if (resp.journeys_size() > 0) {
-            ++nb_reponses;
-            nb_journeys += resp.journeys_size();
-        }
+        // ProfilerStop();
+#ifdef __BENCH_WITH_CALGRIND__
+        CALLGRIND_STOP_INSTRUMENTATION;
+#endif
     }
-    // ProfilerStop();
-#ifdef __BENCH_WITH_CALGRIND__
-    CALLGRIND_STOP_INSTRUMENTATION;
-#endif
-
     if (vm.count("output")) {
         std::fstream out_file(benchmark_output_file, std::ios::out);
         out_file << "Start point uri, Target uri, Departure posix date time, Computing time (ms), Nb of journeys found"
