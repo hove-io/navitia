@@ -157,7 +157,6 @@ bool RAPTOR::foot_path(const Visitor& v) {
 
                 // if we can improve the best label, we mark it
                 working_labels.mut_dt_transfer(destination_sp_idx) = end_connection_date;
-                // TODO ? : add conn.duration to fallback_duration_transfer ?
                 working_labels.mut_fallback_duration_transfer(destination_sp_idx) = candidate_fallback_duration;
                 best_labels_transfers[destination_sp_idx] = end_connection_date;
                 best_labels_transfers_fallback[destination_sp_idx] = candidate_fallback_duration;
@@ -451,7 +450,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto start_raptor = std::chrono::system_clock::now();
 
     // auto solutions = ParetoFront<Journey, Dominates /*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
-    auto dominator = Dominates(clockwise);
+    auto dominator = Dominates(clockwise, transfer_penalty);
     auto solutions = Solutions(dominator);
 
     if (direct_path_dur) {

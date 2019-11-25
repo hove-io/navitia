@@ -46,9 +46,12 @@ struct StartingPointSndPhase;
 // by the pool).
 struct Dominates {
     bool request_clockwise;
-    Dominates(bool rc) : request_clockwise(rc) {}
+    navitia::time_duration transfer_penalty;
+    Dominates(bool rc, navitia::time_duration transfer_penalty)
+        : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs) && lhs.better_on_sn(rhs);
+        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs)
+               && lhs.better_on_sn(rhs, transfer_penalty);
     }
 };
 
