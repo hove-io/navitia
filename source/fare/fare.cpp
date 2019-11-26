@@ -159,10 +159,15 @@ results Fare::compute_fare(const routing::Path& path) const {
             BOOST_FOREACH (edge_t e, boost::edges(g)) {
                 vertex_t u = boost::source(e, g);
                 vertex_t v = boost::target(e, g);
-                if (!valid(g[v], section_key))
+                
+                if (!valid(g[v], section_key)) {
                     continue;
-
-                LOG4CPLUS_TRACE(logger, "Trying transition  from node : " << u << " to node : " << v << ", : " << g[e]);
+                }
+                    
+                LOG4CPLUS_TRACE(logger, "Trying transition : \n " << g[e] 
+                                        << "\n from node : " << u << "\n  " << g[u] 
+                                        << "\n to node :   " << v << "\n  " << g[v]);
+                
 
                 for (const Label& label : labels[u]) {
                     LOG4CPLUS_TRACE(logger, "Looking at label  : \n" << label);
@@ -191,6 +196,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                             throw ticket;
                         }
                         else if (transition.global_condition == Transition::GlobalCondition::with_changes) {
+                            LOG4CPLUS_TRACE(logger, " ODFare ticket \n");
                             ticket.type = Ticket::ODFare;
                         }
                         Label next = next_label(label, ticket, section_key);
@@ -208,7 +214,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 n.cost += ticket_od.value;
                                 n.tickets.back() = ticket_od;
                                 n.current_type = Ticket::FlatFare;
-                                LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : " << next);
+                                LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : \n" << n);
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
                                 LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
@@ -220,10 +226,10 @@ results Fare::compute_fare(const routing::Path& path) const {
                                                             << ", mode=" << section_key.mode);
                             }
                         } else {
-                            LOG4CPLUS_TRACE(logger, "Adding label to node 0 : " << next);
+                            LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
                             new_labels[0].push_back(next);
                         }
-                        LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " : " << next);
+                        LOG4CPLUS_TRACE(logger, "Adding label to node " << v <<" {" << g[v] << "} : \n" << next);
                         new_labels[v].push_back(next);
                     }
                 }
