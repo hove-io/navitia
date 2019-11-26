@@ -134,7 +134,7 @@ results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);
 
-    LOG4CPLUS_TRACE(logger, "Computing fare for journey : \n" << path);
+    LOG4CPLUS_DEBUG(logger, "Computing fare for journey : \n" << path);
 
     if (nb_nodes < 2) {
         LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
