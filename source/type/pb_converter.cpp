@@ -1719,7 +1719,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
                 pb_ticket->set_id("unknown_ticket");
                 pb_ticket->set_source_id(ticket.key);
                 pb_ticket->set_comment("unknown ticket");
-                unknown_ticket = pb_ticket;
+                //unknown_ticket = pb_ticket;
                 pb_fare->add_ticket_id(pb_ticket->id());
             } else {
                 pb_ticket = unknown_ticket;
