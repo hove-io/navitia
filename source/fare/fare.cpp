@@ -243,9 +243,9 @@ results Fare::compute_fare(const routing::Path& path) const {
 
     // We look for the cheapest label
     // if 2 label have the same cost, we take the one with the least number of tickets
-    LOG4CPLUS_TRACE(logger, "Bests labels : \n");
+    LOG4CPLUS_DEBUG(logger, "Bests labels : \n");
     for (const Label& label : labels.at(0)) {
-        LOG4CPLUS_TRACE(logger, " " << label);
+        LOG4CPLUS_DEBUG(logger, " " << label);
     }
     boost::optional<Label> best_label;
     for (const Label& label : labels.at(0)) {
@@ -256,7 +256,7 @@ results Fare::compute_fare(const routing::Path& path) const {
             best_label = label;
         }
     }
-    LOG4CPLUS_TRACE(logger, "Result label : \n" << (*best_label));
+    LOG4CPLUS_DEBUG(logger, "Result label : \n" << (*best_label));
 
     return res;
 }
