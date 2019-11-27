@@ -145,4 +145,4 @@ In order to report bug and make feature requests please use our github navitia p
 
 Stay tuned on twitter [@navitia](https://twitter.com/navitia).
 
-At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
+At last, we are present on the network `matrix.org`, channel [`#navitia:matrix.org`](https://riot.im/app/#/room/#navitia:matrix.org).
