@@ -148,7 +148,7 @@ struct DateTicket {
     Ticket get_fare(boost::gregorian::date date) const;
 
     /// Add a new period to a ticket
-    void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, const Ticket& ticket);
+    void add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket);
 
     /// Sum of two DateTicket
     /// This funciton assumes that there's the same number of tickets and that their validity period are the same
