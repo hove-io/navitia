@@ -124,3 +124,8 @@ from jormungandr import api
 
 def setup_package():
     i_manager.stop()
+
+
+from jormungandr import transient_socket
+
+transient_socket.TransientSocket.init_socket_reaper(app.config)

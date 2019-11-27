@@ -29,8 +29,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+import datetime
 from jormungandr.exceptions import TechnicalError
 from jormungandr import app
+from jormungandr.transient_socket import TransientSocket
 from jormungandr import fallback_modes as fm
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
@@ -43,22 +45,43 @@ from zmq import green as zmq
 import six
 import pybreaker
 
+DEFAULT_ASGARD_SOCKET_TTL = datetime.timedelta(minutes=1).total_seconds()
 
-class Asgard(Kraken):
+
+class Asgard(TransientSocket, Kraken):
     def __init__(
-        self, instance, service_url, asgard_socket, modes=None, id=None, timeout=10, api_key=None, **kwargs
+        self,
+        instance,
+        service_url,
+        asgard_socket,
+        modes=None,
+        id=None,
+        timeout=10,
+        api_key=None,
+        socket_ttl=DEFAULT_ASGARD_SOCKET_TTL,
+        **kwargs
     ):
         super(Asgard, self).__init__(
-            instance, service_url, modes or [], id or 'asgard', timeout, api_key, **kwargs
+            name=instance.name,
+            zmq_context=instance.context,
+            socket_path=asgard_socket,
+            socket_ttl=socket_ttl,
+            instance=instance,
+            service_url=service_url,
+            modes=modes or [],
+            id=id or 'asgard',
+            timeout=timeout,
+            api_key=api_key,
+            **kwargs
         )
         self.asgard_socket = asgard_socket
         self.timeout = timeout
-        self._sockets = queue.Queue()
 
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_ASGARD_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_ASGARD_TIMEOUT_S'],
         )
+        self.socket_ttl = socket_ttl
         self.logger = logging.getLogger(__name__)
 
     def status(self):
@@ -72,6 +95,7 @@ class Asgard(Kraken):
                 'fail_counter': self.breaker.fail_counter,
                 'reset_timeout': self.breaker.reset_timeout,
             },
+            'socket_ttl': self.socket_ttl,
         }
 
     def get_street_network_routing_matrix(
@@ -131,23 +155,9 @@ class Asgard(Kraken):
     def get_uri_pt_object(self, pt_object):
         return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))
 
-    @contextmanager
-    def socket(self, context):
-        socket = None
-        try:
-            socket = self._sockets.get(block=False)
-        except queue.Empty:
-            socket = context.socket(zmq.REQ)
-            socket.connect(self.asgard_socket)
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                self._sockets.put(socket)
-
     def _call_asgard(self, request):
         def _request():
-            with self.socket(self.instance.context) as socket:
+            with self.socket() as socket:
                 socket.send(request.SerializeToString())
                 # timeout is in second, we need it on millisecond
                 if socket.poll(timeout=self.timeout * 1000) > 0:
