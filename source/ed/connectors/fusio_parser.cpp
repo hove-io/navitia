@@ -1083,11 +1083,11 @@ void CompanyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
                                     + "  file has more than one company and no company_id column");
         throw InvalidHeaders(csv.filename);
     }
-    ed::types::Company* company = new ed::types::Company();
     if (!is_valid(id_c, row)) {
         LOG4CPLUS_WARN(logger, "CompanyFusioHandler : Invalid company id " << row[id_c]);
         return;
     }
+    auto* company = new ed::types::Company();
     company->uri = row[id_c];
     company->name = row[name_c];
     if (is_valid(company_address_name_c, row))
