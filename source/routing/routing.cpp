@@ -83,8 +83,5 @@ bool use_crow_fly(const type::EntryPoint& point,
     }
 }
 
-
-
-
 }  // namespace routing
 }  // namespace navitia

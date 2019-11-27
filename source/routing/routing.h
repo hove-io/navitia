@@ -112,10 +112,8 @@ struct PathItem {
     }
 };
 
-
-
-inline std::ostream& operator<<(std::ostream& ss, const PathItem & t) {
-const navitia::type::StopArea* start = t.stop_points.front()->stop_area;
+inline std::ostream& operator<<(std::ostream& ss, const PathItem& t) {
+    const navitia::type::StopArea* start = t.stop_points.front()->stop_area;
     const navitia::type::StopArea* dest = t.stop_points.back()->stop_area;
     switch (t.type) {
         case navitia::routing::ItemType::public_transport:
@@ -181,15 +179,13 @@ struct Path {
     }
 };
 
-
-inline std::ostream& operator<<(std::ostream& ss, const Path & t) {
+inline std::ostream& operator<<(std::ostream& ss, const Path& t) {
     for (auto item : t.items) {
         ss << item;
     }
 
     return ss;
 }
- 
 
 bool operator==(const PathItem& a, const PathItem& b);
 

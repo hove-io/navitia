@@ -119,8 +119,7 @@ struct Ticket {
     }
 };
 
-
-std::ostream& operator<<(std::ostream& ss, const Ticket & t); 
+std::ostream& operator<<(std::ostream& ss, const Ticket& t);
 
 inline Ticket make_default_ticket() {
     Ticket default_t("unknown_ticket", "unknown ticket", 0, "unknown ticket");
@@ -203,7 +202,7 @@ struct State {
     }
 };
 
-std::ostream& operator<<(std::ostream& ss, const State & k);
+std::ostream& operator<<(std::ostream& ss, const State& k);
 
 /// Type de comparaison possible entre un arc et une valeur
 enum class Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True };
@@ -264,16 +263,15 @@ struct Label {
             return nb_undefined_sub_cost < l.nb_undefined_sub_cost;
         if (cost.value != l.cost.value)
             return cost.value < l.cost.value;
-        if (tickets.size() !=  l.tickets.size()) {
+        if (tickets.size() != l.tickets.size()) {
             return tickets.size() < l.tickets.size();
         }
 
         return nb_changes < l.nb_changes;
-        
     }
 };
 
-std::ostream& operator<<(std::ostream& ss, const Label & l);
+std::ostream& operator<<(std::ostream& ss, const Label& l);
 
 /// Contient les données retournées par navitia
 struct SectionKey {
@@ -294,7 +292,7 @@ struct SectionKey {
     int duration_at_end(int ticket_start_time) const;
 };
 
-std::ostream& operator<<(std::ostream& ss, const SectionKey & k); 
+std::ostream& operator<<(std::ostream& ss, const SectionKey& k);
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
@@ -313,7 +311,7 @@ struct Transition {
     }
 };
 
-std::ostream& operator<<(std::ostream& ss, const Transition & k);
+std::ostream& operator<<(std::ostream& ss, const Transition& k);
 
 struct OD_key {
     enum od_type { Zone, StopArea, Mode };  // NOTE: don't forget to change the bdd enum if this change
