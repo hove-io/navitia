@@ -29,38 +29,39 @@ www.navitia.io
 */
 
 #include "apply_disruption.h"
-#include "utils/logger.h"
-#include "utils/map_find.h"
+
 #include "type/datetime.h"
 #include "type/type.h"
+#include "utils/logger.h"
+#include "utils/map_find.h"
 
-#include <boost/make_shared.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
+
 #include <algorithm>
+#include <utility>
 
 namespace navitia {
 
 namespace nt = navitia::type;
 namespace nu = navitia::utils;
 namespace ndtu = navitia::DateTimeUtils;
-namespace bt = boost::posix_time;
-namespace bg = boost::gregorian;
 
 namespace {
 
-static nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
-                                                 const nt::VehicleJourney* vj,
-                                                 const std::string& new_vj_uri,
-                                                 nt::RTLevel rt_level,
-                                                 nt::ValidityPattern new_vp,
-                                                 std::vector<nt::StopTime> new_stop_times,
-                                                 nt::PT_Data& pt_data) {
+nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
+                                          const nt::VehicleJourney* vj,
+                                          const std::string& new_vj_uri,
+                                          nt::RTLevel rt_level,
+                                          const nt::ValidityPattern& new_vp,
+                                          std::vector<nt::StopTime> new_stop_times,
+                                          nt::PT_Data& pt_data) {
     auto* company = vj->company;
     auto vehicle_journey_type = vj->vehicle_journey_type;
     auto odt_message = vj->odt_message;
@@ -97,27 +98,27 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
     nt::RTLevel rt_level;  // level of the impacts
     log4cplus::Logger log = log4cplus::Logger::getInstance("log");
 
-    apply_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
+    apply_impacts_visitor(boost::shared_ptr<nt::disruption::Impact> impact,
                           nt::PT_Data& pt_data,
                           const nt::MetaData& meta,
                           std::string action,
                           nt::RTLevel l)
-        : impact(impact), pt_data(pt_data), meta(meta), action(action), rt_level(l) {}
+        : impact(std::move(impact)), pt_data(pt_data), meta(meta), action(std::move(action)), rt_level(l) {}
 
-    virtual ~apply_impacts_visitor() {}
+    virtual ~apply_impacts_visitor() = default;
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
 
     virtual void operator()(nt::MetaVehicleJourney*, nt::Route* = nullptr) = 0;
 
-    void log_start_action(std::string uri) {
-        LOG4CPLUS_TRACE(log, "Start to " << action << " impact " << impact.get()->uri << " on object " << uri);
+    void log_start_action(const std::string& uri) {
+        LOG4CPLUS_TRACE(log, "Start to " << action << " impact " << impact->uri << " on object " << uri);
     }
 
-    void log_end_action(std::string uri) {
-        LOG4CPLUS_TRACE(log, "Finished to " << action << " impact " << impact.get()->uri << " on object " << uri);
+    void log_end_action(const std::string& uri) {
+        LOG4CPLUS_TRACE(log, "Finished to " << action << " impact " << impact->uri << " on object " << uri);
     }
 
-    void operator()(nt::disruption::UnknownPtObj&) {}
+    void operator()(nt::disruption::UnknownPtObj& /*unused*/) {}
 
     void operator()(nt::Network* network) {
         this->log_start_action(network->uri);
@@ -154,9 +155,8 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 };
 
 // Computes the vp corresponding to the days where base vj's are disrupted
-static type::ValidityPattern compute_base_disrupted_vp(
-    const std::vector<boost::posix_time::time_period>& disrupted_vj_periods,
-    const boost::gregorian::date_period& production_period) {
+type::ValidityPattern compute_base_disrupted_vp(const std::vector<boost::posix_time::time_period>& disrupted_vj_periods,
+                                                const boost::gregorian::date_period& production_period) {
     type::ValidityPattern vp{production_period.begin()};  // bitset are all initialised to 0
     for (const auto& period : disrupted_vj_periods) {
         auto start_date = period.begin().date();
@@ -170,7 +170,7 @@ static type::ValidityPattern compute_base_disrupted_vp(
     return vp;
 }
 
-static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
+std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
     std::stringstream impacts_uris;
     for (auto& mvj_impacts : mvj.modified_by) {
         if (auto i = mvj_impacts.lock()) {
@@ -182,7 +182,7 @@ static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
     return impacts_uris.str();
 }
 
-static nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
+nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
     nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
     nt::CommercialMode* comm_mode =
         pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
@@ -209,12 +209,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                         nt::RTLevel l)
         : apply_impacts_visitor(impact, pt_data, meta, "add", l) {}
 
-    ~add_impacts_visitor() {}
+    ~add_impacts_visitor() override = default;
     add_impacts_visitor(const add_impacts_visitor&) = default;
 
     using apply_impacts_visitor::operator();
 
-    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* r = nullptr) override {
         log_start_action(mvj->uri);
         if (impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
@@ -370,7 +370,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 const auto base_st = st.get_base_stop_time();
                 // stop is ignored if its stop_point is not in impacted_stops
                 // if we don't find an associated base we keep it
-                if (base_st && impacted_vj.impacted_ranks.count(base_st->order())) {
+                if (base_st && (impacted_vj.impacted_ranks.count(base_st->order()) != 0u)) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     continue;
                 }
@@ -565,7 +565,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 };
 
-static bool is_modifying_effect(nt::disruption::Effect e) {
+bool is_modifying_effect(nt::disruption::Effect e) {
     // check if the effect needs to modify the model
     return contains({nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::UNKNOWN_EFFECT,
                      nt::disruption::Effect::SIGNIFICANT_DELAYS, nt::disruption::Effect::MODIFIED_SERVICE,
@@ -574,7 +574,9 @@ static bool is_modifying_effect(nt::disruption::Effect e) {
                     e);
 }
 
-void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact, nt::PT_Data& pt_data, const nt::MetaData& meta) {
+void apply_impact(const boost::shared_ptr<nt::disruption::Impact>& impact,
+                  nt::PT_Data& pt_data,
+                  const nt::MetaData& meta) {
     if (!is_modifying_effect(impact->severity->effect)) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                         "Ingoring impact: " << impact->uri << " the effect is not handled");
@@ -589,7 +591,7 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact, nt::PT_Data&
 
 using impact_sptr = boost::shared_ptr<nt::disruption::Impact>;
 
-static auto comp = [](const impact_sptr& lhs, const impact_sptr& rhs) {
+auto comp = [](const impact_sptr& lhs, const impact_sptr& rhs) {
     // lexical sort by update datetime then uri
     if (lhs->updated_at != rhs->updated_at) {
         return lhs->updated_at < rhs->updated_at;
@@ -600,7 +602,7 @@ static auto comp = [](const impact_sptr& lhs, const impact_sptr& rhs) {
 struct delete_impacts_visitor : public apply_impacts_visitor {
     size_t nb_vj_reassigned = 0;
     std::set<impact_sptr, decltype(comp)> disruptions_collection{comp};
-    delete_impacts_visitor(boost::shared_ptr<nt::disruption::Impact> impact,
+    delete_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
                            nt::PT_Data& pt_data,
                            const nt::MetaData& meta,
                            nt::RTLevel l)
@@ -709,7 +711,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         apply_impacts_visitor::operator()(route);
     }
 
-    void operator()(nt::disruption::LineSection&) {
+    void operator()(nt::disruption::LineSection& /*unused*/) {
         auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
             if (auto i = weak_ptr.lock()) {
                 return i->uri == impact->uri;
@@ -724,15 +726,17 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     }
 };
 
-void delete_impact(boost::shared_ptr<nt::disruption::Impact> impact, nt::PT_Data& pt_data, const nt::MetaData& meta) {
+void delete_impact(const boost::shared_ptr<nt::disruption::Impact>& impact,
+                   nt::PT_Data& pt_data,
+                   const nt::MetaData& meta) {
     if (!is_modifying_effect(impact->severity->effect)) {
         return;
     }
     auto log = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_DEBUG(log, "Deleting impact: " << impact.get()->uri);
+    LOG4CPLUS_DEBUG(log, "Deleting impact: " << impact->uri);
     delete_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
     boost::for_each(impact->mut_informed_entities(), boost::apply_visitor(v));
-    LOG4CPLUS_DEBUG(log, impact.get()->uri << " deleted");
+    LOG4CPLUS_DEBUG(log, impact->uri << " deleted");
 }
 
 }  // anonymous namespace

@@ -29,11 +29,14 @@ www.navitia.io
 */
 
 #include "configuration.h"
+
 #include "utils/exception.h"
-#include <fstream>
-#include <boost/optional.hpp>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/optional.hpp>
+
+#include <fstream>
 #include <iostream>
 
 namespace po = boost::program_options;
@@ -41,9 +44,9 @@ namespace po = boost::program_options;
 namespace navitia {
 namespace kraken {
 
-po::options_description get_options_description(const boost::optional<std::string> name,
-                                                const boost::optional<std::string> zmq,
-                                                const boost::optional<bool> display_contributors) {
+po::options_description get_options_description(const boost::optional<std::string>& name,
+                                                const boost::optional<std::string>& zmq,
+                                                const boost::optional<bool>& display_contributors) {
     po::options_description desc("Allowed options");
     // clang-format off
     desc.add_options()
@@ -214,7 +217,7 @@ int Configuration::broker_sleeptime() const {
 }
 
 std::string Configuration::broker_queue(const std::string& default_queue) const {
-    if (vm.count("BROKER.queue")) {
+    if (vm.count("BROKER.queue") != 0u) {
         return this->vm["BROKER.queue"].as<std::string>();
     }
     return default_queue;
@@ -225,7 +228,7 @@ bool Configuration::broker_queue_auto_delete() const {
 }
 
 std::vector<std::string> Configuration::rt_topics() const {
-    if (!this->vm.count("BROKER.rt_topics")) {
+    if (this->vm.count("BROKER.rt_topics") == 0u) {
         return std::vector<std::string>();
     }
     return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
@@ -236,7 +239,7 @@ int Configuration::kirin_retry_timeout() const {
 }
 
 bool Configuration::display_contributors() const {
-    if (!this->vm.count("GENERAL.display_contributors")) {
+    if (this->vm.count("GENERAL.display_contributors") == 0u) {
         return false;
     }
     return vm["GENERAL.display_contributors"].as<bool>();
@@ -251,7 +254,7 @@ bool Configuration::enable_request_deadline() const {
 }
 
 size_t Configuration::raptor_cache_size() const {
-    if (!vm.count("GENERAL.raptor_cache_size")) {
+    if (vm.count("GENERAL.raptor_cache_size") == 0u) {
         return 10;
     }
     int raptor_cache_size = vm["GENERAL.raptor_cache_size"].as<int>();

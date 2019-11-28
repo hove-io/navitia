@@ -28,20 +28,21 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "kraken_zmq.h"
+
 #include "conf.h"
 #include "type/type.pb.h"
-#include <google/protobuf/descriptor.h>
-
-#include <boost/thread.hpp>
-#include <functional>
-#include <string>
-#include <iostream>
-#include "utils/init.h"
-#include "kraken_zmq.h"
-#include "utils/zmq.h"
 #include "utils/functions.h"  //navitia::absolute_path function
+#include "utils/init.h"
+#include "utils/zmq.h"
 
+#include <google/protobuf/descriptor.h>
+#include <boost/thread.hpp>
 #include <sys/resource.h>  // Posix dependencies for getrlimit
+
+#include <functional>
+#include <iostream>
+#include <string>
 
 namespace {
 void show_usage(const std::string& name, const boost::program_options::options_description& descr) {
@@ -57,7 +58,7 @@ void show_usage(const std::string& name, const boost::program_options::options_d
 
 void set_core_file_size_limit(int max_core_file_size, log4cplus::Logger& logger) {
     if (max_core_file_size != 0) {
-        rlimit limit;
+        rlimit limit{};
 
         if (getrlimit(RLIMIT_CORE, &limit) == -1) {
             LOG4CPLUS_ERROR(logger, "Fail to call system 'getrlimit()'");
@@ -93,10 +94,10 @@ int main(int argn, char** argv) {
             auto opt_desc = navitia::kraken::get_options_description();
             show_usage(argv[0], opt_desc);
             return 0;
-        } else {
-            // The first argument is the path to the configuration file
-            conf_file = arg;
         }
+        // The first argument is the path to the configuration file
+        conf_file = arg;
+
     } else {
         conf_file = path + application + ".ini";
     }
