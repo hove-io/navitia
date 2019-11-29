@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "astar_path_finder.h"
+
 #include "visitor.h"
 
 #include <boost/graph/astar_search.hpp>
@@ -60,8 +61,9 @@ void AstarPathFinder::init(const type::GeographicalCoord& start_coord,
 void AstarPathFinder::start_distance_or_target_astar(const navitia::time_duration& radius,
                                                      const type::GeographicalCoord& dest_projected,
                                                      const std::vector<vertex_t>& destinations) {
-    if (!starting_edge.found)
+    if (!starting_edge.found) {
         return;
+    }
     computation_launch = true;
     // We start astar from source and target nodes
     try {
@@ -82,7 +84,10 @@ void AstarPathFinder::astar(const std::array<georef::vertex_t, 2>& origin_vertex
     // Note: the predecessors have been updated in init
 
     // Fill color map in white before A*
-    std::fill(color.data.get(), color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
+    std::fill(color.data.get(),
+              color.data.get()
+                  + (color.n + boost::two_bit_color_map<>::elements_per_char - 1)
+                        / boost::two_bit_color_map<>::elements_per_char,
               0);
 
     // we filter the graph to only use certain mean of transport

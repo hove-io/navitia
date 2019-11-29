@@ -32,18 +32,20 @@ www.navitia.io
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 #include "adminref.h"
+#include "type/time_duration.h"
 #include "utils/exception.h"
 #include "utils/flat_enum_map.h"
+#include "utils/serialization_vector.h"
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
-#include "utils/serialization_vector.h"
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/set.hpp>
+
 #include <map>
 #include <set>
 #include <functional>
-#include "type/time_duration.h"
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
@@ -292,7 +294,7 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string& str,
                                                                    const int nbmax,
                                                                    const int search_type,
-                                                                   std::function<bool(nt::idx_t)> keep_element,
+                                                                   const std::function<bool(nt::idx_t)>& keep_element,
                                                                    const std::set<std::string>& ghostwords) const;
     std::vector<Admin*> find_admins(const type::GeographicalCoord&) const;
     std::vector<Admin*> find_admins(const type::GeographicalCoord&, AdminRtree&) const;
