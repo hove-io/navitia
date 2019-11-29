@@ -70,12 +70,12 @@ class ReleaseManager:
         # TODO quit on error
         self.git.rebase(remote_name + "/dev", "dev")
         self.dev_data_version = self.get_data_version()
+        remote_release = remote_name + "/release"
         try:
-            self.git.checkout("release")
+            self.git.checkout("-B release ", remote_release)
         except Exception as e:
             print("Cannot checkout 'release':{}, creating from distant branch".format(str(e)))
-            self.git.checkout("-b", "release", remote_name + "/release")
-        self.git.rebase(remote_name + "/release", "release")
+            self.git.checkout("-b", "release", remote_release)
 
         print("checking that release was merged into dev...")
         unmerged = self.git.branch("--no-merged", "dev", '--no-color')
