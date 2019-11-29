@@ -58,7 +58,7 @@ void show_usage(const std::string& name, const boost::program_options::options_d
 
 void set_core_file_size_limit(int max_core_file_size, log4cplus::Logger& logger) {
     if (max_core_file_size != 0) {
-        rlimit limit{};
+        rlimit limit;
 
         if (getrlimit(RLIMIT_CORE, &limit) == -1) {
             LOG4CPLUS_ERROR(logger, "Fail to call system 'getrlimit()'");
