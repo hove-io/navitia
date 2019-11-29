@@ -29,21 +29,23 @@ www.navitia.io
 */
 
 #pragma once
+#include "type/type_interfaces.h"
+#include "type/geographical_coord.h"
+#include "type/fwd_type.h"
+#include "utils/functions.h"
+
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/map.hpp>
-#include <algorithm>
 #include <boost/regex.hpp>
+
+#include <algorithm>
 #include <map>
 #include <unordered_map>
 #include <set>
-#include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
-#include "type/fwd_type.h"
-#include "utils/functions.h"
 
 namespace navitia {
 namespace autocomplete {

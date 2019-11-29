@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "autocomplete_api.h"
+
 #include "autocomplete/autocomplete.h"
 #include "autocomplete/utils.h"
 #include "type/pb_converter.h"
