@@ -29,17 +29,19 @@ www.navitia.io
 */
 
 #pragma once
-#include <set>
-#include <osmpbfreader/osmpbfreader.h>
 #include "utils/lotus.h"
 #include "utils/logger.h"
-#include <unordered_map>
+
+#include <osmpbfreader/osmpbfreader.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/core/cs.hpp>
 #include <RTree/RTree.h>
-#include <boost/algorithm/string.hpp>
+
+#include <unordered_map>
+#include <set>
 
 namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point;
@@ -114,10 +116,10 @@ struct OSMRelation {
     mpolygon_type polygon;
     point centre = point(0.0, 0.0);
 
-    OSMRelation(const std::vector<CanalTP::Reference>& refs,
-                const std::string& insee,
-                const std::string postal_code,
-                const std::string& name,
+    OSMRelation(std::vector<CanalTP::Reference> refs,
+                std::string insee,
+                const std::string& postal_code,
+                std::string name,
                 const uint32_t level);
 
     std::string postal_code() const;
@@ -176,7 +178,7 @@ struct ReadWaysVisitor {
 
     void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
     void relation_callback(OSMId, const CanalTP::Tags&, const CanalTP::References&) {}
-    void way_callback(OSMId, const CanalTP::Tags& tags, const std::vector<OSMId>& nodes);
+    void way_callback(OSMId, const CanalTP::Tags& tags, const std::vector<OSMId>& nodes_refs);
 };
 
 struct ReadNodesVisitor {
@@ -186,7 +188,7 @@ struct ReadNodesVisitor {
 
     ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tag);
+    void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags);
     void relation_callback(uint64_t, const CanalTP::Tags&, const CanalTP::References&) {}
     void way_callback(uint64_t, const CanalTP::Tags&, const std::vector<uint64_t>&) {}
 };
