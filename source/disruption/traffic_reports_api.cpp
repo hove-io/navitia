@@ -29,8 +29,9 @@ www.navitia.io
 */
 
 #include "traffic_reports_api.h"
-#include "type/pb_converter.h"
+
 #include "ptreferential/ptreferential.h"
+#include "type/pb_converter.h"
 #include "utils/logger.h"
 #include "utils/paginate.h"
 
@@ -45,7 +46,7 @@ namespace {  // anonymous namespace
 using DisruptionSet = std::set<boost::shared_ptr<type::disruption::Impact>, Less>;
 
 struct NetworkDisrupt {
-    type::idx_t idx;
+    type::idx_t idx{};
     const type::Network* network = nullptr;
     DisruptionSet network_disruptions;
     // we use a vector of pair because we need to sort by the priority of the impacts
@@ -64,17 +65,17 @@ private:
                         const std::string& filter,
                         const std::vector<std::string>& forbidden_uris,
                         const type::Data& d,
-                        const boost::posix_time::ptime now);
-    void add_networks(const type::Indexes& network_idx, const type::Data& d, const boost::posix_time::ptime now);
+                        const boost::posix_time::ptime& now);
+    void add_networks(const type::Indexes& network_idx, const type::Data& d, boost::posix_time::ptime now);
     void add_lines(const std::string& filter,
                    const std::vector<std::string>& forbidden_uris,
                    const type::Data& d,
-                   const boost::posix_time::ptime now);
+                   const boost::posix_time::ptime& now);
     void add_vehicle_journeys(const type::Indexes& network_idx,
                               const std::string& filter,
                               const std::vector<std::string>& forbidden_uris,
                               const type::Data& d,
-                              const boost::posix_time::ptime now);
+                              const boost::posix_time::ptime& now);
     void sort_disruptions();
 
 public:
@@ -83,18 +84,19 @@ public:
     void disruptions_list(const std::string& filter,
                           const std::vector<std::string>& forbidden_uris,
                           const type::Data& d,
-                          const boost::posix_time::ptime now);
+                          const boost::posix_time::ptime& now);
 
     const std::vector<NetworkDisrupt>& get_disrupts() const { return this->disrupts; }
 
     size_t get_disrupts_size() { return this->disrupts.size(); }
 };
 
-static int min_priority(const DisruptionSet& disruptions) {
+int min_priority(const DisruptionSet& disruptions) {
     int min = std::numeric_limits<int>::max();
     for (const auto& impact : disruptions) {
-        if (!impact->severity)
+        if (!impact->severity) {
             continue;
+        }
         if (impact->severity->priority < min) {
             min = impact->severity->priority;
         }
@@ -119,7 +121,7 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
                                    const std::string& filter,
                                    const std::vector<std::string>& forbidden_uris,
                                    const type::Data& d,
-                                   const boost::posix_time::ptime now) {
+                                   const boost::posix_time::ptime& now) {
     for (auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri;
@@ -164,7 +166,7 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
             auto it = boost::find_if(dist.stop_areas, find_predicate);
             if (it == dist.stop_areas.end()) {
                 auto ds = DisruptionSet(sa_mess.second.begin(), sa_mess.second.end());
-                dist.stop_areas.push_back(std::make_pair(sa_mess.first, ds));
+                dist.stop_areas.emplace_back(sa_mess.first, ds);
             } else {
                 it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
             }
@@ -183,7 +185,7 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
                     };
                     auto it = boost::find_if(dist.lines, find_predicate);
                     if (it == dist.lines.end()) {
-                        dist.lines.push_back(std::make_pair(line_section->line, DisruptionSet({impact})));
+                        dist.lines.emplace_back(line_section->line, DisruptionSet({impact}));
                     } else {
                         it->second.insert({impact});
                     }
@@ -197,7 +199,7 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
                                          const std::string& filter,
                                          const std::vector<std::string>& forbidden_uris,
                                          const type::Data& d,
-                                         const boost::posix_time::ptime now) {
+                                         const boost::posix_time::ptime& now) {
     for (const auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri + " and vehicle_journey.has_disruption()";
@@ -230,7 +232,7 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
                 };
                 auto it = boost::find_if(dist.vehicle_journeys, find_predicate);
                 if (it == dist.vehicle_journeys.end()) {
-                    dist.vehicle_journeys.push_back({vj, DisruptionSet(impacts.begin(), impacts.end())});
+                    dist.vehicle_journeys.emplace_back(vj, DisruptionSet(impacts.begin(), impacts.end()));
                 } else {
                     it->second.insert(impacts.begin(), impacts.end());
                 }
@@ -255,7 +257,7 @@ void TrafficReport::add_networks(const type::Indexes& network_idx,
 void TrafficReport::add_lines(const std::string& filter,
                               const std::vector<std::string>& forbidden_uris,
                               const type::Data& d,
-                              const boost::posix_time::ptime now) {
+                              const boost::posix_time::ptime& now) {
     type::Indexes line_list;
     try {
         line_list = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
@@ -278,7 +280,7 @@ void TrafficReport::add_lines(const std::string& filter,
             };
             auto it = boost::find_if(dist.lines, find_predicate);
             if (it == dist.lines.end()) {
-                dist.lines.push_back(std::make_pair(line, DisruptionSet(v.begin(), v.end())));
+                dist.lines.emplace_back(line, DisruptionSet(v.begin(), v.end()));
             } else {
                 it->second.insert(v.begin(), v.end());
             }
@@ -297,11 +299,11 @@ void TrafficReport::sort_disruptions() {
         int p2 = min_priority(l2.second);
         if (p1 != p2) {
             return p1 < p2;
-        } else if (l1.first->code != l2.first->code) {
-            return l1.first->code < l2.first->code;
-        } else {
-            return l1.first->name < l2.first->name;
         }
+        if (l1.first->code != l2.first->code) {
+            return l1.first->code < l2.first->code;
+        }
+        return l1.first->name < l2.first->name;
     };
 
     std::sort(this->disrupts.begin(), this->disrupts.end(), sort_disruption);
@@ -313,7 +315,7 @@ void TrafficReport::sort_disruptions() {
 void TrafficReport::disruptions_list(const std::string& filter,
                                      const std::vector<std::string>& forbidden_uris,
                                      const type::Data& d,
-                                     const boost::posix_time::ptime now) {
+                                     const boost::posix_time::ptime& now) {
     // if no disruptions, no need to make unnecessary treatment
     if (d.pt_data->disruption_holder.get_weak_impacts().empty()) {
         return;
