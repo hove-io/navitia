@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "autocomplete.h"
+
 #include "type/pt_data.h"
 #include "type/stop_area.h"
 #include "type/stop_point.h"
@@ -36,7 +37,7 @@ www.navitia.io
 namespace navitia {
 namespace autocomplete {
 
-static void compute_score_poi(type::PT_Data&, georef::GeoRef& georef) {
+static void compute_score_poi(georef::GeoRef& georef) {
     for (auto it = georef.fl_poi.word_quality_list.begin(); it != georef.fl_poi.word_quality_list.end(); ++it) {
         for (navitia::georef::Admin* admin : georef.pois[it->first]->admin_list) {
             if (admin->level == 8) {
@@ -46,7 +47,7 @@ static void compute_score_poi(type::PT_Data&, georef::GeoRef& georef) {
     }
 }
 
-static void compute_score_way(type::PT_Data&, georef::GeoRef& georef) {
+static void compute_score_way(georef::GeoRef& georef) {
     // The scocre of each admin(level 8) is attributed to all its ways
     for (auto it = georef.fl_way.word_quality_list.begin(); it != georef.fl_way.word_quality_list.end(); ++it) {
         for (navitia::georef::Admin* admin : georef.ways[it->first]->admin_list) {
@@ -71,8 +72,9 @@ static void compute_score_stop_point(type::PT_Data& pt_data, georef::GeoRef& geo
 
 static size_t admin_score(const std::vector<navitia::georef::Admin*>& admins, const georef::GeoRef& georef) {
     for (const auto* admin : admins) {
-        if (admin->level == 8)
+        if (admin->level == 8) {
             return georef.fl_admin.word_quality_list.at(admin->idx).score;
+        }
     }
     return 0;
 }
@@ -130,8 +132,8 @@ static void compute_score_admin(type::PT_Data& pt_data, georef::GeoRef& georef) 
     }
 
     // Ajust the score of each admin using natural logarithm as : log(n+2)*10
-    for (auto it = georef.fl_admin.word_quality_list.begin(); it != georef.fl_admin.word_quality_list.end(); ++it) {
-        it->second.score = log(it->second.score + 2) * 10;
+    for (auto& it : georef.fl_admin.word_quality_list) {
+        it.second.score = log(it.second.score + 2) * 10;
     }
 }
 
@@ -148,10 +150,10 @@ void Autocomplete<T>::compute_score(type::PT_Data& pt_data, georef::GeoRef& geor
             compute_score_admin(pt_data, georef);
             break;
         case type::Type_e::Way:
-            compute_score_way(pt_data, georef);
+            compute_score_way(georef);
             break;
         case type::Type_e::POI:
-            compute_score_poi(pt_data, georef);
+            compute_score_poi(georef);
             break;
         default:
             break;

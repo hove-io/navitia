@@ -29,11 +29,13 @@ www.navitia.io
 */
 
 #include "autocomplete_api.h"
-#include "type/pb_converter.h"
 #include "autocomplete/autocomplete.h"
 #include "autocomplete/utils.h"
+#include "type/pb_converter.h"
 #include "utils/functions.h"
+
 #include <algorithm>
+#include <utility>
 
 namespace navitia {
 namespace autocomplete {
@@ -42,10 +44,10 @@ struct AutocompleteResult {
     type::Type_e type;
     Autocomplete<nt::idx_t>::fl_quality fl_result;
 
-    AutocompleteResult() {}
+    AutocompleteResult() = default;
 
-    AutocompleteResult(const type::Type_e& type, const Autocomplete<nt::idx_t>::fl_quality& fl_result)
-        : type(type), fl_result(fl_result) {}
+    AutocompleteResult(const type::Type_e& type, Autocomplete<nt::idx_t>::fl_quality fl_result)
+        : type(type), fl_result(std::move(fl_result)) {}
 };
 
 static void create_place_pb(const std::vector<AutocompleteResult>& result,
@@ -101,7 +103,7 @@ namespace {
  * explictly check if the wanted admin is not oneself
  */
 template <typename T>
-bool self_admin_check(const T*, const georef::Admin*) {
+bool self_admin_check(const T* /*unused*/, const georef::Admin* /*unused*/) {
     return false;
 }
 
@@ -116,8 +118,8 @@ struct ValidAdminPtr {
     const std::vector<T*>& objects;
     const std::vector<const georef::Admin*> required_admins;
 
-    ValidAdminPtr(const std::vector<T*>& objects, const std::vector<const georef::Admin*> required_admins)
-        : objects(objects), required_admins(required_admins) {}
+    ValidAdminPtr(const std::vector<T*>& objects, std::vector<const georef::Admin*> required_admins)
+        : objects(objects), required_admins(std::move(required_admins)) {}
 
     bool operator()(type::idx_t idx) const {
         if (required_admins.empty()) {
@@ -148,7 +150,7 @@ ValidAdminPtr<T> valid_admin_ptr(const std::vector<T*>& objects,
 static std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std::string>& admin_uris,
                                                                  const nt::Data& d) {
     std::vector<const georef::Admin*> admins;
-    for (auto admin_uri : admin_uris) {
+    for (const auto& admin_uri : admin_uris) {
         for (const navitia::georef::Admin* admin : d.geo_ref->admins) {
             if (admin_uri == admin->uri) {
                 admins.push_back(admin);
@@ -198,7 +200,7 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
             if (main_stop_area_weight_factor != 1.0f) {
                 auto main_stop_areas = get_main_stop_areas(d);
                 for (auto& r : result) {
-                    if (main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri)) {
+                    if (main_stop_areas.count(d.pt_data->stop_areas[r.idx]->uri) != 0u) {
                         std::get<0>(r.scores) *= main_stop_area_weight_factor;
                     }
                 }
@@ -308,23 +310,22 @@ static std::string get_name(const type::Data& d, const type::Type_e& type, const
 struct compare_by_quality {
     const type::Data& data;
 
-    compare_by_quality(const type::Data& data) : data(data) {}
+    explicit compare_by_quality(const type::Data& data) : data(data) {}
 
     bool operator()(const AutocompleteResult& a, const AutocompleteResult& b) const {
         if (a.fl_result.quality == b.fl_result.quality) {
             auto a_name = get_name(data, a.type, a.fl_result.idx);
             auto b_name = get_name(data, b.type, b.fl_result.idx);
             return boost::algorithm::lexicographical_compare(a_name, b_name, boost::is_iless());
-        } else {
-            return a.fl_result.quality > b.fl_result.quality;
         }
+        return a.fl_result.quality > b.fl_result.quality;
     }
 };
 
 struct compare_attributs {
     const type::Data& data;
 
-    compare_attributs(const type::Data& data) : data(data) {}
+    explicit compare_attributs(const type::Data& data) : data(data) {}
 
     bool operator()(const AutocompleteResult& a, const AutocompleteResult& b) const {
         // Sort by object type
@@ -387,7 +388,7 @@ void autocomplete(navitia::PbCreator& pb_creator,
                 update_quality(found, query_word_vec.size());
             }
             for (const auto& r : found) {
-                results.push_back(AutocompleteResult(type, r));
+                results.emplace_back(type, r);
             }
         }
         if (search_type == 0 && results.size() > size_t(nbmax)) {

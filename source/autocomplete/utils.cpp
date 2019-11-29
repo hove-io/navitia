@@ -41,7 +41,7 @@ std::vector<std::vector<type::Type_e>> build_type_groups(std::vector<type::Type_
         auto order = get_type_e_order(f);
         if (order != current_order) {
             current_order = order;
-            result.push_back(std::vector<type::Type_e>());
+            result.emplace_back();
         }
         result.back().push_back(f);
     }
