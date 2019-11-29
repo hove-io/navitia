@@ -32,7 +32,8 @@ www.navitia.io
 #include "type/type.h"
 #include "type/pt_data.h"
 #include "utils/logger.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace navitia {
 namespace calendar {
@@ -41,12 +42,10 @@ class Calendar {
 
 public:
     // Return idx calendars list
-    type::Indexes get_calendars(
-        const std::string& filter,
-        const std::vector<std::string>& forbidden_uris,
-        const type::Data& d,
-        const boost::gregorian::date_period filter_period,
-        const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time());
+    type::Indexes get_calendars(const std::string& filter,
+                                const std::vector<std::string>& forbidden_uris,
+                                const type::Data& d,
+                                const boost::gregorian::date_period filter_period);
 };
 }  // namespace calendar
 }  // namespace navitia
