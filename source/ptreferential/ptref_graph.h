@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "type/type_interfaces.h"
+
 #include <boost/graph/adjacency_list.hpp>
 
 namespace navitia {

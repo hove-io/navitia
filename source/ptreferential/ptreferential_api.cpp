@@ -27,17 +27,16 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
+#include "ptreferential_api.h"
 
 #include "ptreferential.h"
-#include "ptreferential_api.h"
-#include "type/pb_converter.h"
-#include "type/data.h"
-#include "type/pt_data.h"
-#include "type/meta_data.h"
 #include "routing/dataraptor.h"
+#include "type/data.h"
+#include "type/meta_data.h"
+#include "type/pb_converter.h"
+#include "type/pt_data.h"
 #include "utils/paginate.h"
 
-namespace pt = boost::posix_time;
 using navitia::type::Type_e;
 
 namespace navitia {

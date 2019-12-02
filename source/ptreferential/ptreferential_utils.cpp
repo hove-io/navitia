@@ -29,15 +29,17 @@ www.navitia.io
 */
 
 #include "ptreferential_utils.h"
-#include "ptreferential.h"
+
 #include "ptref_graph.h"
-#include "type/message.h"
-#include "type/data.h"
-#include "type/pt_data.h"
-#include "type/meta_data.h"
+#include "ptreferential.h"
 #include "routing/dataraptor.h"
+#include "type/data.h"
+#include "type/message.h"
+#include "type/meta_data.h"
+#include "type/pt_data.h"
 
 #include <boost/range/algorithm/find.hpp>
+
 #include <string>
 
 using navitia::type::Data;
@@ -89,14 +91,18 @@ Type_e type_by_caption(const std::string& type) {
 typedef std::pair<type::Type_e, Indexes> pair_indexes;
 struct VariantVisitor : boost::static_visitor<pair_indexes> {
     const Data& d;
-    VariantVisitor(const Data& d) : d(d) {}
-    pair_indexes operator()(const type::disruption::UnknownPtObj) { return {type::Type_e::Unknown, Indexes{}}; }
-    pair_indexes operator()(const type::Network*) { return {type::Type_e::Network, Indexes{}}; }
-    pair_indexes operator()(const type::StopArea*) { return {type::Type_e::StopArea, Indexes{}}; }
-    pair_indexes operator()(const type::StopPoint*) { return {type::Type_e::StopPoint, Indexes{}}; }
-    pair_indexes operator()(const type::disruption::LineSection) { return {type::Type_e::Unknown, Indexes{}}; }
-    pair_indexes operator()(const type::Line*) { return {type::Type_e::Line, Indexes{}}; }
-    pair_indexes operator()(const type::Route*) { return {type::Type_e::Route, Indexes{}}; }
+    explicit VariantVisitor(const Data& d) : d(d) {}
+    pair_indexes operator()(const type::disruption::UnknownPtObj /*unused*/) {
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Network* /*unused*/) { return {type::Type_e::Network, Indexes{}}; }
+    pair_indexes operator()(const type::StopArea* /*unused*/) { return {type::Type_e::StopArea, Indexes{}}; }
+    pair_indexes operator()(const type::StopPoint* /*unused*/) { return {type::Type_e::StopPoint, Indexes{}}; }
+    pair_indexes operator()(const type::disruption::LineSection /*unused*/&) {
+        return {type::Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const type::Line* /*unused*/) { return {type::Type_e::Line, Indexes{}}; }
+    pair_indexes operator()(const type::Route* /*unused*/) { return {type::Type_e::Route, Indexes{}}; }
     pair_indexes operator()(const type::MetaVehicleJourney* meta_vj) {
         return {type::Type_e::VehicleJourney, meta_vj->get(type::Type_e::VehicleJourney, *d.pt_data)};
     }
@@ -272,7 +278,7 @@ static
 template <typename T>
 static
     typename boost::disable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
-    get_indexes_from_code(const std::string&, const std::string&, const Data&) {
+    get_indexes_from_code(const std::string& /*unused*/, const std::string& /*unused*/, const Data& /*unused*/) {
     // there is no codes for unsupporded types, thus the result is empty
     return Indexes{};
 }
@@ -313,7 +319,7 @@ static
 template <typename T>
 static
     typename boost::disable_if<typename boost::mpl::contains<nt::CodeContainer::SupportedTypes, T>::type, Indexes>::type
-    get_indexes_from_code_type(const std::vector<std::string>&, const Data&) {
+    get_indexes_from_code_type(const std::vector<std::string>& /*unused*/, const Data& /*unused*/) {
     // there is no code for unsupported types, thus the result is empty
     return Indexes{};
 }
@@ -405,7 +411,8 @@ static Indexes get_indexes_from_name(const std::string& name, const std::vector<
     }
     return indexes;
 }
-static Indexes get_indexes_from_name(const std::string&, const std::vector<type::ValidityPattern*>&) {
+static Indexes get_indexes_from_name(const std::string& /*unused*/,
+                                     const std::vector<type::ValidityPattern*>& /*unused*/) {
     return Indexes();
 }
 

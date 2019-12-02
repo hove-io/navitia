@@ -115,7 +115,7 @@ std::ostream& operator<<(std::ostream& os, const BinaryOp<Diff>& op);
 
 }  // namespace ast
 
-ast::Expr parse(const std::string& s);
+ast::Expr parse(const std::string& request);
 std::string make_request(const type::Type_e requested_type,
                          const std::string& request,
                          const std::vector<std::string>& forbidden_uris,
