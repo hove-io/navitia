@@ -29,12 +29,54 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 import six
+import logging
+import shapely
 
 
 class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls to external service providing real-time parking places info
     """
+
+    def __init__(self, **kwargs):
+        self.boundary_shape = None
+        self.log = logging.getLogger(__name__)
+        self._init_boundary_shape(kwargs.get('geometry'))
+
+    '''
+    Initialise the object's shape using a GeoJson object.
+
+    boundary_geometry : a dictionary representing a GeoJSON object. see https://geojson.org/
+    '''
+
+    def _init_boundary_shape(self, boundary_geometry):
+        if boundary_geometry:
+            try:
+                boundary_shape = shapely.geometry.shape(boundary_geometry)
+                if not boundary_shape.is_valid:
+                    raise Exception("Geometry shape is invalid")
+                self.boundary_shape = boundary_shape
+            except Exception as e:
+                self.log.error('Error while loading boundary shape :', str(e))
+                self.log.error("Unable to parse geometry object : ", boundary_geometry)
+
+    def has_boundary_shape(self):  # type () : bool
+        return self.boundary_shape != None
+
+    def is_coord_within_boundary_shape(self, lon, lat):
+        # type (float, float) -> bool
+
+        if self.has_boundary_shape() == False:
+            return False
+
+        try:
+            return self.boundary_shape.contains(shapely.geometry.Point([lon, lat]))
+        except ValueError as e:
+            self.log.error("Cannot convert POI's coord to float : ", str(e))
+        except Exception as e:
+            self.log.error("Couldn't find if coordinate is within the shape: ", str(e))
+
+        return False
 
     @abstractmethod
     def support_poi(self, poi):

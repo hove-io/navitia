@@ -33,7 +33,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import pybreaker
 import requests as requests
-import shapely
 
 from jormungandr import cache, app, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
@@ -45,6 +44,7 @@ from abc import abstractmethod
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
     def __init__(self, url, operators, dataset, timeout, feed_publisher, **kwargs):
 
+        AbstractParkingPlacesProvider.__init__(self, **kwargs)
         self.ws_service_template = url + '?dataset={}'
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
@@ -61,18 +61,6 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
 
         self.api_key = kwargs.get('api_key')
 
-        self.boundary_shape = None
-        boundary_geometry = kwargs.get('geometry')
-        if boundary_geometry:
-            try:
-                boundary_shape = shapely.geometry.shape(boundary_geometry)
-                if not boundary_shape.is_valid:
-                    raise Exception("Geometry shape is invalid")
-                self.boundary_shape = boundary_shape
-            except Exception as e:
-                self.log.error('Error while loading boundary shape :', str(e))
-                self.log.error("Unable to parse geometry object : ", boundary_geometry)
-
     @abstractmethod
     def process_data(self, data, poi):
         pass
@@ -87,13 +75,19 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
             return self.process_data(data, poi)
 
     def _is_poi_coords_within_shape(self, poi):
-        if self.boundary_shape is None:
+
+        if self.has_boundary_shape() == False:
+            '''
+            We assume that a POI is within a provider with no shape to be backward compatible.
+            So that we don't have to configure a shape for every single provier.
+            '''
             return True
 
         try:
             coord = poi['coord']
-            coords = [float(coord['lon']), float(coord['lat'])]
-            return self.boundary_shape.contains(shapely.geometry.Point(coords))
+            lon = float(coord['lon'])
+            lat = float(coord['lat'])
+            return self.is_coord_within_boundary_shape(lon, lat)
         except KeyError as e:
             self.log.error(
                 "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)

@@ -37,6 +37,9 @@ from jormungandr.parking_space_availability.car.common_car_park_provider import 
 
 
 class CommonCarParkProviderTest(CommonCarParkProvider):
+    def __init__(self, **kwargs):
+        CommonCarParkProvider.__init__(self, **kwargs)
+
     def process_data(self, data, poi):
         pass
 
@@ -58,7 +61,7 @@ def carParkProvider(defaultCarParkParameters):
 
 
 def test_create_default_common_car_park_provider_with_no_shape(carParkProvider):
-    assert carParkProvider.boundary_shape == None
+    assert carParkProvider.has_boundary_shape() == False
 
 
 def test_default_car_park_provider_should_handle_poi(carParkProvider):
@@ -88,7 +91,7 @@ def carParkProviderWithGeometry(defaultCarParkParameters):
 
 
 def test_car_park_provider_with_geometry_should_have_shape(carParkProviderWithGeometry):
-    assert carParkProviderWithGeometry.boundary_shape != None
+    assert carParkProviderWithGeometry.has_boundary_shape() == True
 
 
 def test_car_park_provider_with_shape_should_not_support_poi_with_no_coords(carParkProviderWithGeometry):
@@ -121,7 +124,7 @@ def test_car_park_provider_with_wrong_geojson_should_have_no_shape(defaultCarPar
     defaultCarParkParameters['geometry'] = {'type': 'no_idea', 'coordinates': ['blah', 'blah', 'blah']}
 
     parkProvider = CommonCarParkProviderTest(**defaultCarParkParameters)
-    assert parkProvider.boundary_shape == None
+    assert parkProvider.has_boundary_shape() == False
 
 
 def test_car_park_provider_with_falty_geometry_shape(defaultCarParkParameters):
@@ -129,4 +132,4 @@ def test_car_park_provider_with_falty_geometry_shape(defaultCarParkParameters):
     params['geometry'] = {'type': 'Unknow_type', 'coordinates': [[]]}
 
     car_park = CommonCarParkProviderTest(**params)
-    assert car_park.boundary_shape == None
+    assert car_park.has_boundary_shape() == False

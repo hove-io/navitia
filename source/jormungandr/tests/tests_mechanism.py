@@ -507,6 +507,7 @@ from jormungandr.ptref import FeedPublisher
 
 class MockBssProvider(AbstractParkingPlacesProvider):
     def __init__(self, pois_supported, name='mock bss provider'):
+        AbstractParkingPlacesProvider.__init__(self)
         self.pois_supported = pois_supported
         self.name = name
 
