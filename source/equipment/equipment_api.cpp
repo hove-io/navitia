@@ -29,15 +29,17 @@ www.navitia.io
 */
 
 #include "equipment_api.h"
+
 #include "utils/paginate.h"
 
 #include "boost/range/algorithm.hpp"
 
-#include <tuple>
-#include <vector>
-#include <string>
-#include <map>
 #include <algorithm>
+#include <map>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace navitia {
 namespace equipment {
@@ -45,7 +47,7 @@ namespace equipment {
 namespace {
 const std::string build_ptref_line_filter(const std::string& line_uri, const std::string& filter) {
     std::string sa_filter = "line.uri=" + line_uri;
-    if (filter.size()) {
+    if (!filter.empty()) {
         sa_filter += " and (" + filter + ")";
     }
     return sa_filter;
@@ -73,11 +75,15 @@ void fill_equipment_to_pb(const equipment::EquipmentReportList& reports, PbCreat
 }  // namespace
 
 EquipmentReports::EquipmentReports(const type::Data& data,
-                                   const std::string& filter,
+                                   std::string filter,
                                    int count,
                                    int start_page,
-                                   const ForbiddenUris& forbidden_uris)
-    : data(data), filter(filter), count(count), start_page(start_page), forbidden_uris(forbidden_uris) {}
+                                   ForbiddenUris forbidden_uris)
+    : data(data),
+      filter(std::move(filter)),
+      count(count),
+      start_page(start_page),
+      forbidden_uris(std::move(forbidden_uris)) {}
 
 EquipmentReportList EquipmentReports::get_paginated_equipment_report_list() {
     const type::Indexes line_indices = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, data);
