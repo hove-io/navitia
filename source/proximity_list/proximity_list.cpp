@@ -1,17 +1,49 @@
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+
+This file is part of Navitia,
+    the software to build cool stuff with public transport.
+
+Hope you'll enjoy and contribute to this project,
+    powered by Canal TP (www.canaltp.fr).
+Help us simplify mobility and open public transport:
+    a non ending quest to the responsive locomotion way of traveling!
+
+LICENCE: This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+Stay tuned using
+twitter @navitia
+channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
+https://groups.google.com/d/forum/navitia
+www.navitia.io
+*/
+
 #include "proximity_list.h"
+
 #include "type/geographical_coord.h"
 
-#include <cmath>
-#include <array>
-#include <exception>
 #include <flann/flann.hpp>
+
+#include <array>
+#include <cmath>
+#include <exception>
 
 namespace navitia {
 namespace proximitylist {
 using type::GeographicalCoord;
 
 static std::array<float, 3> project_coord(const type::GeographicalCoord& coord) {
-    std::array<float, 3> res;
+    std::array<float, 3> res{};
     double lat_grad = coord.lat() * GeographicalCoord::N_DEG_TO_RAD;
     double lon_grad = coord.lon() * GeographicalCoord::N_DEG_TO_RAD;
     res[0] = GeographicalCoord::EARTH_RADIUS_IN_METERS * cos(lat_grad) * sin(lon_grad);
@@ -61,12 +93,12 @@ void ProximityList<T>::build() {
 }
 
 template <typename T, typename Item>
-static auto extract(const Item& item, IndexCoord) -> typename ReturnTypeTrait<T, IndexCoord>::ValueType {
+static auto extract(const Item& item, IndexCoord /*unused*/) -> typename ReturnTypeTrait<T, IndexCoord>::ValueType {
     return std::make_pair(item.element, item.coord);
 }
 
 template <typename T, typename Item>
-static auto extract(const Item& item, IndexOnly) -> typename ReturnTypeTrait<T, IndexOnly>::ValueType {
+static auto extract(const Item& item, IndexOnly /*unused*/) -> typename ReturnTypeTrait<T, IndexOnly>::ValueType {
     return item.element;
 }
 
@@ -76,7 +108,7 @@ static auto make_result(const type::GeographicalCoord& coord,
                         const Indices& indices,
                         const Distances& distances,
                         const int nb_found,
-                        Tag) -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
+                        Tag /*unused*/) -> std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
     std::vector<typename ReturnTypeTrait<T, Tag>::ValueType> res;
@@ -86,13 +118,13 @@ static auto make_result(const type::GeographicalCoord& coord,
         return {};
     }
     for (int i = 0; i < nb_found; ++i) {
-        int res_ind = indices[i];
+        int res_ind = indices.at(i);
         if (res_ind < 0 || res_ind >= static_cast<int>(items.size())) {
             continue;
         }
         LOG4CPLUS_TRACE(
             log4cplus::Logger::getInstance("log"),
-            "Distance(squared) from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances[i]);
+            "Distance(squared) from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances.at(i));
 
         res.push_back(extract<T>(items[res_ind], Tag{}));
     }
@@ -126,7 +158,10 @@ static int radius_search(const std::shared_ptr<index_t>& NN_index,
 }
 
 template <class T>
-auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
+auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
+                                        double radius,
+                                        int size,
+                                        IndexCoord /*unused*/) const
     -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType> {
     // Containers are auto-sized by NN_index, Flann will return all objects inside of the given radius
     std::vector<std::vector<int>> indices;
@@ -138,19 +173,22 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double r
 }
 
 template <class T>
-auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
+auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
+                                        double radius,
+                                        int size,
+                                        IndexOnly /*unused*/) const
     -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType> {
     // Using small sized std::array will avoid heap allocation and limit the research
     const static std::size_t max_size = 100;
-    std::array<int, max_size> indices_data;
+    std::array<int, max_size> indices_data{};
     flann::Matrix<int> indices(&indices_data[0], 1, size == -1 ? max_size : size);
-    std::array<index_t::DistanceType, max_size> distances_data;
+    std::array<index_t::DistanceType, max_size> distances_data{};
     flann::Matrix<index_t::DistanceType> distances(&distances_data[0], 1, size == -1 ? max_size : size);
     int nb_found = radius_search(NN_index, coord, radius, size, indices, distances);
     return make_result<T>(coord, items, indices_data, distances_data, nb_found, IndexOnly{});
 }
 
-NotFound::~NotFound() noexcept {}
+NotFound::~NotFound() noexcept = default;
 
 template struct ProximityList<unsigned int>;
 template struct ProximityList<unsigned long>;
