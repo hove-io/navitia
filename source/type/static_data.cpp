@@ -39,7 +39,7 @@ static_data* static_data::instance = nullptr;
 
 static_data* static_data::get() {
     if (instance == nullptr) {
-        static_data* temp = new static_data();
+        auto* temp = new static_data();
 
         boost::assign::insert(temp->types_string)(Type_e::ValidityPattern, "validity_pattern")(Type_e::Line, "line")(
             Type_e::LineGroup, "line_group")(Type_e::JourneyPattern, "journey_pattern")(

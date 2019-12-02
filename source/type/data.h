@@ -115,8 +115,8 @@ class Data : boost::noncopyable {
 public:
     static const unsigned int data_version;  //< Data version number. *INCREMENT* in cpp file
     unsigned int version = 0;                //< Version of loaded data
-    std::atomic<bool> loaded;                //< have the data been loaded ?
-    std::atomic<bool> loading;               //< Is the data being loaded
+    std::atomic<bool> loaded{};              //< have the data been loaded ?
+    std::atomic<bool> loading{};             //< Is the data being loaded
     std::atomic<bool> disruption_error;      // disruption error flag
     size_t data_identifier = 0;
 
@@ -183,9 +183,9 @@ public:
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
     // find in the future a cleaner way, but now, this is cleaner than
     // before.
-    mutable std::atomic<bool> is_connected_to_rabbitmq;
+    mutable std::atomic<bool> is_connected_to_rabbitmq{};
 
-    mutable std::atomic<bool> is_realtime_loaded;
+    mutable std::atomic<bool> is_realtime_loaded{};
 
     Data(size_t data_identifier = 0);
     ~Data();
@@ -240,7 +240,7 @@ public:
     void load(std::istream& ifs);
 
     /** Save data in a compressed binary file using LZ4*/
-    void save(std::ostream& ifs) const;
+    void save(std::ostream& ofs) const;
 
     // Deep clone from the given Data.
     void clone_from(const Data&);

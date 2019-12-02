@@ -40,7 +40,7 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_m
     const boost::posix_time::time_period& action_period) const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
 
-    for (auto impact : this->impacts) {
+    for (const auto& impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (!impact_acquired) {
             continue;  // pointer might still have become invalid
@@ -69,7 +69,7 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_
     const boost::posix_time::ptime& current_time) const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
 
-    for (auto impact : this->impacts) {
+    for (const auto& impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (!impact_acquired) {
             continue;  // pointer might still have become invalid
@@ -84,12 +84,12 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_
 bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current_time,
                                          const boost::posix_time::time_period& action_period,
                                          const Line* line) const {
-    for (auto i : this->impacts) {
+    for (const auto& i : this->impacts) {
         auto impact = i.lock();
         if (!impact) {
             continue;  // pointer might still have become invalid
         }
-        if (line && impact->is_only_line_section() && !impact->is_line_section_of(*line)) {
+        if ((line != nullptr) && impact->is_only_line_section() && !impact->is_line_section_of(*line)) {
             continue;
         }
         if (impact->is_valid(current_time, action_period)) {
@@ -100,7 +100,7 @@ bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current
 }
 
 bool HasMessages::has_publishable_message(const boost::posix_time::ptime& current_time) const {
-    for (auto impact : this->impacts) {
+    for (const auto& impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (!impact_acquired) {
             continue;  // pointer might still have become invalid

@@ -29,11 +29,12 @@ www.navitia.io
 */
 
 #include "meta_vehicle_journey.h"
-#include "type/serialization.h"
+
+#include "type/concerns_base_at_period.h"
 #include "type/pt_data.h"
 #include "type/route.h"
+#include "type/serialization.h"
 #include "type/type_utils.h"
-#include "type/concerns_base_at_period.h"
 #include "utils/logger.h"
 
 #include <boost/range/algorithm/find.hpp>
@@ -44,14 +45,14 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void MetaVehicleJourney::serialize(Archive& ar, const unsigned int) {
+void MetaVehicleJourney::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& uri& rtlevel_to_vjs_map& associated_calendars& impacts& modified_by& tz_handler;
 }
 SERIALIZABLE(MetaVehicleJourney)
 
 namespace {
 
-static bool is_useless(const nt::VehicleJourney& vj) {
+bool is_useless(const nt::VehicleJourney& vj) {
     // a vj is useless if all it's validity pattern are empty
     for (const auto l_vj : vj.validity_patterns) {
         if (!l_vj.second->empty()) {
@@ -123,7 +124,7 @@ void MetaVehicleJourney::clean_up_useless_vjs(nt::PT_Data& pt_data) {
         for (int i = vjs.size() - 1; i >= 0; --i) {
             auto& vj = vjs[i];
             if (is_useless(*vj)) {
-                vj_idx_to_remove.push_back({rt_vjs.first, i});
+                vj_idx_to_remove.emplace_back(rt_vjs.first, i);
             }
         }
     }
@@ -298,7 +299,7 @@ bool MetaVehicleJourney::is_already_modified_by(const boost::shared_ptr<disrupti
 
 void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact) {
     if (!is_already_modified_by(impact)) {
-        modified_by.push_back(impact);
+        modified_by.emplace_back(impact);
     }
 }
 

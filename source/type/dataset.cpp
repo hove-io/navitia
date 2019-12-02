@@ -29,10 +29,12 @@ www.navitia.io
 */
 
 #include "type/dataset.h"
+
+#include "type/contributor.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/contributor.h"
+
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
@@ -40,12 +42,12 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void Dataset::serialize(Archive& ar, const unsigned int) {
+void Dataset::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& uri& contributor& realtime_level& validation_period& desc& system;
 }
 SERIALIZABLE(Dataset)
 
-Indexes Dataset::get(Type_e type, const PT_Data&) const {
+Indexes Dataset::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::Contributor:

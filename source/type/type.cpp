@@ -29,18 +29,21 @@ www.navitia.io
 */
 
 #include "type.h"
-#include "pt_data.h"
+
 #include "data.h"
 #include "meta_data.h"
+#include "pt_data.h"
+#include "type/indexes.h"
 #include "type_utils.h"
+#include "utils/coord_parser.h"
+#include "utils/functions.h"
+#include "utils/logger.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
+
 #include <iostream>
 #include <set>
-#include <boost/assign.hpp>
-#include <boost/algorithm/string.hpp>
-#include "utils/functions.h"
-#include "utils/coord_parser.h"
-#include "utils/logger.h"
-#include "type/indexes.h"
 
 namespace navitia {
 namespace type {
@@ -76,10 +79,10 @@ bool EntryPoint::is_coord(const std::string& uri) {
 EntryPoint::EntryPoint(const Type_e type, const std::string& uri) : EntryPoint(type, uri, 0) {}
 
 void StreetNetworkParams::set_filter(const std::string& param_uri) {
-    size_t pos = param_uri.find(":");
-    if (pos == std::string::npos)
+    size_t pos = param_uri.find(':');
+    if (pos == std::string::npos) {
         type_filter = Type_e::Unknown;
-    else {
+    } else {
         uri_filter = param_uri;
         type_filter = navitia::type::static_data::get()->typeByCaption(param_uri.substr(0, pos));
     }

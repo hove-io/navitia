@@ -35,7 +35,7 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void hasOdtProperties::serialize(Archive& ar, const unsigned int) {
+void hasOdtProperties::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& odt_properties;
 }
 SERIALIZABLE(hasOdtProperties)

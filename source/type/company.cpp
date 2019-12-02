@@ -29,21 +29,22 @@ www.navitia.io
 */
 
 #include "type/company.h"
+
 #include "type/indexes.h"
+#include "type/line.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/line.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void Company::serialize(Archive& ar, const unsigned int) {
+void Company::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& address_name& address_number& address_type_name& phone_number& mail& website& fax& line_list;
 }
 SERIALIZABLE(Company)
 
-Indexes Company::get(Type_e type, const PT_Data&) const {
+Indexes Company::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::Line:

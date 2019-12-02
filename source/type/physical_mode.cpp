@@ -37,7 +37,7 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void PhysicalMode::serialize(Archive& ar, const unsigned int) {
+void PhysicalMode::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& co2_emission& vehicle_journey_list;
 }
 SERIALIZABLE(PhysicalMode)

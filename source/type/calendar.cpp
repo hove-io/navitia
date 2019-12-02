@@ -28,10 +28,10 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include <type/calendar.h>
-#include <type/pt_data.h>
-#include <type/serialization.h>
-#include <type/line.h>
+#include "type/calendar.h"
+#include "type/line.h"
+#include "type/pt_data.h"
+#include "type/serialization.h"
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
@@ -41,13 +41,13 @@ namespace type {
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
 
 template <class Archive>
-void Calendar::serialize(Archive& ar, const unsigned int) {
+void Calendar::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& name& idx& uri& week_pattern& active_periods& exceptions& validity_pattern;
 }
 SERIALIZABLE(Calendar)
 
 template <class Archive>
-void AssociatedCalendar::serialize(Archive& ar, const unsigned int) {
+void AssociatedCalendar::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& calendar& exceptions;
 }
 SERIALIZABLE(AssociatedCalendar)

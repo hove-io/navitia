@@ -110,8 +110,8 @@ class Data;
 
 // std::ostream & operator<<(std::ostream & os, const DateTime &dt);
 std::string str(const DateTime& dt);
-std::string iso_string(const DateTime dt, const type::Data& d);
-std::string iso_hour_string(const DateTime dt, const type::Data& d);
+std::string iso_string(const DateTime datetime, const type::Data& d);
+std::string iso_hour_string(const DateTime datetime, const type::Data& d);
 
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data& d);
 DateTime to_datetime(boost::posix_time::ptime ptime, const type::Data& d);
@@ -203,8 +203,8 @@ inline weekdays get_weekday(const boost::gregorian::date& date) {
  */
 std::vector<boost::posix_time::time_period> expand_calendar(boost::posix_time::ptime start,
                                                             boost::posix_time::ptime end,
-                                                            boost::posix_time::time_duration beg_of_day,
-                                                            boost::posix_time::time_duration end_of_day,
+                                                            const boost::posix_time::time_duration& beg_of_day,
+                                                            const boost::posix_time::time_duration& end_of_day,
                                                             std::bitset<7> days);
 }  // namespace navitia
 

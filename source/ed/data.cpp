@@ -29,15 +29,18 @@ www.navitia.io
 */
 
 #include "data.h"
-#include <iostream>
+
 #include "utils/timer.h"
 #include "utils/functions.h"
 #include "utils/exception.h"
+#include "type/datetime.h"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
 #include <boost/range/algorithm/find_if.hpp>
-#include "type/datetime.h"
 #include <boost/range/algorithm/max_element.hpp>
+
+#include <iostream>
 
 namespace nt = navitia::type;
 namespace ed {
