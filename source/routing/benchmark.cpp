@@ -30,14 +30,16 @@ www.navitia.io
 
 #include "raptor.h"
 #include "type/data.h"
+#include "utils/csv.h"
+#include "utils/init.h"
 #include "utils/timer.h"
+
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/program_options.hpp>
 #include <boost/progress.hpp>
-#include <random>
+
 #include <fstream>
-#include "utils/init.h"
-#include "utils/csv.h"
-#include <boost/algorithm/string/predicate.hpp>
+#include <random>
 #ifdef __BENCH_WITH_CALGRIND__
 #include "valgrind/callgrind.h"
 #endif
@@ -60,9 +62,11 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration.total_seconds()), time(-1), arrival(-1), nb_changes(path.nb_changes) {
-        if (!path.items.empty())
+    explicit Result(Path path)
+        : duration(path.duration.total_seconds()), time(-1), arrival(-1), nb_changes(path.nb_changes) {
+        if (!path.items.empty()) {
             arrival = path.items.back().arrival.time_of_day().total_seconds();
+        }
     }
 };
 
@@ -96,9 +100,9 @@ int main(int argc, char** argv) {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-    bool verbose = vm.count("verbose");
+    bool verbose = vm.count("verbose") != 0u;
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
         std::cout << "This is used to benchmark journey computation" << std::endl;
         std::cout << desc << std::endl;
         return 1;
@@ -134,7 +138,7 @@ int main(int argc, char** argv) {
             }
             const auto end = it_end->second;
 
-            PathDemand demand;
+            PathDemand demand{};
             demand.start = start->idx;
             demand.target = end->idx;
             demand.hour = boost::lexical_cast<unsigned int>(it[5]);
@@ -143,7 +147,7 @@ int main(int argc, char** argv) {
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
     } else if (start != -1 && target != -1 && date != -1 && hour != -1) {
-        PathDemand demand;
+        PathDemand demand{};
         demand.start = start;
         demand.target = target;
         demand.hour = hour;
@@ -156,13 +160,14 @@ int main(int argc, char** argv) {
         std::uniform_int_distribution<> gen(0, data.pt_data->stop_areas.size() - 1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({7});
-        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6) {
             days.push_back(8);
-        else
+        } else {
             days.push_back(13);
+        }
 
         for (int i = 0; i < iterations; ++i) {
-            PathDemand demand;
+            PathDemand demand{};
             demand.start = gen(rng);
             demand.target = gen(rng);
             while (demand.start == demand.target
@@ -207,7 +212,7 @@ int main(int argc, char** argv) {
                                   type::RTLevel::Base, 2_min, true, {}, 10);
 
         Path path;
-        if (res.size() > 0) {
+        if (!res.empty()) {
             path = res[0];
             ++nb_reponses;
         }

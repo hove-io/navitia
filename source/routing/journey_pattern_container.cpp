@@ -29,8 +29,9 @@ www.navitia.io
 */
 
 #include "journey_pattern_container.h"
-#include "type/pt_data.h"
+
 #include "tests/utils_test.h"
+#include "type/pt_data.h"
 #include <type_traits>
 
 namespace navitia {

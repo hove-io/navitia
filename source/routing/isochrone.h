@@ -71,7 +71,7 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                           const bool clockwise,
                                           const type::GeographicalCoord& coord_origin,
                                           const DateTime& bound,
-                                          const map_stop_point_duration& origine,
+                                          const map_stop_point_duration& origin,
                                           const double& speed,
                                           const int& duration);
 

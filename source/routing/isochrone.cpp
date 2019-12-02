@@ -28,23 +28,25 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/geographical_coord.h"
-#include "utils/exception.h"
 #include "isochrone.h"
+
 #include "raptor.h"
 #include "raptor_api.h"
+#include "type/geographical_coord.h"
+#include "utils/exception.h"
 #include "utils/logger.h"
 
-#include <set>
-#include <assert.h>
-#include <vector>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/geometry.hpp>
-#include <cmath>
-#include <string>
-#include <algorithm>
 #include <boost/range/algorithm.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace navitia {
 namespace routing {
@@ -116,9 +118,8 @@ static type::GeographicalCoord build_sym(const type::GeographicalCoord& point,
                                          const unsigned int& i) {
     if (i % 180 == 0) {
         return type::GeographicalCoord(2 * center.lon() - point.lon(), point.lat());
-    } else {
-        return type::GeographicalCoord(point.lon(), 2 * center.lat() - point.lat());
     }
+    return type::GeographicalCoord(point.lon(), 2 * center.lat() - point.lat());
 }
 
 type::Polygon circle(const type::GeographicalCoord& center, const double& radius) {
@@ -176,7 +177,7 @@ static std::vector<InfoCircle> delete_useless_circle(std::vector<InfoCircle> cir
     boost::sort(circles, [](const InfoCircle& a, const InfoCircle& b) { return a.duration_left > b.duration_left; });
     for (auto& circle : circles) {
         if (!within_info_circle(circle, useful_circles, speed)) {
-            useful_circles.push_back(std::move(circle));
+            useful_circles.push_back(circle);
         }
     }
     return useful_circles;
@@ -196,16 +197,16 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                                           const int& duration) {
     std::vector<InfoCircle> circles_classed;
     type::MultiPolygon circles;
-    circles_classed.push_back(InfoCircle(coord_origin, duration));
+    circles_classed.emplace_back(coord_origin, duration);
     const auto& data_departure = raptor.data.pt_data->stop_points;
-    for (auto it = origin.begin(); it != origin.end(); ++it) {
-        if (it->second.total_seconds() < duration) {
-            int duration_left = duration - int(it->second.total_seconds());
+    for (const auto& it : origin) {
+        if (it.second.total_seconds() < duration) {
+            int duration_left = duration - int(it.second.total_seconds());
             if (duration_left * speed < MIN_RADIUS) {
                 continue;
             }
-            const auto& center = data_departure[it->first.val]->coord;
-            circles_classed.push_back(InfoCircle(center, duration_left));
+            const auto& center = data_departure[it.first.val]->coord;
+            circles_classed.emplace_back(center, duration_left);
         }
     }
     for (const type::StopPoint* sp : stop_points) {
@@ -217,7 +218,7 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
                 continue;
             }
             const auto& center = sp->coord;
-            circles_classed.push_back(InfoCircle(center, duration_left));
+            circles_classed.emplace_back(center, duration_left);
         }
     }
     std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);
@@ -252,7 +253,7 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
             } else {
                 output = max_isochrone;
             }
-            isochrone.push_back(Isochrone(std::move(output), boundary_duration[i], boundary_duration[i - 1]));
+            isochrone.emplace_back(std::move(output), boundary_duration[i], boundary_duration[i - 1]);
         }
     }
     std::reverse(isochrone.begin(), isochrone.end());

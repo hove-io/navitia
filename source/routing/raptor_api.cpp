@@ -29,21 +29,23 @@ www.navitia.io
 */
 
 #include "raptor_api.h"
+
+#include "fare/fare.h"
 #include "georef/street_network.h"
-#include "type/type_utils.h"
-#include "type/pb_converter.h"
+#include "heat_map.h"
+#include "isochrone.h"
 #include "type/datetime.h"
 #include "type/meta_data.h"
-#include "fare/fare.h"
-#include "isochrone.h"
-#include "heat_map.h"
+#include "type/pb_converter.h"
+#include "type/type_utils.h"
 #include "utils/map_find.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
-#include <unordered_set>
 #include <chrono>
 #include <string>
+#include <unordered_set>
+#include <utility>
 
 namespace navitia {
 namespace routing {
@@ -129,7 +131,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                      const size_t max_extra_second_pass,
                                      const double night_bus_filter_max_factor,
                                      const int32_t night_bus_filter_base_factor,
-                                     boost::optional<uint32_t> timeframe_duration) {
+                                     const boost::optional<uint32_t>& timeframe_duration) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
@@ -224,7 +226,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
         // when we have several date time and we have no result,
         // we return an empty path
         else {
-            pathes.push_back(Path());
+            pathes.emplace_back();
         }
     }
 
@@ -366,7 +368,7 @@ static void fill_section(PbCreator& pb_creator,
 static void co2_emission_aggregator(pbnavitia::Journey* pb_journey) {
     double co2_emission = 0.;
     bool to_add = false;
-    if (pb_journey->sections().size() > 0) {
+    if (!pb_journey->sections().empty()) {
         for (int idx_section = 0; idx_section < pb_journey->sections().size(); ++idx_section) {
             if (pb_journey->sections(idx_section).has_co2_emission()) {
                 co2_emission += pb_journey->sections(idx_section).co2_emission().value();
@@ -508,7 +510,7 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig,
     validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / DateTimeUtils::SECONDS_PER_DAY);
     // from the "base validity_pattern" day, we simply have to apply stop_time from base_vj (st_base)
     auto hour_of_day_base = (is_departure ? st_base->departure_time : st_base->arrival_time);
-    return bt::ptime(validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base));
+    return {validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base)};
 }
 
 static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
@@ -583,8 +585,9 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 pb_creator.fill(item.stop_times[i], stop_time, 1);
 
                 // L'heure de départ du véhicule au premier stop point
-                if (departure_ptime.is_not_a_date_time())
+                if (departure_ptime.is_not_a_date_time()) {
                     departure_ptime = p_deptime;
+                }
                 // L'heure d'arrivée au dernier stop point
                 arrival_ptime = p_arrtime;
             }
@@ -653,7 +656,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 if (it->type() != pbnavitia::PUBLIC_TRANSPORT) {
                     continue;
                 }
-                if (boost::count(it->additional_informations(), pbnavitia::HAS_DATETIME_ESTIMATED)) {
+                if (boost::count(it->additional_informations(), pbnavitia::HAS_DATETIME_ESTIMATED) != 0) {
                     pb_section->add_additional_informations(pbnavitia::HAS_DATETIME_ESTIMATED);
                 }
                 break;
@@ -1206,10 +1209,11 @@ static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
         }
         datetimes.push_back(ptime);
     }
-    if (clockwise)
+    if (clockwise) {
         std::sort(datetimes.begin(), datetimes.end(), [](bt::ptime dt1, bt::ptime dt2) { return dt1 > dt2; });
-    else
+    } else {
         std::sort(datetimes.begin(), datetimes.end());
+    }
 
     return datetimes;
 }
@@ -1307,8 +1311,9 @@ bool is_way_later(const Journey& j1, const Journey& j2, const NightBusFilter::Pa
 }
 
 void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Params& params) {
-    if (journeys.size() == 0)
+    if (journeys.empty()) {
         return;
+    }
 
     const auto& best = get_pseudo_best_journey(journeys, params.clockwise);
 
@@ -1375,18 +1380,18 @@ void make_response(navitia::PbCreator& pb_creator,
     }
 
     // case 3 : departure or destination are emtpy
-    if (departures->size() == 0 || destinations->size() == 0) {
+    if (departures->empty() || destinations->empty()) {
         make_pathes(pb_creator, std::vector<Path>(), worker, get_direct_path(worker, origin, destination), origin,
                     destination, datetimes, clockwise, depth);
 
         if (pb_creator.empty_journeys()) {
-            if (departures->size() == 0 && destinations->size() == 0) {
+            if (departures->empty() && destinations->empty()) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                          pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                          "no origin point nor destination point");
-            } else if (departures->size() == 0) {
+            } else if (departures->empty()) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_origin, pbnavitia::NO_ORIGIN_POINT, "no origin point");
-            } else if (destinations->size() == 0) {
+            } else if (destinations->empty()) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_destination, pbnavitia::NO_DESTINATION_POINT,
                                          "no destination point");
             }
@@ -1397,7 +1402,7 @@ void make_response(navitia::PbCreator& pb_creator,
     // classical case : We have departures and destinations
 
     // Compute direct path
-    typedef boost::optional<navitia::time_duration> OptTimeDur;
+    using OptTimeDur = boost::optional<navitia::time_duration>;
     const auto direct_path = get_direct_path(worker, origin, destination);
     const OptTimeDur direct_path_dur =
         direct_path.path_items.empty() ? OptTimeDur()
@@ -1422,26 +1427,26 @@ void make_response(navitia::PbCreator& pb_creator,
 }
 
 struct IsochroneCommon {
-    bool clockwise;
+    bool clockwise{};
     type::GeographicalCoord coord_origin;
     map_stop_point_duration departures;
-    DateTime init_dt;
+    DateTime init_dt{};
     type::EntryPoint center;
-    DateTime bound;
+    DateTime bound{};
     bt::ptime datetime;
-    IsochroneCommon() {}
+    IsochroneCommon() = default;
     IsochroneCommon(const bool clockwise,
                     const type::GeographicalCoord& coord_origin,
-                    const map_stop_point_duration& departures,
+                    map_stop_point_duration departures,
                     const DateTime init_dt,
-                    const type::EntryPoint& center,
+                    type::EntryPoint center,
                     const DateTime bound,
                     bt::ptime datetime)
         : clockwise(clockwise),
           coord_origin(coord_origin),
-          departures(departures),
+          departures(std::move(departures)),
           init_dt(init_dt),
-          center(center),
+          center(std::move(center)),
           bound(bound),
           datetime(datetime) {}
 };
@@ -1461,8 +1466,7 @@ static const boost::optional<IsochroneCommon> make_isochrone_common(
     PbCreator& pb_creator,
     const boost::optional<const type::EntryPoints&>& stop_points) {
     const auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
-    if (pb_creator.has_error() || tmp_datetime.size() == 0
-        || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
+    if (pb_creator.has_error() || tmp_datetime.empty() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return boost::optional<IsochroneCommon>{};
     }
 
@@ -1561,7 +1565,7 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
     pb_isochrone->set_max_duration(max_duration);
     pb_isochrone->set_min_date_time(navitia::to_posix_timestamp(min_date_time, d));
     pb_isochrone->set_max_date_time(navitia::to_posix_timestamp(max_date_time, d));
-    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_isochrone);
+    add_common_isochrone(pb_creator, std::move(center), clockwise, datetime, pb_isochrone);
 }
 
 static void add_heat_map(const std::string& heat_map,
@@ -1572,7 +1576,7 @@ static void add_heat_map(const std::string& heat_map,
     auto pb_heat_map = pb_creator.add_heat_maps();
     pb_heat_map->mutable_heat_matrix();
     pb_heat_map->set_heat_matrix(heat_map);
-    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_heat_map);
+    add_common_isochrone(pb_creator, std::move(center), clockwise, datetime, pb_heat_map);
 }
 
 static DateTime make_isochrone_date(const DateTime& init_dt, const DateTime& offset, const bool clockwise) {

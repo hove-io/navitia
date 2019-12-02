@@ -29,9 +29,11 @@ www.navitia.io
 */
 
 #include "get_stop_times.h"
-#include "routing/next_stop_time.h"
+
 #include "routing/dataraptor.h"
+#include "routing/next_stop_time.h"
 #include "type/pb_converter.h"
+
 #include <functional>
 
 namespace navitia {
@@ -79,13 +81,13 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
         } else {
             result_dt -= best_jpp_dt.st->get_alighting_duration();
         }
-        result.push_back(std::make_pair(result_dt, best_jpp_dt.st));
+        result.emplace_back(result_dt, best_jpp_dt.st);
 
         // we insert the next stop time in the queue (it must be at least one second after/before)
         auto next_dt = best_jpp_dt.dt + (clockwise ? 1 : -1);
         auto st = next_st.next_stop_time(stop_event, best_jpp_dt.jpp, next_dt, clockwise, rt_level,
                                          accessibilite_params.vehicle_properties, true, max_dt);
-        if (st.first) {
+        if (st.first != nullptr) {
             next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second});
         }
     }
@@ -180,11 +182,12 @@ std::vector<std::pair<uint32_t, const type::StopTime*>> get_all_calendar_stop_ti
             // if it is a frequency, we got to expand the timetable
 
             // Note: end can be lower than start, so we have to cycle through the day
-            const auto freq_vj = static_cast<const type::FrequencyVehicleJourney*>(vj);
+            const auto freq_vj = dynamic_cast<const type::FrequencyVehicleJourney*>(vj);
             bool is_looping = (freq_vj->start_time > freq_vj->end_time);
             auto stop_loop = [freq_vj, is_looping, st](u_int32_t t) {
-                if (!is_looping)
+                if (!is_looping) {
                     return t <= freq_vj->end_time + st.departure_time;
+                }
                 return t > freq_vj->end_time + st.departure_time;
             };
             for (auto time = freq_vj->start_time + st.departure_time; stop_loop(time); time += freq_vj->headway_secs) {
@@ -193,11 +196,11 @@ std::vector<std::pair<uint32_t, const type::StopTime*>> get_all_calendar_stop_ti
                 }
 
                 // we need to convert this to local there since we do not have a precise date (just a period)
-                res.push_back({time + freq_vj->utc_to_local_offset(), &st});
+                res.emplace_back(time + freq_vj->utc_to_local_offset(), &st);
             }
         } else {
             // same utc tranformation
-            res.push_back({st.departure_time + vj->utc_to_local_offset(), &st});
+            res.emplace_back(st.departure_time + vj->utc_to_local_offset(), &st);
         }
     }
 

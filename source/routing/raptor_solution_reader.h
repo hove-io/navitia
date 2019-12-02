@@ -48,8 +48,7 @@ struct Dominates {
     bool request_clockwise;
     Dominates(bool rc) : request_clockwise(rc) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs, request_clockwise)
-               && lhs.better_on_sn(rhs, request_clockwise);
+        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs) && lhs.better_on_sn(rhs);
     }
 };
 
