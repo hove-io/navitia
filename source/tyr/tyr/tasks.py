@@ -71,6 +71,7 @@ def finish_job(job_id):
     """
     use for mark a job as done after all the required task has been executed
     """
+    current_app.logger.debug("Finish Job : {}".format(job_id))
     job = models.Job.query.get(job_id)
     if job.state != 'failed':
         job.state = 'done'
@@ -100,10 +101,7 @@ def import_data(
     - reload the krakens
     """
     actions = []
-    job = models.Job()
     instance_config = load_instance_config(instance.name)
-    job.instance = instance
-    job.state = 'running'
     task = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
@@ -117,6 +115,7 @@ def import_data(
 
     for _file in files:
         filename = None
+        new_action = None
 
         dataset = models.DataSet()
         # NOTE: for the moment we do not use the path to load the data here
@@ -137,7 +136,7 @@ def import_data(
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory)
             else:
                 filename = _file
-            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+            new_action = task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid)
         else:
             # unknown type, we skip it
             current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
@@ -146,33 +145,56 @@ def import_data(
         # currently the name of a dataset is the path to it
         dataset.name = filename
         models.db.session.add(dataset)
+
+        # Create a job by type of data
+        job = models.Job()
+        job.instance = instance
+        job.state = 'pending'
         job.data_sets.append(dataset)
 
-    if actions:
-        models.db.session.add(job)
-        models.db.session.commit()
-        # We pass the job id to each tasks, but job need to be commited for having an id
-        for action in actions:
-            action.kwargs['job_id'] = job.id
-        # Create binary file (New .nav.lz4)
-        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
-        actions.append(chain(*binarisation))
-        # Reload kraken with new data after binarisation (New .nav.lz4)
-        if reload:
-            actions.append(reload_data.si(instance_config, job.id))
+        if new_action:
+            models.db.session.add(job)
+            models.db.session.commit()
+            # We pass the job id to each tasks, but job need to be commited for having an id
+            new_action.kwargs['job_id'] = job.id
+            actions.append(new_action)
+            actions.append(finish_job.si(job.id))
 
-        if not skip_mimir:
+    # Create a new job and dataset for ed2nav that will generate binary file (New .nav.lz4)
+    dataset = models.DataSet()
+    dataset.type = dataset.family_type = 'nav'
+    # TODO: path to data.nav.lz4 file
+    dataset.name = 'data.nav.lz4'
+    models.db.session.add(dataset)
+
+    job = models.Job()
+    job.instance = instance
+    job.state = 'pending'
+    job.data_sets.append(dataset)
+    models.db.session.add(job)
+    models.db.session.commit()
+
+    binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
+    actions.append(chain(*binarisation))
+    actions.append(finish_job.si(job.id))
+
+    # Reload kraken with new data after binarisation (New .nav.lz4)
+    if reload:
+        actions.append(reload_data.si(instance_config, job.id))
+
+    # Retrieve jobs created to pass dataset to "send_to_mimir"
+    if not skip_mimir:
+        for job in models.Job.query.filter_by(state='pending').all():
             for dataset in job.data_sets:
                 actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
         else:
             current_app.logger.info("skipping mimir import")
 
-        actions.append(finish_job.si(job.id))
-        if asynchronous:
-            return chain(*actions).delay()
-        else:
-            # all job are run in sequence and import_data will only return when all the jobs are finish
-            return chain(*actions).apply()
+    if asynchronous:
+        return chain(*actions).delay()
+    else:
+        # all job are run in sequence and import_data will only return when all the jobs are finish
+        return chain(*actions).apply()
 
 
 def send_to_mimir(instance, filename, family_type):
@@ -539,6 +561,7 @@ def build_data(instance):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
+    # TODO: add 'nav' dataset here for consistency
     chain(ed2nav.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
     current_app.logger.info("Job build data of : %s queued" % instance.name)
 
@@ -546,7 +569,6 @@ def build_data(instance):
 @celery.task()
 def load_data(instance_id, data_dirs):
     instance = models.Instance.query.get(instance_id)
-
     import_data(data_dirs, instance, backup_file=False, asynchronous=False)
 
 

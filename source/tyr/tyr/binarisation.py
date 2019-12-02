@@ -179,6 +179,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -216,8 +217,8 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
 @Lock(30 * 60)
 def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     """ Unzip gtfs file launch gtfs2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -255,8 +256,8 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
 @Lock(timeout=30 * 60)
 def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     """ launch osm2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
     poi_types_json = None
     if instance.poi_type_json:
@@ -301,8 +302,8 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
 @Lock(timeout=30 * 60)
 def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch geopal2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
     logger = get_instance_logger(instance, task_id=job_id)
     try:
@@ -310,12 +311,15 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
 
         connection_string = make_connection_string(instance_config)
         res = None
-        params = ["-i", working_directory]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        params = [
+            "-i",
+            working_directory,
+            "--connection-string",
+            connection_string,
+            "--local_syslog",
+            "--log_comment",
+            instance_config.name,
+        ]
         with collect_metric('geopal2ed', job, dataset_uid):
             res = launch_exec('geopal2ed', params, logger)
         if res != 0:
@@ -332,8 +336,8 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
 @Lock(timeout=10 * 60)
 def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch poi2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
     logger = get_instance_logger(instance, task_id=job_id)
     try:
@@ -341,12 +345,15 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
 
         connection_string = make_connection_string(instance_config)
         res = None
-        params = ["-i", working_directory]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        params = [
+            "-i",
+            working_directory,
+            "--connection-string",
+            connection_string,
+            "--local_syslog",
+            "--log_comment",
+            instance_config.name,
+        ]
         with collect_metric('poi2ed', job, dataset_uid):
             res = launch_exec('poi2ed', params, logger)
         if res != 0:
@@ -363,20 +370,23 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
 @Lock(timeout=10 * 60)
 def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch synonym2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
         connection_string = make_connection_string(instance_config)
         res = None
-        params = ["-i", filename]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        params = [
+            "-i",
+            filename,
+            "--connection-string",
+            connection_string,
+            "--local_syslog",
+            "--log_comment",
+            instance_config.name,
+        ]
         with collect_metric('synonym2ed', job, dataset_uid):
             res = launch_exec('synonym2ed', params, logger)
         if res != 0:
@@ -487,6 +497,7 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
 def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     """load a street network shape into ed"""
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
     logging.info("loading bounding shape for {} from = {}".format(instance.name, filename))
     load_bounding_shape(instance.name, instance_config, filename)
@@ -561,21 +572,23 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 @Lock(timeout=10 * 60)
 def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch fare2ed """
-
     job = models.Job.query.get(job_id)
+    job.state = "running"
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
-
         working_directory = unzip_if_needed(filename)
 
-        params = ["-f", working_directory]
-        params.append("--connection-string")
-        params.append(make_connection_string(instance_config))
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        params = [
+            "-f",
+            working_directory,
+            "--connection-string",
+            make_connection_string(instance_config),
+            "--local_syslog",
+            "--log_comment",
+            instance_config.name,
+        ]
         res = launch_exec("fare2ed", params, logger)
         if res != 0:
             # @TODO: exception
