@@ -29,8 +29,9 @@ www.navitia.io
 */
 
 #pragma once
-#include <proj_api.h>
 #include "type/geographical_coord.h"
+
+#include <proj_api.h>
 
 namespace ed {
 namespace connectors {

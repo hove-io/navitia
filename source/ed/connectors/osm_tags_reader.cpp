@@ -29,11 +29,14 @@ www.navitia.io
 */
 
 #include "osm_tags_reader.h"
-#include "utils/functions.h"
-#include <iostream>
-#include <algorithm>
-#include <boost/property_tree/json_parser.hpp>
+
 #include "utils/exception.h"
+#include "utils/functions.h"
+
+#include <boost/property_tree/json_parser.hpp>
+
+#include <algorithm>
+#include <iostream>
 
 namespace ed {
 namespace connectors {
@@ -46,7 +49,7 @@ static void update_if_unknown(int& target, const int& source) {
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     // if no highway tag, we can do nothing on it
-    if (!tags.count("highway")) {
+    if (tags.count("highway") == 0u) {
         return {};
     }
 
@@ -135,34 +138,36 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
         // http://wiki.openstreetmap.org/wiki/Cycleway
         // http://wiki.openstreetmap.org/wiki/Map_Features#Cycleway
         else if (key == "cycleway") {
-            if (val == "lane" || val == "yes" || val == "true" || val == "lane_in_the_middle")
+            if (val == "lane" || val == "yes" || val == "true" || val == "lane_in_the_middle") {
                 bike_direct = bike_lane;
-            else if (val == "track")
+            } else if (val == "track") {
                 bike_direct = bike_track;
-            else if (val == "opposite_lane")
+            } else if (val == "opposite_lane") {
                 bike_reverse = bike_lane;
-            else if (val == "opposite_track")
+            } else if (val == "opposite_track") {
                 bike_reverse = bike_track;
-            else if (val == "opposite")
+            } else if (val == "opposite") {
                 bike_reverse = bike_allowed;
-            else if (val == "share_busway")
+            } else if (val == "share_busway") {
                 bike_direct = bike_busway;
-            else if (val == "lane_left")
+            } else if (val == "lane_left") {
                 bike_reverse = bike_lane;
-            else
+            } else {
                 bike_direct = bike_lane;
+            }
         } else if (key == "bicycle") {
             if (val == "yes" || val == "permissive" || val == "destination" || val == "designated" || val == "private"
-                || val == "true" || val == "allowed" || val == "official" || val == "destination")
+                || val == "true" || val == "allowed" || val == "official" || val == "destination") {
                 bike_direct = bike_allowed;
-            else if (val == "no" || val == "dismount" || val == "VTT")
+            } else if (val == "no" || val == "dismount" || val == "VTT") {
                 bike_direct = bike_forbiden;
-            else if (val == "share_busway")
+            } else if (val == "share_busway") {
                 bike_direct = bike_busway;
-            else if (val == "opposite_lane" || val == "opposite")
+            } else if (val == "opposite_lane" || val == "opposite") {
                 bike_reverse = bike_allowed;
-            else
+            } else {
                 std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+            }
         }
 
         else if (key == "busway") {

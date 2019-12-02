@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-#include <utils/logger.h>
+#include "utils/logger.h"
 #include "ed/connectors/conv_coord.h"
 
 namespace ed {
@@ -45,7 +45,7 @@ private:
 
 public:
     // default conv coord is WGS84->WGS84
-    ProjectionSystemReader(const std::string& file, ConvCoord default_conv = ConvCoord(Projection(), Projection()));
+    ProjectionSystemReader(std::string p, ConvCoord d = ConvCoord(Projection(), Projection()));
 
     ConvCoord read_conv_coord() const;
 };

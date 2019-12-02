@@ -28,10 +28,12 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "ed/types.h"
+
+#include <osmpbfreader/osmpbfreader.h>
+
 #include <bitset>
 #include <map>
-#include <osmpbfreader/osmpbfreader.h>
-#include "ed/types.h"
 
 namespace ed {
 namespace connectors {

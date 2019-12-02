@@ -30,15 +30,17 @@ www.navitia.io
 
 #pragma once
 #include "ed/data.h"
-#include <boost/unordered_map.hpp>
-#include <queue>
 #include "utils/csv.h"
 #include "utils/logger.h"
 #include "utils/functions.h"
+#include "tz_db_wrapper.h"
+
+#include <boost/unordered_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
-#include "tz_db_wrapper.h"
+
+#include <queue>
 
 /**
  * Read General Transit Feed Specifications Files
@@ -144,7 +146,7 @@ inline bool is_valid(int col_idx, const std::vector<std::string>& row) {
     return (has_col(col_idx, row) && (!row[col_idx].empty()));
 }
 
-std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj);
+std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string& original_uri, int cpt_vj);
 
 /**
  * Parser used to parse one kind of file
@@ -195,14 +197,14 @@ struct FeedInfoGtfsHandler : public GenericHandler {
     FeedInfoGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int feed_publisher_name_c, feed_publisher_url_c, feed_start_date_c, feed_end_date_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
 };
 
 struct AgencyGtfsHandler : public GenericHandler {
     AgencyGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, time_zone_c;
     void init(Data&);
-    types::Network* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    types::Network* handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"agency_name", "agency_url", "agency_timezone"}; }
 };
 
@@ -224,15 +226,15 @@ struct StopsGtfsHandler : public GenericHandler {
     std::vector<types::StopPoint*> wheelchair_heritance;
     void init(Data& data);
     void finish(Data& data);
-    stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
+    stop_point_and_area handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"stop_id", "stop_name", "stop_lat", "stop_lon"}; }
     template <typename T>
     bool parse_common_data(const csv_row& row, T* stop);
 
     void handle_stop_point_without_area(Data& data);  // might be different between stops parser
 
-    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
-    ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& row);
+    ed::types::StopArea* build_stop_area(Data& data, const csv_row& row);
     bool is_duplicate(const csv_row& row);
 };
 
@@ -242,7 +244,7 @@ struct RouteGtfsHandler : public GenericHandler {
     int ignored = 0;
     void init(Data&);
     void finish(Data& data);
-    ed::types::Line* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    ed::types::Line* handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "route_short_name", "route_long_name", "route_type"};
     }
@@ -256,7 +258,7 @@ struct TransfersGtfsHandler : public GenericHandler {
     virtual ~TransfersGtfsHandler() {}
     void init(Data&);
     void finish(Data& data);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"from_stop_id", "to_stop_id"}; }
     virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
 };
@@ -267,7 +269,7 @@ struct CalendarGtfsHandler : public GenericHandler {
     size_t nb_lines = 0;
     void init(Data& data);
     void finish(Data& data);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"service_id", "monday",   "tuesday", "wednesday",  "thursday",
                 "friday",     "saturday", "sunday",  "start_date", "end_date"};
@@ -278,7 +280,7 @@ struct CalendarDatesGtfsHandler : public GenericHandler {
     CalendarDatesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, date_c, e_type_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"service_id", "date", "exception_type"}; }
 };
 
@@ -287,7 +289,7 @@ struct ShapesGtfsHandler : public GenericHandler {
     int shape_id_c = -1, shape_pt_lat_c = -1, shape_pt_lon_c = -1, shape_pt_sequence_c = -1;
     std::map<std::string, std::map<int, navitia::type::GeographicalCoord>> shapes;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     void finish(Data& data);
     const std::vector<std::string> required_headers() const {
         return {"shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"};
@@ -303,7 +305,7 @@ struct TripsGtfsHandler : public GenericHandler {
 
     void init(Data& data);
     void finish(Data& data);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"route_id", "service_id", "trip_id"}; }
 
     using RouteId = std::pair<types::Line*, const std::string>;
@@ -318,7 +320,7 @@ struct StopTimeGtfsHandler : public GenericHandler {
     size_t count = 0;
     void init(Data& data);
     void finish(Data& data);
-    std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& line, bool is_first_line);
+    std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"};
     }
@@ -328,7 +330,7 @@ struct FrequenciesGtfsHandler : public GenericHandler {
     FrequenciesGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int trip_id_c, start_time_c, end_time_c, headway_secs_c;
     void init(Data& data);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"trip_id", "start_time", "end_time", "headway_secs"};
     }
@@ -353,7 +355,7 @@ public:
     GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GenericGtfsParser(const std::string& path);
+    GenericGtfsParser(std::string path);
     virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre

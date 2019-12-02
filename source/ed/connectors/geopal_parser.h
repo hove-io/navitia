@@ -29,12 +29,13 @@ www.navitia.io
 */
 
 #pragma once
-#include <utils/logger.h>
-#include <boost/filesystem.hpp>
+#include "utils/logger.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
 #include "ed/data.h"
 #include "ed/connectors/conv_coord.h"
+
+#include <boost/filesystem.hpp>
 
 namespace ed {
 namespace connectors {
@@ -55,14 +56,14 @@ private:
     void fill_admins();
     void fill_postal_codes();
     void fill_ways_edges();
-    bool starts_with(std::string filename, const std::string& prefex);
+    bool starts_with(const std::string& filename, const std::string& prefex);
 
 public:
     ConvCoord conv_coord = ConvCoord(Projection("Lambert 2 étendu", "27572", false));
 
     ed::Georef data;
 
-    GeopalParser(const std::string& path);
+    GeopalParser(std::string path);
 
     void fill();
 };

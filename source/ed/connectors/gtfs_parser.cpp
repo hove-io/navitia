@@ -29,19 +29,23 @@ www.navitia.io
 */
 
 #include "gtfs_parser.h"
-#include "utils/encoding_converter.h"
+
 #include "utils/csv.h"
+#include "utils/encoding_converter.h"
 #include "utils/logger.h"
+
 #include <boost/geometry.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/tokenizer.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <utility>
 
 namespace nm = ed::types;
-typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
+using Tokenizer = boost::tokenizer<boost::escaped_list_separator<char> >;
 
 namespace ed {
 namespace connectors {
@@ -90,7 +94,7 @@ template <typename T>
 void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const T& obj, const std::string& comment) {
     std::string& comment_id = gtfs_data.comments_id_map[comment];
     if (comment_id.empty()) {
-        comment_id = "comment__" + boost::lexical_cast<std::string>(gtfs_data.comments_id_map.size());
+        comment_id = "comment__" + std::to_string(gtfs_data.comments_id_map.size());
     }
     data.add_pt_object_comment(obj, comment_id);
     data.comment_by_id[comment_id] = nt::Comment(comment);
@@ -99,7 +103,7 @@ void add_gtfs_comment(GtfsData& gtfs_data, Data& data, const T& obj, const std::
 static int default_waiting_duration = 120;
 static int default_connection_duration = 120;
 
-std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string original_uri, int cpt_vj) {
+std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string& original_uri, int cpt_vj) {
     // we change the name of the vj since we had to split the original GTFS vj because of dst
     // WARNING: this code is uggly, but it's a quick fix.
     for (int i = 0; i < 100; ++i) {
@@ -167,31 +171,32 @@ ed::types::Company* GtfsData::get_or_create_default_company(Data& data) {
 }
 
 int time_to_int(const std::string& time) {
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    using tokenizer = boost::tokenizer<boost::char_separator<char> >;
     boost::char_separator<char> sep(":");
     tokenizer tokens(time, sep);
     std::vector<std::string> elts(tokens.begin(), tokens.end());
     int result = 0;
-    if (elts.size() != 3)
+    if (elts.size() != 3) {
         return -1;
+    }
     try {
         result = boost::lexical_cast<int>(elts[0]) * 3600;
         result += boost::lexical_cast<int>(elts[1]) * 60;
         result += boost::lexical_cast<int>(elts[2]);
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         return std::numeric_limits<int>::min();
     }
     return result;
 }
 
-void FeedInfoGtfsHandler::init(Data&) {
+void FeedInfoGtfsHandler::init(Data& /*unused*/) {
     feed_publisher_name_c = csv.get_pos_col("feed_publisher_name");
     feed_publisher_url_c = csv.get_pos_col("feed_publisher_url");
     feed_start_date_c = csv.get_pos_col("feed_start_date");
     feed_end_date_c = csv.get_pos_col("feed_end_date");
 }
 
-void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     if (has_col(feed_end_date_c, row)) {
         data.add_feed_info("feed_end_date", row[feed_end_date_c]);
     }
@@ -209,7 +214,7 @@ void FeedInfoGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 }
 
-void AgencyGtfsHandler::init(Data&) {
+void AgencyGtfsHandler::init(Data& /*unused*/) {
     id_c = csv.get_pos_col("agency_id");
     name_c = csv.get_pos_col("agency_name");
     time_zone_c = csv.get_pos_col("agency_timezone");
@@ -221,7 +226,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
             logger, "Error while reading " + csv.filename + +" file has more than one agency and no agency_id column");
         throw InvalidHeaders(csv.filename);
     }
-    nm::Network* network = new nm::Network();
+    auto* network = new nm::Network();
 
     if (has_col(id_c, row)) {
         network->uri = row[id_c];
@@ -263,7 +268,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 }
 
 void DefaultContributorHandler::init(Data& data) {
-    nm::Contributor* contributor = new nm::Contributor();
+    auto* contributor = new nm::Contributor();
     contributor->uri = "default_contributor";
     contributor->name = "default_contributor";
     contributor->idx = data.contributors.size() + 1;
@@ -312,8 +317,9 @@ void StopsGtfsHandler::finish(Data& data) {
 
     // We fetch the accessibility for all stop points that inherit from their stop area's accessibility
     for (auto sp : wheelchair_heritance) {
-        if (sp->stop_area == nullptr)
+        if (sp->stop_area == nullptr) {
             continue;
+        }
         if (sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
             sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         }
@@ -322,7 +328,6 @@ void StopsGtfsHandler::finish(Data& data) {
     handle_stop_point_without_area(data);
 
     LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");
-    ;
     LOG4CPLUS_TRACE(logger, data.stop_areas.size() << " added stop areas");
     LOG4CPLUS_TRACE(logger, ignored << " points ignored because of dupplicates");
 }
@@ -340,8 +345,9 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         sa->coord.set_lat(sp->coord.lat());
         sa->name = sp->name;
         sa->uri = sp->uri;
-        if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
+        if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        }
 
         gtfs_data.stop_area_map[sa->uri] = sa;
         data.stop_areas.push_back(sa);
@@ -358,7 +364,7 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         nb_added_sa++;
     }
 
-    if (nb_added_sa) {
+    if (nb_added_sa != 0) {
         LOG4CPLUS_INFO(
             logger,
             nb_added_sa << " stop_points without stop_area. Creation of a stop_area for each of those stop_points");
@@ -370,7 +376,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     try {
         stop->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
         stop->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(logger,
                        "Impossible to parse the coordinate for " + row[id_c] + " " + row[code_c] + " " + row[name_c]);
         return false;
@@ -389,7 +395,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 }
 
 nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) {
-    nm::StopArea* sa = new nm::StopArea();
+    auto* sa = new nm::StopArea();
     if (!parse_common_data(row, sa)) {
         delete sa;  // don't forget to free the data
         return nullptr;
@@ -416,13 +422,13 @@ nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) 
 }
 
 nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row) {
-    nm::StopPoint* sp = new nm::StopPoint();
+    auto* sp = new nm::StopPoint();
     if (!parse_common_data(row, sp)) {
         delete sp;
         return nullptr;
     }
 
-    if (has_col(zone_c, row) && row[zone_c] != "") {
+    if (has_col(zone_c, row) && !row[zone_c].empty()) {
         sp->fare_zone = row[zone_c];
     }
 
@@ -438,7 +444,7 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     }
     gtfs_data.stop_point_map[sp->uri] = sp;
     data.stop_points.push_back(sp);
-    if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
+    if (has_col(parent_c, row) && !row[parent_c].empty()) {  // we save the reference to the stop area
         auto it = gtfs_data.sa_spmap.find(row[parent_c]);
         if (it == gtfs_data.sa_spmap.end()) {
             it = gtfs_data.sa_spmap.insert(std::make_pair(row[parent_c], GtfsData::vector_sp())).first;
@@ -469,7 +475,7 @@ bool StopsGtfsHandler::is_duplicate(const csv_row& row) {
     return false;
 }
 
-StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     stop_point_and_area return_wrapper{};
 
     if (is_duplicate(row)) {
@@ -483,21 +489,20 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             return_wrapper.second = sa;
         }
         return return_wrapper;
-
-    } else if ((has_col(type_c, row) && row[type_c] == "0") || !has_col(type_c, row)) {
+    }
+    if ((has_col(type_c, row) && row[type_c] == "0") || !has_col(type_c, row)) {
         // location_type == 0 => StopPoint
         auto* sp = build_stop_point(data, row);
         if (sp) {
             return_wrapper.first = sp;
         }
         return return_wrapper;
-    } else {
-        // we ignore pathways nodes
-        return {};
     }
+    // we ignore pathways nodes
+    return {};
 }
 
-void RouteGtfsHandler::init(Data&) {
+void RouteGtfsHandler::init(Data& /*unused*/) {
     id_c = csv.get_pos_col("route_id");
     short_name_c = csv.get_pos_col("route_short_name");
     long_name_c = csv.get_pos_col("route_long_name");
@@ -508,14 +513,14 @@ void RouteGtfsHandler::init(Data&) {
     text_color_c = csv.get_pos_col("route_text_color");
 }
 
-nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     if (gtfs_data.line_map.find(row[id_c]) != gtfs_data.line_map.end()) {
         ignored++;
         LOG4CPLUS_WARN(logger, "duplicate on route line " + row[id_c]);
         return nullptr;
     }
 
-    nm::Line* line = new nm::Line();
+    auto* line = new nm::Line();
     line->uri = row[id_c];
     line->name = row[long_name_c];
     line->code = row[short_name_c];
@@ -532,9 +537,9 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     line->additional_data = row[long_name_c];
 
     auto it_commercial_mode = gtfs_data.commercial_mode_map.find(row[type_c]);
-    if (it_commercial_mode != gtfs_data.commercial_mode_map.end())
+    if (it_commercial_mode != gtfs_data.commercial_mode_map.end()) {
         line->commercial_mode = it_commercial_mode->second;
-    else {
+    } else {
         LOG4CPLUS_ERROR(logger,
                         "impossible to find route type " << row[type_c] << " we ignore the route " << row[id_c]);
         ignored++;
@@ -566,7 +571,7 @@ void RouteGtfsHandler::finish(Data& data) {
     LOG4CPLUS_TRACE(logger, ignored << " routes have been ignored because of duplicates");
 }
 
-void TransfersGtfsHandler::init(Data&) {
+void TransfersGtfsHandler::init(Data& /*unused*/) {
     from_c = csv.get_pos_col("from_stop_id");
     to_c = csv.get_pos_col("to_stop_id");
     time_c = csv.get_pos_col("min_transfer_time");
@@ -596,7 +601,7 @@ void TransfersGtfsHandler::fill_stop_point_connection(nm::StopPointConnection* c
     }
 }
 
-void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     GtfsData::vector_sp departures, arrivals;
     // We don't want to have these connections, because it could lead to weird things
     // And also we don't want to show that to our users, this must be a data problem
@@ -639,7 +644,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     for (auto from_sp : departures) {
         for (auto to_sp : arrivals) {
-            nm::StopPointConnection* connection = new nm::StopPointConnection();
+            auto* connection = new nm::StopPointConnection();
             connection->departure = from_sp;
             connection->destination = to_sp;
             connection->uri = from_sp->uri + "=>" + to_sp->uri;
@@ -673,7 +678,7 @@ void CalendarGtfsHandler::finish(Data& data) {
     BOOST_ASSERT(data.validity_patterns.size() == gtfs_data.tz.vp_by_name.size());
 }
 
-void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void CalendarGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     std::bitset<7> week;
     nb_lines++;
 
@@ -731,11 +736,10 @@ static boost::gregorian::date_period compute_smallest_active_period(const nt::Va
         assert(end == std::numeric_limits<size_t>::min());  // if we did not find beg, end cannot be found too
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
                        "the calendar " << vp.uri << " has an empty validity period, we will ignore it");
-        return boost::gregorian::date_period(vp.beginning_date, vp.beginning_date);  // return null period
+        return {vp.beginning_date, vp.beginning_date};  // return null period
     }
 
-    return boost::gregorian::date_period(vp.beginning_date + boost::gregorian::days(beg),
-                                         vp.beginning_date + boost::gregorian::days(end + 1));
+    return {vp.beginning_date + boost::gregorian::days(beg), vp.beginning_date + boost::gregorian::days(end + 1)};
 }
 
 /*
@@ -790,13 +794,13 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
     }
 }
 
-void CalendarDatesGtfsHandler::init(Data&) {
+void CalendarDatesGtfsHandler::init(Data& /*unused*/) {
     id_c = csv.get_pos_col("service_id");
     date_c = csv.get_pos_col("date");
     e_type_c = csv.get_pos_col("exception_type");
 }
 
-void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     bool new_vp = gtfs_data.tz.non_split_vp.find(row[id_c]) == gtfs_data.tz.non_split_vp.end();
 
     nt::ValidityPattern& vp = gtfs_data.tz.non_split_vp[row[id_c]];
@@ -807,26 +811,26 @@ void CalendarDatesGtfsHandler::handle_line(Data& data, const csv_row& row, bool)
     }
 
     auto date = boost::gregorian::from_undelimited_string(row[date_c]);
-    if (row[e_type_c] == "1")
+    if (row[e_type_c] == "1") {
         vp.add(date);
-    else if (row[e_type_c] == "2")
+    } else if (row[e_type_c] == "2") {
         vp.remove(date);
-    else
+    } else
         LOG4CPLUS_WARN(logger, "Exception pour le service " << row[id_c] << " inconnue : " << row[e_type_c]);
 }
 
-void ShapesGtfsHandler::init(Data&) {
+void ShapesGtfsHandler::init(Data& /*unused*/) {
     shape_id_c = csv.get_pos_col("shape_id");
     shape_pt_lat_c = csv.get_pos_col("shape_pt_lat");
     shape_pt_lon_c = csv.get_pos_col("shape_pt_lon");
     shape_pt_sequence_c = csv.get_pos_col("shape_pt_sequence");
 }
 
-void ShapesGtfsHandler::handle_line(Data&, const csv_row& row, bool) {
+void ShapesGtfsHandler::handle_line(Data& /*unused*/, const csv_row& row, bool /*unused*/) {
     try {
         const navitia::type::GeographicalCoord coord(boost::lexical_cast<double>(row.at(shape_pt_lon_c)),
                                                      boost::lexical_cast<double>(row.at(shape_pt_lat_c)));
-        const int seq = boost::lexical_cast<int>(row.at(shape_pt_sequence_c));
+        const auto seq = boost::lexical_cast<int>(row.at(shape_pt_sequence_c));
         shapes[row.at(shape_id_c)][seq] = coord;
     } catch (std::exception& e) {
         LOG4CPLUS_WARN(logger, "Exception in shapes.txt: " << e.what());
@@ -874,20 +878,19 @@ types::Route* TripsGtfsHandler::get_or_create_route(Data& data, const RouteId& r
     const auto it = routes.find(route_id);
     if (it != std::end(routes)) {
         return it->second;
-    } else {
-        types::Route* route = new types::Route();
-        route->line = route_id.first;
-        // uri is {line}:{direction}
-        route->uri = route->line->uri + ":" + route_id.second;
-        route->name = route->line->name;
-        route->idx = data.routes.size();
-        data.routes.push_back(route);
-        routes[route_id] = route;
-        return route;
     }
+    auto* route = new types::Route();
+    route->line = route_id.first;
+    // uri is {line}:{direction}
+    route->uri = route->line->uri + ":" + route_id.second;
+    route->name = route->line->name;
+    route->idx = data.routes.size();
+    data.routes.push_back(route);
+    routes[route_id] = route;
+    return route;
 }
 
-void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     auto it = gtfs_data.line_map.find(row[id_c]);
     if (it == gtfs_data.line_map.end()) {
         LOG4CPLUS_WARN(logger,
@@ -899,7 +902,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     nm::Line* line = it->second;
 
     // direction_id is optional (and possible values "0" or "1"), so defaulting to "0"
-    std::string direction_id = "";
+    std::string direction_id;
     if (direction_id_c != -1) {
         direction_id = row[direction_id_c];
     }
@@ -933,7 +936,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
         nt::ValidityPattern* vp_xx = vp_it->second;
 
-        nm::VehicleJourney* vj = new nm::VehicleJourney();
+        auto* vj = new nm::VehicleJourney();
         const std::string original_uri = row[trip_c];
         std::string vj_uri = original_uri;
         if (has_been_split) {
@@ -941,22 +944,26 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         }
 
         vj->uri = vj_uri;
-        if (has_col(headsign_c, row))
+        if (has_col(headsign_c, row)) {
             vj->name = row[headsign_c];
-        else
+        } else {
             vj->name = vj->uri;
+        }
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
         vj->route = route;
-        if (has_col(block_id_c, row))
+        if (has_col(block_id_c, row)) {
             vj->block_id = row[block_id_c];
-        else
+        } else {
             vj->block_id = "";
-        if (has_col(wheelchair_c, row) && row[wheelchair_c] == "1")
+        }
+        if (has_col(wheelchair_c, row) && row[wheelchair_c] == "1") {
             vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
-        if (has_col(bikes_c, row) && row[bikes_c] == "1")
+        }
+        if (has_col(bikes_c, row) && row[bikes_c] == "1") {
             vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+        }
 
         auto itm = gtfs_data.physical_mode_map.find(line->commercial_mode->uri);
         if (itm != gtfs_data.physical_mode_map.end()) {
@@ -975,7 +982,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 }
 
-void StopTimeGtfsHandler::init(Data&) {
+void StopTimeGtfsHandler::init(Data& /*unused*/) {
     LOG4CPLUS_INFO(logger, "reading stop times");
     trip_c = csv.get_pos_col("trip_id");
     arrival_c = csv.get_pos_col("arrival_time");
@@ -989,8 +996,9 @@ void StopTimeGtfsHandler::init(Data&) {
 void StopTimeGtfsHandler::finish(Data& data) {
     LOG4CPLUS_INFO(logger, "sorting stoptimes of vehicle_journeys");
     for (auto* const vj : data.vehicle_journeys) {
-        if (vj->stop_time_list.empty())
+        if (vj->stop_time_list.empty()) {
             continue;
+        }
 
         boost::sort(vj->stop_time_list, [](const nm::StopTime* st1, const nm::StopTime* st2) -> bool {
             if (st1->order == st2->order) {
@@ -1047,7 +1055,7 @@ static int to_utc(const std::string& local_time, int utc_offset) {
     return local;
 }
 
-std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     auto stop_it = gtfs_data.stop_point_map.find(row[stop_c]);
     if (stop_it == gtfs_data.stop_point_map.end()) {
         LOG4CPLUS_WARN(logger, "Impossible to find the stop_point " + row[stop_c] + "!");
@@ -1063,7 +1071,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 
     // the validity pattern may have been split because of DST, so we need to create one vj for each
     for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_c]); vj_it != vj_end_it; ++vj_it) {
-        nm::StopTime* stop_time = new nm::StopTime();
+        auto* stop_time = new nm::StopTime();
 
         // we need to convert the stop times in UTC
         int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
@@ -1079,18 +1087,21 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
 
-        if (has_col(pickup_c, row) && has_col(drop_off_c, row))
+        if (has_col(pickup_c, row) && has_col(drop_off_c, row)) {
             stop_time->ODT = (row[pickup_c] == "2" || row[drop_off_c] == "2");
-        else
+        } else {
             stop_time->ODT = false;
-        if (has_col(pickup_c, row))
+        }
+        if (has_col(pickup_c, row)) {
             stop_time->pick_up_allowed = row[pickup_c] != "1";
-        else
+        } else {
             stop_time->pick_up_allowed = true;
-        if (has_col(drop_off_c, row))
+        }
+        if (has_col(drop_off_c, row)) {
             stop_time->drop_off_allowed = row[drop_off_c] != "1";
-        else
+        } else {
             stop_time->drop_off_allowed = true;
+        }
 
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
@@ -1102,14 +1113,14 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
     return stop_times;
 }
 
-void FrequenciesGtfsHandler::init(Data&) {
+void FrequenciesGtfsHandler::init(Data& /*unused*/) {
     trip_id_c = csv.get_pos_col("trip_id");
     start_time_c = csv.get_pos_col("start_time");
     end_time_c = csv.get_pos_col("end_time");
     headway_secs_c = csv.get_pos_col("headway_secs");
 }
 
-void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool /*unused*/) {
     for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_id_c]),
               vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[trip_id_c]);
          vj_it != vj_end_it; ++vj_it) {
@@ -1142,10 +1153,10 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 }
 
-GenericGtfsParser::GenericGtfsParser(const std::string& path) : path(path) {
+GenericGtfsParser::GenericGtfsParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
 }
-GenericGtfsParser::~GenericGtfsParser() {}
+GenericGtfsParser::~GenericGtfsParser() = default;
 
 void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
     parse_files(data, beginning_date);
@@ -1157,13 +1168,13 @@ void GenericGtfsParser::fill_default_modes(Data& data) {
     // default commercial_mode and physical_modes
     // all modes are represented by a number in GTFS
     // see route_type in https://developers.google.com/transit/gtfs/reference?hl=fr-FR#routestxt
-    ed::types::PhysicalMode* physical_mode = new ed::types::PhysicalMode();
+    auto* physical_mode = new ed::types::PhysicalMode();
     physical_mode->uri = "Tramway";
     physical_mode->name = "Tramway";
     data.physical_modes.push_back(physical_mode);
     // NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
     gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
-    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
+    auto* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Tram, Streetcar, Light rail";
     data.commercial_modes.push_back(commercial_mode);
@@ -1254,14 +1265,13 @@ void normalize_extcodes(Data& data) {
 }
 
 boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std::string& beginning_date) {
-    if (beginning_date == "") {
+    if (beginning_date.empty()) {
         throw UnableToFindProductionDateException();
-    } else {
-        boost::gregorian::date b_date(boost::gregorian::from_undelimited_string(beginning_date)),
-            e_date(b_date + boost::gregorian::days(365 + 1));
-
-        return boost::gregorian::date_period(b_date, e_date);
     }
+    boost::gregorian::date b_date(boost::gregorian::from_undelimited_string(beginning_date)),
+        e_date(b_date + boost::gregorian::days(365 + 1));
+
+    return {b_date, e_date};
 }
 
 boost::gregorian::date_period GenericGtfsParser::find_production_date(const std::string& beginning_date) {
@@ -1284,8 +1294,9 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     int trip_c = csv.get_pos_col("trip_id");
     while (!csv.eof()) {
         auto row = csv.next();
-        if (!row.empty())
+        if (!row.empty()) {
             trips.insert(std::make_pair(row[trip_c], true));
+        }
     }
 
     filename = path + "/trips.txt";
@@ -1307,8 +1318,9 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     std::map<std::string, bool> services;
     while (!csv2.eof()) {
         auto row = csv2.next();
-        if (!row.empty() && trips.find(row[trip_c]) != trips.end())
+        if (!row.empty() && trips.find(row[trip_c]) != trips.end()) {
             services.insert(std::make_pair(row[service_c], true));
+        }
     }
     boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
 
@@ -1385,8 +1397,8 @@ void GenericGtfsParser::manage_production_date(Data& data, const std::string& be
     auto start_it = data.feed_infos.find("feed_start_date");
     auto end_it = data.feed_infos.find("feed_end_date");
     boost::gregorian::date start_date(boost::gregorian::not_a_date_time), end_date(boost::gregorian::not_a_date_time);
-    if ((start_it != data.feed_infos.end() && start_it->second != "")
-        && (end_it != data.feed_infos.end() && end_it->second != "")) {
+    if ((start_it != data.feed_infos.end() && !start_it->second.empty())
+        && (end_it != data.feed_infos.end() && !end_it->second.empty())) {
         try {
             start_date = boost::gregorian::from_undelimited_string(start_it->second);
         } catch (const std::exception& e) {
@@ -1406,7 +1418,7 @@ void GenericGtfsParser::manage_production_date(Data& data, const std::string& be
         try {
             data.meta.production_date = find_production_date(beginning_date);
         } catch (...) {
-            if (beginning_date == "") {
+            if (beginning_date.empty()) {
                 LOG4CPLUS_FATAL(logger, "Impossible to find the production date");
             }
         }
@@ -1419,8 +1431,9 @@ boost::gregorian::date_period GenericGtfsParser::complete_production_date(const 
                                                                           boost::gregorian::date start_date,
                                                                           boost::gregorian::date end_date) {
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
-    if (beginning_date != "")
+    if (!beginning_date.empty()) {
         b_date = boost::gregorian::from_undelimited_string(beginning_date);
+    }
 
     boost::gregorian::date beginning = std::max(start_date, b_date);
 
@@ -1431,7 +1444,7 @@ boost::gregorian::date_period GenericGtfsParser::complete_production_date(const 
                                + boost::gregorian::to_simple_string(end));
     // the end of a boost::gregorian::date_period is not in the period
     // since end_date is the last day is the data, we want the end to be the next day
-    return boost::gregorian::date_period(beginning, end + boost::gregorian::days(1));
+    return {beginning, end + boost::gregorian::days(1)};
 }
 
 void GtfsParser::parse_files(Data& data, const std::string& beginning_date) {

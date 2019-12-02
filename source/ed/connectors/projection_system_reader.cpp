@@ -29,14 +29,19 @@ www.navitia.io
 */
 
 #include "projection_system_reader.h"
-#include <boost/filesystem.hpp>
-#include "utils/exception.h"
+
 #include "utils/csv.h"
+#include "utils/exception.h"
+
+#include <boost/filesystem.hpp>
+
+#include <utility>
 
 namespace ed {
 namespace connectors {
 
-ProjectionSystemReader::ProjectionSystemReader(const std::string& p, ConvCoord d) : file(p), default_conv_coord(d) {}
+ProjectionSystemReader::ProjectionSystemReader(std::string p, ConvCoord d)
+    : file(std::move(p)), default_conv_coord(std::move(std::move(d))) {}
 
 ConvCoord ProjectionSystemReader::read_conv_coord() const {
     CsvReader reader(file, ';', true, true);
@@ -78,7 +83,7 @@ ConvCoord ProjectionSystemReader::read_conv_coord() const {
     if (reader.has_col(is_degree_col, row)) {
         try {
             is_degree = boost::lexical_cast<bool>(row.at(is_degree_col));
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             LOG4CPLUS_INFO(logger, "Unable to cast '" << row[is_degree_col] << "' to bool, ignoring parameter");
         }
     }

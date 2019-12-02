@@ -29,17 +29,21 @@ www.navitia.io
 */
 
 #include "synonym_parser.h"
-#include <boost/lexical_cast.hpp>
-#include "utils/csv.h"
+
 #include "utils/configuration.h"
+#include "utils/csv.h"
+
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <utility>
 
 namespace ed {
 namespace connectors {
 
-SynonymParserException::~SynonymParserException() noexcept {}
+SynonymParserException::~SynonymParserException() noexcept = default;
 
-SynonymParser::SynonymParser(const std::string& filename) : filename(filename) {
+SynonymParser::SynonymParser(std::string filename) : filename(std::move(filename)) {
     logger = log4cplus::Logger::getInstance("log");
 }
 

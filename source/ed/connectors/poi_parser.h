@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "ed/data.h"
-#include <utils/logger.h>
+#include "utils/logger.h"
 #include "ed/connectors/conv_coord.h"
 
 namespace ed {
@@ -56,7 +56,7 @@ private:
 public:
     ed::Georef data;
 
-    PoiParser(const std::string& path);
+    PoiParser(std::string path);
     void fill();
 };
 }  // namespace connectors

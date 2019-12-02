@@ -29,9 +29,10 @@ www.navitia.io
 */
 
 #pragma once
+#include "utils/logger.h"
+#include "utils/exception.h"
+
 #include <string>
-#include <utils/logger.h>
-#include <utils/exception.h>
 
 namespace ed {
 namespace connectors {
@@ -51,7 +52,7 @@ private:
 public:
     std::map<std::string, std::string> synonym_map;
 
-    SynonymParser(const std::string& filename);
+    SynonymParser(std::string filename);
 
     void fill();
 };
