@@ -61,14 +61,17 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
 
         self.api_key = kwargs.get('api_key')
 
-        self.shape = None
-        arg_geometry = kwargs.get('geometry')
-        if arg_geometry:
+        self.boundary_shape = None
+        boundary_geometry = kwargs.get('geometry')
+        if boundary_geometry:
             try:
-                self.shape = shapely.geometry.shape(arg_geometry)
+                boundary_shape = shapely.geometry.shape(boundary_geometry)
+                if not boundary_shape.is_valid:
+                    raise Exception("Geometry shape is invalid")
+                self.boundary_shape = boundary_shape
             except Exception as e:
-                self.log.error("Enable to parse geometry object from : {}".format(arg_geometry))
-                self.log.error(str(e))
+                self.log.error('Error while loading boundary shape :', str(e))
+                self.log.error("Unable to parse geometry object : ", boundary_geometry)
 
     @abstractmethod
     def process_data(self, data, poi):
@@ -84,21 +87,21 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
             return self.process_data(data, poi)
 
     def _is_poi_coords_within_shape(self, poi):
-        if self.shape is None:
+        if self.boundary_shape is None:
             return True
 
         try:
             coord = poi['coord']
             coords = [float(coord['lon']), float(coord['lat'])]
-            return self.shape.contains(shapely.geometry.Point(coords))
+            return self.boundary_shape.contains(shapely.geometry.Point(coords))
         except KeyError as e:
             self.log.error(
-                "Coords illformed, 'poi' needs a coords dict with 'lon' and 'lat' attributes' : {}".format(
-                    str(e)
-                )
+                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)
             )
+        except ValueError as e:
+            self.log.error("Cannot convert POI's coord to float : ", str(e))
         except Exception as e:
-            self.log.error("Cannot find if coords is within shape: {}".format(str(e)))
+            self.log.error("Cannot find if coords is within shape: ", str(e))
 
         return False
 
