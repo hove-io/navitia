@@ -31,19 +31,19 @@ www.navitia.io
 #include "fare2ed.h"
 
 #include "conf.h"
-#include <iostream>
-
-#include "utils/timer.h"
-#include "utils/init.h"
-
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include "utils/exception.h"
+#include "ed/connectors/fare_parser.h"
 #include "ed_persistor.h"
 #include "fare/fare.h"
-#include "ed/connectors/fare_parser.h"
+#include "utils/exception.h"
+#include "utils/init.h"
+#include "utils/timer.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+#include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -68,31 +68,30 @@ int fare2ed(int argc, const char* argv[]) {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if (vm.count("version")) {
+    if (vm.count("version") != 0u) {
         std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
                   << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
-    if (vm.count("log_comment")) {
+    std::string log_comment;
+    if (vm.count("log_comment") != 0u) {
         log_comment = vm["log_comment"].as<std::string>();
     }
-    navitia::init_app("fare2ed", "DEBUG", vm.count("local_syslog"), log_comment);
+    navitia::init_app("fare2ed", "DEBUG", vm.count("local_syslog") != 0u, log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if (vm.count("config-file")) {
+    if (vm.count("config-file") != 0u) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
-    if (vm.count("help") || !vm.count("connection-string")) {
+    if ((vm.count("help") != 0u) || (vm.count("connection-string") == 0u)) {
         std::cout << "Reads and inserts in ed database fare files" << std::endl;
         std::cout << desc << std::endl;
         return 1;

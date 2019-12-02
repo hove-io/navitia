@@ -43,15 +43,15 @@ bool PhysicalMode::operator<(const PhysicalMode& other) const {
 bool Line::operator<(const Line& other) const {
     if (this->commercial_mode == nullptr && other.commercial_mode != nullptr) {
         return true;
-    } else if (other.commercial_mode == nullptr && this->commercial_mode != nullptr) {
+    }
+    if (other.commercial_mode == nullptr && this->commercial_mode != nullptr) {
         return false;
     }
     if (this->commercial_mode == other.commercial_mode) {
         BOOST_ASSERT(this->uri != other.uri);
         return this->uri < other.uri;
-    } else {
-        return *(this->commercial_mode) < *(other.commercial_mode);
     }
+    return *(this->commercial_mode) < *(other.commercial_mode);
 }
 
 bool LineGroup::operator<(const LineGroup& other) const {
@@ -65,9 +65,8 @@ bool Route::operator<(const Route& other) const {
     if (this->line == other.line) {
         BOOST_ASSERT(this->uri != other.uri);
         return this->uri < other.uri;
-    } else {
-        return *(this->line) < *(other.line);
     }
+    return *(this->line) < *(other.line);
 }
 
 Calendar::Calendar(boost::gregorian::date beginning_date) : validity_pattern(beginning_date) {}
@@ -101,16 +100,17 @@ bool StopArea::operator<(const StopArea& other) const {
 }
 
 bool StopPoint::operator<(const StopPoint& other) const {
-    if (!this->stop_area)
+    if (this->stop_area == nullptr) {
         return false;
-    else if (!other.stop_area)
+    }
+    if (other.stop_area == nullptr) {
         return true;
-    else if (this->stop_area == other.stop_area) {
+    }
+    if (this->stop_area == other.stop_area) {
         BOOST_ASSERT(this->uri != other.uri);
         return this->uri < other.uri;
-    } else {
-        return *(this->stop_area) < *(other.stop_area);
     }
+    return *(this->stop_area) < *(other.stop_area);
 }
 
 int VehicleJourney::earliest_time() const {
@@ -128,12 +128,10 @@ bool StopPointConnection::operator<(const StopPointConnection& other) const {
     if (this->departure == other.departure) {
         if (this->destination == other.destination) {
             return this < &other;
-        } else {
-            return *(this->destination) < *(other.destination);
         }
-    } else {
-        return *(this->departure) < *(other.departure);
+        return *(this->destination) < *(other.destination);
     }
+    return *(this->departure) < *(other.departure);
 }
 
 bool StopTime::operator<(const StopTime& other) const {

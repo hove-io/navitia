@@ -30,18 +30,20 @@ www.navitia.io
 
 #pragma once
 #include "type/type.h"
-#include <osmpbfreader/osmpbfreader.h>
 #include "utils/lotus.h"
 #include "utils/logger.h"
-#include <unordered_map>
-#include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
 #include "ed/connectors/osm_tags_reader.h"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
+#include <osmpbfreader/osmpbfreader.h>
 #include <RTree/RTree.h>
+
+#include <unordered_map>
+#include <set>
 
 namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point;
@@ -115,10 +117,10 @@ private:
 
 struct Admin {
     Admin(u_int64_t id,
-          const std::string& uri,
-          const std::string& insee,
+          std::string uri,
+          std::string insee,
           const std::string& postal_code,
-          const std::string& name,
+          std::string name,
           const uint32_t level);
     Admin(u_int64_t id,
           const std::string& uri,
@@ -127,7 +129,7 @@ struct Admin {
           const std::string& name,
           const uint32_t level,
           mpolygon_type&& polygon,
-          point&& center);
+          const point& center);
     virtual ~Admin();
     virtual void build_geometry(OSMCache&) {}
     bool is_city() const { return level == 8; }
@@ -147,7 +149,7 @@ struct OSMAdminRelation : public Admin {
 
     OSMAdminRelation(u_int64_t id,
                      const std::string& uri,
-                     const std::vector<CanalTP::Reference>& refs,
+                     std::vector<CanalTP::Reference> refs,
                      const std::string& insee,
                      const std::string& postal_code,
                      const std::string& name,
@@ -321,7 +323,7 @@ struct ReadWaysVisitor {
 
     void node_callback(uint64_t, double, double, const CanalTP::Tags&) {}
     void relation_callback(uint64_t, const CanalTP::Tags&, const CanalTP::References&) {}
-    void way_callback(uint64_t osm_id, const CanalTP::Tags& tags, const std::vector<uint64_t>& nodes);
+    void way_callback(uint64_t osm_id, const CanalTP::Tags& tags, const std::vector<uint64_t>& nodes_refs);
 
     size_t filtered_private_way = 0;
 };
@@ -423,7 +425,7 @@ struct PoiHouseNumberVisitor {
                   const CanalTP::Tags& tags,
                   const double lon,
                   const double lat,
-                  OsmObjectType t);
+                  OsmObjectType osm_relation_type);
     void fill_housenumber(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
     void insert_house_numbers();
     void insert_data();

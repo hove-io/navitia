@@ -29,20 +29,20 @@ www.navitia.io
 */
 
 #include "conf.h"
-#include <iostream>
-#include "ed/connectors/fusio_parser.h"
 #include "ed/connectors/fare_parser.h"
-
-#include "utils/timer.h"
-#include "utils/init.h"
-
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include "utils/exception.h"
+#include "ed/connectors/fusio_parser.h"
 #include "ed_persistor.h"
 #include "fare/fare.h"
+#include "utils/exception.h"
+#include "utils/init.h"
+#include "utils/timer.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+#include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -73,31 +73,30 @@ int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    if (vm.count("version")) {
+    if (vm.count("version") != 0u) {
         std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
                   << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
-    if (vm.count("log_comment")) {
+    std::string log_comment;
+    if (vm.count("log_comment") != 0u) {
         log_comment = vm["log_comment"].as<std::string>();
     }
-    navitia::init_app("fusio2ed", "DEBUG", vm.count("local_syslog"), log_comment);
+    navitia::init_app("fusio2ed", "DEBUG", vm.count("local_syslog") != 0u, log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if (vm.count("config-file")) {
+    if (vm.count("config-file") != 0u) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
-    if (vm.count("help") || !vm.count("input")) {
+    if ((vm.count("help") != 0u) || (vm.count("input") == 0u)) {
         std::cout << "Reads and inserts in database fusio files" << std::endl;
         std::cout << desc << "\n";
         return 1;
@@ -168,7 +167,7 @@ int main(int argc, char* argv[]) {
 
     data.normalize_uri();
 
-    if (vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
+    if ((vm.count("fare") != 0u) || boost::filesystem::exists(fare_dir + "/fares.csv")) {
         start = pt::microsec_clock::local_time();
         LOG4CPLUS_INFO(logger, "loading fare");
 
@@ -199,7 +198,7 @@ int main(int argc, char* argv[]) {
     LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
     LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
     LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
-    if (vm.count("fare")) {
+    if (vm.count("fare") != 0u) {
         LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
     }
     LOG4CPLUS_INFO(logger, "\t Destination of routes " << main_destination << "ms");

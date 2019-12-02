@@ -29,22 +29,24 @@ www.navitia.io
 */
 
 #pragma once
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <bitset>
-#include <unordered_map>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/local_time/local_time.hpp>
-#include <boost/optional.hpp>
-#include "type/datetime.h"
 
+#include "type/datetime.h"
 #include "type/type_interfaces.h"
 #include "type/connection.h"
 #include "type/validity_pattern.h"
 #include "type/geographical_coord.h"
 #include "type/vehicle_journey.h"
 #include "type/calendar.h"
-#include "limits.h"
+
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/gregorian/greg_serialize.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
+#include <boost/optional.hpp>
+
+#include <bitset>
+#include <unordered_map>
+#include <limits.h>
 
 namespace nt = navitia::type;
 using nt::idx_t;

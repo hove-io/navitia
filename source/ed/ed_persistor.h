@@ -35,6 +35,7 @@ www.navitia.io
 #include "data.h"
 #include "type/meta_data.h"
 #include "utils/functions.h"
+
 #include <pqxx/pqxx>
 
 namespace ed {
@@ -87,7 +88,7 @@ private:
     void insert_stop_areas(const std::vector<types::StopArea*>& stop_areas);
 
     void insert_networks(const std::vector<types::Network*>& networks);
-    void insert_commercial_modes(const std::vector<types::CommercialMode*>& commercial_mode);
+    void insert_commercial_modes(const std::vector<types::CommercialMode*>& commercial_modes);
     void insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes);
     void insert_companies(const std::vector<types::Company*>& companies);
     void insert_contributors(const std::vector<types::Contributor*>& contributors);

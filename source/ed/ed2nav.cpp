@@ -31,22 +31,22 @@ www.navitia.io
 #include "ed2nav.h"
 
 #include "conf.h"
-
-#include "utils/timer.h"
-#include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
-#include "utils/init.h"
-#include "utils/functions.h"
 #include "type/meta_data.h"
+#include "utils/exception.h"
+#include "utils/functions.h"
+#include "utils/init.h"
+#include "utils/timer.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/program_options.hpp>
 #include <pqxx/pqxx>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -57,7 +57,7 @@ namespace ed {
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
     typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
-    typedef std::vector<georef::Admin*> result_type;
+    using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
@@ -74,8 +74,9 @@ struct FindAdminWithCities {
     FindAdminWithCities(const FindAdminWithCities&) = default;
     FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
     ~FindAdminWithCities() {
-        if (nb_call == 0)
+        if (nb_call == 0) {
             return;
+        }
 
         auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_call << " calls");
@@ -135,10 +136,10 @@ struct FindAdminWithCities {
             if (!insee.empty()) {
                 admin = find_or_default(insee, insee_admins_map);
             }
-            if (!admin) {
+            if (admin == nullptr) {
                 admin = find_or_default(uri, added_admins);
             }
-            if (!admin) {
+            if (admin == nullptr) {
                 georef.admins.push_back(new navitia::georef::Admin());
                 admin = georef.admins.back();
                 admin->comment = "from cities";
@@ -195,33 +196,32 @@ int ed2nav(int argc, const char* argv[]) {
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
-    bool export_georef_edges_geometries(vm.count("full_street_network_geometries"));
+    bool export_georef_edges_geometries(vm.count("full_street_network_geometries") != 0u);
 
-    if (vm.count("version")) {
+    if (vm.count("version") != 0u) {
         std::cout << argv[0] << " " << navitia::config::project_version << " " << navitia::config::navitia_build_type
                   << std::endl;
         return 0;
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
-    if (vm.count("log_comment")) {
+    std::string log_comment;
+    if (vm.count("log_comment") != 0u) {
         log_comment = vm["log_comment"].as<std::string>();
     }
-    navitia::init_app("ed2nav", "DEBUG", vm.count("local_syslog"), log_comment);
+    navitia::init_app("ed2nav", "DEBUG", vm.count("local_syslog") != 0u, log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
-    if (vm.count("config-file")) {
+    if (vm.count("config-file") != 0u) {
         std::ifstream stream;
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("Unable to load config file");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
-    if (vm.count("help") || !vm.count("connection-string")) {
+    if ((vm.count("help") != 0u) || (vm.count("connection-string") == 0u)) {
         std::cout << "Extracts data from a database to a file readable by kraken" << std::endl;
         std::cout << desc << std::endl;
         return 1;
