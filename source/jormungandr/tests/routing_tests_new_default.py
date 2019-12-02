@@ -315,6 +315,18 @@ class TestJourneysNewDefault(
         )
         exec_and_check(query)
 
+    def test_no_origin_or_destination_point_in_request(self):
+        query = "journeys?datetime=20120614T075500"
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "you should at least provide either a 'from' or a 'to' argument" in response[0]["message"]
+
+    def test_same_origin_and_destination_point_in_request(self):
+        query = "journeys?datetime=20120614T075500&from=0.0000898312;0.0000898312&to=0.0000898312;0.0000898312"
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "your origin and destination points are the same" in response[0]["message"]
+
 
 @config(
     {
