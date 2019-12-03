@@ -43,7 +43,7 @@ class LoadDataCommand(Command):
         ]
 
     def run(self, instance_name, data_dir):
-        logging.info("Run command load data, a tyr_worker has to be " "previously started")
+        logging.info("Run command load data, a tyr_worker has to be previously started")
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
 
         if not instance:

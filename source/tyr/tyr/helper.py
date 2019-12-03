@@ -138,7 +138,7 @@ def load_instance_config(instance_name):
     config = ConfigObj(ini_file, configspec=confspec, stringify=True)
     val = Validator()
     res = config.validate(val, preserve_errors=True)
-    # validate retourne true, ou un dictionaire  ...
+    # The function 'validate' above returns True, or a dict...
     if type(res) is dict:
         error = build_error(config, res)
         raise ValueError("Config is not valid: %s in %s" % (error, ini_file))
@@ -162,7 +162,7 @@ def load_instance_config(instance_name):
 
 def build_error(config, validate_result):
     """
-    construit la chaine d'erreur si la config n'est pas valide
+    Creates errors string if config isn't valid
     """
     result = ""
     for entry in flatten_errors(config, validate_result):
