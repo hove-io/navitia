@@ -160,41 +160,41 @@ def import_data(
             actions.append(new_action)
             actions.append(finish_job.si(job.id))
 
-    # Create a new job and dataset for ed2nav that will generate binary file (New .nav.lz4)
-    dataset = models.DataSet()
-    dataset.type = dataset.family_type = 'nav'
-    # TODO: path to data.nav.lz4 file
-    dataset.name = 'data.nav.lz4'
-    models.db.session.add(dataset)
+    if actions:
+        # Create a new job and dataset for ed2nav that will generate binary file (New .nav.lz4)
+        dataset = models.DataSet()
+        dataset.type = dataset.family_type = 'nav'
+        dataset.name = instance_config.target_file
+        models.db.session.add(dataset)
 
-    job = models.Job()
-    job.instance = instance
-    job.state = 'pending'
-    job.data_sets.append(dataset)
-    models.db.session.add(job)
-    models.db.session.commit()
+        job = models.Job()
+        job.instance = instance
+        job.state = 'pending'
+        job.data_sets.append(dataset)
+        models.db.session.add(job)
+        models.db.session.commit()
 
-    binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
-    actions.append(chain(*binarisation))
-    actions.append(finish_job.si(job.id))
+        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
+        actions.append(chain(*binarisation))
+        actions.append(finish_job.si(job.id))
 
-    # Reload kraken with new data after binarisation (New .nav.lz4)
-    if reload:
-        actions.append(reload_data.si(instance_config, job.id))
+        # Reload kraken with new data after binarisation (New .nav.lz4)
+        if reload:
+            actions.append(reload_data.si(instance_config, job.id))
 
-    # Retrieve jobs created to pass dataset to "send_to_mimir"
-    if not skip_mimir:
-        for job in models.Job.query.filter_by(state='pending').all():
-            for dataset in job.data_sets:
-                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+        # Retrieve jobs created to pass dataset to "send_to_mimir"
+        if not skip_mimir:
+            for job in models.Job.query.filter_by(state='pending').all():
+                for dataset in job.data_sets:
+                    actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+            else:
+                current_app.logger.info("skipping mimir import")
+
+        if asynchronous:
+            return chain(*actions).delay()
         else:
-            current_app.logger.info("skipping mimir import")
-
-    if asynchronous:
-        return chain(*actions).delay()
-    else:
-        # all job are run in sequence and import_data will only return when all the jobs are finish
-        return chain(*actions).apply()
+            # all job are run in sequence and import_data will only return when all the jobs are finish
+            return chain(*actions).apply()
 
 
 def send_to_mimir(instance, filename, family_type):
@@ -555,13 +555,21 @@ def build_all_data():
 
 @celery.task()
 def build_data(instance):
+    instance_config = load_instance_config(instance.name)
+
+    dataset = models.DataSet()
+    dataset.type = dataset.family_type = 'nav'
+    dataset.name = instance_config.target_file
+    models.db.session.add(dataset)
+
     job = models.Job()
     job.instance = instance
     job.state = 'running'
-    instance_config = load_instance_config(instance.name)
+    job.data_sets.append(dataset)
     models.db.session.add(job)
+
     models.db.session.commit()
-    # TODO: add 'nav' dataset here for consistency
+
     chain(ed2nav.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
     current_app.logger.info("Job build data of : %s queued" % instance.name)
 
@@ -603,9 +611,7 @@ def cities(file_path, job_id, exe):
 @celery.task()
 def bounding_shape(instance_name, shape_path):
     """ Set the bounding shape to a custom value """
-
     instance_conf = load_instance_config(instance_name)
-
     load_bounding_shape(instance_name, instance_conf, shape_path)
 
 

@@ -544,6 +544,8 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
             output_file = os.path.join(target_path, os.path.basename(output_file))
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
+            # Update dataset with custom output
+            job.data_sets[0].name = output_file
 
         connection_string = make_connection_string(instance_config)
         argv = ["-o", output_file, "--connection-string", connection_string]
