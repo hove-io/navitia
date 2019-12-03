@@ -73,38 +73,13 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         if data:
             return self.process_data(data, poi)
 
-    def _is_poi_coords_within_shape(self, poi):
-
-        if self.has_boundary_shape() == False:
-            '''
-            We assume that a POI is within a provider with no shape to be backward compatible.
-            So that we don't have to configure a shape for every single provier.
-            '''
-            return True
-
-        try:
-            coord = poi['coord']
-            lon = float(coord['lon'])
-            lat = float(coord['lat'])
-            return self.is_coord_within_boundary_shape(lon, lat)
-        except KeyError as e:
-            self.log.error(
-                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)
-            )
-        except ValueError as e:
-            self.log.error("Cannot convert POI's coord to float : ", str(e))
-        except Exception as e:
-            self.log.error("Cannot find if coords is within shape: ", str(e))
-
-        return False
-
     def _has_supported_poi_operator(self, poi):
         properties = poi.get('properties', {})
         operator = properties.get('operator', '').lower()
         return operator in self.operators
 
     def support_poi(self, poi):
-        return self._has_supported_poi_operator(poi) and self._is_poi_coords_within_shape(poi)
+        return self._has_supported_poi_operator(poi)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CAR_PARK'), 30))
     def _call_webservice(self, request_url):

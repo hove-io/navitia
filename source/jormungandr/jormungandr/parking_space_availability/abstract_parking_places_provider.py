@@ -61,22 +61,34 @@ class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
                 self.log.error("Unable to parse geometry object : ", boundary_geometry)
 
     def has_boundary_shape(self):  # type () : bool
-        return self.boundary_shape != None
+        return hasattr(self, 'boundary_shape') and self.boundary_shape != None
 
-    def is_coord_within_boundary_shape(self, lon, lat):
-        # type (float, float) -> bool
-
+    def is_poi_coords_within_shape(self, poi):
         if self.has_boundary_shape() == False:
-            return False
+            '''
+            We assume that a POI is within a provider with no shape to be backward compatible.
+            So that we don't have to configure a shape for every single provider.
+            '''
+            return True
 
         try:
+            coord = poi['coord']
+            lon = float(coord['lon'])
+            lat = float(coord['lat'])
             return self.boundary_shape.contains(shapely.geometry.Point([lon, lat]))
+        except KeyError as e:
+            self.log.error(
+                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)
+            )
         except ValueError as e:
             self.log.error("Cannot convert POI's coord to float : ", str(e))
         except Exception as e:
-            self.log.error("Couldn't find if coordinate is within the shape: ", str(e))
+            self.log.error("Cannot find if coordinate is within shape: ", str(e))
 
         return False
+
+    def handle_poi(self, poi):
+        return self.support_poi(poi) and self.is_poi_coords_within_shape(poi)
 
     @abstractmethod
     def support_poi(self, poi):

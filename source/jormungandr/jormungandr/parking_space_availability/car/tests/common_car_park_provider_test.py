@@ -64,7 +64,7 @@ def test_create_default_common_car_park_provider_with_no_shape(carParkProvider):
     assert carParkProvider.has_boundary_shape() == False
 
 
-def test_default_car_park_provider_should_handle_poi(carParkProvider):
+def test_default_car_park_provider_should_support_poi(carParkProvider):
     assert carParkProvider.support_poi({'properties': {'operator': 'TANK'}}) == True
 
     assert carParkProvider.support_poi({}) == False
@@ -94,12 +94,23 @@ def test_car_park_provider_with_geometry_should_have_shape(carParkProviderWithGe
     assert carParkProviderWithGeometry.has_boundary_shape() == True
 
 
-def test_car_park_provider_with_shape_should_not_support_poi_with_no_coords(carParkProviderWithGeometry):
-    assert carParkProviderWithGeometry.support_poi({}) == False
+def test_car_park_provider_with_shape_should_support_poi_with_no_coords(carParkProviderWithGeometry):
     assert carParkProviderWithGeometry.support_poi({}) == False
     assert carParkProviderWithGeometry.support_poi({'properties': {}}) == False
     assert carParkProviderWithGeometry.support_poi({'properties': {'operator': 'other_operator'}}) == False
-    assert carParkProviderWithGeometry.support_poi({'properties': {'operator': 'TANK'}}) == False
+    assert (
+        carParkProviderWithGeometry.support_poi({'properties': {'operator': 'TANK'}}) == True
+    ), 'Car park provider has operator "Tank", thus should be supported'
+
+
+def test_car_park_provider_with_shape_should_fail_on_poi_with_no_coords(carParkProviderWithGeometry):
+    assert carParkProviderWithGeometry.is_poi_coords_within_shape({}) == False
+    assert carParkProviderWithGeometry.is_poi_coords_within_shape({'properties': {}}) == False
+    assert (
+        carParkProviderWithGeometry.is_poi_coords_within_shape({'properties': {'operator': 'other_operator'}})
+        == False
+    )
+    assert carParkProviderWithGeometry.is_poi_coords_within_shape({'properties': {'operator': 'TANK'}}) == False
 
 
 def test_car_park_provider_with_shape_should_support_poi_with_coords(carParkProviderWithGeometry):
@@ -110,14 +121,27 @@ def test_car_park_provider_with_shape_should_support_poi_with_coords(carParkProv
     '''
     poi_inside = copy.copy(poi)
     poi_inside['coord'] = {'lon': '5.041351318359375', 'lat': '47.32881751198527'}
-    assert carParkProviderWithGeometry.support_poi(poi_inside) == True
+    assert carParkProviderWithGeometry.handle_poi(poi_inside) == True
 
     '''
     The coord is this time, OUTSIDE the car park provider polygon
     '''
     poi_outside = copy.copy(poi)
     poi_outside['coord'] = {'lon': '1.041351318359375', 'lat': '1.32881751198527'}
-    assert carParkProviderWithGeometry.support_poi(poi_outside) == False
+    assert carParkProviderWithGeometry.handle_poi(poi_outside) == False
+
+
+def test_car_park_provider_with_poi_inside_but_wrong_operator_should_fail(carParkProviderWithGeometry):
+    poi = {
+        'properties': {'operator': 'Unknown_operator'},
+        'coord': {  # The coord is a point INSIDE the car park provider polygon
+            'lon': '5.041351318359375',
+            'lat': '47.32881751198527',
+        },
+    }
+    assert (
+        carParkProviderWithGeometry.handle_poi(poi) == False
+    ), 'The POI is inside the shape, but has NOT the correct operator'
 
 
 def test_car_park_provider_with_wrong_geojson_should_have_no_shape(defaultCarParkParameters):
