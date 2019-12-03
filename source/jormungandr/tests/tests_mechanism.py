@@ -127,8 +127,10 @@ class AbstractTestFixture(unittest.TestCase):
                 if kraken_process.returncode is not None:
                     logging.error('kraken is dead, check errors, return code = %s', kraken_process.returncode)
                     assert False, 'kraken is dead, check errors, return code'
-            kraken_process.kill()
-            kraken_process.communicate()  # read stdout and stderr to prevent zombie processes
+            kraken_process.terminate()
+            stdout, stderr = kraken_process.communicate()  # read stdout and stderr to prevent zombie processes
+            if stdout:
+                logging.info(stdout)
 
     @classmethod
     def create_dummy_json(cls):
