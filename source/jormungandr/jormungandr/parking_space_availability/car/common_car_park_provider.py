@@ -43,8 +43,7 @@ from abc import abstractmethod
 
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
     def __init__(self, url, operators, dataset, timeout, feed_publisher, **kwargs):
-
-        AbstractParkingPlacesProvider.__init__(self, **kwargs)
+        super(CommonCarParkProvider, self).__init__(**kwargs)
         self.ws_service_template = url + '?dataset={}'
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout

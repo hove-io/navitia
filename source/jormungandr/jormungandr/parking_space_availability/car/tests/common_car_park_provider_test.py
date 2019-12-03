@@ -38,7 +38,7 @@ from jormungandr.parking_space_availability.car.common_car_park_provider import 
 
 class CommonCarParkProviderTest(CommonCarParkProvider):
     def __init__(self, **kwargs):
-        CommonCarParkProvider.__init__(self, **kwargs)
+        super(CommonCarParkProviderTest, self).__init__(**kwargs)
 
     def process_data(self, data, poi):
         pass
