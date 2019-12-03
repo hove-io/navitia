@@ -566,8 +566,9 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
     except:
         logger.exception('')
         job.state = 'failed'
-        models.db.session.commit()
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
