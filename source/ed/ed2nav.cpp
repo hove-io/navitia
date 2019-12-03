@@ -35,7 +35,6 @@ www.navitia.io
 #include "utils/timer.h"
 #include "utils/exception.h"
 #include "ed_reader.h"
-#include "type/data.h"
 #include "utils/init.h"
 #include "utils/functions.h"
 #include "type/meta_data.h"
@@ -165,6 +164,30 @@ struct FindAdminWithCities {
     }
 };
 
+bool rename_file(const std::string& source_name, const std::string& dest_name) {
+    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");
+    if (boost::filesystem::exists(source_name)) {
+        if (rename(source_name.c_str(), dest_name.c_str()) != 0) {
+            LOG4CPLUS_ERROR(logger, "Unable to rename data file: " << source_name << std::strerror(errno));
+            return false;
+        }
+    }
+    return true;
+}
+
+template <class T = navitia::type::Data>
+bool write_data_to_file(const std::string& output_filename, const T& data) {
+    std::string temp_output_filename = output_filename + ".temp";
+    std::string backup_output_filename = output_filename + ".bak";
+    if (!try_save_file(temp_output_filename, data))
+        return false;
+    if (!rename_file(output_filename, backup_output_filename))
+        return false;
+    if (!rename_file(temp_output_filename, output_filename))
+        return false;
+    return true;
+}
+
 int ed2nav(int argc, const char* argv[]) {
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
@@ -273,15 +296,11 @@ int ed2nav(int argc, const char* argv[]) {
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
-    try {
-        data.save(output);
-    } catch (const navitia::exception& e) {
-        LOG4CPLUS_ERROR(logger, "Unable to save");
-        LOG4CPLUS_ERROR(logger, e.what());
+
+    if (!write_data_to_file(output, data)) {
         return 1;
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    LOG4CPLUS_INFO(logger, "Data saved");
 
     LOG4CPLUS_INFO(logger, "Computing times");
     LOG4CPLUS_INFO(logger, "\t File reading: " << read << "ms");
