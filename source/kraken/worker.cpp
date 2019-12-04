@@ -1133,7 +1133,7 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     entry_point.streetnetwork_params.max_duration = navitia::seconds(request.max_duration());
     street_network_worker->init(entry_point, {});
     // kraken don't handle reverse isochrone
-    auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
+    auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, 0u);
     if (!result) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                        "The entry point: " + entry_point.uri + " is not valid");
