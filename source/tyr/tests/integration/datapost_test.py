@@ -28,13 +28,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-import json
 import pytest
 import os
 from navitiacommon import models
 from tyr import app
 from flask_restful import current_app
-import shutil
 from tests.check_utils import api_post
 
 
@@ -64,6 +62,7 @@ def get_jobs_from_db(id=None):
         return models.Job.get(id=id)
 
 
+@pytest.mark.usefixtures("init_instances_dir")
 def test_post_pbf(create_instance_fr):
     assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
 
