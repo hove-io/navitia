@@ -56,9 +56,9 @@ class InFlightGuard {
 public:
     explicit InFlightGuard(prometheus::Gauge* gauge);
     InFlightGuard(InFlightGuard& other) = delete;
-    InFlightGuard(InFlightGuard&& other);
+    InFlightGuard(InFlightGuard&& other) noexcept;
     void operator=(InFlightGuard& other) = delete;
-    void operator=(InFlightGuard&& other);
+    InFlightGuard& operator=(InFlightGuard&& other) noexcept;
     ~InFlightGuard();
 };
 
