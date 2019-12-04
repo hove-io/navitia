@@ -660,6 +660,53 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         taxi_fallback = next((j for j in response['journeys'] if "taxi" in j['tags']), None)
         assert 'deleted_because_too_short_heavy_mode_fallback' in taxi_fallback['tags']
 
+    def test_max_taxi_duration_to_pt(self):
+        query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&taxi_speed=0.05"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        taxi_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert taxi_with_pt
+
+        taxi_fallback_time = taxi_with_pt['sections'][0]['duration'] + taxi_with_pt['sections'][1]['duration']
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&taxi_speed=0.05"
+            + "&max_taxi_duration_to_pt={}".format(taxi_fallback_time - 1)
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        journeys = get_not_null(response, 'journeys')
+
+        assert len(journeys) == 1
+        assert 'non_pt' in journeys[0]['tags']
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&taxi_speed=0.05"
+            + "&max_duration_to_pt={}".format(taxi_fallback_time - 1)
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        journeys = get_not_null(response, 'journeys')
+
+        assert len(journeys) == 1
+        assert 'non_pt' in journeys[0]['tags']
+
 
 @dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})
 class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):

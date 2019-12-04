@@ -46,6 +46,8 @@ max_car_duration_to_pt = 30 * 60
 
 max_car_no_park_duration_to_pt = 30 * 60
 
+max_taxi_duration_to_pt = 30 * 60
+
 walking_speed = 1.12
 
 bike_speed = 4.1
