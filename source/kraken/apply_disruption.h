@@ -35,6 +35,7 @@ www.navitia.io
 #include "type/chaos.pb.h"
 #include "type/gtfs-realtime.pb.h"
 #include "type/meta_data.h"
+
 #include <memory>
 
 namespace navitia {

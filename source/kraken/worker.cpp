@@ -30,22 +30,23 @@ www.navitia.io
 
 #include "worker.h"
 
-#include "routing/raptor_api.h"
 #include "autocomplete/autocomplete_api.h"
-
+#include "calendar/calendar_api.h"
+#include "disruption/line_reports_api.h"
+#include "disruption/traffic_reports_api.h"
+#include "equipment/equipment_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/route_schedules.h"
-#include "time_tables/passages.h"
-#include "time_tables/departure_boards.h"
-#include "disruption/traffic_reports_api.h"
-#include "disruption/line_reports_api.h"
-#include "calendar/calendar_api.h"
 #include "routing/raptor.h"
+#include "routing/raptor_api.h"
+#include "time_tables/departure_boards.h"
+#include "time_tables/passages.h"
+#include "time_tables/route_schedules.h"
 #include "type/meta_data.h"
-#include "equipment/equipment_api.h"
+
 #include <numeric>
+#include <utility>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -60,10 +61,10 @@ namespace navitia {
 namespace {
 // local exception, only used in this file
 struct coord_conversion_exception : public recoverable_exception {
-    coord_conversion_exception(const std::string& msg) : recoverable_exception(msg) {}
+    explicit coord_conversion_exception(const std::string& msg) : recoverable_exception(msg) {}
     coord_conversion_exception(const coord_conversion_exception&) = default;
     coord_conversion_exception& operator=(const coord_conversion_exception&) = default;
-    virtual ~coord_conversion_exception() noexcept {}
+    ~coord_conversion_exception() noexcept override = default;
 };
 }  // namespace
 
@@ -188,6 +189,7 @@ static nt::OdtLevel_e get_odt_level(pbnavitia::OdtLevel pb_odt_level) {
 template <class T>
 std::vector<nt::Type_e> vector_of_pb_types(const T& pb_object) {
     std::vector<nt::Type_e> result;
+    result.reserve(pb_object.types_size());
     for (int i = 0; i < pb_object.types_size(); ++i) {
         result.push_back(get_type(pb_object.types(i)));
     }
@@ -210,6 +212,7 @@ static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
 template <class T>
 std::vector<std::string> vector_of_admins(const T& admin) {
     std::vector<std::string> result;
+    result.reserve(admin.admin_uris_size());
     for (int i = 0; i < admin.admin_uris_size(); ++i) {
         result.push_back(admin.admin_uris(i));
     }
@@ -217,9 +220,9 @@ std::vector<std::string> vector_of_admins(const T& admin) {
 }
 
 Worker::Worker(kraken::Configuration conf)
-    : conf(conf), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))) {}
+    : conf(std::move(conf)), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))) {}
 
-Worker::~Worker() {}
+Worker::~Worker() = default;
 
 static std::string get_string_status(const nt::Data* data) {
     if (data->loaded) {
@@ -394,8 +397,10 @@ void Worker::pt_object(const pbnavitia::PtobjectRequest& request) {
 void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest& request) {
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
-    for (int i = 0; i < request.forbidden_uris_size(); ++i)
+    forbidden_uris.reserve(request.forbidden_uris_size());
+    for (int i = 0; i < request.forbidden_uris_size(); ++i) {
         forbidden_uris.push_back(request.forbidden_uris(i));
+    }
     navitia::disruption::traffic_reports(this->pb_creator, *data, request.depth(), request.count(),
                                          request.start_page(), request.filter(), forbidden_uris);
 }
@@ -415,16 +420,20 @@ void Worker::line_reports(const pbnavitia::LineReportsRequest& request) {
 void Worker::calendars(const pbnavitia::CalendarsRequest& request) {
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
-    for (int i = 0; i < request.forbidden_uris_size(); ++i)
+    forbidden_uris.reserve(request.forbidden_uris_size());
+    for (int i = 0; i < request.forbidden_uris_size(); ++i) {
         forbidden_uris.push_back(request.forbidden_uris(i));
+    }
     navitia::calendar::calendars(this->pb_creator, *data, request.start_date(), request.end_date(), request.depth(),
                                  request.count(), request.start_page(), request.filter(), forbidden_uris);
 }
 
 void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbnavitia::API api) {
     std::vector<std::string> forbidden_uri;
-    for (int i = 0; i < request.forbidden_uri_size(); ++i)
+    forbidden_uri.reserve(request.forbidden_uri_size());
+    for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
+    }
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
 
@@ -645,14 +654,14 @@ JourneysArg::JourneysArg(type::EntryPoints origins,
                          std::vector<uint64_t> datetimes,
                          boost::optional<type::EntryPoint> isochrone_center)
     : origins(std::move(origins)),
-      accessibilite_params(std::move(accessibilite_params)),
+      accessibilite_params(accessibilite_params),
       forbidden(std::move(forbidden)),
       allowed(std::move(allowed)),
       rt_level(rt_level),
       destinations(std::move(destinations)),
       datetimes(std::move(datetimes)),
-      isochrone_center(isochrone_center) {}
-JourneysArg::JourneysArg() {}
+      isochrone_center(std::move(isochrone_center)) {}
+JourneysArg::JourneysArg() = default;
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
     const auto* data = this->pb_creator.data;
@@ -668,16 +677,19 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
     }
 
     std::vector<std::string> forbidden;
+    forbidden.reserve(request.forbidden_uris_size());
     for (int i = 0; i < request.forbidden_uris_size(); ++i) {
         forbidden.push_back(request.forbidden_uris(i));
     }
 
     std::vector<std::string> allowed;
+    allowed.reserve(request.allowed_id_size());
     for (int i = 0; i < request.allowed_id_size(); ++i) {
         allowed.push_back(request.allowed_id(i));
     }
 
     std::vector<uint64_t> datetimes;
+    datetimes.reserve(request.datetimes_size());
     for (int i = 0; i < request.datetimes_size(); ++i) {
         datetimes.push_back(request.datetimes(i));
     }
@@ -697,8 +709,8 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
                                       ? create_journeys_entry_point(request.isochrone_center(), sn_params, data, true)
                                       : boost::optional<type::EntryPoint>{};
 
-    return JourneysArg(std::move(origins), std::move(accessibilite_params), std::move(forbidden), std::move(allowed),
-                       rt_level, std::move(destinations), std::move(datetimes), std::move(isochrone_center));
+    return JourneysArg(std::move(origins), accessibilite_params, std::move(forbidden), std::move(allowed), rt_level,
+                       std::move(destinations), std::move(datetimes), isochrone_center);
 }
 
 void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg) {
@@ -780,6 +792,7 @@ void Worker::isochrone(const pbnavitia::JourneysRequest& request) {
 void Worker::pt_ref(const pbnavitia::PTRefRequest& request) {
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uri;
+    forbidden_uri.reserve(request.forbidden_uri_size());
     for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
     }
@@ -810,7 +823,8 @@ bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, Journe
     if (!arg.origins.empty() && !request.clockwise()) {
         err_msg_isochron(this->pb_creator, name + " works only for clockwise request");
         return false;
-    } else if (arg.origins.empty() && request.clockwise()) {
+    }
+    if (arg.origins.empty() && request.clockwise()) {
         err_msg_isochron(this->pb_creator, "reverse " + name + " works only for anti-clockwise request");
         return false;
     }
@@ -818,7 +832,7 @@ bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, Journe
 }
 
 void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request) {
-    auto request_journey = request.journeys_request();
+    const auto& request_journey = request.journeys_request();
     navitia::JourneysArg arg = JourneysArg();
     if (!set_journeys_args(request_journey, arg, "isochrone")) {
         return;
@@ -826,10 +840,11 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
 
     auto const center_and_stop_points = get_center_and_stop_points(arg);
     std::vector<DateTime> boundary_duration;
+    boundary_duration.reserve(request.boundary_duration_size());
     for (int i = 0; i < request.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request.boundary_duration(i));
     }
-    const auto sn = request_journey.streetnetwork_params();
+    const auto& sn = request_journey.streetnetwork_params();
     const auto end_mode_iso = request_journey.clockwise() ? sn.destination_mode() : sn.origin_mode();
     const auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
     const double end_speed = get_speed(sn, end_mode);
@@ -840,14 +855,14 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
-    auto request_journey = request.journeys_request();
+    const auto& request_journey = request.journeys_request();
     navitia::JourneysArg arg;
     if (!set_journeys_args(request_journey, arg, "heat_map")) {
         return;
     }
 
     auto const center_and_stop_points = get_center_and_stop_points(arg);
-    auto streetnetwork = request_journey.streetnetwork_params();
+    const auto& streetnetwork = request_journey.streetnetwork_params();
     auto end_mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
     auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
     auto end_speed = get_speed(streetnetwork, end_mode);
@@ -1162,7 +1177,7 @@ void Worker::get_matching_routes(const pbnavitia::MatchingRoute& matching_route)
 }
 
 void Worker::equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports) {
-    const auto proto_uris = equipment_reports.forbidden_uris();
+    const auto& proto_uris = equipment_reports.forbidden_uris();
     std::vector<std::string> forbidden_uris(proto_uris.begin(), proto_uris.end());
 
     equipment::equipment_reports(this->pb_creator, equipment_reports.filter(), equipment_reports.count(),

@@ -30,12 +30,14 @@ www.navitia.io
 */
 
 #pragma once
-#include <string>
-#include <memory>
 #include "type/pt_data.h"
-#include "pqxx/result.hxx"
 #include "type/chaos.pb.h"
 #include "make_disruption_from_chaos.h"
+
+#include <pqxx/result.hxx>
+
+#include <string>
+#include <memory>
 
 namespace navitia {
 #define FILL_NULLABLE_(var_name, arg_name, col_name, type_name) \

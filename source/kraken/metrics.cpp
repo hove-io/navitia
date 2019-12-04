@@ -29,12 +29,13 @@ www.navitia.io
 */
 
 #include "metrics.h"
-#include "utils/functions.h"
 
+#include "utils/functions.h"
+#include "utils/logger.h"
+
+#include <prometheus/counter.h>
 #include <prometheus/exposer.h>
 #include <prometheus/registry.h>
-#include <prometheus/counter.h>
-#include "utils/logger.h"
 
 namespace navitia {
 

@@ -28,10 +28,12 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "make_disruption_from_chaos.h"
+
 #include "apply_disruption.h"
-#include "utils/logger.h"
-#include <boost/make_shared.hpp>
 #include "type/line.h"
+#include "utils/logger.h"
+
+#include <boost/make_shared.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -217,7 +219,7 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
                 break;
             case chaos::PtObject_Type_line_section:
                 if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
-                    res.push_back(*line_section);
+                    res.emplace_back(*line_section);
                 }
                 break;
             case chaos::PtObject_Type_line:
@@ -230,7 +232,7 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
                 res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data));
                 break;
             case chaos::PtObject_Type_unkown_type:
-                res.push_back(UnknownPtObj());
+                res.emplace_back(UnknownPtObj());
                 break;
         }
         // no created_at and updated_at?
@@ -312,7 +314,8 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
     return impact;
 }
 
-bool is_publishable(transit_realtime::TimeRange publication_period, boost::posix_time::time_period production_period) {
+bool is_publishable(const transit_realtime::TimeRange& publication_period,
+                    boost::posix_time::time_period production_period) {
     // Publication period should have a valid start date
     if (publication_period.start() == 0) {
         return false;

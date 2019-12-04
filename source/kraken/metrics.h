@@ -30,17 +30,16 @@ www.navitia.io
 
 #pragma once
 
-#include <memory>
-#include <map>
+#include "type/type.pb.h"
 
 #include <boost/optional.hpp>
 #include <boost/utility.hpp>
-
-#include "type/type.pb.h"
-
 #include <prometheus/exposer.h>
 #include <prometheus/counter.h>
 #include <prometheus/gauge.h>
+
+#include <memory>
+#include <map>
 
 // forward declare
 namespace prometheus {
