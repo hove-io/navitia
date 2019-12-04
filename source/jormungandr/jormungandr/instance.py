@@ -560,12 +560,16 @@ class Instance(object):
 
                 if 'flask_request_id' in kwargs:
                     request.request_id = kwargs['flask_request_id']
+            logger.info("BEFORE SEND")
             socket.send(request.SerializeToString())
+            logger.info("AFTER SEND")
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)
+                logger.info("BEFORE update_property")
                 self.update_property(resp)  # we update the timezone and geom of the instances at each request
+                logger.info("AFTER update_property")
                 return resp
             else:
                 socket.setsockopt(zmq.LINGER, 0)
@@ -671,7 +675,7 @@ class Instance(object):
         req.requested_api = type_pb2.METADATAS
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, timeout=1000, quiet=True)
+            resp = self._send_and_receive(req, timeout=1000, quiet=False)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True

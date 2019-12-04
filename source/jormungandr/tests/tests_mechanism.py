@@ -228,10 +228,8 @@ class AbstractTestFixture(unittest.TestCase):
             instance = i_manager.instances[name]
             try:
                 logging.info("BEFORE RETRYING")
-                # Stopping after 10 seconds, Wait 1200 ms between retries
-                # wait_fixed > timeout of _send_and_receive in instance.
                 retrying.Retrying(
-                    stop_max_delay=10000, wait_fixed=1200, retry_on_result=lambda x: not instance.is_initialized
+                    stop_max_delay=5000, wait_fixed=10, retry_on_result=lambda x: not instance.is_initialized
                 ).call(instance.init)
                 logging.info("AFTER RETRYING")
             except RetryError:
