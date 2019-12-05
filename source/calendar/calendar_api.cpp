@@ -29,9 +29,10 @@ www.navitia.io
 */
 
 #include "calendar_api.h"
-#include "type/pb_converter.h"
+
 #include "calendar.h"
 #include "ptreferential/ptreferential.h"
+#include "type/pb_converter.h"
 #include "utils/paginate.h"
 
 namespace navitia {

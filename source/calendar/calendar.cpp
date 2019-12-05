@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "calendar.h"
+
 #include "ptreferential/ptreferential.h"
 #include "type/data.h"
 
@@ -39,7 +40,7 @@ type::Indexes Calendar::get_calendars(const std::string& filter,
                                       const std::vector<std::string>& forbidden_uris,
                                       const type::Data& d,
                                       const boost::gregorian::date_period filter_period,
-                                      const boost::posix_time::ptime) {
+                                      const boost::posix_time::ptime /*unused*/) {
     type::Indexes to_return;
     to_return = ptref::make_query(type::Type_e::Calendar, filter, forbidden_uris, d);
     if (to_return.empty() || (filter_period.begin().is_not_a_date())) {
