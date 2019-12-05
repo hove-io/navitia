@@ -107,6 +107,9 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
     virtual ~apply_impacts_visitor() = default;
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
+    apply_impacts_visitor(apply_impacts_visitor&&) = default;
+    apply_impacts_visitor& operator=(const apply_impacts_visitor& other) = delete;
+    apply_impacts_visitor& operator=(apply_impacts_visitor&& other) noexcept = delete;
 
     virtual void operator()(nt::MetaVehicleJourney*, nt::Route* = nullptr) = 0;
 
@@ -208,9 +211,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                         const nt::MetaData& meta,
                         nt::RTLevel l)
         : apply_impacts_visitor(impact, pt_data, meta, "add", l) {}
-
-    ~add_impacts_visitor() override = default;
-    add_impacts_visitor(const add_impacts_visitor&) = default;
 
     using apply_impacts_visitor::operator();
 
@@ -607,6 +607,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                            const nt::MetaData& meta,
                            nt::RTLevel l)
         : apply_impacts_visitor(impact, pt_data, meta, "delete", l) {}
+
+    delete_impacts_visitor(const delete_impacts_visitor&) = delete;
+    delete_impacts_visitor& operator=(const delete_impacts_visitor&) = delete;
+
+    delete_impacts_visitor(delete_impacts_visitor&&) = delete;
+    delete_impacts_visitor& operator=(delete_impacts_visitor&&) = delete;
 
     ~delete_impacts_visitor() override {
         for (const auto& i : disruptions_collection) {
