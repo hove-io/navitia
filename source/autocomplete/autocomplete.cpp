@@ -37,7 +37,7 @@ www.navitia.io
 namespace navitia {
 namespace autocomplete {
 
-static void compute_score_poi(type::PT_Data& /*unused*/, georef::GeoRef& georef) {
+static void compute_score_poi(georef::GeoRef& georef) {
     for (auto it = georef.fl_poi.word_quality_list.begin(); it != georef.fl_poi.word_quality_list.end(); ++it) {
         for (navitia::georef::Admin* admin : georef.pois[it->first]->admin_list) {
             if (admin->level == 8) {
@@ -47,7 +47,7 @@ static void compute_score_poi(type::PT_Data& /*unused*/, georef::GeoRef& georef)
     }
 }
 
-static void compute_score_way(type::PT_Data& /*unused*/, georef::GeoRef& georef) {
+static void compute_score_way(georef::GeoRef& georef) {
     // The scocre of each admin(level 8) is attributed to all its ways
     for (auto it = georef.fl_way.word_quality_list.begin(); it != georef.fl_way.word_quality_list.end(); ++it) {
         for (navitia::georef::Admin* admin : georef.ways[it->first]->admin_list) {
@@ -150,10 +150,10 @@ void Autocomplete<T>::compute_score(type::PT_Data& pt_data, georef::GeoRef& geor
             compute_score_admin(pt_data, georef);
             break;
         case type::Type_e::Way:
-            compute_score_way(pt_data, georef);
+            compute_score_way(georef);
             break;
         case type::Type_e::POI:
-            compute_score_poi(pt_data, georef);
+            compute_score_poi(georef);
             break;
         default:
             break;
