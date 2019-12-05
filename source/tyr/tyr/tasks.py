@@ -78,28 +78,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def import_data(
-    files, instance, backup_file, asynchronous=True, reload=True, custom_output_dir=None, skip_mimir=False
-):
-    """
-    import the data contains in the list of 'files' in the 'instance'
-
-    :param files: files to import
-    :param instance: instance to receive the data
-    :param backup_file: If True the files are moved to a backup directory, else they are not moved
-    :param asynchronous: If True all jobs are run in background, else the jobs are run in sequence the function
-     will only return when all of them are finish
-    :param reload: If True kraken would be reload at the end of the treatment
-    :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
-    :param skip_mimir: skip importing data into mimir
-
-    run the whole data import process:
-
-    - data import in bdd (fusio2ed, gtfs2ed, poi2ed, ...)
-    - export bdd to nav file
-    - update the jormungandr db with the new data for the instance
-    - reload the krakens
-    """
+def create_actions(files, instance, backup_file, reload, custom_output_dir, skip_mimir):
     actions = []
     instance_config = load_instance_config(instance.name)
     task = {
@@ -190,6 +169,33 @@ def import_data(
             else:
                 current_app.logger.info("skipping mimir import")
 
+    return actions
+
+
+def import_data(
+    files, instance, backup_file, asynchronous=True, reload=True, custom_output_dir=None, skip_mimir=False
+):
+    """
+    import the data contains in the list of 'files' in the 'instance'
+
+    :param files: files to import
+    :param instance: instance to receive the data
+    :param backup_file: If True the files are moved to a backup directory, else they are not moved
+    :param asynchronous: If True all jobs are run in background, else the jobs are run in sequence the function
+     will only return when all of them are finish
+    :param reload: If True kraken would be reload at the end of the treatment
+    :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
+    :param skip_mimir: skip importing data into mimir
+
+    run the whole data import process:
+
+    - data import in bdd (fusio2ed, gtfs2ed, poi2ed, ...)
+    - export bdd to nav file
+    - update the jormungandr db with the new data for the instance
+    - reload the krakens
+    """
+    actions = create_actions(files, instance, backup_file, reload=True, custom_output_dir=None, skip_mimir=False)
+    if actions:
         if asynchronous:
             return chain(*actions).delay()
         else:
