@@ -76,8 +76,9 @@ nt::LineString PathFinder::path_coordinates_on_same_edge(const Edge& e,
         const nt::GeographicalCoord& endBlade = (reverse ? p1.projected : p2.projected);
         result = type::split_line_at_point(type::split_line_at_point(way->geoms[e.geom_idx], startBlade, true),
                                            endBlade, false);
-        if (reverse)
+        if (reverse) {
             std::reverse(result.begin(), result.end());
+        }
     }
 
     if (result.empty()) {
@@ -88,7 +89,8 @@ nt::LineString PathFinder::path_coordinates_on_same_edge(const Edge& e,
     return result;
 }
 
-PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref), color(boost::num_vertices(geo_ref.graph)) {}
+PathFinder::PathFinder(const GeoRef& gref)
+    : geo_ref(gref), mode(nt::Mode_e::Walking), color(boost::num_vertices(geo_ref.graph)) {}
 
 void PathFinder::init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
@@ -136,17 +138,20 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_ne
     const ProjectionData& target,
     bool handle_on_node) const {
     constexpr auto max = bt::pos_infin;
-    if (!target.found)
+    if (!target.found) {
         return {max, source_e};
+    }
 
-    if (distances[target[source_e]] == max)  // if one distance has not been reached, both have not been reached
+    if (distances[target[source_e]] == max) {  // if one distance has not been reached, both have not been reached
         return {max, source_e};
+    }
 
     if (handle_on_node) {
         // handle if the projection is done on a node
         if (target.distances[source_e] < 0.01) {
             return {distances[target[source_e]], source_e};
-        } else if (target.distances[target_e] < 0.01) {
+        }
+        if (target.distances[target_e] < 0.01) {
             return {distances[target[target_e]], target_e};
         }
     }
@@ -154,15 +159,17 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_ne
     auto source_dist = distances[target[source_e]] + crow_fly_duration(target.distances[source_e]);
     auto target_dist = distances[target[target_e]] + crow_fly_duration(target.distances[target_e]);
 
-    if (target_dist < source_dist)
+    if (target_dist < source_dist) {
         return {target_dist, target_e};
+    }
 
     return {source_dist, source_e};
 }
 
 Path PathFinder::get_path(type::idx_t idx) {
-    if (!computation_launch)
+    if (!computation_launch) {
         return {};
+    }
     ProjectionData projection = this->geo_ref.projected_stop_points[idx][mode];
 
     auto nearest_edge = find_nearest_vertex(projection);
@@ -272,25 +279,28 @@ void PathFinder::add_custom_projections_to_path(Path& p,
     auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
         if (coord_list.empty() || coord_list.front() != projection.projected) {
-            if (d == target_e)
+            if (d == target_e) {
                 coord_list.insert(coord_list.begin(), coords_to_add.begin(), coords_to_add.end());
-            else
+            } else {
                 coord_list.insert(coord_list.begin(), coords_to_add.rbegin(), coords_to_add.rend());
+            }
         }
     } else {
         if (coord_list.empty() || coord_list.back() != projection.projected) {
-            if (d == target_e)
+            if (d == target_e) {
                 coord_list.insert(coord_list.end(), coords_to_add.rbegin(), coords_to_add.rend());
-            else
+            } else {
                 coord_list.insert(coord_list.end(), coords_to_add.begin(), coords_to_add.end());
+            }
         }
     }
 }
 
 Path PathFinder::get_path(const ProjectionData& target,
                           const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge) {
-    if (!computation_launch || !target.found || nearest_edge.first == bt::pos_infin)
+    if (!computation_launch || !target.found || nearest_edge.first == bt::pos_infin) {
         return {};
+    }
 
     Path result = this->build_path(target[nearest_edge.second]);
     auto base_duration = result.duration;
@@ -429,8 +439,9 @@ Path create_path(const GeoRef& geo_ref,
         if (edge.geom_idx != nt::invalid_idx) {
             auto geometry = geo_ref.ways[edge.way_idx]->geoms[edge.geom_idx];
             path_item.coordinates.insert(path_item.coordinates.end(), geometry.begin(), geometry.end());
-        } else
+        } else {
             path_item.coordinates.push_back(coord);
+        }
         last_way = edge.way_idx;
         last_transport_carac = transport_carac;
         path_item.way_idx = edge.way_idx;
@@ -508,8 +519,9 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     int rounded_angle = std::round(raw_angle);
 
     rounded_angle = 180 - rounded_angle;
-    if (det < 0)
+    if (det < 0) {
         rounded_angle *= -1.0;
+    }
 
     return rounded_angle;
 }
