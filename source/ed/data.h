@@ -30,7 +30,6 @@ www.navitia.io
 
 #pragma once
 #include "types.h"
-
 #include "type/type.h"
 #include "type/comment.h"
 #include "type/data.h"
