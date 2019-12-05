@@ -570,7 +570,7 @@ SA builder::sa(const std::string& name,
                const bool create_sp,
                const bool wheelchair_boarding,
                const bool bike_accepted) {
-    return SA(*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted);
+    return {*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted};
 }
 
 builder::builder(const std::string& date,

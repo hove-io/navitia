@@ -55,7 +55,7 @@ namespace ed {
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
-    typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
+    using AdminMap = std::unordered_map<std::string, navitia::georef::Admin*>;
     using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
@@ -71,7 +71,9 @@ struct FindAdminWithCities {
         : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
-    FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
+    FindAdminWithCities(FindAdminWithCities&&) noexcept = default;
+    FindAdminWithCities& operator=(FindAdminWithCities&&) = delete;
     ~FindAdminWithCities() {
         if (nb_call == 0) {
             return;

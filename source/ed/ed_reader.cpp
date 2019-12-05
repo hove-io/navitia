@@ -1337,13 +1337,13 @@ struct ComponentEdge {
     navitia::flat_enum_map<nt::Mode_e, bool> modes;
 };
 
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, ComponentVertice, ComponentEdge>
-    ComponentGraph;
+using ComponentGraph =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, ComponentVertice, ComponentEdge>;
 using component_edge_t = boost::graph_traits<ComponentGraph>::edge_descriptor;
 using component_vertex_t = boost::graph_traits<ComponentGraph>::vertex_descriptor;
 
 struct ModeFilter {
-    nt::Mode_e mode;
+    nt::Mode_e mode = nt::Mode_e::Walking;
     const ComponentGraph* g = nullptr;
     ModeFilter(nt::Mode_e mode, const ComponentGraph* g) : mode(mode), g(g) {}
     ModeFilter() = default;

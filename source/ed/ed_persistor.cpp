@@ -205,10 +205,12 @@ void EdPersistor::insert_edges(const ed::Georef& data) {
         const auto source_coord = coord_to_string(edge.second->source->coord);
         const auto target_coord = coord_to_string(edge.second->target->coord);
 
-        this->lotus.insert({source_str, target_str, way_str, "LINESTRING(" + source_coord + "," + target_coord + ")",
-                            bool_str, bool_str, bool_str});
-        this->lotus.insert({target_str, source_str, way_str, "LINESTRING(" + target_coord + "," + source_coord + ")",
-                            bool_str, bool_str, bool_str});
+        this->lotus.insert({source_str, target_str, way_str,
+                            std::string("LINESTRING(" + source_coord + ",").append(target_coord + ")"), bool_str,
+                            bool_str, bool_str});
+        this->lotus.insert({target_str, source_str, way_str,
+                            std::string("LINESTRING(" + target_coord + ",").append(source_coord + ")"), bool_str,
+                            bool_str, bool_str});
         ++to_insert_count;
         if (to_insert_count % 150000 == 0) {
             lotus.finish_bulk_insert();

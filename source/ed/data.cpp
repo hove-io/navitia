@@ -448,7 +448,7 @@ void Data::clean() {
 }
 
 using LineStringIter = nt::LineString::const_iterator;
-typedef std::pair<LineStringIter, LineStringIter> LineStringIterPair;
+using LineStringIterPair = std::pair<LineStringIter, LineStringIter>;
 
 // Returns the nearest segment or point from coord under the form of a
 // pair of iterators {it1, it2}.  If it is a segment, it1 + 1 == it2.
