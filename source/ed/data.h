@@ -241,7 +241,6 @@ public:
     }
 
     std::vector<std::pair<const types::Calendar*, types::ValidityPattern::year_bitset>> find_matching_calendar(
-        const Data&,
         const std::string& name,
         const types::ValidityPattern& validity_pattern,
         const std::vector<types::Calendar*>& calendar_list,

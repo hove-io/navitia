@@ -605,8 +605,7 @@ static types::ValidityPattern get_union_validity_pattern(const types::MetaVehicl
 
 using list_cal_bitset = std::vector<std::pair<const types::Calendar*, types::ValidityPattern::year_bitset>>;
 
-list_cal_bitset Data::find_matching_calendar(const Data& /*unused*/,
-                                             const std::string& name,
+list_cal_bitset Data::find_matching_calendar(const std::string& name,
                                              const types::ValidityPattern& validity_pattern,
                                              const std::vector<types::Calendar*>& calendar_list,
                                              double relative_threshold) {
@@ -703,7 +702,7 @@ void Data::build_associated_calendar() {
             continue;
         }
 
-        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
+        auto close_cal = find_matching_calendar(meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
 
         if (close_cal.empty()) {
             LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
