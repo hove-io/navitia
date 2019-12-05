@@ -42,7 +42,7 @@ namespace navitia {
 namespace autocomplete {
 
 struct AutocompleteResult {
-    type::Type_e type;
+    type::Type_e type = type::Type_e::Unknown;
     Autocomplete<nt::idx_t>::fl_quality fl_result;
 
     AutocompleteResult() = default;
