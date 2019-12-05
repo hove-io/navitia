@@ -29,12 +29,66 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 import six
+import logging
+import shapely
 
 
 class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls to external service providing real-time parking places info
     """
+
+    def __init__(self, **kwargs):
+        self.boundary_shape = None
+        self.log = logging.getLogger(__name__)
+        self._init_boundary_shape(kwargs.get('geometry'))
+
+    '''
+    Initialise the object's shape using a GeoJson object.
+
+    boundary_geometry : a dictionary representing a GeoJSON object. see https://geojson.org/
+    '''
+
+    def _init_boundary_shape(self, boundary_geometry):
+        if boundary_geometry:
+            try:
+                boundary_shape = shapely.geometry.shape(boundary_geometry)
+                if not boundary_shape.is_valid:
+                    raise Exception("Geometry shape is invalid")
+                self.boundary_shape = boundary_shape
+            except Exception as e:
+                self.log.error('Error while loading boundary shape :', str(e))
+                self.log.error("Unable to parse geometry object : ", boundary_geometry)
+
+    def has_boundary_shape(self):  # type () : bool
+        return hasattr(self, 'boundary_shape') and self.boundary_shape != None
+
+    def is_poi_coords_within_shape(self, poi):
+        if self.has_boundary_shape() == False:
+            '''
+            We assume that a POI is within a provider with no shape to be backward compatible.
+            So that we don't have to configure a shape for every single provider.
+            '''
+            return True
+
+        try:
+            coord = poi['coord']
+            lon = float(coord['lon'])
+            lat = float(coord['lat'])
+            return self.boundary_shape.contains(shapely.geometry.Point([lon, lat]))
+        except KeyError as e:
+            self.log.error(
+                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)
+            )
+        except ValueError as e:
+            self.log.error("Cannot convert POI's coord to float : ", str(e))
+        except Exception as e:
+            self.log.error("Cannot find if coordinate is within shape: ", str(e))
+
+        return False
+
+    def handle_poi(self, poi):
+        return self.support_poi(poi) and self.is_poi_coords_within_shape(poi)
 
     @abstractmethod
     def support_poi(self, poi):

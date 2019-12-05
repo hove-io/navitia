@@ -82,7 +82,7 @@ class AbstractProviderManager(six.with_metaclass(ABCMeta, object)):
 
     def _find_provider(self, poi):
         for provider in self._get_providers():
-            if provider.support_poi(poi):
+            if provider.handle_poi(poi):
                 return provider
         return None
 
