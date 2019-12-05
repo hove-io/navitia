@@ -67,7 +67,7 @@ def init_flask_db(docker):
     db.init_app(app)
 
 
-def create_instance_config_file(instance_dir, backup_dir, name='default'):
+def create_instance_config_file(instance_dir, source_dir, backup_dir, name='default'):
     """
     Create a config file for an instance with path to the temp dir for the backup
     :param instance_dir: temp dir to store data for an instance
@@ -77,7 +77,7 @@ def create_instance_config_file(instance_dir, backup_dir, name='default'):
     config = ConfigParser.ConfigParser()
     config.add_section('instance')
     config.set('instance', 'name', name)
-    config.set('instance', 'source-directory', '/tmp')
+    config.set('instance', 'source-directory', source_dir)
     config.set('instance', 'backup-directory', backup_dir)
     config.set('instance', 'tmp-file', '/tmp/ed/tmpdata.nav.lz4')
     config.set('instance', 'target-file', '/tmp/ed/tmpdata.nav.lz4')
@@ -98,8 +98,11 @@ def init_instances_dir():
     Create a temp dir of an instance with its config file
     """
     instance_dir = tempfile.mkdtemp(prefix='instance_')
+    fr_source_dir = tempfile.mkdtemp(prefix='source_fr_', dir=instance_dir)
     fr_backup_dir = tempfile.mkdtemp(prefix='backup_fr_', dir=instance_dir)
-    create_instance_config_file(instance_dir=instance_dir, backup_dir=fr_backup_dir, name='fr')
+    create_instance_config_file(
+        instance_dir=instance_dir, source_dir=fr_source_dir, backup_dir=fr_backup_dir, name='fr'
+    )
     app.config['INSTANCES_DIR'] = instance_dir
 
     yield

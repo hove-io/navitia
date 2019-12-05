@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, division
 import pytest
 import os
+import glob
 from navitiacommon import models
 from tyr import app
 from flask_restful import current_app
@@ -64,6 +65,8 @@ def get_jobs_from_db(id=None):
 
 @pytest.mark.usefixtures("init_instances_dir")
 def test_post_pbf(create_instance_fr):
+    # Source files are stored in temp folders created in fixture
+    assert not glob.glob("/tmp/instance*/source*/empty_pbf.osm.pbf")
     assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
 
     filename = 'empty_pbf.osm.pbf'
@@ -76,10 +79,10 @@ def test_post_pbf(create_instance_fr):
     finally:
         f.close()
     assert resp.status_code == 200
-    assert os.path.isfile('/tmp/empty_pbf.osm.pbf')
+    assert glob.glob("/tmp/instance*/source*/empty_pbf.osm.pbf")
 
-    os.remove('/tmp/empty_pbf.osm.pbf')
-    assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
+    os.remove(glob.glob("/tmp/instance*/source*/empty_pbf.osm.pbf")[0])
+    assert not glob.glob("/tmp/instance*/source*/empty_pbf.osm.pbf")
 
 
 def test_post_no_file(create_instance_fr):
