@@ -223,7 +223,9 @@ class AbstractTestFixture(unittest.TestCase):
             instance = i_manager.instances[name]
             try:
                 retrying.Retrying(
-                    stop_max_attempt_number=5, retry_on_result=lambda x: not instance.is_initialized
+                    stop_max_attempt_number=5,
+                    wait_fixed=10,
+                    retry_on_result=lambda x: not instance.is_initialized,
                 ).call(instance.init)
             except RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))
