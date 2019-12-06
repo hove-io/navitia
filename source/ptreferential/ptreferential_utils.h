@@ -44,7 +44,7 @@ type::Indexes get_corresponding(type::Indexes indexes,
                                 const type::Data& data);
 type::Type_e type_by_caption(const std::string& type);
 type::Indexes get_indexes_by_impacts(const type::Type_e& type_e, const type::Data& d);
-type::Indexes get_impacts_by_tags(const std::vector<std::string>& tag_uris, const type::Data& d);
+type::Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const type::Data& d);
 type::Indexes filter_on_period(const type::Indexes& indexes,
                                const type::Type_e requested_type,
                                const boost::optional<boost::posix_time::ptime>& since,

@@ -29,7 +29,9 @@ www.navitia.io
 */
 
 #include "ptref_graph.h"
+
 #include "ptreferential.h"
+
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace navitia {
@@ -198,8 +200,9 @@ std::map<Type_e, Type_e> find_path(Type_e source) {
 
     std::map<Type_e, Type_e> result;
 
-    for (Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
+    for (Jointures::vertex_t u = 0; u < boost::num_vertices(j.g); ++u) {
         result[j.g[u]] = j.g[predecessors[u]];
+    }
     return result;
 }
 

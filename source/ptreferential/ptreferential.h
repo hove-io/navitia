@@ -32,11 +32,11 @@ www.navitia.io
 
 #include "utils/exception.h"
 #include "type/type_interfaces.h"
+#include "type/rt_level.h"
 #include "type/data.h"
 
 #include <boost/optional.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include "type/rt_level.h"
 
 namespace navitia {
 namespace ptref {
