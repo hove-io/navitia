@@ -48,7 +48,7 @@ bool try_save_file(const std::string& filename, const T& data) {
     LOG4CPLUS_INFO(logger, "Trying to save " << filename);
     try {
         data.save(filename);
-    } catch (const navitia::exception& e) {
+    } catch (const std::exception& e) {
         LOG4CPLUS_ERROR(logger, "Unable to save " << filename);
         LOG4CPLUS_ERROR(logger, e.what());
         return false;
@@ -57,6 +57,7 @@ bool try_save_file(const std::string& filename, const T& data) {
     return true;
 }
 
+bool rename_file(const std::string& source_name, const std::string& dest_name);
 template <class T = navitia::type::Data>
 bool write_data_to_file(const std::string& output_filename, const T& data);
 int ed2nav(int argc, const char** argv);
