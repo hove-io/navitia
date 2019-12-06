@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/geographical_coord.h"
 #include "utils/exception.h"
 #include "utils/logger.h"
+
 #include <memory>
 #include <vector>
 

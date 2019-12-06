@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "proximitylist_api.h"
+
 #include "type/pb_converter.h"
 #include "utils/paginate.h"
 
@@ -38,8 +39,8 @@ namespace proximitylist {
  * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
-typedef std::tuple<nt::idx_t, nt::GeographicalCoord, nt::Type_e> t_result;
-typedef std::pair<nt::idx_t, nt::GeographicalCoord> idx_coord;
+using t_result = std::tuple<nt::idx_t, nt::GeographicalCoord, nt::Type_e>;
+using idx_coord = std::pair<nt::idx_t, nt::GeographicalCoord>;
 static void make_pb(navitia::PbCreator& pb_creator,
                     const std::vector<t_result>& result,
                     uint32_t depth,
@@ -105,7 +106,7 @@ void find(navitia::PbCreator& pb_creator,
             try {
                 auto nb_w = pb_creator.data->geo_ref->nearest_addr(coord);
                 // we'll regenerate the good number in make_pb
-                result.push_back(t_result(nb_w.second->idx, coord, type));
+                result.emplace_back(nb_w.second->idx, coord, type);
                 ++total_result;
             } catch (const proximitylist::NotFound&) {
             }
@@ -167,7 +168,7 @@ void find(navitia::PbCreator& pb_creator,
         total_result += final_list.size();
         sort_cut(final_list, end_pagination, coord);
         for (auto idx_coord : final_list) {
-            result.push_back(t_result(idx_coord.first, idx_coord.second, type));
+            result.emplace_back(idx_coord.first, idx_coord.second, type);
         }
     }
     auto nb_sort = (result.size() < end_pagination) ? result.size() : end_pagination;
