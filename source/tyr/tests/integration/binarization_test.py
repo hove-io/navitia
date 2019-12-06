@@ -58,8 +58,12 @@ def test_actions_according_to_data(create_instance):
     # os.mkdir(os.path.join(source_dir, "fusio"))
     osm_dir_path = os.path.join(source_dir, "osm")
     os.mkdir(osm_dir_path)
-    os.listdir(os.path.join(os.getcwd(), 'fixtures'))
-    shutil.copy(os.path.join(os.getcwd(), 'fixtures/empty_pbf.osm.pbf'), osm_dir_path)
+    shutil.copy(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/empty_pbf.osm.pbf'
+        ),
+        osm_dir_path,
+    )
 
     # Only OSM file on source so expected actions are 'osm2ed', 'ed2nav'
     actions = create_actions(
