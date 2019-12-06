@@ -45,6 +45,7 @@ namespace ed {
 template <class T = navitia::type::Data>
 bool try_save_file(const std::string& filename, const T& data) {
     auto logger = log4cplus::Logger::getInstance("ed2nav::try_save_file");
+    LOG4CPLUS_INFO(logger, "Trying to save " << filename);
     try {
         data.save(filename);
     } catch (const navitia::exception& e) {
@@ -52,11 +53,9 @@ bool try_save_file(const std::string& filename, const T& data) {
         LOG4CPLUS_ERROR(logger, e.what());
         return false;
     }
+    LOG4CPLUS_INFO(logger, "File " << filename << " has been saved");
     return true;
 }
-
-bool rename_old_file(const std::string& output_filename, const std::string& backup_output_filename);
-bool rename_temp_file(const std::string& temp_output_filename, const std::string& output_filename);
 
 template <class T = navitia::type::Data>
 bool write_data_to_file(const std::string& output_filename, const T& data);
