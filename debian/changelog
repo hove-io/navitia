@@ -1,3 +1,9 @@
+navitia2 (3.1.1) unstable; urgency=low
+
+  * Kraken: Fix VJ re-indexation when cleaning up useless ones
+
+ -- Nonifier <olivier.georget@kisio.org>  Mon, 09 Dec 2019 16:12:14 +0100
+
 navitia2 (3.1.0) unstable; urgency=low
 
   * Revert "Kraken: Case/accents sensitive sort on stop_areas"  <https://github.com/CanalTP/navitia/pull/3043>
