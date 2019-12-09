@@ -307,9 +307,22 @@ An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is t
 |id|string|The id of the trip|
 |name|string|The name of the trip|
 
-It also encapsulates many instances of vehicle_journey, accessible with the url:
+It encapsulates many instances of vehicle_journey.
+
+
+### Vehicle-journey
+
+A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
+the days it circulates according to realtime information.
+
+Note that multiple vehicle-journeys are often associated to the same trip for technical and logical
+reasons (for the changes of daylight saving time, for the changes after applying realtime disruptions, etc.).
+
+The collection is accessible with the url:
 
 `https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys`.
+
+Note: this collection is mostly used for debug and technical purposes.
 
 
 ### <a name="pt-object"></a>Pt_object
