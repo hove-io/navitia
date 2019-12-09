@@ -357,10 +357,14 @@ Examples:
 To be used only on "vehicle_journeys" and "disruptions" collection, to filter on a
 period. Both parameters "until" and "since" are optional.
 
+For vehicle_journeys, since/until are associated to the data_freshness parameter (defaults to base_schedule): see the [realtime](#realtime) section.
+
 Example:
 
--   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100>
+-   Getting every active New Jersey vehicles between 12h00 and 12h01 (base-schedule), on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100>
 -   Getting every active disruption on "Bretagne" for a specific date <http://api.navitia.io/v1/coverage/fr-bre/disruptions?since=20170206000000&until=20170206235959>
+
+
 
 <aside class="warning">
     On vehicle_journey this filter is applied using only the first stop time.

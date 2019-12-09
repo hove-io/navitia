@@ -512,7 +512,7 @@ Severity object can be used to make visual grouping.
 | color         | string     | HTML color for classification                  |
 | priority      | integer    | given by the agency : 0 is strongest priority. it can be null |
 | name          | string     | name of severity                               |
-| effect        | Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect> |
+| effect        | Enum       | Normalized value of the effect on the public transport object. See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect>. See also [realtime](#realtime) section. |
 
 ### Channel
 
