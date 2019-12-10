@@ -586,10 +586,11 @@ builder::builder(const std::string& date,
 }
 
 void builder::connection(const std::string& name1, const std::string& name2, float length) {
-    navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();
-    connexion->idx = data->pt_data->stop_point_connections.size();
-    if (sps.count(name1) == 0 || sps.count(name2) == 0)
+    if (sps.count(name1) == 0 || sps.count(name2) == 0) {
         return;
+    }
+    auto* connexion = new navitia::type::StopPointConnection();
+    connexion->idx = data->pt_data->stop_point_connections.size();
     connexion->departure = (*(sps.find(name1))).second;
     connexion->destination = (*(sps.find(name2))).second;
 
