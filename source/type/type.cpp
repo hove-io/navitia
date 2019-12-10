@@ -119,7 +119,7 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
     // remove the vj from the global list/map
     erase_vj_from_list(vj, pt_data.vehicle_journeys);
     // afterward, we MUST reindex all vehicle journeys
-    std::for_each(pt_data.vehicle_journeys.begin(), pt_data.vehicle_journeys.end(), Indexer<nt::idx_t>());
+    std::for_each(pt_data.vehicle_journeys.begin() + vj->idx, pt_data.vehicle_journeys.end(), Indexer<nt::idx_t>(vj));
 
     pt_data.vehicle_journeys_map.erase(vj->uri);
 }
