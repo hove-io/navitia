@@ -51,13 +51,13 @@ public:
     void start_distance_dijkstra(const navitia::time_duration& radius);
 
     // compute the reachable stop points within the radius
-    routing::map_stop_point_duration find_nearest_stop_points(const navitia::time_duration& radius,
+    routing::map_stop_point_duration find_nearest_stop_points(const navitia::time_duration& max_duration,
                                                               const proximitylist::ProximityList<type::idx_t>& pl);
 
     using coord_uri = std::string;
     boost::container::flat_map<coord_uri, georef::RoutingElement> get_duration_with_dijkstra(
         const navitia::time_duration& radius,
-        const std::vector<type::GeographicalCoord>& entry_points);
+        const std::vector<type::GeographicalCoord>& dest_coords);
 
     /**
      * Launch a dijkstra without initializing the data structure
@@ -84,7 +84,7 @@ private:
 
     // compute the reachable stop points within the radius with a simple crow fly
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>> crow_fly_find_nearest_stop_points(
-        const navitia::time_duration& radius,
+        const navitia::time_duration& max_duration,
         const proximitylist::ProximityList<type::idx_t>& pl);
 
     // Call breadth first search

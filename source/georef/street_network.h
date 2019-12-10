@@ -43,7 +43,7 @@ namespace georef {
 struct StreetNetwork {
     StreetNetwork(const GeoRef& geo_ref);
 
-    void init(const type::EntryPoint& start_coord, boost::optional<const type::EntryPoint&> end_coord = {});
+    void init(const type::EntryPoint& start, const boost::optional<const type::EntryPoint&>& end = {});
 
     bool departure_launched() const;
     bool arrival_launched() const;

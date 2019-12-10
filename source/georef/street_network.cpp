@@ -29,8 +29,10 @@ www.navitia.io
 */
 
 #include "street_network.h"
-#include "type/data.h"
+
 #include "georef.h"
+#include "type/data.h"
+
 #include <chrono>
 
 namespace navitia {
@@ -39,7 +41,7 @@ namespace georef {
 StreetNetwork::StreetNetwork(const GeoRef& geo_ref)
     : geo_ref(geo_ref), departure_path_finder(geo_ref), arrival_path_finder(geo_ref), direct_path_finder(geo_ref) {}
 
-void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const type::EntryPoint&> end) {
+void StreetNetwork::init(const type::EntryPoint& start, const boost::optional<const type::EntryPoint&>& end) {
     departure_path_finder.init(start.coordinates, start.streetnetwork_params.mode,
                                start.streetnetwork_params.speed_factor);
     if (end) {

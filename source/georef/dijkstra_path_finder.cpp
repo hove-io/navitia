@@ -40,8 +40,9 @@ namespace georef {
 DijkstraPathFinder::~DijkstraPathFinder() = default;
 
 void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
-    if (!starting_edge.found)
+    if (!starting_edge.found) {
         return;
+    }
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
@@ -159,6 +160,7 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
     // case 2 : start coord is an edge (dijkstra)
     else {
         std::vector<routing::SpIdx> dest_sp_idx;
+        dest_sp_idx.reserve(elements.size());
         for (const auto& e : elements) {
             dest_sp_idx.emplace_back(routing::SpIdx{e.first});
         }
@@ -199,7 +201,10 @@ template <class Visitor>
 void DijkstraPathFinder::dijkstra(const std::array<georef::vertex_t, 2>& origin_vertexes, const Visitor& visitor) {
     // Note: the predecessors have been updated in init
     // Fill color map in white before dijkstra
-    std::fill(color.data.get(), color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
+    std::fill(color.data.get(),
+              color.data.get()
+                  + (color.n + boost::two_bit_color_map<>::elements_per_char - 1)
+                        / boost::two_bit_color_map<>::elements_per_char,
               0);
 
     // we filter the graph to only use certain mean of transport
@@ -215,8 +220,9 @@ void DijkstraPathFinder::dijkstra(const std::array<georef::vertex_t, 2>& origin_
 std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder::update_path(
     const ProjectionData& target) {
     constexpr auto max = bt::pos_infin;
-    if (!target.found)
+    if (!target.found) {
         return {max, source_e};
+    }
     assert(boost::edge(target[source_e], target[target_e], geo_ref.graph).second);
 
     computation_launch = true;
@@ -248,8 +254,9 @@ std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder:
 navitia::time_duration DijkstraPathFinder::get_distance(type::idx_t target_idx) {
     constexpr auto max = bt::pos_infin;
 
-    if (!starting_edge.found)
+    if (!starting_edge.found) {
         return max;
+    }
     assert(boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).second);
 
     ProjectionData target = this->geo_ref.projected_stop_points[target_idx][mode];
@@ -267,7 +274,7 @@ void DijkstraPathFinder::dijkstra_shortest_paths_no_init_with_heap(const Graph& 
                                                                    const WeightMap& weight,
                                                                    const SpeedDistanceCombiner& combine,
                                                                    const Compare& compare) {
-    typedef boost::d_ary_heap_indirect<vertex_t, 4, vertex_t*, navitia::time_duration*, Compare> MutableQueue;
+    using MutableQueue = boost::d_ary_heap_indirect<vertex_t, 4, vertex_t*, navitia::time_duration*, Compare>;
 
     MutableQueue Q(&distances[0], &index_in_heap_map[0], compare);
 
