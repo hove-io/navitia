@@ -33,14 +33,14 @@ www.navitia.io
 #include "maintenance_worker.h"
 #include "kraken/data_manager.h"
 #include "utils/logger.h"
-#include <utils/zmq.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include "utils/zmq.h"
 #include "kraken/configuration.h"
 #include "type/meta_data.h"
-#include <log4cplus/ndc.h>
 #include "metrics.h"
-
 #include "utils/deadline.h"
+
+#include <log4cplus/ndc.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional/optional_io.hpp>
 
 static void respond(zmq::socket_t& socket, const std::string& address, const pbnavitia::Response& response) {

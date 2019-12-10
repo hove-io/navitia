@@ -56,7 +56,7 @@ struct JourneysArg {
     type::AccessibiliteParams accessibilite_params;
     std::vector<std::string> forbidden;
     std::vector<std::string> allowed;
-    type::RTLevel rt_level;
+    type::RTLevel rt_level = type::RTLevel::Base;
     type::EntryPoints destinations;
     std::vector<uint64_t> datetimes;
     boost::optional<type::EntryPoint> isochrone_center;

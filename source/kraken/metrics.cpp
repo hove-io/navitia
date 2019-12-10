@@ -29,12 +29,13 @@ www.navitia.io
 */
 
 #include "metrics.h"
-#include "utils/functions.h"
 
+#include "utils/functions.h"
+#include "utils/logger.h"
+
+#include <prometheus/counter.h>
 #include <prometheus/exposer.h>
 #include <prometheus/registry.h>
-#include <prometheus/counter.h>
-#include "utils/logger.h"
 
 namespace navitia {
 
@@ -50,14 +51,15 @@ InFlightGuard::~InFlightGuard() {
     }
 }
 
-InFlightGuard::InFlightGuard(InFlightGuard&& other) {
+InFlightGuard::InFlightGuard(InFlightGuard&& other) noexcept {
     this->gauge = other.gauge;
     other.gauge = nullptr;
 }
 
-void InFlightGuard::operator=(InFlightGuard&& other) {
+InFlightGuard& InFlightGuard::operator=(InFlightGuard&& other) noexcept {
     this->gauge = other.gauge;
     other.gauge = nullptr;
+    return *this;
 }
 
 static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double start, double factor, int count) {

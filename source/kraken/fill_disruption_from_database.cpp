@@ -27,15 +27,16 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-#include <functional>
-
 #include "fill_disruption_from_database.h"
-#include <pqxx/pqxx>
 #include "utils/exception.h"
 #include "utils/logger.h"
 
-#include <boost/format.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/format.hpp>
+#include <pqxx/pqxx>
+
+#include <functional>
+#include <memory>
 
 namespace navitia {
 
@@ -43,8 +44,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                                    const boost::gregorian::date_period& production_date,
                                    DisruptionDatabaseReader& reader,
                                    const std::vector<std::string>& contributors) {
-    std::unique_ptr<pqxx::connection> conn;
-    conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
+    auto conn = std::make_unique<pqxx::connection>(connection_string);
 
     pqxx::work work(*conn, "loading disruptions");
 
@@ -169,7 +169,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
         offset += result.size();
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
-    } while (result.size() > 0);
+    } while (!result.empty());
 
     // counting disruptions & impacts in order to get real numbers
     pqxx::result count;
@@ -201,7 +201,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 }
 
 void DisruptionDatabaseReader::finalize() {
-    if (disruption && disruption->id() != "") {
+    if (disruption && !disruption->id().empty()) {
         disruption_callback(*disruption, pt_data, meta);
     }
     pt_data.clean_weak_impacts();

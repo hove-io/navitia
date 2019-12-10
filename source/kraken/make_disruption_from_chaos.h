@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/message.h"
 #include "type/chaos.pb.h"
 #include "type/meta_data.h"
+
 #include <memory>
 
 namespace navitia {
@@ -54,6 +55,7 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
 boost::optional<type::disruption::LineSection> make_line_section(const chaos::PtObject& chaos_section,
                                                                  nt::PT_Data& pt_data);
 
-bool is_publishable(transit_realtime::TimeRange publication_period, boost::posix_time::time_period production_period);
+bool is_publishable(const transit_realtime::TimeRange& publication_period,
+                    boost::posix_time::time_period production_period);
 
 }  // namespace navitia

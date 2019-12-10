@@ -29,11 +29,14 @@ www.navitia.io
 */
 
 #include "configuration.h"
+
 #include "utils/exception.h"
-#include <fstream>
-#include <boost/optional.hpp>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/optional.hpp>
+
+#include <fstream>
 #include <iostream>
 
 namespace po = boost::program_options;
@@ -41,9 +44,9 @@ namespace po = boost::program_options;
 namespace navitia {
 namespace kraken {
 
-po::options_description get_options_description(const boost::optional<std::string> name,
-                                                const boost::optional<std::string> zmq,
-                                                const boost::optional<bool> display_contributors) {
+po::options_description get_options_description(const boost::optional<std::string>& name,
+                                                const boost::optional<std::string>& zmq,
+                                                const boost::optional<bool>& display_contributors) {
     po::options_description desc("Allowed options");
     // clang-format off
     desc.add_options()

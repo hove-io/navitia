@@ -39,7 +39,7 @@ class Configuration {
     boost::program_options::variables_map vm;
 
 public:
-    void load(const std::string& file);
+    void load(const std::string& filename);
     std::vector<std::string> load_from_command_line(const boost::program_options::options_description&,
                                                     int argc,
                                                     const char* const argv[]);
@@ -78,9 +78,9 @@ public:
 };
 
 boost::program_options::options_description get_options_description(
-    const boost::optional<std::string> name = {},
-    const boost::optional<std::string> zmq = {},
-    const boost::optional<bool> display_contributors = {});
+    const boost::optional<std::string>& name = {},
+    const boost::optional<std::string>& zmq = {},
+    const boost::optional<bool>& display_contributors = {});
 
 }  // namespace kraken
 }  // namespace navitia

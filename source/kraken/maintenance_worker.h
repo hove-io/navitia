@@ -30,10 +30,11 @@ www.navitia.io
 
 #pragma once
 
-#include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "type/data.h"
 #include "kraken/data_manager.h"
 #include "kraken/configuration.h"
+
+#include <SimpleAmqpClient/SimpleAmqpClient.h>
 
 #include <memory>
 
