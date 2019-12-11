@@ -60,7 +60,7 @@ namespace qi = ::boost::spirit::qi;
 namespace ph = ::boost::phoenix;
 
 navitia::fare::Condition parse_condition(const std::string& condition_str) {
-    std::string str = boost::algorithm::to_lower_copy(condition_str);
+    std::string str(condition_str);
     boost::algorithm::replace_all(str, " ", "");
     navitia::fare::Condition cond;
 
