@@ -389,6 +389,10 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
                 return false;
             }
+        } else if (cond.key == "line") {
+            if (!compare(section.line, cond.value, cond.comparaison)) {
+                return false;
+            }
         }
     }
     for (const Condition& cond : this->end_conditions) {
