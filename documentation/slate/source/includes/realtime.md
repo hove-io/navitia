@@ -16,7 +16,7 @@ The effect of a disruption can be among the following:
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
     <li>[UNKNOWN_EFFECT](#UNKNOWN_EFFECT)</li>
 </ul>
-This list follows the values of the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect>.
+This list follows the values of the GTFS RT documentation at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 
