@@ -7,7 +7,7 @@ Several endpoints can integrate real time information in their responses. In the
 Real time isn't available on every coverage for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia.
 </aside>
 
-The effect of a disruption can be among of the following:
+The effect of a disruption can be among the following:
 <ul>
     <li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
     <li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
@@ -16,7 +16,7 @@ The effect of a disruption can be among of the following:
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
     <li>[UNKNOWN_EFFECT](#UNKNOWN_EFFECT)</li>
 </ul>
-List follows the values of the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect>.
+This list follows the values of the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect>.
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 

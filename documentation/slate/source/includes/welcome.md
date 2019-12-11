@@ -36,7 +36,7 @@ Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French nat
 
 <aside class="notice">
 A fake token is used in examples below: be aware that this token is really limited ("sandbox" coverage only).</br>
-You should use yours to get better services on real data (your token has no access to "sandbox" coverage).
+You have to use yours to get real services on real data (your token has no access to "sandbox" coverage).
 </aside>
 
 First step
