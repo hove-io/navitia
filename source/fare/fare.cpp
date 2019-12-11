@@ -468,6 +468,10 @@ DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     return ticket;
 }
 
+Fare::Fare() {
+    add_default_ticket();
+}
+
 size_t Fare::nb_transitions() const {
     return boost::num_edges(g);
 }

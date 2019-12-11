@@ -120,6 +120,7 @@ add_library(data ${DATA_SRC})
 target_link_libraries(data
     fill_disruption_from_database
     routing
+    fare
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -133,6 +134,7 @@ set(TYPES_TEST_LINK_LIBS
 
 add_executable(fill_pb_placemark_test tests/fill_pb_placemark_test.cpp)
 target_link_libraries(fill_pb_placemark_test
+    data
     routing
     thermometer
     pb_converter

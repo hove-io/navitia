@@ -41,6 +41,7 @@ www.navitia.io
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
 #include "type/fwd_type.h"
+#include "fare/fare.h"
 
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 #if __GNUG__ && __GNUC__ < 5

@@ -352,7 +352,7 @@ struct Fare {
     Graph g;
     Fare::vertex_t begin_v;  // begin vertex descriptor
 
-    Fare() { add_default_ticket(); }
+    Fare();
 
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
