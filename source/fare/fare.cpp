@@ -39,16 +39,12 @@ www.navitia.io
 #include "type/datetime.h"
 #include "routing/routing.h"
 
-#define FARE_LOG_ENABLED false
-
 namespace greg = boost::gregorian;
 
 namespace navitia {
 namespace fare {
 
 static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance("fare");
-
     // we save the informations about the last mod used
     label.line = section.line;
     label.mode = section.mode;
@@ -72,14 +68,8 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
         // empty ticket, it is juste a change
         // we have to update the number of changes and the duration with the same ticket
         if (ticket.caption == "" && ticket.value == 0) {
-#if (FARE_LOG_ENABLED)
-            LOG4CPLUS_TRACE(logger, "Empty ticket, free change");
-#endif
             label.nb_changes++;
         } else {
-#if (FARE_LOG_ENABLED)
-            LOG4CPLUS_TRACE(logger, "We buy a new ticket");
-#endif
             // we bought a new ticket
             // we save the global cost, and we reset the number of changes and duration
             if (ticket.value.undefined)
@@ -140,9 +130,7 @@ results Fare::compute_fare(const routing::Path& path) const {
     results res;
     int nb_nodes = boost::num_vertices(g);
 
-#if (FARE_LOG_ENABLED)
     LOG4CPLUS_DEBUG(logger, "Computing fare for journey : \n" << path);
-#endif
 
     if (nb_nodes < 2) {
         LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
@@ -158,9 +146,7 @@ results Fare::compute_fare(const routing::Path& path) const {
             section_idx++;
             continue;
         }
-#if (FARE_LOG_ENABLED)
         LOG4CPLUS_TRACE(logger, "In section " << section_idx << " : \n" << item);
-#endif
         SectionKey section_key(item, section_idx++);
 
         std::vector<std::vector<Label>> new_labels(nb_nodes);
@@ -172,25 +158,17 @@ results Fare::compute_fare(const routing::Path& path) const {
                 if (!valid(g[v], section_key)) {
                     continue;
                 }
-#if (FARE_LOG_ENABLED)
                 LOG4CPLUS_TRACE(logger, "Trying transition : \n " << g[e] << "\n from node : " << u << "\n  " << g[u]
                                                                   << "\n to node :   " << v << "\n  " << g[v]);
-#endif
 
                 for (const Label& label : labels[u]) {
-#if (FARE_LOG_ENABLED)
                     LOG4CPLUS_TRACE(logger, "Looking at label  : \n" << label);
-#endif
                     Ticket ticket;
                     const Transition& transition = g[e];
                     if (valid(g[u], label) && transition.valid(section_key, label)) {
-#if (FARE_LOG_ENABLED)
                         LOG4CPLUS_TRACE(logger, " Transition accept this (section, label) \n");
-#endif
                         if (transition.ticket_key != "") {
-#if (FARE_LOG_ENABLED)
                             LOG4CPLUS_TRACE(logger, " Transition ticket key is not blank : " << transition.ticket_key);
-#endif
                             bool ticket_found = false;  // TODO refactor this, optional is way better
                             auto it = fare_map.find(transition.ticket_key);
                             try {
@@ -199,23 +177,19 @@ results Fare::compute_fare(const routing::Path& path) const {
                                     ticket_found = true;
                                 }
                             } catch (no_ticket) {  // the ticket_found bool is still false
-#if (FARE_LOG_ENABLED)
                                 LOG4CPLUS_TRACE(logger, " Throw no ticket \n");
-#endif
                             }
                             if (!ticket_found) {
                                 ticket = make_default_ticket();
                             }
                         }
                         if (transition.global_condition == Transition::GlobalCondition::exclusive) {
-#if (FARE_LOG_ENABLED)
                             LOG4CPLUS_TRACE(logger, " Throw Ticket \n");
-#endif
+
                             throw ticket;
                         } else if (transition.global_condition == Transition::GlobalCondition::with_changes) {
-#if (FARE_LOG_ENABLED)
                             LOG4CPLUS_TRACE(logger, " ODFare ticket \n");
-#endif
+
                             ticket.type = Ticket::ODFare;
                         }
                         Label next = next_label(label, ticket, section_key);
@@ -233,12 +207,9 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 n.cost += ticket_od.value;
                                 n.tickets.back() = ticket_od;
                                 n.current_type = Ticket::FlatFare;
-#if (FARE_LOG_ENABLED)
                                 LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : \n" << n);
-#endif
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
-#if (FARE_LOG_ENABLED)
                                 LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
                                                             << next.stop_area << ", zone=" << next.zone
                                                             << ", section start_zone=" << section_key.start_zone
@@ -246,17 +217,12 @@ results Fare::compute_fare(const routing::Path& path) const {
                                                             << ", start_sa=" << section_key.start_stop_area
                                                             << ", dest_sa=" << section_key.dest_stop_area
                                                             << ", mode=" << section_key.mode);
-#endif
                             }
                         } else {
-#if (FARE_LOG_ENABLED)
                             LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
-#endif
                             new_labels[0].push_back(next);
                         }
-#if (FARE_LOG_ENABLED)
                         LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " {" << g[v] << "} : \n" << next);
-#endif
                         new_labels[v].push_back(next);
                     }
                 }
@@ -264,9 +230,7 @@ results Fare::compute_fare(const routing::Path& path) const {
         }
         // exclusive segment, we have to use that ticket
         catch (const Ticket& ticket) {
-#if (FARE_LOG_ENABLED)
             LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
-#endif
             new_labels.clear();
             new_labels.resize(nb_nodes);
             for (Label label : labels.at(0)) {
@@ -276,14 +240,12 @@ results Fare::compute_fare(const routing::Path& path) const {
         labels = std::move(new_labels);
     }
 
-// We look for the cheapest label
-// if 2 label have the same cost, we take the one with the least number of tickets
-#if (FARE_LOG_ENABLED)
+    // We look for the cheapest label
+    // if 2 label have the same cost, we take the one with the least number of tickets
     LOG4CPLUS_DEBUG(logger, "Bests labels : \n");
     for (const Label& label : labels.at(0)) {
         LOG4CPLUS_DEBUG(logger, " " << label);
     }
-#endif
     boost::optional<Label> best_label;
     for (const Label& label : labels.at(0)) {
         if (!best_label || label < (*best_label)) {
@@ -293,9 +255,7 @@ results Fare::compute_fare(const routing::Path& path) const {
             best_label = label;
         }
     }
-#if (FARE_LOG_ENABLED)
     LOG4CPLUS_DEBUG(logger, "Result label : \n" << (*best_label));
-#endif
 
     return res;
 }
@@ -416,7 +376,6 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
                 return false;
             }
         } else if (cond.key == "ticket" && label.tickets.size() > 0) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("fare"), label.tickets.back().key << " " << cond.value);
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
                 return false;
             }
