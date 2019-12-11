@@ -33,6 +33,12 @@ navitia2 (3.0.0) unstable; urgency=low
 
  -- mbounabi <Mehdi.Bounabi@Kisio.org>  Fri, 08 Nov 2019 14:11:15 +0100
 
+navitia2 (2.88.2) unstable; urgency=low
+
+  * Kraken: Only reindex VJs from the deleted one <https://github.com/CanalTP/navitia/pull/3080>
+
+ -- Olivier Georget <olivier.georget@kisio.com>  Mon, 09 Dec 2019 10:00:00 +0100
+
 navitia2 (2.88.0) unstable; urgency=low
 
   * Tyr: Robustify purge and heartbeat  <https://github.com/CanalTP/navitia/pull/3016>
