@@ -29,16 +29,17 @@ www.navitia.io
 */
 
 #include "ptreferential_ng.h"
-#include "ptreferential_utils.h"
+
 #include "ptreferential.h"
+#include "ptreferential_utils.h"
+#include "type/line.h"
 #include "type/pt_data.h"
+#include "type/static_data.h"
+#include "type/type_interfaces.h"
 #include "utils/logger.h"
 
-#include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include "type/line.h"
-#include "type/type_interfaces.h"
-#include "type/static_data.h"
+#include <boost/spirit/include/qi.hpp>
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 using navitia::type::Indexes;
@@ -81,10 +82,10 @@ void print_quoted_string(std::ostream& os, const std::string& s) {
 std::ostream& operator<<(std::ostream& os, const Expr& expr) {
     return os << expr.expr;
 }
-std::ostream& operator<<(std::ostream& os, const All&) {
+std::ostream& operator<<(std::ostream& os, const All& /*unused*/) {
     return os << "all";
 }
-std::ostream& operator<<(std::ostream& os, const Empty&) {
+std::ostream& operator<<(std::ostream& os, const Empty& /*unused*/) {
     return os << "empty";
 }
 std::ostream& operator<<(std::ostream& os, const Fun& fun) {
@@ -199,13 +200,14 @@ const char* to_string(OdtLevel_e level) {
 OdtLevel_e odt_level_from_string(const std::string& s) {
     if (s == "scheduled") {
         return OdtLevel_e::scheduled;
-    } else if (s == "with_stops") {
-        return OdtLevel_e::with_stops;
-    } else if (s == "zonal") {
-        return OdtLevel_e::zonal;
-    } else {
-        return OdtLevel_e::all;
     }
+    if (s == "with_stops") {
+        return OdtLevel_e::with_stops;
+    }
+    if (s == "zonal") {
+        return OdtLevel_e::zonal;
+    }
+    return OdtLevel_e::all;
 }
 
 const char* rt_level_to_string(RTLevel rt_level) {
@@ -224,11 +226,11 @@ const char* rt_level_to_string(RTLevel rt_level) {
 RTLevel rt_level_from_string(const std::string& s) {
     if (s == "realtime") {
         return RTLevel::RealTime;
-    } else if (s == "adapted_schedule") {
-        return RTLevel::Adapted;
-    } else {
-        return RTLevel::Base;
     }
+    if (s == "adapted_schedule") {
+        return RTLevel::Adapted;
+    }
+    return RTLevel::Base;
 }
 
 boost::posix_time::ptime from_datetime(const std::string& s) {
@@ -250,8 +252,8 @@ struct Eval : boost::static_visitor<Indexes> {
     const type::Data& data;
     Eval(Type_e t, const type::Data& d) : target(t), data(d) {}
 
-    Indexes operator()(const ast::All&) const { return data.get_all_index(target); }
-    Indexes operator()(const ast::Empty&) const { return Indexes(); }
+    Indexes operator()(const ast::All& /*unused*/) const { return data.get_all_index(target); }
+    Indexes operator()(const ast::Empty& /*unused*/) const { return Indexes(); }
     Indexes operator()(const ast::Fun& f) const {
         Indexes indexes;
         const auto type = type_by_caption(f.type);
@@ -259,7 +261,7 @@ struct Eval : boost::static_visitor<Indexes> {
             for (auto vj : data.pt_data->headsign_handler.get_vj_from_headsign(f.args.at(0))) {
                 indexes.insert(vj->idx);
             }
-        } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.size() == 0) {
+        } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.empty()) {
             indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, data);
         } else if (type == Type_e::Line && f.method == "code" && f.args.size() == 1) {
             for (auto l : data.pt_data->lines) {
@@ -293,7 +295,7 @@ struct Eval : boost::static_visitor<Indexes> {
                 }
             }
         } else if (type == Type_e::Impact
-                   && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && f.args.size() >= 1))) {
+                   && ((f.method == "tag" && f.args.size() == 1) || (f.method == "tags" && !f.args.empty()))) {
             indexes = get_impacts_by_tags(f.args, data);
         }
         // since/until/between are available for disruption and vehicle_journey,
@@ -416,7 +418,6 @@ std::string make_request(const Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::RTLevel rt_level,
                          const type::Data& data) {
-    const auto* static_data = navitia::type::static_data::get();
     std::string res = request.empty() ? std::string("all") : request;
 
     switch (requested_type) {
@@ -428,7 +429,7 @@ std::string make_request(const Type_e requested_type,
         case Type_e::VehicleJourney:
         case Type_e::Impact:
             if (since || until) {
-                res = "(" + res + ") AND " + static_data->captionByType(requested_type);
+                res = "(" + res + ") AND " + navitia::type::static_data::get()->captionByType(requested_type);
                 if (since && until) {
                     res = res + ".between(" + to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z";
                 } else if (since) {
@@ -454,7 +455,7 @@ std::string make_request(const Type_e requested_type,
         }
         std::stringstream ss;
         try {
-            ss << static_data->captionByType(type);
+            ss << navitia::type::static_data::get()->captionByType(type);
         } catch (std::out_of_range&) {
             throw parsing_error(parsing_error::error_type::unknown_object, "Filter Unknown object type: " + id);
         }
@@ -490,7 +491,8 @@ Indexes make_query_ng(const Type_e requested_type,
         make_request(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
     const auto expr = parse(request_ng);
     LOG4CPLUS_TRACE(logger, "ptref_ng parsed: " << expr << " [requesting: "
-                                                << navitia::type::static_data::captionByType(requested_type) << "]");
+                                                << navitia::type::static_data::get()->captionByType(requested_type)
+                                                << "]");
     return Eval(requested_type, data)(expr);
 }
 
