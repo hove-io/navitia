@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "line_reports_api.h"
+
 #include "utils/paginate.h"
 
 namespace bt = boost::posix_time;
