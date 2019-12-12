@@ -29,22 +29,24 @@ www.navitia.io
 */
 
 #include "cities.h"
-#include <stdio.h>
-#include <queue>
 
-#include <iostream>
-#include <boost/program_options.hpp>
-#include <boost/geometry.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/range/algorithm/find_if.hpp>
-#include <boost/range/algorithm/reverse.hpp>
-
+#include "conf.h"
 #include "ed/connectors/osm_tags_reader.h"
 #include "utils/functions.h"
 #include "utils/init.h"
+
+#include <boost/dynamic_bitset.hpp>
+#include <boost/geometry.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/reverse.hpp>
+
+#include <cstdio>
 #include <iomanip>
-#include "conf.h"
+#include <iostream>
+#include <queue>
+#include <utility>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -82,7 +84,7 @@ void ReadRelationsVisitor::relation_callback(OSMId osm_id, const CanalTP::Tags& 
         for (const CanalTP::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
-                    if (ref.role == "outer" || ref.role == "" || ref.role == "exclave") {
+                    if (ref.role == "outer" || ref.role.empty() || ref.role == "exclave") {
                         cache.ways.insert(std::make_pair(ref.member_id, OSMWay()));
                     }
                     break;
@@ -108,7 +110,9 @@ void ReadRelationsVisitor::relation_callback(OSMId osm_id, const CanalTP::Tags& 
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(OSMId osm_id, const CanalTP::Tags&, const std::vector<OSMId>& nodes_refs) {
+void ReadWaysVisitor::way_callback(OSMId osm_id,
+                                   const CanalTP::Tags& /*unused*/,
+                                   const std::vector<OSMId>& nodes_refs) {
     auto it_way = cache.ways.find(osm_id);
     if (it_way == cache.ways.end()) {
         return;
@@ -139,7 +143,7 @@ void OSMCache::build_relations_geometries() {
         if (relation.second.polygon.empty()) {
             continue;
         }
-        boost::geometry::model::box<point> box;
+        boost::geometry::model::box<point> box{};
         boost::geometry::envelope(relation.second.polygon, box);
         Rect r(box.min_corner().get<0>(), box.min_corner().get<1>(), box.max_corner().get<0>(),
                box.max_corner().get<1>());
@@ -167,7 +171,7 @@ OSMRelation* OSMCache::match_coord_admin(const double lon, const double lat) {
     relations result;
     auto callback = [](OSMRelation* rel, void* c) -> bool {
         if (rel->level == 8) {  // we want to match only cities
-            relations* context = reinterpret_cast<relations*>(c);
+            auto* context = reinterpret_cast<relations*>(c);
             context->push_back(rel);
         }
         return true;
@@ -219,19 +223,20 @@ std::string OSMNode::to_geographic_point() const {
     return geog.str();
 }
 
-OSMRelation::OSMRelation(const std::vector<CanalTP::Reference>& refs,
-                         const std::string& insee,
-                         const std::string postal_code,
-                         const std::string& name,
+OSMRelation::OSMRelation(std::vector<CanalTP::Reference> refs,
+                         std::string insee,
+                         const std::string& postal_code,
+                         std::string name,
                          const uint32_t level)
-    : references(refs), insee(insee), name(name), level(level) {
+    : references(std::move(refs)), insee(std::move(insee)), name(std::move(name)), level(level) {
     this->add_postal_code(postal_code);
 }
 
 void OSMRelation::add_postal_code(const std::string& postal_code) {
     if (postal_code.empty()) {
         return;
-    } else if (postal_code.find(";", 0) == std::string::npos) {
+    }
+    if (postal_code.find(';', 0) == std::string::npos) {
         this->postal_codes.insert(postal_code);
     } else {
         boost::split(this->postal_codes, postal_code, boost::is_any_of(";"));
@@ -241,11 +246,11 @@ void OSMRelation::add_postal_code(const std::string& postal_code) {
 std::string OSMRelation::postal_code() const {
     if (postal_codes.empty()) {
         return "";
-    } else if (postal_codes.size() == 1) {
-        return *postal_codes.begin();
-    } else {
-        return *postal_codes.begin() + "-" + *postal_codes.rbegin();
     }
+    if (postal_codes.size() == 1) {
+        return *postal_codes.begin();
+    }
+    return *postal_codes.begin() + "-" + *postal_codes.rbegin();
 }
 
 /*
