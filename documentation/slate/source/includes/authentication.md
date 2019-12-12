@@ -38,5 +38,5 @@ or
 
 <aside class="notice">
 The token used in documentation has only access to "sandbox" coverage.</br>
-The private token token obtained on https://navitia.io has access to other coverages, but not to "sandbox".
+The private token obtained on https://navitia.io has access to other coverages, but not to "sandbox".
 </aside>
