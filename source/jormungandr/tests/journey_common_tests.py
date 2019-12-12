@@ -1563,7 +1563,7 @@ class OneDeadRegion:
     """
 
     def test_one_dead_region(self):
-        self.krakens_pool["basic_routing_test"].kill()
+        self.krakens_pool["basic_routing_test"].terminate()
 
         query = "v1/journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120614T080000&debug=true&max_duration_to_pt=0"
         response = self.query(query)
