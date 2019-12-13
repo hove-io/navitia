@@ -30,19 +30,47 @@ www.navitia.io
 
 #include "osm_tags_reader.h"
 #include "utils/functions.h"
+#include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
 #include "utils/exception.h"
+#include "speed_parser.h"
 
 namespace ed {
 namespace connectors {
+
 
 static void update_if_unknown(int& target, const int& source) {
     if (target == -1) {
         target = source;
     }
 }
+
+
+boost::optional<float> parse_way_speed(const std::map<std::string, std::string>& tags, const SpeedsParser& default_speed) {
+    if (!tags.count("highway")) {
+        return 0;
+    }
+    boost::optional<std::string> max_speed;
+    std::string highway;
+    for (std::pair<std::string, std::string> pair : tags) {
+        std::string key = pair.first, val = pair.second;
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+        std::transform(val.begin(), val.end(), val.begin(), ::tolower);
+
+        if (key == "maxspeed") {
+            max_speed = val;
+        }
+
+        if (key == "highway") {
+            highway = val;
+        }
+    }
+
+    return default_speed.get_speed(highway, max_speed);
+}
+
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     // if no highway tag, we can do nothing on it

@@ -196,14 +196,15 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id,
     if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
-
+    auto speed = parse_way_speed(tags, this->speed_parser);
     if (is_used_by_relation) {
         it_way->set_properties(properties);
+        it_way->set_car_speed(speed);
         if (!name.empty()) {
             it_way->set_name(name);
         }
     } else if (is_street) {
-        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
+        it_way = cache.ways.insert(OSMWay(osm_id, properties, name, speed)).first;
     }
     for (auto osm_id : nodes_refs) {
         auto v = cache.nodes.insert(OSMNode(osm_id));
@@ -424,7 +425,8 @@ void OSMCache::insert_edges() {
     }
 
     this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                                     "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+                                                     "pedestrian_allowed", "cycles_allowed", "cars_allowed", 
+                                                     "car_speed"});
     nt::LineString coords;
     std::stringstream wkt;
     wkt.precision(10);
@@ -433,6 +435,11 @@ void OSMCache::insert_edges() {
     for (const auto& way : ways) {
         auto prev_node = nodes.end();
         const auto ref_way_id = way.way_ref == nullptr ? way.osm_id : way.way_ref->osm_id;
+
+        std::string speed = lotus->null_value;
+        if(way.car_speed){
+            speed = std::to_string(way.car_speed.get());
+        }
         for (const auto& node : way.nodes) {
             if (!node->is_defined()) {
                 continue;
@@ -451,7 +458,8 @@ void OSMCache::insert_edges() {
                                      std::to_string(ref_way_id), wkt.str(),
                                      std::to_string(way.properties[OSMWay::FOOT_FWD]),
                                      std::to_string(way.properties[OSMWay::CYCLE_FWD]),
-                                     std::to_string(way.properties[OSMWay::CAR_FWD])});
+                                     std::to_string(way.properties[OSMWay::CAR_FWD]),
+                                     speed});
                 // In most of the case we need the reversal,
                 // that'll be wrong for some in case in car
                 // We need to work on it
@@ -462,7 +470,8 @@ void OSMCache::insert_edges() {
                                      std::to_string(ref_way_id), wkt.str(),
                                      std::to_string(way.properties[OSMWay::FOOT_BWD]),
                                      std::to_string(way.properties[OSMWay::CYCLE_BWD]),
-                                     std::to_string(way.properties[OSMWay::CAR_BWD])});
+                                     std::to_string(way.properties[OSMWay::CAR_BWD]),
+                                     speed});
                 prev_node = nodes.end();
                 n_inserted = n_inserted + 2;
             }
@@ -476,7 +485,8 @@ void OSMCache::insert_edges() {
             this->lotus->finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << " edges inserted");
             this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                                             "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+                                                             "pedestrian_allowed", "cycles_allowed", "cars_allowed",
+                                                             "car_speed"});
         }
     }
     this->lotus->finish_bulk_insert();

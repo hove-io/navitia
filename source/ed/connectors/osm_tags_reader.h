@@ -44,8 +44,13 @@ constexpr uint8_t FOOT_FWD = 4;
 constexpr uint8_t FOOT_BWD = 5;
 constexpr uint8_t VISIBLE = 6;
 
+class SpeedsParser;
+
 /// return properties on modes and directions that are possible on a way
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags);
+
+
+boost::optional<float> parse_way_speed(const std::map<std::string, std::string>& tags, const SpeedsParser& default_speed);
 
 ed::types::Poi fill_poi(const uint64_t osm_id,
                         const double lon,

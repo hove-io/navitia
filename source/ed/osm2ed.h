@@ -35,6 +35,7 @@ www.navitia.io
 #include "ed/types.h"
 #include "ed_persistor.h"
 #include "ed/connectors/osm_tags_reader.h"
+#include "ed/connectors/speed_parser.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
@@ -180,12 +181,13 @@ struct OSMWay {
     mutable std::vector<std::set<OSMNode>::const_iterator> nodes;
     mutable ls_type ls;
     mutable const OSMWay* way_ref = nullptr;
+    mutable boost::optional<float> car_speed;
 
     OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {
         properties[VISIBLE] = true;  // By default way are visible
     }
-    OSMWay(const u_int64_t osm_id, const std::bitset<8>& properties, const std::string& name)
-        : osm_id(osm_id), properties(properties), name(name) {}
+    OSMWay(const u_int64_t osm_id, const std::bitset<8>& properties, const std::string& name, boost::optional<float> car_speed=boost::none)
+        : osm_id(osm_id), properties(properties), name(name), car_speed(car_speed) {}
 
     void add_node(std::set<OSMNode>::const_iterator node) const {
         nodes.push_back(node);
@@ -197,6 +199,8 @@ struct OSMWay {
     bool operator<(const OSMWay& other) const { return this->osm_id < other.osm_id; }
 
     void set_properties(const std::bitset<8>& properties) const { this->properties = properties; }
+
+    void set_car_speed(boost::optional<float> speed) const { this->car_speed = speed; }
 
     void set_name(const std::string& name) const { this->name = name; }
 
@@ -317,6 +321,7 @@ struct ReadWaysVisitor {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     OSMCache& cache;
     const PoiTypeParams poi_params;
+    SpeedsParser speed_parser;
 
     ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params) : cache(cache), poi_params(poi_params) {}
     ~ReadWaysVisitor();
