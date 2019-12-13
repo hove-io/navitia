@@ -315,8 +315,8 @@ It encapsulates many instances of vehicle_journey.
 A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
 the days it circulates according to realtime information.
 
-Note that multiple vehicle-journeys are often associated to the same trip for technical and logical
-reasons (for the changes of daylight saving time, for the changes after applying realtime disruptions, etc.).
+Note that multiple vehicle-journeys are often associated with the same trip for technical and logical
+reasons (to model the daylight saving time, for the changes after applying realtime disruptions, etc.).
 
 The collection is accessible with the url:
 

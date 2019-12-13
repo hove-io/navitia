@@ -16,7 +16,7 @@ The effect of a disruption can be among the following:
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
     <li>[UNKNOWN_EFFECT](#UNKNOWN_EFFECT)</li>
 </ul>
-This list follows the values of the GTFS RT documentation at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
+This list follows the GTFS RT values documented at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 
@@ -317,15 +317,15 @@ In that case, a link to this disruption can be found in the section "display_inf
 ```
 The effect of the disruption is `NO_SERVICE`. It means that the train won't be circulating at all.
 
-In the disruption, the deleted trip can be found in the list of "impacted_objects" with the
+In the disruption, the deleted trip can be found in the "impacted_objects" list with the
 "application_periods" describing the period(s) of unavailability for the trip.  
 See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
 
-If the trip deleted is used in part by a section of the `base_schedule` journey, Navitia will compute a different
-itinerary to the requested station in `realtime` (without using that trip).  
+If the deleted trip is used by a section of the `base_schedule` journey, Navitia will compute a different
+itinerary to the requested station in `realtime`, or a later one (without using that trip).  
 A link to this disruption can be found in the section "display_informations" like for other disruptions, on a `base_schedule` journey.
 
 ### Departures & Stop Schedules

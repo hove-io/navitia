@@ -357,7 +357,7 @@ Examples:
 To be used only on "vehicle_journeys" and "disruptions" collection, to filter on a
 period. Both parameters "until" and "since" are optional.
 
-For vehicle_journeys, "since" and "until" are associated to the data_freshness parameter (defaults to base_schedule): see the [realtime](#realtime) section.
+For vehicle_journeys, "since" and "until" are associated with the data_freshness parameter (defaults to base_schedule): see the [realtime](#realtime) section.
 
 Example:
 

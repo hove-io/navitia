@@ -37,6 +37,6 @@ or
 `curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage`
 
 <aside class="notice">
-The token used in documentation has only access to "sandbox" coverage.</br>
+The token used within this documentation has only access to the "sandbox" coverage.</br>
 The private token obtained on https://navitia.io has access to other coverages, but not to "sandbox".
 </aside>
