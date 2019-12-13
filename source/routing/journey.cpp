@@ -69,21 +69,21 @@ bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     // FIXME: I don't like this objective, for me, this is a
     // transfer objective, but then you can return some solutions
     // that we didn't return before.
-    if (!(better_on_transfer(that, request_clockwise) && that.better_on_transfer(*this, request_clockwise))) {
+    if (!(better_on_transfer(that) && that.better_on_transfer(*this))) {
         // if they are not equal on transfer, we don't check min_waiting_dur
         return true;
     }
     return min_waiting_dur >= that.min_waiting_dur;
 }
 
-bool Journey::better_on_transfer(const Journey& that, bool /*unused*/) const {
+bool Journey::better_on_transfer(const Journey& that) const {
     if (sections.size() != that.sections.size()) {
         return sections.size() <= that.sections.size();
     }
     return nb_vj_extentions <= that.nb_vj_extentions;
 }
 
-bool Journey::better_on_sn(const Journey& that, bool /*unused*/) const {
+bool Journey::better_on_sn(const Journey& that) const {
     // we consider the transfer sections also as walking sections
     return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
 }
