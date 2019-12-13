@@ -53,7 +53,7 @@ namespace po = boost::program_options;
 struct Demand {
     unsigned int date{};
     unsigned int hour{};
-    nt::RTLevel level;
+    nt::RTLevel level = nt::RTLevel::Base;
     nt::AccessibiliteParams accessibilite_params;
 };
 

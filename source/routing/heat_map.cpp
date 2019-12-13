@@ -370,8 +370,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
         boost::dijkstra_shortest_paths_no_init(
             filtered_graph(worker.graph, {}, georef::TransportationModeFilter(mode, worker)), start, end,
             &predecessors[0], &distances[0], boost::get(&georef::Edge::duration, worker.graph), index_map,
-            std::less<navitia::time_duration>(), georef::SpeedDistanceCombiner(speed_factor), navitia::seconds(0),
-            visitor);
+            std::less<>(), georef::SpeedDistanceCombiner(speed_factor), navitia::seconds(0), visitor);
     } catch (georef::DestinationFound) {
     }
     return build_grid(worker, box, distances, speed, duration, resolution);

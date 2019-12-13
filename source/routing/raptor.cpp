@@ -211,7 +211,7 @@ namespace {
 struct Dom {
     explicit Dom(bool c) : clockwise(c) {}
     bool clockwise;
-    typedef std::pair<size_t, StartingPointSndPhase> Arg;
+    using Arg = std::pair<size_t, StartingPointSndPhase>;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
         /*
          * When multiple arrival with [same walking, same time, same number of sections] are

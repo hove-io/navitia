@@ -51,8 +51,12 @@ struct PathElt {
                      const DateTime e_dt,
                      const PathElt* p = nullptr)
         : begin_st(b), begin_dt(b_dt), end_st(e), end_dt(e_dt), prev(p) {}
+    ~PathElt() = default;
     PathElt(const PathElt&) = delete;
     PathElt& operator=(const PathElt&) = delete;
+    PathElt(const PathElt&&) = delete;
+    PathElt& operator=(const PathElt&&) = delete;
+
     const type::StopTime& begin_st;
     const DateTime begin_dt;
     const type::StopTime& end_st;
@@ -314,11 +318,11 @@ Journey make_bound_journey(DateTime beg,
     return journey;
 }
 
-struct stop_search {};
+struct stop_search : public std::exception {};
 
 template <typename Visitor>
 struct RaptorSolutionReader {
-    typedef std::pair<const type::StopTime*, DateTime> StDt;
+    using StDt = std::pair<const type::StopTime*, DateTime>;
     struct Transfer {
         DateTime end_vj{};
         unsigned nb_stay_in{};
@@ -366,7 +370,7 @@ struct RaptorSolutionReader {
     private:
         std::deque<T> v;
     };
-    typedef boost::container::flat_map<JpIdx, ParetoFront<Transfer, DomTr>> Transfers;
+    using Transfers = boost::container::flat_map<JpIdx, ParetoFront<Transfer, DomTr>>;
     Cache<Transfers> transfers_cache;
     Cache<Journey> journey_cache;
 
