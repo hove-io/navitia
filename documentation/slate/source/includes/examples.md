@@ -4,7 +4,7 @@
 This chapter shows some usages with the minimal required arguments. However, this is not a reference and not all APIs nor arguments are shown.
 
 <aside class="notice">
-You will have to use your own token with the examples below.
+You will have to use your own token with the examples below (if you switch to another coverage than "sandbox").
 </aside>
 
 

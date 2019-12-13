@@ -7,14 +7,16 @@ Several endpoints can integrate real time information in their responses. In the
 Real time isn't available on every coverage for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia.
 </aside>
 
-The effect of a disruption can be one of the following:
+The effect of a disruption can be among the following:
 <ul>
     <li>[SIGNIFICANT_DELAYS](#SIGNIFICANT_DELAYS)</li>
     <li>[REDUCED_SERVICE](#REDUCED_SERVICE)</li>
+    <li>[NO_SERVICE](#NO_SERVICE)</li>
     <li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
     <li>[UNKNOWN_EFFECT](#UNKNOWN_EFFECT)</li>
 </ul>
+This list follows the GTFS RT values documented at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.
 
@@ -31,7 +33,7 @@ So the data_freshness parameter may affect the number of objects returned depend
 For example when looking for a specific circulation with the collection vehicle_journey using the request:  
 `http://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
 
-A vehicle_journey circulating between since and until that is **fully deleted** by a disruption will
+A vehicle_journey circulating between since and until that is **fully deleted** (NO_SERVICE) by a disruption will
 of course be **visible** if `data_freshness=base_schedule`.  
 But it **will not appear** with the parameter `data_freshness=realtime` as it does not exist in that collection.
 
@@ -280,6 +282,55 @@ Either way, a link to this disruption can be found in the section "display_infor
 ### Departures & Stop Schedules
 
 At the deleted stop area, the departure time of the train with a reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
+
+If "data_freshness" is "base_schedule", then the depature time is displayed.  
+In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+
+## <a name="NO_SERVICE"></a>No service
+
+![image](no_service.png)
+
+``` shell
+# Extract of an impacted trip from /disruptions
+{
+    "application_periods": ⊖[
+       ⊖{
+            "begin": "20191210T183100",
+            "end": "20191210T194459"
+        }
+    ],
+    "impacted_objects": ⊖[
+       ⊖{
+            "pt_object": ⊖{
+                "embedded_type": "trip",
+                "id": "OCE:BOA017534OCESNF-20191210",
+                "name": "OCE:BOA017534OCESNF-20191210",
+                "trip": ⊕{2 items}
+            }
+        }
+    ],
+    "severity": ⊖{
+        "effect": "NO_SERVICE"
+        "name": "trip canceled",
+    },
+}
+```
+The effect of the disruption is `NO_SERVICE`. It means that the train won't be circulating at all.
+
+In the disruption, the deleted trip can be found in the "impacted_objects" list with the
+"application_periods" describing the period(s) of unavailability for the trip.  
+See the [disruption](#disruption) objects section for its full content and description.
+
+<div></div>
+### Journeys
+
+If the deleted trip is used by a section of the `base_schedule` journey, Navitia will compute a different
+itinerary to the requested station in `realtime`, or a later one (without using that trip).  
+A link to this disruption can be found in the section "display_informations" like for other disruptions, on a `base_schedule` journey.
+
+### Departures & Stop Schedules
+
+At the deleted stop area, the departure time of the cancelled train simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
 
 If "data_freshness" is "base_schedule", then the depature time is displayed.  
 In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
