@@ -30,9 +30,10 @@ www.navitia.io
 
 #pragma once
 
-#include <boost/container/flat_map.hpp>
 #include "type/datetime.h"
 #include "utils/idx_map.h"
+
+#include <boost/container/flat_map.hpp>
 
 namespace navitia {
 

@@ -29,14 +29,15 @@ www.navitia.io
 */
 
 #include "raptor_solution_reader.h"
+
+#include "journey.h"
 #include "raptor.h"
 #include "raptor_visitors.h"
-#include "journey.h"
 #include "utils/logger.h"
 
-#include <boost/range/algorithm/reverse.hpp>
-#include <boost/range/algorithm/find_if.hpp>
 #include <boost/container/flat_map.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/reverse.hpp>
 
 namespace navitia {
 namespace routing {
@@ -288,12 +289,12 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
 }
 
 Journey make_bound_journey(DateTime beg,
-                           navitia::time_duration beg_sn_dur,
+                           const navitia::time_duration& beg_sn_dur,
                            DateTime end,
-                           navitia::time_duration end_sn_dur,
+                           const navitia::time_duration& end_sn_dur,
                            unsigned count,
                            uint32_t lower_bound_conn,
-                           navitia::time_duration transfer_penalty,
+                           const navitia::time_duration& transfer_penalty,
                            bool clockwise) {
     Journey journey;
     journey.sections.resize(count);  // only the number of sections is part of the dominance function
@@ -319,10 +320,10 @@ template <typename Visitor>
 struct RaptorSolutionReader {
     typedef std::pair<const type::StopTime*, DateTime> StDt;
     struct Transfer {
-        DateTime end_vj;
-        unsigned nb_stay_in;
-        unsigned waiting_dur;
-        unsigned transfer_dur;
+        DateTime end_vj{};
+        unsigned nb_stay_in{};
+        unsigned waiting_dur{};
+        unsigned transfer_dur{};
         StDt end_st_dt;
         StDt begin_st_dt;
     };
@@ -377,7 +378,7 @@ struct RaptorSolutionReader {
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& access,
-                         const navitia::time_duration& transfer_penalty,
+                         navitia::time_duration transfer_penalty,
                          const StartingPointSndPhase& end_point)
         : raptor(r),
           v(vis),
@@ -386,7 +387,7 @@ struct RaptorSolutionReader {
           sp_dur_arrs(arrs),
           rt_level(rt_level),
           accessibilite_params(access),
-          transfer_penalty(transfer_penalty),
+          transfer_penalty(std::move(transfer_penalty)),
           end_point(end_point),
           solutions(solutions) {}
     const RAPTOR& raptor;
@@ -646,10 +647,9 @@ void read_solutions(const RAPTOR& raptor,
     if (clockwise) {
         return read_solutions(raptor, solutions, raptor_reverse_visitor(), departure_datetime, deps, arrs, rt_level,
                               accessibilite_params, transfer_penalty, end_point);
-    } else {
-        return read_solutions(raptor, solutions, raptor_visitor(), departure_datetime, deps, arrs, rt_level,
-                              accessibilite_params, transfer_penalty, end_point);
     }
+    return read_solutions(raptor, solutions, raptor_visitor(), departure_datetime, deps, arrs, rt_level,
+                          accessibilite_params, transfer_penalty, end_point);
 }
 
 Path make_path(const Journey& journey, const type::Data& data) {
@@ -709,8 +709,7 @@ Path make_path(const Journey& journey, const type::Data& data) {
             boarding_section.departures.push_back(boarding_section.departure);
         }
 
-        for (size_t i(0); i < sections.size(); i++) {
-            auto& vj_section = sections.at(i);
+        for (const auto& vj_section : sections) {
             if (last_vj_section) {
                 // add a stay in
                 path.items.emplace_back(ItemType::stay_in, posix(section.get_in_dt), posix(section.get_out_dt));

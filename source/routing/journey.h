@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/time_duration.h"
 #include "type/datetime.h"
 #include "utils/exception.h"
+
 #include <unordered_set>
 
 namespace navitia {

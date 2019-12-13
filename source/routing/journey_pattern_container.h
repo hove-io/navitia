@@ -31,8 +31,9 @@ www.navitia.io
 #pragma once
 
 #include "raptor_utils.h"
-#include <boost/optional.hpp>
 #include "utils/rank.h"
+
+#include <boost/optional.hpp>
 
 namespace navitia {
 namespace type {

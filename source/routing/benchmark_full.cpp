@@ -29,21 +29,23 @@ www.navitia.io
 */
 
 #include "raptor_api.h"
-#include "raptor.h"
 #include "georef/street_network.h"
+#include "raptor.h"
 #include "type/data.h"
-#include "utils/timer.h"
-#include <boost/program_options.hpp>
-#include <boost/progress.hpp>
-#include <random>
-#include <fstream>
-#include "utils/init.h"
-#include "utils/csv.h"
-#include <boost/algorithm/string/predicate.hpp>
 #include "type/pb_converter.h"
+#include "utils/csv.h"
+#include "utils/init.h"
+#include "utils/timer.h"
+
+#include <boost/algorithm/string/predicate.hpp>
 #ifdef __BENCH_WITH_CALGRIND__
 #include "valgrind/callgrind.h"
 #endif
+#include <boost/program_options.hpp>
+#include <boost/progress.hpp>
+
+#include <fstream>
+#include <random>
 
 using namespace navitia;
 using namespace routing;
@@ -54,8 +56,8 @@ struct PathDemand {
     std::string start;
     std::string target;
 
-    unsigned int date;
-    unsigned int hour;
+    unsigned int date{};
+    unsigned int hour{};
 
     type::Mode_e start_mode = type::Mode_e::Walking;
     type::Mode_e target_mode = type::Mode_e::Walking;
@@ -67,7 +69,7 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(pbnavitia::Journey journey)
+    explicit Result(const pbnavitia::Journey& journey)
         : duration(journey.duration()),
           time(-1),
           arrival(journey.arrival_date_time()),
@@ -122,7 +124,7 @@ static type::GeographicalCoord coord_of_entry_point(const type::EntryPoint& entr
 static type::EntryPoint make_entry_point(const std::string& entry_id, const type::Data& data) {
     type::EntryPoint entry;
     try {
-        type::idx_t idx = boost::lexical_cast<type::idx_t>(entry_id);
+        auto idx = boost::lexical_cast<type::idx_t>(entry_id);
 
         // if it is a cached idx, we consider it to be a stop area idx
         entry = type::EntryPoint(type::Type_e::StopArea, data.pt_data->stop_areas.at(idx)->uri, 0);
@@ -199,7 +201,7 @@ int main(int argc, char** argv) {
             demands.push_back(demand);
         }
         std::cout << "nb start not found " << cpt_not_found << std::endl;
-    } else if (start != "" && target != "" && date != -1 && hour != -1) {
+    } else if (!start.empty() && !target.empty() && date != -1 && hour != -1) {
         PathDemand demand;
         demand.start = start;
         demand.target = target;
@@ -214,10 +216,11 @@ int main(int argc, char** argv) {
         std::uniform_int_distribution<> gen(0, data.pt_data->stop_areas.size() - 1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({date != -1 ? unsigned(date) : 7});
-        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+        if (data.pt_data->validity_patterns.front()->beginning_date.day_of_week().as_number() == 6) {
             days.push_back(days.front() + 1);
-        else
+        } else {
             days.push_back(days.front() + 6);
+        }
 
         for (int i = 0; i < iterations; ++i) {
             PathDemand demand;

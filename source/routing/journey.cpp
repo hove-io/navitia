@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "journey.h"
+
 #include "type/type.h"
 
 using namespace navitia::routing;
@@ -75,14 +76,14 @@ bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     return min_waiting_dur >= that.min_waiting_dur;
 }
 
-bool Journey::better_on_transfer(const Journey& that, bool) const {
+bool Journey::better_on_transfer(const Journey& that, bool /*unused*/) const {
     if (sections.size() != that.sections.size()) {
         return sections.size() <= that.sections.size();
     }
     return nb_vj_extentions <= that.nb_vj_extentions;
 }
 
-bool Journey::better_on_sn(const Journey& that, bool) const {
+bool Journey::better_on_sn(const Journey& that, bool /*unused*/) const {
     // we consider the transfer sections also as walking sections
     return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
 }
@@ -110,8 +111,9 @@ size_t JourneyHash::operator()(const Journey& j) const {
     size_t seed = 0;
     SectionHash sect_hash;
 
-    for (const auto& s : j.sections)
+    for (const auto& s : j.sections) {
         boost::hash_combine(seed, sect_hash(s, seed));
+    }
 
     return seed;
 }
