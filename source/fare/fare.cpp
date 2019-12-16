@@ -272,18 +272,17 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::VehicleJourney* vj = path_item.get_vj();
-    std::locale loc;
-    // TODO, original uri for all
-    network = boost::to_lower_copy(vj->route->line->network->uri, loc);  // uri ?
-    start_stop_area = boost::to_lower_copy(first_sp->stop_area->uri, loc);
-    dest_stop_area = boost::to_lower_copy(last_sp->stop_area->uri, loc);
-    line = boost::to_lower_copy(vj->route->line->uri, loc);
+
+    network = vj->route->line->network->uri;
+    start_stop_area = first_sp->stop_area->uri;
+    dest_stop_area = last_sp->stop_area->uri;
+    line = vj->route->line->uri;
     date = path_item.departure.date();
     start_time = path_item.departure.time_of_day().total_seconds();
     dest_time = path_item.arrival.time_of_day().total_seconds();
-    start_zone = boost::to_lower_copy(first_sp->fare_zone, loc);
-    dest_zone = boost::to_lower_copy(last_sp->fare_zone, loc);
-    mode = boost::to_lower_copy(vj->physical_mode->uri, loc);  // CHECK
+    start_zone = first_sp->fare_zone;
+    dest_zone = last_sp->fare_zone;
+    mode = vj->physical_mode->uri;
 }
 
 template <class T>
@@ -356,6 +355,7 @@ DateTicket DateTicket::operator+(const DateTicket& other) const {
 }
 
 bool Transition::valid(const SectionKey& section, const Label& label) const {
+    auto logger = log4cplus::Logger::getInstance("fare");
     if (label.tickets.empty() && ticket_key.empty() && global_condition != Transition::GlobalCondition::with_changes) {
         // the transition is a continuation and we don't have any
         // ticket, thus this transition is not valid
@@ -368,9 +368,11 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
 
     for (const Condition& cond : this->start_conditions) {
         if (cond.key == "zone" && cond.value != section.start_zone) {
+            LOG4CPLUS_TRACE(logger, "start_zone " << cond.value << " vs " << section.start_zone);
             return false;
-        }
-        if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
+        } else if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
+            LOG4CPLUS_TRACE(logger, "start_stop_area " << cond.value << " vs " << section.start_stop_area);
+
             return false;
         }
         if (cond.key == "duration") {
@@ -386,10 +388,13 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
                 return false;
             }
         } else if (cond.key == "ticket" && !label.tickets.empty()) {
+            LOG4CPLUS_TRACE(logger, "ticket " << cond.value << " vs " << label.tickets.back().key);
+
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
                 return false;
             }
         } else if (cond.key == "line") {
+            LOG4CPLUS_TRACE(logger, "line " << cond.value << " vs " << section.line);
             if (!compare(section.line, cond.value, cond.comparaison)) {
                 return false;
             }
@@ -397,9 +402,12 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
     }
     for (const Condition& cond : this->end_conditions) {
         if (cond.key == "zone" && cond.value != section.dest_zone) {
+            LOG4CPLUS_TRACE(logger, "dest_zone " << cond.value << " vs " << section.dest_zone);
+
             return false;
-        }
-        if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
+        } else if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
+            LOG4CPLUS_TRACE(logger, "dest_stop_are " << cond.value << " vs " << section.dest_stop_area);
+
             return false;
         }
         if (cond.key == "duration") {
