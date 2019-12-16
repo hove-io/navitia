@@ -28,18 +28,21 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "timezone_manager.h"
-#include "type/validity_pattern.h"
+
 #include "type/meta_data.h"
-#include "utils/logger.h"
+#include "type/validity_pattern.h"
 #include "utils/exception.h"
+#include "utils/logger.h"
+
+#include <utility>
 
 namespace navitia {
 namespace type {
 
-TimeZoneHandler::TimeZoneHandler(const std::string& name,
+TimeZoneHandler::TimeZoneHandler(std::string name,
                                  const boost::gregorian::date& production_period_beg,
                                  const dst_periods& offsets_periods)
-    : tz_name(name) {
+    : tz_name(std::move(name)) {
     for (const auto& utc_shift_and_periods : offsets_periods) {
         ValidityPattern vp(production_period_beg);
 
@@ -49,7 +52,7 @@ TimeZoneHandler::TimeZoneHandler(const std::string& name,
                 vp.add(*it);
             }
         }
-        time_changes.push_back({std::move(vp), offset});
+        time_changes.emplace_back(std::move(vp), offset);
     }
 }
 
@@ -136,14 +139,14 @@ TimeZoneHandler::dst_periods TimeZoneHandler::get_periods_and_shift() const {
             } else {
                 // if we had a begin, we can add a period
                 if (!last_period_beg.is_not_a_date()) {
-                    periods.push_back({last_period_beg, beg_of_period + bg::days(i)});
+                    periods.emplace_back(last_period_beg, beg_of_period + bg::days(i));
                 }
                 last_period_beg = bg::date();
             }
         }
         // we add the last build period
         if (!last_period_beg.is_not_a_date()) {
-            periods.push_back({last_period_beg, beg_of_period + bg::days(bitset.size())});
+            periods.emplace_back(last_period_beg, beg_of_period + bg::days(bitset.size()));
         }
         dst[vp_shift.second] = periods;
     }

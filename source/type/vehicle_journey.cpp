@@ -29,22 +29,23 @@ www.navitia.io
 */
 
 #include "type/vehicle_journey.h"
+
+#include "type/concerns_base_at_period.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/concerns_base_at_period.h"
 #include "type/type_utils.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void VehicleJourney::save(Archive& ar, const unsigned int) const {
+void VehicleJourney::save(Archive& ar, const unsigned int /*unused*/) const {
     ar& name& uri& route& physical_mode& company& validity_patterns& idx& stop_time_list& realtime_level&
         vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset;
 }
 template <class Archive>
-void VehicleJourney::load(Archive& ar, const unsigned int) {
+void VehicleJourney::load(Archive& ar, const unsigned int /*unused*/) {
     ar& name& uri& route& physical_mode& company& validity_patterns& idx& stop_time_list& realtime_level&
         vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset;
 
@@ -57,13 +58,13 @@ void VehicleJourney::load(Archive& ar, const unsigned int) {
 SPLIT_SERIALIZABLE(VehicleJourney)
 
 template <class Archive>
-void DiscreteVehicleJourney::serialize(Archive& ar, const unsigned int) {
+void DiscreteVehicleJourney::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& boost::serialization::base_object<VehicleJourney>(*this);
 }
 SERIALIZABLE(DiscreteVehicleJourney)
 
 template <class Archive>
-void FrequencyVehicleJourney::serialize(Archive& ar, const unsigned int) {
+void FrequencyVehicleJourney::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& boost::serialization::base_object<VehicleJourney>(*this);
 
     ar& start_time& end_time& headway_secs;
@@ -123,9 +124,9 @@ Indexes VehicleJourney::get(Type_e type, const PT_Data& data) const {
     return result;
 }
 
-VehicleJourney::~VehicleJourney() {}
-FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
-DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
+VehicleJourney::~VehicleJourney() = default;
+FrequencyVehicleJourney::~FrequencyVehicleJourney() = default;
+DiscreteVehicleJourney::~DiscreteVehicleJourney() = default;
 int32_t VehicleJourney::utc_to_local_offset() const {
     const auto* vp = validity_patterns[realtime_level];
     if (!vp) {
@@ -167,8 +168,9 @@ Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
     return result;
 }
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
-    if (day < 0)
+    if (day < 0) {
         return false;
+    }
     return validity_patterns[rt_level]->check(day);
 }
 
@@ -347,7 +349,7 @@ boost::posix_time::time_period VehicleJourney::execution_period(const boost::gre
         }
     }
     namespace bt = boost::posix_time;
-    return bt::time_period(bt::ptime(date, bt::seconds(first_departure)), bt::ptime(date, bt::seconds(last_arrival)));
+    return {bt::ptime(date, bt::seconds(first_departure)), bt::ptime(date, bt::seconds(last_arrival))};
 }
 
 bool VehicleJourney::has_datetime_estimated() const {
@@ -379,8 +381,9 @@ bool VehicleJourney::has_odt() const {
 
 bool VehicleJourney::has_boarding() const {
     std::string physical_mode;
-    if (this->physical_mode != nullptr)
+    if (this->physical_mode != nullptr) {
         physical_mode = this->physical_mode->name;
+    }
     if (!physical_mode.empty()) {
         boost::to_lower(physical_mode);
         return (physical_mode == "boarding");
@@ -390,8 +393,9 @@ bool VehicleJourney::has_boarding() const {
 
 bool VehicleJourney::has_landing() const {
     std::string physical_mode;
-    if (this->physical_mode != nullptr)
+    if (this->physical_mode != nullptr) {
         physical_mode = this->physical_mode->name;
+    }
     if (!physical_mode.empty()) {
         boost::to_lower(physical_mode);
         return (physical_mode == "landing");

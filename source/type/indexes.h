@@ -28,11 +28,12 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
+#include "type/type_interfaces.h"
 
 #include <boost/container/flat_set.hpp>
+
 #include <set>
 #include <vector>
-#include "type/type_interfaces.h"
 
 namespace navitia {
 namespace type {

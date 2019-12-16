@@ -30,6 +30,11 @@ www.navitia.io
 
 #pragma once
 
+#include "utils/exception.h"
+#include "type/type_interfaces.h"
+#include "type/fwd_type.h"
+#include "type/stop_time.h"
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/variant.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -39,12 +44,6 @@ www.navitia.io
 #include <vector>
 #include <string>
 #include <set>
-
-#include "utils/exception.h"
-
-#include "type/type_interfaces.h"
-#include "type/fwd_type.h"
-#include "type/stop_time.h"
 
 namespace navitia {
 namespace type {
@@ -307,8 +306,8 @@ struct Impact {
                                      const boost::gregorian::date_period&,
                                      type::RTLevel);
 
-    bool is_valid(const boost::posix_time::ptime& current_time,
-                  const boost::posix_time::time_period& action_period) const;
+    bool is_valid(const boost::posix_time::ptime& publication_date,
+                  const boost::posix_time::time_period& active_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
     bool is_only_line_section() const;
     bool is_line_section_of(const Line&) const;
@@ -393,7 +392,7 @@ public:
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
     const Disruption* get_disruption(const std::string& uri) const;
     size_t nb_disruptions() const { return disruptions_by_uri.size(); }
-    void add_weak_impact(boost::weak_ptr<Impact>);
+    void add_weak_impact(const boost::weak_ptr<Impact>&);
     void clean_weak_impacts();
     void forget_vj(const VehicleJourney*);
     const std::vector<boost::weak_ptr<Impact>>& get_weak_impacts() const { return weak_impacts; }

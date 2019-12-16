@@ -29,91 +29,89 @@ www.navitia.io
 */
 
 #include "type/message.h"
+
 #include "type/pt_data.h"
+#include "type/serialization.h"
 #include "type/type.h"
 #include "utils/logger.h"
 
-#include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
-#include "type/serialization.h"
-#include <boost/serialization/variant.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
-
-namespace pt = boost::posix_time;
-namespace bg = boost::gregorian;
+#include <boost/format.hpp>
+#include <boost/serialization/variant.hpp>
 
 namespace navitia {
 namespace type {
 namespace disruption {
 
 template <class Archive>
-void Property::serialize(Archive& ar, const unsigned int) {
+void Property::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& key& type& value;
 }
 SERIALIZABLE(Property)
 
 template <class Archive>
-void Cause::serialize(Archive& ar, const unsigned int) {
+void Cause::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& wording& created_at& updated_at& category;
 }
 SERIALIZABLE(Cause)
 
 template <class Archive>
-void Severity::serialize(Archive& ar, const unsigned int) {
+void Severity::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& wording& created_at& updated_at& color& priority& effect;
 }
 SERIALIZABLE(Severity)
 
 template <class archive>
-void LineSection::serialize(archive& ar, const unsigned int) {
+void LineSection::serialize(archive& ar, const unsigned int /*unused*/) {
     ar& line& start_point& end_point& routes;
 }
 SERIALIZABLE(LineSection)
 
 template <class Archive>
-void StopTimeUpdate::serialize(Archive& ar, const unsigned int) {
+void StopTimeUpdate::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& stop_time& cause& departure_status& arrival_status;
 }
 SERIALIZABLE(StopTimeUpdate)
 
 template <class Archive>
-void Message::serialize(Archive& ar, const unsigned int) {
+void Message::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types;
 }
 SERIALIZABLE(Message)
 
 namespace detail {
 template <class Archive>
-void AuxInfoForMetaVJ::serialize(Archive& ar, const unsigned int) {
+void AuxInfoForMetaVJ::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& stop_times;
 }
 SERIALIZABLE(AuxInfoForMetaVJ)
 }  // namespace detail
 
 template <class Archive>
-void Impact::serialize(Archive& ar, const unsigned int) {
+void Impact::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& company_id& physical_mode_id& headsign& created_at& updated_at& application_periods& severity&
         _informed_entities& messages& disruption& aux_info;
 }
 SERIALIZABLE(Impact)
 
 template <class Archive>
-void Tag::serialize(Archive& ar, const unsigned int) {
+void Tag::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& name& created_at& updated_at;
 }
 SERIALIZABLE(Tag)
 
 template <class Archive>
-void Disruption::serialize(Archive& ar, const unsigned int) {
+void Disruption::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& reference& rt_level& publication_period& created_at& updated_at& cause& impacts& localization& tags& note&
         contributor& properties;
 }
 SERIALIZABLE(Disruption)
 
 template <class Archive>
-void DisruptionHolder::serialize(Archive& ar, const unsigned int) {
+void DisruptionHolder::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& disruptions_by_uri& causes& severities& tags& weak_impacts;
 }
 SERIALIZABLE(DisruptionHolder)
@@ -211,7 +209,7 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
             }
         }
     }
-    void operator()(const nt::disruption::UnknownPtObj&) const {}
+    void operator()(const nt::disruption::UnknownPtObj& /*unused*/) const {}
 };
 
 void Impact::link_informed_entity(PtObj ptobj,
@@ -345,11 +343,11 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
             auto ranks = vj.get_sections_ranks(start_point, end_point);
             if (ranks.empty()) {
                 return true;
-            } else {
-                for (const auto& rank : ranks) {
-                    res.insert(vj.get_stop_time(rank).stop_point);
-                }
             }
+            for (const auto& rank : ranks) {
+                res.insert(vj.get_stop_time(rank).stop_point);
+            }
+
             return false;
         });
     }
@@ -363,7 +361,7 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
 
     ImpactVisitor(Type_e target, const PT_Data& pt_data) : target(target), pt_data(pt_data) {}
 
-    pair_indexes operator()(const disruption::UnknownPtObj) { return {Type_e::Unknown, Indexes{}}; }
+    pair_indexes operator()(const disruption::UnknownPtObj /*unused*/) { return {Type_e::Unknown, Indexes{}}; }
     pair_indexes operator()(const Network* n) { return {Type_e::Network, make_indexes(n->idx)}; }
     pair_indexes operator()(const StopArea* sa) { return {Type_e::StopArea, make_indexes(sa->idx)}; }
     pair_indexes operator()(const StopPoint* sp) { return {Type_e::StopPoint, make_indexes(sp->idx)}; }
@@ -424,10 +422,7 @@ bool Disruption::is_publishable(const boost::posix_time::ptime& current_time) co
         return false;
     }
 
-    if (this->publication_period.contains(current_time)) {
-        return true;
-    }
-    return false;
+    return this->publication_period.contains(current_time);
 }
 
 void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder) {
@@ -442,10 +437,9 @@ template <typename T>
 PtObj transform_pt_object(const std::string& uri, T* o) {
     if (o != nullptr) {
         return o;
-    } else {
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
-        return UnknownPtObj();
     }
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
+    return UnknownPtObj();
 }
 template <typename T>
 PtObj transform_pt_object(const std::string& uri, const std::unordered_map<std::string, T*>& map) {
@@ -482,9 +476,8 @@ bool Impact::operator<(const Impact& other) {
     }
     if (this->created_at != other.created_at) {
         return this->created_at < other.created_at;
-    } else {
-        return this->uri < other.uri;
     }
+    return this->uri < other.uri;
 }
 
 Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLevel lvl) {
@@ -523,7 +516,7 @@ const Disruption* DisruptionHolder::get_disruption(const std::string& uri) const
     return it->second.get();
 }
 
-void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
+void DisruptionHolder::add_weak_impact(const boost::weak_ptr<Impact>& weak_impact) {
     weak_impacts.push_back(weak_impact);
 }
 

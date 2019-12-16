@@ -29,20 +29,21 @@ www.navitia.io
 */
 
 #include "type/route.h"
+
+#include "type/dataset.h"
 #include "type/indexes.h"
+#include "type/line.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/vehicle_journey.h"
-#include "type/line.h"
-#include "type/dataset.h"
 #include "type/stop_area.h"
 #include "type/stop_point.h"
+#include "type/vehicle_journey.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void Route::serialize(Archive& ar, const unsigned int) {
+void Route::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& line& destination& discrete_vehicle_journey_list& frequency_vehicle_journey_list& impacts&
         shape& direction_type& dataset_list;
 }

@@ -33,8 +33,10 @@ www.navitia.io
 #include "type/fwd_type.h"
 #include "type/geographical_coord.h"
 #include "type/odt_properties.h"
-#include <set>
+
 #include <boost/container/flat_set.hpp>
+
+#include <set>
 
 namespace navitia {
 namespace type {

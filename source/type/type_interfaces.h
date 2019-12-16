@@ -28,15 +28,16 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
-#include <bitset>
-#include <iostream>
+#include "utils/flat_enum_map.h"
 #include "utils/idx_map.h"
 #include "type/fwd_type.h"
-#include <boost/container/flat_set.hpp>
-#include "utils/flat_enum_map.h"
 
+#include <boost/container/flat_set.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <bitset>
+#include <iostream>
 
 namespace navitia {
 namespace type {

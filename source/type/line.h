@@ -31,9 +31,10 @@ www.navitia.io
 #pragma once
 #include "type/type_interfaces.h"
 #include "type/fwd_type.h"
-#include <boost/optional.hpp>
 #include "type/geographical_coord.h"
 #include "type/odt_properties.h"
+
+#include <boost/optional.hpp>
 
 namespace navitia {
 namespace type {

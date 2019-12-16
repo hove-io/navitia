@@ -29,10 +29,11 @@ www.navitia.io
 */
 
 #pragma once
+#include "type/type_interfaces.h"
+#include "type/fwd_type.h"
+#include "type/geographical_coord.h"
+
 #include <boost/container/flat_set.hpp>
-#include <type/type_interfaces.h>
-#include <type/fwd_type.h>
-#include <type/geographical_coord.h>
 
 namespace navitia {
 namespace type {

@@ -32,10 +32,12 @@ www.navitia.io
 
 #include "type/type_interfaces.h"
 #include "type/geographical_coord.h"
+#include "type/fwd_type.h"
+
+#include <boost/container/flat_set.hpp>
+
 #include <vector>
 #include <set>
-#include <boost/container/flat_set.hpp>
-#include "type/fwd_type.h"
 
 namespace navitia {
 namespace type {

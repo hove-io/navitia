@@ -28,13 +28,15 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
+#include "type/type_interfaces.h"
+#include "type/validity_pattern.h"
+
+#include <utils/exception.h>
+#include <boost/date_time/gregorian/gregorian.hpp>
+
 #include <vector>
 #include <string>
 #include <bitset>
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <type/type_interfaces.h>
-#include <type/validity_pattern.h>
-#include <utils/exception.h>
 
 namespace navitia {
 namespace type {

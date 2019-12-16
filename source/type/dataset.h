@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 #include "type/fwd_type.h"
 #include "type/rt_level.h"
+
 #include <boost/container/flat_set.hpp>
 
 namespace navitia {

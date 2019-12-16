@@ -30,7 +30,8 @@ www.navitia.io
 
 #pragma once
 
-//#include <boost/geometry.hpp>
+#include "utils/serialization_vector.h"
+
 #include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/linestring.hpp>
@@ -40,7 +41,6 @@ www.navitia.io
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 #include <boost/lexical_cast.hpp>
-#include "utils/serialization_vector.h"
 
 namespace navitia {
 namespace type {

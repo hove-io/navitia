@@ -28,15 +28,17 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#pragma once
+
 #include "utils/serialization_fusion_map.h"
 #include "type/fwd_type.h"
+#include "type/comment.h"
+
+#include <boost/fusion/include/at_key.hpp>
+
 #include <vector>
 #include <map>
 #include <type_traits>
-#include <boost/fusion/include/at_key.hpp>
-#include "type/comment.h"
-
-#pragma once
 
 namespace navitia {
 namespace type {

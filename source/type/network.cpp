@@ -29,17 +29,17 @@ www.navitia.io
 */
 
 #include "type/network.h"
+#include "type/dataset.h"
 #include "type/indexes.h"
+#include "type/line.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/line.h"
-#include "type/dataset.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void Network::serialize(Archive& ar, const unsigned int) {
+void Network::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& address_name& address_number& address_type_name& mail& website& fax& sort& line_list& impacts&
         dataset_list;
 }
