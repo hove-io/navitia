@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/container/flat_map.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/reverse.hpp>
+#include <utility>
 
 namespace navitia {
 namespace routing {
@@ -324,12 +325,25 @@ template <typename Visitor>
 struct RaptorSolutionReader {
     using StDt = std::pair<const type::StopTime*, DateTime>;
     struct Transfer {
-        DateTime end_vj{};
-        unsigned nb_stay_in{};
-        unsigned waiting_dur{};
-        unsigned transfer_dur{};
+        DateTime end_vj;
+        unsigned nb_stay_in;
+        unsigned waiting_dur;
+        unsigned transfer_dur;
         StDt end_st_dt;
         StDt begin_st_dt;
+
+        explicit Transfer(const DateTime& end_vj,
+                          unsigned nb_stay_in,
+                          unsigned waiting_dur,
+                          unsigned transfer_dur,
+                          StDt end_st_dt,
+                          StDt begin_st_dt)
+            : end_vj(end_vj),
+              nb_stay_in(nb_stay_in),
+              waiting_dur(waiting_dur),
+              transfer_dur(transfer_dur),
+              end_st_dt(std::move(end_st_dt)),
+              begin_st_dt(std::move(begin_st_dt)) {}
     };
     struct DomTr {
         // This dominance function is used to choose the different
@@ -535,12 +549,9 @@ struct RaptorSolutionReader {
             }
 
             // great, we can begin
-            const Transfer tr = {get_vj_end(begin_st_dt),
-                                 nb_stay_in,
-                                 v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second,
-                                 transfer_t,
-                                 end_st_dt,
-                                 begin_st_dt};
+            const Transfer tr(get_vj_end(begin_st_dt), nb_stay_in,
+                              v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second, transfer_t,
+                              end_st_dt, begin_st_dt);
             transfers[jpp.jp_idx].add(tr);
         }
     }
