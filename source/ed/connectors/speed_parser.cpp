@@ -86,6 +86,15 @@ SpeedsParser SpeedsParser::defaults() {
     parser.max_speeds_by_type["track"] = walking_speed;
     parser.max_speeds_by_type["path"] = walking_speed;
     parser.max_speeds_by_type["unclassified"] = urban_speed;
+    // useless but prevent warnings
+    parser.max_speeds_by_type["footway"] = walking_speed;
+    parser.max_speeds_by_type["steps"] = walking_speed;
+    parser.max_speeds_by_type["pedestrian"] = walking_speed;
+    parser.max_speeds_by_type["cycleway"] = walking_speed;
+    parser.max_speeds_by_type["bus_stop"] = walking_speed;
+    parser.max_speeds_by_type["platform"] = walking_speed;
+    parser.max_speeds_by_type["construction"] = walking_speed;
+    parser.max_speeds_by_type["bridleway"] = walking_speed;
 
     parser.speed_factor_by_type["motorway"] = 0.9;
     parser.speed_factor_by_type["motorway_link"] = 0.5;
@@ -105,6 +114,15 @@ SpeedsParser SpeedsParser::defaults() {
     parser.speed_factor_by_type["track"] = 0.2;
     parser.speed_factor_by_type["path"] = 0.2;
     parser.speed_factor_by_type["unclassified"] = 0.5;
+    // useless but prevent warnings
+    parser.speed_factor_by_type["footway"] = 1;
+    parser.speed_factor_by_type["steps"] = 1;
+    parser.speed_factor_by_type["pedestrian"] = 1;
+    parser.speed_factor_by_type["cycleway"] = 1;
+    parser.speed_factor_by_type["bus_stop"] = 1;
+    parser.speed_factor_by_type["platform"] = 1;
+    parser.speed_factor_by_type["construction"] = 1;
+    parser.speed_factor_by_type["bridleway"] = 1;
 
     return parser;
 }
