@@ -37,48 +37,7 @@ namespace routing {
 std::string PathItem::print() const {
     std::stringstream ss;
 
-    const navitia::type::StopArea* start = stop_points.front()->stop_area;
-    const navitia::type::StopArea* dest = stop_points.back()->stop_area;
-    switch (type) {
-        case ItemType::public_transport:
-            ss << "public transport";
-            break;
-        case ItemType::walking:
-            ss << "walking";
-            break;
-        case ItemType::stay_in:
-            ss << "stay in";
-            break;
-        case ItemType::waiting:
-            ss << "waiting";
-            break;
-        case ItemType::boarding:
-            ss << "boarding";
-            break;
-        case ItemType::alighting:
-            ss << "alighting";
-            break;
-        default:
-            ss << "unknown";
-            break;
-    }
-    ss << " section\n";
-
-    if (type == ItemType::public_transport && !stop_times.empty()) {
-        const navitia::type::StopTime* st = stop_times.front();
-        const navitia::type::VehicleJourney* vj = st->vehicle_journey;
-        const navitia::type::Route* route = vj->route;
-        const navitia::type::Line* line = route->line;
-        ss << "Line : " << line->name << " (" << line->uri << " " << line->idx << "), "
-           << "Route : " << route->name << " (" << route->uri << " " << route->idx << "), "
-           << "Vehicle journey " << vj->idx << "\n";
-    }
-    ss << "From " << start->name << "(" << start->uri << " " << start->idx << ") at " << departure << "\n";
-    for (auto sp : stop_points) {
-        ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")"
-           << "\n";
-    }
-    ss << "To " << dest->name << "(" << dest->uri << " " << dest->idx << ") at " << arrival << "\n";
+    ss << *this;
     return ss.str();
 }
 
@@ -122,6 +81,60 @@ bool use_crow_fly(const type::EntryPoint& point,
         // if the request is on any other type we don't want a crowfly section
         return false;
     }
+}
+
+std::ostream& operator<<(std::ostream& ss, const PathItem& t) {
+    const navitia::type::StopArea* start = t.stop_points.front()->stop_area;
+    const navitia::type::StopArea* dest = t.stop_points.back()->stop_area;
+    switch (t.type) {
+        case navitia::routing::ItemType::public_transport:
+            ss << "public transport";
+            break;
+        case navitia::routing::ItemType::walking:
+            ss << "walking";
+            break;
+        case navitia::routing::ItemType::stay_in:
+            ss << "stay in";
+            break;
+        case navitia::routing::ItemType::waiting:
+            ss << "waiting";
+            break;
+        case navitia::routing::ItemType::boarding:
+            ss << "boarding";
+            break;
+        case navitia::routing::ItemType::alighting:
+            ss << "alighting";
+            break;
+        default:
+            ss << "unknown";
+            break;
+    }
+    ss << " section\n";
+
+    if (t.type == navitia::routing::ItemType::public_transport && !t.stop_times.empty()) {
+        const navitia::type::StopTime* st = t.stop_times.front();
+        const navitia::type::VehicleJourney* vj = st->vehicle_journey;
+        const navitia::type::Route* route = vj->route;
+        const navitia::type::Line* line = route->line;
+        ss << "Line : " << line->name << " (" << line->uri << " " << line->idx << "), "
+           << "Route : " << route->name << " (" << route->uri << " " << route->idx << "), "
+           << "Vehicle journey " << vj->idx << "\n";
+    }
+    ss << "From " << start->name << "(" << start->uri << " " << start->idx << ") at " << t.departure << "\n";
+    for (auto sp : t.stop_points) {
+        ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")"
+           << "\n";
+    }
+    ss << "To " << dest->name << "(" << dest->uri << " " << dest->idx << ") at " << t.arrival << "\n";
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const Path& t) {
+    for (auto item : t.items) {
+        ss << item;
+    }
+
+    return ss;
 }
 
 }  // namespace routing

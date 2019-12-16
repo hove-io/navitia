@@ -6,7 +6,7 @@ SET(ROUTING_SRC
   journey.cpp)
 
 add_library(routing ${ROUTING_SRC})
-target_link_libraries(routing fare georef autocomplete pthread)
+target_link_libraries(routing  georef autocomplete pthread)
 
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark data boost_program_options)

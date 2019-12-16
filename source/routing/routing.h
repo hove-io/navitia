@@ -112,6 +112,7 @@ struct PathItem {
     }
 };
 
+std::ostream& operator<<(std::ostream& ss, const PathItem& t);
 /** Un itinéraire complet */
 struct Path {
     navitia::time_duration duration = boost::posix_time::pos_infin;
@@ -132,6 +133,8 @@ struct Path {
             std::cout << item.print() << std::endl;
     }
 };
+
+std::ostream& operator<<(std::ostream& ss, const Path& t);
 
 bool operator==(const PathItem& a, const PathItem& b);
 
