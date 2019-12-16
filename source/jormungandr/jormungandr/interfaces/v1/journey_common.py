@@ -278,6 +278,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="Maximal duration of ridesharing on public transport in second",
         )
         parser_get.add_argument(
+            "max_taxi_duration_to_pt",
+            type=int,
+            dest="max_taxi_duration_to_pt",
+            help="Maximal duration of taxi on public transport in second, only available in distributed scenario",
+        )
+        parser_get.add_argument(
             "walking_speed",
             type=PositiveFloat(),
             help='Walking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
@@ -445,6 +451,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_no_park_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_taxi_duration_to_pt'] = args['max_duration_to_pt']
 
         if args['data_freshness'] is None:
             # retrocompatibilty handling
