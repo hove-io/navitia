@@ -53,7 +53,7 @@ static void update_if_unknown(boost::optional<T>& target, const T& source) {
 
 // https://www.openstreetmap.org/relation/934933
 // default values for France
-SpeedsParser::SpeedsParser() {
+SpeedsParser SpeedsParser::defaults() {
     const float walking_speed = kmh_to_ms(4);
     const float urban_speed = kmh_to_ms(50);
     const float rural_speed = kmh_to_ms(80);
@@ -61,54 +61,62 @@ SpeedsParser::SpeedsParser() {
     const float trunk_speed = kmh_to_ms(110);
     const float living_street_speed = kmh_to_ms(20);
 
-    implicit_speeds["fr:walk"] = walking_speed;
-    implicit_speeds["fr:urban"] = urban_speed;
-    implicit_speeds["fr:rural"] = rural_speed;
-    implicit_speeds["fr:motorway"] = motorway_speed;
+    SpeedsParser parser;
 
-    max_speeds_by_type["motorway"] = motorway_speed;
-    max_speeds_by_type["motorway_link"] = urban_speed;
-    max_speeds_by_type["trunk"] = trunk_speed;
-    max_speeds_by_type["trunk_link"] = urban_speed;
-    max_speeds_by_type["primary"] = rural_speed;
-    max_speeds_by_type["secondary"] = urban_speed;
-    max_speeds_by_type["tertiary"] = urban_speed;
-    max_speeds_by_type["primary_link"] = urban_speed;
-    max_speeds_by_type["secondary_link"] = urban_speed;
-    max_speeds_by_type["tertiary_link"] = urban_speed;
-    max_speeds_by_type["unclassified"] = urban_speed;
-    max_speeds_by_type["road"] = urban_speed;
-    max_speeds_by_type["residential"] = urban_speed;
-    max_speeds_by_type["living_street"] = living_street_speed;
-    max_speeds_by_type["service"] = urban_speed;
-    max_speeds_by_type["track"] = walking_speed;
-    max_speeds_by_type["path"] = walking_speed;
-    max_speeds_by_type["unclassified"] = urban_speed;
+    parser.implicit_speeds["fr:walk"] = walking_speed;
+    parser.implicit_speeds["fr:urban"] = urban_speed;
+    parser.implicit_speeds["fr:rural"] = rural_speed;
+    parser.implicit_speeds["fr:motorway"] = motorway_speed;
 
-    speed_factor_by_type["motorway"] = 0.9;
-    speed_factor_by_type["motorway_link"] = 0.5;
-    speed_factor_by_type["trunk"] = 0.8;
-    speed_factor_by_type["trunk_link"] = 0.5;
-    speed_factor_by_type["primary"] = 0.8;
-    speed_factor_by_type["secondary"] = 0.6;
-    speed_factor_by_type["tertiary"] = 0.6;
-    speed_factor_by_type["primary_link"] = 0.5;
-    speed_factor_by_type["secondary_link"] = 0.5;
-    speed_factor_by_type["tertiary_link"] = 0.5;
-    speed_factor_by_type["unclassified"] = 0.5;
-    speed_factor_by_type["road"] = 0.5;
-    speed_factor_by_type["residential"] = 0.5;
-    speed_factor_by_type["living_street"] = 0.5;
-    speed_factor_by_type["service"] = 0.2;
-    speed_factor_by_type["track"] = 0.2;
-    speed_factor_by_type["path"] = 0.2;
-    speed_factor_by_type["unclassified"] = 0.5;
+    parser.max_speeds_by_type["motorway"] = motorway_speed;
+    parser.max_speeds_by_type["motorway_link"] = urban_speed;
+    parser.max_speeds_by_type["trunk"] = trunk_speed;
+    parser.max_speeds_by_type["trunk_link"] = urban_speed;
+    parser.max_speeds_by_type["primary"] = rural_speed;
+    parser.max_speeds_by_type["secondary"] = urban_speed;
+    parser.max_speeds_by_type["tertiary"] = urban_speed;
+    parser.max_speeds_by_type["primary_link"] = urban_speed;
+    parser.max_speeds_by_type["secondary_link"] = urban_speed;
+    parser.max_speeds_by_type["tertiary_link"] = urban_speed;
+    parser.max_speeds_by_type["unclassified"] = urban_speed;
+    parser.max_speeds_by_type["road"] = urban_speed;
+    parser.max_speeds_by_type["residential"] = urban_speed;
+    parser.max_speeds_by_type["living_street"] = living_street_speed;
+    parser.max_speeds_by_type["service"] = urban_speed;
+    parser.max_speeds_by_type["track"] = walking_speed;
+    parser.max_speeds_by_type["path"] = walking_speed;
+    parser.max_speeds_by_type["unclassified"] = urban_speed;
+
+    parser.speed_factor_by_type["motorway"] = 0.9;
+    parser.speed_factor_by_type["motorway_link"] = 0.5;
+    parser.speed_factor_by_type["trunk"] = 0.8;
+    parser.speed_factor_by_type["trunk_link"] = 0.5;
+    parser.speed_factor_by_type["primary"] = 0.8;
+    parser.speed_factor_by_type["secondary"] = 0.6;
+    parser.speed_factor_by_type["tertiary"] = 0.6;
+    parser.speed_factor_by_type["primary_link"] = 0.5;
+    parser.speed_factor_by_type["secondary_link"] = 0.5;
+    parser.speed_factor_by_type["tertiary_link"] = 0.5;
+    parser.speed_factor_by_type["unclassified"] = 0.5;
+    parser.speed_factor_by_type["road"] = 0.5;
+    parser.speed_factor_by_type["residential"] = 0.5;
+    parser.speed_factor_by_type["living_street"] = 0.5;
+    parser.speed_factor_by_type["service"] = 0.2;
+    parser.speed_factor_by_type["track"] = 0.2;
+    parser.speed_factor_by_type["path"] = 0.2;
+    parser.speed_factor_by_type["unclassified"] = 0.5;
+
+    return parser;
 }
 
 boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
                                                const boost::optional<std::string>& max_speed) const {
     boost::optional<float> speed;
     boost::optional<float> factor;
+
+    if(max_speeds_by_type.empty() && speed_factor_by_type.empty()){
+        return boost::none;
+    }
 
     if (max_speed) {
         std::string s = boost::algorithm::trim_copy(max_speed.get());

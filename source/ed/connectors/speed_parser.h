@@ -41,7 +41,7 @@ class SpeedsParser {
     std::map<std::string, float> speed_factor_by_type;
 
 public:
-    SpeedsParser();
+    static SpeedsParser defaults();
     boost::optional<float> get_speed(const std::string& highway, const boost::optional<std::string>& max_speed) const;
 };
 

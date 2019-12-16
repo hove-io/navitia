@@ -1139,7 +1139,8 @@ int osm2ed(int argc, const char** argv) {
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name")
         ("cities-connection-string", po::value<std::string>(),
-            "cities database connection string, to use admins from cities instead of osm's relations");
+            "cities database connection string, to use admins from cities instead of osm's relations")
+        ("import-car-speed", "import car speed in ED");
     // clang-format on
 
     po::variables_map vm;
@@ -1187,6 +1188,12 @@ int osm2ed(int argc, const char** argv) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
 
+    SpeedsParser speed_parser;
+    if (vm.count("import-car-speed")) {
+        speed_parser = SpeedsParser::defaults();
+    }
+
+
     boost::optional<std::string> cities_cnx = boost::none;
     if (vm.count("cities-connection-string")) {
         cities_cnx = {vm["cities-connection-string"].as<std::string>()};
@@ -1206,7 +1213,7 @@ int osm2ed(int argc, const char** argv) {
     ed::connectors::OSMCache cache(std::make_unique<Lotus>(connection_string), cities_cnx);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
     CanalTP::read_osm_pbf(input, relations_visitor);
-    ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
+    ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params, speed_parser);
     CanalTP::read_osm_pbf(input, ways_visitor);
     ed::connectors::ReadNodesVisitor node_visitor(cache);
     CanalTP::read_osm_pbf(input, node_visitor);
