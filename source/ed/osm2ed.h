@@ -327,7 +327,8 @@ struct ReadWaysVisitor {
     SpeedsParser speed_parser;
 
     ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params) : cache(cache), poi_params(poi_params) {}
-    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params, const SpeedsParser& parser) : cache(cache), poi_params(poi_params), speed_parser(parser) {}
+    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params, const SpeedsParser& parser)
+        : cache(cache), poi_params(poi_params), speed_parser(parser) {}
     ~ReadWaysVisitor();
 
     void node_callback(uint64_t, double, double, const CanalTP::Tags&) {}

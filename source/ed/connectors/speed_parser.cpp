@@ -132,7 +132,7 @@ boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
     boost::optional<float> speed;
     boost::optional<float> factor;
 
-    if(max_speeds_by_type.empty() && speed_factor_by_type.empty()){
+    if (max_speeds_by_type.empty() && speed_factor_by_type.empty()) {
         return boost::none;
     }
 

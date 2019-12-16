@@ -1193,7 +1193,6 @@ int osm2ed(int argc, const char** argv) {
         speed_parser = SpeedsParser::defaults();
     }
 
-
     boost::optional<std::string> cities_cnx = boost::none;
     if (vm.count("cities-connection-string")) {
         cities_cnx = {vm["cities-connection-string"].as<std::string>()};
