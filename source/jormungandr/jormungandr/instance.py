@@ -658,7 +658,7 @@ class Instance(object):
             self.geojson = None
             return
         # simplify the geom to prevent slow query on bragi
-        geom = self.geom.simplify(tolerance=0.1)
+        geom = self.geom.simplify(tolerance=0.01)
         self.geojson = geometry.mapping(geom)
 
     def init(self):
