@@ -29,17 +29,18 @@ www.navitia.io
 */
 
 #include "pt_data.h"
-#include "utils/functions.h"
+
+#include "type/serialization.h"
 #include "type/type.h"
+#include "utils/functions.h"
 
 #include <boost/range/algorithm/find_if.hpp>
-#include "type/serialization.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void PT_Data::serialize(Archive& ar, const unsigned int) {
+void PT_Data::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar
 #define SERIALIZE_ELEMENTS(type_name, collection_name) &collection_name& collection_name##_map
             ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
@@ -66,7 +67,7 @@ type::Network* PT_Data::get_or_create_network(const std::string& uri, const std:
         return it->second;
     }
 
-    nt::Network* network = new nt::Network();
+    auto* network = new nt::Network();
     network->uri = uri;
     network->name = name;
     network->sort = sort;
@@ -84,7 +85,7 @@ type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& 
         return it->second;
     }
 
-    nt::CommercialMode* mode = new nt::CommercialMode();
+    auto* mode = new nt::CommercialMode();
     mode->uri = uri;
     mode->name = name;
 
@@ -107,7 +108,7 @@ type::Line* PT_Data::get_or_create_line(const std::string& uri,
         return it->second;
     }
 
-    nt::Line* line = new nt::Line();
+    auto* line = new nt::Line();
     line->uri = uri;
     line->name = name;
     line->sort = sort;
@@ -136,7 +137,7 @@ type::Route* PT_Data::get_or_create_route(const std::string& uri,
         return it->second;
     }
 
-    nt::Route* route = new nt::Route();
+    auto* route = new nt::Route();
     route->uri = uri;
     route->name = name;
     route->destination = destination;
@@ -200,7 +201,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
     for (const StopArea* sa : this->stop_areas) {
         // Don't add it to the dictionnary if name is empty
         if ((!sa->name.empty()) && (sa->visible)) {
-            std::string key = "";
+            std::string key;
             for (navitia::georef::Admin* admin : sa->admin_list) {
                 if (admin->level == 8) {
                     key += " " + admin->name;
@@ -215,7 +216,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
     for (const StopPoint* sp : this->stop_points) {
         // Don't add it to the dictionnary if name is empty
         if ((!sp->name.empty()) && ((sp->stop_area == nullptr) || (sp->stop_area->visible))) {
-            std::string key = "";
+            std::string key;
             for (navitia::georef::Admin* admin : sp->admin_list) {
                 if (admin->level == 8) {
                     key += key + " " + admin->name;
@@ -229,7 +230,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
     this->line_autocomplete.clear();
     for (const Line* line : this->lines) {
         if (!line->name.empty()) {
-            std::string key = "";
+            std::string key;
             if (line->network) {
                 key = line->network->name;
             }
@@ -267,7 +268,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
     this->route_autocomplete.clear();
     for (const Route* route : this->routes) {
         if (!route->name.empty()) {
-            std::string key = "";
+            std::string key;
             if (route->line) {
                 if (route->line->network) {
                     key = route->line->network->name;
@@ -343,8 +344,8 @@ void PT_Data::build_uri() {
  * Cela permet de numéroter tous les objets de 0 à n-1 d'un vecteur de pointeurs
  */
 struct Indexer {
-    idx_t idx;
-    Indexer() : idx(0) {}
+    idx_t idx{0};
+    Indexer() = default;
 
     template <class T>
     void operator()(T* obj) {
@@ -397,9 +398,8 @@ const StopPointConnection* PT_Data::get_stop_point_connection(const StopPoint& f
     const auto search = boost::find_if(connections, is_the_one);
     if (search == connections.end()) {
         return nullptr;
-    } else {
-        return *search;
     }
+    return *search;
 }
 
 PT_Data::~PT_Data() {

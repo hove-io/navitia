@@ -29,13 +29,14 @@ www.navitia.io
 */
 
 #include "type/odt_properties.h"
+
 #include "type/serialization.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void hasOdtProperties::serialize(Archive& ar, const unsigned int) {
+void hasOdtProperties::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& odt_properties;
 }
 SERIALIZABLE(hasOdtProperties)

@@ -29,10 +29,11 @@ www.navitia.io
 */
 
 #include "type/datetime.h"
-#include "type/data.h"
-#include "type/time_duration.h"
-#include "type/meta_data.h"
+
 #include "datetime.h"
+#include "type/data.h"
+#include "type/meta_data.h"
+#include "type/time_duration.h"
 
 namespace pt = boost::posix_time;
 
@@ -89,8 +90,8 @@ pt::ptime from_posix_timestamp(uint64_t val) {
 
 std::vector<pt::time_period> expand_calendar(pt::ptime start,
                                              pt::ptime end,
-                                             pt::time_duration beg_of_day,
-                                             pt::time_duration end_of_day,
+                                             const pt::time_duration& beg_of_day,
+                                             const pt::time_duration& end_of_day,
                                              std::bitset<7> days) {
     auto diff = beg_of_day < end_of_day ? end_of_day - beg_of_day : beg_of_day - end_of_day;
     if (days.all() && (diff <= (1_min).to_posix() || diff >= (23_h + 59_min).to_posix())) {
@@ -108,7 +109,7 @@ std::vector<pt::time_period> expand_calendar(pt::ptime start,
             continue;
         }
         // end is not in the period, so we add one second
-        res.push_back(pt::time_period(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day) + (1_s).to_posix()));
+        res.emplace_back(pt::ptime(day, beg_of_day), pt::ptime(day, end_of_day) + (1_s).to_posix());
     }
 
     // we want the first period to start after 'start' (and the last to finish before 'end')

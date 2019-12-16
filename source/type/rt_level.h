@@ -28,11 +28,14 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
-#include <ostream>
 #include "utils/flat_enum_map.h"
 #include "utils/exception.h"
-#include <map>
+
 #include <boost/algorithm/string.hpp>
+
+#include <map>
+#include <ostream>
+
 namespace navitia {
 
 namespace type {

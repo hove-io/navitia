@@ -29,10 +29,11 @@ www.navitia.io
 */
 
 #include "type/stop_time.h"
+
 #include "type/indexes.h"
 #include "type/serialization.h"
-#include "type/vehicle_journey.h"
 #include "type/stop_point.h"
+#include "type/vehicle_journey.h"
 #include "utils/logger.h"
 
 namespace navitia {
@@ -52,8 +53,9 @@ StopTime StopTime::clone() const {
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
     if ((is_arrival && alighting_time >= DateTimeUtils::SECONDS_PER_DAY)
         || (!is_arrival && boarding_time >= DateTimeUtils::SECONDS_PER_DAY)) {
-        if (day == 0)
+        if (day == 0) {
             return false;
+        }
         --day;
     }
     return vehicle_journey->validity_patterns[rt_level]->check(day);

@@ -30,9 +30,9 @@ www.navitia.io
 
 #include "type/type_utils.h"
 #include "type/datetime.h"
+#include "type/message.h"
 #include "type/meta_data.h"
 #include "utils/logger.h"
-#include "type/message.h"
 
 namespace nt = navitia::type;
 namespace bt = boost::posix_time;
@@ -57,9 +57,8 @@ bt::ptime get_date_time(const routing::StopEvent stop_event,
 
     if (is_departure) {
         return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->departure_time);
-    } else {
-        return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->arrival_time);
     }
+    return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->arrival_time);
 }
 
 const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts) {

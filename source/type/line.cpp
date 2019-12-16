@@ -29,15 +29,17 @@ www.navitia.io
 */
 
 #include "type/line.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/commercial_mode.h"
-#include "type/network.h"
+
 #include "type/calendar.h"
+#include "type/commercial_mode.h"
 #include "type/company.h"
-#include "type/route.h"
+#include "type/indexes.h"
+#include "type/network.h"
 #include "type/physical_mode.h"
+#include "type/pt_data.h"
+#include "type/route.h"
 #include "type/serialization.h"
+
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
@@ -45,7 +47,7 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void Line::serialize(Archive& ar, const unsigned int) {
+void Line::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& code& forward_name& backward_name& additional_data& color& text_color& sort& commercial_mode&
         company_list& network& route_list& physical_mode_list& impacts& calendar_list& shape& closing_time&
             opening_time& properties& line_group_list;
@@ -53,7 +55,7 @@ void Line::serialize(Archive& ar, const unsigned int) {
 SERIALIZABLE(Line)
 
 template <class Archive>
-void LineGroup::serialize(Archive& ar, const unsigned int) {
+void LineGroup::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& main_line& line_list;
 }
 SERIALIZABLE(LineGroup)
@@ -133,7 +135,7 @@ std::string Line::get_label() const {
     return s.str();
 }
 
-Indexes LineGroup::get(Type_e type, const PT_Data&) const {
+Indexes LineGroup::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::Line:

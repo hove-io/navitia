@@ -29,7 +29,9 @@ www.navitia.io
 */
 #pragma once
 #include "type_interfaces.h"
+
 #include <boost/date_time/gregorian/gregorian.hpp>
+
 #include <bitset>
 
 namespace navitia {
@@ -39,7 +41,7 @@ struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
 
 private:
-    bool is_valid(int duration) const;
+    bool is_valid(int day) const;
 
 public:
     using year_bitset = std::bitset<366>;
@@ -53,9 +55,9 @@ public:
 
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
-    void add(int day);
+    void add(int duration);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
-    void remove(boost::gregorian::date day);
+    void remove(boost::gregorian::date date);
     void remove(int day);
     void reset() { days.reset(); }
     bool empty() const { return days.none(); }

@@ -32,10 +32,12 @@ www.navitia.io
 
 #include "utils/functions.h"
 #include "utils/serialization_fusion_map.h"
-#include <type_traits>
+
 #include <boost/fusion/include/at_key.hpp>
 #include <boost/fusion/container.hpp>
 #include <boost/fusion/algorithm.hpp>
+
+#include <type_traits>
 #include <map>
 #include <vector>
 

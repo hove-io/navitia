@@ -27,15 +27,16 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
+#pragma once
 
 #include "type/fwd_type.h"
+
 #include <boost/container/flat_map.hpp>
+
 #include <unordered_map>
 #include <unordered_set>
 #include <set>
 #include <vector>
-
-#pragma once
 
 /**
  * Headsign handler

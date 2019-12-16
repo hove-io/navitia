@@ -30,33 +30,33 @@ www.navitia.io
 
 #include "data.h"
 
-#include <fstream>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include "utils/serialization_unique_ptr.h"
-#include "utils/serialization_atomic.h"
-#include <boost/serialization/variant.hpp>
-#include "type/serialization.h"
-#include <boost/range/algorithm/find.hpp>
-#include <boost/container/container_fwd.hpp>
-#include <thread>
-
-#include <eos_portable_archive/portable_iarchive.hpp>
-#include <eos_portable_archive/portable_oarchive.hpp>
+#include "fare/fare.h"
+#include "georef/georef.h"
+#include "kraken/fill_disruption_from_database.h"
 #include "lz4_filter/filter.h"
-#include "utils/functions.h"
-#include "utils/threadbuf.h"
-
 #include "pt_data.h"
 #include "routing/dataraptor.h"
-#include "georef/georef.h"
-#include "fare/fare.h"
 #include "type/meta_data.h"
-#include "kraken/fill_disruption_from_database.h"
+#include "type/serialization.h"
+#include "utils/functions.h"
+#include "utils/serialization_atomic.h"
+#include "utils/serialization_unique_ptr.h"
+#include "utils/threadbuf.h"
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/container/container_fwd.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/range/algorithm/find.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+#include <boost/serialization/variant.hpp>
+#include <eos_portable_archive/portable_iarchive.hpp>
+#include <eos_portable_archive/portable_oarchive.hpp>
+
+#include <fstream>
+#include <thread>
 
 namespace pt = boost::posix_time;
 
@@ -83,10 +83,10 @@ Data::Data(size_t data_identifier)
     is_realtime_loaded = false;
 }
 
-Data::~Data() {}
+Data::~Data() = default;
 
 template <class Archive>
-void Data::save(Archive& ar, const unsigned int) const {
+void Data::save(Archive& ar, const unsigned int /*unused*/) const {
     ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
         is_realtime_loaded;
 }
@@ -279,8 +279,9 @@ void Data::build_administrative_regions() {
         }
         const auto& admins = find_admins(stop_point->coord, admin_tree);
         boost::push_back(stop_point->admin_list, admins);
-        if (admins.empty())
+        if (admins.empty()) {
             ++cpt_no_projected;
+        }
     }
     if (cpt_no_projected)
         LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_points.size()
@@ -312,10 +313,13 @@ void Data::build_administrative_regions() {
 
     this->pt_data->build_admins_stop_areas();
 
-    for (const auto* sa : pt_data->stop_areas)
-        for (auto admin : sa->admin_list)
-            if (!admin->from_original_dataset)
+    for (const auto* sa : pt_data->stop_areas) {
+        for (auto admin : sa->admin_list) {
+            if (!admin->from_original_dataset) {
                 admin->main_stop_areas.push_back(sa);
+            }
+        }
+    }
 }
 
 void Data::build_autocomplete() {
@@ -334,48 +338,8 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
                            find_vp_predicate);
     if (it != this->pt_data->validity_patterns.end()) {
         return *(it);
-    } else {
-        return nullptr;
     }
-}
-
-using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
-
-list_cal_bitset find_matching_calendar(const Data&,
-                                       const std::string& name,
-                                       const ValidityPattern& validity_pattern,
-                                       const std::vector<Calendar*>& calendar_list,
-                                       double relative_threshold) {
-    list_cal_bitset res;
-    // for the moment we keep lot's of trace, but they will be removed after a while
-    auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
-    LOG4CPLUS_TRACE(log, "meta vj " << name << " :" << validity_pattern.days.to_string());
-
-    for (const auto calendar : calendar_list) {
-        // sometimes a calendar can be empty (for example if it's validity period does not
-        // intersect the data's validity period)
-        // we do not filter those calendar since it's a user input, but we do not match them
-        if (!calendar->validity_pattern.days.any()) {
-            continue;
-        }
-        auto diff = get_difference(calendar->validity_pattern.days, validity_pattern.days);
-        size_t nb_diff = diff.count();
-
-        LOG4CPLUS_TRACE(log, "cal " << calendar->uri << " :" << calendar->validity_pattern.days.to_string());
-
-        // we associate the calendar to the vj if the diff are below a relative threshold
-        // compared to the number of active days in the calendar
-        size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
-        LOG4CPLUS_TRACE(log, "**** diff: " << nb_diff << " and threshold: " << threshold
-                                           << (nb_diff <= threshold ? ", we keep it!!" : ""));
-
-        if (nb_diff > threshold) {
-            continue;
-        }
-        res.push_back({calendar, diff});
-    }
-
-    return res;
+    return nullptr;
 }
 
 void Data::complete() {
@@ -681,8 +645,9 @@ std::set<idx_t> Data::get_target_by_source(Type_e source, Type_e target, const s
 
 Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const {
     Indexes result;
-    if (source_idx == invalid_idx)
+    if (source_idx == invalid_idx) {
         return result;
+    }
     if (source == target) {
         result.insert(source_idx);
         return result;
@@ -788,8 +753,9 @@ Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t sourc
             break;
         case Type_e::Impact: {
             auto impact = pt_data->disruption_holder.get_impact(source_idx);
-            if (impact)
+            if (impact) {
                 result = impact->get(target, *pt_data);
+            }
             break;
         }
         default:
@@ -799,27 +765,35 @@ Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t sourc
 }
 
 Type_e Data::get_type_of_id(const std::string& id) const {
-    if (type::EntryPoint::is_coord(id))
+    if (type::EntryPoint::is_coord(id)) {
         return Type_e::Coord;
-    if (id.size() > 8 && id.substr(0, 8) == "address:")
+    }
+    if (id.size() > 8 && id.substr(0, 8) == "address:") {
         return Type_e::Address;
-    if (id.size() > 6 && id.substr(0, 6) == "admin:")
+    }
+    if (id.size() > 6 && id.substr(0, 6) == "admin:") {
         return Type_e::Admin;
-    if (id.size() > 10 && id.substr(0, 10) == "stop_area:")
+    }
+    if (id.size() > 10 && id.substr(0, 10) == "stop_area:") {
         return Type_e::StopArea;
+    }
 #define GET_TYPE(type_name, collection_name)                            \
     const auto& collection_name##_map = pt_data->collection_name##_map; \
     if (collection_name##_map.count(id) != 0)                           \
         return Type_e::type_name;
     ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
-    if (geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end())
+    if (geo_ref->poitype_map.find(id) != geo_ref->poitype_map.end()) {
         return Type_e::POIType;
-    if (geo_ref->poi_map.find(id) != geo_ref->poi_map.end())
+    }
+    if (geo_ref->poi_map.find(id) != geo_ref->poi_map.end()) {
         return Type_e::POI;
-    if (geo_ref->way_map.find(id) != geo_ref->way_map.end())
+    }
+    if (geo_ref->way_map.find(id) != geo_ref->way_map.end()) {
         return Type_e::Address;
-    if (geo_ref->admin_map.find(id) != geo_ref->admin_map.end())
+    }
+    if (geo_ref->admin_map.find(id) != geo_ref->admin_map.end()) {
         return Type_e::Admin;
+    }
     return Type_e::Unknown;
 }
 
@@ -831,6 +805,8 @@ struct Pipe {
     Pipe() : out(&sbuf), in(&sbuf) {}
     Pipe(const Pipe&) = delete;
     Pipe& operator=(const Pipe&) = delete;
+    Pipe(const Pipe&&) = delete;
+    Pipe& operator=(const Pipe&&) = delete;
     ~Pipe() { sbuf.close(); }
 };
 }  // anonymous namespace

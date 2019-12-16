@@ -29,14 +29,16 @@ www.navitia.io
 */
 
 #include "geographical_coord.h"
-#include <iomanip>
+
 #include "type/serialization.h"
+
+#include <iomanip>
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void GeographicalCoord::serialize(Archive& ar, const unsigned int) {
+void GeographicalCoord::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& _lon& _lat;
 }
 SERIALIZABLE(GeographicalCoord)
@@ -68,20 +70,21 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project_common(const Geog
     // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la
     // division par length²)
     if (length_sqr < 1e-11) {  // moins de un mètre, on projette sur une extrémité
-        if (f(*this, segment_start) < f(*this, segment_end))
+        if (f(*this, segment_start) < f(*this, segment_end)) {
             u = 0;
-        else
+        } else {
             u = 1;
+        }
     } else {
         u = ((this->_lon - segment_start._lon) * dlon + (this->_lat - segment_start._lat) * dlat) / length_sqr;
     }
 
     // Les deux cas où le projeté tombe en dehors
-    if (u < 0)
+    if (u < 0) {
         result = std::make_pair(segment_start, f(*this, segment_start));
-    else if (u > 1)
+    } else if (u > 1) {
         result = std::make_pair(segment_end, f(*this, segment_end));
-    else {
+    } else {
         result.first._lon = segment_start._lon + u * dlon;
         result.first._lat = segment_start._lat + u * dlat;
         result.second = f(*this, result.first);
@@ -229,7 +232,7 @@ namespace model {
 
 struct GeoCoord {
     const navitia::type::GeographicalCoord& coord;
-    GeoCoord(const navitia::type::GeographicalCoord& coord) : coord(coord) {}
+    explicit GeoCoord(const navitia::type::GeographicalCoord& coord) : coord(coord) {}
 };
 
 static std::ostream& operator<<(std::ostream& os, const GeoCoord& coord) {
@@ -237,7 +240,7 @@ static std::ostream& operator<<(std::ostream& os, const GeoCoord& coord) {
 }
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points) {
-    os << "{\"type\":\"Polygon\",\"coordinates\":[[";
+    os << R"({"type":"Polygon","coordinates":[[)";
     os << GeoCoord(points.outer()[0]) << ",";
     for (unsigned j = 1; j < points.outer().size(); j++) {
         os << GeoCoord(points.outer()[j]);
@@ -247,11 +250,11 @@ std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points)
         os << ",";
     }
     os << "]";
-    for (unsigned k = 0; k < points.inners().size(); k++) {
+    for (const auto& k : points.inners()) {
         os << ",[";
-        for (unsigned l = 0; l < points.inners()[k].size(); l++) {
-            os << GeoCoord(points.inners()[k][l]);
-            if (l == points.inners()[k].size() - 1) {
+        for (unsigned l = 0; l < k.size(); l++) {
+            os << GeoCoord(k[l]);
+            if (l == k.size() - 1) {
                 continue;
             }
             os << ",";
@@ -262,7 +265,7 @@ std::ostream& operator<<(std::ostream& os, const navitia::type::Polygon& points)
 }
 
 std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& polygons) {
-    os << "{\"type\":\"MultiPolygon\",\"coordinates\":[";
+    os << R"({"type":"MultiPolygon","coordinates":[)";
     for (unsigned i = 0; i < polygons.size(); i++) {
         os << "[[" << GeoCoord(polygons[i].outer()[0]);
         for (unsigned j = 1; j < polygons[i].outer().size(); j++) {
@@ -273,11 +276,11 @@ std::ostream& operator<<(std::ostream& os, const navitia::type::MultiPolygon& po
             os << ",";
         }
         os << "]";
-        for (unsigned k = 0; k < polygons[i].inners().size(); k++) {
+        for (const auto& k : polygons[i].inners()) {
             os << ",[";
-            for (unsigned l = 0; l < polygons[i].inners()[k].size(); l++) {
-                os << GeoCoord(polygons[i].inners()[k][l]);
-                if (l == polygons[i].inners()[k].size() - 1) {
+            for (unsigned l = 0; l < k.size(); l++) {
+                os << GeoCoord(k[l]);
+                if (l == k.size() - 1) {
                     continue;
                 }
                 os << ",";

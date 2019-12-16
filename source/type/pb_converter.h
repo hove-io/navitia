@@ -536,7 +536,7 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects,
 }
 
 void fill_pb_error(const pbnavitia::Error::error_id id,
-                   const std::string& comment,
+                   const std::string& message,
                    pbnavitia::Error* error,
                    int max_depth = 0,
                    const pt::ptime& now = pt::not_a_date_time,

@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "type/comment_container.h"
+
 #include "type/stop_time.h"
 
 namespace navitia {
