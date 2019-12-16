@@ -483,9 +483,9 @@ template void PbCreator::Filler::fill_pb_object<nt::VehicleJourney>(const nt::Ve
 
 PbCreator::Filler PbCreator::Filler::copy(int depth, const DumpMessageOptions& dump_message_options) {
     if (depth <= 0) {
-        return PbCreator::Filler(0, dump_message_options, pb_creator);
+        return {0, dump_message_options, pb_creator};
     }
-    return PbCreator::Filler(depth, dump_message_options, pb_creator);
+    return {depth, dump_message_options, pb_creator};
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib) {

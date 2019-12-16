@@ -844,6 +844,8 @@ struct Pipe {
     Pipe() : out(&sbuf), in(&sbuf) {}
     Pipe(const Pipe&) = delete;
     Pipe& operator=(const Pipe&) = delete;
+    Pipe(const Pipe&&) = delete;
+    Pipe& operator=(const Pipe&&) = delete;
     ~Pipe() { sbuf.close(); }
 };
 }  // anonymous namespace
