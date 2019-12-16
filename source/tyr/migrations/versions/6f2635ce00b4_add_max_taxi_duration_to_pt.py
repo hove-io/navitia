@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('max_taxi_duration_to_pt', sa.Integer(), nullable=False))
+    op.add_column(
+        'instance', sa.Column('max_taxi_duration_to_pt', sa.Integer(), nullable=False, server_default='1800')
+    )
 
 
 def downgrade():

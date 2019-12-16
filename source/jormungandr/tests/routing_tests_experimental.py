@@ -661,6 +661,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         assert 'deleted_because_too_short_heavy_mode_fallback' in taxi_fallback['tags']
 
     def test_max_taxi_duration_to_pt(self):
+        # we begin with a normal request to get the fallback duration in taxi
         query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&taxi_speed=0.05"
 
         response = self.query_region(query)
@@ -670,9 +671,11 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
+        # find the pt journey with taxi as it fallback mode
         taxi_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
         assert taxi_with_pt
 
+        # get the fallback duration (it's the addition of wait time and taxi journey's duration)
         taxi_fallback_time = taxi_with_pt['sections'][0]['duration'] + taxi_with_pt['sections'][1]['duration']
 
         query = (
@@ -680,6 +683,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
             + "&datetime=20120614T075000"
             + "&first_section_mode[]=taxi"
             + "&taxi_speed=0.05"
+            # Now we set the max_taxi_duration_to_pt
             + "&max_taxi_duration_to_pt={}".format(taxi_fallback_time - 1)
         )
 
@@ -689,22 +693,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
 
         assert len(journeys) == 1
-        assert 'non_pt' in journeys[0]['tags']
-
-        query = (
-            sub_query
-            + "&datetime=20120614T075000"
-            + "&first_section_mode[]=taxi"
-            + "&taxi_speed=0.05"
-            + "&max_duration_to_pt={}".format(taxi_fallback_time - 1)
-        )
-
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        journeys = get_not_null(response, 'journeys')
-
-        assert len(journeys) == 1
+        # the pt journey is gone....
         assert 'non_pt' in journeys[0]['tags']
 
 
