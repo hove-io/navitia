@@ -583,6 +583,23 @@ std::ostream& operator<<(std::ostream& ss, const Transition& k) {
             break;
     }
 
+    ss << "\n Start conditions : ";
+    for (const Condition& condition : k.start_conditions) {
+        ss << "\n   " << condition;
+    }
+    ss << "\n End conditions : ";
+    for (const Condition& condition : k.end_conditions) {
+        ss << "\n   " << condition;
+    }
+    ss << "\n";
+
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const Condition& condition) {
+    ss << condition.key << " " << comp_to_string(condition.comparaison) << " " << condition.value
+       << " ticket : " << condition.ticket;
+
     return ss;
 }
 
