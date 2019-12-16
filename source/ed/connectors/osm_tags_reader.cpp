@@ -40,17 +40,16 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-
 static void update_if_unknown(int& target, const int& source) {
     if (target == -1) {
         target = source;
     }
 }
 
-
-boost::optional<float> parse_way_speed(const std::map<std::string, std::string>& tags, const SpeedsParser& default_speed) {
+boost::optional<float> parse_way_speed(const std::map<std::string, std::string>& tags,
+                                       const SpeedsParser& default_speed) {
     if (!tags.count("highway")) {
-        return 0;
+        return boost::none;
     }
     boost::optional<std::string> max_speed;
     std::string highway;
@@ -70,7 +69,6 @@ boost::optional<float> parse_way_speed(const std::map<std::string, std::string>&
 
     return default_speed.get_speed(highway, max_speed);
 }
-
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     // if no highway tag, we can do nothing on it

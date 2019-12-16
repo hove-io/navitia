@@ -186,7 +186,10 @@ struct OSMWay {
     OSMWay(const u_int64_t osm_id) : osm_id(osm_id) {
         properties[VISIBLE] = true;  // By default way are visible
     }
-    OSMWay(const u_int64_t osm_id, const std::bitset<8>& properties, const std::string& name, boost::optional<float> car_speed=boost::none)
+    OSMWay(const u_int64_t osm_id,
+           const std::bitset<8>& properties,
+           const std::string& name,
+           boost::optional<float> car_speed = boost::none)
         : osm_id(osm_id), properties(properties), name(name), car_speed(car_speed) {}
 
     void add_node(std::set<OSMNode>::const_iterator node) const {

@@ -35,7 +35,7 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-class SpeedsParser{
+class SpeedsParser {
     std::map<std::string, float> implicit_speeds;
     std::map<std::string, float> max_speeds_by_type;
     std::map<std::string, float> speed_factor_by_type;
@@ -45,4 +45,5 @@ public:
     boost::optional<float> get_speed(const std::string& highway, const boost::optional<std::string>& max_speed) const;
 };
 
-}}
+}  // namespace connectors
+}  // namespace ed

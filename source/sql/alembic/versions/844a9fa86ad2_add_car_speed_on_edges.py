@@ -16,9 +16,7 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('edge',
-        sa.Column('car_speed', sa.Float(), nullable=True),
-        schema='georef')
+    op.add_column('edge', sa.Column('car_speed', sa.Float(), nullable=True), schema='georef')
 
 
 def downgrade():

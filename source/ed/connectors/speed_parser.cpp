@@ -40,11 +40,11 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-constexpr float kmh_to_ms(float val){
+constexpr float kmh_to_ms(float val) {
     return val / 3.6;
 }
 
-template<typename T>
+template <typename T>
 static void update_if_unknown(boost::optional<T>& target, const T& source) {
     if (!target) {
         target = source;
@@ -105,40 +105,42 @@ SpeedsParser::SpeedsParser() {
     speed_factor_by_type["unclassified"] = 0.5;
 }
 
-boost::optional<float> SpeedsParser::get_speed(const std::string& highway, const boost::optional<std::string>& max_speed) const{
+boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
+                                               const boost::optional<std::string>& max_speed) const {
     boost::optional<float> speed;
     boost::optional<float> factor;
 
-    if(max_speed){
+    if (max_speed) {
         std::string s = boost::algorithm::trim_copy(max_speed.get());
         auto it = implicit_speeds.find(s);
-        if(it != implicit_speeds.end()){
+        if (it != implicit_speeds.end()) {
             speed = it->second;
-        }else{
-            try{
+        } else {
+            try {
                 // todo handle value not in km/h.
                 // if there is no unit the value is in km/h else cast will fail
                 speed = kmh_to_ms(boost::lexical_cast<float>(s));
-            }catch(const std::exception&){
+            } catch (const std::exception&) {
                 std::cerr << "impossible to convert \"" << max_speed << "\" in speed" << std::endl;
             }
         }
     }
 
     auto it = max_speeds_by_type.find(highway);
-    if(it != max_speeds_by_type.end()){
+    if (it != max_speeds_by_type.end()) {
         update_if_unknown(speed, it->second);
-    }else{
+    } else {
         std::cerr << highway << " not handled" << std::endl;
     }
 
     auto it_factor = speed_factor_by_type.find(highway);
-    if(it_factor != speed_factor_by_type.end() && speed){
+    if (it_factor != speed_factor_by_type.end() && speed) {
         speed = speed.get() * it_factor->second;
-    }else{
+    } else {
         std::cerr << highway << " not handled" << std::endl;
     }
     return speed;
 }
 
-}}
+}  // namespace connectors
+}  // namespace ed
