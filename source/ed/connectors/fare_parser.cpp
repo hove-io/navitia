@@ -135,8 +135,6 @@ void fare_parser::load_od() {
         }
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[3]);
-        boost::algorithm::to_lower(start_saec, locale);
-        boost::algorithm::to_lower(dest_saec, locale);
         // col 1 and 4 are the human readable name of the start/end, and are not used
 
         std::string start_mode = boost::algorithm::trim_copy(row[2]);
