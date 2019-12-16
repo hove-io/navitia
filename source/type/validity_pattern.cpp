@@ -120,7 +120,8 @@ bool ValidityPattern::check2(unsigned int day) const {
     if (day == 0) {
         return days[day] || days[day + 1];
     }
-    { return days[day - 1] || days[day] || days[day + 1]; }
+
+    return days[day - 1] || days[day] || days[day + 1];
 }
 
 bool ValidityPattern::uncheck2(unsigned int day) const {
@@ -128,7 +129,8 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
     if (day == 0) {
         return !days[day] && !days[day + 1];
     }
-    { return !days[day - 1] && !days[day] && !days[day + 1]; }
+
+    return !days[day - 1] && !days[day] && !days[day + 1];
 }
 }  // namespace type
 }  // namespace navitia

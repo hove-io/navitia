@@ -342,45 +342,6 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
     return nullptr;
 }
 
-using list_cal_bitset = std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>>;
-
-list_cal_bitset find_matching_calendar(const Data& /*unused*/,
-                                       const std::string& name,
-                                       const ValidityPattern& validity_pattern,
-                                       const std::vector<Calendar*>& calendar_list,
-                                       double relative_threshold) {
-    list_cal_bitset res;
-    // for the moment we keep lot's of trace, but they will be removed after a while
-    auto log = log4cplus::Logger::getInstance("kraken::type::Data::Calendar");
-    LOG4CPLUS_TRACE(log, "meta vj " << name << " :" << validity_pattern.days.to_string());
-
-    for (const auto calendar : calendar_list) {
-        // sometimes a calendar can be empty (for example if it's validity period does not
-        // intersect the data's validity period)
-        // we do not filter those calendar since it's a user input, but we do not match them
-        if (!calendar->validity_pattern.days.any()) {
-            continue;
-        }
-        auto diff = get_difference(calendar->validity_pattern.days, validity_pattern.days);
-        size_t nb_diff = diff.count();
-
-        LOG4CPLUS_TRACE(log, "cal " << calendar->uri << " :" << calendar->validity_pattern.days.to_string());
-
-        // we associate the calendar to the vj if the diff are below a relative threshold
-        // compared to the number of active days in the calendar
-        size_t threshold = std::round(relative_threshold * calendar->validity_pattern.days.count());
-        LOG4CPLUS_TRACE(log, "**** diff: " << nb_diff << " and threshold: " << threshold
-                                           << (nb_diff <= threshold ? ", we keep it!!" : ""));
-
-        if (nb_diff > threshold) {
-            continue;
-        }
-        res.push_back({calendar, diff});
-    }
-
-    return res;
-}
-
 void Data::complete() {
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;

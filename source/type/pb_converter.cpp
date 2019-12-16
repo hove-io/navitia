@@ -2229,16 +2229,6 @@ bool PbCreator::empty_journeys() {
     return (response.journeys().empty());
 }
 
-void fill_pb_error(const pbnavitia::Error::error_id id,
-                   const std::string& message,
-                   pbnavitia::Error* error,
-                   int /*unused*/,
-                   const pt::ptime& /*unused*/,
-                   const pt::time_period& /*unused*/) {
-    error->set_id(id);
-    error->set_message(message);
-}
-
 pbnavitia::GeoStatus* PbCreator::mutable_geo_status() {
     return response.mutable_geo_status();
 }
