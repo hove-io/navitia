@@ -32,12 +32,13 @@ www.navitia.io
 
 #include "conf.h"
 #include "routing/routing.h"
+#include "utils/serialization_vector.h"
 #include "utils/logger.h"
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
-#include "utils/serialization_vector.h"
 #include <boost/serialization/utility.hpp>
 
 namespace navitia {
@@ -150,7 +151,7 @@ struct DateTicket {
     Ticket get_fare(boost::gregorian::date date) const;
 
     /// Add a new period to a ticket
-    void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, const Ticket& ticket);
+    void add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket);
 
     /// Sum of two DateTicket
     /// This funciton assumes that there's the same number of tickets and that their validity period are the same
@@ -350,7 +351,7 @@ struct Fare {
     typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
     typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
     Graph g;
-    Fare::vertex_t begin_v;  // begin vertex descriptor
+    Fare::vertex_t begin_v{};  // begin vertex descriptor
 
     Fare();
 
