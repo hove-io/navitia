@@ -28,11 +28,12 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/geographical_coord.h"
 #include "routing/heat_map.h"
-#include "raptor.h"
+
 #include "isochrone.h"
+#include "raptor.h"
 #include "raptor_api.h"
+#include "type/geographical_coord.h"
 
 #include <vector>
 
@@ -59,7 +60,7 @@ static void print_lat(std::stringstream& ss, const SingleCoord lat) {
     ss << "}";
 }
 
-static void print_datetime(std::stringstream& ss, navitia::time_duration duration) {
+static void print_datetime(std::stringstream& ss, const navitia::time_duration& duration) {
     if (duration.is_pos_infinity()) {
         ss << R"(null)";
     } else {
@@ -96,8 +97,8 @@ static std::pair<int, int> find_rank(const BoundBox& box,
 
 struct Projection {
     boost::optional<double> distance;
-    georef::vertex_t source;
-    georef::vertex_t target;
+    georef::vertex_t source{};
+    georef::vertex_t target{};
     Projection(double distance, georef::vertex_t source, georef::vertex_t target)
         : distance(distance), source(source), target(target) {}
 
@@ -113,7 +114,7 @@ struct Boundary {
         : max_lon(max_lon), max_lat(max_lat), min_lon(min_lon), min_lat(min_lat) {}
 };
 
-static int get_rank(int source, int target, int offset, size_t step) {
+static size_t get_rank(int source, int target, int offset, size_t step) {
     int rank = std::min(source, target) + offset;
     rank = std::max(rank, 0);
     return std::min<size_t>(rank, step - 1);
@@ -128,7 +129,7 @@ static Boundary find_boundary(const std::pair<int, int>& rank_source,
     auto end_lat_box = get_rank(rank_source.second, rank_target.second, +offset_lat, step);
     auto begin_lon_box = get_rank(rank_source.first, rank_target.first, -offset_lon, step);
     auto begin_lat_box = get_rank(rank_source.second, rank_target.second, -offset_lat, step);
-    return Boundary(end_lon_box, end_lat_box, begin_lon_box, begin_lat_box);
+    return {end_lon_box, end_lat_box, begin_lon_box, begin_lat_box};
 }
 
 static std::vector<std::vector<Projection>> find_projection(BoundBox box,
@@ -212,7 +213,7 @@ HeatMap fill_heat_map(const BoundBox& box,
                 const auto duration_to_target =
                     distances[projection[i][j].target]
                     + navitia::milliseconds(sqrt(center.approx_sqr_distance(target, coslat)) / speed * 1e3);
-                const auto new_duration = std::min(duration_to_source, duration_to_target);
+                const auto& new_duration = std::min(duration_to_source, duration_to_target);
                 if (new_duration.total_seconds() < max_duration) {
                     duration = new_duration;
                 } else {
@@ -369,8 +370,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
         boost::dijkstra_shortest_paths_no_init(
             filtered_graph(worker.graph, {}, georef::TransportationModeFilter(mode, worker)), start, end,
             &predecessors[0], &distances[0], boost::get(&georef::Edge::duration, worker.graph), index_map,
-            std::less<navitia::time_duration>(), georef::SpeedDistanceCombiner(speed_factor), navitia::seconds(0),
-            visitor);
+            std::less<>(), georef::SpeedDistanceCombiner(speed_factor), navitia::seconds(0), visitor);
     } catch (georef::DestinationFound) {
     }
     return build_grid(worker, box, distances, speed, duration, resolution);

@@ -32,8 +32,8 @@ www.navitia.io
 
 #include "dataraptor.h"
 #include "type/data.h"
-#include "type/pt_data.h"
 #include "type/meta_data.h"
+#include "type/pt_data.h"
 #include "type/type_utils.h"
 #include "utils/logger.h"
 
@@ -339,7 +339,7 @@ std::pair<const type::StopTime*, DateTime> NextStopTime::tardiest_stop_time(
  *
  * */
 template <typename F>
-static void vj_loop(const nt::DiscreteVehicleJourney*, F f) {
+static void vj_loop(const nt::DiscreteVehicleJourney* /*unused*/, F f) {
     f(0);
 }
 
@@ -367,7 +367,7 @@ static void fill_cache(const DateTime from,
                        const std::vector<const VJ_T*>& vjs,
                        IdxMap<JourneyPatternPoint, std::vector<CachedNextStopTime::DtSt>>& arrival_cache,
                        IdxMap<JourneyPatternPoint, std::vector<CachedNextStopTime::DtSt>>& departure_cache) {
-    const int to_int = static_cast<int>(DateTimeUtils::date(to));
+    const auto to_int = static_cast<int>(DateTimeUtils::date(to));
     // In case of Vj that passes midnight, we should compute one day before "from"
     const int from_int = std::max(static_cast<int>(DateTimeUtils::date(from)) - 1, 0);
     for (const auto* vj : vjs) {
@@ -409,7 +409,8 @@ static void fill_cache(const DateTime from,
 bool CachedNextStopTimeKey::operator<(const CachedNextStopTimeKey& other) const {
     if (from != other.from) {
         return from < other.from;
-    } else if (rt_level != other.rt_level) {
+    }
+    if (rt_level != other.rt_level) {
         return rt_level < other.rt_level;
     }
     return accessibilite_params < other.accessibilite_params;

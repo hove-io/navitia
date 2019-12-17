@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "routing.h"
+
 #include "type/data.h"
 
 namespace navitia {
@@ -69,7 +70,8 @@ bool use_crow_fly(const type::EntryPoint& point,
         // if we have a stop area in the request,
         // we only do a crowfly section if the used stop point belongs to this stop area
         return point.uri == stop_point.stop_area->uri;
-    } else if (point.type == type::Type_e::Admin) {
+    }
+    if (point.type == type::Type_e::Admin) {
         // we handle the main_stop_area of an admin here
         // we want a crowfly for all main_stop_areas of an admin,
         // even if the stop_area is not in the admin
@@ -77,10 +79,9 @@ bool use_crow_fly(const type::EntryPoint& point,
         auto it = find_if(begin(admin->main_stop_areas), end(admin->main_stop_areas),
                           [stop_point](const type::StopArea* stop_area) { return stop_area == stop_point.stop_area; });
         return it != end(admin->main_stop_areas);
-    } else {
-        // if the request is on any other type we don't want a crowfly section
-        return false;
     }
+    // if the request is on any other type we don't want a crowfly section
+    return false;
 }
 
 std::ostream& operator<<(std::ostream& ss, const PathItem& t) {

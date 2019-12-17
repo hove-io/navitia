@@ -34,9 +34,10 @@ www.navitia.io
 #include "type/request.pb.h"
 #include "utils/flat_enum_map.h"
 #include "type/rt_level.h"
-#include <limits>
 #include "raptor.h"
 #include "routing/routing.h"
+
+#include <limits>
 
 namespace navitia {
 namespace type {
@@ -82,7 +83,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    RAPTOR& raptor,
                    const type::EntryPoint& origin,
                    const type::EntryPoint& destination,
-                   const std::vector<uint64_t>& datetimes,
+                   const std::vector<uint64_t>& timestamps,
                    const bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
                    const std::vector<std::string>& forbidden,
@@ -104,7 +105,7 @@ void make_response(navitia::PbCreator& pb_creator,
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR& raptor,
                     const type::EntryPoint& center,
-                    const uint64_t datetime,
+                    const uint64_t datetime_timestamp,
                     const bool clockwise,
                     const type::AccessibiliteParams& accessibilite_params,
                     const std::vector<std::string>& forbidden,
@@ -192,7 +193,7 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
-                              RAPTOR& raptor_max,
+                              RAPTOR& raptor,
                               const type::EntryPoint& center,
                               const uint64_t departure_datetime,
                               const std::vector<DateTime>& boundary_duration,
@@ -218,8 +219,8 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const bool clockwise,
                    const nt::RTLevel rt_level,
                    georef::StreetNetwork& worker,
-                   const double& speed,
-                   const navitia::type::Mode_e mode,
+                   const double& end_speed,
+                   const navitia::type::Mode_e end_mode,
                    const uint32_t resolution,
                    const boost::optional<const type::EntryPoints&>& stop_points = boost::none);
 

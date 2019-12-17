@@ -29,16 +29,17 @@ www.navitia.io
 */
 
 #include "raptor.h"
+
 #include "raptor_visitors.h"
-#include <boost/range/algorithm_ext/push_back.hpp>
-#include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/algorithm/find_if.hpp>
-#include <boost/range/algorithm/fill.hpp>
-#include <boost/functional/hash.hpp>
-#include <chrono>
 #include "utils/logger.h"
 
-namespace bt = boost::posix_time;
+#include <boost/functional/hash.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/algorithm/fill.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
+
+#include <chrono>
 
 namespace navitia {
 namespace routing {
@@ -208,9 +209,9 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
 
 namespace {
 struct Dom {
-    Dom(bool c) : clockwise(c) {}
+    explicit Dom(bool c) : clockwise(c) {}
     bool clockwise;
-    typedef std::pair<size_t, StartingPointSndPhase> Arg;
+    using Arg = std::pair<size_t, StartingPointSndPhase>;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
         /*
          * When multiple arrival with [same walking, same time, same number of sections] are
@@ -226,9 +227,9 @@ struct Dom {
     }
 };
 struct CompSndPhase {
-    CompSndPhase(bool c) : clockwise(c) {}
+    explicit CompSndPhase(bool c) : clockwise(c) {}
     bool clockwise;
-    typedef StartingPointSndPhase Arg;
+    using Arg = StartingPointSndPhase;
     inline bool operator()(const Arg& lhs, const Arg& rhs) const {
         if (lhs.has_priority != rhs.has_priority) {
             return lhs.has_priority;
@@ -269,7 +270,7 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
                 (clockwise ? working_labels.dt_pt(a.first) + walking_t : working_labels.dt_pt(a.first) - walking_t),
                 walking_t, false};
             overfilter.add({res.size(), starting_point});
-            res.push_back(std::move(starting_point));
+            res.push_back(starting_point);
         }
     }
 

@@ -32,6 +32,7 @@ www.navitia.io
 #include "routing/stop_event.h"
 #include "routing/routing.h"
 #include "type/data.h"
+
 #include <queue>
 
 namespace navitia {

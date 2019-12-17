@@ -30,9 +30,6 @@ www.navitia.io
 
 #pragma once
 
-#include <unordered_map>
-#include <queue>
-#include <limits>
 #include "type/type.h"
 #include "type/data.h"
 #include "type/datetime.h"
@@ -41,10 +38,14 @@ www.navitia.io
 #include "routing.h"
 #include "routing/journey.h"
 #include "utils/timer.h"
-#include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
 #include "raptor_utils.h"
 #include "type/time_duration.h"
+
+#include "dataraptor.h"
+#include <unordered_map>
+#include <queue>
+#include <limits>
 
 namespace navitia {
 namespace routing {
@@ -114,20 +115,20 @@ struct RAPTOR {
                               const type::StopArea* destination,
                               int departure_hour,
                               int departure_day,
-                              DateTime bound,
+                              DateTime borne,
                               const nt::RTLevel rt_level,
                               const navitia::time_duration& transfer_penalty,
                               bool clockwise = true,
                               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
-                              const std::vector<std::string>& forbidden_uris = {},
+                              const std::vector<std::string>& forbidden_uri = {},
                               const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
      * stop points de départs, vers plusieurs stoppoints d'arrivée,
      * à une heure donnée.
      */
-    std::vector<Path> compute_all(const map_stop_point_duration& departs,
+    std::vector<Path> compute_all(const map_stop_point_duration& departures,
                                   const map_stop_point_duration& destinations,
                                   const DateTime& departure_datetime,
                                   const nt::RTLevel rt_level,
@@ -135,13 +136,13 @@ struct RAPTOR {
                                   const DateTime& bound = DateTimeUtils::inf,
                                   const uint32_t max_transfers = 10,
                                   const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
-                                  const std::vector<std::string>& forbidden = std::vector<std::string>(),
-                                  const std::vector<std::string>& allowed = std::vector<std::string>(),
+                                  const std::vector<std::string>& forbidden_uri = std::vector<std::string>(),
+                                  const std::vector<std::string>& allowed_ids = std::vector<std::string>(),
                                   bool clockwise = true,
                                   const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                                   const size_t max_extra_second_pass = 0);
 
-    Journeys compute_all_journeys(const map_stop_point_duration& departs,
+    Journeys compute_all_journeys(const map_stop_point_duration& departures,
                                   const map_stop_point_duration& destinations,
                                   const DateTime& departure_datetime,
                                   const nt::RTLevel rt_level,
@@ -169,9 +170,9 @@ struct RAPTOR {
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
-    void isochrone(const map_stop_point_duration& departures_,
+    void isochrone(const map_stop_point_duration& departures,
                    const DateTime& departure_datetime,
-                   const DateTime& bound = DateTimeUtils::min,
+                   const DateTime& b = DateTimeUtils::min,
                    const uint32_t max_transfers = 10,
                    const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                    const std::vector<std::string>& forbidden = std::vector<std::string>(),
@@ -201,7 +202,7 @@ struct RAPTOR {
                             const nt::RTLevel rt_level,
                             const type::VehicleJourney* vj,
                             const uint16_t l_zone,
-                            DateTime workingDate);
+                            DateTime base_dt);
 
     /// Main loop
     template <typename Visitor>

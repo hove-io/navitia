@@ -30,34 +30,35 @@ www.navitia.io
 
 #include "raptor.h"
 #include "type/data.h"
+#include "utils/csv.h"
+#include "utils/init.h"
 #include "utils/timer.h"
+
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/program_options.hpp>
 #include <boost/progress.hpp>
-#include <random>
-#include <fstream>
-#include "utils/init.h"
-#include "utils/csv.h"
-#include <boost/algorithm/string/predicate.hpp>
-#include <thread>
 #ifdef __BENCH_WITH_CALGRIND__
 #include "valgrind/callgrind.h"
 #endif
 #include <gperftools/profiler.h>
 
+#include <fstream>
+#include <random>
+#include <thread>
+
 using namespace navitia;
 using namespace routing;
-namespace ba = boost::algorithm;
 namespace po = boost::program_options;
 
 struct Demand {
-    unsigned int date;
-    unsigned int hour;
-    nt::RTLevel level;
+    unsigned int date{};
+    unsigned int hour{};
+    nt::RTLevel level = nt::RTLevel::Base;
     nt::AccessibiliteParams accessibilite_params;
 };
 
 static void compute(std::vector<Demand> demands, boost::progress_display& show_progress, const type::Data& data) {
-    std::random_shuffle(demands.begin(), demands.end());
+    std::shuffle(demands.begin(), demands.end(), std::mt19937(std::random_device()()));
     std::vector<const CachedNextStopTime*> results;
     for (auto demand : demands) {
         ++show_progress;
