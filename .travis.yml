@@ -63,7 +63,8 @@ matrix:
           - liblog4cplus-dev
           - libgoogle-perftools-dev
           - libprotobuf-dev
-          #- libproj-dev
+          - libboost-dev
+          - libpqxx-dev
       before_script:
         - mkdir build && cd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && make protobuf_files
       script:
