@@ -39,6 +39,7 @@ class JourneyParameters(object):
         timeframe=None,
         depth=1,
         isochrone_center=None,
+        sn_params=None,
     ):
 
         self.max_duration = max_duration
@@ -55,6 +56,28 @@ class JourneyParameters(object):
         self.timeframe = timeframe
         self.depth = depth
         self.isochrone_center = isochrone_center
+        self.sn_params = sn_params
+
+
+# Needed for GraphicalIsochrones
+class StreetNetworkParameters(object):
+    def __init__(
+        self,
+        origin_mode=None,
+        destination_mode=None,
+        walking_speed=None,
+        bike_speed=None,
+        car_speed=None,
+        bss_speed=None,
+        car_no_park_speed=None,
+    ):
+        self.origin_mode = origin_mode
+        self.destination_mode = destination_mode
+        self.walking_speed = walking_speed
+        self.bike_speed = bike_speed
+        self.car_speed = car_speed
+        self.bss_speed = bss_speed
+        self.car_no_park_speed = car_no_park_speed
 
 
 class GraphicalIsochronesParameters(object):
@@ -120,6 +143,16 @@ class Kraken(object):
             req.journeys.isochrone_center.access_duration = 0
             req.requested_api = type_pb2.ISOCHRONE
 
+        if journey_parameters.sn_params:
+            sn_params_request = req.journeys.streetnetwork_params
+            sn_params_request.origin_mode = journey_parameters.sn_params.origin_mode
+            sn_params_request.destination_mode = journey_parameters.sn_params.destination_mode
+            sn_params_request.walking_speed = journey_parameters.sn_params.walking_speed
+            sn_params_request.bike_speed = journey_parameters.sn_params.bike_speed
+            sn_params_request.car_speed = journey_parameters.sn_params.car_speed
+            sn_params_request.bss_speed = journey_parameters.sn_params.bss_speed
+            sn_params_request.car_no_park_speed = journey_parameters.sn_params.car_no_park_speed
+
         return req
 
     def _create_graphical_isochrones_request(
@@ -134,17 +167,19 @@ class Kraken(object):
             bike_in_pt,
         )
         req.requested_api = type_pb2.graphical_isochrone
-        max_duration = graphical_isochrones_parameters.journeys_parameters.max_duration
-        if max_duration:
-            req.journeys.max_duration = max_duration
-        else:
-            req.journeys.max_duration = max(graphical_isochrones_parameters.boundary_duration, key=int)
+        req.journeys.max_duration = graphical_isochrones_parameters.journeys_parameters.max_duration
         if graphical_isochrones_parameters.boundary_duration:
             for duration in sorted(graphical_isochrones_parameters.boundary_duration, key=int, reverse=True):
                 if graphical_isochrones_parameters.min_duration < duration < req.journeys.max_duration:
                     req.isochrone.boundary_duration.append(duration)
         req.isochrone.boundary_duration.insert(0, req.journeys.max_duration)
         req.isochrone.boundary_duration.append(graphical_isochrones_parameters.min_duration)
+
+        # We are consistent with new_default there.
+        if req.journeys.origin:
+            req.journeys.clockwise = True
+        else:
+            req.journeys.clockwise = False
 
         req.isochrone.journeys_request.CopyFrom(req.journeys)
         return req
