@@ -323,8 +323,7 @@ void ranked_pairs_sort(std::vector<std::vector<routing::datetime_stop_time>>& v)
 
 static std::vector<std::vector<routing::datetime_stop_time>> make_matrix(
     const std::vector<std::vector<routing::datetime_stop_time>>& stop_times,
-    const Thermometer& thermometer,
-    const type::Data& /*unused*/) {
+    const Thermometer& thermometer) {
     // result group stop_times by stop_point, tmp by vj.
     const size_t thermometer_size = thermometer.get_thermometer().size();
     std::vector<std::vector<routing::datetime_stop_time>> result(
@@ -402,7 +401,7 @@ void route_schedule(PbCreator& pb_creator,
             }
         }
         thermometer.generate_thermometer(stop_points);
-        auto matrix = make_matrix(stop_times, thermometer, *pb_creator.data);
+        auto matrix = make_matrix(stop_times, thermometer);
 
         auto schedule = pb_creator.add_route_schedules();
         pbnavitia::Table* table = schedule->mutable_table();
