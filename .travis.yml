@@ -57,6 +57,8 @@ matrix:
           sources:
           - ubuntu-toolchain-r-test
           packages:
+          - gcc
+          - g++
           - clang-tidy-6.0
           - cmake
           - libzmq3-dev
