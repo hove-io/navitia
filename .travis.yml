@@ -50,10 +50,6 @@ matrix:
         - ./source/scripts/checkJenkinsJob.sh Artemis
         - ./source/scripts/checkJenkinsJob.sh Artemis_idfm
 
-  exclude:
-    - python: "3.6"
-
-  include:
     - language: "cpp"
       addons:
         apt:
@@ -86,3 +82,6 @@ matrix:
       script:
         # Don't forget -j J
         - run-clang-tidy-6.0.py -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' '\/source(?!\/third_party|.*\/tests?\/|.*tests?\.*)'
+
+  exclude:
+    - python: "3.6"
