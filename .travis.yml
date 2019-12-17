@@ -61,8 +61,11 @@ matrix:
           - clang-tidy-6.0
           - cmake
           - liblog4cplus-dev
+          - libgoogle-perftools-dev
+          - libprotobuf-dev
+          #- libproj-dev
       before_script:
-        - mkdir build && cd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && bash ../source/scripts/build_protobuf.sh
+        - mkdir build && cd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && make protobuf_files
       script:
         # Don't forget -j J
         - run-clang-tidy-6.0.py -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' '\/source(?!\/third_party|.*\/tests?\/|.*tests?\.*)'
