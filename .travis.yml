@@ -60,7 +60,7 @@ matrix:
           - clang-format-6.0
           - clang-tidy-6.0
           - cmake
-          - liblog4cplus-1.0-4
+          - liblog4cplus-dev
       before_script:
         - mkdir build && cd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && bash ../source/scripts/build_protobuf.sh
       script:
