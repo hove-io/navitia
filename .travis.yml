@@ -57,14 +57,25 @@ matrix:
           sources:
           - ubuntu-toolchain-r-test
           packages:
-          - clang-format-6.0
           - clang-tidy-6.0
           - cmake
+          - libzmq3-dev
           - liblog4cplus-dev
           - libgoogle-perftools-dev
           - libprotobuf-dev
-          - libboost-dev
           - libpqxx-dev
+          - libboost-chrono-dev
+          - libboost-date-time-dev
+          - libboost-filesystem-dev
+          - libboost-iostreams-dev
+          - libboost-program-options-dev
+          - libboost-regex-dev
+          - libboost-serialization-dev
+          - libboost-system-dev
+          - libboost-test-dev
+          - libboost-thread-dev
+          - libproj-dev
+          - libgeos-dev
       before_script:
         - mkdir build && cd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && make protobuf_files
       script:
