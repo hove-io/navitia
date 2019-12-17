@@ -29,17 +29,18 @@ www.navitia.io
 */
 
 #include "departure_boards.h"
+
 #include "request_handle.h"
+#include "routing/dataraptor.h"
+#include "routing/dataraptor.h"
 #include "routing/get_stop_times.h"
 #include "type/pb_converter.h"
-#include "routing/dataraptor.h"
-#include "utils/paginate.h"
 #include "utils/functions.h"
-#include "routing/dataraptor.h"
+#include "utils/paginate.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/container/flat_set.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <utility>
 
@@ -70,7 +71,7 @@ static void render(PbCreator& pb_creator,
                    const std::map<RoutePointIdx, first_and_last_stop_time>& map_route_point_first_last_st,
                    const DateTime datetime,
                    const DateTime max_datetime,
-                   const boost::optional<const std::string> calendar_id,
+                   const boost::optional<const std::string>& calendar_id,
                    const uint32_t depth) {
     pb_creator.action_period =
         pt::time_period(to_posix_time(datetime, *pb_creator.data), to_posix_time(max_datetime, *pb_creator.data));
@@ -146,17 +147,15 @@ static time_duration to_navitia(const boost::posix_time::time_duration& dur) {
 time_duration length_of_time(const time_duration& duration_1, const time_duration& duration_2) {
     if (duration_1 <= duration_2) {
         return duration_2 - duration_1;
-    } else {
-        return duration_2 + (hours(24) - duration_1);
     }
+    return duration_2 + (hours(24) - duration_1);
 }
 
 bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing) {
     if (opening < closing) {
         return (opening <= me && me <= closing);
-    } else {
-        return (opening <= me || me <= closing);
     }
+    return (opening <= me || me <= closing);
 }
 
 bool line_closed(const time_duration& duration,
@@ -197,7 +196,7 @@ static std::vector<routing::JppIdx> get_jpp_from_route_point(const RoutePointIdx
 
 void departure_board(PbCreator& pb_creator,
                      const std::string& request,
-                     const boost::optional<const std::string> calendar_id,
+                     const boost::optional<const std::string>& calendar_id,
                      const std::vector<std::string>& forbidden_uris,
                      const pt::ptime date,
                      const uint32_t duration,
@@ -209,7 +208,7 @@ void departure_board(PbCreator& pb_creator,
     RequestHandle handler(pb_creator, date, duration, calendar_id);
     handler.init_jpp(request, forbidden_uris);
 
-    if (pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)) {
+    if (pb_creator.has_error() || (handler.journey_pattern_points.empty())) {
         return;
     }
 
@@ -350,10 +349,9 @@ std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datet
     if (dep_time < opening_time) {
         return std::make_pair((nb_days - 1) * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
                               nb_days * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
-    } else {
-        return std::make_pair(nb_days * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
-                              (nb_days + 1) * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
     }
+    return std::make_pair(nb_days * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
+                          (nb_days + 1) * DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
 }
 
 first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_stop_time& next_stop_time,

@@ -43,10 +43,10 @@ typedef std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<
     first_and_last_stop_time;
 
 void departure_board(PbCreator& pb_creator,
-                     const std::string& filter,
-                     const boost::optional<const std::string> calendar_id,
+                     const std::string& request,
+                     const boost::optional<const std::string>& calendar_id,
                      const std::vector<std::string>& forbidden_uris,
-                     const pt::ptime datetime,
+                     const pt::ptime date,
                      const uint32_t duration,
                      const uint32_t depth,
                      const int count,

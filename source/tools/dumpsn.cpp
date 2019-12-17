@@ -27,12 +27,13 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-#include <fstream>
-#include <boost/program_options.hpp>
-
-#include "utils/init.h"  // init_app()
 #include "type/data.h"
 #include "type/pb_converter.h"
+#include "utils/init.h"  // init_app()
+
+#include <boost/program_options.hpp>
+
+#include <fstream>
 
 using namespace navitia;
 
