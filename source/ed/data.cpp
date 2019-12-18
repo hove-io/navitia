@@ -29,15 +29,18 @@ www.navitia.io
 */
 
 #include "data.h"
-#include <iostream>
-#include "utils/timer.h"
-#include "utils/functions.h"
+
+#include "type/datetime.h"
 #include "utils/exception.h"
+#include "utils/functions.h"
+#include "utils/timer.h"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
 #include <boost/range/algorithm/find_if.hpp>
-#include "type/datetime.h"
 #include <boost/range/algorithm/max_element.hpp>
+
+#include <iostream>
 
 namespace nt = navitia::type;
 namespace ed {
@@ -84,25 +87,23 @@ void Data::build_block_id() {
               [this](const types::VehicleJourney* vj1, const types::VehicleJourney* vj2) {
                   if (vj1->block_id != vj2->block_id) {
                       return vj1->block_id < vj2->block_id;
-                  } else {
-                      auto offset1 = tz_wrapper.tz_handler.get_utc_offset(*vj1->validity_pattern);
-                      auto offset2 = tz_wrapper.tz_handler.get_utc_offset(*vj2->validity_pattern);
-
-                      // we don't want to link the splited vjs
-                      if (offset1 != offset2) {
-                          return offset1 < offset2;
-                      } else if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
-                          return vj1->stop_time_list.size() < vj2->stop_time_list.size();
-                      } else {
-                          return vj1->stop_time_list.front()->departure_time
-                                 < vj2->stop_time_list.front()->departure_time;
-                      }
                   }
+                  auto offset1 = tz_wrapper.tz_handler.get_utc_offset(*vj1->validity_pattern);
+                  auto offset2 = tz_wrapper.tz_handler.get_utc_offset(*vj2->validity_pattern);
+
+                  // we don't want to link the splited vjs
+                  if (offset1 != offset2) {
+                      return offset1 < offset2;
+                  }
+                  if (vj1->stop_time_list.empty() || vj2->stop_time_list.empty()) {
+                      return vj1->stop_time_list.size() < vj2->stop_time_list.size();
+                  }
+                  return vj1->stop_time_list.front()->departure_time < vj2->stop_time_list.front()->departure_time;
               });
 
     types::VehicleJourney* prev_vj = nullptr;
     for (auto* vj : vehicle_journeys) {
-        if (prev_vj && prev_vj->block_id != "" && prev_vj->block_id == vj->block_id) {
+        if (prev_vj && !prev_vj->block_id.empty() && prev_vj->block_id == vj->block_id) {
             // NOTE: we do nothing for vj with empty stop times, they will be removed in the clean()
             if (!vj->stop_time_list.empty() && !prev_vj->stop_time_list.empty()) {
                 // Sanity check
@@ -140,8 +141,9 @@ static std::map<std::string, std::vector<types::StopPoint*>> make_stop_area_stop
     const std::vector<ed::types::StopPoint*>& stop_points) {
     std::map<std::string, std::vector<types::StopPoint*>> res;
     for (auto sp : stop_points) {
-        if (sp->stop_area)
+        if (sp->stop_area) {
             res[sp->stop_area->uri].push_back(sp);
+        }
     }
     return res;
 }
@@ -151,10 +153,9 @@ types::ValidityPattern* Data::get_or_create_validity_pattern(const types::Validi
     auto it = boost::find_if(validity_patterns, find_vp_predicate);
     if (it != validity_patterns.end()) {
         return *(it);
-    } else {
-        validity_patterns.push_back(new types::ValidityPattern(vp));
-        return validity_patterns.back();
     }
+    validity_patterns.push_back(new types::ValidityPattern(vp));
+    return validity_patterns.back();
 }
 
 // Please not that VP is not in the list of validity_patterns
@@ -220,16 +221,18 @@ void Data::shift_stop_times() {
                     throw navitia::exception("Ed: You have to shift more than one day, that's weird");
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
-            for (auto st : vj->stop_time_list)
+            for (auto st : vj->stop_time_list) {
                 st->shift_times(shift);
+            }
         }
 
         if (vj->is_frequency()) {
             // shifting start_time in [0; 24:00[
             vj->start_time += shift * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
             // vj->end_time must be gretter than 0 (but it can be lesser than start_time)
-            while (vj->end_time < 0)
+            while (vj->end_time < 0) {
                 vj->end_time += int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+            }
         }
     }
 }
@@ -299,8 +302,9 @@ void Data::complete() {
         for (const auto& sp1 : sps) {
             for (const auto& sp2 : sps) {
                 // if the connection exists, do nothing
-                if (find_or_default(sp1->uri, connections).count(sp2->uri) != 0)
+                if (find_or_default(sp1->uri, connections).count(sp2->uri) != 0) {
                     continue;
+                }
 
                 const int conn_dur_itself = 0;
                 const int conn_dur_other = 120;
@@ -443,21 +447,23 @@ void Data::clean() {
                                << " stop point connections deleted because of duplicate connections");
 }
 
-typedef nt::LineString::const_iterator LineStringIter;
-typedef std::pair<LineStringIter, LineStringIter> LineStringIterPair;
+using LineStringIter = nt::LineString::const_iterator;
+using LineStringIterPair = std::pair<LineStringIter, LineStringIter>;
 
 // Returns the nearest segment or point from coord under the form of a
 // pair of iterators {it1, it2}.  If it is a segment, it1 + 1 == it2.
 // If it is a point, it1 == it2.  If line is empty, it1 == it2 == line.end()
 static LineStringIterPair get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
-    if (line.empty())
+    if (line.empty()) {
         return {line.end(), line.end()};
+    }
     auto nearest = std::make_pair(line.begin(), line.begin());
     auto nearest_dist = coord.project(*nearest.first, *nearest.second).second;
     for (auto it1 = line.begin(), it2 = it1 + 1; it2 != line.end(); ++it1, ++it2) {
         auto projection = coord.project(*it1, *it2);
-        if (nearest_dist <= projection.second)
+        if (nearest_dist <= projection.second) {
             continue;
+        }
 
         nearest_dist = projection.second;
         if (projection.first == *it1) {
@@ -473,14 +479,16 @@ static LineStringIterPair get_nearest(const nt::GeographicalCoord& coord, const 
 
 // Returns nearest projected point in a path
 static nt::GeographicalCoord get_nearest_projection(const nt::GeographicalCoord& coord, const nt::LineString& line) {
-    if (line.empty())
+    if (line.empty()) {
         return coord;
+    }
     nt::GeographicalCoord projected_point = *line.begin();
     auto nearest_dist = float(coord.distance_to(projected_point));
     for (auto it1 = line.begin(), it2 = it1 + 1; it2 != line.end(); ++it1, ++it2) {
         auto projection = coord.project(*it1, *it2);
-        if (nearest_dist <= projection.second)
+        if (nearest_dist <= projection.second) {
             continue;
+        }
 
         nearest_dist = projection.second;
         projected_point = projection.first;
@@ -493,11 +501,12 @@ static size_t abs_distance(LineStringIterPair pair) {
 }
 
 static LineStringIterPair get_smallest_range(const LineStringIterPair& p1, const LineStringIterPair& p2) {
-    typedef LineStringIterPair P;
+    using P = LineStringIterPair;
     P res = {p1.first, p2.first};
     for (P p : {P(p1.first, p2.second), P(p1.second, p2.first), P(p1.second, p2.second)}) {
-        if (abs_distance(res) > abs_distance(p))
+        if (abs_distance(res) > abs_distance(p)) {
             res = p;
+        }
     }
     return res;
 }
@@ -520,11 +529,13 @@ nt::LineString create_shape(const nt::GeographicalCoord& from,
 
     res.push_back(p_from);
     if (range.first < range.second) {
-        for (auto it = range.first; it <= range.second; ++it)
+        for (auto it = range.first; it <= range.second; ++it) {
             res.push_back(*it);
+        }
     } else {
-        for (auto it = range.first; it >= range.second; --it)
+        for (auto it = range.first; it >= range.second; --it) {
             res.push_back(*it);
+        }
     }
     res.push_back(p_to);
 
@@ -594,8 +605,7 @@ static types::ValidityPattern get_union_validity_pattern(const types::MetaVehicl
 
 using list_cal_bitset = std::vector<std::pair<const types::Calendar*, types::ValidityPattern::year_bitset>>;
 
-list_cal_bitset Data::find_matching_calendar(const Data&,
-                                             const std::string& name,
+list_cal_bitset Data::find_matching_calendar(const std::string& name,
                                              const types::ValidityPattern& validity_pattern,
                                              const std::vector<types::Calendar*>& calendar_list,
                                              double relative_threshold) {
@@ -670,8 +680,9 @@ void Data::build_associated_calendar() {
 
         for (types::Calendar* calendar : this->calendars) {
             for (types::Line* line : calendar->line_list) {
-                if (line->uri == first_vj->route->line->uri)
+                if (line->uri == first_vj->route->line->uri) {
                     calendar_list.push_back(calendar);
+                }
             }
         }
 
@@ -691,7 +702,7 @@ void Data::build_associated_calendar() {
             continue;
         }
 
-        auto close_cal = find_matching_calendar(*this, meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
+        auto close_cal = find_matching_calendar(meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
 
         if (close_cal.empty()) {
             LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
@@ -882,16 +893,21 @@ nt::TimeZoneHandler::dst_periods EdTZWrapper::split_over_dst(
 }
 
 Georef::~Georef() {
-    for (auto itm : this->nodes)
+    for (auto itm : this->nodes) {
         delete itm.second;
-    for (auto itm : this->edges)
+    }
+    for (auto itm : this->edges) {
         delete itm.second;
-    for (auto itm : this->ways)
+    }
+    for (auto itm : this->ways) {
         delete itm.second;
-    for (auto itm : this->admins)
+    }
+    for (auto itm : this->admins) {
         delete itm.second;
-    for (auto itm : this->poi_types)
+    }
+    for (auto itm : this->poi_types) {
         delete itm.second;
+    }
 }
 
 }  // namespace ed

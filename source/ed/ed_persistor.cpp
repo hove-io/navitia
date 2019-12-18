@@ -29,9 +29,11 @@ www.navitia.io
 */
 
 #include "ed_persistor.h"
+
 #include "ed/connectors/fare_utils.h"
 
 #include <boost/geometry.hpp>
+#include <memory>
 
 namespace bg = boost::gregorian;
 
@@ -45,7 +47,7 @@ EdPersistor::EdPersistor(const std::string& connection_string, const bool is_osm
     }
     std::unique_ptr<pqxx::connection> conn;
     try {
-        conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
+        conn = std::make_unique<pqxx::connection>(connection_string);
     } catch (const pqxx::pqxx_exception& e) {
         throw navitia::exception(e.base().what());
     }
@@ -153,7 +155,7 @@ void EdPersistor::insert_ways(const ed::Georef& data) {
             values.push_back(itm.second->name);
             values.push_back(itm.first);
             values.push_back(itm.second->type);
-            values.push_back(itm.second->visible ? "true" : "false");
+            values.emplace_back(itm.second->visible ? "true" : "false");
             this->lotus.insert(values);
         }
     }
@@ -203,10 +205,12 @@ void EdPersistor::insert_edges(const ed::Georef& data) {
         const auto source_coord = coord_to_string(edge.second->source->coord);
         const auto target_coord = coord_to_string(edge.second->target->coord);
 
-        this->lotus.insert({source_str, target_str, way_str, "LINESTRING(" + source_coord + "," + target_coord + ")",
-                            bool_str, bool_str, bool_str});
-        this->lotus.insert({target_str, source_str, way_str, "LINESTRING(" + target_coord + "," + source_coord + ")",
-                            bool_str, bool_str, bool_str});
+        this->lotus.insert({source_str, target_str, way_str,
+                            std::string("LINESTRING(" + source_coord + ",").append(target_coord + ")"), bool_str,
+                            bool_str, bool_str});
+        this->lotus.insert({target_str, source_str, way_str,
+                            std::string("LINESTRING(" + target_coord + ",").append(source_coord + ")"), bool_str,
+                            bool_str, bool_str});
         ++to_insert_count;
         if (to_insert_count % 150000 == 0) {
             lotus.finish_bulk_insert();
@@ -220,8 +224,9 @@ void EdPersistor::insert_edges(const ed::Georef& data) {
 }
 
 void EdPersistor::insert_poi_types(const Georef& data) {
-    if (!parse_pois)
+    if (!parse_pois) {
         return;
+    }
     this->lotus.prepare_bulk_insert("georef.poi_type", {"id", "uri", "name"});
     for (const auto& itm : data.poi_types) {
         this->lotus.insert({std::to_string(itm.second->id), "poi_type:" + itm.first, itm.second->name});
@@ -230,8 +235,9 @@ void EdPersistor::insert_poi_types(const Georef& data) {
 }
 
 void EdPersistor::insert_pois(const Georef& data) {
-    if (!parse_pois)
+    if (!parse_pois) {
         return;
+    }
     this->lotus.prepare_bulk_insert("georef.poi", {"id", "weight", "coord", "name", "uri", "poi_type_id", "visible",
                                                    "address_number", "address_name"});
     for (const auto& itm : data.pois) {
@@ -255,8 +261,9 @@ void EdPersistor::insert_pois(const Georef& data) {
 }
 
 void EdPersistor::insert_poi_properties(const Georef& data) {
-    if (!parse_pois)
+    if (!parse_pois) {
         return;
+    }
     this->lotus.prepare_bulk_insert("georef.poi_properties", {"poi_id", "key", "value"});
     for (const auto& itm : data.pois) {
         for (auto property : itm.second.properties) {
@@ -445,10 +452,10 @@ void EdPersistor::insert_metadata_georef() {
         {"parse_pois_from_osm", (is_osm_reader && parse_pois) ? "t" : "f"}};
 
     if (!street_network_source.empty()) {
-        values.push_back({"street_network_source", street_network_source});
+        values.emplace_back("street_network_source", street_network_source);
     }
     if (parse_pois && !poi_source.empty()) {
-        values.push_back({"poi_source", poi_source});
+        values.emplace_back("poi_source", poi_source);
     }
     this->lotus.exec(Lotus::make_upsert_string("navitia.parameters", values));
 }
@@ -460,8 +467,9 @@ void EdPersistor::clean_georef() {
 }
 
 void EdPersistor::clean_poi() {
-    if (!parse_pois)
+    if (!parse_pois) {
         return;
+    }
     this->lotus.exec("TRUNCATE georef.poi_type, georef.poi CASCADE;");
 }
 
@@ -761,10 +769,11 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines) {
         values.push_back(std::to_string(line->sort));
 
         std::stringstream shape;
-        if (line->shape.empty())
+        if (line->shape.empty()) {
             shape << lotus.null_value;
-        else
+        } else {
             shape << std::setprecision(16) << boost::geometry::wkt(line->shape);
+        }
         values.push_back(shape.str());
 
         values.push_back(line->opening_time ? boost::posix_time::to_simple_string(*line->opening_time)
@@ -844,10 +853,11 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes) {
             values.push_back(lotus.null_value);
         }
         std::stringstream shape;
-        if (route->shape.empty())
+        if (route->shape.empty()) {
             shape << lotus.null_value;
-        else
+        } else {
             shape << std::setprecision(16) << boost::geometry::wkt(route->shape);
+        }
         values.push_back(shape.str());
 
         values.push_back(route->direction_type);
@@ -876,7 +886,7 @@ void EdPersistor::insert_shapes(const std::vector<std::shared_ptr<types::Shape>>
     this->lotus.prepare_bulk_insert("navitia.shape", columns);
     size_t inserted_count = 0;
     std::vector<std::string> values;
-    for (auto shape : shapes) {
+    for (const auto& shape : shapes) {
         values.clear();
         values.push_back(std::to_string(shape->idx));
         std::stringstream ss;
@@ -1045,21 +1055,21 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
     }
     this->lotus.finish_bulk_insert();
     for (types::VehicleJourney* vj : vehicle_journeys) {
-        std::string values = "";
+        std::string values;
         if (vj->prev_vj) {
-            values = "previous_vehicle_journey_id = " + boost::lexical_cast<std::string>(vj->prev_vj->idx);
+            values = "previous_vehicle_journey_id = " + std::to_string(vj->prev_vj->idx);
         }
         if (vj->next_vj) {
             if (!values.empty()) {
                 values += ", ";
             }
-            values += "next_vehicle_journey_id = " + boost::lexical_cast<std::string>(vj->next_vj->idx);
+            values += "next_vehicle_journey_id = " + std::to_string(vj->next_vj->idx);
         }
         if (!values.empty()) {
             std::string query = "UPDATE navitia.vehicle_journey SET ";
             query += values;
             query += " WHERE id = ";
-            query += boost::lexical_cast<std::string>(vj->idx);
+            query += std::to_string(vj->idx);
             query += ";";
             LOG4CPLUS_TRACE(logger, "query : " << query);
             this->lotus.exec(query, "", PGRES_COMMAND_OK);
@@ -1312,7 +1322,7 @@ void EdPersistor::insert_rel_calendar_line(const std::vector<types::Calendar*>& 
 void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& synonyms) {
     this->lotus.prepare_bulk_insert("georef.synonym", {"id", "key", "value"});
     int count = 1;
-    std::map<std::string, std::string>::const_iterator it = synonyms.begin();
+    auto it = synonyms.begin();
     while (it != synonyms.end()) {
         std::vector<std::string> values;
         values.push_back(std::to_string(count));
@@ -1345,7 +1355,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         values.push_back(ed::connectors::to_string(start));
         values.push_back(ed::connectors::to_string(end));
         std::stringstream start_cond;
-        std::string sep = "";
+        std::string sep;
         for (const auto& c : transition.start_conditions) {
             start_cond << sep << c.to_string();
             sep = "&";
@@ -1360,9 +1370,9 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         }
         values.push_back(end_cond.str());
         values.push_back(ed::connectors::to_string(transition.global_condition));
-        if (!transition.ticket_key.empty())  // we do not add empty ticket, to have null in db
+        if (!transition.ticket_key.empty()) {  // we do not add empty ticket, to have null in db
             values.push_back(transition.ticket_key);
-        else {
+        } else {
             null_ticket_vector.push_back(values);
             continue;
         }

@@ -31,21 +31,21 @@ www.navitia.io
 #include "ed2nav.h"
 
 #include "conf.h"
-
-#include "utils/timer.h"
-#include "utils/exception.h"
 #include "ed_reader.h"
-#include "utils/init.h"
-#include "utils/functions.h"
 #include "type/meta_data.h"
+#include "utils/exception.h"
+#include "utils/functions.h"
+#include "utils/init.h"
+#include "utils/timer.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/program_options.hpp>
 #include <pqxx/pqxx>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -55,8 +55,8 @@ namespace ed {
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
-    typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
-    typedef std::vector<georef::Admin*> result_type;
+    using AdminMap = std::unordered_map<std::string, navitia::georef::Admin*>;
+    using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
@@ -71,10 +71,13 @@ struct FindAdminWithCities {
         : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
-    FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
+    FindAdminWithCities(FindAdminWithCities&&) noexcept = default;
+    FindAdminWithCities& operator=(FindAdminWithCities&&) = delete;
     ~FindAdminWithCities() {
-        if (nb_call == 0)
+        if (nb_call == 0) {
             return;
+        }
 
         auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_call << " calls");
@@ -232,7 +235,7 @@ int ed2nav(int argc, const char* argv[]) {
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
+    std::string log_comment;
     if (vm.count("log_comment")) {
         log_comment = vm["log_comment"].as<std::string>();
     }
@@ -244,9 +247,8 @@ int ed2nav(int argc, const char* argv[]) {
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("Unable to load config file");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
     if (vm.count("help") || !vm.count("connection-string")) {

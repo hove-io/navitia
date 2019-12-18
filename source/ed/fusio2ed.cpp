@@ -29,20 +29,20 @@ www.navitia.io
 */
 
 #include "conf.h"
-#include <iostream>
-#include "ed/connectors/fusio_parser.h"
 #include "ed/connectors/fare_parser.h"
-
-#include "utils/timer.h"
-#include "utils/init.h"
-
-#include <fstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include "utils/exception.h"
+#include "ed/connectors/fusio_parser.h"
 #include "ed_persistor.h"
 #include "fare/fare.h"
+#include "utils/exception.h"
+#include "utils/init.h"
+#include "utils/timer.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+
+#include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
+    std::string log_comment;
     if (vm.count("log_comment")) {
         log_comment = vm["log_comment"].as<std::string>();
     }
@@ -92,9 +92,8 @@ int main(int argc, char* argv[]) {
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("loading config file failed");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
     if (vm.count("help") || !vm.count("input")) {
