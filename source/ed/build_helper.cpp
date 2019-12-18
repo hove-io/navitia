@@ -44,6 +44,10 @@ static std::string get_random_id() {
     return uuid_stream.str();
 }
 
+static void doing_nothing() {
+    return;
+}
+
 VJ::VJ(builder& b,
        const std::string& network_name,
        const std::string& line_name,
