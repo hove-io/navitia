@@ -4,7 +4,7 @@
 # https://pspdfkit.com/blog/2018/using-clang-tidy-and-integrating-it-in-jenkins/
 
 # TO CHANGE AND PUT AS ARG
-remote_name="CanalTP"
+remote_name="origin"
 
 # Find the merge base compared to dev.
 base=$(git merge-base refs/remotes/$remote_name/dev HEAD)
@@ -28,11 +28,17 @@ done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEA
 echo "modified files : " ${modified_filepaths[@]}
 
 # TO CHANGE AND PUT AS ARG
-build_dir="_buildRelease"
+build_dir="build"
 
+# -m specifies that `parallel` should distribute the arguments evenly across the executing jobs.
 # -p Tells clang-tidy where to find the `compile_commands.json`.
+# `{}` specifies where `parallel` adds the command-line arguments.
+# `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
 # `| tee` specifies that we would like the output of clang-tidy to go to `stdout` and also to capture it in
 # `$build_dir/clang-tidy-output` for later processing.
-run-clang-tidy-6.0.py -p $build_dir "${modified_filepaths[@]}" \
--checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
--fix -j2
+# parallel -m clang-tidy -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
+# -p $build_dir {} ::: "${modified_filepaths[@]}"
+
+clang-tidy -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
+-p $build_dir -warnings-as-errors='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
+"${modified_filepaths[@]}"
