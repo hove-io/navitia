@@ -29,11 +29,23 @@ www.navitia.io
 */
 
 #include "vptranslator/vptranslator.h"
+
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
+
 #include <unordered_map>
 
-namespace std {
+namespace navitia {
+namespace vptranslator {
+
+using navitia::type::ValidityPattern;
+using Week = navitia::type::Calendar::Week;
+using boost::gregorian::date;
+using boost::gregorian::date_duration;
+using boost::gregorian::date_period;
+using boost::gregorian::day_iterator;
+using navitia::type::ExceptionDate;
+
 template <typename T>
 static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     os << "{";
@@ -46,18 +58,6 @@ static std::ostream& operator<<(std::ostream& os, const std::set<T>& s) {
     }
     return os << "}";
 }
-}  // namespace std
-
-namespace navitia {
-namespace vptranslator {
-
-using navitia::type::ValidityPattern;
-typedef navitia::type::Calendar::Week Week;
-using boost::gregorian::date;
-using boost::gregorian::date_duration;
-using boost::gregorian::date_period;
-using boost::gregorian::day_iterator;
-using navitia::type::ExceptionDate;
 
 // a week index is 0 for Monday, 1 for Tuesday, ..., 6 for Sunday
 static unsigned to_week_index(const date& d) {
@@ -82,8 +82,9 @@ void BlockPattern::canonize_validity_periods() {
     // not overlap, we can simply merge 2 consecutive period if the
     // end day of the first period is the same as the begin day of the
     // second period
-    if (validity_periods.empty())
+    if (validity_periods.empty()) {
         return;
+    }
     std::set<boost::gregorian::date_period> res;
     auto it = validity_periods.cbegin(), end = validity_periods.cend();
     auto cur_period = *it;
@@ -107,12 +108,14 @@ unsigned BlockPattern::nb_weeks() const {
         const auto idx_end = to_week_index(p.end());
         if (idx_begin == 0) {
             // adding the partial week at the end
-            if (idx_end != 0)
+            if (idx_end != 0) {
                 res += 1;
+            }
         } else if (idx_end == 0) {
             // adding the partial week at the begining
-            if (idx_begin != 0)
+            if (idx_begin != 0) {
                 res += 1;
+            }
         } else if (idx_begin > idx_end) {
             // we have 2 partial weeks (at the begining and at the
             // end), and the number of days in the two partial weeks
@@ -140,44 +143,55 @@ void BlockPattern::add_from(const BlockPattern& other) {
         validity_periods.insert(period);
         for (day_iterator day_it = period.begin(); day_it != period.end(); ++day_it) {
             const auto week_idx = to_week_index(*day_it);
-            if (to_exclude[week_idx])
+            if (to_exclude[week_idx]) {
                 exceptions.insert({ExceptionDate::ExceptionType::sub, *day_it});
-            if (to_include[week_idx])
+            }
+            if (to_include[week_idx]) {
                 exceptions.insert({ExceptionDate::ExceptionType::add, *day_it});
+            }
         }
     }
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockPattern& bp) {
-    if (bp.week[0])
+    if (bp.week[0]) {
         os << "Mo";
-    if (bp.week[1])
+    }
+    if (bp.week[1]) {
         os << "Tu";
-    if (bp.week[2])
+    }
+    if (bp.week[2]) {
         os << "We";
-    if (bp.week[3])
+    }
+    if (bp.week[3]) {
         os << "Th";
-    if (bp.week[4])
+    }
+    if (bp.week[4]) {
         os << "Fr";
-    if (bp.week[5])
+    }
+    if (bp.week[5]) {
         os << "Sa";
-    if (bp.week[6])
+    }
+    if (bp.week[6]) {
         os << "Su";
-    if (bp.week.none())
+    }
+    if (bp.week.none()) {
         os << "none";
+    }
     os << " for " << bp.validity_periods;
-    if (!bp.exceptions.empty())
+    if (!bp.exceptions.empty()) {
         os << " except " << bp.exceptions;
+    }
     return os;
 }
 
 namespace {
 struct DistanceMatrix : boost::noncopyable {
     // we have 2^7 days in a week (bit shift as we need a constexpr)
-    static const unsigned size = 1 << 7;
-    typedef std::array<unsigned, size> Line;
-    typedef std::array<Line, size> Matrix;
-    Matrix array;
+    static const unsigned size = 1u << 7u;
+    using Line = std::array<unsigned, size>;
+    using Matrix = std::array<Line, size>;
+    Matrix array{};
     friend const DistanceMatrix& distance_matrix();
     unsigned score(unsigned i, const Line& l) const {
         unsigned res = 0;
@@ -205,8 +219,9 @@ const DistanceMatrix& distance_matrix() {
 DistanceMatrix::Line make_line(const std::vector<BlockPattern>& bps) {
     DistanceMatrix::Line line;
     line.fill(0);
-    for (const auto& bp : bps)
+    for (const auto& bp : bps) {
         line[bp.week.to_ulong()] += bp.nb_weeks();
+    }
     return line;
 }
 Week get_min_week_pattern(const std::vector<BlockPattern>& bps) {
@@ -224,7 +239,7 @@ Week get_min_week_pattern(const std::vector<BlockPattern>& bps) {
             best_score = cur_score;
         }
     }
-    return Week(best);
+    return {best};
 }
 }  // namespace
 
@@ -240,8 +255,9 @@ BlockPattern translate_one_block(const navitia::type::ValidityPattern& vp) {
     }
     BlockPattern res;
     res.week = get_min_week_pattern(no_except);
-    for (const auto& bp : no_except)
+    for (const auto& bp : no_except) {
         res.add_from(bp);
+    }
     res.canonize_validity_periods();
     return res;
 }
@@ -285,7 +301,7 @@ std::vector<BlockPattern> translate_no_exception(const ValidityPattern& vp) {
         res.emplace_back(p.second);
         res.back().canonize_validity_periods();
     }
-    typedef BlockPattern BP;
+    using BP = BlockPattern;
     boost::sort(res, [](const BP& a, const BP& b) {
         assert(!a.validity_periods.empty());
         assert(!b.validity_periods.empty());
@@ -298,9 +314,8 @@ std::vector<BlockPattern> translate(const navitia::type::ValidityPattern& vp) {
     auto res = translate_one_block(vp);
     if (res.validity_periods.empty()) {
         return {};
-    } else {
-        return {res};
     }
+    return {res};
 }
 
 }  // namespace vptranslator
