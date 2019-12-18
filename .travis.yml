@@ -79,7 +79,7 @@ matrix:
       before_script:
         - mkdir build && pushd build && cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=ON && make protobuf_files && popd
       script:
-        - ./scripts/run_clang_tidy_on_diff.sh -r origin -s /home/travis -b /home/travis/build
+        - ./scripts/run_clang_tidy_on_diff.sh -r origin -s /home/travis/build/CanalTP/navitia -b /home/travis/build/CanalTP/navitia/build
 
   exclude:
     - python: "3.6"
