@@ -29,9 +29,9 @@ www.navitia.io
 */
 
 #pragma once
+#include "type/type.h"
 
 #include <set>
-#include "type/type.h"
 
 namespace navitia {
 namespace vptranslator {
