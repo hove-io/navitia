@@ -3,8 +3,65 @@
 # This script is adapted from here
 # https://pspdfkit.com/blog/2018/using-clang-tidy-and-integrating-it-in-jenkins/
 
-# TO CHANGE AND PUT AS ARG
-remote_name="origin"
+usage()
+{
+cat << EOF
+usage: $0 -r <remote_name> -s <absolute_root_sources_dir_path> -b <absolute_build_dir_path>
+
+This script runs clang-tidy-6.0 on all modified files of your actual branch
+compared the the dev branch of a remote (preferably, the navitia one)
+
+Note that you must have clang-tidy-6.0 installed and generate
+your cmake build with the option -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+OPTIONS:
+   -h           Show this message
+   -r           Name of the remote you want to compare your actual branch
+   -s           Absolute path of your navitia root sources directory
+   -b           Absolute path of your navitia build directory
+
+EOF
+}
+
+while getopts “hr:s:b:” OPTION
+do
+     case "$OPTION" in
+         h)
+             usage
+             exit 1
+             ;;
+         r)
+             remote_name="$OPTARG"
+             ;;
+         s)
+             absolute_root_sources_dir_path="$OPTARG"
+             ;;
+         b)
+             absolute_build_dir_path="$OPTARG"
+             ;;
+     esac
+done
+
+if [ -z "$remote_name" ]
+then
+    echo "no remote_name given, abort"
+    usage
+    exit 1
+fi
+
+if [ -z "$absolute_root_sources_dir_path" ]
+then
+    echo "no absolute path of your navitia root sources directory given, abort"
+    exit 1
+fi
+
+if [ -z "$absolute_build_dir_path" ]
+then
+    echo "no absolute path of your navitia build directory given, abort"
+    exit 1
+fi
+
+cd $absolute_root_sources_dir_path
 
 # Find the merge base compared to dev.
 base=$(git merge-base refs/remotes/$remote_name/dev HEAD)
@@ -27,18 +84,13 @@ done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEA
 
 echo "modified files : " ${modified_filepaths[@]}
 
-# TO CHANGE AND PUT AS ARG
-build_dir="build"
-
 # -m specifies that `parallel` should distribute the arguments evenly across the executing jobs.
 # -p Tells clang-tidy where to find the `compile_commands.json`.
 # `{}` specifies where `parallel` adds the command-line arguments.
 # `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
-# `| tee` specifies that we would like the output of clang-tidy to go to `stdout` and also to capture it in
-# `$build_dir/clang-tidy-output` for later processing.
 # parallel -m clang-tidy -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
-# -p $build_dir {} ::: "${modified_filepaths[@]}"
+# -p $absolute_build_dir_path {} ::: "${modified_filepaths[@]}"
 
-clang-tidy -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
--p $build_dir -warnings-as-errors='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
+clang-tidy-6.0 -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
+-p $absolute_build_dir_path -warnings-as-errors='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
 "${modified_filepaths[@]}"
