@@ -84,13 +84,9 @@ done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEA
 
 echo "modified files : " ${modified_filepaths[@]}
 
-# -m specifies that `parallel` should distribute the arguments evenly across the executing jobs.
+# -checks Are all the checks that are enabled. Here, we enable everything except all the checks starting with "-"
 # -p Tells clang-tidy where to find the `compile_commands.json`.
-# `{}` specifies where `parallel` adds the command-line arguments.
-# `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
-# parallel -m clang-tidy -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
-# -p $absolute_build_dir_path {} ::: "${modified_filepaths[@]}"
-
+# -warnings-as-errors All following warnings will be treated as errors. Same format as -checks
 clang-tidy-6.0 -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
 -p $absolute_build_dir_path -warnings-as-errors='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
 "${modified_filepaths[@]}"
