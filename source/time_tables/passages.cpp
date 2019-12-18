@@ -29,16 +29,18 @@ www.navitia.io
 */
 
 #include "passages.h"
-#include "routing/get_stop_times.h"
-#include "request_handle.h"
-#include "type/datetime.h"
+
 #include "ptreferential/ptreferential.h"
-#include "utils/paginate.h"
+#include "request_handle.h"
 #include "routing/dataraptor.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/range/algorithm/set_algorithm.hpp>
+#include "routing/get_stop_times.h"
+#include "type/datetime.h"
 #include "type/type_utils.h"
+#include "utils/paginate.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/algorithm_ext/erase.hpp>
 
 namespace pt = boost::posix_time;
 using navitia::routing::StopEvent;

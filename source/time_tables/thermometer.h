@@ -30,7 +30,8 @@ www.navitia.io
 
 #pragma once
 #include "type/data.h"
-#include "boost/functional/hash.hpp"
+
+#include <boost/functional/hash.hpp>
 namespace navitia {
 namespace timetables {
 
@@ -38,14 +39,14 @@ typedef std::vector<idx_t> vector_idx;
 typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {
-    void generate_thermometer(const std::vector<vector_idx>& journey_patterns);
+    void generate_thermometer(const std::vector<vector_idx>& sps);
     void generate_thermometer(const type::Route* route);
     vector_idx get_thermometer() const;
 
     // res[stop_time.order()] correspond to the index of the
     // thermometer for a stop time of the given vj
     std::vector<uint32_t> stop_times_order(const type::VehicleJourney&) const;
-    std::vector<uint32_t> stop_times_order_helper(const vector_idx& stop_points) const;
+    std::vector<uint32_t> stop_times_order_helper(const vector_idx& stop_point_list) const;
 
     struct cant_match {
         type::idx_t jpp_idx;
@@ -60,7 +61,7 @@ private:
     std::string filter;
     int nb_branches = 0;
 
-    bool generate_topological_thermometer(const std::vector<vector_idx>& journey_patterns);
+    bool generate_topological_thermometer(const std::vector<vector_idx>& stop_point_lists);
 
     std::vector<uint32_t> untail(std::vector<vector_idx>& journey_patterns,
                                  type::idx_t spidx,
