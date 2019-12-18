@@ -19,7 +19,6 @@ addons:
 
 services:
   - docker
-  - rabbitmq
 
 git:
   submodules: false

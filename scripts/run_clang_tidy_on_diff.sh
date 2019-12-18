@@ -3,8 +3,11 @@
 # This script is adapted from here
 # https://pspdfkit.com/blog/2018/using-clang-tidy-and-integrating-it-in-jenkins/
 
+# TO CHANGE AND PUT AS ARG
+remote_name="CanalTP"
+
 # Find the merge base compared to dev.
-base=$(git merge-base refs/remotes/origin/dev HEAD)
+base=$(git merge-base refs/remotes/$remote_name/dev HEAD)
 # Create an empty array that will contain all the filepaths of files modified.
 modified_filepaths=()
 
@@ -24,11 +27,12 @@ done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEA
 
 echo "modified files : " ${modified_filepaths[@]}
 
-build_dir="build"
+# TO CHANGE AND PUT AS ARG
+build_dir="_buildRelease"
 
 # -p Tells clang-tidy where to find the `compile_commands.json`.
 # `| tee` specifies that we would like the output of clang-tidy to go to `stdout` and also to capture it in
 # `$build_dir/clang-tidy-output` for later processing.
 run-clang-tidy-6.0.py -p $build_dir "${modified_filepaths[@]}" \
 -checks='*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses, -clang-diagnostic-unused-command-line-argument' \
- -j2 | tee "$build_dir/clang-tidy-output"
+-fix -j2
