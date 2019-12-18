@@ -140,6 +140,8 @@ nt::VehicleJourney* VJ::make() {
         }
     }
 
+    doing_nothing();
+
     // Fill a vector of stop_times
     std::vector<nt::StopTime> sts;
     for (auto& st : stop_times) {
