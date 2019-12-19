@@ -1495,6 +1495,21 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work) {
 
 boost::optional<navitia::time_res_traits::sec_type> EdReader::get_duration(nt::Mode_e mode,
                                                                            double len,
+                                                                           double speed,
+                                                                           uint64_t source,
+                                                                           uint64_t target) {
+    try {
+        // overflow check since we want to store that on a int32
+        return boost::lexical_cast<navitia::time_res_traits::sec_type>(std::floor(len / speed));
+    } catch (const boost::bad_lexical_cast&) {
+        LOG4CPLUS_WARN(log, "edge length overflow for " << mode << " for source " << source << " target " << target
+                                                        << " length: " << len << ", we ignore this edge");
+        return boost::none;
+    }
+}
+
+boost::optional<navitia::time_res_traits::sec_type> EdReader::get_duration(nt::Mode_e mode,
+                                                                           double len,
                                                                            uint64_t source,
                                                                            uint64_t target) {
     try {
@@ -1512,7 +1527,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
     std::string request =
         "select e.source_node_id, target_node_id, e.way_id, "
         "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
-        "e.cycles_allowed as bike,e.cars_allowed as car";
+        "e.cycles_allowed as bike,e.cars_allowed as car, car_speed";
     // Don't call ST_ASTEXT if not needed since it's slow
     if (export_georef_edges_geometries) {
         request += ", ST_ASTEXT(the_geog) AS geometry";
@@ -1587,7 +1602,13 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
             }
         }
         if (carable) {
-            if (auto dur = get_duration(nt::Mode_e::Car, len, source, target)) {
+            boost::optional<navitia::time_res_traits::sec_type> dur;
+            if (!const_it["car_speed"].is_null()) {
+                dur = get_duration(nt::Mode_e::Car, len, const_it["car_speed"].as<double>(), source, target);
+            } else {
+                dur = get_duration(nt::Mode_e::Car, len, source, target);
+            }
+            if (dur) {
                 e.duration = navitia::seconds(*dur);
                 auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
                 auto car_target = data.geo_ref->offsets[nt::Mode_e::Car] + target;
