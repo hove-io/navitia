@@ -159,11 +159,13 @@ boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
         std::cerr << highway << " not handled" << std::endl;
     }
 
-    auto it_factor = speed_factor_by_type.find(highway);
-    if (it_factor != speed_factor_by_type.end() && speed) {
-        speed = speed.get() * it_factor->second;
-    } else {
-        std::cerr << highway << " not handled" << std::endl;
+    if (speed) {
+        auto it_factor = speed_factor_by_type.find(highway);
+        if (it_factor != speed_factor_by_type.end()) {
+            speed = speed.get() * it_factor->second;
+        } else {
+            speed = speed.get() * default_speed_factor;
+        }
     }
     return speed;
 }

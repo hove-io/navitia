@@ -39,6 +39,7 @@ class SpeedsParser {
     std::map<std::string, float> implicit_speeds;
     std::map<std::string, float> max_speeds_by_type;
     std::map<std::string, float> speed_factor_by_type;
+    float default_speed_factor = 0.5;
 
 public:
     static SpeedsParser defaults();

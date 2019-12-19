@@ -58,6 +58,6 @@ BOOST_AUTO_TEST_CASE(france_speed_parser_test) {
 
     // not existing highway
     BOOST_CHECK_EQUAL(parser.get_speed("noway", boost::none), boost::none);
-    // no factor applied but we take the maxspeed into account
-    BOOST_CHECK_CLOSE(parser.get_speed("noway", boost::make_optional(std::string("70"))).get(), 19.44, 0.1);
+    // no factor applied but we take the maxspeed into account and applied default speed factor
+    BOOST_CHECK_CLOSE(parser.get_speed("noway", boost::make_optional(std::string("70"))).get(), 9.72, 0.1);
 }
