@@ -55,10 +55,11 @@ namespace ed {
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
-    using AdminMap = std::unordered_map<std::string, navitia::georef::Admin*>;
+    using AdminMap = std::unordered_map<std::string, georef::Admin*>;
     using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
+    std::shared_ptr<pqxx::work> work;
     georef::GeoRef& georef;
     AdminMap added_admins;
     AdminMap insee_admins_map;
@@ -68,7 +69,9 @@ struct FindAdminWithCities {
     std::map<size_t, size_t> cities_stats;  // number of response for size of the result
 
     FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr)
-        : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
+        : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {
+        work = std::make_shared<pqxx::work>(*conn);
+    }
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
     FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
@@ -103,7 +106,65 @@ struct FindAdminWithCities {
         }
     }
 
-    result_type operator()(const navitia::type::GeographicalCoord& c, navitia::georef::AdminRtree& admin_tree) {
+    template <class Row>
+    georef::Admin* make_admin(const Row& r) {
+        georef::Admin* admin = new georef::Admin();
+        admin->comment = "from cities";
+        r["uri"] >> admin->uri;
+        r["name"] >> admin->name;
+        r["insee"] >> admin->insee;
+        r["level"] >> admin->level;
+        double lon, lat;
+        r["lon"] >> lon;
+        r["lat"] >> lat;
+        admin->coord = navitia::type::GeographicalCoord(lon, lat);
+        admin->idx = georef.admins.size() - 1;
+        admin->from_original_dataset = false;
+        std::string post_codes = r["post_code"].c_str();
+        boost::split(admin->postal_codes, post_codes, boost::is_any_of("-"));
+        std::string boundary = r["boundary"].c_str();
+        boost::geometry::read_wkt(boundary, admin->boundary);
+        return admin;
+    }
+
+    template <class Results>
+    result_type get_admin_from_cities(const Results& db_result, georef::AdminRtree& admin_tree) {
+        result_type res;
+        for (auto row : db_result) {
+            georef::Admin* admin = nullptr;
+            // we try to find the admin in georef by using it's insee code (only work in France)
+            std::string insee = row["insee"].c_str();
+            if (!insee.empty()) {
+                admin = find_or_default(insee, insee_admins_map);
+            }
+
+            std::string uri = row["uri"].c_str();
+            if (!admin) {
+                admin = find_or_default(uri, added_admins);
+            }
+
+            if (!admin) {
+                admin = make_admin(row);
+
+                if (!admin->boundary.empty()) {
+                    const auto box = boost::geometry::return_envelope<georef::Box>(admin->boundary);
+                    const double min[2] = {box.min_corner().lon(), box.min_corner().lat()};
+                    const double max[2] = {box.max_corner().lon(), box.max_corner().lat()};
+                    admin_tree.Insert(min, max, admin);
+                }
+
+                georef.admins.push_back(admin);
+                added_admins[uri] = admin;
+            }
+
+            res.push_back(admin);
+        }
+        return res;
+    }
+
+    result_type operator()(const navitia::type::GeographicalCoord& c, georef::AdminRtree& admin_tree) {
+        auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
+
         if (nb_call == 0) {
             init();
         }
@@ -115,53 +176,24 @@ struct FindAdminWithCities {
         }
 
         const auto& georef_res = georef.find_admins(c, admin_tree);
+
         if (!georef_res.empty()) {
             ++nb_georef;
             return georef_res;
         }
 
+        TimerGuard tg([&](const StopWatch& stopwatch) {
+            LOG4CPLUS_DEBUG(log, "Find cities in db | " << stopwatch.elapsed() << " us");
+        });
         std::stringstream request;
         request << "SELECT uri, name, coalesce(insee, '') as insee, level, coalesce(post_code, '') as post_code, "
-                << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
+                << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, "
+                << "ST_ASTEXT(boundary) as boundary "
                 << "FROM administrative_regions "
                 << "WHERE ST_DWithin(ST_GeographyFromText('POINT(" << std::setprecision(16) << c.lon() << " " << c.lat()
                 << ")'), boundary, 0.001)";
-        pqxx::work work(*conn);
-        pqxx::result result = work.exec(request);
-        result_type res;
-        for (auto it = result.begin(); it != result.end(); ++it) {
-            const std::string uri = it["uri"].as<std::string>();
-            const std::string insee = it["insee"].as<std::string>();
-            // we try to find the admin in georef by using it's insee code (only work in France)
-            navitia::georef::Admin* admin = nullptr;
-            if (!insee.empty()) {
-                admin = find_or_default(insee, insee_admins_map);
-            }
-            if (!admin) {
-                admin = find_or_default(uri, added_admins);
-            }
-            if (!admin) {
-                georef.admins.push_back(new navitia::georef::Admin());
-                admin = georef.admins.back();
-                admin->comment = "from cities";
-                admin->uri = uri;
-                it["name"].to(admin->name);
-                admin->insee = insee;
-                it["level"].to(admin->level);
-                admin->coord.set_lon(it["lon"].as<double>());
-                admin->coord.set_lat(it["lat"].as<double>());
-                admin->idx = georef.admins.size() - 1;
-                admin->from_original_dataset = false;
-                std::string postal_code;
-                it["post_code"].to(postal_code);
-
-                if (!postal_code.empty()) {
-                    boost::split(admin->postal_codes, postal_code, boost::is_any_of("-"));
-                }
-                added_admins[uri] = admin;
-            }
-            res.push_back(admin);
-        }
+        pqxx::result result = work->exec(request);
+        auto res = get_admin_from_cities(result, admin_tree);
         ++cities_stats[res.size()];
         return res;
     }
