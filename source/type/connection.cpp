@@ -29,20 +29,21 @@ www.navitia.io
 */
 
 #include "type/connection.h"
-#include "type/pt_data.h"
-#include "type/stop_point.h"
+
 #include "type/indexes.h"
+#include "type/pt_data.h"
 #include "type/serialization.h"
+#include "type/stop_point.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void StopPointConnection::save(Archive& ar, const unsigned int) const {
+void StopPointConnection::save(Archive& ar, const unsigned int /*unused*/) const {
     ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
 }
 template <class Archive>
-void StopPointConnection::load(Archive& ar, const unsigned int) {
+void StopPointConnection::load(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& uri& departure& destination& display_duration& duration& max_duration& connection_type& _properties;
 
     // loading manage StopPoint::stop_point_connection_list
@@ -51,7 +52,7 @@ void StopPointConnection::load(Archive& ar, const unsigned int) {
 }
 SPLIT_SERIALIZABLE(StopPointConnection)
 
-Indexes StopPointConnection::get(Type_e type, const PT_Data&) const {
+Indexes StopPointConnection::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::StopPoint:

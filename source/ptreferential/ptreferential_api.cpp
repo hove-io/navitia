@@ -28,16 +28,16 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "ptreferential.h"
 #include "ptreferential_api.h"
-#include "type/pb_converter.h"
-#include "type/data.h"
-#include "type/pt_data.h"
-#include "type/meta_data.h"
+
+#include "ptreferential.h"
 #include "routing/dataraptor.h"
+#include "type/data.h"
+#include "type/meta_data.h"
+#include "type/pb_converter.h"
+#include "type/pt_data.h"
 #include "utils/paginate.h"
 
-namespace pt = boost::posix_time;
 using navitia::type::Type_e;
 
 namespace navitia {

@@ -127,7 +127,7 @@ class AbstractTestFixture(unittest.TestCase):
                 if kraken_process.returncode is not None:
                     logging.error('kraken is dead, check errors, return code = %s', kraken_process.returncode)
                     assert False, 'kraken is dead, check errors, return code'
-            kraken_process.kill()
+            kraken_process.terminate()
             kraken_process.communicate()  # read stdout and stderr to prevent zombie processes
 
     @classmethod
@@ -223,7 +223,9 @@ class AbstractTestFixture(unittest.TestCase):
             instance = i_manager.instances[name]
             try:
                 retrying.Retrying(
-                    stop_max_delay=5000, wait_fixed=10, retry_on_result=lambda x: not instance.is_initialized
+                    stop_max_attempt_number=5,
+                    wait_fixed=10,
+                    retry_on_result=lambda x: not instance.is_initialized,
                 ).call(instance.init)
             except RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))

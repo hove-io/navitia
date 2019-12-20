@@ -28,18 +28,19 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "type/stop_area.h"
+
+#include "georef/adminref.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
+#include "type/route.h"
 #include "type/serialization.h"
 #include "type/stop_point.h"
-#include "type/route.h"
-#include "georef/adminref.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void StopArea::serialize(Archive& ar, const unsigned int) {
+void StopArea::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& label& uri& name& coord& stop_point_list& admin_list& _properties& wheelchair_boarding& impacts& visible&
         timezone;
 }

@@ -29,8 +29,11 @@ www.navitia.io
 */
 
 #include "build_helper.h"
+
 #include "ed/connectors/gtfs_parser.h"
+
 #include <boost/range/algorithm/find_if.hpp>
+#include <utility>
 
 namespace pt = boost::posix_time;
 namespace dis = nt::disruption;
@@ -45,28 +48,28 @@ static std::string get_random_id() {
 }
 
 VJ::VJ(builder& b,
-       const std::string& network_name,
-       const std::string& line_name,
+       std::string network_name,
+       std::string line_name,
        const std::string& validity_pattern,
-       const std::string& block_id,
+       std::string block_id,
        const bool is_frequency,
        const bool wheelchair_boarding,
-       const std::string& name,
-       const std::string& meta_vj_name,
-       const std::string& physical_mode,
+       std::string name,
+       std::string meta_vj_name,
+       std::string physical_mode,
        const uint32_t start_time,
        const uint32_t end_time,
        const uint32_t headway_secs,
        const nt::RTLevel vj_type)
     : b(b),
-      network_name(network_name),
-      line_name(line_name),
-      _block_id(block_id),
+      network_name(std::move(network_name)),
+      line_name(std::move(line_name)),
+      _block_id(std::move(block_id)),
       is_frequency(is_frequency),
       wheelchair_boarding(wheelchair_boarding),
-      _name(name),
-      _meta_vj_name(meta_vj_name),
-      _physical_mode(physical_mode),
+      _name(std::move(name)),
+      _meta_vj_name(std::move(meta_vj_name)),
+      _physical_mode(std::move(physical_mode)),
       start_time(start_time),
       end_time(end_time),
       headway_secs(headway_secs),
@@ -176,7 +179,7 @@ nt::VehicleJourney* VJ::make() {
         }
     }
     if (!vj->physical_mode) {
-        if (_physical_mode.empty() && pt_data.physical_modes.size()) {
+        if (_physical_mode.empty() && !pt_data.physical_modes.empty()) {
             vj->physical_mode = pt_data.physical_modes.front();
         } else {
             const auto physical_name = _physical_mode.empty() ? "physical_mode:0" : _physical_mode;
@@ -192,7 +195,7 @@ nt::VehicleJourney* VJ::make() {
 
     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, mvj_name);
 
-    if (_block_id != "") {
+    if (!_block_id.empty()) {
         b.block_vjs.insert(std::make_pair(_block_id, vj));
     }
 
@@ -227,8 +230,9 @@ VJ& VJ::operator()(const std::string& stopPoint,
                    int alighting_duration,
                    int boarding_duration) {
     auto _departure = departure;
-    if (_departure.empty())
+    if (_departure.empty()) {
         _departure = arrival;
+    }
 
     return (*this)(stopPoint, pt::duration_from_string(arrival).total_seconds(),
                    pt::duration_from_string(_departure).total_seconds(), local_traffic_zone, drop_off_allowed,
@@ -250,14 +254,15 @@ VJ& VJ::operator()(const std::string& sp_name,
         sp->idx = b.data->pt_data->stop_points.size();
         sp->name = sp_name;
         sp->uri = sp_name;
-        if (!b.data->pt_data->networks.empty())
+        if (!b.data->pt_data->networks.empty()) {
             sp->network = b.data->pt_data->networks.front();
+        }
 
         b.sps[sp_name] = sp;
         b.data->pt_data->stop_points.push_back(sp);
         auto sa_it = b.sas.find(sp_name);
         if (sa_it == b.sas.end()) {
-            navitia::type::StopArea* sa = new navitia::type::StopArea();
+            auto* sa = new navitia::type::StopArea();
             sa->idx = b.data->pt_data->stop_areas.size();
             sa->name = sp_name;
             sa->uri = sp_name;
@@ -289,8 +294,9 @@ VJ& VJ::operator()(const std::string& sp_name,
     stop_time.set_pick_up_allowed(pick_up_allowed);
 
     ST st(stop_time);
-    if (departure == -1)
+    if (departure == -1) {
         departure = arrival;
+    }
     st.arrival_time = arrival;
     st.departure_time = departure;
     st.alighting_time = arrival + alighting_duration;
@@ -315,8 +321,9 @@ SA::SA(builder& b,
     sa->uri = sa_name;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
-    if (wheelchair_boarding)
+    if (wheelchair_boarding) {
         sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
+    }
     b.sas[sa_name] = sa;
 
     if (create_sp) {
@@ -342,15 +349,17 @@ navitia::type::StopPoint* SP::create_stop_point(builder& b,
                                                 double y,
                                                 bool wheelchair_boarding,
                                                 bool bike_accepted) {
-    navitia::type::StopPoint* sp = new navitia::type::StopPoint();
+    auto* sp = new navitia::type::StopPoint();
     sp->idx = b.data->pt_data->stop_points.size();
     b.data->pt_data->stop_points.push_back(sp);
     sp->name = name;
     sp->uri = name;
-    if (wheelchair_boarding)
+    if (wheelchair_boarding) {
         sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-    if (bike_accepted)
+    }
+    if (bike_accepted) {
         sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+    }
     sp->coord.set_lon(x);
     sp->coord.set_lat(y);
     sp->stop_area = sa;
@@ -358,7 +367,7 @@ navitia::type::StopPoint* SP::create_stop_point(builder& b,
     sa->stop_point_list.push_back(sp);
 
     for (auto code : codes) {
-        for (auto value : code.second) {
+        for (const auto& value : code.second) {
             b.data->pt_data->codes.add(sp, code.first, value);
         }
     }
@@ -391,7 +400,7 @@ DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
 }
 
 DisruptionCreator& DisruptionCreator::tag_if_not_empty(const std::string& t) {
-    if (t.size()) {
+    if (!t.empty()) {
         tag(t);
     }
     return *this;
@@ -561,7 +570,7 @@ SA builder::sa(const std::string& name,
                const bool create_sp,
                const bool wheelchair_boarding,
                const bool bike_accepted) {
-    return SA(*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted);
+    return {*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted};
 }
 
 builder::builder(const std::string& date,
@@ -586,10 +595,11 @@ builder::builder(const std::string& date,
 }
 
 void builder::connection(const std::string& name1, const std::string& name2, float length) {
-    navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();
+    auto* connexion = new navitia::type::StopPointConnection();
     connexion->idx = data->pt_data->stop_point_connections.size();
-    if (sps.count(name1) == 0 || sps.count(name2) == 0)
+    if (sps.count(name1) == 0 || sps.count(name2) == 0) {
         return;
+    }
     connexion->departure = (*(sps.find(name1))).second;
     connexion->destination = (*(sps.find(name2))).second;
 
@@ -643,7 +653,7 @@ static double get_co2_emission(const std::string& uri) {
 }
 
 void builder::generate_dummy_basis() {
-    navitia::type::Company* company = new navitia::type::Company();
+    auto* company = new navitia::type::Company();
     company->idx = this->data->pt_data->companies.size();
     company->name = "base_company";
     company->uri = "base_company";
@@ -660,7 +670,7 @@ void builder::generate_dummy_basis() {
     this->data->pt_data->get_or_create_commercial_mode("Car", "Car");
 
     for (navitia::type::CommercialMode* mt : this->data->pt_data->commercial_modes) {
-        navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
+        auto* mode = new navitia::type::PhysicalMode();
         double co2_emission;
         mode->idx = mt->idx;
         mode->name = mt->name;
@@ -673,14 +683,14 @@ void builder::generate_dummy_basis() {
         this->data->pt_data->physical_modes_map[mode->uri] = mode;
     }
     // default dataset and contributor
-    navitia::type::Contributor* contributor = new navitia::type::Contributor();
+    auto* contributor = new navitia::type::Contributor();
     contributor->idx = this->data->pt_data->contributors.size();
     contributor->uri = "default:contributor";
     contributor->name = "default contributor";
     this->data->pt_data->contributors.push_back(contributor);
     this->data->pt_data->contributors_map[contributor->uri] = contributor;
 
-    navitia::type::Dataset* dataset = new navitia::type::Dataset();
+    auto* dataset = new navitia::type::Dataset();
     dataset->idx = this->data->pt_data->datasets.size();
     dataset->uri = "default:dataset";
     dataset->name = "default dataset";
@@ -832,7 +842,7 @@ navitia::georef::Way* builder::add_way(const std::string& name, const std::strin
     if (vertex_b == boost::none) {
         vertex_b = init_vertex(*this->data->geo_ref);
     }
-    navitia::georef::Way* w = new navitia::georef::Way;
+    auto* w = new navitia::georef::Way;
     w->idx = this->data->geo_ref->ways.size();
     w->name = name;
     w->visible = visible;
@@ -842,7 +852,7 @@ navitia::georef::Way* builder::add_way(const std::string& name, const std::strin
     navitia::georef::Edge e;
     e.way_idx = w->idx;
     boost::add_edge(*this->vertex_a, *this->vertex_b, e, this->data->geo_ref->graph);
-    w->edges.push_back(std::make_pair(*this->vertex_a, *this->vertex_b));
+    w->edges.emplace_back(*this->vertex_a, *this->vertex_b);
     this->data->geo_ref->ways.push_back(w);
     return w;
 }

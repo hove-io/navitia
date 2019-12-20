@@ -29,16 +29,17 @@ www.navitia.io
 */
 
 #pragma once
-#include <iomanip>
 #include "utils/exception.h"
+
 #include <boost/date_time/time_duration.hpp>
 #include <boost/date_time/time_resolution_traits.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/parsers.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
-
 #include <boost/serialization/split_free.hpp>
+
+#include <iomanip>
 
 // adapted from boost (I don't understand why it is not like that in boost
 namespace boost {

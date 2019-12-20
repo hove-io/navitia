@@ -103,7 +103,7 @@ target_link_libraries(pb_converter thermometer vptranslator pthread pb_lib)
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
     validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
     contributor.cpp dataset.cpp company.cpp commercial_mode.cpp physical_mode.cpp line.cpp route.cpp
-    vehicle_journey.cpp stop_time.cpp type_interfaces.cpp comment_container.cpp odt_properties.cpp comment.cpp static_data.cpp)
+    vehicle_journey.cpp meta_vehicle_journey.cpp stop_time.cpp type_interfaces.cpp comment_container.cpp odt_properties.cpp comment.cpp static_data.cpp)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
 add_dependencies(types protobuf_files)
 
@@ -120,6 +120,7 @@ add_library(data ${DATA_SRC})
 target_link_libraries(data
     fill_disruption_from_database
     routing
+    fare
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -133,6 +134,7 @@ set(TYPES_TEST_LINK_LIBS
 
 add_executable(fill_pb_placemark_test tests/fill_pb_placemark_test.cpp)
 target_link_libraries(fill_pb_placemark_test
+    data
     routing
     thermometer
     pb_converter

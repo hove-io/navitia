@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "dataraptor.h"
+
 #include "routing.h"
 #include "routing/raptor_utils.h"
 

@@ -35,7 +35,8 @@ Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French nat
 
 
 <aside class="notice">
-A fake token is used in examples below: be aware that this token is really limited. You should use yours to get better services on real data.
+A fake token is used in examples below: be aware that this token is really limited ("sandbox" coverage only).</br>
+You have to use yours to get real services on real data (your token has no access to "sandbox" coverage).
 </aside>
 
 First step
@@ -45,6 +46,11 @@ First step
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
 Get a token here <http://navitia.io/register/>. We need your mail to stay in touch when Navitia changes.
+
+<aside class="notice">
+The token obtained is private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
+This will avoid having someone use your request quota.
+</aside>
 
 Second step
 ---------------
@@ -145,4 +151,4 @@ In order to report bug and make feature requests please use our github navitia p
 
 Stay tuned on twitter [@navitia](https://twitter.com/navitia).
 
-At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
+At last, we are present on the network `matrix.org`, channel [`#navitia:matrix.org`](https://riot.im/app/#/room/#navitia:matrix.org).

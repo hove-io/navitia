@@ -30,21 +30,22 @@ www.navitia.io
 
 #include "georef.h"
 
-#include "utils/logger.h"
-#include "utils/functions.h"
-#include "utils/csv.h"
-#include "utils/configuration.h"
-
-#include <boost/foreach.hpp>
-#include <boost/geometry.hpp>
-#include <boost/range/algorithm/sort.hpp>
-#include <boost/algorithm/cxx11/none_of.hpp>
-#include <boost/range/algorithm/lexicographical_compare.hpp>
-#include <boost/math/constants/constants.hpp>
-#include <array>
-#include <unordered_map>
 #include "type/stop_area.h"
 #include "type/type.h"  //TODO: move get_admin_name and reduce include
+#include "utils/configuration.h"
+#include "utils/csv.h"
+#include "utils/functions.h"
+#include "utils/logger.h"
+
+#include <boost/algorithm/cxx11/none_of.hpp>
+#include <boost/foreach.hpp>
+#include <boost/geometry.hpp>
+#include <boost/math/constants/constants.hpp>
+#include <boost/range/algorithm/lexicographical_compare.hpp>
+#include <boost/range/algorithm/sort.hpp>
+
+#include <array>
+#include <unordered_map>
 
 using navitia::type::idx_t;
 
@@ -83,20 +84,20 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number, const Graph& 
     nt::GeographicalCoord to_return;
 
     if (number % 2 == 0) {  // pair
-        for (auto it = this->house_number_right.begin(); it != this->house_number_right.end(); ++it) {
-            if ((*it).number < number) {
-                hn_lower = (*it);
+        for (const auto& it : this->house_number_right) {
+            if (it.number < number) {
+                hn_lower = it;
             } else {
-                hn_upper = (*it);
+                hn_upper = it;
                 break;
             }
         }
     } else {
-        for (auto it = this->house_number_left.begin(); it != this->house_number_left.end(); ++it) {
-            if ((*it).number < number) {
-                hn_lower = (*it);
+        for (const auto& it : this->house_number_left) {
+            if (it.number < number) {
+                hn_lower = it;
             } else {
-                hn_upper = (*it);
+                hn_upper = it;
                 break;
             }
         }
@@ -138,9 +139,9 @@ nt::GeographicalCoord Way::get_geographical_coord(const int number, const Graph&
         }
 
         /// Dans le cas où le numéro recherché est dans la liste = à un numéro dans la liste
-        for (auto it = house_number_list.begin(); it != house_number_list.end(); ++it) {
-            if ((*it).number == number) {
-                return (*it).coord;
+        for (const auto& it : house_number_list) {
+            if (it.number == number) {
+                return it.coord;
             }
         }
 
@@ -162,8 +163,9 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
 
     if ((this->house_number_right.empty() && this->house_number_left.empty())
         || (this->house_number_right.empty() && number % 2 == 0) || (this->house_number_left.empty() && number % 2 != 0)
-        || number <= 0)
+        || number <= 0) {
         return projected_centroid(graph);
+    }
 
     return get_geographical_coord(number, graph);
 }
@@ -384,8 +386,9 @@ void GeoRef::build_proximity_list() {
     auto build_sn_pl = [this](proximitylist::ProximityList<vertex_t>& sn_pl, nt::idx_t offset) {
         for (vertex_t v = offset; v < nb_vertex_by_mode + offset; ++v) {
             if (boost::algorithm::none_of(boost::out_edges(v, graph),
-                                          [=](const auto& e) { return is_sn_edge(*this, e); }))
+                                          [=](const auto& e) { return is_sn_edge(*this, e); })) {
                 continue;
+            }
             sn_pl.add(graph[v].coord, v);
         }
         sn_pl.build();
@@ -429,7 +432,7 @@ void GeoRef::build_autocomplete_list() {
         if (way->edges.empty()) {
             continue;
         }
-        if (way->visible == false) {
+        if (!way->visible) {
             continue;
         }
         if (auto admin = find_city_admin(way->admin_list)) {
@@ -506,11 +509,12 @@ void GeoRef::build_admin_map() {
  * [Nom de la commune] Exemple : 108 rue victor hugo reims Si le numéro est rensigné, on renvoie les coordonnées les
  * plus proches Sinon le barycentre de la rue
  */
-std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string& str,
-                                                                       const int nbmax,
-                                                                       const int search_type,
-                                                                       std::function<bool(nt::idx_t)> keep_element,
-                                                                       const std::set<std::string>& ghostwords) const {
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(
+    const std::string& str,
+    const int nbmax,
+    const int search_type,
+    const std::function<bool(nt::idx_t)>& keep_element,
+    const std::set<std::string>& ghostwords) const {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
 
@@ -521,7 +525,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     if (search_number != -1) {
         search_str = "";
         int i = 0;
-        for (auto token : tokens) {
+        for (const auto& token : tokens) {
             if (i != 0) {
                 search_str += token + " ";
             }
@@ -659,8 +663,9 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
         nt::Mode_e mode = mode_layer.first;
         ProjectionData proj(stop_point->coord, *this, mode_layer.second);
         projections[mode] = proj;
-        if (proj.found)
+        if (proj.found) {
             one_proj_found = true;
+        }
     }
 
     return {projections, one_proj_found};
@@ -698,12 +703,10 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord& coordinates,
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
 
-    // Magic Number!
-    // The number indicates the number of nearest vertices that should be returned by find_with
-    // This number is determined by balancing the performance and the practical results (Artemis)
-    // The bigger the number is, the better the projection will be and slower it will run.
-    // With 30, we have broken less than 1% tests on Artemis_idfm.
-    constexpr int nb_nearest_vertices = 30;
+    // TODO: set different nb for different modes
+    // we can set -1 for both walking and bike mode
+    // set smaller number (ex: 50) for car
+    constexpr int nb_nearest_vertices = -1;
 
     for (const auto& u : prox.find_within<proximitylist::IndexOnly>(coordinates, horizon, nb_nearest_vertices)) {
         BOOST_FOREACH (const edge_t& e, boost::out_edges(u, graph)) {
@@ -893,7 +896,7 @@ GeoRef::~GeoRef() {
     }
 }
 
-type::Indexes POI::get(type::Type_e type, const GeoRef&) const {
+type::Indexes POI::get(type::Type_e type, const GeoRef& /*unused*/) const {
     switch (type) {
         case type::Type_e::POIType:
             return type::make_indexes({poitype_idx});

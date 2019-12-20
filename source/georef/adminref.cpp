@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "adminref.h"
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/geometry.hpp>
 
@@ -52,7 +53,7 @@ std::string Admin::get_range_postal_codes() {
                 post_code = this->postal_codes[result.first - postal_codes_int.begin()] + "-"
                             + this->postal_codes[result.second - postal_codes_int.begin()];
             }
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             post_code = this->postal_codes_to_string();
         }
     }
@@ -68,7 +69,7 @@ AdminRtree build_admins_tree(const std::vector<Admin*> admins) {
     double min[2] = {0., 0.};
     double max[2] = {0., 0.};
     for (auto* admin : admins) {
-        if (admin->boundary.size() > 0) {
+        if (!admin->boundary.empty()) {
             boost::geometry::model::box<nt::GeographicalCoord> box;
             boost::geometry::envelope(admin->boundary, box);
             min[0] = box.min_corner().lon();

@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "type/type_interfaces.h"
+
 #include <boost/graph/adjacency_list.hpp>
 
 namespace navitia {
@@ -47,7 +48,7 @@ struct Jointures {
     typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
     typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
-    navitia::flat_enum_map<type::Type_e, vertex_t> vertex_map;
+    navitia::flat_enum_map<type::Type_e, vertex_t> vertex_map{};
     Graph g;
     Jointures();
 };

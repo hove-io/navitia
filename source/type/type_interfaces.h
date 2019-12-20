@@ -28,14 +28,16 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #pragma once
-#include <bitset>
-#include <iostream>
-#include "utils/idx_map.h"
-#include <boost/container/flat_set.hpp>
 #include "utils/flat_enum_map.h"
+#include "utils/idx_map.h"
+#include "type/fwd_type.h"
 
+#include <boost/container/flat_set.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <bitset>
+#include <iostream>
 
 namespace navitia {
 namespace type {
@@ -284,6 +286,41 @@ inline std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
             return os << "[unknown mode]";
     }
 }
+
+template <typename T>
+inline Type_e get_type_e() {
+    static_assert(!std::is_same<T, T>::value, "get_type_e unimplemented");
+    return Type_e::Unknown;
+}
+template <>
+inline Type_e get_type_e<PhysicalMode>() {
+    return Type_e::PhysicalMode;
+}
+template <>
+inline Type_e get_type_e<CommercialMode>() {
+    return Type_e::CommercialMode;
+}
+template <>
+inline Type_e get_type_e<Contributor>() {
+    return Type_e::Contributor;
+}
+template <>
+inline Type_e get_type_e<Network>() {
+    return Type_e::Network;
+}
+template <>
+inline Type_e get_type_e<Route>() {
+    return Type_e::Route;
+}
+template <>
+inline Type_e get_type_e<StopArea>() {
+    return Type_e::StopArea;
+}
+template <>
+inline Type_e get_type_e<StopPoint>() {
+    return Type_e::StopPoint;
+}
+
 }  // namespace type
 // trait to access the number of elements in the Mode_e enum
 template <>

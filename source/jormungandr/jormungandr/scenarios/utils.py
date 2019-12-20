@@ -213,6 +213,9 @@ def updated_common_journey_request_with_default(request, instance):
     if request['max_car_no_park_duration_to_pt'] is None:
         request['max_car_no_park_duration_to_pt'] = instance.max_car_no_park_duration_to_pt
 
+    if request['max_taxi_duration_to_pt'] is None:
+        request['max_taxi_duration_to_pt'] = instance.max_taxi_duration_to_pt
+
     if request['max_transfers'] is None:
         request['max_transfers'] = instance.max_nb_transfers
 

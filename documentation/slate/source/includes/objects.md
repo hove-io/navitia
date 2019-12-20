@@ -307,9 +307,22 @@ An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is t
 |id|string|The id of the trip|
 |name|string|The name of the trip|
 
-It also encapsulates many instances of vehicle_journey, accessible with the url:
+It encapsulates many instances of vehicle_journey.
+
+
+### Vehicle-journey
+
+A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
+the days it circulates according to realtime information.
+
+Note that multiple vehicle-journeys are often associated with the same trip for technical and logical
+reasons (to model the daylight saving time, for the changes after applying realtime disruptions, etc.).
+
+The collection is accessible with the url:
 
 `https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys`.
+
+Note: this collection is mostly used for debug and technical purposes.
 
 
 ### <a name="pt-object"></a>Pt_object
@@ -512,7 +525,7 @@ Severity object can be used to make visual grouping.
 | color         | string     | HTML color for classification                  |
 | priority      | integer    | given by the agency : 0 is strongest priority. it can be null |
 | name          | string     | name of severity                               |
-| effect        | Enum       | Normalized value of the effect on the public transport object See the GTFS RT documentation at <https://developers.google.com/transit/gtfs-realtime/reference#Effect> |
+| effect        | Enum       | Normalized value of the effect on the public transport object. See the GTFS RT documentation at <https://gtfs.org/reference/realtime/v2/#enum-effect>. See also [realtime](#realtime) section. |
 
 ### Channel
 
@@ -607,7 +620,7 @@ Poi = Point Of Interest
 |-----|----|-----------|
 |id|string|Identifier of the address|
 |name|string|Name of the address|
-|label|string|Label of the adress. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
+|label|string|Label of the address. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the address|
 |house_number|int|House number of the address|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the address in which is the stop area|

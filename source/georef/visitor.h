@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "georef.h"
 #include "type/time_duration.h"
+
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/astar_search.hpp>
 

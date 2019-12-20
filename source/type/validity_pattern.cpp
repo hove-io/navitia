@@ -28,19 +28,20 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "validity_pattern.h"
-#include <log4cplus/logger.h>
-#include <log4cplus/loggingmacros.h>
-#include "utils/exception.h"
 #include "datetime.h"
-#include <type/serialization.h>
+#include "type/serialization.h"
+#include "utils/exception.h"
+
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/bitset.hpp>
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void ValidityPattern::serialize(Archive& ar, const unsigned int) {
+void ValidityPattern::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& beginning_date& days& idx& uri;
 }
 SERIALIZABLE(ValidityPattern)
@@ -69,8 +70,9 @@ void ValidityPattern::add(boost::gregorian::date day) {
 }
 
 void ValidityPattern::add(int duration) {
-    if (is_valid(duration))
+    if (is_valid(duration)) {
         days[duration] = true;
+    }
 }
 
 void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days) {
@@ -90,8 +92,9 @@ void ValidityPattern::remove(boost::gregorian::date date) {
 }
 
 void ValidityPattern::remove(int day) {
-    if (is_valid(day))
+    if (is_valid(day)) {
         days[day] = false;
+    }
 }
 
 std::string ValidityPattern::str() const {
@@ -114,18 +117,20 @@ bool ValidityPattern::check(unsigned int day) const {
 
 bool ValidityPattern::check2(unsigned int day) const {
     //    BOOST_ASSERT(is_valid(day));
-    if (day == 0)
+    if (day == 0) {
         return days[day] || days[day + 1];
-    else
-        return days[day - 1] || days[day] || days[day + 1];
+    }
+
+    return days[day - 1] || days[day] || days[day + 1];
 }
 
 bool ValidityPattern::uncheck2(unsigned int day) const {
     //    BOOST_ASSERT(is_valid(day));
-    if (day == 0)
+    if (day == 0) {
         return !days[day] && !days[day + 1];
-    else
-        return !days[day - 1] && !days[day] && !days[day + 1];
+    }
+
+    return !days[day - 1] && !days[day] && !days[day + 1];
 }
 }  // namespace type
 }  // namespace navitia

@@ -43,7 +43,7 @@ from abc import abstractmethod
 
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
     def __init__(self, url, operators, dataset, timeout, feed_publisher, **kwargs):
-
+        super(CommonCarParkProvider, self).__init__(**kwargs)
         self.ws_service_template = url + '?dataset={}'
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
@@ -73,9 +73,13 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         if data:
             return self.process_data(data, poi)
 
-    def support_poi(self, poi):
+    def _has_supported_poi_operator(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '').lower() in self.operators
+        operator = properties.get('operator', '').lower()
+        return operator in self.operators
+
+    def support_poi(self, poi):
+        return self._has_supported_poi_operator(poi)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_CAR_PARK'), 30))
     def _call_webservice(self, request_url):

@@ -141,7 +141,7 @@ public:
     // Color map for the dijkstra shortest path (to avoid extra alloc)
     boost::two_bit_color_map<> color;
 
-    PathFinder(const GeoRef& geo_ref);
+    PathFinder(const GeoRef& gref);
     PathFinder(const PathFinder& o) = default;
 
     // Virtual destructor, to allow use as a public base class,
@@ -177,7 +177,7 @@ protected:
     void init_start(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     // return the time the travel the distance at the current speed (used for projections)
-    navitia::time_duration crow_fly_duration(const double val) const;
+    navitia::time_duration crow_fly_duration(const double distance) const;
 
     PathItem::TransportCaracteristic get_transportation_mode_item_to_update(
         const PathItem::TransportCaracteristic& previous_transportation,

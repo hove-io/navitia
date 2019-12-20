@@ -31,22 +31,21 @@ www.navitia.io
 #include "ed2nav.h"
 
 #include "conf.h"
-
-#include "utils/timer.h"
-#include "utils/exception.h"
 #include "ed_reader.h"
-#include "type/data.h"
-#include "utils/init.h"
-#include "utils/functions.h"
 #include "type/meta_data.h"
+#include "utils/exception.h"
+#include "utils/functions.h"
+#include "utils/init.h"
+#include "utils/timer.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/program_options.hpp>
 #include <pqxx/pqxx>
-#include <iostream>
+
 #include <fstream>
+#include <iostream>
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -56,8 +55,8 @@ namespace ed {
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
-    typedef std::unordered_map<std::string, navitia::georef::Admin*> AdminMap;
-    typedef std::vector<georef::Admin*> result_type;
+    using AdminMap = std::unordered_map<std::string, navitia::georef::Admin*>;
+    using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
     georef::GeoRef& georef;
@@ -72,10 +71,13 @@ struct FindAdminWithCities {
         : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
-    FindAdminWithCities& operator=(const FindAdminWithCities&) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
+    FindAdminWithCities(FindAdminWithCities&&) noexcept = default;
+    FindAdminWithCities& operator=(FindAdminWithCities&&) = delete;
     ~FindAdminWithCities() {
-        if (nb_call == 0)
+        if (nb_call == 0) {
             return;
+        }
 
         auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
         LOG4CPLUS_INFO(log, "FindAdminWithCities: " << nb_call << " calls");
@@ -165,6 +167,35 @@ struct FindAdminWithCities {
     }
 };
 
+bool rename_file(const std::string& source_name, const std::string& dest_name) {
+    auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");
+    LOG4CPLUS_INFO(logger, "Trying to rename " << source_name << " to " << dest_name);
+    if (boost::filesystem::exists(source_name)) {
+        if (rename(source_name.c_str(), dest_name.c_str()) != 0) {
+            LOG4CPLUS_ERROR(logger, "Unable to rename data file: " << source_name << std::strerror(errno));
+            return false;
+        }
+    }
+    LOG4CPLUS_INFO(logger, "Renaming file success");
+    return true;
+}
+
+template <class T>
+bool write_data_to_file(const std::string& output_filename, const T& data) {
+    std::string temp_output_filename = output_filename + ".temp";
+    std::string backup_output_filename = output_filename + ".bak";
+    if (!try_save_file(temp_output_filename, data)) {
+        return false;
+    }
+    if (!rename_file(output_filename, backup_output_filename)) {
+        return false;
+    }
+    if (!rename_file(temp_output_filename, output_filename)) {
+        return false;
+    }
+    return true;
+}
+
 int ed2nav(int argc, const char* argv[]) {
     std::string output, connection_string, region_name, cities_connection_string;
     double min_non_connected_graph_ratio;
@@ -204,7 +235,7 @@ int ed2nav(int argc, const char* argv[]) {
     }
 
     // Construct logger and signal handling
-    std::string log_comment = "";
+    std::string log_comment;
     if (vm.count("log_comment")) {
         log_comment = vm["log_comment"].as<std::string>();
     }
@@ -216,9 +247,8 @@ int ed2nav(int argc, const char* argv[]) {
         stream.open(vm["config-file"].as<std::string>());
         if (!stream.is_open()) {
             throw navitia::exception("Unable to load config file");
-        } else {
-            po::store(po::parse_config_file(stream, desc), vm);
         }
+        po::store(po::parse_config_file(stream, desc), vm);
     }
 
     if (vm.count("help") || !vm.count("connection-string")) {
@@ -273,15 +303,12 @@ int ed2nav(int argc, const char* argv[]) {
     LOG4CPLUS_INFO(logger, "Begin to save ...");
 
     start = pt::microsec_clock::local_time();
-    try {
-        data.save(output);
-    } catch (const navitia::exception& e) {
-        LOG4CPLUS_ERROR(logger, "Unable to save");
-        LOG4CPLUS_ERROR(logger, e.what());
+
+    if (!write_data_to_file(output, data)) {
+        LOG4CPLUS_ERROR(logger, "Exiting ed2nav with errors");
         return 1;
     }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    LOG4CPLUS_INFO(logger, "Data saved");
 
     LOG4CPLUS_INFO(logger, "Computing times");
     LOG4CPLUS_INFO(logger, "\t File reading: " << read << "ms");

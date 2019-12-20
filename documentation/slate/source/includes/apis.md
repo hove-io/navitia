@@ -357,10 +357,15 @@ Examples:
 To be used only on "vehicle_journeys" and "disruptions" collection, to filter on a
 period. Both parameters "until" and "since" are optional.
 
+For vehicle_journeys, "since" and "until" are associated with the data_freshness parameter (defaults to base_schedule): see the [realtime](#realtime) section.
+
 Example:
 
--   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100>
+-   Getting every active (only base_schedule) New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100>
+-   Getting every active (according to realtime information) New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100&data_freshness=realtime>
 -   Getting every active disruption on "Bretagne" for a specific date <http://api.navitia.io/v1/coverage/fr-bre/disruptions?since=20170206000000&until=20170206235959>
+
+
 
 <aside class="warning">
     On vehicle_journey this filter is applied using only the first stop time.
@@ -695,7 +700,7 @@ Differents kind of objects can be returned (sorted as):
 <aside class="warning">
     Until now, you have to specify the right coverage to get `/places`.<br>
     If you like to play, you can test the "beta" `/places`, without any coverage:
-    it will soon be able to request entire Earth on adresses, POIs, stop areas... with geographical sort.
+    it will soon be able to request entire Earth on addresses, POIs, stop areas... with geographical sort.
 </aside>
 
 
@@ -712,7 +717,7 @@ Differents kind of objects can be returned (sorted as):
 
 
 
-<a name="places-nearby-api"></a>Places Nearby
+<a name="places-nearby-api"></a>Places nearby
 -----------------------------------------
 
 >[Try it on Navitia playground (click on "MAP" buttons to see places)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%3ARAT%3ASA%3ACAMPO%2Fplaces_nearby)
@@ -992,8 +997,8 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 
 | Required  | Name                    | Type          | Description                                                                            | Default value |
 |-----------|-------------------------|---------------|----------------------------------------------------------------------------------------|---------------|
-| nop       | from                    | id            | The id of the departure of your journey. If none are provided an isochrone is computed |               |
-| nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
+| nop       | from                    | id            | The id of the departure of your journey. If none are provided an isochrone is computed. Should be different than `to` or no journey will be computed.  |               |
+| nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed. Should be different than `from` or no journey will be computed. |               |
 | nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go.<br>Note: the datetime must be in the [coverage's publication period](#coverage)                                                   | now           |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
 | nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically.<br> We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br>enum values:<ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul>|               |

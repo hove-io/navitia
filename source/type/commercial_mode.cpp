@@ -29,21 +29,22 @@ www.navitia.io
 */
 
 #include "type/commercial_mode.h"
+
 #include "type/indexes.h"
-#include "type/pt_data.h"
 #include "type/line.h"
+#include "type/pt_data.h"
 #include "type/serialization.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void CommercialMode::serialize(Archive& ar, const unsigned int) {
+void CommercialMode::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& line_list;
 }
 SERIALIZABLE(CommercialMode)
 
-Indexes CommercialMode::get(Type_e type, const PT_Data&) const {
+Indexes CommercialMode::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::Line:

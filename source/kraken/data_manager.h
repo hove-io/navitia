@@ -38,11 +38,12 @@ www.navitia.io
 #include "gperftools/malloc_extension.h"
 #endif
 
+#include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
+
 #include <memory>
 #include <iostream>
 #include <atomic>
-#include <boost/make_shared.hpp>
-#include <boost/optional.hpp>
 
 template <typename Data>
 void data_deleter(const Data* data) {

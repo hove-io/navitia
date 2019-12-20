@@ -33,13 +33,15 @@ www.navitia.io
 #include "utils/functions.h"
 #include "type/data.h"
 #include "type/pt_data.h"
-#include <boost/date_time/gregorian_calendar.hpp>
 #include "georef/georef.h"
 #include "type/meta_data.h"
 #include "type/message.h"
 #include "type/rt_level.h"
-#include <memory>
+
 #include <boost/optional.hpp>
+#include <boost/date_time/gregorian_calendar.hpp>
+
+#include <memory>
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -85,15 +87,15 @@ struct VJ {
 
     /// Construit un nouveau vehicle journey
     VJ(builder& b,
-       const std::string& network_name,
-       const std::string& line_name,
+       std::string network_name,
+       std::string line_name,
        const std::string& validity_pattern,
-       const std::string& block_id,
+       std::string block_id,
        const bool is_frequency,
        const bool wheelchair_boarding = true,
-       const std::string& name = "",
-       const std::string& meta_vj_name = "",
-       const std::string& physical_mode = "",
+       std::string name = "",
+       std::string meta_vj_name = "",
+       std::string physical_mode = "",
        const uint32_t start_time = 0,
        const uint32_t end_time = 0,
        const uint32_t headway_secs = 0,
@@ -108,10 +110,10 @@ struct VJ {
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
-    VJ& operator()(const std::string& stopPoint,
+    VJ& operator()(const std::string& sp_name,
                    int arrival,
                    int departure = -1,
-                   uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
+                   uint16_t local_trafic_zone = std::numeric_limits<uint16_t>::max(),
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true,
                    int alighting_duration = 0,
@@ -233,7 +235,7 @@ struct Impacter {
                               const std::string& end_stop_uri,
                               const std::vector<std::string>& route_uris);  // add section in informed_entities
     Impacter& msg(nt::disruption::Message);
-    Impacter& msg(const std::string& msg, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p) {
         // to ease use without a DisruptionCreator
         impact->disruption->publication_period = p;

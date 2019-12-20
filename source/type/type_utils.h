@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include "type/type.pb.h"
 #include "routing/stop_event.h"
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace navitia {

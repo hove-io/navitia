@@ -33,8 +33,10 @@ www.navitia.io
 #include "type/fwd_type.h"
 #include "type/rt_level.h"
 #include "validity_pattern.h"
-#include <set>
+
 #include <boost/serialization/split_member.hpp>
+
+#include <set>
 
 namespace navitia {
 namespace type {
@@ -128,7 +130,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
                                  const boost::posix_time::time_period& period) const;
 
     // Return the vp for all the stops of the section
-    ValidityPattern get_vp_for_section(const std::set<RankStopTime>& bounds_st,
+    ValidityPattern get_vp_for_section(const std::set<RankStopTime>& section,
                                        RTLevel rt_level,
                                        const boost::posix_time::time_period& period) const;
 

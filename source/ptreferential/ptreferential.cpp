@@ -37,7 +37,7 @@ namespace ptref {
 const char* ptref_error::what() const noexcept {
     return this->more.c_str();
 }
-parsing_error::~parsing_error() noexcept {}
+parsing_error::~parsing_error() noexcept = default;
 
 type::Indexes make_query(const type::Type_e requested_type,
                          const std::string& request,

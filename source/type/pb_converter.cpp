@@ -29,23 +29,26 @@ www.navitia.io
 */
 
 #include "pb_converter.h"
+
+#include "fare/fare.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
-#include "utils/exception.h"
-#include "utils/exception.h"
-#include <functional>
-#include <boost/lexical_cast.hpp>
-#include <boost/date_time/date_defs.hpp>
-#include <boost/geometry/algorithms/length.hpp>
-#include <boost/algorithm/cxx11/none_of.hpp>
+#include "ptreferential/ptreferential.h"
+#include "routing/dataraptor.h"
+#include "time_tables/thermometer.h"
 #include "type/geographical_coord.h"
 #include "type/type_utils.h"
-#include <boost/geometry.hpp>
-#include "fare/fare.h"
-#include "time_tables/thermometer.h"
-#include "routing/dataraptor.h"
-#include "ptreferential/ptreferential.h"
+#include "utils/exception.h"
+#include "utils/exception.h"
 #include "utils/functions.h"
+
+#include <boost/algorithm/cxx11/none_of.hpp>
+#include <boost/date_time/date_defs.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/algorithms/length.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <functional>
 
 namespace gd = boost::gregorian;
 namespace nd = navitia::type::disruption;
@@ -106,7 +109,7 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
                         arr_status));
     }
 
-    void operator()(const nd::UnknownPtObj&) const {}
+    void operator()(const nd::UnknownPtObj& /*unused*/) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
         auto* pobj = add_pt_object(mvj);
 
@@ -149,75 +152,75 @@ template <typename Pb>
 struct NavitiaToProto;
 template <>
 struct NavitiaToProto<nt::Line> {
-    typedef pbnavitia::Line type;
+    using type = pbnavitia::Line;
 };
 template <>
 struct NavitiaToProto<nt::ValidityPattern> {
-    typedef pbnavitia::ValidityPattern type;
+    using type = pbnavitia::ValidityPattern;
 };
 template <>
 struct NavitiaToProto<nt::StopArea> {
-    typedef pbnavitia::StopArea type;
+    using type = pbnavitia::StopArea;
 };
 template <>
 struct NavitiaToProto<nt::StopPoint> {
-    typedef pbnavitia::StopPoint type;
+    using type = pbnavitia::StopPoint;
 };
 template <>
 struct NavitiaToProto<nt::Network> {
-    typedef pbnavitia::Network type;
+    using type = pbnavitia::Network;
 };
 template <>
 struct NavitiaToProto<nt::Route> {
-    typedef pbnavitia::Route type;
+    using type = pbnavitia::Route;
 };
 template <>
 struct NavitiaToProto<nt::Company> {
-    typedef pbnavitia::Company type;
+    using type = pbnavitia::Company;
 };
 template <>
 struct NavitiaToProto<nt::CommercialMode> {
-    typedef pbnavitia::CommercialMode type;
+    using type = pbnavitia::CommercialMode;
 };
 template <>
 struct NavitiaToProto<nt::PhysicalMode> {
-    typedef pbnavitia::PhysicalMode type;
+    using type = pbnavitia::PhysicalMode;
 };
 template <>
 struct NavitiaToProto<nt::LineGroup> {
-    typedef pbnavitia::LineGroup type;
+    using type = pbnavitia::LineGroup;
 };
 template <>
 struct NavitiaToProto<ng::POI> {
-    typedef pbnavitia::Poi type;
+    using type = pbnavitia::Poi;
 };
 template <>
 struct NavitiaToProto<ng::POIType> {
-    typedef pbnavitia::PoiType type;
+    using type = pbnavitia::PoiType;
 };
 template <>
 struct NavitiaToProto<nt::VehicleJourney> {
-    typedef pbnavitia::VehicleJourney type;
+    using type = pbnavitia::VehicleJourney;
 };
 template <>
 struct NavitiaToProto<nt::Calendar> {
-    typedef pbnavitia::Calendar type;
+    using type = pbnavitia::Calendar;
 };
 template <>
 struct NavitiaToProto<nt::Contributor> {
-    typedef pbnavitia::Contributor type;
+    using type = pbnavitia::Contributor;
 };
 template <>
 struct NavitiaToProto<nt::Dataset> {
-    typedef pbnavitia::Dataset type;
+    using type = pbnavitia::Dataset;
 };
 template <>
 struct NavitiaToProto<nt::StopPointConnection> {
-    typedef pbnavitia::Connection type;
+    using type = pbnavitia::Connection;
 };
 template <>
 struct NavitiaToProto<nt::MetaVehicleJourney> {
-    typedef pbnavitia::Trip type;
+    using type = pbnavitia::Trip;
 };
 
 template <typename T>
@@ -294,78 +297,78 @@ NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointConnection>(p
     return resp.mutable_connections();
 }
 
-pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin*, pbnavitia::PtObject* pt_object) {
+pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_administrative_region();
 }
-pbnavitia::Calendar* get_sub_object(const nt::Calendar*, pbnavitia::PtObject* pt_object) {
+pbnavitia::Calendar* get_sub_object(const nt::Calendar* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_calendar();
 }
 template <typename PB>
-pbnavitia::CommercialMode* get_sub_object(const nt::CommercialMode*, PB* pt_object) {
+pbnavitia::CommercialMode* get_sub_object(const nt::CommercialMode* /*unused*/, PB* pt_object) {
     return pt_object->mutable_commercial_mode();
 }
 template <typename PB>
-pbnavitia::Company* get_sub_object(const nt::Company*, PB* pt_object) {
+pbnavitia::Company* get_sub_object(const nt::Company* /*unused*/, PB* pt_object) {
     return pt_object->mutable_company();
 }
 template <typename PB>
-pbnavitia::Contributor* get_sub_object(const nt::Contributor*, PB* pt_object) {
+pbnavitia::Contributor* get_sub_object(const nt::Contributor* /*unused*/, PB* pt_object) {
     return pt_object->mutable_contributor();
 }
 template <typename PB>
-pbnavitia::Address* get_sub_object(const nt::GeographicalCoord*, PB* pt_object) {
+pbnavitia::Address* get_sub_object(const nt::GeographicalCoord* /*unused*/, PB* pt_object) {
     return pt_object->mutable_address();
 }
 template <typename PB>
-pbnavitia::JourneyPattern* get_sub_object(const jp_pair*, PB* pt_object) {
+pbnavitia::JourneyPattern* get_sub_object(const jp_pair* /*unused*/, PB* pt_object) {
     return pt_object->mutable_journey_pattern();
 }
 template <typename PB>
-pbnavitia::JourneyPatternPoint* get_sub_object(const jpp_pair*, PB* pt_object) {
+pbnavitia::JourneyPatternPoint* get_sub_object(const jpp_pair* /*unused*/, PB* pt_object) {
     return pt_object->mutable_journey_pattern_point();
 }
 template <typename PB>
-pbnavitia::Line* get_sub_object(const nt::Line*, PB* pt_object) {
+pbnavitia::Line* get_sub_object(const nt::Line* /*unused*/, PB* pt_object) {
     return pt_object->mutable_line();
 }
 template <typename PB>
-pbnavitia::MultiLineString* get_sub_object(const nt::MultiLineString*, PB* pt_object) {
+pbnavitia::MultiLineString* get_sub_object(const nt::MultiLineString* /*unused*/, PB* pt_object) {
     return pt_object->mutable_geojson();
 }
 template <typename PB>
-pbnavitia::Network* get_sub_object(const nt::Network*, PB* pt_object) {
+pbnavitia::Network* get_sub_object(const nt::Network* /*unused*/, PB* pt_object) {
     return pt_object->mutable_network();
 }
 template <typename PB>
-pbnavitia::PhysicalMode* get_sub_object(const nt::PhysicalMode*, PB* pt_object) {
+pbnavitia::PhysicalMode* get_sub_object(const nt::PhysicalMode* /*unused*/, PB* pt_object) {
     return pt_object->mutable_physical_mode();
 }
 template <typename PB>
-pbnavitia::Poi* get_sub_object(const ng::POI*, PB* pt_object) {
+pbnavitia::Poi* get_sub_object(const ng::POI* /*unused*/, PB* pt_object) {
     return pt_object->mutable_poi();
 }
 template <typename PB>
-pbnavitia::PoiType* get_sub_object(const ng::POIType*, PB* pt_object) {
+pbnavitia::PoiType* get_sub_object(const ng::POIType* /*unused*/, PB* pt_object) {
     return pt_object->mutable_poi_type();
 }
 template <typename PB>
-pbnavitia::Route* get_sub_object(const nt::Route*, PB* pt_object) {
+pbnavitia::Route* get_sub_object(const nt::Route* /*unused*/, PB* pt_object) {
     return pt_object->mutable_route();
 }
 template <typename PB>
-pbnavitia::StopArea* get_sub_object(const nt::StopArea*, PB* pt_object) {
+pbnavitia::StopArea* get_sub_object(const nt::StopArea* /*unused*/, PB* pt_object) {
     return pt_object->mutable_stop_area();
 }
 template <typename PB>
-pbnavitia::StopPoint* get_sub_object(const nt::StopPoint*, PB* pt_object) {
+pbnavitia::StopPoint* get_sub_object(const nt::StopPoint* /*unused*/, PB* pt_object) {
     return pt_object->mutable_stop_point();
 }
 template <typename PB>
-pbnavitia::Trip* get_sub_object(const nt::MetaVehicleJourney*, PB* pt_object) {
+pbnavitia::Trip* get_sub_object(const nt::MetaVehicleJourney* /*unused*/, PB* pt_object) {
     return pt_object->mutable_trip();
 }
 template <typename PB>
-pbnavitia::VehicleJourney* get_sub_object(const nt::VehicleJourney*, PB* pt_object) {
+pbnavitia::VehicleJourney* get_sub_object(const nt::VehicleJourney* /*unused*/, PB* pt_object) {
     return pt_object->mutable_vehicle_journey();
 }
 
@@ -480,9 +483,9 @@ template void PbCreator::Filler::fill_pb_object<nt::VehicleJourney>(const nt::Ve
 
 PbCreator::Filler PbCreator::Filler::copy(int depth, const DumpMessageOptions& dump_message_options) {
     if (depth <= 0) {
-        return PbCreator::Filler(0, dump_message_options, pb_creator);
+        return {0, dump_message_options, pb_creator};
     }
-    return PbCreator::Filler(depth, dump_message_options, pb_creator);
+    return {depth, dump_message_options, pb_creator};
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib) {
@@ -672,8 +675,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         line->set_color(l->color);
     }
 
-    if (!l->text_color.empty())
+    if (!l->text_color.empty()) {
         line->set_text_color(l->text_color);
+    }
 
     line->set_name(l->name);
     line->set_uri(l->uri);
@@ -1073,9 +1077,8 @@ static pbnavitia::ActiveStatus compute_disruption_status(const nd::Impact& impac
 
     if (is_future) {
         return pbnavitia::future;
-    } else {
-        return pbnavitia::past;
     }
+    return pbnavitia::past;
 }
 
 static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
@@ -1576,8 +1579,9 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
 }
 
 void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::PtObject* place) {
-    if (way_coord->way == nullptr)
+    if (way_coord->way == nullptr) {
         return;
+    }
 
     copy(depth, dump_message_options).fill_pb_object(way_coord, place->mutable_address());
 
@@ -1657,14 +1661,14 @@ const type::disruption::Impact* PbCreator::get_impact(const std::string& uri) co
 }
 
 const std::string& PbCreator::register_section(pbnavitia::Journey* j, size_t section_idx) {
-    routing_section_map[{j, section_idx}] = "section_" + boost::lexical_cast<std::string>(nb_sections++);
+    routing_section_map[{j, section_idx}] = "section_" + std::to_string(nb_sections++);
     return routing_section_map[{j, section_idx}];
 }
 
 std::string PbCreator::register_section() {
     // For some section (transfer, waiting, streetnetwork, corwfly) we don't need info
     // about the item
-    return "section_" + boost::lexical_cast<std::string>(nb_sections++);
+    return "section_" + std::to_string(nb_sections++);
 }
 
 std::string PbCreator::get_section_id(pbnavitia::Journey* j, size_t section_idx) {
@@ -1702,8 +1706,9 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
     boost::optional<std::string> currency;
     for (const fare::Ticket& ticket : fare.tickets) {
         if (!ticket.is_default_ticket()) {
-            if (!currency)
+            if (!currency) {
                 currency = ticket.currency;
+            }
             if (ticket.currency != *currency) {
                 throw navitia::exception("cannot have different currencies for tickets");
             }  // if we really had to handle different currencies it could be done, but I don't see the point
@@ -1712,25 +1717,21 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
 
         pbnavitia::Ticket* pb_ticket = nullptr;
         if (ticket.is_default_ticket()) {
-            if (!unknown_ticket) {
-                pb_ticket = response.add_tickets();
-                pb_ticket->set_name(ticket.caption);
-                pb_ticket->set_found(false);
-                pb_ticket->set_id("unknown_ticket");
-                pb_ticket->set_source_id(ticket.key);
-                pb_ticket->set_comment("unknown ticket");
-                unknown_ticket = pb_ticket;
-                pb_fare->add_ticket_id(pb_ticket->id());
-            } else {
-                pb_ticket = unknown_ticket;
-            }
+            pb_ticket = response.add_tickets();
+            pb_ticket->set_name(ticket.caption);
+            pb_ticket->set_found(false);
+            pb_ticket->set_id("unknown_ticket");
+            pb_ticket->set_source_id(ticket.key);
+            pb_ticket->set_comment("unknown ticket");
+            pb_fare->add_ticket_id(pb_ticket->id());
+
         } else {
             pb_ticket = response.add_tickets();
 
             pb_ticket->set_name(ticket.caption);
             pb_ticket->set_found(true);
             pb_ticket->set_comment(ticket.comment);
-            pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
+            pb_ticket->set_id("ticket_" + std::to_string(++cpt_ticket));
             pb_ticket->set_source_id(ticket.key);
             pb_ticket->mutable_cost()->set_currency(*currency);
             pb_ticket->mutable_cost()->set_value(ticket.value.value);
@@ -1743,16 +1744,18 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
         }
     }
     pb_fare->mutable_total()->set_value(fare.total.value);
-    if (currency)
+    if (currency) {
         pb_fare->mutable_total()->set_currency(*currency);
+    }
     pb_fare->set_found(!fare.not_found);
 }
 
 void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn,
                               const ng::PathItem& item,
                               const type::EntryPoint& ori_dest) {
-    if (item.way_idx >= data->geo_ref->ways.size())
-        throw navitia::exception("Wrong way idx : " + boost::lexical_cast<std::string>(item.way_idx));
+    if (item.way_idx >= data->geo_ref->ways.size()) {
+        throw navitia::exception("Wrong way idx : " + std::to_string(item.way_idx));
+    }
 
     pbnavitia::PathItem* path_item = sn->add_path_items();
     path_item->set_name(data->geo_ref->ways[item.way_idx]->name);
@@ -1777,8 +1780,9 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest,
                                      const pt::ptime departure,
                                      int max_depth) {
     int depth = std::min(max_depth, 3);
-    if (path.path_items.empty())
+    if (path.path_items.empty()) {
         return;
+    }
 
     auto session_departure = departure;
 
@@ -1809,10 +1813,10 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest,
 
     // We add consistency between origin/destination places and geojson
     auto sections = pb_journey->mutable_sections();
-    for (auto section = sections->begin(); section != sections->end(); ++section) {
-        auto destination_coord = get_coord(section->destination());
-        auto sn = section->mutable_street_network();
-        if (!destination_coord.IsInitialized() || sn->coordinates().size() == 0) {
+    for (auto& section : *sections) {
+        auto destination_coord = get_coord(section.destination());
+        auto sn = section.mutable_street_network();
+        if (!destination_coord.IsInitialized() || sn->coordinates().empty()) {
             continue;
         }
         auto last_coord = sn->coordinates(sn->coordinates_size() - 1);
@@ -2083,7 +2087,7 @@ void PbCreator::fill_additional_informations(google::protobuf::RepeatedField<int
     } else if (has_odt) {
         infos->Add(pbnavitia::ODT_WITH_STOP_TIME);
     }
-    if (infos->size() < 1) {
+    if (infos->empty()) {
         infos->Add(pbnavitia::REGULAR);
     }
 }
@@ -2222,17 +2226,7 @@ void PbCreator::sort_journeys() {
 }
 
 bool PbCreator::empty_journeys() {
-    return (response.journeys().size() == 0);
-}
-
-void fill_pb_error(const pbnavitia::Error::error_id id,
-                   const std::string& message,
-                   pbnavitia::Error* error,
-                   int,
-                   const pt::ptime&,
-                   const pt::time_period&) {
-    error->set_id(id);
-    error->set_message(message);
+    return (response.journeys().empty());
 }
 
 pbnavitia::GeoStatus* PbCreator::mutable_geo_status() {

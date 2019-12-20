@@ -30,12 +30,13 @@ www.navitia.io
 
 #pragma once
 #include "conf.h"
-#include <string>
+
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
+
+#include <string>
 
 namespace navitia {
 namespace type {

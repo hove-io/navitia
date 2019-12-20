@@ -29,10 +29,11 @@ www.navitia.io
 */
 
 #pragma once
-#include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/type.h"
 #include "type/response.pb.h"
 #include "type/pb_converter.h"
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace navitia {
 namespace calendar {

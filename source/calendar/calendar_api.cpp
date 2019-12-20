@@ -29,9 +29,10 @@ www.navitia.io
 */
 
 #include "calendar_api.h"
-#include "type/pb_converter.h"
+
 #include "calendar.h"
 #include "ptreferential/ptreferential.h"
+#include "type/pb_converter.h"
 #include "utils/paginate.h"
 
 namespace navitia {
@@ -70,7 +71,7 @@ void calendars(navitia::PbCreator& pb_creator,
 
     try {
         Calendar calendar;
-        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, pb_creator.now);
+        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period);
     } catch (const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, parse_error.more);
         return;

@@ -200,7 +200,6 @@ struct PbCreator {
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
-    pbnavitia::Ticket* unknown_ticket = nullptr;  // we want only one unknown ticket
 
     PbCreator() = default;
 
@@ -235,7 +234,6 @@ struct PbCreator {
         this->impacts.clear();
         this->routing_section_map.clear();
         this->response.Clear();
-        this->unknown_ticket = nullptr;
     }
 
     PbCreator(const PbCreator&) = delete;
@@ -538,7 +536,7 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects,
 }
 
 void fill_pb_error(const pbnavitia::Error::error_id id,
-                   const std::string& comment,
+                   const std::string& message,
                    pbnavitia::Error* error,
                    int max_depth = 0,
                    const pt::ptime& now = pt::not_a_date_time,

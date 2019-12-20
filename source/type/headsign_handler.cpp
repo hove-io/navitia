@@ -29,9 +29,11 @@ www.navitia.io
 */
 
 #include "headsign_handler.h"
-#include "utils/functions.h"
-#include "type/type.h"  //TODO reduce include once metavj has been move
+
+#include "type/meta_vehicle_journey.h"
 #include "type/serialization.h"
+#include "type/stop_time.h"
+#include "utils/functions.h"
 #include "utils/serialization_flat_map.h"
 #include "utils/serialization_unordered_map.h"
 #include "utils/serialization_unordered_set.h"
@@ -40,7 +42,7 @@ namespace navitia {
 namespace type {
 
 template <class Archive>
-void HeadsignHandler::serialize(Archive& ar, const unsigned int) {
+void HeadsignHandler::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& headsign_changes& headsign_mvj;
 }
 SERIALIZABLE(HeadsignHandler)
@@ -133,10 +135,7 @@ bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj, const std::
     auto has_headsign = [&](const std::pair<RankStopTime, std::string>& it_change) {
         return it_change.second == headsign;
     };
-    if (navitia::contains_if(it_vj_changes->second, has_headsign)) {
-        return true;
-    }
-    return false;
+    return navitia::contains_if(it_vj_changes->second, has_headsign);
 }
 
 std::vector<const VehicleJourney*> HeadsignHandler::get_vj_from_headsign(const std::string& headsign) const {
@@ -193,7 +192,7 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, co
     update_headsign_mvj_after_remove(*vj, prev_headsign_for_stop_time);
 }
 
-void HeadsignHandler::forget_vj(const VehicleJourney*) {
+void HeadsignHandler::forget_vj(const VehicleJourney* /*unused*/) {
     // currently we never want to forget VJ
     // it would be MANDATORY to do it if we added realtime vjs to the headsigns handler,
     // but for the moment we only index base schedule VJ

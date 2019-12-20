@@ -49,10 +49,10 @@ using ForbiddenUris = std::vector<std::string>;
 class EquipmentReports {
 public:
     EquipmentReports(const type::Data& data,
-                     const std::string& filter,
+                     std::string filter,
                      int count = 25,
                      int start_page = 0,
-                     const ForbiddenUris& forbidden_uris = {});
+                     ForbiddenUris forbidden_uris = {});
 
     EquipmentReportList get_paginated_equipment_report_list();
     size_t get_total_lines() const { return total_lines; }

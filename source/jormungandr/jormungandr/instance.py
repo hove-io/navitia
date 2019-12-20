@@ -293,6 +293,12 @@ class Instance(object):
         return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_taxi_duration_to_pt(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_taxi_duration_to_pt', instance_db, self.name)
+
+    @property
     def walking_speed(self):
         # type: () -> float
         instance_db = self.get_models()
@@ -658,7 +664,7 @@ class Instance(object):
             self.geojson = None
             return
         # simplify the geom to prevent slow query on bragi
-        geom = self.geom.simplify(tolerance=0.1)
+        geom = self.geom.simplify(tolerance=0.01)
         self.geojson = geometry.mapping(geom)
 
     def init(self):

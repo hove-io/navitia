@@ -28,21 +28,22 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 #include "type/stop_point.h"
-#include "type/stop_area.h"
-#include "type/dataset.h"
-#include "type/connection.h"
-#include "type/pt_data.h"
 
-#include "type/serialization.h"
-#include <boost/serialization/weak_ptr.hpp>
+#include "type/connection.h"
+#include "type/dataset.h"
 #include "type/indexes.h"
+#include "type/pt_data.h"
 #include "type/route.h"
+#include "type/serialization.h"
+#include "type/stop_area.h"
+
+#include <boost/serialization/weak_ptr.hpp>
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void StopPoint::serialize(Archive& ar, const unsigned int) {
+void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
     // The *_list are not serialized here to avoid stack abuse
     // during serialization and deserialization.
     //
@@ -70,8 +71,9 @@ Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
             break;
         case Type_e::Connection:
         case Type_e::StopPointConnection:
-            for (const StopPointConnection* stop_cnx : stop_point_connection_list)
+            for (const StopPointConnection* stop_cnx : stop_point_connection_list) {
                 result.insert(stop_cnx->idx);  // TODO use bulk insert ?
+            }
             break;
         case Type_e::Impact:
             return data.get_impacts_idx(get_impacts());

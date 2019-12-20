@@ -29,18 +29,20 @@ www.navitia.io
 */
 
 #include "route_schedules.h"
+
+#include "ptreferential/ptreferential.h"
+#include "request_handle.h"
 #include "routing/dataraptor.h"
 #include "thermometer.h"
-#include "request_handle.h"
-#include "type/pb_converter.h"
-#include "ptreferential/ptreferential.h"
-#include "utils/paginate.h"
 #include "type/datetime.h"
+#include "type/pb_converter.h"
+#include "utils/paginate.h"
+
+#include <boost/graph/adjacency_matrix.hpp>
+#include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
-#include <boost/graph/topological_sort.hpp>
-#include <boost/graph/adjacency_matrix.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -54,7 +56,7 @@ std::vector<std::vector<routing::datetime_stop_time>> get_all_route_stop_times(
     const size_t max_stop_date_times,
     const type::Data& d,
     const type::RTLevel rt_level,
-    const boost::optional<const std::string> calendar_id) {
+    const boost::optional<const std::string>& calendar_id) {
     std::vector<std::vector<routing::datetime_stop_time>> result;
 
     const auto& journey_patterns = d.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
@@ -84,7 +86,7 @@ std::vector<std::vector<routing::datetime_stop_time>> get_all_route_stop_times(
 
     // we need to load the next datetimes for each jp
     for (const auto& ho : first_dt_st) {
-        result.push_back(std::vector<routing::datetime_stop_time>());
+        result.emplace_back();
         DateTime dt = ho.first;
         for (const type::StopTime& stop_time : ho.second->vehicle_journey->stop_time_list) {
             if (!stop_time.is_frequency()) {
@@ -150,7 +152,7 @@ int score(const std::vector<routing::datetime_stop_time>& v1, const std::vector<
     });
     return res;
 }
-typedef boost::adjacency_matrix<boost::directedS> Graph;
+using Graph = boost::adjacency_matrix<boost::directedS>;
 struct Edge {
     uint32_t source;
     uint32_t target;
@@ -321,8 +323,7 @@ void ranked_pairs_sort(std::vector<std::vector<routing::datetime_stop_time>>& v)
 
 static std::vector<std::vector<routing::datetime_stop_time>> make_matrix(
     const std::vector<std::vector<routing::datetime_stop_time>>& stop_times,
-    const Thermometer& thermometer,
-    const type::Data&) {
+    const Thermometer& thermometer) {
     // result group stop_times by stop_point, tmp by vj.
     const size_t thermometer_size = thermometer.get_thermometer().size();
     std::vector<std::vector<routing::datetime_stop_time>> result(
@@ -353,7 +354,7 @@ static std::vector<std::vector<routing::datetime_stop_time>> make_matrix(
 
 void route_schedule(PbCreator& pb_creator,
                     const std::string& filter,
-                    const boost::optional<const std::string> calendar_id,
+                    const boost::optional<const std::string>& calendar_id,
                     const std::vector<std::string>& forbidden_uris,
                     const pt::ptime datetime,
                     uint32_t duration,
@@ -393,14 +394,14 @@ void route_schedule(PbCreator& pb_creator,
         std::vector<vector_idx> stop_points;
         for (const auto& jp_idx : jps) {
             const auto& jp = pb_creator.data->dataRaptor->jp_container.get(jp_idx);
-            stop_points.push_back(vector_idx());
+            stop_points.emplace_back();
             for (const auto& jpp_idx : jp.jpps) {
                 const auto& jpp = pb_creator.data->dataRaptor->jp_container.get(jpp_idx);
                 stop_points.back().push_back(jpp.sp_idx.val);
             }
         }
         thermometer.generate_thermometer(stop_points);
-        auto matrix = make_matrix(stop_times, thermometer, *pb_creator.data);
+        auto matrix = make_matrix(stop_times, thermometer);
 
         auto schedule = pb_creator.add_route_schedules();
         pbnavitia::Table* table = schedule->mutable_table();

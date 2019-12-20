@@ -29,18 +29,21 @@ www.navitia.io
 */
 
 #pragma once
-#include <boost/serialization/split_member.hpp>
-#include <boost/utility.hpp>
-#include <boost/serialization/version.hpp>
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
-#include <atomic>
-#include <set>
 #include "type/validity_pattern.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
 #include "type/fwd_type.h"
+#include "fare/fare.h"
+
+#include <boost/serialization/split_member.hpp>
+#include <boost/utility.hpp>
+#include <boost/serialization/version.hpp>
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
+
+#include <atomic>
+#include <set>
 
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 #if __GNUG__ && __GNUC__ < 5
@@ -115,8 +118,8 @@ class Data : boost::noncopyable {
 public:
     static const unsigned int data_version;  //< Data version number. *INCREMENT* in cpp file
     unsigned int version = 0;                //< Version of loaded data
-    std::atomic<bool> loaded;                //< have the data been loaded ?
-    std::atomic<bool> loading;               //< Is the data being loaded
+    std::atomic<bool> loaded{};              //< have the data been loaded ?
+    std::atomic<bool> loading{};             //< Is the data being loaded
     std::atomic<bool> disruption_error;      // disruption error flag
     size_t data_identifier = 0;
 
@@ -183,9 +186,9 @@ public:
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
     // find in the future a cleaner way, but now, this is cleaner than
     // before.
-    mutable std::atomic<bool> is_connected_to_rabbitmq;
+    mutable std::atomic<bool> is_connected_to_rabbitmq{};
 
-    mutable std::atomic<bool> is_realtime_loaded;
+    mutable std::atomic<bool> is_realtime_loaded{};
 
     Data(size_t data_identifier = 0);
     ~Data();
@@ -240,7 +243,7 @@ public:
     void load(std::istream& ifs);
 
     /** Save data in a compressed binary file using LZ4*/
-    void save(std::ostream& ifs) const;
+    void save(std::ostream& ofs) const;
 
     // Deep clone from the given Data.
     void clone_from(const Data&);
@@ -266,13 +269,6 @@ std::bitset<N> get_difference(const std::bitset<N>& calendar, const std::bitset<
     auto res = (calendar ^ vj) & calendar;
     return res;
 }
-
-std::vector<std::pair<const Calendar*, ValidityPattern::year_bitset>> find_matching_calendar(
-    const Data&,
-    const std::string& name,
-    const ValidityPattern& validity_pattern,
-    const std::vector<Calendar*>& calendar_list,
-    double relative_threshold = 0.1);
 
 }  // namespace type
 }  // namespace navitia

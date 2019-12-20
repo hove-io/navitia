@@ -31,6 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "type/type_interfaces.h"
+
 #include <boost/serialization/split_member.hpp>
 
 namespace navitia {

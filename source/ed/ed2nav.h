@@ -27,11 +27,40 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-
 #pragma once
+
+#include "utils/exception.h"
+
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
+
+#include <string>
+
+namespace navitia {
+namespace type {
+struct Data;
+}  // namespace type
+}  // namespace navitia
 
 namespace ed {
 
+template <class T = navitia::type::Data>
+bool try_save_file(const std::string& filename, const T& data) {
+    auto logger = log4cplus::Logger::getInstance("ed2nav::try_save_file");
+    LOG4CPLUS_INFO(logger, "Trying to save " << filename);
+    try {
+        data.save(filename);
+    } catch (const navitia::exception& e) {
+        LOG4CPLUS_ERROR(logger, "Unable to save " << filename);
+        LOG4CPLUS_ERROR(logger, e.what());
+        return false;
+    }
+    LOG4CPLUS_INFO(logger, "File " << filename << " has been saved");
+    return true;
+}
+
+template <class T = navitia::type::Data>
+bool write_data_to_file(const std::string& output_filename, const T& data);
 int ed2nav(int argc, const char** argv);
 
 }  // namespace ed

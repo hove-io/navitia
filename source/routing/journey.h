@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/time_duration.h"
 #include "type/datetime.h"
 #include "utils/exception.h"
+
 #include <unordered_set>
 
 namespace navitia {
@@ -57,8 +58,8 @@ struct Journey {
     bool is_pt() const;
 
     bool better_on_dt(const Journey& that, bool request_clockwise) const;
-    bool better_on_transfer(const Journey& that, bool) const;
-    bool better_on_sn(const Journey& that, bool) const;
+    bool better_on_transfer(const Journey& that) const;
+    bool better_on_sn(const Journey& that) const;
     bool operator==(const Journey& rhs) const;
     bool operator!=(const Journey& rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);

@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "request_handle.h"
+
 #include "ptreferential/ptreferential.h"
 #include "type/meta_data.h"
 
@@ -38,7 +39,7 @@ namespace timetables {
 RequestHandle::RequestHandle(PbCreator& pb_creator,
                              const pt::ptime datetime,
                              uint32_t duration,
-                             boost::optional<const std::string> calendar_id,
+                             const boost::optional<const std::string>& calendar_id,
                              const bool clockwise)
     : pb_creator(pb_creator), date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf) {
     if (!calendar_id) {
@@ -69,7 +70,7 @@ void RequestHandle::init_jpp(const std::string& request, const std::vector<std::
     try {
         const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, *pb_creator.data);
         for (const auto idx : jpps) {
-            journey_pattern_points.push_back(routing::JppIdx(idx));
+            journey_pattern_points.emplace_back(idx);
         }
         total_result = journey_pattern_points.size();
     } catch (const ptref::ptref_error& ptref_error) {

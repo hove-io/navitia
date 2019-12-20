@@ -31,14 +31,15 @@ www.navitia.io
 #pragma once
 
 #include "data.h"
+#include "utils/functions.h"
 #include "utils/exception.h"
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
 #include <pqxx/pqxx>
+
 #include <unordered_map>
 #include <algorithm>
-#include "utils/functions.h"
 
 namespace ed {
 
@@ -53,7 +54,7 @@ struct EdReader {
         }
     }
 
-    void fill(navitia::type::Data& nav_data,
+    void fill(navitia::type::Data& data,
               const double min_non_connected_graph_ratio,
               const bool export_georef_edges_geometries);
 
@@ -105,7 +106,7 @@ private:
     using EdgeId = std::pair<uint64_t, uint64_t>;
     navitia::flat_enum_map<navitia::type::Mode_e, std::set<EdgeId>> edge_to_ignore_by_modes;
 
-    void fill_meta(navitia::type::Data& data, pqxx::work& work);
+    void fill_meta(navitia::type::Data& nav_data, pqxx::work& work);
     void fill_feed_infos(navitia::type::Data& data, pqxx::work& work);
     void fill_timezones(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
@@ -133,7 +134,7 @@ private:
 
     void fill_comments(navitia::type::Data& data, pqxx::work& work);
 
-    void fill_admins(navitia::type::Data& data, pqxx::work& work);
+    void fill_admins(navitia::type::Data& nav_data, pqxx::work& work);
     void fill_admin_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_admins_postal_codes(navitia::type::Data& data, pqxx::work& work);
     void fill_object_codes(navitia::type::Data& data, pqxx::work& work);
@@ -149,7 +150,7 @@ private:
                                                                      double len,
                                                                      uint64_t source,
                                                                      uint64_t target);
-    void fill_vector_to_ignore(pqxx::work& work, const double percent_delete);
+    void fill_vector_to_ignore(pqxx::work& work, const double min_non_connected_graph_ratio);
     void fill_graph_bss(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_parking(navitia::type::Data& data, pqxx::work& work);
 

@@ -29,13 +29,14 @@ www.navitia.io
 */
 
 #include "type/comment.h"
+
 #include "type/serialization.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void Comment::serialize(Archive& ar, const unsigned int) {
+void Comment::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& value& type;
 }
 SERIALIZABLE(Comment)

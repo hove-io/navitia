@@ -30,21 +30,24 @@ www.navitia.io
 
 #include "maintenance_worker.h"
 
-#include "make_disruption_from_chaos.h"
 #include "apply_disruption.h"
+#include "make_disruption_from_chaos.h"
+#include "metrics.h"
 #include "realtime.h"
-#include "type/task.pb.h"
 #include "type/pt_data.h"
+#include "type/task.pb.h"
+#include "utils/get_hostname.h"
+
+#include <SimpleAmqpClient/Envelope.h>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread/thread.hpp>
-#include <sys/stat.h>
-#include <signal.h>
-#include <SimpleAmqpClient/Envelope.h>
+
 #include <chrono>
+#include <csignal>
+#include <sys/stat.h>
 #include <thread>
-#include "utils/get_hostname.h"
-#include "metrics.h"
+#include <utility>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -89,7 +92,7 @@ void MaintenanceWorker::load_realtime() {
     task.set_action(pbnavitia::LOAD_REALTIME);
     auto* lr = task.mutable_load_realtime();
     lr->set_queue_name(queue_name);
-    for (auto topic : conf.rt_topics()) {
+    for (const auto& topic : conf.rt_topics()) {
         lr->add_contributors(topic);
     }
     auto data = data_manager.get_data();
@@ -211,7 +214,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         auto duration = pt::microsec_clock::universal_time() - begin;
         this->metrics.observe_handle_rt(duration.total_seconds());
         LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disruption applied in " << duration);
-    } else if (envelopes.size() > 0) {
+    } else if (!envelopes.empty()) {
         // we didn't had to update Data because there is no change but we want to track that realtime data
         // is being processed as it should because "nothing has changed" isn't the same thing
         // than "I don't known what's happening"
@@ -238,13 +241,15 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
          * BasicConsumeMessage() timeout.
          * */
         bool queue_is_empty = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
-        if (queue_is_empty)
+        if (queue_is_empty) {
             break;
+        }
 
         if (envelope) {
             envelopes.push_back(envelope);
-            if (!no_ack)
+            if (!no_ack) {
                 channel->BasicAck(envelope);
+            }
             ++consumed_nb;
         }
     }
@@ -342,7 +347,7 @@ void MaintenanceWorker::init_rabbitmq() {
         LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
         // binding the queue to the exchange for all task for this instance
         LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
-        for (auto topic : conf.rt_topics()) {
+        for (const auto& topic : conf.rt_topics()) {
             channel->BindQueue(queue_name_rt, exchange_name, topic);
         }
         is_initialized = true;
@@ -355,7 +360,7 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
                                      const Metrics& metrics)
     : data_manager(data_manager),
       logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
-      conf(conf),
+      conf(std::move(conf)),
       metrics(metrics),
       next_try_realtime_loading(pt::microsec_clock::universal_time()) {
     // Connect Rabbitmq

@@ -29,21 +29,22 @@ www.navitia.io
 */
 
 #include "type/contributor.h"
+
+#include "type/dataset.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
-#include "type/dataset.h"
 
 namespace navitia {
 namespace type {
 
 template <class Archive>
-void Contributor::serialize(Archive& ar, const unsigned int) {
+void Contributor::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& idx& name& uri& website& license& dataset_list;
 }
 SERIALIZABLE(Contributor)
 
-Indexes Contributor::get(Type_e type, const PT_Data&) const {
+Indexes Contributor::get(Type_e type, const PT_Data& /*unused*/) const {
     Indexes result;
     switch (type) {
         case Type_e::Dataset:

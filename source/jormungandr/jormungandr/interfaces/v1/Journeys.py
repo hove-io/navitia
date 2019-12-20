@@ -414,10 +414,16 @@ class Journeys(JourneyCommon):
         if args.get('timeframe_duration'):
             args['timeframe_duration'] = min(args['timeframe_duration'], default_values.max_duration)
 
+        if not (args['destination'] or args['origin']):
+            abort(400, message="you should at least provide either a 'from' or a 'to' argument")
+
         if args['destination'] and args['origin']:
             api = 'journeys'
         else:
             api = 'isochrone'
+
+        if api == 'journeys' and args['origin'] == args['destination']:
+            abort(400, message="your origin and destination points are the same")
 
         if api == 'isochrone':
             # we have custom default values for isochrone because they are very resource expensive
@@ -479,9 +485,6 @@ class Journeys(JourneyCommon):
             args["_final_line_filter"] = False
             # 'no_shared_section' removes journeys with a section that have the same origin and destination stop points
             args["no_shared_section"] = False
-
-        if not (args['destination'] or args['origin']):
-            abort(400, message="you should at least provide either a 'from' or a 'to' argument")
 
         if args['debug']:
             g.debug = True

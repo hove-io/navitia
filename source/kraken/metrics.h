@@ -30,17 +30,16 @@ www.navitia.io
 
 #pragma once
 
-#include <memory>
-#include <map>
+#include "type/type.pb.h"
 
 #include <boost/optional.hpp>
 #include <boost/utility.hpp>
-
-#include "type/type.pb.h"
-
 #include <prometheus/exposer.h>
 #include <prometheus/counter.h>
 #include <prometheus/gauge.h>
+
+#include <memory>
+#include <map>
 
 // forward declare
 namespace prometheus {
@@ -57,9 +56,9 @@ class InFlightGuard {
 public:
     explicit InFlightGuard(prometheus::Gauge* gauge);
     InFlightGuard(InFlightGuard& other) = delete;
-    InFlightGuard(InFlightGuard&& other);
+    InFlightGuard(InFlightGuard&& other) noexcept;
     void operator=(InFlightGuard& other) = delete;
-    void operator=(InFlightGuard&& other);
+    InFlightGuard& operator=(InFlightGuard&& other) noexcept;
     ~InFlightGuard();
 };
 

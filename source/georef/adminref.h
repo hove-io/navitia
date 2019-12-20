@@ -34,8 +34,9 @@ www.navitia.io
 #include "type/type_interfaces.h"
 
 #include <boost/geometry/geometries/polygon.hpp>
-#include <unordered_map>
 #include <RTree/RTree.h>
+
+#include <unordered_map>
 
 namespace nt = navitia::type;
 

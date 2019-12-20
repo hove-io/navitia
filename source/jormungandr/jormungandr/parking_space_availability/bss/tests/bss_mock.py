@@ -35,6 +35,7 @@ from jormungandr.ptref import FeedPublisher
 
 class BssMockProvider(AbstractParkingPlacesProvider):
     def __init__(self, network=None, *args, **kwargs):
+        super(BssMockProvider, self).__init__(*args, **kwargs)
         self.network = network
 
     def support_poi(self, poi):

@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "routing.h"
+
 #include "type/data.h"
 
 namespace navitia {
@@ -37,48 +38,7 @@ namespace routing {
 std::string PathItem::print() const {
     std::stringstream ss;
 
-    const navitia::type::StopArea* start = stop_points.front()->stop_area;
-    const navitia::type::StopArea* dest = stop_points.back()->stop_area;
-    switch (type) {
-        case ItemType::public_transport:
-            ss << "public transport";
-            break;
-        case ItemType::walking:
-            ss << "walking";
-            break;
-        case ItemType::stay_in:
-            ss << "stay in";
-            break;
-        case ItemType::waiting:
-            ss << "waiting";
-            break;
-        case ItemType::boarding:
-            ss << "boarding";
-            break;
-        case ItemType::alighting:
-            ss << "alighting";
-            break;
-        default:
-            ss << "unknown";
-            break;
-    }
-    ss << " section\n";
-
-    if (type == ItemType::public_transport && !stop_times.empty()) {
-        const navitia::type::StopTime* st = stop_times.front();
-        const navitia::type::VehicleJourney* vj = st->vehicle_journey;
-        const navitia::type::Route* route = vj->route;
-        const navitia::type::Line* line = route->line;
-        ss << "Line : " << line->name << " (" << line->uri << " " << line->idx << "), "
-           << "Route : " << route->name << " (" << route->uri << " " << route->idx << "), "
-           << "Vehicle journey " << vj->idx << "\n";
-    }
-    ss << "From " << start->name << "(" << start->uri << " " << start->idx << ") at " << departure << "\n";
-    for (auto sp : stop_points) {
-        ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")"
-           << "\n";
-    }
-    ss << "To " << dest->name << "(" << dest->uri << " " << dest->idx << ") at " << arrival << "\n";
+    ss << *this;
     return ss.str();
 }
 
@@ -110,7 +70,8 @@ bool use_crow_fly(const type::EntryPoint& point,
         // if we have a stop area in the request,
         // we only do a crowfly section if the used stop point belongs to this stop area
         return point.uri == stop_point.stop_area->uri;
-    } else if (point.type == type::Type_e::Admin) {
+    }
+    if (point.type == type::Type_e::Admin) {
         // we handle the main_stop_area of an admin here
         // we want a crowfly for all main_stop_areas of an admin,
         // even if the stop_area is not in the admin
@@ -118,10 +79,63 @@ bool use_crow_fly(const type::EntryPoint& point,
         auto it = find_if(begin(admin->main_stop_areas), end(admin->main_stop_areas),
                           [stop_point](const type::StopArea* stop_area) { return stop_area == stop_point.stop_area; });
         return it != end(admin->main_stop_areas);
-    } else {
-        // if the request is on any other type we don't want a crowfly section
-        return false;
     }
+    // if the request is on any other type we don't want a crowfly section
+    return false;
+}
+
+std::ostream& operator<<(std::ostream& ss, const PathItem& t) {
+    const navitia::type::StopArea* start = t.stop_points.front()->stop_area;
+    const navitia::type::StopArea* dest = t.stop_points.back()->stop_area;
+    switch (t.type) {
+        case navitia::routing::ItemType::public_transport:
+            ss << "public transport";
+            break;
+        case navitia::routing::ItemType::walking:
+            ss << "walking";
+            break;
+        case navitia::routing::ItemType::stay_in:
+            ss << "stay in";
+            break;
+        case navitia::routing::ItemType::waiting:
+            ss << "waiting";
+            break;
+        case navitia::routing::ItemType::boarding:
+            ss << "boarding";
+            break;
+        case navitia::routing::ItemType::alighting:
+            ss << "alighting";
+            break;
+        default:
+            ss << "unknown";
+            break;
+    }
+    ss << " section\n";
+
+    if (t.type == navitia::routing::ItemType::public_transport && !t.stop_times.empty()) {
+        const navitia::type::StopTime* st = t.stop_times.front();
+        const navitia::type::VehicleJourney* vj = st->vehicle_journey;
+        const navitia::type::Route* route = vj->route;
+        const navitia::type::Line* line = route->line;
+        ss << "Line : " << line->name << " (" << line->uri << " " << line->idx << "), "
+           << "Route : " << route->name << " (" << route->uri << " " << route->idx << "), "
+           << "Vehicle journey " << vj->idx << "\n";
+    }
+    ss << "From " << start->name << "(" << start->uri << " " << start->idx << ") at " << t.departure << "\n";
+    for (auto sp : t.stop_points) {
+        ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")"
+           << "\n";
+    }
+    ss << "To " << dest->name << "(" << dest->uri << " " << dest->idx << ") at " << t.arrival << "\n";
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const Path& t) {
+    for (auto item : t.items) {
+        ss << item;
+    }
+
+    return ss;
 }
 
 }  // namespace routing

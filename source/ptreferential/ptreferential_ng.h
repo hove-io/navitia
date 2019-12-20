@@ -32,13 +32,13 @@ www.navitia.io
 
 #include "utils/exception.h"
 #include "type/type_interfaces.h"
+#include "type/rt_level.h"
 #include "type/data.h"
 
 #include <boost/optional.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 #include <boost/variant/recursive_variant.hpp>
-#include "type/rt_level.h"
 
 namespace navitia {
 namespace ptref {
@@ -115,7 +115,7 @@ std::ostream& operator<<(std::ostream& os, const BinaryOp<Diff>& op);
 
 }  // namespace ast
 
-ast::Expr parse(const std::string& s);
+ast::Expr parse(const std::string& request);
 std::string make_request(const type::Type_e requested_type,
                          const std::string& request,
                          const std::vector<std::string>& forbidden_uris,
