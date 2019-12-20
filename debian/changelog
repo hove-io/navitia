@@ -1,3 +1,39 @@
+navitia2 (3.2.0) unstable; urgency=low
+
+  * Ed: Clang tidy on ed  <https://github.com/CanalTP/navitia/pull/3076>
+  * TimeTables: Clang tidy on time_tables  <https://github.com/CanalTP/navitia/pull/3094>
+  * Vptranslator: Clang tidy on vptranslator  <https://github.com/CanalTP/navitia/pull/3095>
+  * Routing: Clang tidy on routing  <https://github.com/CanalTP/navitia/pull/3089>
+  * Jormun: Graphical isochrone distributed  <https://github.com/CanalTP/navitia/pull/3040>
+  * Fare: Clang tidy on fare  <https://github.com/CanalTP/navitia/pull/3090>
+  * Type: Clang tidy on type  <https://github.com/CanalTP/navitia/pull/3092>
+  * Distributed add max_taxi_duration_to_pt  <https://github.com/CanalTP/navitia/pull/3068>
+  * Jormun: reduce simplification of coverage shapes used by bragi  <https://github.com/CanalTP/navitia/pull/3087>
+  * Fares: Fix instabilities in fares  <https://github.com/CanalTP/navitia/pull/3049>
+  * PTref: Using clang-tidy on ptref  <https://github.com/CanalTP/navitia/pull/3084>
+  * Equipment: Clang tidy on equipment  <https://github.com/CanalTP/navitia/pull/3082>
+  * Disruption: Using clang-tidy on disruption  <https://github.com/CanalTP/navitia/pull/3075>
+  * Cities: Using clang-tidy on cities  <https://github.com/CanalTP/navitia/pull/3074>
+  * Proximity_list: Using clang-tidy on proximity_list  <https://github.com/CanalTP/navitia/pull/3083>
+  * Jormun: Terminate is better than kill  <https://github.com/CanalTP/navitia/pull/3077>
+  * CI: Using a fixed number of tries instead of time for the init of mock kraken  <https://github.com/CanalTP/navitia/pull/3069>
+  * Calendar: Using clang-tidy on calendar  <https://github.com/CanalTP/navitia/pull/3073>
+  * Autocomplete: Clang tidy on autocomplete  <https://github.com/CanalTP/navitia/pull/3072>
+  * Georef: Using clang-tidy on georef  <https://github.com/CanalTP/navitia/pull/3071>
+  * Kraken: Clang tidy on kraken  <https://github.com/CanalTP/navitia/pull/3070>
+  * Kraken: Fix warnings found by scan-build  <https://github.com/CanalTP/navitia/pull/3048>
+  * Ed: Adding logs in ed2nav  <https://github.com/CanalTP/navitia/pull/3078>
+  * Jormun: GeoJson geometry to be configured to a car park provider  <https://github.com/CanalTP/navitia/pull/3042>
+  * ed2nav: Writes a temp file before replacing the old data  <https://github.com/CanalTP/navitia/pull/2997>
+  * Jormun: Check that the origin and destination of journeys are not the same  <https://github.com/CanalTP/navitia/pull/3044>
+  * Kraken: move MetaVehicleJourney and get_type_e from type.h  <https://github.com/CanalTP/navitia/pull/3041>
+  * Kraken: Fixed the `Places nearby` anchor in the index + minor typo edit  <https://github.com/CanalTP/navitia/pull/3045>
+  * Doc: Update the communication room from IRC to matrix  <https://github.com/CanalTP/navitia/pull/3047>
+  * Doc: add documentation about kraken metrics  <https://github.com/CanalTP/navitia/pull/3027>
+  * Kraken: set nb_nearest_vertices to -1  <https://github.com/CanalTP/navitia/pull/3039>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 20 Dec 2019 11:12:35 +0100
+
 navitia2 (3.1.0) unstable; urgency=low
 
   * Revert "Kraken: Case/accents sensitive sort on stop_areas"  <https://github.com/CanalTP/navitia/pull/3043>
