@@ -45,8 +45,6 @@ from zmq import green as zmq
 import six
 import pybreaker
 
-DEFAULT_ASGARD_SOCKET_TTL = datetime.timedelta(minutes=1).total_seconds()
-
 
 class Asgard(TransientSocket, Kraken):
     def __init__(
@@ -58,7 +56,7 @@ class Asgard(TransientSocket, Kraken):
         id=None,
         timeout=10,
         api_key=None,
-        socket_ttl=DEFAULT_ASGARD_SOCKET_TTL,
+        socket_ttl=app.config['ASGARD_ZMQ_SOCKET_TTL_SECONDS'],
         **kwargs
     ):
         super(Asgard, self).__init__(

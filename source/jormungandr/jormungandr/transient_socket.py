@@ -33,7 +33,7 @@
 import zmq
 import time
 import gevent
-import queue
+from gevent import queue
 from contextlib import contextmanager
 import logging
 import six
@@ -54,6 +54,7 @@ class TransientSocket(object):
     """
 
     _sockets = dict()  # type: Dict[object, queue.PriorityQueue]
+    _sockets_run_out_of_ttl = queue.Queue(maxsize=None)
     _reaper_interval = 10
 
     def __init__(self, name, zmq_context, socket_path, socket_ttl, *args, **kwargs):
@@ -69,8 +70,20 @@ class TransientSocket(object):
         # We don't want to waste time to close sockets in this function since the performance is critical
         # The cleaning job is done in another greenlet or uwsgi's signal-triggered task.
         try:
-            t, socket = self._sockets[self].get_nowait()
+            while True:
+                t, socket = self._sockets[self].get_nowait()
+                now = time.time()
+                # why do we need to check the ttl and another queue here?
+                # What may happen WITHOUT this queue is that every time the reaper is started, a request may arrive
+                # and pick the available socket in the self._sockets[self], so the reaper will consider that there is
+                # nothing to clean and quit.
+                if now - t > self.ttl:
+                    self._sockets_run_out_of_ttl.put((socket, self.name))
+                else:
+                    break
         except queue.Empty:  # there is no socket available: let's create one
+            logging.getLogger(__name__).info("opening one socket for %s", self.name)
+
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
@@ -81,20 +94,24 @@ class TransientSocket(object):
                 self._sockets[self].put((t, socket))
 
     @staticmethod
+    def close_socket(socket, name):
+        logging.getLogger(__name__).info("closing one socket for %s", name)
+        socket.setsockopt(zmq.LINGER, 0)
+        socket.close()
+
+    @staticmethod
     def _reaper(sockets, name, ttl):
-        while True:
-            try:
+        try:
+            while True:
                 now = time.time()
                 t, socket = sockets.get_nowait()
                 if now - t > ttl:
-                    logging.getLogger(__name__).info("closing one socket for %s", name)
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
+                    TransientSocket.close_socket(socket, name)
                 else:
                     sockets.put((t, socket))
-                    break  # remaining socket are still in "keep alive" state
-            except queue.Empty:
-                break
+                    return  # remaining socket are still in "keep alive" state
+        except queue.Empty:
+            pass
 
     @classmethod
     def _reap_sockets(cls):
@@ -102,9 +119,12 @@ class TransientSocket(object):
         for o, sockets in six.iteritems(cls._sockets):
             cls._reaper(sockets, o.name, o.ttl)
 
-    @classmethod
-    def uwsgi_reap_sockets(cls, signal):
-        cls._reap_sockets()
+        try:
+            while True:
+                socket, name = cls._sockets_run_out_of_ttl.get_nowait()
+                TransientSocket.close_socket(socket, name)
+        except queue.Empty:
+            return
 
     @classmethod
     def gevent_reap_sockets(cls):
@@ -115,35 +135,7 @@ class TransientSocket(object):
 
     @classmethod
     def init_socket_reaper(cls, config):
-        cls._reaper_interval = config['ZMQ_SOCKET_REAPER_INTERVAL']
+        cls._reaper_interval = config['ASGARD_ZMQ_SOCKET_REAPER_INTERVAL']
         # start a greenlet that handle connection closing when idle
         logging.getLogger(__name__).info("spawning a socket reaper with gevent")
         gevent.spawn(cls.gevent_reap_sockets)
-
-        try:
-            # Use uwsgi timer if we are running in uwsgi without gevent.
-            # When we are using uwsgi without gevent, idle workers won't run the greenlet, it will only
-            # be scheduled when waiting for a response of an external service (kraken mostly)
-            import uwsgi
-
-            # In gevent mode we stop, no need to add a timer, the greenlet will be scheduled while waiting
-            # for incomming request.
-            if 'gevent' in uwsgi.opt:
-                return
-
-            logging.getLogger(__name__).info("spawning a socket reaper with  uwsgi timer")
-
-            # Register a signal handler for the signal 2 of uwsgi
-            # this signal will trigger the socket reaper and can be on the first available worker
-            uwsgi.register_signal(2, 'worker', cls.uwsgi_reap_sockets)
-            # Add a timer that trigger this signal every reaper_interval second
-            uwsgi.add_timer(2, cls._reaper_interval)
-        except (ImportError, ValueError):
-            # ImportError is triggered if we aren't in uwsgi
-            # ValueError is raise if there is no more timer availlable: only 64 timers can be created
-            # workers that didn't create a timer can still run the signal handler
-            # if uwsgi dispatch the signal to them
-            # signal are dispatched randomly to workers (not round robbin :()
-            logging.getLogger(__name__).info(
-                "No more uwsgi timer available or not running in uwsgi, only gevent will be used"
-            )
