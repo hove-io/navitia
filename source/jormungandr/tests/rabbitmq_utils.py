@@ -34,6 +34,7 @@ from kombu.connection import BrokerConnection
 from kombu.entity import Exchange
 from kombu.pools import producers
 from retrying import Retrying
+import os
 
 
 # we need to generate a unique topic not to have conflict between tests
@@ -52,7 +53,8 @@ class RabbitMQCnxFixture(AbstractTestFixture):
 
     def setUp(self):
         # Note: not a setup_class method, not to conflict with AbstractTestFixture's setup
-        self._mock_rabbit_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
+        rabbit = os.getenv('JORMUNGANDR_BROKER_URL', "pyamqp://guest:guest@localhost:5672")
+        self._mock_rabbit_connection = BrokerConnection(rabbit)
         self._connections = {self._mock_rabbit_connection}
         self._exchange = Exchange('navitia', durable=True, delivry_mode=2, type='topic')
         self._mock_rabbit_connection.connect()

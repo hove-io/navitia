@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: fetch submodules
+    - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
@@ -36,8 +36,9 @@ jobs:
     - name: configure
       run: cmake source
     - name: make
-      run: make -j $(nproc)
+      run:  make protobuf_files && make -j $(nproc)
     - name: tests
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
