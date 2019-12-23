@@ -62,7 +62,6 @@ class TransientSocket(object):
     _sockets = defaultdict(
         lambda: SortedList([], key=lambda x: -x[0])
     )  # type: Dict[TransientSocket, SortedList]
-    _sockets_run_out_of_ttl = queue.Queue(maxsize=None)
     _reaper_interval = 10
 
     def __init__(self, name, zmq_context, socket_path, socket_ttl, *args, **kwargs):
