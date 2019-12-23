@@ -38,6 +38,12 @@ from contextlib import contextmanager
 import logging
 import six
 from typing import Dict
+from gevent.lock import BoundedSemaphore
+from collections import defaultdict
+from sortedcontainers import SortedList
+
+
+_semaphore = BoundedSemaphore(1)
 
 
 class TransientSocket(object):
@@ -53,7 +59,9 @@ class TransientSocket(object):
 
     """
 
-    _sockets = dict()  # type: Dict[object, queue.PriorityQueue]
+    _sockets = defaultdict(
+        lambda: SortedList([], key=lambda x: -x[0])
+    )  # type: Dict[TransientSocket, SortedList]
     _sockets_run_out_of_ttl = queue.Queue(maxsize=None)
     _reaper_interval = 10
 
@@ -63,7 +71,6 @@ class TransientSocket(object):
         self._zmq_context = zmq_context
         self._socket_path = socket_path
         self.ttl = socket_ttl
-        self._sockets[self] = queue.PriorityQueue(maxsize=None)
 
     @contextmanager
     def socket(self):
@@ -71,27 +78,29 @@ class TransientSocket(object):
         # The cleaning job is done in another greenlet or uwsgi's signal-triggered task.
         try:
             while True:
-                t, socket = self._sockets[self].get_nowait()
-                now = time.time()
-                # why do we need to check the ttl and another queue here?
-                # What may happen WITHOUT this queue is that every time the reaper is started, a request may arrive
-                # and pick the available socket in the self._sockets[self], so the reaper will consider that there is
-                # nothing to clean and quit.
-                if now - t > self.ttl:
-                    self._sockets_run_out_of_ttl.put((socket, self.name))
-                else:
-                    break
-        except queue.Empty:  # there is no socket available: let's create one
+                with _semaphore:
+                    # self._sockets's first element is the most recent one
+                    t, socket = self._sockets[self][0]
+                    now = time.time()
+                    # nothing to clean and quit.
+                    if now - t < self.ttl:
+                        # we use it!
+                        _, socket = self._sockets[self].pop(0)
+                        break
+                    else:
+                        raise IndexError
+        except IndexError:  # there is no socket available: let's create one
             logging.getLogger(__name__).info("opening one socket for %s", self.name)
-
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
+
         try:
             yield socket
         finally:
             if not socket.closed:
-                self._sockets[self].put((t, socket))
+                with _semaphore:
+                    self._sockets[self].add((t, socket))
 
     @staticmethod
     def close_socket(socket, name):
@@ -100,31 +109,26 @@ class TransientSocket(object):
         socket.close()
 
     @staticmethod
-    def _reaper(sockets, name, ttl):
+    def _reap(o, sockets):
         try:
             while True:
-                now = time.time()
-                t, socket = sockets.get_nowait()
-                if now - t > ttl:
-                    TransientSocket.close_socket(socket, name)
-                else:
-                    sockets.put((t, socket))
-                    return  # remaining socket are still in "keep alive" state
-        except queue.Empty:
-            pass
+                with _semaphore:
+                    now = time.time()
+                    # sockets's last element is the oldest one
+                    t, socket = sockets[-1]
+                    if now - t > o.ttl:
+                        TransientSocket.close_socket(socket, o.name)
+                        sockets.pop(-1)
+                    else:
+                        return  # remaining socket are still in "keep alive" state
+        except IndexError:
+            return
 
     @classmethod
     def _reap_sockets(cls):
         logging.getLogger(__name__).info("reaping sockets")
         for o, sockets in six.iteritems(cls._sockets):
-            cls._reaper(sockets, o.name, o.ttl)
-
-        try:
-            while True:
-                socket, name = cls._sockets_run_out_of_ttl.get_nowait()
-                TransientSocket.close_socket(socket, name)
-        except queue.Empty:
-            return
+            TransientSocket._reap(o, sockets)
 
     @classmethod
     def gevent_reap_sockets(cls):
