@@ -126,9 +126,7 @@ class TestEndPoint(AbstractTestFixture):
             assert region_id in ['main_routing_test', 'main_ptref_test']
 
     @pytest.mark.xfail(
-        strict=False,
-        reason="github action doesn't have the version number",
-        raises=AssertionError,
+        strict=False, reason="github action doesn't have the version number", raises=AssertionError
     )
     def test_technical_status(self):
         json_response = self.query("/v1/status")
