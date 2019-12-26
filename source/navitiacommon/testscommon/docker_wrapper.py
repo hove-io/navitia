@@ -34,6 +34,7 @@ import logging
 import psycopg2
 from typing import List, Optional, Dict
 from retrying import retry
+import os
 
 """
 This module contains classes about Docker management.
@@ -146,18 +147,29 @@ class DockerWrapper(object):
                 )
             else:
                 raise
-
+        kwargs = {}
+        # If tests are running in a container we need to attach to the same network
+        network_name = os.getenv('NAVITIA_DOCKER_NETWORK')
+        if network_name:
+            kwargs['network'] = network_name
         self.container = self.docker_client.containers.create(
-            image_name, name=self.container_name, environment=self.env_vars, mounts=self.mounts
+            image_name, name=self.container_name, environment=self.env_vars, mounts=self.mounts, **kwargs
         )
         logger.info("docker id is {}".format(self.container.id))
         logger.info("starting the temporary docker")
         self.container.start()
-        self.ip_addr = (
-            self.docker_api_client.inspect_container(self.container.id)
-            .get('NetworkSettings', {})
-            .get('IPAddress')
-        )
+        container_info = self.docker_api_client.inspect_container(self.container.id)
+        if not network_name:
+            self.ip_addr = container_info.get('NetworkSettings', {}).get('IPAddress')
+        else:
+            self.ip_addr = (
+                container_info.get('NetworkSettings', {})
+                .get('Networks', {})
+                .get(network_name, {})
+                .get('IPAddress')
+            )
+
+        logging.debug('container inspect %s', container_info)
 
         if not self.ip_addr:
             logger.error("temporary docker {} not started".format(self.container.id))
