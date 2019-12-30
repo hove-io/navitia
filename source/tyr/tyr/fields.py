@@ -224,7 +224,7 @@ user_fields_full = {
     'default_coord': fields.Raw,
 }
 
-dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw}
+dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
 
 job_fields = {
     'id': fields.Raw,
