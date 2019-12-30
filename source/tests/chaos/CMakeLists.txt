@@ -26,4 +26,4 @@ add_custom_command(
     COMMAND PYTHONPATH=${CMAKE_SOURCE_DIR}/navitiacommon CHAOS_DB_TESTS_BUILD_DIR=${CHAOS_DB_TESTS_BUILD_DIR} py.test ${CHAOS_TESTS_PATH}
     COMMENT "Running Chaos's disruptions tests"
 )
-#add_dependencies(docker_test chaos_tests)
+add_dependencies(docker_test chaos_tests)
