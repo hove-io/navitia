@@ -85,7 +85,7 @@ class TransientSocket(object):
                 else:
                     raise IndexError
         except IndexError:  # there is no socket available: let's create one
-            logging.getLogger(__name__).error("opening one socket for %s", self.name)
+            logging.getLogger(__name__).info("opening one socket for %s", self.name)
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
@@ -99,7 +99,7 @@ class TransientSocket(object):
 
     @staticmethod
     def close_socket(socket, name):
-        logging.getLogger(__name__).error("closing one socket for %s", name)
+        logging.getLogger(__name__).info("closing one socket for %s", name)
         socket.setsockopt(zmq.LINGER, 0)
         socket.close()
 
@@ -121,7 +121,7 @@ class TransientSocket(object):
 
     @classmethod
     def _reap_sockets(cls):
-        logging.getLogger(__name__).error("reaping sockets")
+        logging.getLogger(__name__).info("reaping sockets")
         for o, sockets in six.iteritems(cls._sockets):
             TransientSocket._reap(o, sockets)
 
