@@ -56,4 +56,4 @@ def status_test():
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0
     assert status['circuit_breaker']['reset_timeout'] == 60
-    assert status['socket_ttl'] == 60
+    assert status['zmq_socket_ttl'] == 60

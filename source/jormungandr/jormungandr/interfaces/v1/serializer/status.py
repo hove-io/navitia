@@ -119,7 +119,7 @@ class OutsideServiceCommon(serpy.DictSerializer):
         o = obj.get('circuit_breaker', None)
         return CircuitBreakerSerializer(o, display_none=False).data if o else None
 
-    def get_socket_ttl(self, obj):
+    def get_zmq_socket_ttl(self, obj):
         return obj.get('zmq_socket_ttl', None)
 
 
