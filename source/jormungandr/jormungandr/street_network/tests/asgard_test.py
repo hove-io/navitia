@@ -31,9 +31,15 @@
 from jormungandr.street_network.asgard import Asgard
 
 
+class FakeInstance(object):
+
+    name = 'fake_instance'
+    context = None
+
+
 def status_test():
     asgard = Asgard(
-        instance=None,
+        instance=FakeInstance(),
         service_url=None,
         asgard_socket="asgard_socket",
         id=u"tata-é$~#@\"*!'`§èû",
@@ -42,7 +48,7 @@ def status_test():
     )
 
     status = asgard.status()
-    assert len(status) == 5
+    assert len(status) == 6
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
     assert status['class'] == "Asgard"
     assert status['modes'] == ["walking", "bike", "car"]
@@ -50,3 +56,4 @@ def status_test():
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0
     assert status['circuit_breaker']['reset_timeout'] == 60
+    assert status['socket_ttl'] == 60

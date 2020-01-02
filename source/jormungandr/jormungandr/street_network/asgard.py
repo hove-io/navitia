@@ -93,7 +93,7 @@ class Asgard(TransientSocket, Kraken):
                 'fail_counter': self.breaker.fail_counter,
                 'reset_timeout': self.breaker.reset_timeout,
             },
-            'socket_ttl': self.socket_ttl,
+            'zmq_socket_ttl': self.socket_ttl,
         }
 
     def get_street_network_routing_matrix(

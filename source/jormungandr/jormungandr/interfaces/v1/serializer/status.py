@@ -113,10 +113,14 @@ class OutsideServiceCommon(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
     _id = Field(label='id', attr='id', schema_type=str)
     circuit_breaker = MethodField(schema_type=CircuitBreakerSerializer, display_none=False)
+    zmq_socket_ttl = MethodField(schema_type=float, display_none=False)
 
     def get_circuit_breaker(self, obj):
         o = obj.get('circuit_breaker', None)
         return CircuitBreakerSerializer(o, display_none=False).data if o else None
+
+    def get_socket_ttl(self, obj):
+        return obj.get('zmq_socket_ttl', None)
 
 
 class StreetNetworkSerializer(OutsideServiceCommon):
