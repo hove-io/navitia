@@ -76,20 +76,17 @@ class TransientSocket(object):
         # We don't want to waste time to close sockets in this function since the performance is critical
         # The cleaning job is done in another greenlet or uwsgi's signal-triggered task.
         try:
-            while True:
-                with _semaphore:
-                    # self._sockets's first element is the most recent one
-                    t, socket = self._sockets[self][0]
-                    now = time.time()
-                    # nothing to clean and quit.
-                    if now - t < self.ttl:
-                        # we use it!
-                        _, socket = self._sockets[self].pop(0)
-                        break
-                    else:
-                        raise IndexError
+            with _semaphore:
+                # self._sockets's first element is the most recent one
+                t, socket = self._sockets[self][0]
+                now = time.time()
+                if now - t < self.ttl:
+                    # we move the ownership and use it!
+                    self._sockets[self].pop(0)
+                else:
+                    raise IndexError
         except IndexError:  # there is no socket available: let's create one
-            logging.getLogger(__name__).info("opening one socket for %s", self.name)
+            logging.getLogger(__name__).error("opening one socket for %s", self.name)
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
@@ -103,7 +100,7 @@ class TransientSocket(object):
 
     @staticmethod
     def close_socket(socket, name):
-        logging.getLogger(__name__).info("closing one socket for %s", name)
+        logging.getLogger(__name__).error("closing one socket for %s", name)
         socket.setsockopt(zmq.LINGER, 0)
         socket.close()
 
@@ -125,7 +122,7 @@ class TransientSocket(object):
 
     @classmethod
     def _reap_sockets(cls):
-        logging.getLogger(__name__).info("reaping sockets")
+        logging.getLogger(__name__).error("reaping sockets")
         for o, sockets in six.iteritems(cls._sockets):
             TransientSocket._reap(o, sockets)
 
