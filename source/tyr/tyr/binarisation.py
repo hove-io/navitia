@@ -489,7 +489,13 @@ def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
     logging.info("loading bounding shape for {} from = {}".format(instance.name, filename))
-    load_bounding_shape(instance.name, instance_config, filename)
+    try:
+        load_bounding_shape(instance.name, instance_config, filename)
+    except:
+        logging.exception("")
+        job.state = "failed"
+        models.db.session.commit()
+        raise
 
 
 @celery.task(bind=True)
