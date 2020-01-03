@@ -130,7 +130,7 @@ struct FindAdminWithCities {
     template <class Results>
     result_type get_admin_from_cities(const Results& db_result, georef::AdminRtree& admin_tree) {
         result_type res;
-        for (auto row : db_result) {
+        for (const auto& row : db_result) {
             georef::Admin* admin = nullptr;
             // we try to find the admin in georef by using it's insee code (only work in France)
             std::string insee = row["insee"].c_str();
