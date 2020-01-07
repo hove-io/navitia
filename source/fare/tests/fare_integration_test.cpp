@@ -75,14 +75,14 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     // dummy transition
     fare::Transition transitionA;
     fare::State endA;
-    endA.line = "a";
+    endA.line = "A";
     transitionA.ticket_key = "price1";
     auto endA_v = boost::add_vertex(endA, b.data->fare->g);
     boost::add_edge(b.data->fare->begin_v, endA_v, transitionA, b.data->fare->g);
 
     fare::Transition transitionB;
     fare::State endB;
-    endB.line = "b";
+    endB.line = "B";
     transitionB.ticket_key = "price2";
     auto endB_v = boost::add_vertex(endB, b.data->fare->g);
     boost::add_edge(b.data->fare->begin_v, endB_v, transitionB, b.data->fare->g);
