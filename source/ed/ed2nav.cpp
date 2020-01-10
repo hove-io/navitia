@@ -123,12 +123,18 @@ struct FindAdminWithCities {
         r["lon"] >> lon;
         r["lat"] >> lat;
         admin->coord = navitia::type::GeographicalCoord(lon, lat);
-        admin->idx = georef.admins.size() - 1;
+        admin->idx = georef.admins.size();
         admin->from_original_dataset = false;
         std::string post_codes = r["post_code"].c_str();
         boost::split(admin->postal_codes, post_codes, boost::is_any_of("-"));
         std::string boundary = r["boundary"].c_str();
         boost::geometry::read_wkt(boundary, admin->boundary);
+
+        // Add admins to added list
+        added_admins[admin->uri] = admin;
+        // Add admins to georef's admins list
+        georef.admins.push_back(admin);
+
         return admin;
     }
 
@@ -209,10 +215,6 @@ struct FindAdminWithCities {
 
         // Add admins to RTree cache
         boost::range::for_each(new_admins, add_admin_to_cache);
-        // Add admins to added list
-        boost::range::for_each(new_admins, [&](const auto& admin) { added_admins[admin->uri] = admin; });
-        // Add admins to georef's admins list
-        boost::range::copy(new_admins, std::back_inserter(georef.admins));
 
         return georef.find_admins(c, admin_tree);
     }
