@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+  release:
+    types:
+      - created
+
+
+jobs:
+  build:
+    container:
+      image: navitia/debian8_dev
+
+    # tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7]
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: get submodule
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install -r source/jormungandr/requirements_dev.txt
+    - name: configure
+      run: cmake source
+    - name: make
+      run:  make protobuf_files && make -j $(nproc)
+    - name: tests
+      run: |
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+
+  precommit:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+      # we need python 3.6 and clang-format-6.0
+      # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
+      # resolved
+    steps:
+    - uses: actions/checkout@v1
+    - name: install dependencies
+      run: |
+        apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
+        pip install -r requirements_pre-commit.txt
+        pre-commit install
+    - name: get submodule
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: run pre-commit
+      run: |
+        export LC_ALL=C.UTF-8
+        export LANG=C.UTF-8
+        bash source/scripts/build_protobuf.sh
+        pre-commit run --all --show-diff-on-failure
+
+  check_artemis:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: check artemis
+      run: ./source/scripts/checkJenkinsJob.sh Artemis
+    - name: check artemis IDFM
+      run: ./source/scripts/checkJenkinsJob.sh Artemis_idfm
+
