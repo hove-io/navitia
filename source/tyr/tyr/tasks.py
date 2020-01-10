@@ -145,6 +145,7 @@ def import_data(
 
         # currently the name of a dataset is the path to it
         dataset.name = filename
+        dataset.state = "pending"
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
 
