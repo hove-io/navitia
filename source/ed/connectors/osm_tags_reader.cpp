@@ -153,7 +153,7 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
                 bike_direct = bike_lane;
         } else if (key == "bicycle") {
             if (val == "yes" || val == "permissive" || val == "destination" || val == "designated" || val == "private"
-                || val == "true" || val == "allowed" || val == "official" || val == "destination")
+                || val == "true" || val == "allowed" || val == "official")
                 bike_direct = bike_allowed;
             else if (val == "no" || val == "dismount" || val == "VTT")
                 bike_direct = bike_forbiden;
@@ -216,6 +216,12 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
             if (val == "platform") {
                 visible = false;
             }
+        } else if (key == "highway") {
+            if (val == "trunk" || val == "trunk_link" || val == "motorway" || val == "motorway_link") {
+                visible = false;
+            }
+        } else if (key == "tunnel") {
+            visible = false;
         }
     }
 
