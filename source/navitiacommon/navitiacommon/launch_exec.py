@@ -31,6 +31,8 @@
 """
 Function to launch a bin
 """
+from __future__ import absolute_import, unicode_literals
+
 import subprocess
 import os
 import select
@@ -65,7 +67,7 @@ def parse_log(buff):
         line, sep, buff = buff.partition('\n')
     if not sep:
         buff = line  # we put back the last unterminated line in the buffer
-    return (logs, buff)
+    return logs, buff
 
 
 # from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
@@ -103,10 +105,11 @@ def launch_exec_traces(exec_name, args, logger):
 
             for pipe in proc.stdout, proc.stderr:
                 log_pipe = read_async(pipe)
-                logs, line = parse_log(log_pipe)
-                for l in logs:
-                    logger.log(l.level, l.msg)
-                    traces += "##  {}  ##".format(l.msg)
+                if log_pipe:
+                    logs, line = parse_log(log_pipe.decode("utf-8"))
+                    for l in logs:
+                        logger.log(l.level, l.msg)
+                        traces += "##  {}  ##".format(l.msg)
 
             if proc.poll() is not None:
                 break
