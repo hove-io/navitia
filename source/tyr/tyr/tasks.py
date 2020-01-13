@@ -500,7 +500,7 @@ def purge_jobs(days_to_keep=None):
 def scan_instances():
     for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
         instance_name = os.path.basename(instance_file).replace('.ini', '')
-        instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+        instance = models.Instance.query_all().filter_by(name=instance_name).first()
         if not instance:
             current_app.logger.info('new instances detected: %s', instance_name)
             instance = models.Instance(name=instance_name)
