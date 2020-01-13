@@ -42,6 +42,11 @@ www.navitia.io
 #include <boost/filesystem.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/adaptor/filtered.hpp>
 #include <pqxx/pqxx>
 
 #include <fstream>
@@ -55,10 +60,11 @@ namespace ed {
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
-    using AdminMap = std::unordered_map<std::string, navitia::georef::Admin*>;
+    using AdminMap = std::unordered_map<std::string, georef::Admin*>;
     using result_type = std::vector<georef::Admin*>;
 
     boost::shared_ptr<pqxx::connection> conn;
+    std::shared_ptr<pqxx::work> work;
     georef::GeoRef& georef;
     AdminMap added_admins;
     AdminMap insee_admins_map;
@@ -68,7 +74,9 @@ struct FindAdminWithCities {
     std::map<size_t, size_t> cities_stats;  // number of response for size of the result
 
     FindAdminWithCities(const std::string& connection_string, georef::GeoRef& gr)
-        : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {}
+        : conn(boost::make_shared<pqxx::connection>(connection_string)), georef(gr) {
+        work = std::make_shared<pqxx::work>(*conn);
+    }
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
     FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
@@ -103,7 +111,117 @@ struct FindAdminWithCities {
         }
     }
 
-    result_type operator()(const navitia::type::GeographicalCoord& c, navitia::georef::AdminRtree& admin_tree) {
+    template <class Row>
+    georef::Admin* make_admin(const Row& r) {
+        auto admin = new georef::Admin();
+        admin->comment = "from cities";
+        r["uri"] >> admin->uri;
+        r["name"] >> admin->name;
+        r["insee"] >> admin->insee;
+        r["level"] >> admin->level;
+        double lon, lat;
+        r["lon"] >> lon;
+        r["lat"] >> lat;
+        admin->coord = navitia::type::GeographicalCoord(lon, lat);
+        admin->idx = georef.admins.size();
+        admin->from_original_dataset = false;
+        std::string post_codes = r["post_code"].c_str();
+        boost::split(admin->postal_codes, post_codes, boost::is_any_of("-"));
+        std::string boundary = r["boundary"].c_str();
+        boost::geometry::read_wkt(boundary, admin->boundary);
+
+        // Add admins to added list
+        added_admins[admin->uri] = admin;
+        // Add admins to georef's admins list
+        georef.admins.push_back(admin);
+
+        return admin;
+    }
+
+    result_type get_admins_from_cities(const navitia::type::GeographicalCoord& c, georef::AdminRtree& admin_tree) {
+        /*
+            For all admins that contain the coordinate in their boundary shape,
+            we want to search in db for their own inner admins as well.
+
+            +-----------------------------+
+            |A                            |
+            |   +-------+      +-------+  |
+            |   |B      |      |C      |  |
+            |   |       |      |   X   |  |
+            |   |       |      +-------+  |
+            |   |   Y   |  +------+       |
+            |   |       |  |D     |       |
+            |   +-------+  |      |       |
+            |              +------+       |
+            +-----------------------------+
+
+            For instance, when looking at 'X', we want:
+                - admins {A, C} to be returned
+                - BUT admins {A, B, C, D} added in the cache
+
+            This is so that when looking at 'Y':
+                - admins {A, B} to be returned by the cache
+
+            If we don't search for all inner admins, looking for 'Y' would result in:
+                - admin {A} to be only returned by the cache
+        */
+        const auto sql_req = boost::format(R"sql(
+            SELECT
+                DISTINCT uri,
+                name,
+                coalesce(insee, '') as insee,
+                level,
+                coalesce(post_code, '') as post_code,
+                ST_X(coord::geometry) as lon,
+                ST_Y(coord::geometry) as lat,
+                ST_ASTEXT(boundary) as boundary
+            FROM
+                administrative_regions,
+                (
+                    SELECT boundary as within_bound
+                    FROM administrative_regions
+                    WHERE ST_DWithin(
+                    ST_GeographyFromText('POINT(%.16f %.16f)'),
+                    boundary, 0.001
+                    )
+                ) AS within
+            WHERE
+                ST_DWithin(within_bound, boundary, 0.001)
+            )sql") % c.lon() % c.lat();
+        pqxx::result db_result = work->exec(sql_req.str());
+
+        auto not_in_insee_admins_map = [&](const pqxx::tuple& row) {
+            return insee_admins_map.count(row["insee"].c_str()) == 0;
+        };
+        auto not_already_added = [&](const pqxx::tuple& row) { return added_admins.count(row["uri"].c_str()) == 0; };
+        auto make_admin_from_row = [&](const pqxx::tuple& row) { return make_admin(row); };
+
+        std::vector<georef::Admin*> new_admins;
+        // clang-format off
+        auto filtered_res = db_result | boost::adaptors::filtered(not_in_insee_admins_map)
+                                      | boost::adaptors::filtered(not_already_added);
+        //clang-format on
+        boost::range::transform(filtered_res, std::back_inserter(new_admins), make_admin_from_row);
+
+        auto add_admin_to_cache = [&](georef::Admin* admin) {
+            if (admin->boundary.empty()) {
+                return;
+            }
+            const auto box = boost::geometry::return_envelope<georef::Box>(admin->boundary);
+            const double min[2] = {box.min_corner().lon(), box.min_corner().lat()};
+            const double max[2] = {box.max_corner().lon(), box.max_corner().lat()};
+            admin_tree.Insert(min, max, admin);
+        };
+
+        // Add admins to RTree cache
+        boost::range::for_each(new_admins, add_admin_to_cache);
+
+        return georef.find_admins(c, admin_tree);
+    }
+
+    result_type operator()(const navitia::type::GeographicalCoord& c, georef::AdminRtree& admin_tree) {
+        auto log = log4cplus::Logger::getInstance("ed2nav::FindAdminWithCities");
+
         if (nb_call == 0) {
             init();
         }
@@ -115,53 +233,16 @@ struct FindAdminWithCities {
         }
 
         const auto& georef_res = georef.find_admins(c, admin_tree);
+
         if (!georef_res.empty()) {
             ++nb_georef;
             return georef_res;
         }
 
-        std::stringstream request;
-        request << "SELECT uri, name, coalesce(insee, '') as insee, level, coalesce(post_code, '') as post_code, "
-                << "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat "
-                << "FROM administrative_regions "
-                << "WHERE ST_DWithin(ST_GeographyFromText('POINT(" << std::setprecision(16) << c.lon() << " " << c.lat()
-                << ")'), boundary, 0.001)";
-        pqxx::work work(*conn);
-        pqxx::result result = work.exec(request);
-        result_type res;
-        for (auto it = result.begin(); it != result.end(); ++it) {
-            const std::string uri = it["uri"].as<std::string>();
-            const std::string insee = it["insee"].as<std::string>();
-            // we try to find the admin in georef by using it's insee code (only work in France)
-            navitia::georef::Admin* admin = nullptr;
-            if (!insee.empty()) {
-                admin = find_or_default(insee, insee_admins_map);
-            }
-            if (!admin) {
-                admin = find_or_default(uri, added_admins);
-            }
-            if (!admin) {
-                georef.admins.push_back(new navitia::georef::Admin());
-                admin = georef.admins.back();
-                admin->comment = "from cities";
-                admin->uri = uri;
-                it["name"].to(admin->name);
-                admin->insee = insee;
-                it["level"].to(admin->level);
-                admin->coord.set_lon(it["lon"].as<double>());
-                admin->coord.set_lat(it["lat"].as<double>());
-                admin->idx = georef.admins.size() - 1;
-                admin->from_original_dataset = false;
-                std::string postal_code;
-                it["post_code"].to(postal_code);
-
-                if (!postal_code.empty()) {
-                    boost::split(admin->postal_codes, postal_code, boost::is_any_of("-"));
-                }
-                added_admins[uri] = admin;
-            }
-            res.push_back(admin);
-        }
+        TimerGuard tg([&](const StopWatch& stopwatch) {
+            LOG4CPLUS_TRACE(log, "Find admin in cities db | " << stopwatch.elapsed() << " us");
+        });
+        auto res = get_admins_from_cities(c, admin_tree);
         ++cities_stats[res.size()];
         return res;
     }

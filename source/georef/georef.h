@@ -198,6 +198,8 @@ struct ProjectionData;
 struct POI;
 struct POIType;
 
+std::vector<Admin*> search_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree);
+
 /** All you need about the street network */
 struct GeoRef {
     // parameters

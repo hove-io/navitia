@@ -624,7 +624,7 @@ std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) co
     }
 }
 
-std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree) const {
+std::vector<Admin*> search_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree) {
     std::vector<Admin*> result;
 
     auto callback = [](Admin* admin, void* c) -> bool {
@@ -634,16 +634,21 @@ std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, Ad
         }
         return true;
     };
-    double c[2];
-    c[0] = coord.lon();
-    c[1] = coord.lat();
+    double c[2] = {coord.lon(), coord.lat()};
     auto context = std::make_pair(coord, &result);
     admins_tree.Search(c, c, callback, &context);
-    if (!result.empty()) {
-        return result;
+    return result;
+}
+
+std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree) const {
+    auto result = search_admins(coord, admins_tree);
+
+    if (result.empty()) {
+        // we didn't find any result within the boundary, as a fallback we retrieve the admin of the closest way
+        return this->find_admins(coord);
     }
-    // we didn't find any result within the boundary, as a fallback we retrieve the admin of the closest way
-    return this->find_admins(coord);
+
+    return result;
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
