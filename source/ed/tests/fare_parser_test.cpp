@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE(parse_state_test) {
     BOOST_CHECK(parse_state("*") == state);
     BOOST_CHECK(parse_state("") == state);
 
-    // on n'est pas case sensitive
     BOOST_CHECK(parse_state("mode=metro").mode == navitia::encode_uri("metro"));
 
     BOOST_CHECK(parse_state("zone=1").zone == "1");
