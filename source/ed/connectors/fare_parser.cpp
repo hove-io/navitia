@@ -69,12 +69,8 @@ void fare_parser::load_transitions() {
         fa::State start = parse_state(row.at(0));
         fa::State end = parse_state(row.at(1));
 
-        if (!is_valid(start)) {
-            continue;
-        }
-        if (!is_valid(end)) {
-            continue;
-        }
+        is_valid(start);
+        is_valid(end);
 
         fa::Transition transition;
         transition.start_conditions = parse_conditions(row.at(2));
@@ -127,8 +123,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
         }
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the mode "
-                                       << state.mode << " but this mode does not appears in the data."
-                                       << " I'll ignore this transition");
+                                       << state.mode << " but this mode does not appears in the data.");
             return false;
         }
     }
@@ -143,8 +138,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
         }
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the stop_area "
-                                       << state.stop_area << " but this stop_area does not appears in the data."
-                                       << " I'll ignore this transition");
+                                       << state.stop_area << " but this stop_area does not appears in the data.");
             return false;
         }
     }
@@ -159,8 +153,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
         }
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the line "
-                                       << state.line << " but this line does not appears in the data."
-                                       << " I'll ignore this transition");
+                                       << state.line << " but this line does not appears in the data.");
             return false;
         }
     }
@@ -175,8 +168,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
         }
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the network "
-                                       << state.network << " but this network does not appears in the data."
-                                       << " I'll ignore this transition");
+                                       << state.network << " but this network does not appears in the data.");
             return false;
         }
     }
@@ -191,8 +183,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
         }
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the zone "
-                                       << state.zone << " but this zone does not appears in the data."
-                                       << " I'll ignore this transition");
+                                       << state.zone << " but this zone does not appears in the data.");
             return false;
         }
     }

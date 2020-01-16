@@ -183,6 +183,9 @@ struct fare_load_fixture {
                                            std::string(navitia::config::fixtures_dir) + "/fare/tarifs_od.csv");
         parser.load();
         f = load_fare_from_ed(parser.data);
+
+        // uncomment to activate logs in fare computation
+        // log4cplus::Logger::getInstance("fare").setLogLevel(log4cplus::TRACE_LOG_LEVEL);
     }
 
     std::vector<std::string> keys;
