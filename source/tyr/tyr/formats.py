@@ -34,7 +34,7 @@ def parse_error(error):
         res = error.message
     except AttributeError:
         res = str(error).replace("\n", " ")
-    return res.decode('utf-8', 'backslashreplace')
+    return res
 
 
 poi_type_format = {

@@ -93,6 +93,19 @@ def create_autocomplete_parameters():
         models.db.session.delete(autocomp)
 
 
+def compare_responses(v1_resp, v0_resp):
+    """
+    Compare list of dictionaries
+    :return: True if responses are equals, False otherwise
+    """
+    import operator
+
+    # Sort all dictionaries in list by their id, so the zip will match the correct dicts
+    v0_resp.sort(key=operator.itemgetter('id'))
+    v1_resp.sort(key=operator.itemgetter('id'))
+    return all(x == y for x, y in (zip(v0_resp, v1_resp)))
+
+
 def check_v1_response(endpoint, request=None):
     if not request:
         request = endpoint
@@ -102,7 +115,9 @@ def check_v1_response(endpoint, request=None):
     resp_v1 = api_get('/v1/{}'.format(request))
     assert type(resp_v1) == dict
     assert endpoint in resp_v1
-    assert sorted(resp_v1[endpoint]) == sorted(resp_v0)
+    if isinstance(resp_v0, list) and isinstance(resp_v1[endpoint], list):
+        assert compare_responses(resp_v1[endpoint], resp_v0)
+    assert resp_v1[endpoint] == resp_v0
 
 
 def test_api():

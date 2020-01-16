@@ -27,14 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, division
-import json
+from __future__ import absolute_import, print_function, division, unicode_literals
 import pytest
 import os
 from navitiacommon import models
 from tyr import app
 from flask_restful import current_app
-import shutil
 from tests.check_utils import api_post
 
 

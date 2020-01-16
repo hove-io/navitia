@@ -195,7 +195,7 @@ class User(db.Model):  # type: ignore
         return False
 
     def has_shape(self):
-        return self.shape is not None
+        return self.shape is not None and self.shape != 'null'
 
     # Note: the private methods below exist to be mocked in the integration tests
 
