@@ -1,3 +1,16 @@
+navitia2 (3.3.0) unstable; urgency=low
+
+  * Ed2Nav: Add admins fetched from Cities db to Rtree for significant speed up.  <https://github.com/CanalTP/navitia/pull/3099>
+  * Tyr: Task 'scan_instances' get all instances in db  <https://github.com/CanalTP/navitia/pull/3107>
+  * Tyr: Fail 'shape2ed' when error occurs  <https://github.com/CanalTP/navitia/pull/3104>
+  * Tyr: Add dataset.state param  <https://github.com/CanalTP/navitia/pull/3103>
+  * CI: Use github actions for CI  <https://github.com/CanalTP/navitia/pull/3100>
+  * Fare: make different unknown_tickets have different ids  <https://github.com/CanalTP/navitia/pull/3102>
+  * Bump rack from 1.6.11 to 1.6.12 in /documentation/slate  <https://github.com/CanalTP/navitia/pull/3098>
+  * Utils: update to include europeans characters to strip_accents  <https://github.com/CanalTP/navitia/pull/3086>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 17 Jan 2020 10:01:20 +0100
+
 navitia2 (3.2.0) unstable; urgency=low
 
   * Ed: Clang tidy on ed  <https://github.com/CanalTP/navitia/pull/3076>
