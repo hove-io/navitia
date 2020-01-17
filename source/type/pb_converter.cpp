@@ -1720,7 +1720,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
             pb_ticket = response.add_tickets();
             pb_ticket->set_name(ticket.caption);
             pb_ticket->set_found(false);
-            pb_ticket->set_id("unknown_ticket");
+            pb_ticket->set_id("unknown_ticket_" + std::to_string(++cpt_ticket));
             pb_ticket->set_source_id(ticket.key);
             pb_ticket->set_comment("unknown ticket");
             pb_fare->add_ticket_id(pb_ticket->id());

@@ -782,6 +782,7 @@ class DataSet(db.Model):  # type: ignore
     type = db.Column(db.Text, nullable=False)
     family_type = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
+    state = db.Column(db.Enum('pending', 'running', 'done', 'failed', name='dataset_state'))
 
     uid = db.Column(UUID, unique=True)
 
@@ -796,6 +797,10 @@ class DataSet(db.Model):  # type: ignore
             # old dataset don't have uid, we don't want to get one of them
             return None
         return cls.query.filter_by(uid=uid).first()
+
+    @classmethod
+    def find_by_type_and_job_id(cls, dataset_type, job_id):
+        return cls.query.filter(cls.job_id == job_id, cls.type == dataset_type).first()
 
     def __repr__(self):
         return '<DataSet %r>' % self.id

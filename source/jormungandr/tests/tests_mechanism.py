@@ -99,12 +99,15 @@ class AbstractTestFixture(unittest.TestCase):
 
     @classmethod
     def launch_all_krakens(cls):
+        # Kraken doesn't handle amqp url :(
+        rabbitmq = os.getenv('KRAKEN_RABBITMQ_HOST', 'localhost')
         for (kraken_name, conf) in cls.data_sets.items():
             exe = os.path.join(krakens_dir, kraken_name)
             assert os.path.exists(exe), "cannot find the kraken {}".format(exe)
 
             kraken_main_args = [
                 "--GENERAL.zmq_socket=" + cls._get_zmq_socket_name(kraken_name),
+                "--BROKER.host=" + rabbitmq,
                 "--BROKER.queue=kraken_" + str(cls.uid),
                 "--BROKER.queue_auto_delete=true",
             ]

@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 
 #include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/box.hpp>
 #include <RTree/RTree.h>
 
 #include <unordered_map>
@@ -45,6 +46,7 @@ namespace navitia {
 namespace georef {
 typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
+typedef boost::geometry::model::box<navitia::type::GeographicalCoord> Box;
 
 struct Admin : nt::Header, nt::Nameable {
     const static type::Type_e type = type::Type_e::Admin;

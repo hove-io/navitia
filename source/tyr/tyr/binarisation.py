@@ -28,8 +28,9 @@
 # www.navitia.io
 
 """
-Functions to launch the binaratisations
+Functions to launch the binarizations
 """
+
 from __future__ import absolute_import, print_function, division
 import logging
 import os
@@ -173,12 +174,21 @@ def collect_metric(task_type, job, dataset_uid):
         logger.exception('unable to persist Metrics data: ')
 
 
+def _retrieve_dataset_and_set_state(dataset_type, job_id):
+    dataset = models.DataSet.find_by_type_and_job_id(dataset_type, job_id)
+    logging.getLogger(__name__).debug("Retrieved dataset: {}".format(dataset.id))
+    dataset.state = "running"
+    models.db.session.commit()
+    return dataset
+
+
 @celery.task(bind=True)
 @Lock(timeout=30 * 60)
 def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     """ Unzip fusio file and launch fusio2ed """
 
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -201,15 +211,18 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
-        with collect_metric('fusio2ed', job, dataset_uid):
+        with collect_metric("fusio2ed", job, dataset_uid):
             res = launch_exec("fusio2ed", params, logger)
         if res != 0:
-            raise ValueError('fusio2ed failed')
+            raise ValueError("fusio2ed failed")
+        dataset.state = "done"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
@@ -218,6 +231,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     """ Unzip gtfs file launch gtfs2ed """
 
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("gtfs", job.id)
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -240,23 +254,26 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
-        with collect_metric('gtfs2ed', job, dataset_uid):
+        with collect_metric("gtfs2ed", job, dataset_uid):
             res = launch_exec("gtfs2ed", params, logger)
         if res != 0:
-            raise ValueError('gtfs2ed failed')
+            raise ValueError("gtfs2ed failed")
+        dataset.state = "done"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
 @Lock(timeout=30 * 60)
 def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     """ launch osm2ed """
-
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("osm", job.id)
     instance = job.instance
     poi_types_json = None
     if instance.poi_type_json:
@@ -282,19 +299,22 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
             cities_db = current_app.config.get('CITIES_DATABASE_URI')
             if not cities_db:
                 raise ValueError(
-                    'impossible to use osm2ed with cities db since no cities database configuration has been set'
+                    "impossible to use osm2ed with cities db since no cities database configuration has been set"
                 )
             args.extend(["--cities-connection-string", cities_db])
-        with collect_metric('osm2ed', job, dataset_uid):
-            res = launch_exec('osm2ed', args, logger)
+        with collect_metric("osm2ed", job, dataset_uid):
+            res = launch_exec("osm2ed", args, logger)
         if res != 0:
             # @TODO: exception
-            raise ValueError('osm2ed failed')
+            raise ValueError("osm2ed failed")
+        dataset.state = "done"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
@@ -303,6 +323,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch geopal2ed """
 
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("geopal", job.id)
     instance = job.instance
     logger = get_instance_logger(instance, task_id=job_id)
     try:
@@ -321,11 +342,14 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         if res != 0:
             # @TODO: exception
             raise ValueError('geopal2ed failed')
+        dataset.state = "done"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
@@ -334,6 +358,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch poi2ed """
 
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("poi", job.id)
     instance = job.instance
     logger = get_instance_logger(instance, task_id=job_id)
     try:
@@ -347,16 +372,19 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
-        with collect_metric('poi2ed', job, dataset_uid):
-            res = launch_exec('poi2ed', params, logger)
+        with collect_metric("poi2ed", job, dataset_uid):
+            res = launch_exec("poi2ed", params, logger)
         if res != 0:
             # @TODO: exception
-            raise ValueError('poi2ed failed')
+            raise ValueError("poi2ed failed")
+        dataset.state = "done"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
@@ -365,6 +393,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch synonym2ed """
 
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("synonym", job.id)
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -381,12 +410,15 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
             res = launch_exec('synonym2ed', params, logger)
         if res != 0:
             # @TODO: exception
-            raise ValueError('synonym2ed failed')
+            raise ValueError("synonym2ed failed")
+        dataset.state = "failed"
     except:
-        logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 # from http://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Python_Parsing
@@ -489,7 +521,13 @@ def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
     logging.info("loading bounding shape for {} from = {}".format(instance.name, filename))
-    load_bounding_shape(instance.name, instance_config, filename)
+    try:
+        load_bounding_shape(instance.name, instance_config, filename)
+    except:
+        logging.exception("")
+        job.state = "failed"
+        models.db.session.commit()
+        raise
 
 
 @celery.task(bind=True)
