@@ -36,6 +36,7 @@ www.navitia.io
 #include "realtime.h"
 #include "type/pt_data.h"
 #include "type/task.pb.h"
+#include "type/kirin.pb.h"
 #include "utils/get_hostname.h"
 
 #include <SimpleAmqpClient/Envelope.h>
@@ -161,9 +162,21 @@ void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envel
     }
 }
 
+bool autocomplete_rebuilding_needed(const transit_realtime::FeedEntity& entity) {
+    if ((entity.trip_update().GetExtension(kirin::effect)
+         == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE)
+        || (entity.trip_update().GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR)
+        || (entity.trip_update().GetExtension(kirin::effect)
+            == transit_realtime::Alert_Effect::Alert_Effect_MODIFIED_SERVICE)) {
+        return true;
+    }
+    return false;
+}
+
 void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes) {
     boost::shared_ptr<nt::Data> data{};
     pt::ptime begin = pt::microsec_clock::universal_time();
+    bool autocomplete_rebuilding_activated = false;
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -193,6 +206,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(), *data, conf.is_realtime_add_enabled(),
                                 conf.is_realtime_add_trip_enabled());
+                autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
             }
@@ -201,8 +215,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     if (data) {
         LOG4CPLUS_INFO(logger, "rebuilding relations");
         data->build_relations();
-        LOG4CPLUS_INFO(logger, "rebuilding autocomplete");
-        data->build_autocomplete_partial();
+        if (autocomplete_rebuilding_activated) {
+            LOG4CPLUS_INFO(logger, "rebuilding autocomplete");
+            data->build_autocomplete_partial();
+        }
         LOG4CPLUS_INFO(logger, "cleaning weak impacts");
         data->pt_data->clean_weak_impacts();
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
