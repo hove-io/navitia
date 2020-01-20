@@ -31,6 +31,7 @@ www.navitia.io
 #include "fare_parser.h"
 #include "utils/csv.h"
 #include "utils/base64_encode.h"
+#include "utils/functions.h"
 #include "ed/data.h"
 #include "fare_utils.h"
 
@@ -114,13 +115,8 @@ void fare_parser::load_transitions() {
 
 bool fare_parser::is_valid(const navitia::fare::State& state) {
     if (!state.mode.empty()) {
-        bool found = false;
-        for (const auto& mode : data.physical_modes) {
-            if (mode->uri == state.mode) {
-                found = true;
-                break;
-            }
-        }
+        bool found =
+            navitia::contains_if(data.physical_modes, [&](const auto& mode) { return mode->uri == state.mode; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the mode "
                                        << state.mode << " but this mode does not appears in the data.");
@@ -129,13 +125,8 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
     }
 
     if (!state.stop_area.empty()) {
-        bool found = false;
-        for (const auto& stop_area : data.stop_areas) {
-            if (stop_area->uri == state.stop_area) {
-                found = true;
-                break;
-            }
-        }
+        bool found = navitia::contains_if(data.stop_areas,
+                                          [&](const auto& stop_area) { return stop_area->uri == state.stop_area; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the stop_area "
                                        << state.stop_area << " but this stop_area does not appears in the data.");
@@ -144,13 +135,7 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
     }
 
     if (!state.line.empty()) {
-        bool found = false;
-        for (const auto& line : data.lines) {
-            if (line->uri == state.line) {
-                found = true;
-                break;
-            }
-        }
+        bool found = navitia::contains_if(data.lines, [&](const auto& line) { return line->uri == state.line; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the line "
                                        << state.line << " but this line does not appears in the data.");
@@ -159,13 +144,8 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
     }
 
     if (!state.network.empty()) {
-        bool found = false;
-        for (const auto& network : data.networks) {
-            if (network->uri == state.network) {
-                found = true;
-                break;
-            }
-        }
+        bool found =
+            navitia::contains_if(data.networks, [&](const auto& network) { return network->uri == state.network; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the network "
                                        << state.network << " but this network does not appears in the data.");
@@ -174,13 +154,8 @@ bool fare_parser::is_valid(const navitia::fare::State& state) {
     }
 
     if (!state.zone.empty()) {
-        bool found = false;
-        for (const auto& stop_point : data.stop_points) {
-            if (stop_point->fare_zone == state.zone) {
-                found = true;
-                break;
-            }
-        }
+        bool found = navitia::contains_if(data.stop_points,
+                                          [&](const auto& stop_point) { return stop_point->fare_zone == state.zone; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition is valid only for the zone "
                                        << state.zone << " but this zone does not appears in the data.");
@@ -203,13 +178,8 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
     }
 
     if (condition.key == "zone") {
-        bool found = false;
-        for (const auto& stop_point : data.stop_points) {
-            if (stop_point->fare_zone == condition.value) {
-                found = true;
-                break;
-            }
-        }
+        bool found = navitia::contains_if(
+            data.stop_points, [&](const auto& stop_point) { return stop_point->fare_zone == condition.value; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition has a condition with the zone "
                                        << condition.value << " but this zone does not appears in the data.");
@@ -217,13 +187,8 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
         }
     }
     if (condition.key == "stoparea") {
-        bool found = false;
-        for (const auto& stop_area : data.stop_areas) {
-            if (stop_area->uri == condition.value) {
-                found = true;
-                break;
-            }
-        }
+        bool found = navitia::contains_if(data.stop_areas,
+                                          [&](const auto& stop_area) { return stop_area->uri == condition.value; });
         if (!found) {
             LOG4CPLUS_WARN(logger, "A transition has a condition with the stop_area "
                                        << condition.value << " but this stop_area does not appears in the data.");
