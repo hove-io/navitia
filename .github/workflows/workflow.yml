@@ -36,7 +36,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/docker-compose
           TAG=dev docker-compose pull
-          docker-compose -f docker-compose.yml -f artemis/docker-artemis-instance.yml up
+          docker-compose -f docker-compose.yml -f artemis/docker-artemis-instance.yml up -d
 
       - name: clone Artemis references
         uses: actions/checkout@master
