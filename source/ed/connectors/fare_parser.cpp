@@ -171,9 +171,9 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
     if (condition.key.empty()) {
         return true;
     }
-    if (condition.key != "zone" || condition.key != "stoparea" || condition.key != "duration"
-        || condition.key != "nb_changes" || condition.key != "ticket") {
-        LOG4CPLUS_WARN(logger, "A transition has a condition with an invalid key " << condition.key);
+    if (condition.key != "zone" && condition.key != "stoparea" && condition.key != "duration"
+        && condition.key != "nb_changes" && condition.key != "ticket") {
+        LOG4CPLUS_WARN(logger, "A transition has a condition with an invalid key : \"" << condition.key << "\"");
         return false;
     }
 
