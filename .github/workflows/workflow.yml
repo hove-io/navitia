@@ -25,22 +25,45 @@ jobs:
   artemisNG:
     runs-on: ubuntu-latest
     steps:
-      - name: clone ArtemisNG
-        uses: actions/checkout@master
-        with:
-          repository: CanalTP/artemis.git
-          path: 'artemisNG'
+
       - name: clone navitia-docker-compose
         uses: actions/checkout@master
         with:
           repository: CanalTP/navitia-docker-compose.git
           path: 'docker-compose'    
-      - name: install requirements
-        run: cd $GITHUB_WORKSPACE/artemisNG/artemis && mkvirtualenv -p python3 -r requirements.txt
 
-      - name: get Navitia docker containers
+      - name: pop Navitia docker containers
         run: |
           cd $GITHUB_WORKSPACE/docker-compose
           TAG=dev docker-compose pull
+          docker-compose -f docker-compose.yml -f artemis/docker-artemis-instance.yml up
+
+      - name: clone Artemis references
+        uses: actions/checkout@master
+        with:
+          repository: CanalTP/CanalTP/artemis_references.git
+          path: 'artemis_references' 
+
+      - name: clone ArtemisNG
+        uses: actions/checkout@master
+        with:
+          repository: CanalTP/artemis.git
+          path: 'artemisNG'
+
+      - name: install requirements
+        run: |
+          cd $GITHUB_WORKSPACE/artemisNG/artemis 
+          rm -rf venv
+          virtualenv --python=$(which python3) --system-site-packages venv 
+
+          . venv/bin/activate
+          pip3 install --exists-action=w -r requirements.txt
+
+      - name: get Artemis data
+        run: mkdir $GITHUB_WORKSPACE/artemis_data
+
+      - name: run tests
+        run: ARTEMIS_USE_ARTEMIS_NG=True  ARTEMIS_DATA_DIR=$GITHUB_WORKSPACE/artemis_data ARTEMIS_REFERENCE_FILE_PATH=$GITHUB_WORKSPACE/artemis_references ARTEMIS_URL_JORMUN=http://localhost:9191 ARTEMIS_URL_TYR=http://localhost:9898 py.test artemis/tests
+
 
 
