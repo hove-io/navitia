@@ -1377,7 +1377,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
             continue;
         }
 
-        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ";"));
+        LOG4CPLUS_TRACE(logger, "transition : " << boost::algorithm::join(values, ";"));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
