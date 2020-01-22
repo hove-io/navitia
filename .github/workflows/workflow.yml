@@ -41,7 +41,7 @@ jobs:
       - name: clone Artemis references
         uses: actions/checkout@master
         with:
-          repository: CanalTP/CanalTP/artemis_references.git
+          repository: CanalTP/artemis_references.git
           path: 'artemis_references' 
 
       - name: clone ArtemisNG
