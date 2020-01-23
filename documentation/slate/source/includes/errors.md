@@ -24,13 +24,13 @@ The are two possible 40x http codes :
 
 -   Code 404: unable to find an object
 
-| Error id                    | Description                                                                |
-|-----------------------------|----------------------------------------------------------------------------|
-| date_out_of_bounds          | When the given date is out of bounds of the production dates of the region |
-| no_origin                   | Couldn't find an origin for the journeys                                   |
-| no_destination              | Couldn't find an destination for the journeys                              |
-| no_origin_nor_destination   | Couldn't find an origin nor a destination for the journeys                 |
-| unknown_object              | As it's said                                                               |
+| Error id                    | Description                                                                	|
+|-----------------------------|-----------------------------------------------------------------------------|
+| date_out_of_bounds          | When the given date is out of bounds of the production dates of the region 	|
+| no_origin                   | Couldn't find an origin for the journeys                                   	|
+| no_destination              | Couldn't find a destination for the journeys                              	|
+| no_origin_nor_destination   | Couldn't find neither origin nor destination for the journeys               |
+| unknown_object              | Couldn't find one of the request parameters. It can be the region, the API or a PT object |
 
 -   Code 400: bad request
 
@@ -40,6 +40,7 @@ The are two possible 40x http codes :
 | unable_to_parse   | When you use a mal-formed custom filter                     |
 | unknown_api       | When you request an inexistant endpoint                     |
 | bad_format        | When you provide ill-formated parameter (coord for example) |
+| config_exception  | When you try to configure an external service (street network back-end or autocomplete) with wrong parameters |
 
 
 Code 200
@@ -57,6 +58,10 @@ Code 50x
 
 Ouch. Technical issue :/
 
-| Error id          | Description                                                 |
-|-------------------|-------------------------------------------------------------|
-| internal_error    | Something bad and unexpected has happened internally        |
+| Error id            	| Description                                               				|
+|-----------------------|---------------------------------------------------------------------------------------|
+| internal_error	| Something bad and unexpected has happened internally      				|
+| service_unavailable	| Navitia isn't responding								|
+| dead_socket		| The requested region isn't responding							|
+| technical_error	| An external service (street network back-end or autocomplete)	isn't responding	|
+	
