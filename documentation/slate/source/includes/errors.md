@@ -64,4 +64,4 @@ Ouch. Technical issue :/
 | service_unavailable	| Navitia isn't responding								|
 | dead_socket		| The requested region isn't responding							|
 | technical_error	| An external service (street network back-end or autocomplete)	isn't responding	|
-	
+
