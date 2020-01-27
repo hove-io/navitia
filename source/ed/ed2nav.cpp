@@ -262,9 +262,12 @@ bool rename_file(const std::string& source_name, const std::string& dest_name) {
 }
 
 bool remove_file(const std::string& filename) {
+    if(!boost::filesystem::exists(filename))
+        return true;
+
     if(!boost::filesystem::remove(filename)) {
         auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");
-        LOG4CPLUS_INFO(logger, "Unable to remove file " << filename);
+        LOG4CPLUS_ERROR(logger, "Unable to remove file " << filename);
         return false;
     }
 
