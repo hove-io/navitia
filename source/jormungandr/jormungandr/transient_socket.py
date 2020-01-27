@@ -32,7 +32,6 @@
 import zmq
 import time
 import gevent
-from gevent import queue
 from contextlib import contextmanager
 import logging
 import six
@@ -45,6 +44,10 @@ from sortedcontainers import SortedList
 _semaphore = BoundedSemaphore(1)
 
 
+class NoAliveSockets(Exception):
+    pass
+
+
 class TransientSocket(object):
     """
     With this class, sockets will be shut down and reopened if the TTL run out.
@@ -52,12 +55,15 @@ class TransientSocket(object):
 
     Why?
 
-    Because jormungandr creates sockets via the AWS's autobalancer, when a new instance is popped by autoscaling,
-    despite the autobalancer, sockets created previously will still stick to the old instance. We have to close the
+    Because jormungandr creates sockets via the AWS's autobalancer, when a new instance is popped by auto scaling,
+    despite the auto balancer, sockets created previously will still stick to the old instance. We have to close the
     socket and reopen one so that traffic will be lead to new instances.
 
     """
 
+    # _sockets is a map of TransientSocket vs a sorted list of tuple of created time and tcp sockets
+    # the sorted list is arranged in a way that the first element is the most recent one and the last element is oldest
+    # one.
     _sockets = defaultdict(
         lambda: SortedList([], key=lambda x: -x[0])
     )  # type: Dict[TransientSocket, SortedList]
@@ -73,29 +79,38 @@ class TransientSocket(object):
     @contextmanager
     def socket(self):
         # We don't want to waste time to close sockets in this function since the performance is critical
-        # The cleaning job is done in another greenlet or uwsgi's signal-triggered task.
+        # The cleaning job is done in another greenlet.
         try:
             with _semaphore:
                 # self._sockets's first element is the most recent one
+                # If self._sockets is empty, a IndexError exception is raised
                 t, socket = self._sockets[self][0]
                 now = time.time()
                 if now - t < self.ttl:
-                    # we move the ownership and use it!
+                    # we find an alive socket! we move the ownership and use it!
                     self._sockets[self].pop(0)
                 else:
-                    raise IndexError
-        except IndexError:  # there is no socket available: let's create one
+                    raise NoAliveSockets
+        except (IndexError, NoAliveSockets):  # there is no socket available: let's create one
             logging.getLogger(__name__).info("opening one socket for %s", self.name)
             socket = self._zmq_context.socket(zmq.REQ)
+            # the socket will try to reconnect every 100 ms
+            socket.setsockopt(zmq.RECONNECT_IVL, 100)
             socket.connect(self._socket_path)
             t = time.time()
 
         try:
             yield socket
+        except:
+            logging.getLogger(__name__).exception("")
+
         finally:
             if not socket.closed:
-                with _semaphore:
-                    self._sockets[self].add((t, socket))
+                if time.time() - t > self.ttl:
+                    TransientSocket.close_socket(socket, self.name)
+                else:
+                    with _semaphore:
+                        self._sockets[self].add((t, socket))
 
     @staticmethod
     def close_socket(socket, name):
