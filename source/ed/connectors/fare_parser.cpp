@@ -172,7 +172,7 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
         return true;
     }
     if (condition.key != "zone" && condition.key != "stoparea" && condition.key != "duration"
-        && condition.key != "nb_changes" && condition.key != "ticket") {
+        && condition.key != "nb_changes" && condition.key != "ticket" && condition.key != "line") {
         LOG4CPLUS_WARN(logger, "A transition has a condition with an invalid key : \"" << condition.key << "\"");
         return false;
     }
@@ -222,7 +222,14 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
             return false;
         }
     }
-
+    if (condition.key == "line") {
+        bool found = navitia::contains_if(data.lines, [&](const auto& line) { return line->uri == condition.value; });
+        if (!found) {
+            LOG4CPLUS_WARN(logger, "A transition has a condition with the line "
+                                       << condition.value << " but this line does not appears in the data.");
+            return false;
+        }
+    }
     return true;
 }
 
