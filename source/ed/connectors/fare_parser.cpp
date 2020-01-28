@@ -207,7 +207,11 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
     }
     if (condition.key == "nb_changes") {
         try {
-            boost::lexical_cast<int>(condition.value);
+            int nb_changes = boost::lexical_cast<int>(condition.value);
+            if (nb_changes <= -1) {
+                LOG4CPLUS_WARN(logger, "A transition has a condition with a nb_changes equals to "
+                                           << condition.value << " which is <= -1 .");
+            }
         } catch (boost::bad_lexical_cast) {
             LOG4CPLUS_WARN(logger, "A transition has a condition with a nb_changes "
                                        << condition.value << " but this string is not parsable as an integer.");
