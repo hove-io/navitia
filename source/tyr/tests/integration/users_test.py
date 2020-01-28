@@ -277,25 +277,25 @@ def test_add_user_with_invalid_coord(mock_rabbit):
     assert mock_rabbit.call_count == 0
 
 
+def _check_user_resp(user_input, user_output):
+    for key in user_input:
+        assert user_output[key] == user_input[key]
+    assert user_output['end_point']['name'] == 'navitia.io'
+    assert user_output['type'] == 'with_free_instances'
+    assert user_output['block_until'] is None
+
+
 def test_add_user_with_plus(mock_rabbit):
     """
     creation of a user with a "+" in the email
     """
     user = {'login': 'user1+test@example.com', 'email': 'user1+test@example.com'}
     resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
-
-    def check(u):
-        for k in user.keys():
-            assert u[k] == user[k]
-        assert u['end_point']['name'] == 'navitia.io'
-        assert u['type'] == 'with_free_instances'
-        assert u['block_until'] is None
-
-    check(resp)
+    _check_user_resp(user, resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
-    check(resp[0])
+    _check_user_resp(user, resp[0])
     assert mock_rabbit.called
 
 
@@ -305,19 +305,11 @@ def test_add_user_with_plus_no_json(mock_rabbit):
     """
     user = {'login': 'user1+test@example.com', 'email': 'user1+test@example.com'}
     resp = api_post('/v0/users/', data=user)
-
-    def check(u):
-        for k in user.keys():
-            assert u[k] == user[k]
-        assert u['end_point']['name'] == 'navitia.io'
-        assert u['type'] == 'with_free_instances'
-        assert u['block_until'] is None
-
-    check(resp)
+    _check_user_resp(user, resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
-    check(resp[0])
+    _check_user_resp(user, resp[0])
     assert mock_rabbit.called
 
 
@@ -330,19 +322,11 @@ def test_add_user_with_plus_in_query(mock_rabbit):
     assert status == 400
 
     resp = api_post('/v0/users/?login={email}&email={email}'.format(email=quote(user['email'])))
-
-    def check(u):
-        for k in user.keys():
-            assert u[k] == user[k]
-        assert u['end_point']['name'] == 'navitia.io'
-        assert u['type'] == 'with_free_instances'
-        assert u['block_until'] is None
-
-    check(resp)
+    _check_user_resp(user, resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
-    check(resp[0])
+    _check_user_resp(user, resp[0])
     assert mock_rabbit.called
 
 

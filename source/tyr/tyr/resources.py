@@ -657,7 +657,7 @@ class Instance(flask_restful.Resource):
             def map_args_to_instance(attr_name):
                 setattr(instance, attr_name, args[attr_name])
 
-            list(
+            all(
                 map(
                     map_args_to_instance,
                     [

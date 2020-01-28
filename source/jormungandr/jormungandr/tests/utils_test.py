@@ -201,7 +201,6 @@ def test_walk_dict():
 
     walk_dict(bob, my_first_stopper_visitor)
     expected_nodes = ["tete", "tuple1"]
-    print(result.getvalue())
     assert all(node in result.getvalue() for node in expected_nodes)
 
     def my_second_stopper_visitor(name, val):
@@ -210,7 +209,5 @@ def test_walk_dict():
             return True
 
     walk_dict(bob, my_second_stopper_visitor)
-    print(result.getvalue())
-
     expected_nodes = ["toto", "bob", "bobette", "nested_bob"]
     assert all(node in result.getvalue() for node in expected_nodes)
