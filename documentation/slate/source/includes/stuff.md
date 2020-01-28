@@ -106,6 +106,7 @@ This is due to a re-interpretation of the service pattern, with one specific goa
 
 This means that Navitia will re-organise the input data, to produce a smaller and more comprehensive response that respects the semantics of the input data.
 
+For more information about the algorithm (in French): [https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf](https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf)
 
 
 <a name="ridesharing-stuff"></a>Ridesharing
