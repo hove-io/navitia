@@ -385,12 +385,19 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
                 return false;
             }
         } else if (cond.key == "nb_changes") {
+            LOG4CPLUS_TRACE(logger, "nb changes " << cond.value << " vs " << label.nb_changes);
             auto nb_changes = boost::lexical_cast<int>(cond.value);
-            if (!compare(label.nb_changes, nb_changes, cond.comparaison)) {
+            // we are checking whether we can extend `label` using this Transition.
+            // for now, in the label, we have made `label.nb_changes` changes of public transport
+            // if this Transition is used to extend the label, we will have `label.nb_changes + 1`
+            // changes. So we must compare `cond.value` with `label.nb_changes + 1`
+            // and not `label.nb_changes`
+            if (!compare(label.nb_changes + 1, nb_changes, cond.comparaison)) {
                 return false;
             }
         } else if (cond.key == "ticket" && !label.tickets.empty()) {
-            LOG4CPLUS_TRACE(logger, "ticket " << cond.value << " vs " << label.tickets.back().key);
+            LOG4CPLUS_TRACE(logger, "ticket " << cond.value << " " << comp_to_string(cond.comparaison) << " "
+                                              << label.tickets.back().key);
 
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
                 return false;
