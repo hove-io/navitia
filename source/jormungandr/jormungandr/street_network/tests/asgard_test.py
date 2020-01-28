@@ -45,6 +45,7 @@ def status_test():
         id=u"tata-é$~#@\"*!'`§èû",
         modes=["walking", "bike", "car"],
         timeout=77,
+        socket_ttl=60,
     )
 
     status = asgard.status()
