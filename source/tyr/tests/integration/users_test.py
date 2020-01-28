@@ -470,8 +470,8 @@ def test_update_user(create_multiple_users, mock_rabbit, geojson_polygon):
     )
 
     def check(u):
-        for k in user.keys():
-            assert u[k] == user[k]
+        for key in user:
+            assert u[key] == user[key]
         assert resp['id'] == create_multiple_users['user1']
         assert resp['login'] == user['login']
         assert resp['email'] == user['email']
@@ -508,8 +508,8 @@ def test_update_shape(create_multiple_users, mock_rabbit, geojson_polygon):
     )
 
     def check(u):
-        for k in user.keys():
-            assert u[k] == user[k]
+        for key in user:
+            assert u[key] == user[key]
         assert resp['id'] == create_multiple_users['user1']
 
     check(resp)
