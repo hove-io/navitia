@@ -223,8 +223,10 @@ results Fare::compute_fare(const routing::Path& path) const {
                                                             << ", mode=" << section_key.mode);
                             }
                         } else {
-                            LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
-                            new_labels[0].push_back(next);
+                            if (v != 0) {
+                                LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
+                                new_labels[0].push_back(next);
+                            }
                         }
                         LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " {" << g[v] << "} : \n" << next);
                         new_labels[v].push_back(next);
