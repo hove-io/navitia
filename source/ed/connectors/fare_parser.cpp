@@ -206,6 +206,11 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
         }
     }
     if (condition.key == "nb_changes") {
+        if (condition.comparaison != navitia::fare::Comp_e::LT || condition.comparaison != navitia::fare::Comp_e::LTE) {
+            LOG4CPLUS_WARN(logger, "A transition has a condition on nb_changes  which is not a < or <= condition. "
+                                       << condition.to_string());
+            return false;
+        }
         try {
             int nb_changes = boost::lexical_cast<int>(condition.value);
             if (nb_changes <= -1) {
