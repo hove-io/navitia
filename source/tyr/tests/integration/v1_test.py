@@ -117,7 +117,8 @@ def check_v1_response(endpoint, request=None):
     assert endpoint in resp_v1
     if isinstance(resp_v0, list) and isinstance(resp_v1[endpoint], list):
         assert compare_responses(resp_v1[endpoint], resp_v0)
-    assert resp_v1[endpoint] == resp_v0
+    else:
+        assert resp_v1[endpoint] == resp_v0
 
 
 def test_api():
