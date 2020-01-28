@@ -101,10 +101,10 @@ You expected to have 3 `add` exceptions but you only have 1 `remove`. Also, the 
 This is due to a re-interpretation of the service pattern, with one specific goal :
 
 <aside class="notice">
- Navitia interprets the input service with the **least** number of exceptions
+ Navitia analyzes the input service and computes an equivalent pair of (week_pattern, exceptions) with the **smallest** number of exceptions
 </aside>
 
-This means that Navitia will try to re-organise the input data, to produce a smaller and more comprehensive response that respects the integrity of the data.
+This means that Navitia will re-organise the input data, to produce a smaller and more comprehensive response that respects the semantics of the input data.
 
 
 
