@@ -1,4 +1,4 @@
-stop_time_id,trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,local_zone_id,date_time_estimated,boarding_duration,alighting_duration
+stop_time_id,trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type,local_zone_id,stop_time_precision,boarding_duration,alighting_duration
 ,trip_1,08:11:00,08:11:00,SP:A,0,N1,0,0,,0,,
 ,trip_1,09:11:00,09:11:00,SP:B,1,N1,0,0,1,0,,
 ,trip_1,10:11:00,10:11:00,SP:C,2,N1,0,0,1,0,,
@@ -25,3 +25,6 @@ StopTime:7,trip_2,12:30:00,12:30:00,24034,1,,3,3,0,1,,
 421,trip_5,06:10:00,06:10:00,SP:B,2,,0,0,,0,900,900
 422,trip_5,06:20:00,06:20:00,SP:C,3,,0,0,,0,900,900
 423,trip_5,06:30:00,06:30:00,SP:D,4,,1,0,,0,0,300
+,trip_6,12:30:00,12:30:00,id_for_stop_time_precision_true,1,,3,3,0,2,,
+,trip_6,12:30:00,12:30:00,id_for_stop_time_precision_false_1,1,,3,3,0,1,,
+,trip_6,12:30:00,12:30:00,id_for_stop_time_precision_false_2,1,,3,3,0,0,,
