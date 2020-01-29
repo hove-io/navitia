@@ -380,12 +380,10 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_punch_date = section.start_time;
-            if (!label.tickets.empty()) {
-                const Ticket& last_ticket = label.tickets.back();
-                if (!last_ticket.sections.empty()) {
-                    ticket_punch_date = last_ticket.sections.back().start_time;
-                }
+            int ticket_punch_date = label.start_time;
+            // if the ticket key is not empty, it means we are punching a new ticket
+            if (!this->ticket_key.empty()) {
+                ticket_punch_date = section.start_time;
             }
             int ticket_duration = section.duration_at_begin(ticket_punch_date);
             LOG4CPLUS_TRACE(logger, "Boarding duration " << duration << " vs " << ticket_duration);
@@ -393,14 +391,30 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
                 return false;
             }
         } else if (cond.key == "nb_changes") {
-            LOG4CPLUS_TRACE(logger, "nb changes " << cond.value << " vs " << label.nb_changes);
-            auto nb_changes = boost::lexical_cast<int>(cond.value);
+            auto max_nb_changes = boost::lexical_cast<int>(cond.value);
+
+            int current_nb_of_changes = label.nb_changes;
+            int nb_of_changes_after_transition = current_nb_of_changes + 1;
+            // if the ticket key is not empty, it means we are punching a new ticket
+            // hence, after this transition, we will have made 0 changes with the last ticket
+            if (!this->ticket_key.empty()) {
+                assert(current_nb_of_changes == 0);
+                nb_of_changes_after_transition = 0;
+            }
+
             // we are checking whether we can extend `label` using this Transition.
-            // for now, in the label, we have made `label.nb_changes` changes of public transport
-            // if this Transition is used to extend the label, we will have `label.nb_changes + 1`
-            // changes. So we must compare `cond.value` with `label.nb_changes + 1`
-            // and not `label.nb_changes`
-            if (!compare(label.nb_changes + 1, nb_changes, cond.comparaison)) {
+            // we want to check that, after using this Transition, the number of changes will be
+            // less than `max_nb_changes`
+            // Two cases can arise :
+            //  - either we are starting a new ticket, so label.tickets is empty,
+            //     or last_ticket.sections is empty.
+            //    In this case, after this transition, we will have make 0 changes with this ticket
+            //  - otherwise we keep using a ticket that was used on the previous section.
+            //     In this case, we already have made `current_nb_of_changes`, and after
+            //     the transition we will have `current_nb_of_changes + 1` changes
+            //
+            LOG4CPLUS_TRACE(logger, "nb changes " << max_nb_changes << " vs " << nb_of_changes_after_transition);
+            if (!compare(nb_of_changes_after_transition, max_nb_changes, cond.comparaison)) {
                 return false;
             }
         } else if (cond.key == "ticket" && !label.tickets.empty()) {
@@ -430,12 +444,10 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_punch_date = section.start_time;
-            if (!label.tickets.empty()) {
-                const Ticket& last_ticket = label.tickets.back();
-                if (!last_ticket.sections.empty()) {
-                    ticket_punch_date = last_ticket.sections.back().start_time;
-                }
+            int ticket_punch_date = label.start_time;
+            // if the ticket key is not empty, it means we are punching a new ticket
+            if (!this->ticket_key.empty()) {
+                ticket_punch_date = section.start_time;
             }
             int ticket_duration = section.duration_at_end(ticket_punch_date);
             LOG4CPLUS_TRACE(logger, "Alighting duration " << duration << " vs " << ticket_duration);
