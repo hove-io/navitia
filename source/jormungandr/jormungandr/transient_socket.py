@@ -37,7 +37,7 @@ import logging
 import six
 from typing import Dict
 from gevent.lock import BoundedSemaphore
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from sortedcontainers import SortedList
 
 
@@ -61,13 +61,15 @@ class TransientSocket(object):
 
     """
 
+    # TODO: use dataclass in python3.7
+    _Socket = namedtuple('_Socket', ['t', 'socket'])
+
     # _sockets is a map of TransientSocket vs a sorted list of tuple of created time and tcp sockets
     # the sorted list is arranged in a way that the first element is the most recent one and the last element is oldest
     # one.
-    _sockets = defaultdict(
-        lambda: SortedList([], key=lambda x: -x[0])
-    )  # type: Dict[TransientSocket, SortedList]
+    _sockets = defaultdict(lambda: SortedList([], key=lambda s: -s.t))  # type: Dict[TransientSocket, SortedList]
     _reaper_interval = 10
+    _logger = logging.getLogger(__name__)
 
     def __init__(self, name, zmq_context, socket_path, socket_ttl, *args, **kwargs):
         super(TransientSocket, self).__init__(*args, **kwargs)
@@ -83,60 +85,57 @@ class TransientSocket(object):
         try:
             with _semaphore:
                 # self._sockets's first element is the most recent one
-                # If self._sockets is empty, a IndexError exception is raised
-                t, socket = self._sockets[self][0]
+                t, socket = self._sockets[self][
+                    0
+                ]  # If self._sockets is empty, a IndexError exception will be raised
                 now = time.time()
                 if now - t < self.ttl:
-                    # we find an alive socket! we move the ownership and use it!
+                    # we find an alive socket! we move the ownership to this greenlet and use it!
                     self._sockets[self].pop(0)
                 else:
                     raise NoAliveSockets
         except (IndexError, NoAliveSockets):  # there is no socket available: let's create one
-            logging.getLogger(__name__).info("opening one socket for %s", self.name)
+            self._logger.info("opening one socket for %s", self.name)
             socket = self._zmq_context.socket(zmq.REQ)
-            # the socket will try to reconnect every 100 ms
-            socket.setsockopt(zmq.RECONNECT_IVL, 100)
             socket.connect(self._socket_path)
             t = time.time()
 
         try:
             yield socket
         except:
-            logging.getLogger(__name__).exception("")
+            self._logger.exception("")
 
         finally:
             if not socket.closed:
-                if time.time() - t > self.ttl:
-                    TransientSocket.close_socket(socket, self.name)
+                if time.time() - t >= self.ttl:
+                    self.close_socket(socket, self.name)
                 else:
                     with _semaphore:
-                        self._sockets[self].add((t, socket))
+                        self._sockets[self].add(TransientSocket._Socket(t, socket))
 
-    @staticmethod
-    def close_socket(socket, name):
-        logging.getLogger(__name__).info("closing one socket for %s", name)
-        socket.setsockopt(zmq.LINGER, 0)
-        socket.close()
-
-    @staticmethod
-    def _reap(o, sockets):
+    @classmethod
+    def close_socket(cls, socket, name):
+        cls._logger.info("closing one socket for %s", name)
         try:
-            while True:
-                with _semaphore:
-                    now = time.time()
-                    # sockets's last element is the oldest one
-                    t, socket = sockets[-1]
-                    if now - t > o.ttl:
-                        TransientSocket.close_socket(socket, o.name)
-                        sockets.pop(-1)
-                    else:
-                        return  # remaining socket are still in "keep alive" state
-        except IndexError:
-            return
+            socket.setsockopt(zmq.LINGER, 0)
+            socket.close()
+        except:
+            cls._logger.exception("")
+
+    @classmethod
+    def _reap(cls, o, sockets):
+        oldest_creation_time = time.time() - o.ttl
+        with _semaphore:
+            i = sockets.bisect_left(TransientSocket._Socket(oldest_creation_time, None))
+            sockets_to_be_closed = sockets[i:]  # no worries, it's a copy
+            del sockets[i:]
+
+        for _, socket in sockets_to_be_closed:
+            cls.close_socket(socket, o.name)
 
     @classmethod
     def _reap_sockets(cls):
-        logging.getLogger(__name__).info("reaping sockets")
+        cls._logger.info("reaping sockets")
         for o, sockets in six.iteritems(cls._sockets):
             TransientSocket._reap(o, sockets)
 
@@ -151,5 +150,5 @@ class TransientSocket(object):
     def init_socket_reaper(cls, config):
         cls._reaper_interval = config['ASGARD_ZMQ_SOCKET_REAPER_INTERVAL']
         # start a greenlet that handle connection closing when idle
-        logging.getLogger(__name__).info("spawning a socket reaper with gevent")
+        cls._logger.info("spawning a socket reaper with gevent")
         gevent.spawn(cls.gevent_reap_sockets)
