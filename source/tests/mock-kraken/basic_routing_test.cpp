@@ -150,29 +150,21 @@ int main(int argc, const char* const argv[]) {
     sp->is_zonal = true;
     b.data->pt_data->stop_points_by_area.insert(area_2, sp);
 
-    b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
-    auto admin = b.data->geo_ref->admins.back();
-    admin->uri = "admin:93700";
-    admin->name = "Drancy";
-    admin->insee = "93700";
-    admin->level = 8;
-    admin->postal_codes.push_back("93700");
-    admin->coord = {12, 12};
-    admin->idx = 0;
+    auto drancy = new navitia::georef::Admin(0, "admin:93700", "Drancy", 8, "93700", "Drancy", {12, 12}, {"93700"});
+    auto paris = new navitia::georef::Admin(1, "admin:75000", "Paris", 8, "75000", "Paris", {22, 22}, {"75000"});
+    auto paris12 =
+        new navitia::georef::Admin(2, "admin:75012", "Paris 12em", 9, "75012", "Paris 12", {23, 23}, {"75012"});
+    auto aligre =
+        new navitia::georef::Admin(3, "admin:75012", "Aligre market", 10, "75012", "Aligre", {23, 23}, {"75012"});
 
-    b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
-    admin = b.data->geo_ref->admins.back();
-    admin->uri = "admin:75000";
-    admin->name = "Paris";
-    admin->insee = "75000";
-    admin->level = 8;
-    admin->postal_codes.push_back("75012");
-    admin->coord = {22, 22};
-    admin->idx = 1;
-
+    b.data->geo_ref->admins.assign({drancy, paris, paris12, aligre});
     b.data->complete();
     b.manage_admin();
     b.make();
+
+    auto stop_area_A = b.data->pt_data->stop_areas[0];
+    // we willingly add cities in the wrong order of level to make sure they'll get sorted
+    stop_area_A->admin_list.assign({aligre, paris, paris12});
 
     mock_kraken kraken(b, argc, argv);
     return 0;

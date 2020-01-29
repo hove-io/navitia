@@ -296,3 +296,16 @@ class TestPlaces(AbstractTestFixture):
         places = response['places']
         assert len(places) == 1
         assert 'distance' not in places[0]
+
+
+@dataset({"basic_routing_test": {}})
+class TestAdministrativesRegions(AbstractTestFixture):
+    def test_administrative_regions_are_ordered_by_level(self):
+        """
+        In kraken's data, administrative regions aren't sorted.
+        At serialization time, we should order them by level ascending
+        """
+        response = self.query_region("stop_areas/A")
+        admins = response['stop_areas'][0]['administrative_regions']
+        levels = [admin['level'] for admin in admins]
+        assert levels[0] < levels[1] < levels[2]

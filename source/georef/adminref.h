@@ -50,6 +50,7 @@ typedef boost::geometry::model::box<navitia::type::GeographicalCoord> Box;
 
 struct Admin : nt::Header, nt::Nameable {
     const static type::Type_e type = type::Type_e::Admin;
+    using Postal_codes = std::vector<std::string>;
     /**
       http://wiki.openstreetmap.org/wiki/Key:admin_level#admin_level
       Level = 2  : Pays
@@ -75,10 +76,18 @@ struct Admin : nt::Header, nt::Nameable {
 
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     std::vector<const nt::StopPoint*> odt_stop_points;  // zone odt stop points for the admin
-    std::vector<std::string> postal_codes;
+    Postal_codes postal_codes;
 
     Admin() : level(-1) {}
     Admin(int lev) : level(lev) {}
+    Admin(idx_t idx,
+          const std::string& uri,
+          const std::string& name,
+          int level,
+          const std::string& insee,
+          const std::string& label,
+          const nt::GeographicalCoord& coord,
+          const Postal_codes& postal_codes);
     std::string get_range_postal_codes();
     std::string postal_codes_to_string() const;
     template <class Archive>
