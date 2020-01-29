@@ -40,8 +40,12 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-constexpr float kmh_to_ms(float val) {
+constexpr float kmh_to_ms(long double val) {
     return val / 3.6;
+}
+
+constexpr float operator"" _kmh(long double val) {
+    return kmh_to_ms(val);
 }
 
 template <typename T>
@@ -54,12 +58,12 @@ static void update_if_unknown(boost::optional<T>& target, const T& source) {
 // https://www.openstreetmap.org/relation/934933
 // default values for France
 SpeedsParser SpeedsParser::defaults() {
-    const float walking_speed = kmh_to_ms(4);
-    const float urban_speed = kmh_to_ms(50);
-    const float rural_speed = kmh_to_ms(80);
-    const float motorway_speed = kmh_to_ms(130);
-    const float trunk_speed = kmh_to_ms(110);
-    const float living_street_speed = kmh_to_ms(20);
+    const float walking_speed = 4.0_kmh;
+    const float urban_speed = 50.0_kmh;
+    const float rural_speed = 80.0_kmh;
+    const float motorway_speed = 130.0_kmh;
+    const float trunk_speed = 110.0_kmh;
+    const float living_street_speed = 20.0_kmh;
 
     SpeedsParser parser;
 
@@ -130,7 +134,6 @@ SpeedsParser SpeedsParser::defaults() {
 boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
                                                const boost::optional<std::string>& max_speed) const {
     boost::optional<float> speed;
-    boost::optional<float> factor;
 
     if (max_speeds_by_type.empty() && speed_factor_by_type.empty()) {
         return boost::none;
