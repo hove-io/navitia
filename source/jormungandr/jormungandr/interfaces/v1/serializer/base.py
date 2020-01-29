@@ -32,6 +32,7 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import six
 import operator
+import abc
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
 
@@ -210,7 +211,7 @@ class PbGenericSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
 
 
-class SortedGenericSerializer(object):
+class SortedGenericSerializer(serpy.Serializer):
     '''
     Sorted generic serializer can be used to sort a iterable container according to a specific key.
 
@@ -218,6 +219,10 @@ class SortedGenericSerializer(object):
 
     Implementation is based on 'serpy.Serializer.to_value' - https://serpy.readthedocs.io/en/latest/_modules/serpy/serializer.html#Serializer.to_value
     '''
+
+    @abc.abstractmethod
+    def sort_key(self):
+        raise NotImplementedError
 
     def to_value(self, obj):
         fields = self._compiled_fields

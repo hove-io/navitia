@@ -102,7 +102,7 @@ struct Nameable {
     bool visible = true;
 
     Nameable() = default;
-    Nameable(const std::string name) : name(name) {}
+    Nameable(const std::string& name) : name(name) {}
 };
 
 struct PT_Data;
