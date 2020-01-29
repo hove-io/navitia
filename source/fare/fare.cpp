@@ -314,7 +314,7 @@ bool compare(const T& a, const T& b, Comp_e comp) {
 }
 
 int SectionKey::duration_at_begin(int ticket_start_time) const {
-    if (ticket_start_time < boost::lexical_cast<int>(start_time)) {
+    if (ticket_start_time <= boost::lexical_cast<int>(start_time)) {
         return start_time - ticket_start_time;
     }
 
@@ -323,7 +323,7 @@ int SectionKey::duration_at_begin(int ticket_start_time) const {
 }
 
 int SectionKey::duration_at_end(int ticket_start_time) const {
-    if (ticket_start_time < boost::lexical_cast<int>(dest_time)) {
+    if (ticket_start_time <= boost::lexical_cast<int>(dest_time)) {
         return dest_time - ticket_start_time;
     }
 
@@ -380,7 +380,15 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_duration = section.duration_at_begin(label.start_time);
+            int ticket_punch_date = section.start_time;
+            if (!label.tickets.empty()) {
+                const Ticket& last_ticket = label.tickets.back();
+                if (!last_ticket.sections.empty()) {
+                    ticket_punch_date = last_ticket.sections.back().start_time;
+                }
+            }
+            int ticket_duration = section.duration_at_begin(ticket_punch_date);
+            LOG4CPLUS_TRACE(logger, "Boarding duration " << duration << " vs " << ticket_duration);
             if (!compare(ticket_duration, duration, cond.comparaison)) {
                 return false;
             }
@@ -422,7 +430,15 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_duration = section.duration_at_end(label.start_time);
+            int ticket_punch_date = section.start_time;
+            if (!label.tickets.empty()) {
+                const Ticket& last_ticket = label.tickets.back();
+                if (!last_ticket.sections.empty()) {
+                    ticket_punch_date = last_ticket.sections.back().start_time;
+                }
+            }
+            int ticket_duration = section.duration_at_end(ticket_punch_date);
+            LOG4CPLUS_TRACE(logger, "Alighting duration " << duration << " vs " << ticket_duration);
             if (!compare(ticket_duration, duration, cond.comparaison)) {
                 return false;
             }
