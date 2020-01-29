@@ -30,7 +30,12 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
 
-from jormungandr.interfaces.v1.serializer.base import PbGenericSerializer, EnumListField, LiteralField
+from jormungandr.interfaces.v1.serializer.base import (
+    PbGenericSerializer,
+    EnumListField,
+    LiteralField,
+    SortedGenericSerializer,
+)
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateType
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
@@ -309,12 +314,15 @@ class CarParkSerializer(PbNestedSerializer):
     total_places = jsonschema.IntField()
 
 
-class AdminSerializer(PbGenericSerializer):
+class AdminSerializer(SortedGenericSerializer, PbGenericSerializer):
     level = jsonschema.Field(schema_type=int)
     zip_code = jsonschema.Field(schema_type=str, display_none=True)
     label = jsonschema.Field(schema_type=str)
     insee = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
+
+    def sort_key(self, obj):
+        return obj["level"]
 
 
 class AddressSerializer(PbGenericSerializer):
