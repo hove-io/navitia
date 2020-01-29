@@ -100,6 +100,9 @@ enum class OdtLevel_e { scheduled = 0, with_stops = 1, zonal = 2, all = 3 };
 struct Nameable {
     std::string name;
     bool visible = true;
+
+    Nameable() = default;
+    Nameable(const std::string name) : name(name) {}
 };
 
 struct PT_Data;
@@ -118,6 +121,9 @@ inline Indexes make_indexes(std::initializer_list<idx_t> l) {
 struct Header {
     idx_t idx = invalid_idx;  // Index of the object in the main structure
     std::string uri;          // unique indentifier of the object
+
+    Header() = default;
+    Header(idx_t idx, const std::string& uri) : idx(idx), uri(uri) {}
     Indexes get(Type_e, const PT_Data&) const { return Indexes{}; }
 };
 
