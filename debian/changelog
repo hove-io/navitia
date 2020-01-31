@@ -1,3 +1,13 @@
+navitia2 (3.4.0) unstable; urgency=low
+
+  * Jormun: Sort administration region by level  <https://github.com/CanalTP/navitia/pull/3118>
+  * Kraken: Select when autocomplete needs rebuild during realtime process  <https://github.com/CanalTP/navitia/pull/3111>
+  * Doc: Document the Service Translation algorithm  <https://github.com/CanalTP/navitia/pull/3116>
+  * Doc/Jormun: Errors  <https://github.com/CanalTP/navitia/pull/3114>
+  * Ed2Nav: Remove backup nav file  <https://github.com/CanalTP/navitia/pull/3115>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Fri, 31 Jan 2020 08:01:43 +0100
+
 navitia2 (3.3.0) unstable; urgency=low
 
   * Ed2Nav: Add admins fetched from Cities db to Rtree for significant speed up.  <https://github.com/CanalTP/navitia/pull/3099>
