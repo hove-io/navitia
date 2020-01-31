@@ -39,3 +39,4 @@ shortuuid==0.5.0
 click==6.7
 typing==3.7.4
 coloredlogs==10.0
+sortedcontainers==2.1.0

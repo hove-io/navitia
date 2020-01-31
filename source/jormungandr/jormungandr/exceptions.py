@@ -56,11 +56,11 @@ class RegionNotFound(HTTPException):
             elif object_id[:6] == "coord:":
                 lon, lat = object_id[6:].split(":")
                 object_id = None
-        if region == lon == lat is None == object_id:
+        if not any([region, lon, lat, object_id]):
             self.data = format_error("unknown_object", "No region nor " "coordinates given")
-        elif region and lon == lat == object_id is None:
+        elif region and not any([lon, lat, object_id]):
             self.data = format_error("unknown_object", "The region {0} " "doesn't exists".format(region))
-        elif region == object_id is None and lon and lat:
+        elif not any([region, object_id]) and lon and lat:
             self.data = format_error(
                 "unknown_object",
                 "No region available for the coordinates:" "{lon}, {lat}".format(lon=lon, lat=lat),

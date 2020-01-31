@@ -1,5 +1,5 @@
-# coding=utf-8
-#  Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2001-2020, Kisio and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -28,33 +28,23 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.street_network.asgard import Asgard
+from __future__ import absolute_import, print_function, unicode_literals, division
+
+from jormungandr.interfaces.v1.serializer.base import SortedGenericSerializer
+import pytest
+import serpy
 
 
-class FakeInstance(object):
+def test_sorted_generic_serializer():
+    class SortSerializer(SortedGenericSerializer, serpy.DictSerializer):
+        v = serpy.IntField()
 
-    name = 'fake_instance'
-    context = None
+        def sort_key(self, obj):
+            return obj
 
-
-def status_test():
-    asgard = Asgard(
-        instance=FakeInstance(),
-        service_url=None,
-        asgard_socket="asgard_socket",
-        id=u"tata-é$~#@\"*!'`§èû",
-        modes=["walking", "bike", "car"],
-        timeout=77,
-        socket_ttl=60,
-    )
-
-    status = asgard.status()
-    assert len(status) == 6
-    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
-    assert status['class'] == "Asgard"
-    assert status['modes'] == ["walking", "bike", "car"]
-    assert status['timeout'] == 77
-    assert status['circuit_breaker']['current_state'] == 'closed'
-    assert status['circuit_breaker']['fail_counter'] == 0
-    assert status['circuit_breaker']['reset_timeout'] == 60
-    assert status['zmq_socket_ttl'] == 60
+    objs = [{'v': '2'}, {'v': '4'}, {'v': '3'}, {'v': '1'}]
+    data = SortSerializer(objs, many=True).data
+    assert data[0]['v'] == 1
+    assert data[1]['v'] == 2
+    assert data[2]['v'] == 3
+    assert data[3]['v'] == 4

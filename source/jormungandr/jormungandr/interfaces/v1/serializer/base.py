@@ -32,6 +32,7 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import six
 import operator
+import abc
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
 
@@ -208,6 +209,30 @@ class DictCodeSerializer(serpy.DictSerializer):
 class PbGenericSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri', description='Identifier of the object')
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
+
+
+class SortedGenericSerializer(serpy.Serializer):
+    '''
+    Sorted generic serializer can be used to sort a iterable container according to a specific key.
+
+    The derived class needs to implement `sort_key(self, o)`, a function used to extract the comparison key (as the `key` argument from https://docs.python.org/3.3/library/functions.html#sorted)
+
+    Implementation is based on 'serpy.Serializer.to_value' - https://serpy.readthedocs.io/en/latest/_modules/serpy/serializer.html#Serializer.to_value
+    '''
+
+    @abc.abstractmethod
+    def sort_key(self):
+        raise NotImplementedError
+
+    def to_value(self, obj):
+        fields = self._compiled_fields
+        serialize = self._serialize
+
+        if self.many == False:
+            return serialize(obj, fields)
+
+        serialized_objs = (serialize(o, fields) for o in obj)
+        return sorted(serialized_objs, key=self.sort_key)
 
 
 class AmountSerializer(PbNestedSerializer):
