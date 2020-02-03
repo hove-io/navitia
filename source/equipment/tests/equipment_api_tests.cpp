@@ -37,7 +37,6 @@ www.navitia.io
 #include "equipment/equipment_api.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/logger.h"
-#include "type/type.h"
 #include "type/pt_data.h"
 #include "tests/utils_test.h"
 

@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "utils/exception.h"
 
+#include <boost/functional/hash.hpp>
 #include <unordered_set>
 
 namespace navitia {

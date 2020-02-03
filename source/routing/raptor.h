@@ -30,17 +30,23 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type.h"
 #include "type/data.h"
 #include "type/datetime.h"
 #include "type/rt_level.h"
+#include "type/time_duration.h"
+#include "type/line.h"
+#include "type/route.h"
+#include "type/commercial_mode.h"
+#include "type/physical_mode.h"
+#include "type/network.h"
+#include "type/stop_area.h"
+
 #include "raptor_solution_reader.h"
 #include "routing.h"
 #include "routing/journey.h"
 #include "utils/timer.h"
 #include "dataraptor.h"
 #include "raptor_utils.h"
-#include "type/time_duration.h"
 
 #include "dataraptor.h"
 #include <unordered_map>

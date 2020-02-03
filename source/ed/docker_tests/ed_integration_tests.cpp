@@ -37,6 +37,9 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
+#include "type/contributor.h"
+#include "type/meta_vehicle_journey.h"
+#include "type/dataset.h"
 #include "tests/utils_test.h"
 #include "routing/raptor_utils.h"
 

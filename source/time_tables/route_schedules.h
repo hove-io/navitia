@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+
 #include "routing/routing.h"
 #include "routing/get_stop_times.h"
 #include "type/pb_converter.h"

@@ -30,7 +30,6 @@ www.navitia.io
 
 #include "utils/init.h"
 #include "mock_kraken.h"
-#include "type/type.h"
 #include "type/pt_data.h"
 
 using namespace navitia::georef;

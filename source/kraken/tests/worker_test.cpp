@@ -39,7 +39,6 @@ www.navitia.io
 #include "kraken/worker.h"
 #include "type/pt_data.h"
 #include "georef/georef.h"
-#include "type/type.h"
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }

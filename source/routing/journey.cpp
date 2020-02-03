@@ -30,7 +30,7 @@ www.navitia.io
 
 #include "journey.h"
 
-#include "type/type.h"
+#include "type/stop_time.h"
 
 using namespace navitia::routing;
 

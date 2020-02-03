@@ -31,7 +31,6 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE associated_calendar_test
 #include <boost/test/unit_test.hpp>
-#include "type/type.h"
 #include "ed/build_helper.h"
 #include "type/pt_data.h"
 

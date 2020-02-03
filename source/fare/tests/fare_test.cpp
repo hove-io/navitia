@@ -33,6 +33,7 @@ www.navitia.io
 #include "utils/base64_encode.h"
 #include "fare/fare.h"
 #include "type/data.h"
+#include "type/network.h"
 #include "ed/connectors/fare_parser.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/spirit/include/qi.hpp>

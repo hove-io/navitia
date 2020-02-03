@@ -32,11 +32,15 @@ www.navitia.io
 
 #include "utils/functions.h"
 #include "type/data.h"
-#include "type/pt_data.h"
 #include "georef/georef.h"
+#include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "type/message.h"
 #include "type/rt_level.h"
+#include "type/company.h"
+#include "type/dataset.h"
+#include "type/contributor.h"
+#include "type/commercial_mode.h"
 
 #include <boost/optional.hpp>
 #include <boost/date_time/gregorian_calendar.hpp>

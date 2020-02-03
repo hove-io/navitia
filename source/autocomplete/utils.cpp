@@ -30,7 +30,7 @@ www.navitia.io
 
 #include "autocomplete/utils.h"
 
-#include "type/type.h"
+#include "type/type_interfaces.h"
 
 namespace navitia {
 namespace autocomplete {

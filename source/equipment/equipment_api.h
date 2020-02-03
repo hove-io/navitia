@@ -30,7 +30,6 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type.h"
 #include "type/pb_converter.h"
 
 #include <string>

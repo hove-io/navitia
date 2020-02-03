@@ -36,6 +36,9 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "routing/dataraptor.h"
 
+#include "type/calendar.h"
+#include "type/meta_vehicle_journey.h"
+
 using namespace navitia;
 using namespace navitia::routing;
 using navitia::routing::StopEvent;

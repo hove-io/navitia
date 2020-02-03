@@ -31,7 +31,8 @@ www.navitia.io
 #include "thermometer.h"
 
 #include "ptreferential/ptreferential.h"
-#include "type/type.h"
+#include "type/route.h"
+#include "type/stop_point.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/topological_sort.hpp>
