@@ -711,7 +711,13 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     compute_most_serious_disruption(pb_journey, pb_creator);
 
     // fare computation, done at the end for the journey to be complete
+    auto before_fare = std::chrono::system_clock::now();
     auto fare = pb_creator.data->fare->compute_fare(path);
+    auto after_fare = std::chrono::system_clock::now();
+    LOG4CPLUS_DEBUG(
+        logger,
+        "Fare duration : " << std::chrono::duration_cast<std::chrono::milliseconds>(after_fare - before_fare).count());
+
     try {
         pb_creator.fill_fare_section(pb_journey, fare);
     } catch (const navitia::exception& e) {
