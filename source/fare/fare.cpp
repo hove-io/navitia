@@ -395,9 +395,10 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
 
             int current_nb_of_changes = label.nb_changes;
             int nb_of_changes_after_transition = current_nb_of_changes + 1;
-            // if the ticket key is not empty, it means we are punching a new ticket
+            // if the ticket_key is not empty, it means we are punching a new ticket
             // hence, after this transition, we will have made 0 changes with the last ticket
-            if (!this->ticket_key.empty()) {
+            // similarly, if label->tickets is empty, it means that we are punching a new ticket
+            if (!this->ticket_key.empty() || label.tickets.empty()) {
                 assert(current_nb_of_changes == 0);
                 nb_of_changes_after_transition = 0;
             }
