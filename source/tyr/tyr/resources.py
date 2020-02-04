@@ -73,6 +73,7 @@ from tyr.fields import *
 from werkzeug.exceptions import BadRequest
 import werkzeug
 import six
+from collections import deque
 
 
 class Api(flask_restful.Resource):
@@ -657,7 +658,7 @@ class Instance(flask_restful.Resource):
             def map_args_to_instance(attr_name):
                 setattr(instance, attr_name, args[attr_name])
 
-            all(
+            deque(
                 map(
                     map_args_to_instance,
                     [
@@ -716,7 +717,8 @@ class Instance(flask_restful.Resource):
                         'max_taxi_direct_path_duration',
                         'max_ridesharing_direct_path_duration',
                     ],
-                )
+                ),
+                maxlen=0,
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
             import copy
