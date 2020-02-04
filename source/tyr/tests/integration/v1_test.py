@@ -103,6 +103,7 @@ def compare_responses(v1_resp, v0_resp):
     # Sort all dictionaries in list by their id, so the zip will match the correct dicts
     v0_resp.sort(key=operator.itemgetter('id'))
     v1_resp.sort(key=operator.itemgetter('id'))
+    assert len(v0_resp) == len(v1_resp)
     return all(x == y for x, y in (zip(v0_resp, v1_resp)))
 
 
