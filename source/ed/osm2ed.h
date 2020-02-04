@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include "ed/types.h"

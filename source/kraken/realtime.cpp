@@ -35,7 +35,7 @@ www.navitia.io
 #include "type/kirin.pb.h"
 #include "type/meta_data.h"
 #include "type/pt_data.h"
-#include "type/type.h"
+#include "type/meta_vehicle_journey.h"
 #include "utils/functions.h"
 #include "utils/logger.h"
 

@@ -29,7 +29,8 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+
+#include "type/calendar.h"
 #include "type/pt_data.h"
 #include "utils/logger.h"
 

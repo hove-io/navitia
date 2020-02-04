@@ -36,7 +36,6 @@ www.navitia.io
 #include "routing/dataraptor.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
-#include "type/type.h"
 #include "type/pt_data.h"
 #include "type/datetime.h"
 

@@ -32,6 +32,11 @@ www.navitia.io
 
 #include "ed/connectors/fare_utils.h"
 #include "type/meta_data.h"
+#include "type/network.h"
+#include "type/company.h"
+#include "type/contributor.h"
+#include "type/commercial_mode.h"
+#include "type/dataset.h"
 
 #include <boost/foreach.hpp>
 #include <boost/geometry.hpp>

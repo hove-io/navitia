@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2020, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -27,23 +27,11 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
+#include "entry_point.h"
 
-#include "type.h"
-
-#include "data.h"
-#include "meta_data.h"
-#include "pt_data.h"
-#include "type/indexes.h"
-#include "type_utils.h"
 #include "utils/coord_parser.h"
 #include "utils/functions.h"
 #include "utils/logger.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/assign.hpp>
-
-#include <iostream>
-#include <set>
 
 namespace navitia {
 namespace type {

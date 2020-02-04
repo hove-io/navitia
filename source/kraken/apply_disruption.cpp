@@ -31,7 +31,10 @@ www.navitia.io
 #include "apply_disruption.h"
 
 #include "type/datetime.h"
-#include "type/type.h"
+#include "type/base_pt_objects.h"
+#include "type/network.h"
+#include "type/physical_mode.h"
+#include "type/meta_vehicle_journey.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
 

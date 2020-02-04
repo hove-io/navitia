@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2020, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -30,25 +30,27 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type_interfaces.h"
-#include "type/time_duration.h"
-#include "type/validity_pattern.h"
-#include "type/timezone_manager.h"
-#include "type/geographical_coord.h"
-#include "type/stop_point.h"
-#include "type/connection.h"
-#include "type/calendar.h"
-#include "type/stop_area.h"
-#include "type/network.h"
-#include "type/contributor.h"
-#include "type/dataset.h"
-#include "type/company.h"
-#include "type/commercial_mode.h"
-#include "type/physical_mode.h"
-#include "type/line.h"
-#include "type/route.h"
-#include "type/meta_vehicle_journey.h"
-#include "type/vehicle_journey.h"
-#include "type/stop_time.h"
-#include "type/static_data.h"
-#include "type/entry_point.h"
+namespace navitia {
+namespace type {
+
+/**
+  Accessibility management
+  */
+struct AccessibiliteParams {
+    Properties properties;                 // Accessibility StopPoint, Connection, ...
+    VehicleProperties vehicle_properties;  // Accessibility VehicleJourney
+
+    AccessibiliteParams() {}
+
+    bool operator<(const AccessibiliteParams& other) const {
+        if (properties.to_ulong() != other.properties.to_ulong()) {
+            return properties.to_ulong() < other.properties.to_ulong();
+        } else if (vehicle_properties.to_ulong() != other.vehicle_properties.to_ulong()) {
+            return vehicle_properties.to_ulong() < other.vehicle_properties.to_ulong();
+        }
+        return false;
+    }
+};
+
+}  // namespace type
+}  // namespace navitia

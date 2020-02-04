@@ -32,6 +32,15 @@ www.navitia.io
 
 #include "type/data.h"
 #include "type/rt_level.h"
+#include "type/dataset.h"
+#include "type/contributor.h"
+#include "type/calendar.h"
+#include "type/base_pt_objects.h"
+#include "type/network.h"
+#include "type/company.h"
+#include "type/commercial_mode.h"
+#include "type/physical_mode.h"
+#include "type/meta_vehicle_journey.h"
 
 namespace navitia {
 namespace ptref {

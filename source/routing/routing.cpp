@@ -31,6 +31,7 @@ www.navitia.io
 #include "routing.h"
 
 #include "type/data.h"
+#include "type/base_pt_objects.h"
 
 namespace navitia {
 namespace routing {

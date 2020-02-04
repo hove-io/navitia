@@ -32,8 +32,8 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE chaos_db_disruption_tests
 
-#include "type/type.h"
 #include "type/datetime.h"
+#include "type/meta_vehicle_journey.h"
 #include "kraken/fill_disruption_from_database.h"
 
 #include <google/protobuf/repeated_field.h>

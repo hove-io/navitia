@@ -33,7 +33,6 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "boost/date_time/posix_time/posix_time_types.hpp"
 #include "type/pt_data.h"
-#include "type/type.h"
 #include "type/response.pb.h"
 #include "ed/build_helper.h"
 #include "type/pb_converter.h"

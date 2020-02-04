@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+
 #include "type/response.pb.h"
 #include "type/pb_converter.h"
 

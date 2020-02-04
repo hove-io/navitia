@@ -31,8 +31,11 @@ www.navitia.io
 #include "type/message.h"
 
 #include "type/pt_data.h"
+#include "type/company.h"
+#include "type/network.h"
+#include "type/base_pt_objects.h"
+#include "type/meta_vehicle_journey.h"
 #include "type/serialization.h"
-#include "type/type.h"
 #include "utils/logger.h"
 
 #include <boost/algorithm/cxx11/all_of.hpp>

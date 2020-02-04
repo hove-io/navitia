@@ -29,9 +29,14 @@ www.navitia.io
 */
 
 #pragma once
+
 #include "types.h"
-#include "type/type.h"
+
 #include "type/comment.h"
+#include "type/base_pt_objects.h"
+#include "type/physical_mode.h"
+#include "type/meta_vehicle_journey.h"
+#include "type/line.h"
 #include "type/data.h"
 #include "type/meta_data.h"
 #include "fare/fare.h"
