@@ -55,3 +55,8 @@ ADD_BOOST_TEST(ed2nav_test)
 add_executable(route_main_destination_test route_main_destination_test.cpp)
 target_link_libraries(route_main_destination_test ed ${ED_TESTS_LINK_LIBS})
 ADD_BOOST_TEST(route_main_destination_test)
+
+
+add_executable(speed_parser_test speed_parser_test.cpp)
+target_link_libraries(speed_parser_test ${ED_TESTS_LINK_LIBS})
+ADD_BOOST_TEST(speed_parser_test)

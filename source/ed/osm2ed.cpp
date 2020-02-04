@@ -196,14 +196,15 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id,
     if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
-
+    auto speed = parse_way_speed(tags, this->speed_parser);
     if (is_used_by_relation) {
         it_way->set_properties(properties);
+        it_way->set_car_speed(speed);
         if (!name.empty()) {
             it_way->set_name(name);
         }
     } else if (is_street) {
-        it_way = cache.ways.insert(OSMWay(osm_id, properties, name)).first;
+        it_way = cache.ways.insert(OSMWay(osm_id, properties, name, speed)).first;
     }
     for (auto osm_id : nodes_refs) {
         auto v = cache.nodes.insert(OSMNode(osm_id));
@@ -423,8 +424,9 @@ void OSMCache::insert_edges() {
         return;
     }
 
-    this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                                     "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+    this->lotus->prepare_bulk_insert("georef.edge",
+                                     {"source_node_id", "target_node_id", "way_id", "the_geog", "pedestrian_allowed",
+                                      "cycles_allowed", "cars_allowed", "car_speed"});
     nt::LineString coords;
     std::stringstream wkt;
     wkt.precision(10);
@@ -433,6 +435,11 @@ void OSMCache::insert_edges() {
     for (const auto& way : ways) {
         auto prev_node = nodes.end();
         const auto ref_way_id = way.way_ref == nullptr ? way.osm_id : way.way_ref->osm_id;
+
+        std::string speed = lotus->null_value;
+        if (way.car_speed) {
+            speed = std::to_string(way.car_speed.get());
+        }
         for (const auto& node : way.nodes) {
             if (!node->is_defined()) {
                 continue;
@@ -451,7 +458,7 @@ void OSMCache::insert_edges() {
                                      std::to_string(ref_way_id), wkt.str(),
                                      std::to_string(way.properties[OSMWay::FOOT_FWD]),
                                      std::to_string(way.properties[OSMWay::CYCLE_FWD]),
-                                     std::to_string(way.properties[OSMWay::CAR_FWD])});
+                                     std::to_string(way.properties[OSMWay::CAR_FWD]), speed});
                 // In most of the case we need the reversal,
                 // that'll be wrong for some in case in car
                 // We need to work on it
@@ -462,7 +469,7 @@ void OSMCache::insert_edges() {
                                      std::to_string(ref_way_id), wkt.str(),
                                      std::to_string(way.properties[OSMWay::FOOT_BWD]),
                                      std::to_string(way.properties[OSMWay::CYCLE_BWD]),
-                                     std::to_string(way.properties[OSMWay::CAR_BWD])});
+                                     std::to_string(way.properties[OSMWay::CAR_BWD]), speed});
                 prev_node = nodes.end();
                 n_inserted = n_inserted + 2;
             }
@@ -475,8 +482,9 @@ void OSMCache::insert_edges() {
         if ((n_inserted % max_n_inserted) == 0) {
             this->lotus->finish_bulk_insert();
             LOG4CPLUS_INFO(logger, n_inserted << " edges inserted");
-            this->lotus->prepare_bulk_insert("georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog",
-                                                             "pedestrian_allowed", "cycles_allowed", "cars_allowed"});
+            this->lotus->prepare_bulk_insert(
+                "georef.edge", {"source_node_id", "target_node_id", "way_id", "the_geog", "pedestrian_allowed",
+                                "cycles_allowed", "cars_allowed", "car_speed"});
         }
     }
     this->lotus->finish_bulk_insert();
@@ -1131,7 +1139,8 @@ int osm2ed(int argc, const char** argv) {
         ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name")
         ("cities-connection-string", po::value<std::string>(),
-            "cities database connection string, to use admins from cities instead of osm's relations");
+            "cities database connection string, to use admins from cities instead of osm's relations")
+        ("import-car-speed", "import car speed in ED");
     // clang-format on
 
     po::variables_map vm;
@@ -1179,6 +1188,11 @@ int osm2ed(int argc, const char** argv) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
 
+    SpeedsParser speed_parser;
+    if (vm.count("import-car-speed")) {
+        speed_parser = SpeedsParser::defaults();
+    }
+
     boost::optional<std::string> cities_cnx = boost::none;
     if (vm.count("cities-connection-string")) {
         cities_cnx = {vm["cities-connection-string"].as<std::string>()};
@@ -1198,7 +1212,7 @@ int osm2ed(int argc, const char** argv) {
     ed::connectors::OSMCache cache(std::make_unique<Lotus>(connection_string), cities_cnx);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
     CanalTP::read_osm_pbf(input, relations_visitor);
-    ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
+    ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params, speed_parser);
     CanalTP::read_osm_pbf(input, ways_visitor);
     ed::connectors::ReadNodesVisitor node_visitor(cache);
     CanalTP::read_osm_pbf(input, node_visitor);
