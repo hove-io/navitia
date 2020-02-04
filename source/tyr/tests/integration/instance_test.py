@@ -46,7 +46,7 @@ def create_instance():
 
 
 def check_traveler_profile(profile, params):
-    for key, param in params.iteritems():
+    for key, param in params.items():
         assert profile[key] == param
 
 
@@ -139,7 +139,7 @@ def test_update_instances(create_instance):
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    for key, param in params.iteritems():
+    for key, param in params.items():
         # Keys containing "street_network_" are urls
         if "street_network_" in key:
             assert resp[key] == "http://localhost/v0/streetnetwork_backends/{}".format(param)
@@ -149,7 +149,7 @@ def test_update_instances(create_instance):
     resp = api_put(
         '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
     )
-    for key, param in params.iteritems():
+    for key, param in params.items():
         if "street_network_" in key:
             assert resp[key] == "http://localhost/v0/streetnetwork_backends/{}".format(param)
         else:

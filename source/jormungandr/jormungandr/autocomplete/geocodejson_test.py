@@ -36,15 +36,15 @@ import pytest
 import requests_mock
 
 
-@requests_mock.mock()
 def test_geocodejson_check_response(mock):
     url = 'https://geocode.json'
-    mock.get('https://geocode.json/features/my_method', status_code=42, text='{"msg": "this is a response"}')
+    with requests_mock.Mocker() as m:
+        m.get('https://geocode.json/features/my_method', status_code=42, text='{"msg": "this is a response"}')
 
-    gj = GeocodeJson(host=url)
+        gj = GeocodeJson(host=url)
 
-    with pytest.raises(GeocodeJsonError) as exc:
-        gj.get_by_uri('my_method')
+        with pytest.raises(GeocodeJsonError) as exc:
+            gj.get_by_uri('my_method')
 
-    assert "42" in str(exc)
-    assert "this is a response" in str(exc)
+        assert "42" in str(exc)
+        assert "this is a response" in str(exc)

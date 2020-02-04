@@ -27,8 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, division
-from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
+from __future__ import absolute_import, print_function, division, unicode_literals
+from tests.check_utils import api_get, api_post, api_delete, api_put
 import json
 import pytest
 from navitiacommon import models
@@ -134,6 +134,5 @@ def test_put_poi_type_json(create_poi_type_json_obj):
 
 def test_delete_poi_type_json(create_poi_type_json_obj):
     resp, status_code = api_delete('/v0/instances/fr/poi_types', check=False, no_json=True)
-
-    assert resp == ''
+    assert resp.decode("utf-8") == ''
     assert status_code == 204

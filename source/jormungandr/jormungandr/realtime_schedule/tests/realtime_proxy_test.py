@@ -161,4 +161,4 @@ def test_route_point_get_code():
     c = r.codes.add()
     c.value = "foo3"
     c.type = "source"
-    assert RoutePoint._get_all_codes(r, "source") == ["foo", "foo3"]
+    assert set(RoutePoint._get_all_codes(r, "source")) == set(["foo", "foo3"])

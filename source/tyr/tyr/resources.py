@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, division
+from __future__ import absolute_import, print_function, division, unicode_literals
 from flask import current_app, url_for, request
 import flask_restful
 from flask_restful import marshal_with, marshal, reqparse, inputs, abort
@@ -72,6 +72,8 @@ from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
 import werkzeug
+import six
+from collections import deque
 
 
 class Api(flask_restful.Resource):
@@ -195,7 +197,7 @@ class InstancePoiType(flask_restful.Resource):
             _validate_poi_types_json(poi_types_json)
 
             poi_types = models.PoiTypeJson(
-                json.dumps(poi_types_json, ensure_ascii=False).encode('utf-8', 'backslashreplace'), instance
+                six.text_type(json.dumps(poi_types_json, ensure_ascii=False)), instance
             )
             db.session.add(poi_types)
             db.session.commit()
@@ -236,9 +238,7 @@ class AutocompletePoiType(flask_restful.Resource):
 
         try:
             _validate_poi_types_json(poi_types_json)
-            autocomplete_param.poi_types_json = json.dumps(poi_types_json, ensure_ascii=False).encode(
-                'utf-8', 'backslashreplace'
-            )
+            autocomplete_param.poi_types_json = six.text_type(json.dumps(poi_types_json, ensure_ascii=False))
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -658,64 +658,67 @@ class Instance(flask_restful.Resource):
             def map_args_to_instance(attr_name):
                 setattr(instance, attr_name, args[attr_name])
 
-            map(
-                map_args_to_instance,
-                [
-                    'scenario',
-                    'journey_order',
-                    'max_walking_duration_to_pt',
-                    'max_bike_duration_to_pt',
-                    'max_bss_duration_to_pt',
-                    'max_car_duration_to_pt',
-                    'max_car_no_park_duration_to_pt',
-                    'max_nb_transfers',
-                    'walking_speed',
-                    'bike_speed',
-                    'bss_speed',
-                    'car_speed',
-                    'car_no_park_speed',
-                    'taxi_speed',
-                    'min_bike',
-                    'min_bss',
-                    'min_car',
-                    'min_taxi',
-                    'max_duration',
-                    'walking_transfer_penalty',
-                    'night_bus_filter_max_factor',
-                    'night_bus_filter_base_factor',
-                    'successive_physical_mode_to_limit_id',
-                    'priority',
-                    'bss_provider',
-                    'full_sn_geometries',
-                    'is_free',
-                    'is_open_data',
-                    'import_stops_in_mimir',
-                    'import_ntfs_in_mimir',
-                    'admins_from_cities_db',
-                    'min_nb_journeys',
-                    'max_nb_journeys',
-                    'min_journeys_calls',
-                    'max_successive_physical_mode',
-                    'final_line_filter',
-                    'max_extra_second_pass',
-                    'autocomplete_backend',
-                    'additional_time_after_first_section_taxi',
-                    'additional_time_before_last_section_taxi',
-                    'max_additional_connections',
-                    'car_park_provider',
-                    'street_network_car',
-                    'street_network_walking',
-                    'street_network_bike',
-                    'street_network_bss',
-                    'street_network_ridesharing',
-                    'street_network_taxi',
-                    'max_walking_direct_path_duration',
-                    'max_bike_direct_path_duration',
-                    'max_bss_direct_path_duration',
-                    'max_car_direct_path_duration',
-                    'max_taxi_direct_path_duration',
-                    'max_ridesharing_direct_path_duration',
-                ],
+            deque(
+                map(
+                    map_args_to_instance,
+                    [
+                        'scenario',
+                        'journey_order',
+                        'max_walking_duration_to_pt',
+                        'max_bike_duration_to_pt',
+                        'max_bss_duration_to_pt',
+                        'max_car_duration_to_pt',
+                        'max_car_no_park_duration_to_pt',
+                        'max_nb_transfers',
+                        'walking_speed',
+                        'bike_speed',
+                        'bss_speed',
+                        'car_speed',
+                        'car_no_park_speed',
+                        'taxi_speed',
+                        'min_bike',
+                        'min_bss',
+                        'min_car',
+                        'min_taxi',
+                        'max_duration',
+                        'walking_transfer_penalty',
+                        'night_bus_filter_max_factor',
+                        'night_bus_filter_base_factor',
+                        'successive_physical_mode_to_limit_id',
+                        'priority',
+                        'bss_provider',
+                        'full_sn_geometries',
+                        'is_free',
+                        'is_open_data',
+                        'import_stops_in_mimir',
+                        'import_ntfs_in_mimir',
+                        'admins_from_cities_db',
+                        'min_nb_journeys',
+                        'max_nb_journeys',
+                        'min_journeys_calls',
+                        'max_successive_physical_mode',
+                        'final_line_filter',
+                        'max_extra_second_pass',
+                        'autocomplete_backend',
+                        'additional_time_after_first_section_taxi',
+                        'additional_time_before_last_section_taxi',
+                        'max_additional_connections',
+                        'car_park_provider',
+                        'street_network_car',
+                        'street_network_walking',
+                        'street_network_bike',
+                        'street_network_bss',
+                        'street_network_ridesharing',
+                        'street_network_taxi',
+                        'max_walking_direct_path_duration',
+                        'max_bike_direct_path_duration',
+                        'max_bss_direct_path_duration',
+                        'max_car_direct_path_duration',
+                        'max_taxi_direct_path_duration',
+                        'max_ridesharing_direct_path_duration',
+                    ],
+                ),
+                maxlen=0,
             )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
             import copy
@@ -754,9 +757,9 @@ class User(flask_restful.Resource):
         if user_id:
             return parser
 
-        parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
-        parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
-        parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
+        parser.add_argument('login', type=six.text_type, required=False, case_sensitive=False, help='login')
+        parser.add_argument('email', type=six.text_type, required=False, case_sensitive=False, help='email')
+        parser.add_argument('key', type=six.text_type, required=False, case_sensitive=False, help='key')
         parser.add_argument('end_point_id', type=int)
         parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
         return parser
@@ -794,7 +797,7 @@ class User(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'login',
-            type=unicode,
+            type=six.text_type,
             required=True,
             case_sensitive=False,
             help='login is required',
@@ -802,7 +805,7 @@ class User(flask_restful.Resource):
         )
         parser.add_argument(
             'email',
-            type=unicode,
+            type=six.text_type,
             required=True,
             case_sensitive=False,
             help='email is required',
@@ -887,7 +890,7 @@ class User(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'login',
-            type=unicode,
+            type=six.text_type,
             required=False,
             default=user.login,
             case_sensitive=False,
@@ -896,7 +899,7 @@ class User(flask_restful.Resource):
         )
         parser.add_argument(
             'email',
-            type=unicode,
+            type=six.text_type,
             required=False,
             default=user.email,
             case_sensitive=False,
@@ -1211,7 +1214,9 @@ class EndPoint(flask_restful.Resource):
 
     def post(self, version=0):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location='json')
+        parser.add_argument(
+            'name', type=six.text_type, required=True, help='name of the endpoint', location='json'
+        )
         args = parser.parse_args()
 
         try:
@@ -1245,7 +1250,7 @@ class EndPoint(flask_restful.Resource):
         end_point = models.EndPoint.query.get_or_404(id)
         parser = reqparse.RequestParser()
         parser.add_argument(
-            'name', type=unicode, default=end_point.name, help='name of the endpoint', location=('json')
+            'name', type=six.text_type, default=end_point.name, help='name of the endpoint', location=('json')
         )
         args = parser.parse_args()
 
@@ -1410,7 +1415,7 @@ class TravelerProfile(flask_restful.Resource):
                 return {'error': "Coverage: {0} doesn't exist".format(name)}
             profile = models.TravelerProfile()
             profile.coverage_id = instance.id
-            for (attr, default_value) in default_traveler_profile_params[traveler_type].iteritems():
+            for (attr, default_value) in default_traveler_profile_params[traveler_type].items():
                 # override hardcoded values by args if args are not None
                 value = default_value if self.args.get(attr) is None else self.args.get(attr)
                 setattr(profile, attr, value)
@@ -1430,7 +1435,7 @@ class TravelerProfile(flask_restful.Resource):
         if profile is None:
             return {'error': 'Non profile is found to update'}, 404
         try:
-            for (attr, args_value) in self.args.iteritems():
+            for (attr, args_value) in self.args.items():
                 # override hardcoded values by args if args are not None
                 if args_value is not None:
                     setattr(profile, attr, args_value)
@@ -1478,7 +1483,7 @@ class BillingPlan(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
-            type=unicode,
+            type=six.text_type,
             required=True,
             case_sensitive=False,
             help='name is required',
@@ -1545,7 +1550,7 @@ class BillingPlan(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
-            type=unicode,
+            type=six.text_type,
             required=False,
             default=billing_plan.name,
             case_sensitive=False,
@@ -1631,7 +1636,7 @@ class AutocompleteParameter(flask_restful.Resource):
         parser = reqparse.RequestParser()
         parser.add_argument(
             'name',
-            type=unicode,
+            type=six.text_type,
             required=True,
             case_sensitive=False,
             help='name is required',

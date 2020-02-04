@@ -26,11 +26,13 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
+import six
 import copy
 import logging
 from functools import cmp_to_key
@@ -177,7 +179,7 @@ class PtJourney:
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
 
-        if resp.HasField(b"error"):
+        if resp.HasField(six.text_type("error")):
             logger.debug("pt journey has error mode: %s", mode)
             # Here needs to modify error message of no_solution
             if not fallback_durations:

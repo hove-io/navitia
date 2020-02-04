@@ -36,14 +36,13 @@ import os
 sys.path.append(os.path.dirname(__file__) + '/../navitiacommon')
 
 import argparse
-import contextlib
 import logging
 from contextlib import closing
 from ed_handler import generate_nav
 from navitiacommon import log
 from testscommon.docker_wrapper import PostgisDocker
 
-from typing import Any, List
+from typing import Any
 
 """
 Eitri uses a set of binaries to extract data, load it into a database and extract it to a single file.

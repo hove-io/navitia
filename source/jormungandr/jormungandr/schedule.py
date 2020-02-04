@@ -40,8 +40,8 @@ from navitiacommon import type_pb2, request_pb2, response_pb2
 from copy import deepcopy
 from jormungandr import new_relic
 
-import gevent, gevent.pool
-import flask
+import gevent
+import gevent.pool
 
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
@@ -111,7 +111,7 @@ class RoutePoint(object):
         return str(self)
 
     def __key(self):
-        return (self.pb_stop_point.uri, self.pb_route.uri)
+        return self.pb_stop_point.uri, self.pb_route.uri
 
     def __eq__(self, other):
         return self.__key() == other.__key()
