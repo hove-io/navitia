@@ -32,7 +32,7 @@ jobs:
         git submodule update --init --recursive
     - name: Install dependencies
       run: |
-        pip install -r source/jormungandr/requirements_dev.txt
+        pip install -r source/requirements_dev.txt
     - name: configure
       run: cmake source
     - name: make
@@ -42,10 +42,6 @@ jobs:
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: install tyr dependencies
-      run: |
-        pip install -r source/tyr/requirements_dev.txt
-        pip install -r source/sql/requirements.txt
     - name: docker_test
       run: |
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
@@ -54,6 +50,10 @@ jobs:
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+    - name: Codecov
+      run: |
+        export CODECOV_TOKEN=${codecov_token}
+        bash -c "bash <(curl -s https://codecov.io/bash) -P ${ghprbPullId}"
 
 
 

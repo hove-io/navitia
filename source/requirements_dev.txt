@@ -1,0 +1,3 @@
+-r jormungandr/requirements_dev.txt
+-r tyr/requirements_dev.txt
+-r sql/requirements.txt
