@@ -31,7 +31,8 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_proximity_list
 
-#include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include "type/message.h"
 #include "type/data.h"
 #include "type/datetime.h"
@@ -41,6 +42,9 @@ www.navitia.io
 
 #include <boost/geometry.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/range/algorithm/sort.hpp>
+#include <boost/range/algorithm/transform.hpp>
+#include <boost/test/unit_test.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -138,6 +142,67 @@ BOOST_AUTO_TEST_CASE(projection) {
     BOOST_CHECK_SMALL(pp.lon(), 1e-3);
     BOOST_CHECK_SMALL(pp.lat(), 1e-3);
     BOOST_CHECK_CLOSE(d, pp.distance_to(p), 1e-3);
+}
+
+template <typename T>
+std::shared_ptr<T> create_obj_with_name(std::string const& name) {
+    auto obj = std::make_shared<T>();
+    obj->name = name;
+    return obj;
+}
+
+BOOST_AUTO_TEST_CASE(human_sort_on_stop_areas_should_not_throw) {
+    std::vector<std::shared_ptr<StopArea>> stop_areas{
+        create_obj_with_name<StopArea>("AVENUE DU NID (Sarcelles)"),
+        create_obj_with_name<StopArea>("Alésia (Paris)"),
+        create_obj_with_name<StopArea>("Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)"),
+        create_obj_with_name<StopArea>("Aéroport de Marseille (Marseille)"),
+        create_obj_with_name<StopArea>("ZURICH (Rueil-Malmaison)"),
+        create_obj_with_name<StopArea>("Église de Pantin (Pantin)"),
+    };
+
+    boost::sort(stop_areas, Less());
+
+    std::vector<std::string> stop_areas_name;
+    boost::transform(stop_areas, std::back_inserter(stop_areas_name), [](const auto& sa) { return sa->name; });
+
+    std::vector<std::string> stop_areas_sorted{
+        "Aéroport de Marseille (Marseille)",
+        "Alésia (Paris)",
+        "Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)",
+        "AVENUE DU NID (Sarcelles)",
+        "Église de Pantin (Pantin)",
+        "ZURICH (Rueil-Malmaison)",
+    };
+
+    BOOST_CHECK_EQUAL_RANGE(stop_areas_name, stop_areas_sorted);
+}
+
+BOOST_AUTO_TEST_CASE(human_sort_on_stop_points_should_not_throw) {
+    std::vector<std::shared_ptr<StopPoint>> stop_points{
+        create_obj_with_name<StopPoint>("AVENUE DU NID (Sarcelles)"),
+        create_obj_with_name<StopPoint>("Alésia (Paris)"),
+        create_obj_with_name<StopPoint>("Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)"),
+        create_obj_with_name<StopPoint>("Aéroport de Marseille (Marseille)"),
+        create_obj_with_name<StopPoint>("ZURICH (Rueil-Malmaison)"),
+        create_obj_with_name<StopPoint>("Église de Pantin (Pantin)"),
+    };
+
+    boost::sort(stop_points, Less());
+
+    std::vector<std::string> stop_points_name;
+    boost::transform(stop_points, std::back_inserter(stop_points_name), [](const auto& sp) { return sp->name; });
+
+    std::vector<std::string> stop_points_sorted{
+        "Aéroport de Marseille (Marseille)",
+        "Alésia (Paris)",
+        "Asnières — Gennevilliers Les Courtilles (Asnières-sur-Seine)",
+        "AVENUE DU NID (Sarcelles)",
+        "Église de Pantin (Pantin)",
+        "ZURICH (Rueil-Malmaison)",
+    };
+
+    BOOST_CHECK_EQUAL_RANGE(stop_points_name, stop_points_sorted);
 }
 
 struct disruption_fixture {

@@ -479,24 +479,6 @@ struct Autocomplete {
         return distance;
     }
 
-    std::string strip_accents(std::string str) const {
-        const static std::vector<std::pair<std::string, std::string> > vec_str{
-            {"à", "a"}, {"À", "a"}, {"â", "a"}, {"Â", "a"}, {"ä", "a"},  {"Ä", "a"},  {"é", "e"},
-            {"É", "e"}, {"è", "e"}, {"È", "e"}, {"ê", "e"}, {"Ê", "e"},  {"ë", "e"},  {"Ë", "e"},
-            {"ô", "o"}, {"Ô", "o"}, {"ö", "o"}, {"Ö", "o"}, {"ò", "o"},  {"Ò", "o"},  {"û", "u"},
-            {"Û", "u"}, {"ù", "u"}, {"Ù", "u"}, {"ü", "u"}, {"Ü", "u"},  {"ç", "c"},  {"Ç", "c"},
-            {"ï", "i"}, {"Ï", "i"}, {"î", "i"}, {"Î", "i"}, {"œ", "oe"}, {"æ", "ae"}, {"’", "'"}};
-
-        for (const auto& vec : vec_str) {
-            boost::algorithm::replace_all(str, vec.first, vec.second);
-        }
-        return str;
-    }
-
-    std::string strip_accents_and_lower(const std::string& str) const {
-        return boost::to_lower_copy(strip_accents(str));
-    }
-
     std::set<std::string> tokenize(std::string strFind,
                                    const std::set<std::string>& ghostwords,
                                    const autocomplete_map& synonyms = autocomplete_map()) const {
