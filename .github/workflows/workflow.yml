@@ -91,3 +91,10 @@ jobs:
     - name: check artemis IDFM
       run: ./source/scripts/checkJenkinsJob.sh Artemis_idfm
 
+  check_submodules:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: check submodules
+      run: ./source/scripts/check_submodules.sh
+
