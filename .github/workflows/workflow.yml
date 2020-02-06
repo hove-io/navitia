@@ -12,8 +12,13 @@ on:
 
 jobs:
   build:
+
+    strategy:
+        matrix:
+            docker_build: [navitia/debian8_dev]
+
     container:
-      image: navitia/debian8_dev
+      image: ${{matrix.docker_build}}
 
     # tests
     runs-on: ubuntu-latest
@@ -29,7 +34,7 @@ jobs:
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
+        git submodule update --init --recursive --depth 1
     - name: Install dependencies
       run: |
         pip install -r source/requirements_dev.txt
@@ -53,9 +58,7 @@ jobs:
     - name: Codecov
       run: |
         export CODECOV_TOKEN=${codecov_token}
-        bash -c "bash <(curl -s https://codecov.io/bash) -P ${ghprbPullId}"
-
-
+        bash -c "bash <(curl -s https://codecov.io/bash)"
 
   precommit:
     runs-on: ubuntu-latest
