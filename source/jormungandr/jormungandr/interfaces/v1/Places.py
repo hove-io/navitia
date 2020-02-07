@@ -39,7 +39,6 @@ from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNea
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type
-from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
 from datetime import datetime

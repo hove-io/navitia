@@ -209,7 +209,7 @@ class Timeo(RealtimeProxy):
         for message_response in message_responses:
             if (
                 'ResponseCode' in message_response
-                and message_response['ResponseCode'] >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT
+                and int(message_response['ResponseCode']) >= self.INTERNAL_TIMEO_ERROR_CODE_LIMIT
             ):
                 resp_code = message_response['ResponseCode']
                 if 'ResponseComment' in message_response:

@@ -142,7 +142,6 @@ class ArrivalJourneySorter(JourneySorter):
 class DepartureJourneySorter(JourneySorter):
     """
     Journey comparator for sort, on clockwise the sort is done by departure time
-
     the comparison is different if the query is for clockwise search or not
     """
 
@@ -300,7 +299,6 @@ def get_pseudo_duration(journey, requested_dt, is_clockwise):
 
 def gen_all_combin(n, t):
     """
-
     :param n: number of elements in the whole set
     :param t: number of choices
     :return: iterator
