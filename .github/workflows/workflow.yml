@@ -80,17 +80,19 @@ jobs:
     - name: install dependencies
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
-        pip install -r requirements_pre-commit.txt
-        pre-commit install
+        pip install -r requirements_pre-commit.txt --upgrade
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
-    - name: run pre-commit
+    - name: Build Protobuf
+      run: bash source/scripts/build_protobuf.sh
+    - name: Pre-commit Run
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
       run: |
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        bash source/scripts/build_protobuf.sh
+        pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
 
 
