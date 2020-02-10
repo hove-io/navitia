@@ -24,11 +24,10 @@ jobs:
 
 
   build:
+    runs-on: ubuntu-latest
+
     container:
       image: navitia/debian8_dev
-
-    # tests
-    runs-on: ubuntu-latest
 
     services:
       rabbitmq:
@@ -43,12 +42,11 @@ jobs:
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
     - name: Install dependencies
-      run: |
-        pip install -r source/jormungandr/requirements_dev.txt
+      run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
       run: cmake source
     - name: make
-      run:  make protobuf_files && make -j $(nproc)
+      run:  make -j $(nproc)
     - name: tests
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
