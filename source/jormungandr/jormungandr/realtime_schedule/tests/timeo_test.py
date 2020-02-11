@@ -264,7 +264,7 @@ def get_passages_wrong_response_test():
 
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
-        "MessageResponse": [{"ResponseCode": "0", "ResponseComment": "success"}],
+        "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
     }
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
