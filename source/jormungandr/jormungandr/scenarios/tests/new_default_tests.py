@@ -206,7 +206,7 @@ def get_sorted_solutions_indexes_test():
     assert all(selection_matrix[best_indexes[0]] == [0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0])
 
 
-def culling_jounreys_1_test():
+def culling_journeys_1_test():
     """
     Test when max_nb_journeys is bigger than journey's length in response,
     none of journeys are cut out
@@ -218,7 +218,7 @@ def culling_jounreys_1_test():
     assert len(mocked_pb_response.journeys) == nb_journeys
 
 
-def culling_jounreys_2_test():
+def culling_journeys_2_test():
     """
     max_nb_journeys equals to nb of must-keep journeys ('comfort', 'best')
     """
@@ -229,7 +229,7 @@ def culling_jounreys_2_test():
     assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN for j in mocked_pb_response.journeys])
 
 
-def culling_jounreys_2_bis_test():
+def culling_journeys_2_bis_test():
     """
     max_nb_journeys equals to nb of must-keep journeys ('comfort', 'best', 'non_pt_bike', 'non_pt_walk')
     Here we test the case where max_nb_journeys equals to nb_journeys_must_have
@@ -241,7 +241,7 @@ def culling_jounreys_2_bis_test():
     assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN for j in mocked_pb_response.journeys])
 
 
-def culling_jounreys_3_test():
+def culling_journeys_3_test():
     mocked_pb_response = build_mocked_response()
     mocked_request = {'max_nb_journeys': 6, 'debug': False, 'datetime': 1444903200}
     new_default.culling_journeys(mocked_pb_response, mocked_request)
@@ -260,7 +260,7 @@ def culling_jounreys_3_test():
         assert (tuple(s.uris.line for s in j.sections), j.arrival_date_time) in journey_uris
 
 
-def culling_jounreys_4_test():
+def culling_journeys_4_test():
     """
     When max_nb_journeys == 3 and nb_must_have_journeys == 4
     """

@@ -36,6 +36,7 @@ import pytz
 from jormungandr import app
 import datetime
 import io
+from operator import itemgetter
 
 from navitiacommon import models
 import pytest
@@ -211,3 +212,10 @@ def test_walk_dict():
     walk_dict(bob, my_second_stopper_visitor)
     expected_nodes = ["toto", "bob", "bobette", "nested_bob"]
     assert all(node in result.getvalue() for node in expected_nodes)
+
+
+def compare_list_of_dicts(sorting_key, first_list, second_list):
+    first_list.sort(key=itemgetter(sorting_key))
+    second_list.sort(key=itemgetter(sorting_key))
+    assert len(first_list) == len(second_list)
+    return all(x == y for x, y in (zip(first_list, second_list)))

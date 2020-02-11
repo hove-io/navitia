@@ -26,8 +26,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+        matrix:
+            docker_image: [navitia/debian8_dev, navitia/debian9_dev]
+
     container:
-      image: navitia/debian8_dev
+        image: ${{matrix.docker_image}}
 
     services:
       rabbitmq:

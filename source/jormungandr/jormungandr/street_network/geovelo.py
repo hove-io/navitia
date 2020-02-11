@@ -167,7 +167,7 @@ class Geovelo(AbstractStreetNetworkService):
             raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
 
         add_ = row.routing_response.add
-        for e in itertools.islice(json_response, 1, sys.maxint):
+        for e in itertools.islice(json_response, 1, sys.maxsize):
             duration, routing_status = (e[2], response_pb2.reached) if e[2] else (-1, response_pb2.unknown)
             add_(duration=duration, routing_status=routing_status)
 
@@ -290,7 +290,7 @@ class Geovelo(AbstractStreetNetworkService):
             speed = section.length / section.duration if section.duration != 0 else 0
 
             for geovelo_instruction in itertools.islice(
-                geovelo_section['details']['instructions'], 1, sys.maxint
+                geovelo_section['details']['instructions'], 1, sys.maxsize
             ):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
