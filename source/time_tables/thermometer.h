@@ -29,7 +29,8 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/data.h"
+#include "type/fwd_type.h"
+#include "type/type_interfaces.h"
 
 #include <boost/functional/hash.hpp>
 namespace navitia {
