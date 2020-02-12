@@ -34,8 +34,6 @@ jobs:
         rm -fr *
         mv /tmp/job_documentation_publish_slate/build/* .
     - name: update action user and commit changes
-      env:
-        DEPLOY_KEY: ${{ secrets.ACTION_SECRET_KEY }}
       run: |
         git config --global user.email "tech.navitia.development@kisio.com"
         git config --global user.name "Action"
@@ -45,8 +43,8 @@ jobs:
         echo "lol"  
         eval `ssh-agent -t 60 -s`
         echo "lol"  
-        echo $DEPLOY_KEY  
-        echo "$DEPLOY_KEY" | ssh-add -
+        echo ${{ secrets.ACTION_SECRET_KEY }}  
+        echo ${{ secrets.ACTION_SECRET_KEY }} | ssh-add -
         echo "lol"  
         mkdir -p ~/.ssh/
         echo "lol"  
