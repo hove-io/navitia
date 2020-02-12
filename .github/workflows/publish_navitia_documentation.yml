@@ -21,3 +21,10 @@ jobs:
       run: apt update && apt install -y bundler
     - name: git checkout on dev
       run: git checkout dev
+    - name: generate documentation on dev
+      working-directory: documentation/slate 
+      run: |
+        bundle exec middleman build
+        rm -fr /tmp/job_documentation_publish_slate
+        mkdir -p /tmp/job_documentation_publish_slate
+        mv build /tmp/job_documentation_publish_slate
