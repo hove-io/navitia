@@ -12,9 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: navitia/debian8_dev
-
     steps:
     - uses: actions/checkout@v1
     - name: install bundle
@@ -37,13 +34,19 @@ jobs:
         rm -fr *
         mv /tmp/job_documentation_publish_slate/build/* .
     - name: update action user and commit changes
+      env:
+        DEPLOY_KEY: ${{ secrets.ACTION_SECRET_KEY }}
       run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "Github Action"
+        git config --global user.email "tech.navitia.development@kisio.com"
+        git config --global user.name "Action"
         git commit -m "Add changes" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        repository: 'https://github.com/CanalTP/navitia.git'
-        github_token: ${{secrets.ACCESS_TOKEN}}
-        branch: 'gh-pages'
+        git remote set-url origin "$(git config --get remote.origin.url | sed 's#http.*com/#git@github.com:#g')"
+        
+        eval `ssh-agent -t 60 -s`
+        echo "$DEPLOY_KEY" | ssh-add -
+          
+        mkdir -p ~/.ssh/
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+          
+        git push
+        ssh-agent -k
