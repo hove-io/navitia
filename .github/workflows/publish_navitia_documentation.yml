@@ -36,18 +36,11 @@ jobs:
         git checkout gh-pages
         rm -fr *
         mv /tmp/job_documentation_publish_slate/build/* .
-    - name: update doc user
+    - name: update action user
       run: |
-        git config --global user.name "doc"
-        git config --global user.email doc@github-actions.com
-    - name: test
-      run: git status
-    - name: push new documentation on gh-pages
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          git add -A
-          git commit -m "Automatic documentation publication"
-          git push origin gh-pages
-        else
-          echo "The documentation has not been updated.";
-        fi
+        git config --global user.email "action@github.com"
+        git config --global user.name "Github Action"
+    - name: Push changes
+      uses: ad-m/github-push-action@gh-pages
+      with:
+        github_token: ${{secret.GITHUB_TOKEN}}
