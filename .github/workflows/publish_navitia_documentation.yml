@@ -45,6 +45,7 @@ jobs:
         echo "lol"  
         eval `ssh-agent -t 60 -s`
         echo "lol"  
+        echo $DEPLOY_KEY  
         echo "$DEPLOY_KEY" | ssh-add -
         echo "lol"  
         mkdir -p ~/.ssh/
