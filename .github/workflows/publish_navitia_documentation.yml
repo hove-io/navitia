@@ -40,6 +40,8 @@ jobs:
       run: |
         git config --global user.name "doc"
         git config --global user.email doc@github-actions.com
+    - name: test
+      run: git status
     - name: push new documentation on gh-pages
       run: |
         if [ -n "$(git status --porcelain)" ]; then
