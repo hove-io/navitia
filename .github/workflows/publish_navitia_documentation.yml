@@ -33,6 +33,7 @@ jobs:
     - name: move new documentation on gh-pages
       run: |
         ls -al /tmp
+        rm -f documentation/slate/Gemfile.lock
         git fetch origin gh-pages:gh-pages
         git checkout gh-pages
         rm -fr *
