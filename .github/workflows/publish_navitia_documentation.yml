@@ -44,5 +44,6 @@ jobs:
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
+        repository: 'https://github.com/CanalTP/navitia.git'
         github_token: ${{secrets.ACCESS_TOKEN}}
         branch: 'gh-pages'
