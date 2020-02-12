@@ -43,8 +43,6 @@ jobs:
         git commit -m "Add changes" -a
     - name: Push changes
       uses: ad-m/github-push-action@master
-      env:
-        ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
       with:
-        github_token: ${{ACCESS_TOKEN}}
+        github_token: ${{secrets.ACCESS_TOKEN}}
         branch: 'gh-pages'
