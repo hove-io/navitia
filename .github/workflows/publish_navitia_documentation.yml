@@ -32,3 +32,5 @@ jobs:
       run: |
         git fetch origin gh-pages:gh-pages
         git checkout gh-pages
+        rm -fr *
+        mv /tmp/job_documentation_publish_slate/build/* .
