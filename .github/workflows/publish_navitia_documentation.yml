@@ -38,6 +38,7 @@ jobs:
         mv /tmp/job_documentation_publish_slate/build/* .
     - name: update action user
       run: |
+        git rev-parse --abbrev-ref HEAD  
         git config --global user.email "action@github.com"
         git config --global user.name "Github Action"
         git commit -m "Add changes" -a
