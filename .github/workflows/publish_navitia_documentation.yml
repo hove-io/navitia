@@ -42,11 +42,16 @@ jobs:
         git commit -m "Add changes" -a
         git remote set-url origin "$(git config --get remote.origin.url | sed 's#http.*com/#git@github.com:#g')"
         
+        echo "lol"  
         eval `ssh-agent -t 60 -s`
+        echo "lol"  
         echo "$DEPLOY_KEY" | ssh-add -
-          
+        echo "lol"  
         mkdir -p ~/.ssh/
+        echo "lol"  
         ssh-keyscan github.com >> ~/.ssh/known_hosts
+        echo "lol"  
           
         git push
+        echo "lol"  
         ssh-agent -k
