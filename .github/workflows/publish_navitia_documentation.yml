@@ -41,8 +41,11 @@ jobs:
         git config --global user.email "action@github.com"
         git config --global user.name "Github Action"
         git commit -m "Add changes" -a
+    - name: access token
+      env:
+        ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{secrets.ACCESS_TOKEN}}
+        github_token: ${{ACCESS_TOKEN}}
         branch: 'gh-pages'
