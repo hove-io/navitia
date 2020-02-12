@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: git checout on dev
+      run: git checkout dev
     - name: install bundle
       run: apt update && apt install -y bundler
     - name: generate documentation on dev
