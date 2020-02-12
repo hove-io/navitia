@@ -28,3 +28,20 @@ jobs:
         rm -fr /tmp/job_documentation_publish_slate
         mkdir -p /tmp/job_documentation_publish_slate
         mv build /tmp/job_documentation_publish_slate
+    - name: move new documentation on gh-pages
+      run: |
+        git fetch origin gh-pages:gh-pages
+        git checkout gh-pages
+        rm -fr *
+        mv /tmp/job_documentation_publish_slate/build/* .
+    - name: push new documentation on gh-pages
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          git add -A
+          git commit -m "Automatic documentation publication"
+          git push origin gh-pages
+        else
+          echo "The documentation has not been updated.";
+        fi
+    - name: delete temporary files
+      rm -fr /tmp/job_documentation_publish_slate
