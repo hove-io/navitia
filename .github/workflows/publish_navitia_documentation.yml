@@ -1,6 +1,7 @@
 name: Publish Navitia Documentation
 
 on:
+  pull_request:
   push:
     branches:
       - dev
