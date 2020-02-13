@@ -35,11 +35,8 @@ jobs:
         path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
-    - name: Dump GitHub context
+    - name: trigger Jenkins for deploy
+      uses: joelwmale/webhook-action@master
       env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Dump job context
-      env:
-        JOB_CONTEXT: ${{ toJson(job) }}
-      run: echo "$JOB_CONTEXT"
+        WEBHOOK_URL: ${{https://ci.navitia.io/job/navitia_pull_request_build/build}}
+      data: "{'action_run_id': ${{github.run_id}}}"
