@@ -1,0 +1,48 @@
+name: Publish Navitia Documentation
+
+on:
+  push:
+    branches:
+      - dev
+      - release
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install bundle
+      run: sudo apt update && sudo apt install -y bundler
+    - name: git checkout on dev
+      run: git checkout dev
+    - name: generate documentation on dev
+      working-directory: documentation/slate
+      run: |
+        bundle install
+        bundle exec middleman build
+        rm -fr /tmp/job_documentation_publish_slate
+        mkdir -p /tmp/job_documentation_publish_slate
+        mv build /tmp/job_documentation_publish_slate
+    - name: move new documentation on gh-pages
+      run: |
+        rm -f documentation/slate/Gemfile.lock
+        git fetch origin gh-pages:gh-pages
+        git checkout gh-pages
+        rm -fr *
+        mv /tmp/job_documentation_publish_slate/build/* .
+    - name: update action user and commit changes
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          git config --global user.email "action@github.com"
+          git config --global user.name "Action"
+          git commit -m "Add changes" -a
+        else
+          echo "The documentation has not been updated"
+        fi
+    - name: push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        branch: 'gh-pages'
