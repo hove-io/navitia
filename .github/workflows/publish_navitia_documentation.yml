@@ -18,7 +18,7 @@ jobs:
     - name: git checkout on dev
       run: git checkout dev
     - name: generate documentation on dev
-      working-directory: documentation/slate 
+      working-directory: documentation/slate
       run: |
         bundle install
         bundle exec middleman build
