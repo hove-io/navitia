@@ -38,5 +38,5 @@ jobs:
     - name: trigger Jenkins for deploy
       uses: joelwmale/webhook-action@master
       env:
-        WEBHOOK_URL: ${{https://ci.navitia.io/job/navitia_pull_request_build/build}}
-      data: "{'action_run_id': ${{github.run_id}}}"
+        WEBHOOK_URL: "https://ci.navitia.io/job/navitia_pull_request_build/build"
+        data: "{'action_run_id': ${{github.run_id}}}"
