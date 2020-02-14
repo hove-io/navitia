@@ -31,7 +31,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.serializer.base import SortedGenericSerializer
-import pytest
 import serpy
 
 
@@ -40,7 +39,7 @@ def test_sorted_generic_serializer():
         v = serpy.IntField()
 
         def sort_key(self, obj):
-            return obj
+            return obj["v"]
 
     objs = [{'v': '2'}, {'v': '4'}, {'v': '3'}, {'v': '1'}]
     data = SortSerializer(objs, many=True).data
