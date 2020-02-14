@@ -32,7 +32,6 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include "ed/build_helper.h"
-#include "type/type.h"
 #include "tests/utils_test.h"
 #include "time_tables/passages.h"
 

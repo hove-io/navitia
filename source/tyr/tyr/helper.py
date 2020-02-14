@@ -131,7 +131,7 @@ def load_instance_config(instance_name):
     confspec.append(b(u'password = string()'))
     confspec.append(b(u'port = string(default="5432")'))
 
-    ini_file = b(u'%s/%s.ini') % (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
+    ini_file = os.path.join(os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name + ".ini")
     if not os.path.isfile(ini_file):
         raise ValueError("File doesn't exists or is not a file %s" % ini_file)
 

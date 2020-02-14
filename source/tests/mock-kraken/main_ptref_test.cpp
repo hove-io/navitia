@@ -31,7 +31,6 @@ www.navitia.io
 #include "utils/init.h"
 #include "routing/tests/routing_api_test_data.h"
 #include "mock_kraken.h"
-#include "type/type.h"
 
 static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);

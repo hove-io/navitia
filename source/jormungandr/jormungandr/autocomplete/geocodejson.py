@@ -32,7 +32,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import (
     AbstractAutocomplete,
     AutocompleteUnavailable,
@@ -185,11 +184,7 @@ class GeocodeJson(AbstractAutocomplete):
             fail_max=app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_BRAGI_TIMEOUT_S'],
         )
-        # create a session to allow connection pooling via keep alive
-        if kwargs.get('disable_keepalive', False):
-            self.session = requests
-        else:
-            self.session = requests.Session()
+        self.session = requests
 
     def call_bragi(self, url, method, **kwargs):
         try:

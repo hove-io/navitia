@@ -130,15 +130,15 @@ def test_delete_poi_type_for_one_instance(create_tyr_update_jobs):
     assert len(resp) == 1
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 2
+    assert len(resp["jobs"]) == 2
 
     # Here a job having two poi data_sets is deleted
     resp = api_delete('/v0/instances/{}/actions/delete_dataset/poi'.format(create_tyr_update_jobs))
     assert resp['action'] == 'All poi datasets deleted for instance {}'.format(create_tyr_update_jobs)
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 1
-    for dataset in resp.values()[0][0]['data_sets']:
+    assert len(resp["jobs"]) == 1
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] != 'poi'
 
 
@@ -150,17 +150,17 @@ def test_delete_fusio_type_for_one_instance(create_tyr_update_jobs):
     assert len(resp) == 1
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 2
+    assert len(resp["jobs"]) == 2
 
     # Here no empty job is deleted
     resp = api_delete('/v0/instances/{}/actions/delete_dataset/fusio'.format(create_tyr_update_jobs))
     assert resp['action'] == 'All fusio datasets deleted for instance {}'.format(create_tyr_update_jobs)
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 2
-    for dataset in resp.values()[0][0]['data_sets']:
+    assert len(resp["jobs"]) == 2
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] != 'fusio'
-    for dataset in resp.values()[0][0]['data_sets']:
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] == 'poi'
 
 
@@ -170,21 +170,21 @@ def test_delete_poi_type_for_two_instances(create_instance, create_tyr_update_jo
     assert len(resp) == 2
 
     resp = api_get('/v0/jobs/{}'.format(create_instance))
-    for dataset in resp.values()[0][0]['data_sets']:
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] == 'poi'
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 2
+    assert len(resp["jobs"]) == 2
 
     resp = api_delete('/v0/instances/{}/actions/delete_dataset/poi'.format(create_tyr_update_jobs))
     assert resp['action'] == 'All poi datasets deleted for instance {}'.format(create_tyr_update_jobs)
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
-    assert len(resp.values()[0]) == 1
-    for dataset in resp.values()[0][0]['data_sets']:
+    assert len(resp["jobs"]) == 1
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] != 'poi'
 
     resp = api_get('/v0/jobs/{}'.format(create_instance))
-    assert len(resp.values()[0]) == 1
-    for dataset in resp.values()[0][0]['data_sets']:
+    assert len(resp["jobs"]) == 1
+    for dataset in resp["jobs"][0]['data_sets']:
         assert dataset['type'] == 'poi'

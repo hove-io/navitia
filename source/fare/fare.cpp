@@ -32,6 +32,9 @@ www.navitia.io
 
 #include "routing/routing.h"
 #include "type/datetime.h"
+#include "type/base_pt_objects.h"
+#include "type/network.h"
+#include "type/physical_mode.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>

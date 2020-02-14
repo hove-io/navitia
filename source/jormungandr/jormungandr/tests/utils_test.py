@@ -36,6 +36,7 @@ import pytz
 from jormungandr import app
 import datetime
 import io
+from operator import itemgetter
 
 from navitiacommon import models
 import pytest
@@ -194,40 +195,27 @@ def test_walk_dict():
     }
     result = io.StringIO()
 
-    def my_visitor(name, val):
+    def my_first_stopper_visitor(name, val):
         result.write("{}={}\n".format(name, val))
-
-    walk_dict(bob, my_visitor)
-    expected = """titi={u'b': 1}
-b=1
-titi={u'a': 1}
-a=1
-tete=ltuple2
-tete=ltuple1
-tete=tuple1
-tutu=1
-toto={u'bobette': 13, u'bob': 12, u'nested_bob': {u'bob': 3}}
-nested_bob={u'bob': 3}
-bob=3
-bob=12
-bobette=13
-tata=2
-tata=1
-"""
-    assert result.getvalue() == expected
-
-    result = io.StringIO()
-
-    def my_stoper_visitor(name, val):
-        result.write("{}={}\n".format(name, val))
-        if name == 'tete':
+        if val == 'ltuple1':
             return True
 
-    walk_dict(bob, my_stoper_visitor)
-    expected = """titi={u'b': 1}
-b=1
-titi={u'a': 1}
-a=1
-tete=ltuple2
-"""
-    assert result.getvalue() == expected
+    walk_dict(bob, my_first_stopper_visitor)
+    expected_nodes = ["tete", "tuple1"]
+    assert all(node in result.getvalue() for node in expected_nodes)
+
+    def my_second_stopper_visitor(name, val):
+        result.write("{}={}\n".format(name, val))
+        if val == 3:
+            return True
+
+    walk_dict(bob, my_second_stopper_visitor)
+    expected_nodes = ["toto", "bob", "bobette", "nested_bob"]
+    assert all(node in result.getvalue() for node in expected_nodes)
+
+
+def compare_list_of_dicts(sorting_key, first_list, second_list):
+    first_list.sort(key=itemgetter(sorting_key))
+    second_list.sort(key=itemgetter(sorting_key))
+    assert len(first_list) == len(second_list)
+    return all(x == y for x, y in (zip(first_list, second_list)))

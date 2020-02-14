@@ -41,7 +41,6 @@ www.navitia.io
 #include <fstream>
 #include <map>
 #include <unordered_map>
-#include "type/type.h"
 #include <boost/regex.hpp>
 #include "georef/adminref.h"
 #include "georef/georef.h"

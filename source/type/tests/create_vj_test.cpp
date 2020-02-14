@@ -34,7 +34,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "ed/build_helper.h"
 #include "type/pt_data.h"
-#include "type/type.h"
+#include "type/meta_vehicle_journey.h"
 #include "tests/utils_test.h"
 #include "type/comment_container.h"
 #include <memory>

@@ -60,5 +60,16 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
     bool operator<(const StopArea& other) const;
 };
 
+template <typename T>
+std::string get_admin_name(const T* v) {
+    std::string admin_name = "";
+    for (auto admin : v->admin_list) {
+        if (admin->level == 8) {
+            admin_name += " (" + admin->name + ")";
+        }
+    }
+    return admin_name;
+}
+
 }  // namespace type
 }  // namespace navitia

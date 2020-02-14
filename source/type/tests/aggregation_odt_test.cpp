@@ -32,9 +32,9 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_navimake
 #include <boost/test/unit_test.hpp>
 
-#include "type/type.h"
 #include "ed/build_helper.h"
 #include "type/pt_data.h"
+#include "type/base_pt_objects.h"
 
 struct aggregate_odt_fixture {
     ed::builder b;

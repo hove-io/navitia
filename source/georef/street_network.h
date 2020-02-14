@@ -33,7 +33,7 @@ www.navitia.io
 #include "dijkstra_path_finder.h"
 #include "astar_path_finder.h"
 #include "routing/raptor_utils.h"
-#include "type/type.h"  //TODO: Remove
+#include "type/entry_point.h"
 #include "type/time_duration.h"
 
 namespace navitia {

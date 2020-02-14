@@ -5,10 +5,11 @@ pull_request_rules:
       - "#review-requested=0"
       - "#changes-requested-reviews-by=0"
       - "#commented-reviews-by=0"
-      - status-success=continuous-integration/travis-ci/pr
+      - status-success=CI / check_submodules (pull_request)
+      - status-success=CI / build (pull_request)
+      - status-success=CI / precommit (pull_request)
+      - status-success=CI / check_artemis (pull_request)
       - status-success=default
-      - status-success=codecov/project
-      - status-success=codecov/patch
       - base=dev
       - label!=dot_not_merge
       - label!=wip

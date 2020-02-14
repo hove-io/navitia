@@ -31,6 +31,8 @@ from jormungandr.instance import Instance
 from jormungandr.interfaces.v1 import add_common_status
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.equipments import EquipmentProviderManager
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+from jormungandr.tests.utils_test import compare_list_of_dicts
 
 from collections import OrderedDict
 
@@ -89,10 +91,13 @@ expected_equipment_providers = [
     {"codes_types": ["TCL_ESCALIER", "TCL_ASCENSEUR"], "fail_max": 5, "key": "sytral", "timeout": 1}
 ]
 
-# The only purpose of this class is to override get_all_street_networks()
-# To bypass the app.config[str('DISABLE_DATABASE')] and the get_models()
-# Of the real implementation
+
 class FakeInstance(Instance):
+    """
+    The only purpose of this class is to override get_all_street_networks()
+    To bypass the app.config[str('DISABLE_DATABASE')] and the get_models() of the real implementation
+    """
+
     def __init__(
         self,
         disable_database,
@@ -110,7 +115,7 @@ class FakeInstance(Instance):
             realtime_proxies_configuration=[],
             zmq_socket_type=None,
             autocomplete_type='kraken',
-            streetnetwork_backend_manager=None,
+            streetnetwork_backend_manager=StreetNetworkBackendManager(),
         )
         self.disable_database = disable_database
         self.equipment_provider_manager = EquipmentProviderManager(equipment_details_config)
@@ -164,8 +169,7 @@ def call_add_common_status(disable_database):
     # We sort this list because the order is not important
     # And it is easier to compare
     streetnetworks_status = response['status']["street_networks"]
-    streetnetworks_status.sort()
-    assert streetnetworks_status == expected_streetnetworks_status
+    compare_list_of_dicts("id", streetnetworks_status, expected_streetnetworks_status)
 
     ridesharing_status = response['status']["ridesharing_services"]
     ridesharing_status.sort()

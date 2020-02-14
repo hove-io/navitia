@@ -149,6 +149,8 @@ int main(int argn, char** argv) {
     do {
         try {
             lb.run();
+        } catch (const navitia::recoverable_exception& e) {
+            LOG4CPLUS_ERROR(logger, e.what());
         } catch (const zmq::error_t&) {
         }  // lors d'un SIGHUP on restore la queue
     } while (true);

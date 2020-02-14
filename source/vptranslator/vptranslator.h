@@ -29,7 +29,13 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type.h"
+
+#include "type/datetime.h"
+#include "type/calendar.h"
+#include "type/network.h"
+#include "type/base_pt_objects.h"
+#include "type/commercial_mode.h"
+#include "type/meta_vehicle_journey.h"
 
 #include <set>
 

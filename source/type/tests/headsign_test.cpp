@@ -35,7 +35,6 @@ www.navitia.io
 #include "utils/functions.h"
 #include "ed/build_helper.h"
 #include "type/pt_data.h"
-#include "type/type.h"
 #include "tests/utils_test.h"
 #include "type/headsign_handler.h"
 #include <memory>

@@ -32,8 +32,11 @@ www.navitia.io
 #define BOOST_TEST_MODULE test_navimake
 #include <boost/test/unit_test.hpp>
 
-#include "type/type.h"
+#include "type/type_interfaces.h"
+#include "type/stop_point.h"
+
 using namespace navitia::type;
+
 BOOST_AUTO_TEST_CASE(wcb_required_false_properties_false) {
     Properties required_properties = 0;
     StopPoint sp;

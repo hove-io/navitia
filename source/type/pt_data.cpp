@@ -31,7 +31,16 @@ www.navitia.io
 #include "pt_data.h"
 
 #include "type/serialization.h"
-#include "type/type.h"
+#include "type/connection.h"
+#include "type/calendar.h"
+#include "type/company.h"
+#include "type/contributor.h"
+#include "type/dataset.h"
+#include "type/network.h"
+#include "type/base_pt_objects.h"
+#include "type/meta_vehicle_journey.h"
+#include "type/commercial_mode.h"
+#include "type/physical_mode.h"
 #include "utils/functions.h"
 
 #include <boost/range/algorithm/find_if.hpp>

@@ -4,6 +4,7 @@ SET(SOURCE_LIB
     gtfs_parser.cpp
     fusio_parser.cpp
     osm_tags_reader.cpp
+    speed_parser.cpp
     poi_parser.cpp
     fare_parser.cpp
     fare_utils.cpp

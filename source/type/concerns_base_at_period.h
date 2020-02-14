@@ -33,7 +33,7 @@ www.navitia.io
 #include "type/fwd_type.h"
 #include "type/rt_level.h"
 #include "type/vehicle_journey.h"
-#include "type/type.h"  //TODO: import only MetaVJ once it is out of type.h
+#include "type/meta_vehicle_journey.h"
 
 namespace navitia {
 namespace type {

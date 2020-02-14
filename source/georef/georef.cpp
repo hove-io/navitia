@@ -31,7 +31,7 @@ www.navitia.io
 #include "georef.h"
 
 #include "type/stop_area.h"
-#include "type/type.h"  //TODO: move get_admin_name and reduce include
+#include "type/stop_point.h"
 #include "utils/configuration.h"
 #include "utils/csv.h"
 #include "utils/functions.h"

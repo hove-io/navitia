@@ -503,3 +503,43 @@ BOOST_AUTO_TEST_CASE(grid_rel_calendar_line_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.calendars[0]->line_list[0]->uri, "Nav55");
     }
 }
+
+BOOST_AUTO_TEST_CASE(stop_time_precision_retrocompatibilty_tests) {
+    // Test 1 : parse stop_times/stop_time_precision field
+    // 0 -> false
+    // 1 -> false
+    // 2 -> true
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path);
+        parser.fill(data);
+        for (const auto& stop : data.stops) {
+            if (stop->stop_point->uri == "id_for_stop_time_precision_true") {
+                BOOST_REQUIRE_EQUAL(stop->date_time_estimated, true);
+            }
+            if (stop->stop_point->uri == "id_for_stop_time_precision_false_1") {
+                BOOST_REQUIRE_EQUAL(stop->date_time_estimated, false);
+            }
+            if (stop->stop_point->uri == "id_for_stop_time_precision_false_2") {
+                BOOST_REQUIRE_EQUAL(stop->date_time_estimated, false);
+            }
+        }
+    }
+
+    // Test 2, the old way : parse stop_times/date_time_estimated filed
+    // 0 -> false
+    // 1 -> true
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path + "_dst");
+        parser.fill(data);
+        for (const auto& stop : data.stops) {
+            if (stop->stop_point->uri == "SCF:SP:SPOCENoctilien87591180") {
+                BOOST_REQUIRE_EQUAL(stop->date_time_estimated, true);
+            }
+            if (stop->stop_point->uri == "SCF:SP:SPOCENoctilien87594929") {
+                BOOST_REQUIRE_EQUAL(stop->date_time_estimated, false);
+            }
+        }
+    }
+}

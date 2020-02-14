@@ -35,7 +35,10 @@ www.navitia.io
 #include "utils/idx_map.h"
 #include "utils/lru.h"
 #include "type/rt_level.h"
-#include "type/type.h"
+#include "type/type_interfaces.h"
+#include "type/connection.h"
+#include "type/stop_point.h"
+#include "type/accessibility_params.h"
 
 #include <boost/range/algorithm/lower_bound.hpp>
 #include <boost/range/algorithm/upper_bound.hpp>

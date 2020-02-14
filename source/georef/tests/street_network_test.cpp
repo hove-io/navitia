@@ -34,6 +34,7 @@ www.navitia.io
 #include "builder.h"
 #include "type/data.h"
 #include "type/pt_data.h"
+#include "type/stop_point.h"
 
 #include "georef/street_network.h"
 #include <boost/test/unit_test.hpp>

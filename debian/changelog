@@ -1,3 +1,20 @@
+navitia2 (3.5.0) unstable; urgency=low
+
+  * CI: Publish navitia documentation with GitHub actions  <https://github.com/CanalTP/navitia/pull/3132>
+  * CI: build navitia packages on github actions  <https://github.com/CanalTP/navitia/pull/3127>
+  * CI: Fix unresolved dependency on protobuf-files for Thermometer  <https://github.com/CanalTP/navitia/pull/3130>
+  * CI: Add build matrix to build with debian8, 9 #turfu  <https://github.com/CanalTP/navitia/pull/3128>
+  * Jormungandr: Python 3 compatibility changes  <https://github.com/CanalTP/navitia/pull/3126>
+  * Kraken: update car edges cost with car speed if available  <https://github.com/CanalTP/navitia/pull/3097>
+  * Ed: Mask highway=trunk, trunk_link, motorway, motorway_link at autocomplete  <https://github.com/CanalTP/navitia/pull/3120>
+  * CI: extend git-actions with a checking submodules job  <https://github.com/CanalTP/navitia/pull/3125>
+  * Fusio2ed: add stop_time_precison parsing for ntfs stop_times files  <https://github.com/CanalTP/navitia/pull/3117>
+  * Jormun: Migration to Python3  <https://github.com/CanalTP/navitia/pull/3110>
+  * Osm2ed: import car speed in ed database  <https://github.com/CanalTP/navitia/pull/3088>
+  * Kraken: type/type.h is not use now  <https://github.com/CanalTP/navitia/pull/3119>
+
+ -- AurelienLP <aurelien.laporte@canaltp.fr>  Fri, 14 Feb 2020 08:02:02 +0100
+
 navitia2 (3.4.0) unstable; urgency=low
 
   * Jormun: Sort administration region by level  <https://github.com/CanalTP/navitia/pull/3118>

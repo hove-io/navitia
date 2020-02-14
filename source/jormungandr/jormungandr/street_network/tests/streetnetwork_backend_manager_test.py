@@ -26,6 +26,7 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import
 import pytest
 from jormungandr.instance import Instance
@@ -34,7 +35,7 @@ from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
 from jormungandr.exceptions import ConfigException, TechnicalError
-
+from jormungandr.tests.utils_test import compare_list_of_dicts
 
 import datetime
 
@@ -179,6 +180,8 @@ def sn_backends_getter_ok():
     sn_backend2 = StreetNetworkBackend(id='asgard')
     sn_backend2.klass = 'jormungandr.street_network.tests.StreetNetworkBackendMock'
     sn_backend2.args = {'url': 'asgard.url'}
+    sn_backend2.created_at = datetime.datetime.utcnow()
+
     return [sn_backend1, sn_backend2]
 
 
@@ -300,7 +303,7 @@ def append_default_street_network_to_config_test():
     ]
 
     response = manager._append_default_street_network_to_config(None)
-    assert response == config_full_default
+    compare_list_of_dicts("class", response, config_full_default)
 
     # Asgard is used for car, Kraken for all the other modes.
     config_car_asgard = [{'class': 'jormungandr.street_network.Asgard', 'modes': ['car']}]
@@ -336,7 +339,7 @@ def append_default_street_network_to_config_test():
             'modes': ['walking', 'bike', 'bss'],
         },
     ]
-    assert response == config_asgard_plus_default
+    compare_list_of_dicts("class", response, config_asgard_plus_default)
 
     # Surf is used for surf, Kraken for all the other modes.
     # Surf stay in the config but is not used.
@@ -373,7 +376,7 @@ def append_default_street_network_to_config_test():
             'modes': ['car', 'walking', 'bike', 'bss'],
         },
     ]
-    assert response == wrong_plus_default_config
+    compare_list_of_dicts("class", response, wrong_plus_default_config)
 
 
 def get_street_network_db_test():
@@ -417,7 +420,7 @@ class FakeInstance(Instance):
             zmq_socket_type=None,
             autocomplete_type='kraken',
             instance_equipment_providers=[],
-            streetnetwork_backend_manager=None,
+            streetnetwork_backend_manager=StreetNetworkBackendManager(),
         )
 
 

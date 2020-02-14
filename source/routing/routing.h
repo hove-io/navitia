@@ -33,6 +33,7 @@ www.navitia.io
 #include "georef/street_network.h"
 #include "type/pt_data.h"
 #include "type/datetime.h"
+#include "type/accessibility_params.h"
 
 #include <boost/optional.hpp>
 

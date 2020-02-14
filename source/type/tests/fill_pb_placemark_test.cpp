@@ -33,8 +33,6 @@ www.navitia.io
 
 #include <boost/test/unit_test.hpp>
 #include "type/data.h"
-#include "type/type.h"
-#include "type/data.h"
 #include "georef/adminref.h"
 #include "georef/georef.h"
 #include "type/pb_converter.h"
