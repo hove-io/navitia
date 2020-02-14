@@ -23,7 +23,7 @@ jobs:
         git submodule update --init --recursive
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
     - name: install zip dependency
-      run: apt update && apt install -y zip
+      run: apt update && apt install -y zip httpie
     - name: create navitia_debian_packages.zip
       run: |
         zip navitia_debian_packages.zip ../navitia-*
@@ -35,8 +35,5 @@ jobs:
         path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
-    - name: trigger Jenkins for deploy
-      uses: joelwmale/webhook-action@master
-      env:
-        WEBHOOK_URL: "https://ci.navitia.io/job/navitia_pull_request_build/build"
-        data: "{'action_run_id': ${{github.run_id}}}"
+    - name: trigger Jenkins to send run_id
+      run: http -v https://${{secrets.jenkins_token}}@ci.navitia.io/job/retreive_artifact_run_id_from_github/buildWithParameters Github_run_id=${{github.run_id}}
