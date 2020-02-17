@@ -69,7 +69,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
     const auto tmp_admin_level = tags.find("admin_level");
     const auto boundary = tags.find("boundary");
 
-    std::string insee, postal_code, name;
+    std::string insee, name;
     if (!use_cities && tmp_admin_level != tags.end() && boundary != tags.end()
         && boundary->second == "administrative") {
         // we consider only admin boundaries with level 8, 9 or 10
@@ -115,9 +115,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
         if (tags.find("name") != tags.end()) {
             name = tags.at("name");
         }
-        if (tags.find("addr:postcode") != tags.end()) {
-            postal_code = tags.at("addr:postcode");
-        }
+        const auto postal_code = get_postal_code_from_tags(tags);
 
         std::string uri;
         if (insee.empty()) {

@@ -274,3 +274,16 @@ BOOST_AUTO_TEST_CASE(highway_cycleway_visible) {
     std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "cycleway"}});
     BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], true);
 }
+
+BOOST_AUTO_TEST_CASE(get_postal_code_from_tags_test) {
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"tag2", "plopi"}}), std::string());
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"addr:postcode", "42"}}),
+                      std::string("42"));
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"postal_code", "67"}}),
+                      std::string("67"));
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"addr:postcode", "23"}, {"postal_code", "168"}}),
+                      std::string("23"));
+}
