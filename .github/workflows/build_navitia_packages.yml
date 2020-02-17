@@ -36,4 +36,4 @@ jobs:
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
     - name: trigger Jenkins to send run_id
-      run: http -v https://${{secrets.jenkins_token}}@ci.navitia.io/job/receive_artifact_run_id_from_github/buildWithParameters github_run_id=${{github.run_id}}
+      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/receive_artifact_run_id_from_github/buildWithParameters github_run_id=${{github.run_id}}
