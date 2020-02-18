@@ -15,12 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: disk
+      run: |
+        df -h
+        echo "kikou"
+        du -h --max-depth=1
+        pwd
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
+    - name: disk
+      run: |
+        df -h
+        echo "kikou"
+        du -h --max-depth=1
+        pwd
 
 
   build:
@@ -41,6 +53,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: disk
+      run: |
+        df -h
+        echo "kikou"
+        du -h --max-depth=1
+        pwd
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -54,7 +72,9 @@ jobs:
     - name: disk
       run: |
         df -h
+        echo "kikou"
         du -h --max-depth=1
+        pwd
     - name: tests
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
