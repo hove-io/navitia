@@ -51,6 +51,10 @@ jobs:
       run: cmake source
     - name: make
       run:  make -j $(nproc)
+    - name: disk
+      run: |
+        df -h
+        du -h --max-depth=1
     - name: tests
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
