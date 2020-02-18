@@ -88,16 +88,8 @@ jobs:
         pwd
     - name: remove useless tests
       run: |
-        rm -rf tests
-        rm -rf kraken/tests
-        rm -rf fare/tests
-        rm -rf routing/tests
-        rm -rf calendar/tests
-        rm -rf georef/tests
-        rm -rf proximity_list/tests
-        rm -rf time_tables/tests
-        rm -rf disruption/tests
-        rm -rf equipment/tests
+        rm -rf tests kraken/tests ed/tests fare/tests routing/tests calendar/tests
+        rm -rf georef/tests proximity_list/tests time_tables/tests equipment/tests
         rm -rf ptreferential/tests
     - name: disk
       run: |
