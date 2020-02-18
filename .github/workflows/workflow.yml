@@ -86,6 +86,25 @@ jobs:
         echo "kikou"
         du -h --max-depth=1
         pwd
+    - name: remove useless tests
+      run: |
+        rm -rf tests
+        rm -rf kraken/tests
+        rm -rf fare/tests
+        rm -rf routing/tests
+        rm -rf calendar/tests
+        rm -rf georef/tests
+        rm -rf proximity_list/tests
+        rm -rf time_tables/tests
+        rm -rf disruption/tests
+        rm -rf equipment/tests
+        rm -rf ptreferential/tests
+    - name: disk
+      run: |
+        df -h
+        echo "kikou"
+        du -h --max-depth=1
+        pwd
     - name: install tyr dependencies
       run: |
         pip install -r source/tyr/requirements_dev.txt
