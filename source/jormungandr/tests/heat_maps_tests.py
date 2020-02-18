@@ -235,7 +235,10 @@ class TestHeatMap(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert 'unable to parse datetime, unknown string format' in normal_response['message'].lower()
+        assert all(
+            msg in normal_response['message'].lower()
+            for msg in ('unable to parse datetime', 'unknown string format')
+        )
 
     def test_graphical_heat_maps_no_heat_maps(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
