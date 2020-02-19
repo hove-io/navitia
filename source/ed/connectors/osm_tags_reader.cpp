@@ -324,5 +324,17 @@ const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::
     return nullptr;
 }
 
+const std::string get_postal_code_from_tags(const CanalTP::Tags& tags) {
+    if (tags.find("addr:postcode") != tags.end()) {
+        return tags.at("addr:postcode");
+    }
+
+    if (tags.find("postal_code") != tags.end()) {
+        return tags.at("postal_code");
+    }
+
+    return std::string();
+}
+
 }  // namespace connectors
 }  // namespace ed
