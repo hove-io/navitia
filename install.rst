@@ -58,6 +58,11 @@ We hope you got the source code from git.
    Note: it will build in release mode. If you want to compile it with debug symbols run
    ``cmake -DCMAKE_BUILD_TYPE=Debug ../source``
 
+   list of options
+
+   * SKIP_TESTS=ON : Compile without the test parts
+   * STRIP_SYMBOLS=ON : Strip symbols within all code (Active -s option)
+
 #. Compile
 
    ``make -j4``
