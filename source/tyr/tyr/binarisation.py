@@ -411,7 +411,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         if res != 0:
             # @TODO: exception
             raise ValueError("synonym2ed failed")
-        dataset.state = "failed"
+        dataset.state = "done"
     except:
         logger.exception("")
         job.state = "failed"
@@ -519,15 +519,19 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
 def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     """load a street network shape into ed"""
     job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("shape", job.id)
     instance = job.instance
     logging.info("loading bounding shape for {} from = {}".format(instance.name, filename))
     try:
         load_bounding_shape(instance.name, instance_config, filename)
+        dataset.state = "done"
     except:
         logging.exception("")
         job.state = "failed"
-        models.db.session.commit()
+        dataset.state = "failed"
         raise
+    finally:
+        models.db.session.commit()
 
 
 @celery.task(bind=True)
@@ -608,12 +612,15 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
 
         working_directory = unzip_if_needed(filename)
 
-        params = ["-f", working_directory]
-        params.append("--connection-string")
-        params.append(make_connection_string(instance_config))
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        params = [
+            "-f",
+            working_directory,
+            "--connection-string",
+            make_connection_string(instance_config),
+            "--local_syslog",
+            "--log_comment",
+            instance_config.name,
+        ]
         res = launch_exec("fare2ed", params, logger)
         if res != 0:
             # @TODO: exception
@@ -771,8 +778,8 @@ def stops2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     try:
         res = launch_exec('stops2mimir', argv, logger)
         if res != 0:
-            # Do not raise error because that it breaks celery tasks chain.
-            # stops2mimir have to be non-blocking.
+            # Do not raise error because it breaks celery tasks chain.
+            # stops2mimir has to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
             logger.error('stops2mimir failed')
             if job_id:
