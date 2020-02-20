@@ -17,4 +17,7 @@ target_link_libraries(benchmark_raptor_cache boost_program_options data profiler
 add_executable(benchmark_full benchmark_full.cpp)
 target_link_libraries(benchmark_full boost_program_options data)
 
-add_subdirectory(tests)
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)
