@@ -82,6 +82,11 @@ Then, install the hooks with:
 ```
 pre-commit install
 ```
+Alternatively, you can configure a [template directory](https://pre-commit.com/#automatically-enabling-pre-commit-on-repositories). Whenever you clone a pre-commit enabled repository, the hooks will already be set up and you won't need to install pre-commit:
+```
+git config --global init.templateDir ~/.git-template
+pre-commit init-templatedir ~/.git-template
+```
 
 ### Python formatting
 
