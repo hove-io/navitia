@@ -603,7 +603,7 @@ def heartbeat():
     send a heartbeat to all kraken
     """
     logging.info('ping krakens!!')
-    with kombu.Connection(current_app.config['CELERY_BROKER_URL']) as connection:
+    with kombu.Connection(current_app.config['KRAKEN_BROKER_URL']) as connection:
         instances = models.Instance.query_existing().all()
         task = task_pb2.Task()
         task.action = task_pb2.HEARTBEAT
