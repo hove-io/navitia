@@ -475,6 +475,8 @@ class Journeys(JourneyCommon):
 
         if region:
             _set_specific_params(i_manager.instances[region])
+        elif possible_regions:
+            _set_specific_params(i_manager.instances[possible_regions[0]])
         else:
             _set_specific_params(default_values)
 
