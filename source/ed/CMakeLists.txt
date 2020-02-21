@@ -38,9 +38,6 @@ target_link_libraries(ed2nav_lib connectors types)
 add_executable(ed2nav ed2nav_main.cpp)
 target_link_libraries(ed2nav ed2nav_lib ${ED_LINK_LIBS})
 
-add_subdirectory(tests)
-add_subdirectory(connectors)
-
 add_executable(geopal2ed geopal2ed.cpp)
 target_link_libraries(geopal2ed transportation_data_import ${ED_LINK_LIBS})
 
@@ -52,6 +49,11 @@ target_link_libraries(synonym2ed transportation_data_import ${ED_LINK_LIBS})
 
 set(ED_TARGETS_TO_INSTALL gtfs2ed osm2ed ed2nav fusio2ed fare2ed geopal2ed poi2ed synonym2ed)
 install(TARGETS ${ED_TARGETS_TO_INSTALL} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)
+add_subdirectory(connectors)
 
 add_custom_target(ed_executables DEPENDS ${ED_TARGETS_TO_INSTALL})
 

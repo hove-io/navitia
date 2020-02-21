@@ -3,4 +3,8 @@ SET(CALENDAR_SRC
     calendar.cpp
 )
 add_library(calendar_api ${CALENDAR_SRC})
-add_subdirectory(tests)
+
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)

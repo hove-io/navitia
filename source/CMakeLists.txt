@@ -70,11 +70,15 @@ add_subdirectory(tyr)
 add_subdirectory(sql)
 add_subdirectory(disruption)
 add_subdirectory(calendar)
-add_subdirectory(tests)
 add_subdirectory(scripts)
 add_subdirectory(cities)
 add_subdirectory(tools)
 add_subdirectory(equipment)
+
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)
 
 include(CheckIncludeFiles)
 include(CheckIncludeFileCXX)

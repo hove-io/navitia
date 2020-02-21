@@ -5,4 +5,8 @@ SET(FARE_SRC
 
 add_library(fare ${FARE_SRC})
 target_link_libraries(fare routing pb_lib)
-add_subdirectory(tests)
+
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)
