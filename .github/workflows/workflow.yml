@@ -11,12 +11,27 @@ on:
 
 
 jobs:
-  build:
-    container:
-      image: navitia/debian8_dev
-
-    # tests
+  check_submodules:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: get submodule
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: check submodules
+      run: ./source/scripts/check_submodules.sh
+
+
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            docker_image: [navitia/debian8_dev]
+
+    container:
+        image: ${{matrix.docker_image}}
 
     services:
       rabbitmq:
@@ -31,30 +46,28 @@ jobs:
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
     - name: Install dependencies
-      run: |
-        pip install -r source/jormungandr/requirements_dev.txt
+      run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
       run: cmake source
     - name: make
-      run:  make protobuf_files && make -j $(nproc)
+      run:  make -j $(nproc)
     - name: tests
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
+    - name: remove useless tests
+      run: |
+        rm -rf tests/mock_kraken kraken/tests ed/tests fare/tests routing/tests calendar/tests
+        rm -rf georef/tests proximity_list/tests time_tables/tests equipment/tests
+        rm -rf ptreferential/tests
     - name: install tyr dependencies
       run: |
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
-    - name: docker_test
-      run: |
-        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
-        echo $NAVITIA_CHAOS_DUMP_PATH
-        make docker_test
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
-
 
 
   precommit:
@@ -69,18 +82,21 @@ jobs:
     - name: install dependencies
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
-        pip install -r requirements_pre-commit.txt
-        pre-commit install
+        pip install -r requirements_pre-commit.txt --upgrade
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
-    - name: run pre-commit
+    - name: Build Protobuf
+      run: bash source/scripts/build_protobuf.sh
+    - name: Pre-commit Run
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
       run: |
-        export LC_ALL=C.UTF-8
-        export LANG=C.UTF-8
-        bash source/scripts/build_protobuf.sh
+        pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
+
 
   check_artemis:
     runs-on: ubuntu-latest

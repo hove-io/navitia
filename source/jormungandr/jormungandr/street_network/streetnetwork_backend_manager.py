@@ -33,10 +33,9 @@ from jormungandr.exceptions import TechnicalError
 from jormungandr.instance import Instance
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
-from importlib import import_module
 from collections import defaultdict
 import logging, itertools, copy, datetime
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Optional
 
 
 class StreetNetworkBackendManager(object):
@@ -191,7 +190,7 @@ class StreetNetworkBackendManager(object):
                 continue
             all_street_networks_with_modes[sn].append(mode)
 
-        for sn, modes in all_street_networks_with_modes.iteritems():
+        for sn, modes in all_street_networks_with_modes.items():
             sn.modes = modes
 
         return [sn for sn in all_street_networks_with_modes]

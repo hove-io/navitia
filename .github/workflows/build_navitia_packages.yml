@@ -1,0 +1,36 @@
+name: Build Navitia Packages
+
+on:
+  push:
+    branches:
+      - dev
+      - release
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: navitia/debian8_dev
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: dkpg-buildpackage
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+    - name: install zip dependency
+      run: apt update && apt install -y zip
+    - name: create navitia_debian_packages.zip
+      run: |
+        zip navitia_debian_packages.zip ../navitia-*
+        echo "::set-env name=NAVITIA_DEBIAN_PACKAGES::navitia_debian_packages.zip"
+    - name: upload debian packages
+      uses: actions/upload-artifact@v1
+      with:
+        name: navitia-debian-packages
+        path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
+    - name: remove useless temporary files
+      run: rm -rf ../navitia-*

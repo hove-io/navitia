@@ -249,3 +249,41 @@ BOOST_AUTO_TEST_CASE(colon_tagging) {
     BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(bss_tags)->poi_type_id, "amenity:bicycle_rental");
     BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(effia_tags)->poi_type_id, "amenity:parking");
 }
+
+BOOST_AUTO_TEST_CASE(highway_trunk_not_visible) {
+    std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "trunk"}});
+    BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], false);
+}
+
+BOOST_AUTO_TEST_CASE(highway_trunk_link_not_visible) {
+    std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "trunk_link"}});
+    BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], false);
+}
+
+BOOST_AUTO_TEST_CASE(highway_motorway_not_visible) {
+    std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "motorway"}});
+    BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], false);
+}
+
+BOOST_AUTO_TEST_CASE(highway_motorway_link_not_visible) {
+    std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "motorway_link"}});
+    BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], false);
+}
+
+BOOST_AUTO_TEST_CASE(highway_cycleway_visible) {
+    std::bitset<8> res = ed::connectors::parse_way_tags({{"highway", "cycleway"}});
+    BOOST_CHECK_EQUAL(res[ed::connectors::VISIBLE], true);
+}
+
+BOOST_AUTO_TEST_CASE(get_postal_code_from_tags_test) {
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"tag2", "plopi"}}), std::string());
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"addr:postcode", "42"}}),
+                      std::string("42"));
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"tag1", "plop"}, {"postal_code", "67"}}),
+                      std::string("67"));
+
+    BOOST_CHECK_EQUAL(ed::connectors::get_postal_code_from_tags({{"addr:postcode", "23"}, {"postal_code", "168"}}),
+                      std::string("23"));
+}

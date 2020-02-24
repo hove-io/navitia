@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 from navitiacommon.models import BssProvider
+import datetime
 
 CONFIG = [{'class': 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'}]
 
@@ -182,6 +183,7 @@ def provider_getter_ok():
     c = BssProvider('foo')
     c.network = 'foo'
     c.klass = 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
+    c.created_at = datetime.datetime.now()
     return [c]
 
 
@@ -189,10 +191,12 @@ def provider_getter_two():
     c = BssProvider('foo')
     c.network = 'foo'
     c.klass = 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
+    c.created_at = datetime.datetime.now()
 
     c2 = BssProvider('bar')
     c2.network = 'bar'
     c2.klass = 'jormungandr.parking_space_availability.bss.tests.BssMockProvider'
+    c2.created_at = datetime.datetime.now()
     return [c, c2]
 
 

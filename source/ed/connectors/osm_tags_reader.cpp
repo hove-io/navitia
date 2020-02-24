@@ -179,7 +179,7 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
                 bike_direct = bike_lane;
         } else if (key == "bicycle") {
             if (val == "yes" || val == "permissive" || val == "destination" || val == "designated" || val == "private"
-                || val == "true" || val == "allowed" || val == "official" || val == "destination")
+                || val == "true" || val == "allowed" || val == "official")
                 bike_direct = bike_allowed;
             else if (val == "no" || val == "dismount" || val == "VTT")
                 bike_direct = bike_forbiden;
@@ -242,6 +242,12 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
             if (val == "platform") {
                 visible = false;
             }
+        } else if (key == "highway") {
+            if (val == "trunk" || val == "trunk_link" || val == "motorway" || val == "motorway_link") {
+                visible = false;
+            }
+        } else if (key == "tunnel") {
+            visible = false;
         }
     }
 
@@ -316,6 +322,18 @@ const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::
         }
     }
     return nullptr;
+}
+
+const std::string get_postal_code_from_tags(const CanalTP::Tags& tags) {
+    if (tags.find("addr:postcode") != tags.end()) {
+        return tags.at("addr:postcode");
+    }
+
+    if (tags.find("postal_code") != tags.end()) {
+        return tags.at("postal_code");
+    }
+
+    return std::string();
 }
 
 }  // namespace connectors

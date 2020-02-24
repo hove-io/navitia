@@ -212,13 +212,11 @@ class PbGenericSerializer(PbNestedSerializer):
 
 
 class SortedGenericSerializer(serpy.Serializer):
-    '''
-    Sorted generic serializer can be used to sort a iterable container according to a specific key.
-
+    """
+    Sorted generic serializer can be used to sort an iterable container according to a specific key.
     The derived class needs to implement `sort_key(self, o)`, a function used to extract the comparison key (as the `key` argument from https://docs.python.org/3.3/library/functions.html#sorted)
-
     Implementation is based on 'serpy.Serializer.to_value' - https://serpy.readthedocs.io/en/latest/_modules/serpy/serializer.html#Serializer.to_value
-    '''
+    """
 
     @abc.abstractmethod
     def sort_key(self):

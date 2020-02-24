@@ -31,7 +31,6 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_proximity_list
 
-
 #include <algorithm>
 #include "type/message.h"
 #include "type/data.h"

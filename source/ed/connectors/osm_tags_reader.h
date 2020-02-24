@@ -72,5 +72,7 @@ struct PoiTypeParams {
     const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags) const;
 };
 
+const std::string get_postal_code_from_tags(const CanalTP::Tags& tags);
+
 }  // namespace connectors
 }  // namespace ed

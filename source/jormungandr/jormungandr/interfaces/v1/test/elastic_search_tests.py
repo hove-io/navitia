@@ -28,10 +28,10 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, unicode_literals
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
-from jormungandr.interfaces.v1 import Places
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 import requests_mock
@@ -429,7 +429,7 @@ def bragi_poi_reading_test():
     assert poi.get('id') == 'poi:osm:3224270910'
     assert poi.get('poi_type').get('id') == 'poi_type:amenity:townhall'
     assert poi.get('poi_type').get('name') == 'Mairie'
-    assert poi.get('coord').get('lat') == "42.5992355"
+    assert poi.get('coord').get('lat') == str(42.599235500000009)
     assert poi.get('coord').get('lon') == "8.9028068"
     assert len(poi.get('administrative_regions')) == 1
     administrative_region = poi.get('administrative_regions')[0]

@@ -26,16 +26,17 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from copy import deepcopy
 from jormungandr.scenarios import journey_filter as jf
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
 import navitiacommon.response_pb2 as response_pb2
-from navitiacommon import default_values
 from jormungandr.scenarios.new_default import sort_journeys
 from jormungandr.utils import str_to_time_stamp
 import random
 import itertools
+import functools
 
 
 def empty_journeys_test():
@@ -636,8 +637,8 @@ def test_departure_sort():
     result = [j1, j2, j3, j4, j5]
     random.shuffle(result)
 
-    compartor = DepartureJourneySorter(True)
-    result.sort(compartor)
+    comparator = DepartureJourneySorter(True)
+    result.sort(key=functools.cmp_to_key(comparator))
     assert result[0] == j1
     assert result[1] == j2
     assert result[2] == j5
@@ -683,7 +684,7 @@ def test_arrival_sort():
     random.shuffle(result)
 
     comparator = ArrivalJourneySorter(True)
-    result.sort(comparator)
+    result.sort(key=functools.cmp_to_key(comparator))
     assert result[0] == j1
     assert result[1] == j2
     assert result[2] == j5

@@ -35,4 +35,8 @@ target_link_libraries(kraken workers ${NAVITIA_ALLOCATOR} ${Boost_THREAD_LIBRARY
 add_dependencies(kraken protobuf_files)
 
 install(TARGETS kraken DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-add_subdirectory(tests)
+
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)
