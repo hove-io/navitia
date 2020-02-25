@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
         std::uniform_int_distribution<> gen(0, data.pt_data->stop_areas.size() - 1);
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({7});
-        if (data.meta->production_date.begin().day_of_week().as_number() == 6)
+        if (data.meta->production_date.begin().day_of_week().as_number() == 6) {
             days.push_back(days.front() + 1);
         } else {
             days.push_back(days.front() + 6);
