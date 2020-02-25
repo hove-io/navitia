@@ -5,11 +5,10 @@ pull_request_rules:
       - "#review-requested=0"
       - "#changes-requested-reviews-by=0"
       - "#commented-reviews-by=0"
-      - status-success=CI / check_submodules (pull_request)
-      - status-success=CI / build (pull_request)
-      - status-success=CI / precommit (pull_request)
-      - status-success=CI / check_artemis (pull_request)
-      - status-success=default
+      - "status-success=CI / check_submodules (pull_request)"
+      - "status-success=CI / build (pull_request)"
+      - "status-success=CI / precommit (pull_request)"
+      - "status-success=CI / check_artemis (pull_request)"
       - base=dev
       - label!=dot_not_merge
       - label!=wip
@@ -21,12 +20,8 @@ pull_request_rules:
         method: merge
         strict: smart   # To avoid multiple builds at once on the CI
         strict_method: rebase # We want Dev rebased onto the PR
-  - name: delete head branch after merge
-    conditions: []
+  - name: delete head branch on merged pull requests
+    conditions:
+      - merged
     actions:
       delete_head_branch: {}
-  - name: remove outdated reviews
-    conditions:
-      - base=master
-    actions:
-      dismiss_reviews: {}
