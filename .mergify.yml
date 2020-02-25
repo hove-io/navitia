@@ -5,10 +5,10 @@ pull_request_rules:
       - "#review-requested=0"
       - "#changes-requested-reviews-by=0"
       - "#commented-reviews-by=0"
-      - "status-success=CI / check_submodules (pull_request)"
-      - "status-success=CI / build (pull_request)"
-      - "status-success=CI / precommit (pull_request)"
-      - "status-success=CI / check_artemis (pull_request)"
+      - status-success=check_submodule
+      - status-success=build
+      - status-success=precommit
+      - status-success=check_artemis
       - base=dev
       - label!=dot_not_merge
       - label!=wip
