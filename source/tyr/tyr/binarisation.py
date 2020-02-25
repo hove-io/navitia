@@ -546,7 +546,7 @@ def reload_data(self, instance_config, job_id):
         task.action = navitiacommon.task_pb2.RELOAD
 
         rabbit_mq_handler = RabbitMqHandler(
-            current_app.config['CELERY_BROKER_URL'], instance_config.exchange, "topic"
+            current_app.config['KRAKEN_BROKER_URL'], instance_config.exchange, "topic"
         )
 
         logger.info("reload kraken")
