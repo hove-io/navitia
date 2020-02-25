@@ -5,7 +5,7 @@ pull_request_rules:
       - "#review-requested=0"
       - "#changes-requested-reviews-by=0"
       - "#commented-reviews-by=0"
-      - status-success=check_submodule
+      - status-success=check_submodules
       - status-success=build
       - status-success=precommit
       - status-success=check_artemis
