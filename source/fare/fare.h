@@ -235,6 +235,8 @@ struct Condition {
     }
 };
 
+std::ostream& operator<<(std::ostream& ss, const Condition& k);
+
 /// Structure représentant une étiquette
 struct Label {
     Cost cost = 0;  //< Coût cummulé

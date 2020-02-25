@@ -62,6 +62,9 @@ private:
 
     void load_od();
 
+    bool is_valid(const navitia::fare::State&);
+    bool is_valid(const navitia::fare::Condition&);
+
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 };
 
