@@ -1,6 +1,7 @@
 name: Build Navitia Packages
 
 on:
+  pull_request:
   push:
     branches:
       - dev
@@ -22,7 +23,7 @@ jobs:
         git submodule update --init --recursive
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
     - name: install zip dependency
-      run: apt update && apt install -y zip
+      run: apt update && apt install -y zip httpie
     - name: create navitia_debian_packages.zip
       run: |
         zip navitia_debian_packages.zip ../navitia-*
@@ -34,3 +35,5 @@ jobs:
         path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
+    - name: trigger deploy on artemis
+      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
