@@ -153,178 +153,177 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
     };
     auto set_car_reverse_forbidden = [&]() { car_reverse = car_forbidden; };
 
+    static std::unordered_map<std::string, std::unordered_map<std::string, std::function<void()>>> key_map = {
+        {"highway",
+         {
+             {"footway", update_foot_allowed},
+             {"pedestrian", update_foot_allowed},
+             {"cycleway",
+              [&]() {
+                  update_bike_direct_track();
+                  update_foot_allowed();
+              }},
+             {"path",
+              [&]() {
+                  // http://www.cyclestreets.net/journey/help/osmconversion/#toc6
+                  // highway = path => might mean lots of different things, so we allow bike and foot
+                  update_bike_direct_track();
+                  update_foot_allowed();
+              }},
+             {"steps", update_foot_allowed},
+             {"primary", update_car_direct_primary},
+             {"primary_link", update_car_direct_primary},
+             {"secondary", update_car_direct_secondary},
+             {"secondary_link", update_car_direct_secondary},
+             {"tertiary", update_car_direct_tertiary},
+             {"tertiary_link", update_car_direct_tertiary},
+             {"unclassified", update_car_direct_residentiary},
+             {"residential", update_car_direct_residentiary},
+             {"living_street", update_car_direct_residentiary},
+             {"road", update_car_direct_residentiary},
+             {"service", update_car_direct_residentiary},
+             {"track", update_car_direct_residentiary},
+             {"motorway",
+              [&]() {
+                  update_car_direct_motorway();
+                  set_visible_false();
+              }},
+             {"motorway_link",
+              [&]() {
+                  update_car_direct_motorway();
+                  set_visible_false();
+              }},
+             {"trunk",
+              [&]() {
+                  update_car_direct_trunk();
+                  set_visible_false();
+              }},
+             {"trunk_link",
+              [&]() {
+                  update_car_direct_trunk();
+                  set_visible_false();
+              }},
+         }},
+
+        {"pedestrian",
+         {
+             {"yes", set_foot_allowed},
+             {"designated", set_foot_allowed},
+             {"permissive", set_foot_allowed},
+             {"lane", set_foot_allowed},
+             {"official", set_foot_allowed},
+             {"allowed", set_foot_allowed},
+             {"destination", set_foot_allowed},
+             {"no", set_foot_forbidden},
+             {"private", set_foot_forbidden},
+         }},
+        {"foot",
+         {
+             {"yes", set_foot_allowed},
+             {"designated", set_foot_allowed},
+             {"permissive", set_foot_allowed},
+             {"lane", set_foot_allowed},
+             {"official", set_foot_allowed},
+             {"allowed", set_foot_allowed},
+             {"destination", set_foot_allowed},
+             {"no", set_foot_forbidden},
+             {"private", set_foot_forbidden},
+         }},
+
+        // http://wiki.openstreetmap.org/wiki/Cycleway
+        // http://wiki.openstreetmap.org/wiki/Map_Features#Cycleway
+        {"cycleway",
+         {
+             {"lane", set_bike_direct_lane},
+             {"yes", set_bike_direct_lane},
+             {"true", set_bike_direct_lane},
+             {"lane_in_the_middle", set_bike_direct_lane},
+             {"track", set_bike_direct_track},
+             {"opposite_lane", set_bike_reverse_lane},
+             {"opposite_track", set_bike_reverse_track},
+             {"opposite", set_bike_reverse_allowed},
+             {"share_busway", set_bike_direct_busway},
+             {"lane_left", set_bike_reverse_lane},
+             {"_default", set_bike_direct_lane},
+         }},
+
+        {"bicycle",
+         {
+             {"yes", set_bike_direct_allowed},
+             {"permissive", set_bike_direct_allowed},
+             {"destination", set_bike_direct_allowed},
+             {"designated", set_bike_direct_allowed},
+             {"private", set_bike_direct_allowed},
+             {"true", set_bike_direct_allowed},
+             {"allowed", set_bike_direct_allowed},
+             {"official", set_bike_direct_allowed},
+             {"no", set_bike_direct_forbidden},
+             {"dismount", set_bike_direct_forbidden},
+             {"VTT", set_bike_direct_forbidden},
+             {"share_busway", set_bike_direct_busway},
+             {"opposite_lane", set_bike_reverse_allowed},
+             {"opposite", set_bike_reverse_allowed},
+         }},
+
+        {"busway",
+         {
+             {"yes", update_bike_direct_busway},
+             {"track", update_bike_direct_busway},
+             {"lane", update_bike_direct_busway},
+             {"opposite_lane", update_bike_reverse_busway},
+             {"opposite_track", update_bike_reverse_busway},
+             {"_default", update_bike_direct_busway},
+         }},
+
+        {"oneway",
+         {
+             {"yes",
+              [&]() {
+                  set_car_reverse_forbidden();
+                  update_bike_reverse_forbidden();
+              }},
+             {"true",
+              [&]() {
+                  set_car_reverse_forbidden();
+                  update_bike_reverse_forbidden();
+              }},
+             {"1",
+              [&]() {
+                  set_car_reverse_forbidden();
+                  update_bike_reverse_forbidden();
+              }},
+         }},
+
+        {"junction",
+         {
+             {"roundabout",
+              [&]() {
+                  set_car_reverse_forbidden();
+                  update_bike_reverse_forbidden();
+              }},
+         }},
+
+        {"access",
+         {
+             {"yes", set_foot_allowed},
+             {"no", set_foot_forbidden},
+         }},
+
+        {"public_transport",
+         {
+             {"platform", set_foot_allowed},
+         }},
+
+        {"railway",
+         {
+             {"platform",
+              [&]() {
+                  set_foot_allowed();
+                  set_visible_false();
+              }},
+         }},
+    };
     for (std::pair<std::string, std::string> pair : tags) {
-        std::unordered_map<std::string, std::unordered_map<std::string, std::function<void()>>> key_map = {
-            {"highway",
-             {
-                 {"footway", update_foot_allowed},
-                 {"pedestrian", update_foot_allowed},
-                 {"cycleway",
-                  [&]() {
-                      update_bike_direct_track();
-                      update_foot_allowed();
-                  }},
-                 {"path",
-                  [&]() {
-                      // http://www.cyclestreets.net/journey/help/osmconversion/#toc6
-                      // highway = path => might mean lots of different things, so we allow bike and foot
-                      update_bike_direct_track();
-                      update_foot_allowed();
-                  }},
-                 {"steps", update_foot_allowed},
-                 {"primary", update_car_direct_primary},
-                 {"primary_link", update_car_direct_primary},
-                 {"secondary", update_car_direct_secondary},
-                 {"secondary_link", update_car_direct_secondary},
-                 {"tertiary", update_car_direct_tertiary},
-                 {"tertiary_link", update_car_direct_tertiary},
-                 {"unclassified", update_car_direct_residentiary},
-                 {"residential", update_car_direct_residentiary},
-                 {"living_street", update_car_direct_residentiary},
-                 {"road", update_car_direct_residentiary},
-                 {"service", update_car_direct_residentiary},
-                 {"track", update_car_direct_residentiary},
-                 {"motorway",
-                  [&]() {
-                      update_car_direct_motorway();
-                      set_visible_false();
-                  }},
-                 {"motorway_link",
-                  [&]() {
-                      update_car_direct_motorway();
-                      set_visible_false();
-                  }},
-                 {"trunk",
-                  [&]() {
-                      update_car_direct_trunk();
-                      set_visible_false();
-                  }},
-                 {"trunk_link",
-                  [&]() {
-                      update_car_direct_trunk();
-                      set_visible_false();
-                  }},
-             }},
-
-            {"pedestrian",
-             {
-                 {"yes", set_foot_allowed},
-                 {"designated", set_foot_allowed},
-                 {"permissive", set_foot_allowed},
-                 {"lane", set_foot_allowed},
-                 {"official", set_foot_allowed},
-                 {"allowed", set_foot_allowed},
-                 {"destination", set_foot_allowed},
-                 {"no", set_foot_forbidden},
-                 {"private", set_foot_forbidden},
-             }},
-            {"foot",
-             {
-                 {"yes", set_foot_allowed},
-                 {"designated", set_foot_allowed},
-                 {"permissive", set_foot_allowed},
-                 {"lane", set_foot_allowed},
-                 {"official", set_foot_allowed},
-                 {"allowed", set_foot_allowed},
-                 {"destination", set_foot_allowed},
-                 {"no", set_foot_forbidden},
-                 {"private", set_foot_forbidden},
-             }},
-
-            // http://wiki.openstreetmap.org/wiki/Cycleway
-            // http://wiki.openstreetmap.org/wiki/Map_Features#Cycleway
-            {"cycleway",
-             {
-                 {"lane", set_bike_direct_lane},
-                 {"yes", set_bike_direct_lane},
-                 {"true", set_bike_direct_lane},
-                 {"lane_in_the_middle", set_bike_direct_lane},
-                 {"track", set_bike_direct_track},
-                 {"opposite_lane", set_bike_reverse_lane},
-                 {"opposite_track", set_bike_reverse_track},
-                 {"opposite", set_bike_reverse_allowed},
-                 {"share_busway", set_bike_direct_busway},
-                 {"lane_left", set_bike_reverse_lane},
-                 {"_default", set_bike_direct_lane},
-             }},
-
-            {"bicycle",
-             {
-                 {"yes", set_bike_direct_allowed},
-                 {"permissive", set_bike_direct_allowed},
-                 {"destination", set_bike_direct_allowed},
-                 {"designated", set_bike_direct_allowed},
-                 {"private", set_bike_direct_allowed},
-                 {"true", set_bike_direct_allowed},
-                 {"allowed", set_bike_direct_allowed},
-                 {"official", set_bike_direct_allowed},
-                 {"no", set_bike_direct_forbidden},
-                 {"dismount", set_bike_direct_forbidden},
-                 {"VTT", set_bike_direct_forbidden},
-                 {"share_busway", set_bike_direct_busway},
-                 {"opposite_lane", set_bike_reverse_allowed},
-                 {"opposite", set_bike_reverse_allowed},
-             }},
-
-            {"busway",
-             {
-                 {"yes", update_bike_direct_busway},
-                 {"track", update_bike_direct_busway},
-                 {"lane", update_bike_direct_busway},
-                 {"opposite_lane", update_bike_reverse_busway},
-                 {"opposite_track", update_bike_reverse_busway},
-                 {"_default", update_bike_direct_busway},
-             }},
-
-            {"oneway",
-             {
-                 {"yes",
-                  [&]() {
-                      set_car_reverse_forbidden();
-                      update_bike_reverse_forbidden();
-                  }},
-                 {"true",
-                  [&]() {
-                      set_car_reverse_forbidden();
-                      update_bike_reverse_forbidden();
-                  }},
-                 {"1",
-                  [&]() {
-                      set_car_reverse_forbidden();
-                      update_bike_reverse_forbidden();
-                  }},
-             }},
-
-            {"junction",
-             {
-                 {"roundabout",
-                  [&]() {
-                      set_car_reverse_forbidden();
-                      update_bike_reverse_forbidden();
-                  }},
-             }},
-
-            {"access",
-             {
-                 {"yes", set_foot_allowed},
-                 {"no", set_foot_forbidden},
-             }},
-
-            {"public_transport",
-             {
-                 {"platform", set_foot_allowed},
-             }},
-
-            {"railway",
-             {
-                 {"platform",
-                  [&]() {
-                      set_foot_allowed();
-                      set_visible_false();
-                  }},
-             }},
-        };
-
         std::string key = pair.first, val = pair.second;
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         std::transform(val.begin(), val.end(), val.begin(), ::tolower);
