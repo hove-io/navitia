@@ -328,8 +328,8 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         std::transform(val.begin(), val.end(), val.begin(), ::tolower);
 
-        // We do not want to autocomplete on public transport objects
-        if (key == "public_transport") {
+        // We do not want to autocomplete on public transport objects and tunnels
+        if (key == "public_transport" || key == "tunnel") {
             set_visible_false();
         }
 
