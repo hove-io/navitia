@@ -6,10 +6,20 @@ else("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
 endif("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
 
 # Release by default
-IF(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
     #https://cmake.org/pipermail/cmake/2009-June/030311.html
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+    message("-- By default, Build type is Release")
+else(NOT CMAKE_BUILD_TYPE)
+    message("-- Build type : ${CMAKE_BUILD_TYPE}")
+endif(NOT CMAKE_BUILD_TYPE)
+
+# compile tests flag
+if(NOT SKIP_TESTS)
+    message("-- Tests compilation actived")
+else(NOT SKIP_TESTS)
+    message("-- Tests compilation deactived")
+endif(NOT SKIP_TESTS)
 
 # Gcc Release flags
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -51,6 +61,13 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 # Debug flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1")
+
+# Strip symbols
+if(STRIP_SYMBOLS)
+    message("-- Strip symbols actived")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+endif(STRIP_SYMBOLS)
 
 set(NAVITIA_ALLOCATOR "tcmalloc")
 

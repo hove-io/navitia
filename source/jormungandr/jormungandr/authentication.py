@@ -95,8 +95,15 @@ def get_token():
     args = auth.split(' ')
     if len(args) == 2:
         b64 = args[1]
+        # TODO: Remove conditions when fully migrated to python3
+        # Python3 Compatibility 1: The bytes object is encoded as a string by flask and prefixed with " b' ", which should be removed
+        if isinstance(b64, str) and b64[0:2] == "b\'":
+            b64 = b64[2:].encode()
         try:
-            decoded = base64.decodestring(b64)
+            decoded = base64.b64decode(b64)
+            # Python3 Compatibility 2: Decode bytes to string in order to use split()
+            if isinstance(decoded, bytes):
+                decoded = decoded.decode()
             return decoded.split(':')[0]
         except (binascii.Error, UnicodeDecodeError):
             logging.getLogger(__name__).info('badly formated token %s', auth)
@@ -178,7 +185,7 @@ def get_all_available_instances(user):
     if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
         from jormungandr import i_manager
 
-        return i_manager.instances.values()
+        return list(i_manager.instances.values())
 
     if not user:
         # for not-public navitia a user is mandatory

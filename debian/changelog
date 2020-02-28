@@ -1,3 +1,21 @@
+navitia2 (3.6.0) unstable; urgency=low
+
+  * [CI] trigger deploy navitia on artemis after build packages  <https://github.com/CanalTP/navitia/pull/3146>
+  * [Doc] Added template directory doc for pre-commit  <https://github.com/CanalTP/navitia/pull/3140>
+  * [Revert] "Revert "Kraken: Case/accents sensitive sort on stop_areas""  <https://github.com/CanalTP/navitia/pull/3123>
+  * [Accept] mergify rule on all build success  <https://github.com/CanalTP/navitia/pull/3145>
+  * [CI] publish docker compose images   <https://github.com/CanalTP/navitia/pull/3142>
+  * [Tyr] Split brokers used by Tyr for Celery and Kraken  <https://github.com/CanalTP/navitia/pull/3141>
+  * [Fare] update fare engine to handle fare v2 to fare v1 conversion  <https://github.com/CanalTP/navitia/pull/3106>
+  * [Cmake] add cmake options for stripping binaries and bypassing tests compilation  <https://github.com/CanalTP/navitia/pull/3138>
+  * [Tyr] Update dataset.state  <https://github.com/CanalTP/navitia/pull/3139>
+  * [Jormun] Python3-compatible tests: FINAL ROUND  <https://github.com/CanalTP/navitia/pull/3135>
+  * [Ed] Parse postal_code in osm  <https://github.com/CanalTP/navitia/pull/3136>
+  * [CI] temporarily fix github CI  <https://github.com/CanalTP/navitia/pull/3137>
+  * [Jormun] Python3-compatible authentication   <https://github.com/CanalTP/navitia/pull/3134>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 28 Feb 2020 17:02:06 +0100
+
 navitia2 (3.5.0) unstable; urgency=low
 
   * CI: Publish navitia documentation with GitHub actions  <https://github.com/CanalTP/navitia/pull/3132>

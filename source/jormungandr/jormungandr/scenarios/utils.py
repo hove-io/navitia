@@ -331,7 +331,7 @@ def gen_all_combin(n, t):
         """
         nothing to do when n <= t, there is only one possible combination
         """
-        yield range(n)
+        yield list(range(n))
         return
     # c is an array of choices
     c = np.ones(t + 2, dtype=int).tolist()

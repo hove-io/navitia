@@ -81,9 +81,9 @@ static boost::gregorian::date parse_nav_date(const std::string& date_str) {
 static navitia::routing::Path string_to_path(const std::vector<std::string>& keys) {
     navitia::routing::Path p;
     for (const auto& key : keys) {
-        std::string lower_key = boost::algorithm::to_lower_copy(key);
+        std::string key_copy(key);
         std::vector<std::string> string_vec;
-        boost::algorithm::split(string_vec, lower_key, boost::algorithm::is_any_of(";"));
+        boost::algorithm::split(string_vec, key_copy, boost::algorithm::is_any_of(";"));
         if (string_vec.size() != 10)
             throw std::string("Nombre incorrect d'éléments dans une section :"
                               + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
@@ -183,6 +183,9 @@ struct fare_load_fixture {
                                            std::string(navitia::config::fixtures_dir) + "/fare/tarifs_od.csv");
         parser.load();
         f = load_fare_from_ed(parser.data);
+
+        // uncomment to activate logs in fare computation
+        // log4cplus::Logger::getInstance("fare").setLogLevel(log4cplus::TRACE_LOG_LEVEL);
     }
 
     std::vector<std::string> keys;
@@ -214,7 +217,7 @@ BOOST_FIXTURE_TEST_CASE(simple_journey, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
 
     // Correspondance Tramwayway-bus autant qu'on veut
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|50;03|30;1;1;tramway");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|50;03|30;1;1;Tramway");
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;03|30;04|20;1;1;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
@@ -377,9 +380,9 @@ BOOST_FIXTURE_TEST_CASE(natio_filgato, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).sections.size(), 3);
 
     keys.clear();
-    keys.push_back("5604:127;11:120;050050023:23;8727622;2011|07|31;09|28;09|39;4;4;Bus");
-    keys.push_back(";8727622;800:D;8775890;2011|07|31;09|47;10|09;4;1;RapidTransit");
-    keys.push_back(";8775860;100110007:7;R_0007;2011|07|31;10|20;10|21;1;1;Metro");
+    keys.push_back("5604:127;11:120;050050023:23;8727622;2011|07|31;09|28;09|39;4;4;bus");
+    keys.push_back(";8727622;800:D;8775890;2011|07|31;09|47;10|09;4;1;rapidtransit");
+    keys.push_back(";8775860;100110007:7;R_0007;2011|07|31;10|20;10|21;1;1;metro");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -391,7 +394,7 @@ BOOST_FIXTURE_TEST_CASE(natio_filgato, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(rer_in_paris, fare_load_fixture) {
     // On prend le RER intramuros
     keys.clear();
-    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;1;1;RapidTransit");  // Aulnay -> CDG "intramuros"
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;1;1;rapidtransit");  // Aulnay -> CDG "intramuros"
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -400,16 +403,16 @@ BOOST_FIXTURE_TEST_CASE(rer_in_paris, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(tram_with_od, fare_load_fixture) {
     // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
     keys.clear();
-    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|28;09|39;4;4;tramway");      // L'abbaye -> Aulnay
-    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit");  // Aulnay -> CDG
+    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|28;09|39;4;4;Tramway");      // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;rapidtransit");  // Aulnay -> CDG
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 545);  // code 13 et 84 => 305 + 240
 
     keys.clear();
-    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus");  // Bled Paumé -> L'Abbaye
-    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|40;09|50;4;4;tramway");      // L'abbaye -> Aulnay
-    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit");  // Aulnay -> CDG
+    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;bus");  // Bled Paumé -> L'Abbaye
+    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|40;09|50;4;4;Tramway");      // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;rapidtransit");  // Aulnay -> CDG
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -427,8 +430,8 @@ BOOST_FIXTURE_TEST_CASE(exclusive_line, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 1150);  // Kof ! c'est cher la navette AF
 
     keys.clear();
-    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus");  // Bled Paumé -> L'Abbaye
-    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;Bus");
+    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;bus");  // Bled Paumé -> L'Abbaye
+    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -438,9 +441,9 @@ BOOST_FIXTURE_TEST_CASE(exclusive_line, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(metro_rer_bus, fare_load_fixture) {
     // Metro-RER-Bus
     keys.clear();
-    keys.push_back("439;59465;100110008:8;8739303;2011|12|01;16|07;16|34;1;1;Metro");
-    keys.push_back("436;8739303;800:C;8739315;2011|12|01;16|41;17|12;1;4;RapidTransit");
-    keys.push_back("285;8739315;056356006:H;2:212;2011|12|01;17|17;17|19;4;4;Bus");
+    keys.push_back("439;59465;100110008:8;8739303;2011|12|01;16|07;16|34;1;1;metro");
+    keys.push_back("436;8739303;800:C;8739315;2011|12|01;16|41;17|12;1;4;rapidtransit");
+    keys.push_back("285;8739315;056356006:H;2:212;2011|12|01;17|17;17|19;4;4;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 320);
@@ -451,10 +454,10 @@ BOOST_FIXTURE_TEST_CASE(metro_rer_bus, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(stif_test_case_1, fare_load_fixture) {
     // Essais avec noctilien
     keys.clear();
-    keys.push_back("56;59557;100987785:N12;59452;2011|12|02;03|20;03|42;1;1;Bus");
-    keys.push_back("56;59452;100987762:N62;59:182428;2011|12|02;03|48;04|22;1;3;Bus");
-    keys.push_back("442;41:6487;100100195:195;59:153463;2011|12|02;05|14;05|20;3;3;Bus");
-    keys.push_back("442;59:153463;100100194:194;59:1055459;2011|12|02;05|28;05|31;3;3;Bus");
+    keys.push_back("56;59557;100987785:N12;59452;2011|12|02;03|20;03|42;1;1;bus");
+    keys.push_back("56;59452;100987762:N62;59:182428;2011|12|02;03|48;04|22;1;3;bus");
+    keys.push_back("442;41:6487;100100195:195;59:153463;2011|12|02;05|14;05|20;3;3;bus");
+    keys.push_back("442;59:153463;100100194:194;59:1055459;2011|12|02;05|28;05|31;3;3;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -465,11 +468,11 @@ BOOST_FIXTURE_TEST_CASE(stif_test_case_1, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(mode_than_90_after_billing, fare_load_fixture) {
     // Plus de 90min depuis le dernier compostage
     keys.clear();
-    keys.push_back("442;59362;100100068:68;59624;2011|12|05;10|52;11|08;1;2;Bus");
-    keys.push_back("442;59624;100100295:295;24:14919;2011|12|05;11|15;11|56;2;3;Bus");
-    keys.push_back("101;24:14919;039039307:307;24:14929;2011|12|05;12|01;12|15;3;4;Bus");
-    keys.push_back("285;8739300;056356102:BAK;8739315;2011|12|05;12|21;12|26;4;4;Bus");
-    keys.push_back("405;8739315;027027011:11;50:8168;2011|12|05;12|30;12|33;4;4;Bus");
+    keys.push_back("442;59362;100100068:68;59624;2011|12|05;10|52;11|08;1;2;bus");
+    keys.push_back("442;59624;100100295:295;24:14919;2011|12|05;11|15;11|56;2;3;bus");
+    keys.push_back("101;24:14919;039039307:307;24:14929;2011|12|05;12|01;12|15;3;4;bus");
+    keys.push_back("285;8739300;056356102:BAK;8739315;2011|12|05;12|21;12|26;4;4;bus");
+    keys.push_back("405;8739315;027027011:11;50:8168;2011|12|05;12|30;12|33;4;4;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -479,7 +482,7 @@ BOOST_FIXTURE_TEST_CASE(mode_than_90_after_billing, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(orlybus, fare_load_fixture) {
     // Orlybus
     keys.clear();
-    keys.push_back("442;8775863;100100283:ORLYBUS;59675;2011|12|05;05|35;05|56;1;4;Bus");
+    keys.push_back("442;8775863;100100283:ORLYBUS;59675;2011|12|05;05|35;05|56;1;4;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 690);
@@ -489,8 +492,8 @@ BOOST_FIXTURE_TEST_CASE(free_journey, fare_load_fixture) {
     // UN trajet qui coûtait 0 pour des raison obscures
     keys.clear();
     keys.push_back("440;59108;100112013:T3;59624;2011|12|05;11|43;11|45;1;1;Tramway");
-    keys.push_back("442;59624;100100028:28;59349;2011|12|05;11|56;12|09;1;1;Bus");
-    keys.push_back("442;59349;100100092:92;59:181763;2011|12|05;12|12;12|27;1;1;Bus");
+    keys.push_back("442;59624;100100028:28;59349;2011|12|05;11|56;12|09;1;1;bus");
+    keys.push_back("442;59349;100100092:92;59:181763;2011|12|05;12|12;12|27;1;1;bus");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -500,8 +503,8 @@ BOOST_FIXTURE_TEST_CASE(mantis_sword_36393, fare_load_fixture) {
     // Ticket mantis sword 36393
     // Ressort deux ticket t+ au lieu d'un seul
     keys.clear();
-    keys.push_back("436;8768600;810:A;8775800;2011|12|13;09|49;09|57;1;1;RapidTransit");
-    keys.push_back("439;8775800;100110006:6;59455;2011|12|13;10|04;10|12;1;1;Metro");
+    keys.push_back("436;8768600;810:A;8775800;2011|12|13;09|49;09|57;1;1;rapidtransit");
+    keys.push_back("439;8775800;100110006:6;59455;2011|12|13;10|04;10|12;1;1;metro");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
@@ -510,24 +513,24 @@ BOOST_FIXTURE_TEST_CASE(mantis_sword_36393, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(stif_test_case_2, fare_load_fixture) {
     // Remonté par le stif, deux tickets au lieu d'un
     keys.clear();
-    keys.push_back("439;59500;100110009:9;59489;2011|12|13;10|17;10|23;1;1;Metro");
-    keys.push_back("437;8738400;800:J;8738107;2011|12|13;10|31;10|39;1;3;LocalTrain");
+    keys.push_back("439;59500;100110009:9;59489;2011|12|13;10|17;10|23;1;1;metro");
+    keys.push_back("437;8738400;800:J;8738107;2011|12|13;10|31;10|39;1;3;localtrain");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 245);
 
     keys.clear();
-    keys.push_back("437;8738287;800:L;8738221;2011|12|13;19|36;19|52;4;3;LocalTrain");
-    keys.push_back("439;59594;100110001:1;59250;2011|12|13;20|04;20|09;2;2;Metro");
+    keys.push_back("437;8738287;800:L;8738221;2011|12|13;19|36;19|52;4;3;localtrain");
+    keys.push_back("439;59594;100110001:1;59250;2011|12|13;20|04;20|09;2;2;metro");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 395);
 
     // Remonté par le stif, deux tickets au lieu d'un
     keys.clear();
-    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
-    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
-    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;localtrain");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 250);
@@ -542,7 +545,7 @@ BOOST_FIXTURE_TEST_CASE(mantis_sword_39517, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 170);
 
     // on rajoute un bout de RER, on doit basculer vers un ticket OD
-    keys.push_back("436;8727141;810:B;8727148;2012|06|26;19|41;19|50;4;4;RapidTransit");
+    keys.push_back("436;8727141;810:B;8727148;2012|06|26;19|41;19|50;4;4;rapidtransit");
     res = f.compute_fare(string_to_path(keys));
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 265);
@@ -562,9 +565,9 @@ BOOST_FIXTURE_TEST_CASE(mantis_sword_46044, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(journeys_with_unknown_section, fare_load_fixture) {
     // tests with unknown section in the middle
     keys.clear();
-    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
-    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
-    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;localtrain");
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal");  // unkown fare section
     res = f.compute_fare(string_to_path(keys));
     //    print_res(res);
@@ -575,8 +578,8 @@ BOOST_FIXTURE_TEST_CASE(journeys_with_unknown_section, fare_load_fixture) {
     keys.clear();
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|06;02|10;1;1;metro");
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal");  // unkown fare section
-    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
-    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;localtrain");
     res = f.compute_fare(string_to_path(keys));
     //    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 3);
@@ -589,9 +592,9 @@ BOOST_FIXTURE_TEST_CASE(journeys_with_unknown_section, fare_load_fixture) {
     // tests with unknown section in the beginning
     keys.clear();
     keys.push_back("bob;morane;contre;tout;2011|07|01;02|06;02|10;1;1;chacal");  // unkown fare section
-    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
-    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
-    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;localtrain");
     res = f.compute_fare(string_to_path(keys));
     //    print_res(res);
     BOOST_REQUIRE_EQUAL(res.tickets.size(), 2);

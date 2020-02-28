@@ -626,7 +626,7 @@ void builder::add_ticket(const std::string& ticket_id,
 
     navitia::fare::Transition ticket_transition;
     navitia::fare::State ticket_state;
-    ticket_state.line = boost::algorithm::to_lower_copy(line);
+    ticket_state.line = line;
     ticket_transition.ticket_key = ticket_id;
 
     auto ticket_state_v = boost::add_vertex(ticket_state, data->fare->g);

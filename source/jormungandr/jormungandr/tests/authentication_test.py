@@ -28,12 +28,14 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import app
 from jormungandr.authentication import get_token, get_used_coverages, register_used_coverages
 import base64
 import pytest
 from werkzeug.exceptions import Unauthorized
+import six
 
 
 def get_token_direct_test():
@@ -42,25 +44,27 @@ def get_token_direct_test():
 
 
 def get_token_basic_auth_test():
-    key = base64.encodestring('mykey:').strip()
+    key = base64.b64encode("mykey:".encode()).strip()
     with app.test_request_context('/', headers={'Authorization': 'BASIC {}'.format(key)}):
         assert get_token() == 'mykey'
 
 
 def get_token_no_token_test():
     with app.test_request_context('/'):
-        assert get_token() == None
+        assert get_token() is None
 
 
-def get_token_basic_auth_unicode_test():
-    """
-    base64 doesn't seems to like unicode, it doesn't matter since our token are always in ascii (uuid).
-    But we want a clean error, not a 500
-    """
-    key = base64.encodestring(u'maclé:'.encode('utf-8')).strip()
-    with app.test_request_context('/', headers={'Authorization': 'BASIC {}'.format(key)}):
-        with pytest.raises(Unauthorized):
-            get_token()
+if six.PY2:  # Authorization header is kept as unicode only in Py2
+
+    def get_token_basic_auth_unicode_test():
+        """
+        base64 doesn't seems to like unicode, it doesn't matter since our token are always in ascii (uuid).
+        But we want a clean error, not a 500
+        """
+        key = base64.b64encode(u'maclé:'.encode('utf-8')).strip()
+        with app.test_request_context('/', headers={'Authorization': 'BASIC {}'.format(key)}):
+            with pytest.raises(Unauthorized):
+                get_token()
 
 
 def get_token_url_test():

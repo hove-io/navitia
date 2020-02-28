@@ -405,7 +405,10 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
         i, c = pair
         selected_journeys_matrix[i] = c
 
-    map(f, zip(range(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+    collections.deque(
+        map(f, zip(range(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find))),
+        maxlen=0,
+    )
     """
     We should cut out those combinations that don't contain must-keep journeys
     """

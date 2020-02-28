@@ -7,4 +7,8 @@ add_library(proximitylist
 )
 add_dependencies(proximitylist protobuf_files)
 target_link_libraries(proximitylist types utils)
-add_subdirectory(tests)
+
+# Add tests
+if(NOT SKIP_TESTS)
+    add_subdirectory(tests)
+endif(NOT SKIP_TESTS)

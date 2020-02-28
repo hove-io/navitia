@@ -60,12 +60,13 @@ namespace qi = ::boost::spirit::qi;
 namespace ph = ::boost::phoenix;
 
 navitia::fare::Condition parse_condition(const std::string& condition_str) {
-    std::string str = boost::algorithm::to_lower_copy(condition_str);
+    std::string str(condition_str);
     boost::algorithm::replace_all(str, " ", "");
     navitia::fare::Condition cond;
 
-    if (str.empty() || str == "true")
+    if (str.empty() || boost::algorithm::to_lower_copy(str) == "true") {
         return cond;
+    }
 
     // Match du texte : du alphanumérique et quelques chars spéciaux
     qi::rule<std::string::iterator, std::string()> txt = +(qi::alnum | qi::char_("_:-"));

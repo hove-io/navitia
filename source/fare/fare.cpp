@@ -223,8 +223,10 @@ results Fare::compute_fare(const routing::Path& path) const {
                                                             << ", mode=" << section_key.mode);
                             }
                         } else {
-                            LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
-                            new_labels[0].push_back(next);
+                            if (v != 0) {
+                                LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
+                                new_labels[0].push_back(next);
+                            }
                         }
                         LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " {" << g[v] << "} : \n" << next);
                         new_labels[v].push_back(next);
@@ -272,18 +274,17 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     const navitia::type::StopPoint* first_sp = path_item.stop_points.front();
     const navitia::type::StopPoint* last_sp = path_item.stop_points.back();
     const navitia::type::VehicleJourney* vj = path_item.get_vj();
-    std::locale loc;
-    // TODO, original uri for all
-    network = boost::to_lower_copy(vj->route->line->network->uri, loc);  // uri ?
-    start_stop_area = boost::to_lower_copy(first_sp->stop_area->uri, loc);
-    dest_stop_area = boost::to_lower_copy(last_sp->stop_area->uri, loc);
-    line = boost::to_lower_copy(vj->route->line->uri, loc);
+
+    network = vj->route->line->network->uri;
+    start_stop_area = first_sp->stop_area->uri;
+    dest_stop_area = last_sp->stop_area->uri;
+    line = vj->route->line->uri;
     date = path_item.departure.date();
     start_time = path_item.departure.time_of_day().total_seconds();
     dest_time = path_item.arrival.time_of_day().total_seconds();
-    start_zone = boost::to_lower_copy(first_sp->fare_zone, loc);
-    dest_zone = boost::to_lower_copy(last_sp->fare_zone, loc);
-    mode = boost::to_lower_copy(vj->physical_mode->uri, loc);  // CHECK
+    start_zone = first_sp->fare_zone;
+    dest_zone = last_sp->fare_zone;
+    mode = vj->physical_mode->uri;
 }
 
 template <class T>
@@ -313,7 +314,7 @@ bool compare(const T& a, const T& b, Comp_e comp) {
 }
 
 int SectionKey::duration_at_begin(int ticket_start_time) const {
-    if (ticket_start_time < boost::lexical_cast<int>(start_time)) {
+    if (ticket_start_time <= boost::lexical_cast<int>(start_time)) {
         return start_time - ticket_start_time;
     }
 
@@ -322,7 +323,7 @@ int SectionKey::duration_at_begin(int ticket_start_time) const {
 }
 
 int SectionKey::duration_at_end(int ticket_start_time) const {
-    if (ticket_start_time < boost::lexical_cast<int>(dest_time)) {
+    if (ticket_start_time <= boost::lexical_cast<int>(dest_time)) {
         return dest_time - ticket_start_time;
     }
 
@@ -356,6 +357,7 @@ DateTicket DateTicket::operator+(const DateTicket& other) const {
 }
 
 bool Transition::valid(const SectionKey& section, const Label& label) const {
+    auto logger = log4cplus::Logger::getInstance("fare");
     if (label.tickets.empty() && ticket_key.empty() && global_condition != Transition::GlobalCondition::with_changes) {
         // the transition is a continuation and we don't have any
         // ticket, thus this transition is not valid
@@ -368,40 +370,88 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
 
     for (const Condition& cond : this->start_conditions) {
         if (cond.key == "zone" && cond.value != section.start_zone) {
+            LOG4CPLUS_TRACE(logger, "start_zone " << cond.value << " vs " << section.start_zone);
             return false;
-        }
-        if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
+        } else if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
+            LOG4CPLUS_TRACE(logger, "start_stop_area " << cond.value << " vs " << section.start_stop_area);
+
             return false;
         }
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_duration = section.duration_at_begin(label.start_time);
+            int ticket_punch_date = label.start_time;
+            // if the ticket key is not empty, it means we are punching a new ticket
+            if (!this->ticket_key.empty()) {
+                ticket_punch_date = section.start_time;
+            }
+            int ticket_duration = section.duration_at_begin(ticket_punch_date);
+            LOG4CPLUS_TRACE(logger, "Boarding duration " << duration << " vs " << ticket_duration);
             if (!compare(ticket_duration, duration, cond.comparaison)) {
                 return false;
             }
         } else if (cond.key == "nb_changes") {
-            auto nb_changes = boost::lexical_cast<int>(cond.value);
-            if (!compare(label.nb_changes, nb_changes, cond.comparaison)) {
+            auto max_nb_changes = boost::lexical_cast<int>(cond.value);
+
+            int current_nb_of_changes = label.nb_changes;
+            int nb_of_changes_after_transition = current_nb_of_changes + 1;
+            // if the ticket_key is not empty, it means we are punching a new ticket
+            // hence, after this transition, we will have made 0 changes with the last ticket
+            // similarly, if label->tickets is empty, it means that we are punching a new ticket
+            if (!this->ticket_key.empty() || label.tickets.empty()) {
+                assert(current_nb_of_changes == 0);
+                nb_of_changes_after_transition = 0;
+            }
+
+            // we are checking whether we can extend `label` using this Transition.
+            // we want to check that, after using this Transition, the number of changes will be
+            // less than `max_nb_changes`
+            // Two cases can arise :
+            //  - either we are starting a new ticket, so label.tickets is empty,
+            //     or last_ticket.sections is empty.
+            //    In this case, after this transition, we will have make 0 changes with this ticket
+            //  - otherwise we keep using a ticket that was used on the previous section.
+            //     In this case, we already have made `current_nb_of_changes`, and after
+            //     the transition we will have `current_nb_of_changes + 1` changes
+            //
+            LOG4CPLUS_TRACE(logger, "nb changes " << max_nb_changes << " vs " << nb_of_changes_after_transition);
+            if (!compare(nb_of_changes_after_transition, max_nb_changes, cond.comparaison)) {
                 return false;
             }
         } else if (cond.key == "ticket" && !label.tickets.empty()) {
+            LOG4CPLUS_TRACE(logger, "ticket " << cond.value << " " << comp_to_string(cond.comparaison) << " "
+                                              << label.tickets.back().key);
+
             if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) {
+                return false;
+            }
+        } else if (cond.key == "line") {
+            LOG4CPLUS_TRACE(logger, "line " << cond.value << " vs " << section.line);
+            if (!compare(section.line, cond.value, cond.comparaison)) {
                 return false;
             }
         }
     }
     for (const Condition& cond : this->end_conditions) {
         if (cond.key == "zone" && cond.value != section.dest_zone) {
+            LOG4CPLUS_TRACE(logger, "dest_zone " << cond.value << " vs " << section.dest_zone);
+
             return false;
-        }
-        if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
+        } else if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
+            LOG4CPLUS_TRACE(logger, "dest_stop_are " << cond.value << " vs " << section.dest_stop_area);
+
             return false;
         }
         if (cond.key == "duration") {
             // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            int ticket_duration = section.duration_at_end(label.start_time);
+            int ticket_punch_date = label.start_time;
+            // if the ticket key is not empty, it means we are punching a new ticket
+            if (!this->ticket_key.empty()) {
+                ticket_punch_date = section.start_time;
+            }
+            int ticket_duration = section.duration_at_end(ticket_punch_date);
+            LOG4CPLUS_TRACE(logger, "Alighting duration " << duration << " vs " << ticket_duration);
             if (!compare(ticket_duration, duration, cond.comparaison)) {
                 return false;
             }
@@ -570,6 +620,23 @@ std::ostream& operator<<(std::ostream& ss, const Transition& k) {
         default:
             break;
     }
+
+    ss << "\n Start conditions : ";
+    for (const Condition& condition : k.start_conditions) {
+        ss << "\n   " << condition;
+    }
+    ss << "\n End conditions : ";
+    for (const Condition& condition : k.end_conditions) {
+        ss << "\n   " << condition;
+    }
+    ss << "\n";
+
+    return ss;
+}
+
+std::ostream& operator<<(std::ostream& ss, const Condition& condition) {
+    ss << condition.key << " " << comp_to_string(condition.comparaison) << " " << condition.value
+       << " ticket : " << condition.ticket;
 
     return ss;
 }

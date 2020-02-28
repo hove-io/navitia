@@ -79,11 +79,9 @@ def choose_best_instance(instances):
 
 
 class InstanceManager(object):
-
     """
     Handle the different Kraken instances
-
-    a kraken instance's id is associated to a zmq socket and possibly some custom configuration
+    A Kraken instance id is associated to a zmq socket and possibly some custom configuration
     """
 
     def __init__(
