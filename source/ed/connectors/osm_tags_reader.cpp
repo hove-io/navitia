@@ -246,8 +246,6 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string>& tags) {
             if (val == "trunk" || val == "trunk_link" || val == "motorway" || val == "motorway_link") {
                 visible = false;
             }
-        } else if (key == "tunnel") {
-            visible = false;
         }
     }
 
