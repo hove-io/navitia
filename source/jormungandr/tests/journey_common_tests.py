@@ -287,9 +287,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert all(
-            msg in response['message'].lower() for msg in ('unable to parse datetime', 'unknown string format')
-        )
+        assert "unable to parse datetime, unknown string format" in response['message'].lower()
 
     def test_journeys_date_invalid(self):
         """giving the date with mmsshh (56 45 12) should be a problem"""
