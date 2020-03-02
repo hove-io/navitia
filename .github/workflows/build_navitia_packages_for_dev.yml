@@ -1,10 +1,9 @@
-name: Build Navitia Packages
+name: Build Navitia Packages for dev
 
 on:
   push:
     branches:
       - dev
-      - release
 
 
 jobs:
