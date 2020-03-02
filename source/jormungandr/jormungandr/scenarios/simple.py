@@ -50,7 +50,7 @@ def get_pb_data_freshness(request):
 
 class Scenario(object):
     """
-    the most basic scenario, it's so simple it don't implements journeys!
+    The most basic scenario: it's so simple, it doesn't implement journeys!
     """
 
     def status(self, request, instance):

@@ -145,14 +145,14 @@ class TestEndPoint(AbstractTestFixture):
         main_status = get_not_null(all_status_dict, 'main_routing_test')
 
         is_valid_region_status(main_status)
-        get_not_null(main_status, 'region_id')
-        get_not_null(main_status, 'is_open_data') == False
-        get_not_null(main_status, 'is_open_service') == False
+        assert get_not_null(main_status, 'region_id') == "main_routing_test"
+        assert get_not_null(main_status, 'is_open_data') is False
+        assert get_not_null(main_status, 'is_open_service') is False
         assert get_not_null(main_status, 'status') == 'running'
 
         assert 'warnings' in json_response
         assert len(json_response['warnings']) == 1
-        json_response['warnings'][0]['id'] == 'beta_endpoint'
+        assert json_response['warnings'][0]['id'] == 'beta_endpoint'
 
     def test_one_status(self):
         json_response = self.query("/v1/coverage/main_routing_test/status")
@@ -160,14 +160,14 @@ class TestEndPoint(AbstractTestFixture):
         is_valid_region_status(get_not_null(json_response, "status"))
         self.check_context(json_response)
         assert json_response['context']['timezone'] == 'Africa/Abidjan'
-        assert json_response["status"]["is_open_data"] == False
-        assert json_response["status"]["is_open_service"] == False
+        assert json_response["status"]["is_open_data"] is False
+        assert json_response["status"]["is_open_service"] is False
         assert 'realtime_contributors' in json_response['status']
         assert 'realtime_proxies' in json_response['status']
 
         assert 'warnings' in json_response
         assert len(json_response['warnings']) == 1
-        json_response['warnings'][0]['id'] == 'beta_endpoint'
+        assert json_response['warnings'][0]['id'] == 'beta_endpoint'
 
         assert 'street_networks' in json_response['status']
 
