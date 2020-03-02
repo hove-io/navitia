@@ -1,4 +1,4 @@
-name: Build Navitia Packages for dev
+name: Build Navitia Packages For Dev
 
 on:
   push:

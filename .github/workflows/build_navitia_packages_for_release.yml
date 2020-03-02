@@ -1,4 +1,4 @@
-name: Build Navitia Packages for release
+name: Build Navitia Packages For Release
 
 on:
   push:
