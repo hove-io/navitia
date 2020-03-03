@@ -93,7 +93,7 @@ class Siri(RealtimeProxy):
 
     {datetime} is iso-formated: YYYY-mm-ddTHH:MM:ss.sss+HH:MM
     {requestor_ref} is a configuration parameter
-    {stop_code} is the stop_point code value, which type is the id of the connector
+    {stop_code} is the stop_point code value, which type is the 'id' of the connector (or 'destination_id_tag' if provided in conf)
     ex: for a connector "Siri_BOB", on stop_point_BOB, you should find in the Navitia stop_point response:
         "codes": [
            {
