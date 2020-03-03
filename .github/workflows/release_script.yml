@@ -5,7 +5,7 @@ on:
         branches:
             - dev
             - release
-    pullrequests:
+    pull_request:
 
 jobs:
     release_script_tests:
