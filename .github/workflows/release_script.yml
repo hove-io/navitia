@@ -18,6 +18,8 @@ jobs:
         - uses: actions/checkout@v2
           with:
             path: release
+        - name: Install Pipenv
+          uses: dschep/install-pipenv-action@v1
         - name: Setup Pipenv for development
           run: pipenv install --dev
         - name: Release Script unit tests
