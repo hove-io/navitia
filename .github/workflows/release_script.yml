@@ -1,0 +1,24 @@
+name: Release Script
+
+on:
+    push:
+        branches:
+            - dev
+            - release
+    pullrequests:
+
+jobs:
+    release_script_tests:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Setup Python environment
+          uses: actions/setup-python@v1
+          with:
+              python-version: '2.7'
+        - uses: actions/checkout@v2
+          with:
+            path: release
+        - name: Setup Pipenv for development
+          run: pipenv install --dev
+        - name: Release Script unit tests
+          run: pipenv run py.test
