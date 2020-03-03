@@ -20,7 +20,7 @@ jobs:
             path: release
         - name: Install Pipenv
           uses: dschep/install-pipenv-action@v1
-        - name: Setup Pipenv for development
+        - name: Setup Pipenv and Run tests
+          working-directory: release
           run: pipenv install --dev
-        - name: Release Script unit tests
           run: pipenv run py.test
