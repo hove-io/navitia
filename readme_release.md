@@ -1,5 +1,12 @@
 # HOW TO Release navitia
 
+## Versionning
+
+Our versionning is based on [Semantic Versionning](nhttps://semver.org/)
+* the **major** version is bumped in case of an API/interface change or **when a binarisation is needed**.
+* the **minor** version is bumped when functionnalities are backward compatible.
+* the **patch** version is bumped on a bug fix.
+
 ## "Regular" release
 
 This lets the script decide if it's major or minor release.
