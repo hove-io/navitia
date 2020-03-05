@@ -494,7 +494,8 @@ void terminus_schedules(PbCreator& pb_creator,
     for (const auto& jpp_idx : handler.journey_pattern_points) {
         const auto& jp_end = pb_creator.data->dataRaptor->jp_container.get(jpp_idx);
         const auto& jp = pb_creator.data->dataRaptor->jp_container.get(jp_end.jp_idx);
-        if (jp_end.order.val == jp.jpps.size() - 1) {  // no use considering cases where JPP is the terminus for departures
+        if (jp_end.order.val
+            == jp.jpps.size() - 1) {  // no use considering cases where JPP is the terminus for departures
             continue;
         }
         const type::Route* route = pb_creator.data->pt_data->routes[jp.route_idx.val];
@@ -573,10 +574,9 @@ void terminus_schedules(PbCreator& pb_creator,
         std::vector<routing::datetime_stop_time> stop_times;
         int32_t utc_offset = 0;
         if (!calendar_id) {
-            stop_times =
-                routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
-                                        handler.max_datetime, items_per_route_point, *pb_creator.data,
-                                        navitia::type::RTLevel::Base);
+            stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                                 handler.max_datetime, items_per_route_point, *pb_creator.data,
+                                                 navitia::type::RTLevel::Base);
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
             if (route->line->opening_time && !stop_times.empty()) {
@@ -584,10 +584,10 @@ void terminus_schedules(PbCreator& pb_creator,
                 utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
 
                 // first and last Date time
-                map_route_point_first_last_st[route_point] = get_first_and_last_stop_time(
-                        stop_times[0], *route->line->opening_time, routepoint_jpps,
-                        handler.date_time + DateTimeUtils::SECONDS_PER_DAY, *pb_creator.data,
-                        navitia::type::RTLevel::Base, utc_offset);
+                map_route_point_first_last_st[route_point] =
+                    get_first_and_last_stop_time(stop_times[0], *route->line->opening_time, routepoint_jpps,
+                                                 handler.date_time + DateTimeUtils::SECONDS_PER_DAY, *pb_creator.data,
+                                                 navitia::type::RTLevel::Base, utc_offset);
             }
 
         } else {
@@ -606,7 +606,7 @@ void terminus_schedules(PbCreator& pb_creator,
         if (calendar_id) {
             // If all stop_times are on the terminus of their vj
             // (stop_time order is equal to the order of the last stop_time of the vj)
-            if (is_terminus_for_all_stop_times(stop_times)) {                
+            if (is_terminus_for_all_stop_times(stop_times)) {
                 if (stop_point->stop_area == route->destination) {
                     response_status[route_point] = pbnavitia::ResponseStatus::terminus;
                     LOG4CPLUS_DEBUG(logger, " *** Terminus in calendar_id ***");
@@ -630,14 +630,13 @@ void terminus_schedules(PbCreator& pb_creator,
             // If we have no calendar terminuses have no pick_up stop_time, we try to get drop_off time
             // to see if it's just a terminus
             if (!calendar_id) {
-                auto tmp_stop_times =
-                    routing::get_stop_times(routing::StopEvent::drop_off, routepoint_jpps, handler.date_time,
-                                            handler.max_datetime, items_per_route_point, *pb_creator.data,
-                                            navitia::type::RTLevel::Base);
+                auto tmp_stop_times = routing::get_stop_times(
+                    routing::StopEvent::drop_off, routepoint_jpps, handler.date_time, handler.max_datetime,
+                    items_per_route_point, *pb_creator.data, navitia::type::RTLevel::Base);
                 // If there is stop_times and everyone of them is a terminus
                 if (!tmp_stop_times.empty() && is_terminus_for_all_stop_times(tmp_stop_times)) {
                     // If we are on the main destination
-                    if (stop_point->stop_area == route->destination) {                        
+                    if (stop_point->stop_area == route->destination) {
                         resp_status = pbnavitia::ResponseStatus::terminus;
                         LOG4CPLUS_DEBUG(logger, " *** Terminus in !calendar_id ***");
                     } else {

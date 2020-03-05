@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"),
-                           43200, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
@@ -143,16 +143,18 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150619T094500"),
-                           43200, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150619T094500"), 43200, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).date_times_size(), 0);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).route().name(), "A");
-        BOOST_CHECK_EQUAL(resp.terminus_schedules(0).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+        BOOST_CHECK_EQUAL(resp.terminus_schedules(0).response_status(),
+                          pbnavitia::ResponseStatus::no_departure_this_day);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).route().name(), "B");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).date_times_size(), 0);
-        BOOST_CHECK_EQUAL(resp.terminus_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+        BOOST_CHECK_EQUAL(resp.terminus_schedules(1).response_status(),
+                          pbnavitia::ResponseStatus::no_departure_this_day);
     }
 
     // no departure for route "B"
@@ -173,15 +175,16 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150621T094500"),
-                           43200, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150621T094500"), 43200, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).date_times_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).route().name(), "A");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).route().name(), "B");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).date_times_size(), 0);
-        BOOST_CHECK_EQUAL(resp.terminus_schedules(1).response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
+        BOOST_CHECK_EQUAL(resp.terminus_schedules(1).response_status(),
+                          pbnavitia::ResponseStatus::no_departure_this_day);
     }
 
     // Terminus for route "A"
@@ -202,8 +205,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop2", {}, {}, d("20150615T094500"),
-                           43200, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop2", {}, {}, d("20150615T094500"), 43200, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).route().name(), "B");
@@ -226,8 +229,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop3", {}, {}, d("20150615T094500"),
-                           43200, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop3", {}, {}, d("20150615T094500"), 43200, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
     }
@@ -245,8 +248,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop2", {}, {}, d("20120701T094500"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop2", {}, {}, d("20120701T094500"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
         resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.error().id(), pbnavitia::Error::date_out_of_bounds);
     }
@@ -696,8 +699,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
     b.data->pt_data->build_uri();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"),
-                       86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                       std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
@@ -1005,7 +1008,7 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
     b.data->build_uri();
     b.data->complete();
     b.data->build_raptor();
-    //Empty stop schedule without any date_time
+    // Empty stop schedule without any date_time
     {
         navitia::PbCreator pb_creator;
         pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
@@ -1018,12 +1021,12 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
         pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
     }
-    //Empty stop schedule without any date_time also for terminus schedule
+    // Empty stop schedule without any date_time also for terminus schedule
     {
         navitia::PbCreator pb_creator;
         pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE(!resp.has_error());
@@ -1498,8 +1501,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_lines_closed) {
 
     // Same for terminus schedule
     navitia::PbCreator pb_creator1(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T063000"),
-                       600, 0, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T063000"), 600, 0, 10, 0,
+                       std::numeric_limits<size_t>::max());
     resp = pb_creator.get_response();
     // Two elements as there are two lines (A, B)
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
@@ -1695,10 +1698,10 @@ BOOST_AUTO_TEST_CASE(stop_schedules_order_by_line_route_stop_point) {
     test(6, "route:13rl", "JennerRL");
     test(7, "route:13rl", "RubensRL");
 
-    //We compare terminus_schedume with stop_schedule:
+    // We compare terminus_schedume with stop_schedule:
     navitia::PbCreator pb_creator_1(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_1, "network.uri=base_network", {}, {}, d("20170103T070000"), 86400,
-                       3, 20, 0,std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator_1, "network.uri=base_network", {}, {}, d("20170103T070000"), 86400, 3, 20, 0,
+                       std::numeric_limits<size_t>::max());
     resp = pb_creator_1.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 4);
 
@@ -1845,15 +1848,15 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_on_terminus) {
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"),
-                       86400, 3, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
     auto resp = pb_creator_dep.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
 
     // Even for a day without circulation, no terminus_schedule on terminus.
     navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"),
-                       86400, 3, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
     resp = pb_creator_no_dep.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
@@ -1875,15 +1878,15 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_on_partial_terminus) {
     data_ptr->pt_data->routes[0]->destination = b.sas.find("real terminus")->second;
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"),
-                       86400, 3, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
     auto resp = pb_creator_dep.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
 
     // Even for a day without circulation, no terminus_schedule on partial terminus.
     navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"),
-                       86400, 3, 10, 0, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
     resp = pb_creator_no_dep.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
 }
@@ -1929,22 +1932,22 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11,00,00));
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), time_to_int(11,15,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 00, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), time_to_int(11, 15, 00));
         // Direction B -> A
         stop_schedule = resp.stop_schedules(1);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "bobette");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12,00,00));
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), time_to_int(12,55,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12, 00, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), time_to_int(12, 55, 00));
     }
     // we should have three terminus_schedules: B -> C, B -> D and b -> A
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 3);
@@ -1954,22 +1957,22 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "C");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11,00,00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 00, 00));
         // Direction B -> D
         terminus_schedule = resp.terminus_schedules(1);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bob");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11,15,00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 15, 00));
         // Direction B -> A
         terminus_schedule = resp.terminus_schedules(2);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bobette");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12,00,00));
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(12,55,00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(12, 55, 00));
     }
 }
 
@@ -1984,10 +1987,14 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
      * Bobynette:  D -> C -> B -> A
      */
     ed::builder b("20160802");
-    b.vj("line:bob", "11111111", "", true, "vj1", "").route("route:bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
-    b.vj("line:bob", "11111111", "", true, "vj2", "").route("route:boby")("A", "10:15"_t)("B", "11:15"_t)("C", "12:15"_t)("D", "13:15"_t);
-    b.vj("line:bob", "11111111", "", true, "vj3", "").route("route:bobette")("C", "11:00"_t)("B", "12:00"_t)("A", "13:00"_t);
-    b.vj("line:bob", "11111111", "", true, "vj4", "").route("route:bobynette")("D", "11:00"_t)("C", "12:00"_t)("B", "13:00"_t)("A", "14:00"_t);
+    b.vj("line:bob", "11111111", "", true, "vj1", "")
+        .route("route:bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
+    b.vj("line:bob", "11111111", "", true, "vj2", "")
+        .route("route:boby")("A", "10:15"_t)("B", "11:15"_t)("C", "12:15"_t)("D", "13:15"_t);
+    b.vj("line:bob", "11111111", "", true, "vj3", "")
+        .route("route:bobette")("C", "11:00"_t)("B", "12:00"_t)("A", "13:00"_t);
+    b.vj("line:bob", "11111111", "", true, "vj4", "")
+        .route("route:bobynette")("D", "11:00"_t)("C", "12:00"_t)("B", "13:00"_t)("A", "14:00"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -2011,34 +2018,34 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11,00,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 00, 00));
         // Direction B -> A
         stop_schedule = resp.stop_schedules(1);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bobette");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12,00,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12, 00, 00));
         // Directions B -> C -> D
         stop_schedule = resp.stop_schedules(2);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:boby");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "D");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11,15,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 15, 00));
         // Direction B -> A
         stop_schedule = resp.stop_schedules(3);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bobynette");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(13,00,00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(13, 00, 00));
     }
     // we should have two terminus_schedules: B -> C -> D and b -> A
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
@@ -2049,8 +2056,8 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12,00,00));
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(13,00,00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(13, 00, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj3");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().vehicle_journey_id(), "vehicle_journey:vj4");
 
@@ -2061,8 +2068,8 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11,00,00));
-        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(11,15,00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(11, 15, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj1");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().vehicle_journey_id(), "vehicle_journey:vj2");
     }
