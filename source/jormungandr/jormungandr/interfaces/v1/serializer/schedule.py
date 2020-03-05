@@ -100,6 +100,20 @@ class StopScheduleSerializer(PbNestedSerializer):
         return _get_links(obj)
 
 
+class TerminusScheduleSerializer(PbNestedSerializer):
+    stop_point = pt.StopPointSerializer()
+    route = pt.RouteSerializer()
+    additional_informations = EnumField(attr="response_status", display_none=True)
+    display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
+    date_times = DateTimeTypeSerializer(many=True, display_none=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
+    first_datetime = DateTimeTypeSerializer(display_none=False)
+    last_datetime = DateTimeTypeSerializer(display_none=False)
+
+    def get_links(self, obj):
+        return _get_links(obj)
+
+
 class RowSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     date_times = DateTimeTypeSerializer(many=True, display_none=True)

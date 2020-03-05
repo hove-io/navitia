@@ -147,6 +147,28 @@ def get_real_notes(obj, full_response):
     return [real_notes[n['id']] for n in get_not_null(obj, 'links') if n['type'] == 'notes']
 
 
+def is_valid_terminus_schedule(terminus_schedule, tester, only_time=False):
+    is_valid_stop_point(get_not_null(terminus_schedule, "stop_point"), depth_check=2)
+    is_valid_route(get_not_null(terminus_schedule, "route"), depth_check=2)
+
+    datetimes = get_not_null(terminus_schedule, "date_times")
+    assert len(datetimes) != 0, "we have to have date_times"
+    for dt_wrapper in datetimes:
+        is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time)
+
+    d = get_not_null(terminus_schedule, 'display_informations')
+    get_not_null(d, 'direction')
+    get_not_null(d, 'label')
+    get_not_null(d, 'network')
+    get_not_null(d, 'commercial_mode')
+    get_not_null(d, 'name')
+
+
+def is_valid_terminus_schedules(terminus_schedules, tester, only_time=False):
+    for terminus_schedule in terminus_schedules:
+        is_valid_terminus_schedule(terminus_schedule, tester, only_time)
+
+
 @dataset({"departure_board_test": {}})
 class TestDepartureBoard(AbstractTestFixture):
     """
@@ -612,6 +634,25 @@ class TestDepartureBoard(AbstractTestFixture):
         assert display_information_route['text_color'] == 'FFD700'
         assert display_information_route['name'] == 'line:A'
         assert display_information_route['code'] == 'A'
+
+    def test_terminus_schedules(self):
+        """
+        terminus_schedules for a given date
+        """
+        response = self.query_region("stop_points/ODTstop1/terminus_schedules?from_datetime=20120615T080000")
+
+        is_valid_notes(response["notes"])
+        assert "terminus_schedules" in response
+        assert len(response["terminus_schedules"]) == 1
+
+        is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
+
+        assert len(response["terminus_schedules"][0]["date_times"]) == 2
+        assert response["terminus_schedules"][0]["stop_point"]["name"] == "ODTstop1"
+        assert response["terminus_schedules"][0]["route"]["name"] == "B"
+        assert response["terminus_schedules"][0]["display_informations"]["direction"] == "ODTstop2"
+        assert response["terminus_schedules"][0]["display_informations"]["name"] == "B"
+        assert response["terminus_schedules"][0]["display_informations"]["commercial_mode"] == "Bus"
 
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
