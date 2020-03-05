@@ -351,7 +351,6 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vehicle_journey:vj2"
 
         # Stop_schedules in TStop2: Partial Terminus
-
         response = self.query_region(
             "stop_areas/Tstop1/stop_schedules?" "from_datetime=20120615T080000&calendar=cal_partial_terminus"
         )
@@ -398,6 +397,20 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][1]["date_time"] == "20120615T103000"
         assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR2"
 
+        # terminus_schedules on partial_terminus with calendar
+        # There is neither terminus nor partial_terminus in terminus_schedules
+        response = self.query_region(
+            "stop_areas/Tstop2/terminus_schedules?" "from_datetime=20120615T080000&calendar=cal_partial_terminus"
+        )
+
+        is_valid_notes(response["notes"])
+        assert "terminus_schedules" in response
+        assert len(response["terminus_schedules"]) == 1
+        assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
+        assert len(response["terminus_schedules"][0]["date_times"]) == 0
+        assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"
+
     def test_real_terminus(self):
         """
         Real Terminus
@@ -409,6 +422,16 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "terminus"
 
+    def test_terminus_schedules_on_terminus(self):
+        """
+        No terminus_schedules on terminus
+        """
+        response = self.query_region("stop_areas/Tstop3/terminus_schedules?" "from_datetime=20120615T080000")
+
+        is_valid_notes(response["notes"])
+        assert "terminus_schedules" in response
+        assert len(response["terminus_schedules"]) == 0
+
     def test_no_departure_this_day(self):
         """
         no departure for this day : 20120620T080000
@@ -419,6 +442,19 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "no_departure_this_day"
+
+    def test_terminus_schedules_on_no_departure_this_day(self):
+        """
+        no departure for this day : 20120620T080000
+        same as stop_schedules
+        """
+        response = self.query_region("stop_areas/Tstop1/terminus_schedules?" "from_datetime=20120620T080000")
+
+        is_valid_notes(response["notes"])
+        assert "terminus_schedules" in response
+        assert len(response["terminus_schedules"]) == 1
+        assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert len(response["terminus_schedules"][0]["date_times"]) == 0
 
     def test_routes_schedule(self):
         """
