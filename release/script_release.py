@@ -374,8 +374,7 @@ class ReleaseManager:
         print("  git push {} release dev --tags".format(self.remote_name))
         # TODO: when we'll be confident, we will do that automaticaly
 
-    def release_the_kraken(self):
-        new_version = self.get_new_version_number()
+    def release_the_kraken(self, new_version):
 
         tmp_name = "release_%s" % new_version
 
@@ -411,17 +410,41 @@ class ReleaseManager:
         self.publish_release(tmp_name)
 
 
+def get_release_type():
+    if raw_input("Do you need a binarization ? [Y/n] ").lower() == "y":
+        return "major"
+
+    if raw_input("Have you changed the API or Data interface ? [Y/n] ").lower() == "y":
+        return "major"
+
+    if raw_input("Are the changes backward compatible ? [Y/n] ").lower() == "y":
+        return "minor"
+
+    if raw_input("Are you hotfixing ? [Y/n] ").lower() == "y":
+        return "hotfix"
+
+    raise RuntimeError("Couldn't find out the release type")
+
+
 if __name__ == '__main__':
 
-    if len(argv) < 2:
+    if len(argv) < 1:
         print("mandatory argument: {regular|major|minor|hotfix}")
         print("possible additional argument: remote (default is CanalTP)")
         exit(5)
 
     logging.basicConfig(level=logging.INFO)
 
-    r_type = argv[1]
-    remote = argv[2] if len(argv) >= 3 else "CanalTP"
+    release_type = get_release_type()
+    remote = argv[1] if len(argv) >= 2 else "CanalTP"
 
-    manager = ReleaseManager(release_type=r_type, remote_name=remote)
-    manager.release_the_kraken()
+    manager = ReleaseManager(release_type, remote_name=remote)
+
+    new_version = manager.get_new_version_number()
+
+    print("Release type: {}".format(release_type))
+    print("Release version: {}".format(new_version))
+    if raw_input("Shall we proceed ? [Y/n] ").lower() != "y":
+        exit(6)
+
+    manager.release_the_kraken(new_version)

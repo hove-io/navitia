@@ -1,5 +1,12 @@
 # HOW TO Release navitia
 
+## Versionning
+
+Our versionning is based on [Semantic Versionning](nhttps://semver.org/)
+* the **major** version is bumped in case of an API/interface change or **when a binarisation is needed**.
+* the **minor** version is bumped when functionnalities are backward compatible.
+* the **patch** version is bumped on a bug fix.
+
 ## "Regular" release
 
 This lets the script decide if it's major or minor release.
@@ -18,7 +25,7 @@ git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/
 ```
 At this point, you may build and run tests to check that everything is OK. If you're confident, proceed with:
 ```sh
-./release_navitia.sh regular <canaltp_distant_repo_name>
+./release_navitia.sh <canaltp_distant_repo_name>
 ```
 Note: this script uses "vim", make sure it's installed on your machine.
 
@@ -33,7 +40,7 @@ Nota: `major` and `minor` invocations are possible but deprecated.
 
 Note: It is preferable but not mandatory to merge the hotfix PR before.
 ```sh
-./release_navitia.sh hotfix <canaltp_distant_repo_name>
+./release_navitia.sh <canaltp_distant_repo_name>
 ```
 A new branch has been created <release_x.yy.z> and the changelog is opened.
 Then the process is less automated (but still, instructions are given):

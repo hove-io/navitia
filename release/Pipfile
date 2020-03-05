@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pytest = "*"
+mock = "*"
 
 [packages]
 requests = "*"
@@ -12,3 +14,4 @@ pre-commit = "*"
 
 [requires]
 python_version = "2.7"
+
