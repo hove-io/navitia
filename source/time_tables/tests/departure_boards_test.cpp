@@ -1792,6 +1792,33 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_terminus) {
     BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
 }
 
+//  Check that there is no terminus_schedules on terminuses.
+BOOST_AUTO_TEST_CASE(terminus_schedule_on_terminus) {
+    ed::builder b("20181101");
+
+    b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto* data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
+    auto resp = pb_creator_dep.get_response();
+    BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
+
+    // Even for a day without circulation, no terminus_schedule on terminus.
+    navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3, 10, 0,
+                       std::numeric_limits<size_t>::max());
+    resp = pb_creator_no_dep.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
+}
+
 //  Check stop_schedules on partial terminuses.
 //  We check that no departure has priority over partial terminus
 BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
@@ -1835,34 +1862,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     BOOST_CHECK_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::no_departure_this_day);
 }
 
-//  Check that there is no terminus_schedules on terminuses.
-BOOST_AUTO_TEST_CASE(terminus_schedule_on_terminus) {
-    ed::builder b("20181101");
-
-    b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
-
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
-    auto* data_ptr = b.data.get();
-
-    navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_dep, "stop_point.uri=stop3", {}, {}, d("20181101T075500"), 86400, 3, 10, 0,
-                       std::numeric_limits<size_t>::max());
-    auto resp = pb_creator_dep.get_response();
-    BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
-
-    // Even for a day without circulation, no terminus_schedule on terminus.
-    navitia::PbCreator pb_creator_no_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator_no_dep, "stop_point.uri=stop3", {}, {}, d("20181102T075500"), 86400, 3, 10, 0,
-                       std::numeric_limits<size_t>::max());
-    resp = pb_creator_no_dep.get_response();
-
-    BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 0);
-}
-
-//  Check terminus_schedules on partial terminuses.
+//  Check that there is no terminus_schedules on partial terminuses.
 BOOST_AUTO_TEST_CASE(terminus_schedule_on_partial_terminus) {
     ed::builder b("20181101");
 

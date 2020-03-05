@@ -566,7 +566,6 @@ void terminus_schedules(PbCreator& pb_creator,
         const auto& jpp_dir = pb_creator.data->dataRaptor->jp_container.get(jp_ends_one_dir.direction);
         const auto& jp_dir = pb_creator.data->dataRaptor->jp_container.get(jpp_dir.jp_idx);
         const type::Route* route = pb_creator.data->pt_data->routes[jp_dir.route_idx.val];
-        const type::StopPoint* stop_point = pb_creator.data->pt_data->stop_points[jpp_dir.sp_idx.val];
 
         const auto routepoint_jpps = jp_ends_one_dir.jp_ends;
         const auto& route_point = jp_ends_one_dir.direction;
@@ -601,23 +600,6 @@ void terminus_schedules(PbCreator& pb_creator,
             }
         }
 
-        // If we have a calendar_id we have stop_times at the terminus and can use them to check
-        // if the current stop is a terminus or a partial terminus
-        if (calendar_id) {
-            // If all stop_times are on the terminus of their vj
-            // (stop_time order is equal to the order of the last stop_time of the vj)
-            if (is_terminus_for_all_stop_times(stop_times)) {
-                if (stop_point->stop_area == route->destination) {
-                    response_status[route_point] = pbnavitia::ResponseStatus::terminus;
-                    LOG4CPLUS_DEBUG(logger, " *** Terminus in calendar_id ***");
-                } else {
-                    // Otherwise it's a partial_terminus
-                    response_status[route_point] = pbnavitia::ResponseStatus::partial_terminus;
-                    LOG4CPLUS_DEBUG(logger, " *** Partial terminus in calendar_id ***");
-                }
-            }
-        }
-
         // If there is no departure for a request with "RealTime", Test existence of any departure with "base_schedule"
         // If departure with base_schedule is not empty, additional_information = active_disruption
         // Else additional_information = no_departure_this_day
@@ -625,26 +607,6 @@ void terminus_schedules(PbCreator& pb_creator,
             auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
             if (line_closed(navitia::seconds(duration), route, date)) {
                 resp_status = pbnavitia::ResponseStatus::no_active_circulation_this_day;
-            }
-
-            // If we have no calendar terminuses have no pick_up stop_time, we try to get drop_off time
-            // to see if it's just a terminus
-            if (!calendar_id) {
-                auto tmp_stop_times = routing::get_stop_times(
-                    routing::StopEvent::drop_off, routepoint_jpps, handler.date_time, handler.max_datetime,
-                    items_per_route_point, *pb_creator.data, navitia::type::RTLevel::Base);
-                // If there is stop_times and everyone of them is a terminus
-                if (!tmp_stop_times.empty() && is_terminus_for_all_stop_times(tmp_stop_times)) {
-                    // If we are on the main destination
-                    if (stop_point->stop_area == route->destination) {
-                        resp_status = pbnavitia::ResponseStatus::terminus;
-                        LOG4CPLUS_DEBUG(logger, " *** Terminus in !calendar_id ***");
-                    } else {
-                        // Otherwise it's a partial_terminus
-                        resp_status = pbnavitia::ResponseStatus::partial_terminus;
-                        LOG4CPLUS_DEBUG(logger, " *** Partial terminus in !calendar_id ***");
-                    }
-                }
             }
             response_status[route_point] = resp_status;
         }
