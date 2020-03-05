@@ -91,11 +91,16 @@ class Siri(RealtimeProxy):
         </x:Body>
     </x:Envelope>'
 
-    Then Navitia matches route-points in the response using {stop_code}, {route_code} and {line_code}.
-
     {datetime} is iso-formated: YYYY-mm-ddTHH:MM:ss.sss+HH:MM
-    {stop_code}, {route_code} and {line_code} are provided using the same code key, named after
-    the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
+    {requestor_ref} is a configuration parameter
+    {stop_code} is the stop_point code value, which type is the 'id' of the connector (or 'destination_id_tag' if provided in conf)
+    ex: for a connector "Siri_BOB", on stop_point_BOB, you should find in the Navitia stop_point response:
+        "codes": [
+           {
+                "type": "Siri_BOB",
+                "value": "Bobito:StopPoint:BOB:00021201:ITO"
+            }, ...
+    {nb_desired} is the requested number of next passages
 
     In practice it will look like:
     curl -X POST 'http://bobito.fr:8080/ProfilSiriKidfProducer-Bobito/SiriServices' -d '<x:Envelope
@@ -118,6 +123,10 @@ class Siri(RealtimeProxy):
             </GetStopMonitoring>
         </x:Body>
     </x:Envelope>'
+
+    Then Navitia matches route-points in the response using {stop_code}, {route_code} and {line_code}.
+    {stop_code}, {route_code} and {line_code} are provided using the same code key, named after
+    the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
     """
 
     def __init__(

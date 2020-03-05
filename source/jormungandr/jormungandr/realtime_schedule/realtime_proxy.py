@@ -155,8 +155,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         Update the stopschedule response with the new realtime passages
 
-        By default we remove all base schedule data and replace them with the realtime
-        Each proxy can define is own way to merge passages
+        By default, all base schedule data is removed and replaced with realtime data.
+        Each proxy can define its own way to merge passages.
 
         If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
         so we use the base schedule
