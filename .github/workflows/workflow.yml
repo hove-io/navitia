@@ -48,7 +48,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
-      run: cmake source
+      run: cmake -DSTRIP_SYMBOLS=ON source
     - name: make
       run:  make -j $(nproc)
     - name: tests
