@@ -99,16 +99,22 @@ class AbstractRidesharingService(object):
         return '{}_{}'.format(six.text_type(self.system_id), six.text_type(self.network))
 
     def record_internal_failure(self, message):
-        params = {'ridesharing_service_id': self._get_rs_id(), 'message': message,
-                  'ridesharing_service_url': self.service_url}
+        params = {
+            'ridesharing_service_id': self._get_rs_id(),
+            'message': message,
+            'ridesharing_service_url': self.service_url,
+        }
         new_relic.record_custom_event('ridesharing_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'ridesharing_service_id': self._get_rs_id(), 'status': status,
-                  'ridesharing_service_url': self.service_url}
+        params = {
+            'ridesharing_service_id': self._get_rs_id(),
+            'status': status,
+            'ridesharing_service_url': self.service_url,
+        }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_status', params)
 
@@ -116,8 +122,11 @@ class AbstractRidesharingService(object):
         """
         status can be in: ok, failure
         """
-        params = {'ridesharing_service_id': self._get_rs_id(), 'status': status,
-                  'ridesharing_service_url': self.service_url}
+        params = {
+            'ridesharing_service_id': self._get_rs_id(),
+            'status': status,
+            'ridesharing_service_url': self.service_url,
+        }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
 
