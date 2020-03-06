@@ -33,11 +33,15 @@ for submod in $submodules; do
 	head=`cat .git/modules/$module_path/refs/remotes/origin/HEAD` # eg. "ref: refs/remotes/origin/master"
 	remote_ref=`echo $head | sed "s%ref: refs/remotes/%%"` # eg. origin/master
 
+    echo "---------------------------"
+    echo $module_path
+    echo $head
+    echo $remote_ref
 	pushd $module_path > /dev/null
-		# Check whether the current commit is merged or contained in the remote HEAD
-		is_merged=`git branch --all --merged HEAD --no-color | grep $remote_ref`
+		# Check whether the current commit contained in the remote HEAD
 		contained=`git branch --all --contains HEAD --no-color | grep $remote_ref`
-		if [ -z "$is_merged" -a -z "$contained" ]; then
+        echo "contained $contained"
+		if [ -z "$contained" ]; then
 			_add_error "Submodule $module_path points to a commit not merged to its head ! "
 			_add_error " > submodule: $module_path"
 			_add_error " > commit: $sha1"
