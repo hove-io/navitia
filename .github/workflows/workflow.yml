@@ -28,7 +28,7 @@ jobs:
 
     strategy:
         matrix:
-            docker_image: [navitia/debian8_dev]
+            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
 
     container:
         image: ${{matrix.docker_image}}
@@ -101,7 +101,7 @@ jobs:
   check_artemis:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: check artemis
       run: ./source/scripts/checkJenkinsJob.sh Artemis
     - name: check artemis IDFM
