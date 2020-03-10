@@ -55,6 +55,11 @@ struct Dominates {
     }
 };
 
+// #define LOG_PARETO_FRONT
+// to activate logs of the updates of the pareto front of journeys
+// inside raptor
+#ifdef LOG_PARETO_FRONT
+
 struct ParetoFrontLogger {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
 
@@ -72,6 +77,12 @@ struct ParetoFrontLogger {
 };
 
 typedef ParetoFront<Journey, Dominates, ParetoFrontLogger> Solutions;
+
+#else
+
+typedef ParetoFront<Journey, Dominates> Solutions;
+
+#endif
 
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).

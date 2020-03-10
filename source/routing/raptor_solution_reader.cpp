@@ -602,7 +602,6 @@ void read_solutions(const RAPTOR& raptor,
                     const StartingPointSndPhase& end_point) {
     auto reader = RaptorSolutionReader<Visitor>(raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
                                                 accessibilite_params, transfer_penalty, end_point);
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
     const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_point.sp_idx);
     for (unsigned count = 1; count <= raptor.count; ++count) {
         auto& working_labels = raptor.labels[count];
@@ -622,15 +621,17 @@ void read_solutions(const RAPTOR& raptor,
                 make_bound_journey(working_labels.dt_pt(a.first), a.second,
                                    raptor.labels[0].dt_transfer(end_point.sp_idx), end_point_street_network_duration,
                                    count, raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
-            LOG4CPLUS_DEBUG(logger, "Journey from " << stop_point->uri << " count : " << count << std::endl << j);
+            LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
+                                                                  << std::endl
+                                                                  << j);
 
             if (reader.solutions.contains_better_than(j)) {
-                LOG4CPLUS_DEBUG(logger, "Journey discarded");
+                LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
 
                 continue;
             }
             try {
-                LOG4CPLUS_DEBUG(logger, "try to build journey ");
+                LOG4CPLUS_DEBUG(raptor.raptor_logger, "try to build journey ");
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
             } catch (stop_search&) {
             }
@@ -644,7 +645,7 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
     os << "(["
        << "departure_dt : " << navitia::str(j.departure_dt) << ", "
        << "arrival_dt : " << navitia::str(j.arrival_dt) << ", "
-       << "min_wainting_dur : " << j.min_waiting_dur << ", "
+       << "min_waiting_dur : " << j.min_waiting_dur << ", "
        << "transfer_dur : " << j.transfer_dur << "], ["
        << "nb sections : " << j.sections.size() << ", "
        << "nb extensions : " << unsigned(j.nb_vj_extentions) << "], "

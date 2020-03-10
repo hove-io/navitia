@@ -66,13 +66,7 @@ bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
             return arrival_dt <= that.arrival_dt;
         }
     }
-    // FIXME: I don't like this objective, for me, this is a
-    // transfer objective, but then you can return some solutions
-    // that we didn't return before.
-    // if (!(better_on_transfer(that, request_clockwise) && that.better_on_transfer(*this, request_clockwise))) {
-    //     // if they are not equal on transfer, we don't check min_waiting_dur
-    //     return true;
-    // }
+
     return min_waiting_dur >= that.min_waiting_dur;
 }
 
@@ -87,7 +81,10 @@ bool Journey::better_on_transfer(const Journey& that) const {
     return total_waiting_dur <= that.total_waiting_dur;
 }
 bool Journey::better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const {
-    // we consider the transfer sections also as walking sections
+    // we consider that the transfer duration as well as the street network duration are
+    // walking duration
+    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it reduces the walking duration by at least transfer_penalty
     return sn_dur + transfer_dur + transfer_penalty * sections.size()
            <= that.sn_dur + that.transfer_dur + transfer_penalty * that.sections.size();
     ;

@@ -136,10 +136,6 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                      const boost::optional<uint32_t>& timeframe_duration) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    LOG4CPLUS_TRACE(logger, "direct_path_duration : "
-                                << direct_path_duration.get_value_or(time_duration(boost::date_time::not_a_date_time))
-                                << " max_duration : " << max_duration);
-
     std::vector<Path> pathes;
 
     // We loop on datetimes, but in practice there's always only one
@@ -181,8 +177,6 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
 
             // Remove direct path
             filter_direct_path(raptor_journeys);
-
-            LOG4CPLUS_DEBUG(logger, "after filter direct path :  " << raptor_journeys.size() << " solutions");
 
             // filter joureys that are too late.....with the magic formula...
             NightBusFilter::Params params{request_date_secs, clockwise, night_bus_filter_max_factor,
@@ -1366,8 +1360,6 @@ void make_response(navitia::PbCreator& pb_creator,
                    const int32_t night_bus_filter_base_factor,
                    const boost::optional<uint32_t>& timeframe_duration,
                    const uint32_t depth) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
-
     // Create datetime
     auto datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
     if (pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1392,20 +1384,6 @@ void make_response(navitia::PbCreator& pb_creator,
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                  "The entry point: " + destination.uri + " is not valid");
         return;
-    }
-
-    for (const auto& stop_point_iter : *departures) {
-        SpIdx sp_idx = stop_point_iter.first;
-        auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
-        LOG4CPLUS_DEBUG(logger, "departure : " << stop_point->uri << " distance : "
-                                               << navitia::str(stop_point_iter.second.total_seconds()));
-    }
-
-    for (const auto& stop_point_iter : *destinations) {
-        SpIdx sp_idx = stop_point_iter.first;
-        auto stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
-        LOG4CPLUS_DEBUG(logger, "destination : " << stop_point->uri << " distance : "
-                                                 << navitia::str(stop_point_iter.second.total_seconds()));
     }
 
     // case 3 : departure or destination are emtpy

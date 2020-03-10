@@ -96,6 +96,8 @@ struct RAPTOR {
     // set to store if the stop_point is valid
     boost::dynamic_bitset<> valid_stop_points;
 
+    log4cplus::Logger raptor_logger;
+
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
           best_labels_pts(data.pt_data->stop_points),
@@ -105,7 +107,8 @@ struct RAPTOR {
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
-          valid_stop_points(data.pt_data->stop_points.size()) {
+          valid_stop_points(data.pt_data->stop_points.size()),
+          raptor_logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"))) {
         labels.assign(10, data.dataRaptor->labels_const);
         first_pass_labels.assign(10, data.dataRaptor->labels_const);
     }
@@ -239,10 +242,7 @@ struct RAPTOR {
 
     ~RAPTOR() = default;
 
-    std::string print_jpps_from_sp();
-    std::string print_current_labels();
     std::string print_all_labels();
-    std::string print_best_labels();
     std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
 };
 
