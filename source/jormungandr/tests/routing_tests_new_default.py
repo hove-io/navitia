@@ -430,6 +430,11 @@ class TestNewDefaultJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefault
     pass
 
 
+@config({"scenario": "new_default"})
+class TestNewDefaultJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+
 @dataset({"main_routing_test": {"scenario": "new_default"}})
 class TestTaxiNewDefault(NewDefaultScenarioAbstractTestFixture):
     def test_taxi_with_new_default(self):

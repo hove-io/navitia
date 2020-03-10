@@ -79,14 +79,14 @@ def sort_regions(regions_list):
 
 def compute_regions(args):
     """
-    method computing the region the journey has to be computed on
-    The complexity comes from the fact that the regions in jormungandr can overlap.
+    Method computing the possible regions on which the journey can be queried
+    The complexity comes from the fact that the regions in Jormungandr can overlap.
 
-    return the kraken instance keys
+    Rules are :
+    - Fetch the different regions that can be used for 'origin' and 'destination'
+    - Intersect both lists and sort it
 
-    rules are easy:
-    we fetch the different regions the user can use for 'origin' and 'destination'
-    we do the intersection and sort the list
+    :return: Kraken instance keys
     """
     from_regions = set()
     to_regions = set()
@@ -127,16 +127,15 @@ def compute_regions(args):
 
 
 def compute_possible_region(region, args):
+    """
+    :return:    If region is set in the query, return it
+                If not, return a list of possible regions for the query
+    """
     if region:
-        region_obj = i_manager.get_region(region)
-
-    if not region:
-        # TODO how to handle lon/lat ? don't we have to override args['origin'] ?
-        possible_regions = compute_regions(args)
+        return [i_manager.get_region(region)]
     else:
-        possible_regions = [region_obj]
-
-    return possible_regions
+        # TODO: how to handle lon/lat ? don't we have to override args['origin'] ?
+        return compute_regions(args)
 
 
 class JourneyCommon(ResourceUri, ResourceUtc):
@@ -457,7 +456,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             # retrocompatibilty handling
             args['data_freshness'] = 'realtime' if args['disruption_active'] is True else 'base_schedule'
 
-        # TODO : Changer le protobuff pour que ce soit propre
+        # TODO : Change protobuff to be cleaner
         if args['destination_mode'] == 'vls':
             args['destination_mode'] = 'bss'
         if args['origin_mode'] == 'vls':

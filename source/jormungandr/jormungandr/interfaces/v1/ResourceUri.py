@@ -59,7 +59,7 @@ class ResourceUri(StatedResource):
             self.get_decorators.append(clean_links())
 
         if authentication:
-            # some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
+            # Some rare endpoints (eg journey) must handle the authentication by themselves, thus deactivate it
             # by default ALWAYS use authentication=True
             self.get_decorators.append(authentication_required)
 
