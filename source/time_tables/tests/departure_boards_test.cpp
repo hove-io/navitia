@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
     }
 
-    // comparing terminus_schedule with above stop_schedules
+    // comparing terminus_schedule with above stop_schedules (function "departure_board")
     // same number of elements as terminus_schedules contains an element per destination but not route.
     {
         auto* data_ptr = b.data.get();
@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).date_times_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).stop_point().uri(), "stop1");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).pt_display_informations().direction(), "stop2");
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).stop_point().uri(), "stop1");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).pt_display_informations().direction(), "stop3");
     }
 
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_CHECK_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
     }
 
-    // No terminus_schedules on terminus for toute "A"
+    // No terminus_schedules on terminus for route "A"
     {
         auto* data_ptr = b.data.get();
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);

@@ -61,8 +61,8 @@ void terminus_schedules(PbCreator& pb_creator,
                         const pt::ptime date,
                         const uint32_t duration,
                         const uint32_t depth,
-                        const int count,
-                        const int start_page,
+                        const uint32_t count,
+                        const uint32_t start_page,
                         const size_t items_per_route_point);
 
 bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing);

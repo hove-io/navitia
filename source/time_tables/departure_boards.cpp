@@ -144,8 +144,8 @@ static void render(PbCreator& pb_creator,
                    const std::map<routing::JppIdx, pbnavitia::ResponseStatus>& response_status,
                    const std::map<routing::JppIdx, vector_dt_st>& map_route_stop_point,
                    const std::map<routing::JppIdx, first_and_last_stop_time>& map_route_point_first_last_st,
-                   const DateTime datetime,
-                   const DateTime max_datetime,
+                   const DateTime& datetime,
+                   const DateTime& max_datetime,
                    const boost::optional<const std::string> calendar_id,
                    const uint32_t depth) {
     pb_creator.action_period =
@@ -461,8 +461,8 @@ void terminus_schedules(PbCreator& pb_creator,
                         const pt::ptime date,
                         const uint32_t duration,
                         const uint32_t depth,
-                        const int count,
-                        const int start_page,
+                        const uint32_t count,
+                        const uint32_t start_page,
                         const size_t items_per_route_point) {
     RequestHandle handler(pb_creator, date, duration, calendar_id);
     handler.init_jpp(request, forbidden_uris);
