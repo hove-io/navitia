@@ -2075,3 +2075,298 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().vehicle_journey_id(), "vehicle_journey:vj2");
     }
 }
+
+BOOST_AUTO_TEST_CASE(schedules_on_terminus_with_return_vj) {
+    /*
+     * Check that terminus_schedules on a terminus does not contain
+     * routes towards itself
+     *
+     * 1 line, 2 routes, bob and boby(one forward, and one backward)
+     * Bob    :  A -> B -> C
+     * Boby   :  C -> B -> A
+     */
+    ed::builder b("20160802");
+    b.vj("line:bob", "11111111", "", true, "vj1", "")
+        .route("route:bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
+    b.vj("line:bob", "11111111", "", true, "vj2", "")
+        .route("route:boby")("C", "10:15"_t)("B", "11:15"_t)("A", "12:15"_t);
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto* data_ptr = b.data.get();
+
+    auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
+
+    // We will have 2 stop_schedules, one with empty date_times.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=C", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                        nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        // Direction A -> C
+        auto stop_schedule = resp.stop_schedules(0);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bob");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+        // Direction C -> A
+        stop_schedule = resp.stop_schedules(1);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+
+    // We will have 1 terminus_schedules as the route toward terminus is excluded.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        terminus_schedules(pb_creator, "stop_point.uri=C", {}, {}, d("20160802T090000"),
+                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
+        // Direction C -> A
+        auto teminus_schedule = resp.terminus_schedules(0);
+        BOOST_CHECK_EQUAL(teminus_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(teminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_REQUIRE_EQUAL(teminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(schedules_with_routes_with_different_intermediate_stops) {
+    /*
+     * Check that terminus_schedules on A contains 2 routes with H as terminus
+     * Reason: There is no route serving all the stops served by two routes
+     * 1 line, 2 routes, bob and boby
+     * Bob    :  A -> B -> C -> D -> G -> H
+     * Boby   :  A -> B -> E -> F -> G -> H
+     *
+     *          C -> D
+     * A -> B           G -> H
+     *          E -> F
+     *
+     */
+    ed::builder b("20160802");
+    b.vj("line:bob", "11111111", "", true, "vj1", "")
+        .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t)("C", "11:30"_t)("G", "12:00"_t)("H", "12:30"_t);
+    b.vj("line:bob", "11111111", "", true, "vj2", "")
+        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t)("G", "12:15"_t)("H", "12:45"_t);
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto* data_ptr = b.data.get();
+
+    auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
+
+    // We will have 2 stop_schedules, one with date_times empty.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                        nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        // Direction A -> H
+        auto stop_schedule = resp.stop_schedules(0);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bob");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "H");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        // Direction A -> H
+        stop_schedule = resp.stop_schedules(1);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "H");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+
+    // We will also have 2 terminus_schedules as there is no route
+    // serving all the stops served by two routes
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"),
+                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
+        // Direction A -> H
+        auto teminus_schedule = resp.terminus_schedules(0);
+        BOOST_CHECK_EQUAL(teminus_schedule.route().name(), "route:bob");
+        BOOST_CHECK_EQUAL(teminus_schedule.pt_display_informations().direction(), "H");
+        BOOST_REQUIRE_EQUAL(teminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        // Direction A -> H
+        teminus_schedule = resp.terminus_schedules(1);
+        BOOST_CHECK_EQUAL(teminus_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(teminus_schedule.pt_display_informations().direction(), "H");
+        BOOST_REQUIRE_EQUAL(teminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(schedules_on_multi_Y_shaped_routes) {
+    /*
+     * Check multi-Y-shaped routes in terminus_schedules
+     *
+     * 1 line, 3 routes, bob, boby and bobette
+     * Bob:     A -> B -> C -> D
+     * Boby:    A -> B -> E -> F
+     * Bobette: A -> B -> E -> G
+     *                                      D
+     *                                  -
+     *                            C
+     *                      -
+     * A -------------- B                   F
+     *                      -           -
+     *                           E
+     *                                  -
+     *                                      G
+     */
+    ed::builder b("20160802");
+    b.vj("bob").route("bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t)("D", "11:30"_t);
+    b.vj("bob").route("boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t);
+    b.vj("bob").route("bobette")("A", "10:30"_t)("B", "11:00"_t)("E", "11:30"_t)("G", "12:00"_t);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto* data_ptr = b.data.get();
+
+    auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
+
+    // We will have three stop_schedules.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                        nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 3);
+        // Directions A -> B -> C -> D
+        auto stop_schedule = resp.stop_schedules(0);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "bob");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "D");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        // Directions A -> B -> E -> G
+        stop_schedule = resp.stop_schedules(1);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "bobette");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "G");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 30, 00));
+
+        // Directions A -> B -> E -> F
+        stop_schedule = resp.stop_schedules(2);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "boby");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "F");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+    // We will have three terminus_schedules as above.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 3);
+        // Directions A -> B -> C -> D
+        auto terminus_schedule = resp.terminus_schedules(0);
+        BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bob");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
+        BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        // Directions A -> B -> E -> G
+        terminus_schedule = resp.terminus_schedules(1);
+        BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bobette");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "G");
+        BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(10, 30, 00));
+        // Directions A -> B -> E -> F
+        terminus_schedule = resp.terminus_schedules(2);
+        BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "boby");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "F");
+        BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(schedules_on_circular_routes) {
+    /*
+     * Check that terminus_schedules on a terminus contains circular routes towards itself
+     *
+     * 1 line, 2 routes, bob and boby
+     * Bob    :  A -> B -> C
+     * Boby   :  A -> B -> C -> A
+     */
+    ed::builder b("20160802");
+    b.vj("line:bob", "11111111", "", true, "vj1", "")
+        .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t);
+    b.vj("line:bob", "11111111", "", true, "vj2", "")
+        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("C", "11:15"_t) ("A", "11:45"_t);
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto* data_ptr = b.data.get();
+
+    auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
+
+    // We should have 2 stop_schedules
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                        nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        // Direction A -> B -> C
+        auto stop_schedule = resp.stop_schedules(0);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bob");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        // Direction A -> B -> C -> A
+        stop_schedule = resp.stop_schedules(1);
+        BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 15, 00));
+    }
+
+    // We should have 1 terminus_schedules with 2 date_times as two routes are merged.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"),
+                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
+        // Direction A -> B -> C -> A
+        auto teminus_schedule = resp.terminus_schedules(0);
+        BOOST_CHECK_EQUAL(teminus_schedule.route().name(), "route:boby");
+        BOOST_CHECK_EQUAL(teminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_REQUIRE_EQUAL(teminus_schedule.date_times_size(), 2);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(0).time(), time_to_int(10, 00, 00));
+        BOOST_CHECK_EQUAL(teminus_schedule.date_times(1).time(), time_to_int(10, 15, 00));
+    }
+}

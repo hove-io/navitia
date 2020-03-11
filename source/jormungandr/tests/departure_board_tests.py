@@ -150,7 +150,8 @@ def get_real_notes(obj, full_response):
 def is_valid_terminus_schedule(terminus_schedule, tester, only_time=False):
     is_valid_stop_point(get_not_null(terminus_schedule, "stop_point"), depth_check=2)
     is_valid_route(get_not_null(terminus_schedule, "route"), depth_check=2)
-
+    if len(terminus_schedule.get('date_times', [])) == 0:
+        return
     datetimes = get_not_null(terminus_schedule, "date_times")
     assert len(datetimes) != 0, "we have to have date_times"
     for dt_wrapper in datetimes:
@@ -406,6 +407,7 @@ class TestDepartureBoard(AbstractTestFixture):
         is_valid_notes(response["notes"])
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
+        is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
         assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
@@ -424,10 +426,10 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_terminus_schedules_on_terminus(self):
         """
-        No terminus_schedules on terminus
+        No terminus_schedules on terminus 'Tstop3' as there is no route/vj of return.
         """
         response = self.query_region("stop_areas/Tstop3/terminus_schedules?" "from_datetime=20120615T080000")
-
+        is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
         is_valid_notes(response["notes"])
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 0
@@ -449,7 +451,7 @@ class TestDepartureBoard(AbstractTestFixture):
         same as stop_schedules
         """
         response = self.query_region("stop_areas/Tstop1/terminus_schedules?" "from_datetime=20120620T080000")
-
+        is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
         is_valid_notes(response["notes"])
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
@@ -680,9 +682,7 @@ class TestDepartureBoard(AbstractTestFixture):
         is_valid_notes(response["notes"])
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
-
         is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
-
         assert len(response["terminus_schedules"][0]["date_times"]) == 2
         assert response["terminus_schedules"][0]["stop_point"]["name"] == "ODTstop1"
         assert response["terminus_schedules"][0]["route"]["name"] == "B"
