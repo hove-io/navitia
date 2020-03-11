@@ -2123,8 +2123,8 @@ BOOST_AUTO_TEST_CASE(schedules_on_terminus_with_return_vj) {
     // We will have 1 terminus_schedules as the route toward terminus is excluded.
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=C", {}, {}, d("20160802T090000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=C", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
@@ -2153,9 +2153,11 @@ BOOST_AUTO_TEST_CASE(schedules_with_routes_with_different_intermediate_stops) {
      */
     ed::builder b("20160802");
     b.vj("line:bob", "11111111", "", true, "vj1", "")
-        .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t)("C", "11:30"_t)("G", "12:00"_t)("H", "12:30"_t);
+        .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t)("C", "11:30"_t)("G", "12:00"_t)("H",
+                                                                                                            "12:30"_t);
     b.vj("line:bob", "11111111", "", true, "vj2", "")
-        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t)("G", "12:15"_t)("H", "12:45"_t);
+        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t)("G", "12:15"_t)("H",
+                                                                                                             "12:45"_t);
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
@@ -2192,8 +2194,8 @@ BOOST_AUTO_TEST_CASE(schedules_with_routes_with_different_intermediate_stops) {
     // serving all the stops served by two routes
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
@@ -2320,7 +2322,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_circular_routes) {
     b.vj("line:bob", "11111111", "", true, "vj1", "")
         .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t);
     b.vj("line:bob", "11111111", "", true, "vj2", "")
-        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("C", "11:15"_t) ("A", "11:45"_t);
+        .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("C", "11:15"_t)("A", "11:45"_t);
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
@@ -2355,8 +2357,8 @@ BOOST_AUTO_TEST_CASE(schedules_on_circular_routes) {
     // We should have 1 terminus_schedules with 2 date_times as two routes are merged.
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"),
-                           86400, 0, 10, 0, std::numeric_limits<size_t>::max());
+        terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
