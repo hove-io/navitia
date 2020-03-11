@@ -177,10 +177,10 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
     return result;
 }
 
-struct ProjectionGetterOnFly {
+struct ProjectionGetterOnCoords {
     const GeoRef::ProjectedCoords& projected_coords;
     const type::Mode_e mode = type::Mode_e::Walking;
-    ProjectionGetterOnFly(const GeoRef::ProjectedCoords& projected_coords, const type::Mode_e mode)
+    ProjectionGetterOnCoords(const GeoRef::ProjectedCoords& projected_coords, const type::Mode_e mode)
         : projected_coords(projected_coords), mode(mode) {}
     const georef::ProjectionData& operator()(const type::GeographicalCoord& coord) const {
         const auto& projection = projected_coords.at(coord);
@@ -195,10 +195,10 @@ DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& rad
         return {};
     }
 
-    ProjectionGetterOnFly projection_getter(geo_ref.projected_coords,
-                                            mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode);
+    ProjectionGetterOnCoords projection_getter(geo_ref.projected_coords,
+                                               mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode);
     return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord,
-                                                ProjectionGetterOnFly>(radius, dest_coords, projection_getter);
+                                                ProjectionGetterOnCoords>(radius, dest_coords, projection_getter);
 }
 
 template <class Visitor>
