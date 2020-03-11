@@ -30,7 +30,7 @@ www.navitia.io
 
 #include "dijkstra_path_finder.h"
 
-#include "type/geographical_coord.h"
+#include "georef/georef.h"
 #include "utils/logger.h"
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
@@ -178,13 +178,16 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
 }
 
 struct ProjectionGetterOnCoords {
-    const GeoRef::ProjectedCoords& projected_coords;
+    const GeoRef& georef;
     const type::Mode_e mode = type::Mode_e::Walking;
-    ProjectionGetterOnCoords(const GeoRef::ProjectedCoords& projected_coords, const type::Mode_e mode)
-        : projected_coords(projected_coords), mode(mode) {}
-    const georef::ProjectionData& operator()(const type::GeographicalCoord& coord) const {
-        const auto& projection = projected_coords.at(coord);
-        return projection[mode];
+    ProjectionGetterOnCoords(const GeoRef& georef, const type::Mode_e mode) : georef(georef), mode(mode) {}
+    const georef::ProjectionData operator()(const type::GeographicalCoord& coord) const {
+        try {
+            const auto& projection = georef.projected_coords.at(coord);
+            return projection[mode];
+        } catch (std::out_of_range& e) {
+            return georef::ProjectionData{coord, georef, mode};
+        }
     }
 };
 
@@ -195,8 +198,7 @@ DijkstraPathFinder::get_duration_with_dijkstra(const navitia::time_duration& rad
         return {};
     }
 
-    ProjectionGetterOnCoords projection_getter(geo_ref.projected_coords,
-                                               mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode);
+    ProjectionGetterOnCoords projection_getter(geo_ref, mode == type::Mode_e::Car ? nt::Mode_e::Walking : mode);
     return start_dijkstra_and_fill_duration_map<DijkstraPathFinder::coord_uri, type::GeographicalCoord,
                                                 ProjectionGetterOnCoords>(radius, dest_coords, projection_getter);
 }
