@@ -205,6 +205,9 @@ struct GeoRef {
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
     std::vector<ProjectionByMode> projected_stop_points = {};
 
+    typedef std::unordered_map<nt::GeographicalCoord, ProjectionByMode> ProjectedCoords;
+    ProjectedCoords projected_coords;
+
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
