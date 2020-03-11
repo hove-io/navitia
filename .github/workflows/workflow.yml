@@ -29,7 +29,7 @@ jobs:
 
     strategy:
         matrix:
-            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/ubuntu18_dev]
+            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
 
     container:
         image: ${{matrix.docker_image}}
