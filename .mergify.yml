@@ -3,7 +3,6 @@ pull_request_rules:
     conditions:
       - "#approved-reviews-by>=2"
       - "#changes-requested-reviews-by=0"
-      - "#commented-reviews-by=0"
       - status-success~=build
       - status-success=check_submodules
       - status-success=precommit
