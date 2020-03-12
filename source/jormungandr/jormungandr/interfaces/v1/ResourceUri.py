@@ -149,7 +149,14 @@ class add_computed_resources(object):
                 collection in ['stop_areas', 'stop_points', 'lines', 'routes', 'addresses']
                 and "region" in kwargs
             ):
-                for api in ['route_schedules', 'stop_schedules', 'arrivals', 'departures', "places_nearby"]:
+                for api in [
+                    'route_schedules',
+                    'stop_schedules',
+                    'arrivals',
+                    'departures',
+                    "places_nearby",
+                    "terminus_schedules",
+                ]:
                     data['links'].append(
                         {"href": url_for("v1." + api, **kwargs), "rel": api, "type": api, "templated": templated}
                     )

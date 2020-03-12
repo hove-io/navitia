@@ -186,6 +186,7 @@ class add_coverage_link(generate_links):
             "arrivals": "stop_areas/{stop_areas.id}",
             "stop_schedules": "stop_areas/{stop_areas.id}",
             "route_schedules": "lines/{lines.id}",
+            "terminus_schedules": "stop_areas/{stop_areas.id}",
         }
 
     def __call__(self, f):

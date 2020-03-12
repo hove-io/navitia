@@ -325,11 +325,13 @@ struct PbCreator {
     bool empty_journeys();
     pbnavitia::RouteSchedule* add_route_schedules();
     pbnavitia::StopSchedule* add_stop_schedules();
+    pbnavitia::StopSchedule* add_terminus_schedules();
     int route_schedules_size();
     pbnavitia::Passage* add_next_departures();
     pbnavitia::Passage* add_next_arrivals();
     void make_paginate(const int, const int, const int, const int);
     int departure_boards_size();
+    int terminus_schedules_size();
     int stop_schedules_size();
     int traffic_reports_size();
     int line_reports_size();
