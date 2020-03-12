@@ -36,8 +36,9 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "utils/serialization_vector.h"
 #include "type/time_duration.h"
+#include "georef/georef_types.h"
+#include "georef/projection_data.h"
 
-#include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/utility.hpp>
@@ -80,40 +81,6 @@ struct Vertex {
         ar& coord;
     }
 };
-
-/** Edge properties (used to be "segment")*/
-
-struct Edge {
-    nt::idx_t way_idx = nt::invalid_idx;   //< indexing street name
-    nt::idx_t geom_idx = nt::invalid_idx;  // geometry index
-    navitia::time_duration duration = {};  // duration of the edge
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& way_idx& geom_idx& duration;
-    }
-    Edge(nt::idx_t wid, navitia::time_duration dur) : way_idx(wid), duration(dur) {}
-    Edge() {}
-};
-
-// Plein de typedefs pour nous simpfilier un peu la vie
-
-/** Définit le type de graph que l'on va utiliser
- *
- * Les arcs sortants et la liste des nœuds sont représentés par des vecteurs
- * les arcs sont orientés
- * les propriétés des nœuds et arcs sont les classes définies précédemment
- */
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
-
-/// Représentation d'un nœud dans le g,raphe
-typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
-
-/// Représentation d'un arc dans le graphe
-typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-
-/// Pour parcourir les segements du graphe
-typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
 /** le numéro de la maison :
     il représente un point dans la rue, voie */
@@ -238,6 +205,9 @@ struct GeoRef {
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
     std::vector<ProjectionByMode> projected_stop_points = {};
 
+    typedef std::unordered_map<nt::GeographicalCoord, ProjectionByMode> ProjectedCoords;
+    ProjectedCoords projected_coords;
+
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
@@ -347,60 +317,6 @@ private:
     edge_t nearest_edge(const type::GeographicalCoord& coordinates,
                         const proximitylist::ProximityList<vertex_t>& prox,
                         double horizon = 500) const;
-};
-
-/** When given a coordinate, we have to associate it with the street network.
- *
- * This structure handle this.
- *
- * It contains
- *   - 2 possible nodes (each end of the edge where the coordinate has been projected)
- *   - the coordinate of the projection
- *   - the 2 distances between the projected point and the ends (NOTE, this is not the distance between the coordinate
- * and the ends)
- *
- */
-struct ProjectionData {
-    // enum used to acces the nodes and the distances
-    enum class Direction { Source = 0, Target, size };
-    // 2 possible nodes (each end of the edge where the coordinate has been projected)
-    flat_enum_map<Direction, vertex_t> vertices;
-
-    // The edge we projected on. Needed since we can't be sure to get the right edge with only the source and the target
-    // because of parallel edges.
-    Edge edge;
-
-    // has the projection been successful?
-    bool found = false;
-
-    // The coordinate projected on the edge
-    type::GeographicalCoord projected;
-
-    // the original coordinate before projection
-    type::GeographicalCoord real_coord;
-
-    // Distance between the projected point and the ends
-    flat_enum_map<Direction, double> distances{{{-1, -1}}};
-
-    ProjectionData() {}
-    // Project the coordinate on the graph corresponding to the transportation mode of the offset
-    ProjectionData(const type::GeographicalCoord& coord, const GeoRef& sn, type::Mode_e mode = type::Mode_e::Walking);
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int) {
-        ar& vertices& projected& distances& found& real_coord& edge;
-    }
-
-    void init(const type::GeographicalCoord& coord, const GeoRef& sn, const edge_t& nearest_edge);
-
-    // syntaxic sugar
-    vertex_t operator[](Direction d) const {
-        if (!found) {
-            throw proximitylist::NotFound();
-        }
-
-        return vertices[d];
-    }
 };
 
 /** Nommage d'un POI (point of interest). **/

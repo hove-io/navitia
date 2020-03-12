@@ -566,10 +566,24 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
     this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
 
+    this->projected_coords.clear();
+    this->projected_coords.reserve(stop_points.size());
+
     for (const type::StopPoint* stop_point : stop_points) {
         std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
 
+        /*
+         * We build 2 different caches :
+         *  1. projected_stop_points : based on the stop_point id for NewDefault
+         *  2. projected_coords : based on GeographicalCoord for distributed.
+         *
+         *  TODO: remove projected_stop_points and replace it with the other one.
+         *  This could save us spave, but the Dijkstra related interface for Georef
+         *  needs a lot of rework.
+         */
         this->projected_stop_points.push_back(pair.first);
+        this->projected_coords[stop_point->coord] = pair.first;
+
         if (pair.second) {
             messages[error::matched] += 1;
         } else {
