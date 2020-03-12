@@ -33,3 +33,5 @@ jobs:
         path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
+    - name: trigger navitia debian packages publishing on internal server
+      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/publish_navitia_release_packages_from_github/build
