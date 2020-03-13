@@ -1860,6 +1860,10 @@ pbnavitia::StopSchedule* PbCreator::add_stop_schedules() {
     return response.add_stop_schedules();
 }
 
+pbnavitia::StopSchedule* PbCreator::add_terminus_schedules() {
+    return response.add_terminus_schedules();
+}
+
 int PbCreator::route_schedules_size() {
     return response.route_schedules_size();
 }
@@ -2192,6 +2196,10 @@ void PbCreator::make_paginate(const int total_result,
 
 int PbCreator::departure_boards_size() {
     return response.departure_boards_size();
+}
+
+int PbCreator::terminus_schedules_size() {
+    return response.terminus_schedules_size();
 }
 
 int PbCreator::stop_schedules_size() {

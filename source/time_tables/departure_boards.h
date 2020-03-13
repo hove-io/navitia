@@ -54,6 +54,17 @@ void departure_board(PbCreator& pb_creator,
                      const type::RTLevel rt_level,
                      const size_t items_per_route_point);
 
+void terminus_schedules(PbCreator& pb_creator,
+                        const std::string& request,
+                        const boost::optional<const std::string>& calendar_id,
+                        const std::vector<std::string>& forbidden_uris,
+                        const pt::ptime date,
+                        const uint32_t duration,
+                        const uint32_t depth,
+                        const uint32_t count,
+                        const uint32_t start_page,
+                        const size_t items_per_route_point);
+
 bool between_opening_and_closing(const time_duration& me, const time_duration& opening, const time_duration& closing);
 
 time_duration length_of_time(const time_duration& duration_1, const time_duration& duration_2);

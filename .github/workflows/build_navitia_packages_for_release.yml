@@ -1,9 +1,8 @@
-name: Build Navitia Packages
+name: Build Navitia Packages For Release
 
 on:
   push:
     branches:
-      - dev
       - release
 
 
@@ -34,5 +33,5 @@ jobs:
         path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
-    - name: trigger deploy on artemis
-      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
+    - name: trigger jenkins to publish Artifacts on internal server
+      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/publish_navitia_release_packages_from_github/build

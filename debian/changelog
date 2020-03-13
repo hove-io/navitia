@@ -1,3 +1,20 @@
+navitia2 (3.7.0) unstable; urgency=low
+
+  * CI: trigger Jenkins for publishing packages on internal server  <https://github.com/CanalTP/navitia/pull/3170>
+  * CI: split build navitia debian package for release and dev  <https://github.com/CanalTP/navitia/pull/3156>
+  * CI: Several actions to increase the CI quality  <https://github.com/CanalTP/navitia/pull/3162>
+  * CI: Publish images with condition  <https://github.com/CanalTP/navitia/pull/3168>
+  * Doc: Bump rake from 10.4.2 to 12.3.3 in /documentation/slate  <https://github.com/CanalTP/navitia/pull/3155>
+  * Doc: Actual definition of 'max_duration'  <https://github.com/CanalTP/navitia/pull/3165>
+  * Mergify: We already have a rule that says we are good to go after 2 approvals.  <https://github.com/CanalTP/navitia/pull/3150>
+  * EndPoint: new end point terminus_schedules - beta  <https://github.com/CanalTP/navitia/pull/3160>
+  * kraken: GeoRef- Add projection cache to `get_duration_with_dijkstra`  <https://github.com/CanalTP/navitia/pull/3167>
+  * jormungandr: Add RideSharing WS url in newrelic  <https://github.com/CanalTP/navitia/pull/3163>
+  * Jormungandr: Details about call to Siri  <https://github.com/CanalTP/navitia/pull/3157>
+  * Jormungandr: Fix status tests  <https://github.com/CanalTP/navitia/pull/3154>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 13 Mar 2020 08:03:15 +0100
+
 navitia2 (3.6.0) unstable; urgency=low
 
   * [CI] trigger deploy navitia on artemis after build packages  <https://github.com/CanalTP/navitia/pull/3146>

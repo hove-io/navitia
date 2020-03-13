@@ -342,6 +342,10 @@ class StopSchedulesSerializer(SchedulesSerializer):
     stop_schedules = schedule.StopScheduleSerializer(many=True, display_none=True)
 
 
+class TerminusSchedulesSerializer(SchedulesSerializer):
+    terminus_schedules = schedule.TerminusScheduleSerializer(many=True, display_none=True)
+
+
 class RouteSchedulesSerializer(SchedulesSerializer):
     route_schedules = schedule.RouteScheduleSerializer(many=True, display_none=True)
 

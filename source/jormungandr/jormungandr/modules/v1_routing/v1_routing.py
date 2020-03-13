@@ -296,4 +296,12 @@ class V1Routing(AModule):
             endpoint="calendars",
         )
 
+        self.add_resource(
+            Schedules.TerminusSchedules,
+            region + '<uri:uri>/terminus_schedules',
+            coord + '<uri:uri>/terminus_schedules',
+            '/terminus_schedules',
+            endpoint='terminus_schedules',
+        )
+
         self.add_resource(JSONSchema.Schema, '/schema', endpoint="schema")

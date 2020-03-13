@@ -41,6 +41,7 @@ www.navitia.io
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 #include <boost/geometry/multi/geometries/register/multi_linestring.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace navitia {
 namespace type {
@@ -181,6 +182,19 @@ typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
 typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
 }  // namespace type
 }  // namespace navitia
+
+namespace std {
+template <>
+struct hash<navitia::type::GeographicalCoord> {
+    std::size_t operator()(const navitia::type::GeographicalCoord& coord) const {
+        std::size_t seed = 0;
+        boost::hash_combine(seed, coord.lon());
+        boost::hash_combine(seed, coord.lat());
+        return seed;
+    }
+};
+}  // namespace std
+
 namespace boost {
 namespace serialization {
 template <class Archive>

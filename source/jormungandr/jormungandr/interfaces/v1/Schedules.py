@@ -291,6 +291,13 @@ class StopSchedules(Schedules):
         )
 
 
+class TerminusSchedules(Schedules):
+    def __init__(self):
+        super(TerminusSchedules, self).__init__(
+            "terminus_schedules", output_type_serializer=api.TerminusSchedulesSerializer
+        )
+
+
 class add_passages_links:
     """
     delete disruption links and put the disruptions directly in the owner objets
