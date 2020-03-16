@@ -70,6 +70,7 @@ class FakeModel(object):
         priority,
         is_free,
         is_open_data,
+        max_nb_journeys,
         scenario='new_default',
         equipment_details_providers=[],
         poi_dataset=None,
@@ -80,6 +81,7 @@ class FakeModel(object):
         self.scenario = scenario
         self.equipment_details_providers = equipment_details_providers
         self.poi_dataset = poi_dataset
+        self.max_nb_journeys = max_nb_journeys
 
 
 class AbstractTestFixture(unittest.TestCase):
@@ -210,11 +212,19 @@ class AbstractTestFixture(unittest.TestCase):
             is_open_data = cls.data_sets[name].get('is_open_data', False)
             scenario = cls.data_sets[name].get('scenario', 'new_default')
             poi_dataset = cls.data_sets[name].get('poi_dataset', None)
+            max_nb_journeys = cls.data_sets[name].get('max_nb_journeys', None)
             cls.mocks.append(
                 mock.patch.object(
                     i_manager.instances[name],
                     'get_models',
-                    return_value=FakeModel(priority, is_free, is_open_data, scenario, poi_dataset=poi_dataset),
+                    return_value=FakeModel(
+                        priority=priority,
+                        is_free=is_free,
+                        is_open_data=is_open_data,
+                        scenario=scenario,
+                        poi_dataset=poi_dataset,
+                        max_nb_journeys=max_nb_journeys,
+                    ),
                 )
             )
 

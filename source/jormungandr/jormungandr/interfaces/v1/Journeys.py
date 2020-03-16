@@ -41,7 +41,7 @@ from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -57,7 +57,6 @@ from navitiacommon.parser_args_type import (
     DepthArgument,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
-from jormungandr.scenarios import new_default, distributed
 from jormungandr.fallback_modes import FallbackModes
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -473,11 +472,6 @@ class Journeys(JourneyCommon):
                 if args.get(tmp) is None:
                     args[tmp] = getattr(mod, tmp)
 
-        if region:
-            _set_specific_params(i_manager.instances[region])
-        else:
-            _set_specific_params(default_values)
-
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
@@ -499,7 +493,7 @@ class Journeys(JourneyCommon):
         responses = {}
         for r in possible_regions:
             self.region = r
-
+            _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)
 
             # Store the region in the 'g' object, which is local to a request
