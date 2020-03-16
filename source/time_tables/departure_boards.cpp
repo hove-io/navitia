@@ -65,6 +65,29 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
     return !stop_times.empty();
 }
 
+static void fill_first_last_date_times(PbCreator& pb_creator,
+                                       pbnavitia::ScheduleStopTime* date_time,
+                                       const std::pair<unsigned int, const navitia::type::StopTime*> stop_time,
+                                       const boost::optional<const std::string> calendar_id) {
+    const auto& st_calendar = navitia::StopTimeCalendar(stop_time.second, stop_time.first, calendar_id);
+    pb_creator.fill(&st_calendar, date_time, 0);
+}
+
+static void fill_basic_objects(PbCreator& pb_creator,
+                               pbnavitia::StopSchedule* schedule,
+                               const type::Route* route,
+                               const type::StopPoint* stop_point,
+                               const uint32_t depth) {
+    pb_creator.fill(stop_point, schedule->mutable_stop_point(), depth);
+    auto m_route = schedule->mutable_route();
+
+    pb_creator.fill(route, m_route, depth);
+    if (route->line != nullptr) {
+        auto m_line = m_route->mutable_line();
+        pb_creator.fill(route->line, m_line, 0);
+    }
+}
+
 static void render(PbCreator& pb_creator,
                    const std::map<RoutePointIdx, pbnavitia::ResponseStatus>& response_status,
                    const std::map<RoutePointIdx, vector_dt_st>& map_route_stop_point,
@@ -81,17 +104,10 @@ static void render(PbCreator& pb_creator,
         // Each schedule has a stop_point and a route
         const auto* stop_point = pb_creator.data->pt_data->stop_points[id_vec.first.second.val];
         const auto* route = pb_creator.data->pt_data->routes[id_vec.first.first.val];
-        pb_creator.fill(stop_point, schedule->mutable_stop_point(), depth);
 
-        auto m_route = schedule->mutable_route();
+        fill_basic_objects(pb_creator, schedule, route, stop_point, depth);
 
-        pb_creator.fill(route, m_route, depth);
-        if (route->line != nullptr) {
-            auto m_line = m_route->mutable_line();
-            pb_creator.fill(route->line, m_line, 0);
-        }
         auto pt_display_information = schedule->mutable_pt_display_informations();
-
         pb_creator.fill(route, pt_display_information, 0);
 
         // Now we fill the date_times
@@ -118,17 +134,13 @@ static void render(PbCreator& pb_creator,
         if (first_last_it != map_route_point_first_last_st.end()) {
             // first date time
             if (first_last_it->second.first) {
-                auto first_stop_time = *(first_last_it->second.first);
-                const auto& st_calendar =
-                    navitia::StopTimeCalendar(first_stop_time.second, first_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calendar, schedule->mutable_first_datetime(), 0);
+                fill_first_last_date_times(pb_creator, schedule->mutable_first_datetime(),
+                                           *(first_last_it->second.first), calendar_id);
             }
             // last date time
             if (first_last_it->second.second) {
-                auto last_stop_time = *(first_last_it->second.second);
-                const auto& st_calendar =
-                    navitia::StopTimeCalendar(last_stop_time.second, last_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calendar, schedule->mutable_last_datetime(), 0);
+                fill_first_last_date_times(pb_creator, schedule->mutable_last_datetime(),
+                                           *(first_last_it->second.second), calendar_id);
             }
         }
 
@@ -153,30 +165,20 @@ static void render(PbCreator& pb_creator,
 
     for (const auto& id_vec : map_route_stop_point) {
         auto schedule = pb_creator.add_terminus_schedules();
+
         // Each schedule has a stop_point and a route
         const auto& jpp_dir = pb_creator.data->dataRaptor->jp_container.get(id_vec.first);
         const auto& jp_dir = pb_creator.data->dataRaptor->jp_container.get(jpp_dir.jp_idx);
         const type::Route* route = pb_creator.data->pt_data->routes[jp_dir.route_idx.val];
         const type::StopPoint* stop_point = pb_creator.data->pt_data->stop_points[jpp_dir.sp_idx.val];
-        pb_creator.fill(stop_point, schedule->mutable_stop_point(), depth);
 
-        auto m_route = schedule->mutable_route();
+        fill_basic_objects(pb_creator, schedule, route, stop_point, depth);
 
-        pb_creator.fill(route, m_route, depth);
-        if (route->line != nullptr) {
-            auto m_line = m_route->mutable_line();
-            pb_creator.fill(route->line, m_line, 0);
-        }
         auto pt_display_information = schedule->mutable_pt_display_informations();
-
         pb_creator.fill(route, pt_display_information, 0);
-
-        // add informations for debug. TODO : clean that
         const auto& jpc = pb_creator.data->dataRaptor->jp_container;
         pt_display_information->set_direction(
             pb_creator.data->pt_data->stop_points[jpc.get(jp_dir.jpps.back()).sp_idx.val]->stop_area->name);
-        pt_display_information->set_description(std::string("JP = ") + std::to_string(jpp_dir.jp_idx.val)
-                                                + " JPP = " + std::to_string(id_vec.first.val));
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
@@ -202,17 +204,13 @@ static void render(PbCreator& pb_creator,
         if (first_last_it != map_route_point_first_last_st.end()) {
             // first date time
             if (first_last_it->second.first) {
-                auto first_stop_time = *(first_last_it->second.first);
-                const auto& st_calendar =
-                    navitia::StopTimeCalendar(first_stop_time.second, first_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calendar, schedule->mutable_first_datetime(), 0);
+                fill_first_last_date_times(pb_creator, schedule->mutable_first_datetime(),
+                                           *(first_last_it->second.first), calendar_id);
             }
             // last date time
             if (first_last_it->second.second) {
-                auto last_stop_time = *(first_last_it->second.second);
-                const auto& st_calendar =
-                    navitia::StopTimeCalendar(last_stop_time.second, last_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calendar, schedule->mutable_last_datetime(), 0);
+                fill_first_last_date_times(pb_creator, schedule->mutable_last_datetime(),
+                                           *(first_last_it->second.second), calendar_id);
             }
         }
 
