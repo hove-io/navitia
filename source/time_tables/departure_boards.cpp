@@ -65,6 +65,27 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
     return !stop_times.empty();
 }
 
+static void fill_date_times(PbCreator& pb_creator,
+                            pbnavitia::StopSchedule* schedule,
+                            const std::pair<unsigned int, const navitia::type::StopTime*> dt_st,
+                            const boost::optional<const std::string> calendar_id) {
+    const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
+    // terminus or partial terminus
+    if (is_last_stoptime(st_calendar.stop_time)) {
+        return;
+    }
+    auto date_time = schedule->add_date_times();
+    pb_creator.fill(&st_calendar, date_time, 0);
+    if (dt_st.second != nullptr) {
+        auto vj = dt_st.second->vehicle_journey;
+        if (vj != nullptr) {
+            for (const auto& comment : pb_creator.data->pt_data->comments.get(*vj)) {
+                pb_creator.fill(&comment, date_time->mutable_properties()->add_notes(), 0);
+            }
+        }
+    }
+}
+
 static void fill_first_last_date_times(PbCreator& pb_creator,
                                        pbnavitia::ScheduleStopTime* date_time,
                                        const std::pair<unsigned int, const navitia::type::StopTime*> stop_time,
@@ -112,21 +133,7 @@ static void render(PbCreator& pb_creator,
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
-            const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
-            // terminus or partial terminus
-            if (is_last_stoptime(st_calendar.stop_time)) {
-                continue;
-            }
-            auto date_time = schedule->add_date_times();
-            pb_creator.fill(&st_calendar, date_time, 0);
-            if (dt_st.second != nullptr) {
-                auto vj = dt_st.second->vehicle_journey;
-                if (vj != nullptr) {
-                    for (const auto& comment : pb_creator.data->pt_data->comments.get(*vj)) {
-                        pb_creator.fill(&comment, date_time->mutable_properties()->add_notes(), 0);
-                    }
-                }
-            }
+            fill_date_times(pb_creator, schedule, dt_st, calendar_id);
         }
 
         // add first and last datetime
@@ -182,21 +189,7 @@ static void render(PbCreator& pb_creator,
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
-            const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
-            // terminus or partial terminus
-            if (is_last_stoptime(st_calendar.stop_time)) {
-                continue;
-            }
-            auto date_time = schedule->add_date_times();
-            pb_creator.fill(&st_calendar, date_time, 0);
-            if (dt_st.second != nullptr) {
-                auto vj = dt_st.second->vehicle_journey;
-                if (vj != nullptr) {
-                    for (const auto& comment : pb_creator.data->pt_data->comments.get(*vj)) {
-                        pb_creator.fill(&comment, date_time->mutable_properties()->add_notes(), 0);
-                    }
-                }
-            }
+            fill_date_times(pb_creator, schedule, dt_st, calendar_id);
         }
 
         // add first and last datetime
