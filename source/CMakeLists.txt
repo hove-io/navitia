@@ -31,6 +31,9 @@ set(CMAKE_INSTALL_PREFIX "/usr")
 include(GetGitRevisionDescription)
 git_describe(GIT_REVISION)
 
+# Detect Os version
+include(DetectOsVersion)
+
 # Compilation flags (Debug and Release)
 include(CompilationFlags)
 
