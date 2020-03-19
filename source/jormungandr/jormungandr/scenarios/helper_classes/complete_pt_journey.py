@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 import logging
-from .helper_utils import complete_pt_journey, compute_fallback, _build_crowflies
+from .helper_utils import complete_pt_journey, compute_fallback, _build_crowflies, timed_logger
 from .helper_exceptions import InvalidDateBoundException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
@@ -146,28 +146,31 @@ def wait_and_complete_pt_journey(
         # Early return if no journey has to be finished
         return
 
+    logger = logging.getLogger(__name__)
     # launch fallback direct path asynchronously
-    compute_fallback(
-        from_obj=requested_orig_obj,
-        to_obj=requested_dest_obj,
-        streetnetwork_path_pool=streetnetwork_path_pool,
-        orig_places_free_access=orig_places_free_access,
-        dest_places_free_access=dest_places_free_access,
-        request=request,
-        pt_journeys=journeys,
-    )
-
-    for pt_element in journeys:
-        complete_pt_journey(
-            requested_orig_obj=requested_orig_obj,
-            requested_dest_obj=requested_dest_obj,
-            dep_mode=pt_element.dep_mode,
-            arr_mode=pt_element.arr_mode,
-            pt_journey=pt_element.pt_journeys,
+    with timed_logger(logger, 'compute_fallback'):
+        compute_fallback(
+            from_obj=requested_orig_obj,
+            to_obj=requested_dest_obj,
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,
-            orig_fallback_durations_pool=orig_fallback_durations_pool,
-            dest_fallback_durations_pool=dest_fallback_durations_pool,
             request=request,
+            pt_journeys=journeys,
         )
+
+    with timed_logger(logger, 'complete_pt_journeys'):
+        for pt_element in journeys:
+            complete_pt_journey(
+                requested_orig_obj=requested_orig_obj,
+                requested_dest_obj=requested_dest_obj,
+                dep_mode=pt_element.dep_mode,
+                arr_mode=pt_element.arr_mode,
+                pt_journey=pt_element.pt_journeys,
+                streetnetwork_path_pool=streetnetwork_path_pool,
+                orig_places_free_access=orig_places_free_access,
+                dest_places_free_access=dest_places_free_access,
+                orig_fallback_durations_pool=orig_fallback_durations_pool,
+                dest_fallback_durations_pool=dest_fallback_durations_pool,
+                request=request,
+            )

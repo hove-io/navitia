@@ -36,6 +36,7 @@ import six
 import copy
 import logging
 from functools import cmp_to_key
+from .helper_utils import timed_logger
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
@@ -74,28 +75,29 @@ class PtJourney:
         self._value = None
         self._isochrone_center = isochrone_center
         self._request_type = request_type
+        self._logger = logging.getLogger(__name__)
 
         self._async_request()
 
     @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
-        return self._instance.planner.journeys(
-            orig_fallback_durations,
-            dest_fallback_durations,
-            self._periode_extremity.datetime,
-            self._periode_extremity.represents_start,
-            self._journey_params,
-            self._bike_in_pt,
-        )
+        with timed_logger(self._logger, 'pt_journyes_calling_kraken'):
+            return self._instance.planner.journeys(
+                orig_fallback_durations,
+                dest_fallback_durations,
+                self._periode_extremity.datetime,
+                self._periode_extremity.represents_start,
+                self._journey_params,
+                self._bike_in_pt,
+            )
 
     def _do_journeys_request(self):
-        logger = logging.getLogger(__name__)
-        logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
+        self._logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
         orig_fallback_duration_status = self._orig_fallback_durtaions_pool.wait_and_get(self._dep_mode)
-        logger.debug("waiting for dest fallback durations with %s", self._arr_mode)
+        self._logger.debug("waiting for dest fallback durations with %s", self._arr_mode)
         dest_fallback_duration_status = self._dest_fallback_durations_pool.wait_and_get(self._arr_mode)
 
-        logger.debug(
+        self._logger.debug(
             "requesting public transport journey with dep_mode: %s and arr_mode: %s",
             self._dep_mode,
             self._arr_mode,
@@ -117,7 +119,9 @@ class PtJourney:
             j.internal_id = str(utils.generate_id())
 
         if resp.HasField(str("error")):
-            logger.debug("pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode)
+            self._logger.debug(
+                "pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
+            )
             # Here needs to modify error message of no_solution
             if not orig_fallback_durations:
                 resp.error.id = response_pb2.Error.no_origin
@@ -126,7 +130,7 @@ class PtJourney:
                 resp.error.id = response_pb2.Error.no_destination
                 resp.error.message = "no destination point"
 
-        logger.debug(
+        self._logger.debug(
             "finish public transport journey with dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
         )
         return resp
@@ -150,10 +154,10 @@ class PtJourney:
             else self._dest_fallback_durations_pool
         )
         mode = self._dep_mode if self._orig_fallback_durtaions_pool is not None else self._arr_mode
-        logger.debug("waiting for fallback durations with %s", mode)
+        self._logger.debug("waiting for fallback durations with %s", mode)
         fallback_duration_status = fallback_durations_pool.wait_and_get(mode)
 
-        logger.debug("requesting public transport journey with dep_mode: %s", mode)
+        self._logger.debug("requesting public transport journey with dep_mode: %s", mode)
 
         fallback_durations = {k: v.duration for k, v in fallback_duration_status.items()}
 
@@ -200,7 +204,8 @@ class PtJourney:
             self._value = self._future_manager.create_future(self._do_journeys_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get()
+        with timed_logger(self._logger, 'waiting_for_pt_journeys'):
+            return self._value.wait_and_get()
 
 
 class _PtJourneySorter(object):

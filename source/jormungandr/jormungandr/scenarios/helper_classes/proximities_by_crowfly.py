@@ -29,9 +29,7 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from . import helper_future
-from jormungandr.street_network.street_network import StreetNetworkPathType
-from .helper_utils import get_max_fallback_duration
+from .helper_utils import get_max_fallback_duration, timed_logger
 from jormungandr import utils, new_relic
 import logging
 
@@ -52,17 +50,19 @@ class ProximitiesByCrowfly:
         self._max_nb_crowfly = max_nb_crowfly
         self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
         self._value = None
+        self._logger = logging.getLogger(__name__)
         self._async_request()
 
-    @new_relic.distributedEvent("direct_path", "street_network")
+    @new_relic.distributedEvent("get_crowf_ly", "street_network")
     def _get_crow_fly(self):
-        return self._instance.georef.get_crow_fly(
-            utils.get_uri_pt_object(self._requested_place_obj),
-            self._mode,
-            self._max_duration,
-            self._max_nb_crowfly,
-            **self._speed_switcher
-        )
+        with timed_logger(self._logger, 'get_crow_fly_calling_external_service'):
+            return self._instance.georef.get_crow_fly(
+                utils.get_uri_pt_object(self._requested_place_obj),
+                self._mode,
+                self._max_duration,
+                self._max_nb_crowfly,
+                **self._speed_switcher
+            )
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -95,7 +95,8 @@ class ProximitiesByCrowfly:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get()
+        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly'):
+            return self._value.wait_and_get()
 
 
 class ProximitiesByCrowflyPool:
