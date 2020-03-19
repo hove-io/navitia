@@ -51,7 +51,6 @@ from jormungandr.scenarios.utils import (
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import type_pb2
 from flask_restful import abort
-import flask
 from .helper_classes.helper_utils import timed_logger
 
 
