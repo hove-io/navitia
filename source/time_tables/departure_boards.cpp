@@ -67,8 +67,8 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
 
 static void fill_date_times(PbCreator& pb_creator,
                             pbnavitia::StopSchedule* schedule,
-                            const std::pair<unsigned int, const navitia::type::StopTime*> dt_st,
-                            const boost::optional<const std::string> calendar_id) {
+                            const std::pair<unsigned int, const navitia::type::StopTime*>& dt_st,
+                            const boost::optional<const std::string>& calendar_id) {
     const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
     // terminus or partial terminus
     if (is_last_stoptime(st_calendar.stop_time)) {
