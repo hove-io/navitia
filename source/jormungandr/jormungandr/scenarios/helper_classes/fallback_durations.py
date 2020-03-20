@@ -120,7 +120,7 @@ class FallbackDurations:
                     **self._speed_switcher
                 )
             except Exception as e:
-                logging.getLogger(__name__).error("Exception':{}".format(str(e)))
+                self._logger.exception("Exception':{}".format(str(e)))
                 return None
 
     def _do_request(self):
