@@ -96,12 +96,9 @@ class FallbackDurations:
         self._async_request()
 
     def _get_duration(self, resp, place):
-        map_response = {
-            response_pb2.reached: resp.duration,
-            # Calculate duration
-            response_pb2.unknown: int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode)),
-        }
-        return map_response[resp.routing_status]
+        if resp.routing_status == response_pb2.reached:
+            return resp.duration
+        return int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode))
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
