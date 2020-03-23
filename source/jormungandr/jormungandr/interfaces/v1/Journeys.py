@@ -488,10 +488,48 @@ class Journeys(JourneyCommon):
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
+
         # If there are several possible regions to query:
         # copy base request arguments before setting region specific parameters
         if len(possible_regions) > 1:
             base_args = deepcopy(args)
+
+        logger = logging.getLogger(__name__)
+
+        logger.debug("We are about to ask journeys on regions : {}".format(possible_regions))
+
+        # generate an id that :
+        #  - depends on the coverage and differents arguments of the request (from, to, datetime, etc.)
+        #  - does not depends on the order of the arguments in the request (only on their values)
+        #  - does not depend on the _override_scenario argument
+        #  - if  _override_scenario is present, its type is added at the end of the id in
+        #    order to identify identical requests made with the different scenarios
+        def generate_request_id():
+            import flask, json, hashlib
+
+            path = str(flask.request.path)
+            args_for_id = dict(flask.request.args)
+            if "_override_scenario" in args_for_id:
+                scenario = str(args_for_id["_override_scenario"])
+                args_for_id["_override_scenario"] = ""
+            else:
+                scenario = ""
+
+            json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
+
+            # we could use the json_repr as an id, but we hash it to have something smaller
+            m = hashlib.sha256()
+            m.update(json_repr)
+            json_hash = m.hexdigest()
+
+            result = "{}_{}".format(json_hash, scenario)
+
+            logger.debug("Generating id {} for request {}".format(result, json_repr))
+
+            return result
+
+        request_id = generate_request_id()
+
 
         # Store the different errors
         responses = {}
