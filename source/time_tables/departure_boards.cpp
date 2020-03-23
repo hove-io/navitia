@@ -457,7 +457,6 @@ void terminus_schedules(PbCreator& pb_creator,
                         const size_t items_per_route_point) {
     RequestHandle handler(pb_creator, date, duration, calendar_id);
     handler.init_jpp(request, forbidden_uris);
-    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
 
     if (pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)) {
         return;
