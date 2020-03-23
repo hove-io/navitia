@@ -396,6 +396,7 @@ class Journeys(JourneyCommon):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
         possible_regions = compute_possible_region(region, args)
+        logging.getLogger(__name__).debug("Possible regions for the request : {}".format(possible_regions))
         args.update(self.parse_args(region, uri))
 
         # count override min_nb_journey or max_nb_journey
@@ -485,9 +486,6 @@ class Journeys(JourneyCommon):
 
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
-        logging.getLogger(__name__).debug(
-            "We are about to ask journeys on regions : {}".format(possible_regions)
-        )
 
         # Store the different errors
         responses = {}
@@ -495,6 +493,7 @@ class Journeys(JourneyCommon):
             self.region = r
             _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)
+            logging.getLogger(__name__).debug("Querying region : {}".format(r))
 
             # Store the region in the 'g' object, which is local to a request
             if args['debug']:
