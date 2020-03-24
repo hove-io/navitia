@@ -93,12 +93,20 @@ void ProximityList<T>::build() {
 }
 
 template <typename T, typename Item>
-static auto extract(const Item& item, IndexCoord /*unused*/) -> typename ReturnTypeTrait<T, IndexCoord>::ValueType {
+static auto extract(const Item& item, float /*unused*/, IndexCoord /*unused*/) ->
+    typename ReturnTypeTrait<T, IndexCoord>::ValueType {
     return std::make_pair(item.element, item.coord);
 }
 
 template <typename T, typename Item>
-static auto extract(const Item& item, IndexOnly /*unused*/) -> typename ReturnTypeTrait<T, IndexOnly>::ValueType {
+static auto extract(const Item& item, float distance, IndexCoordDistance /*unused*/) ->
+    typename ReturnTypeTrait<T, IndexCoordDistance>::ValueType {
+    return std::make_tuple(item.element, item.coord, distance);
+}
+
+template <typename T, typename Item>
+static auto extract(const Item& item, float /*unused*/, IndexOnly /*unused*/) ->
+    typename ReturnTypeTrait<T, IndexOnly>::ValueType {
     return item.element;
 }
 
@@ -126,7 +134,7 @@ static auto make_result(const type::GeographicalCoord& coord,
             log4cplus::Logger::getInstance("log"),
             "Distance(squared) from the coord: " << coord.lon() << " " << coord.lat() << " is " << distances.at(i));
 
-        res.push_back(extract<T>(items[res_ind], Tag{}));
+        res.push_back(extract<T>(items[res_ind], distances.at(i), Tag{}));
     }
     return res;
 }
@@ -170,6 +178,21 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
     assert(indices.size() == 1);
     assert(distances.size() == 1);
     return make_result<T>(coord, items, indices[0], distances[0], nb_found, IndexCoord{});
+}
+
+template <class T>
+auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
+                                        double radius,
+                                        int size,
+                                        IndexCoordDistance /*unused*/) const
+    -> std::vector<typename ReturnTypeTrait<T, IndexCoordDistance>::ValueType> {
+    // Containers are auto-sized by NN_index, Flann will return all objects inside of the given radius
+    std::vector<std::vector<int>> indices;
+    std::vector<std::vector<index_t::DistanceType>> distances;
+    int nb_found = radius_search(NN_index, coord, radius, size, indices, distances);
+    assert(indices.size() == 1);
+    assert(distances.size() == 1);
+    return make_result<T>(coord, items, indices[0], distances[0], nb_found, IndexCoordDistance{});
 }
 
 template <class T>

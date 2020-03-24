@@ -39,8 +39,10 @@ namespace proximitylist {
  * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
-using t_result = std::tuple<nt::idx_t, nt::GeographicalCoord, nt::Type_e>;
-using idx_coord = std::pair<nt::idx_t, nt::GeographicalCoord>;
+using t_result = std::tuple<nt::idx_t, nt::GeographicalCoord, float, nt::Type_e>;
+using idx_coord_distance = std::tuple<nt::idx_t, nt::GeographicalCoord, float>;
+using vector_idx_coord_distance = std::vector<idx_coord_distance>;
+
 static void make_pb(navitia::PbCreator& pb_creator,
                     const std::vector<t_result>& result,
                     uint32_t depth,
@@ -50,19 +52,20 @@ static void make_pb(navitia::PbCreator& pb_creator,
         pbnavitia::PtObject* place = pb_creator.add_places_nearby();
         auto idx = std::get<0>(result_item);
         auto coord_item = std::get<1>(result_item);
-        auto type = std::get<2>(result_item);
+        auto distance = sqrt(std::get<2>(result_item));
+        auto type = std::get<3>(result_item);
         switch (type) {
             case nt::Type_e::StopArea:
                 pb_creator.fill(data.pt_data->stop_areas[idx], place, depth);
-                place->set_distance(coord.distance_to(coord_item));
+                place->set_distance(distance);
                 break;
             case nt::Type_e::StopPoint:
                 pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
-                place->set_distance(coord.distance_to(coord_item));
+                place->set_distance(distance);
                 break;
             case nt::Type_e::POI:
                 pb_creator.fill(data.geo_ref->pois[idx], place, depth);
-                place->set_distance(coord.distance_to(coord_item));
+                place->set_distance(distance);
                 break;
             case nt::Type_e::Address: {
                 const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx], coord,
@@ -77,14 +80,8 @@ static void make_pb(navitia::PbCreator& pb_creator,
     }
 }
 
-static void sort_cut(vector_idx_coord& list, const size_t end_pagination, const nt::GeographicalCoord& coord) {
-    const double coslat = ::cos(coord.lat() * nt::GeographicalCoord::N_DEG_TO_RAD);
+static void cut(vector_idx_coord_distance& list, const size_t end_pagination, const nt::GeographicalCoord& coord) {
     const auto nb_sort = std::min(list.size(), end_pagination);
-    std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(), [&](const idx_coord& a, const idx_coord& b) {
-        const auto sq_dist_a = coord.approx_sqr_distance(a.second, coslat);
-        const auto sq_dist_b = coord.approx_sqr_distance(b.second, coslat);
-        return sq_dist_a < sq_dist_b;
-    });
     list.resize(nb_sort);
 }
 
@@ -106,14 +103,14 @@ void find(navitia::PbCreator& pb_creator,
             try {
                 auto nb_w = pb_creator.data->geo_ref->nearest_addr(coord);
                 // we'll regenerate the good number in make_pb
-                result.emplace_back(nb_w.second->idx, coord, type);
+                result.emplace_back(nb_w.second->idx, coord, 0, type);
                 ++total_result;
             } catch (const proximitylist::NotFound&) {
             }
             continue;
         }
 
-        vector_idx_coord list;
+        vector_idx_coord_distance list;
         type::Indexes indexes;
         if (!filter.empty()) {
             try {
@@ -131,53 +128,41 @@ void find(navitia::PbCreator& pb_creator,
         int search_count = -1;
         switch (type) {
             case nt::Type_e::StopArea:
-                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within(coord, distance, search_count);
+                list = pb_creator.data->pt_data->stop_area_proximity_list.find_within<IndexCoordDistance>(
+                    coord, distance, search_count);
                 break;
             case nt::Type_e::StopPoint:
-                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within(coord, distance, search_count);
+                list = pb_creator.data->pt_data->stop_point_proximity_list.find_within<IndexCoordDistance>(
+                    coord, distance, search_count);
                 break;
             case nt::Type_e::POI:
-                list = pb_creator.data->geo_ref->poi_proximity_list.find_within(coord, distance, search_count);
+                list = pb_creator.data->geo_ref->poi_proximity_list.find_within<IndexCoordDistance>(coord, distance,
+                                                                                                    search_count);
                 break;
             default:
                 break;
         }
 
-        vector_idx_coord final_list;
+        vector_idx_coord_distance final_list;
         if (filter.empty()) {
             final_list = list;
         } else {
-            // We find the intersection between indexes and list
-            // we sort the proximity list on the indexes
-            auto comp = [](idx_coord a, idx_coord b) { return a.first < b.first; };
-            std::sort(list.begin(), list.end(), comp);
-
-            for (auto idx : indexes) {
-                auto it = std::lower_bound(list.begin(), list.end(), std::make_pair(idx, nt::GeographicalCoord()),
-                                           comp);  // we create a mock pair and only compare the first elt
-                if (it != list.end() && (*it).first == idx) {
-                    final_list.push_back(*it);
-                    if (final_list.size() == list.size()) {
-                        // small speedup, if all geographical elt have been added we can stop
-                        //(since the indexes list might be way bigger than the proximity list)
-                        break;
-                    }
+            for (const auto& element : list) {
+                auto idx = std::get<0>(element);
+                if (indexes.find(idx) != indexes.cend()) {
+                    final_list.push_back(element);
                 }
             }
         }
         total_result += final_list.size();
-        sort_cut(final_list, end_pagination, coord);
-        for (auto idx_coord : final_list) {
-            result.emplace_back(idx_coord.first, idx_coord.second, type);
+        cut(final_list, end_pagination, coord);
+        for (const auto& e : final_list) {
+            auto idx = std::get<0>(e);
+            auto coord = std::get<1>(e);
+            auto distance = std::get<2>(e);
+            result.emplace_back(idx, std::move(coord), distance, type);
         }
     }
-    auto nb_sort = (result.size() < end_pagination) ? result.size() : end_pagination;
-    std::partial_sort(result.begin(), result.begin() + nb_sort, result.end(),
-                      [coord](t_result t1, t_result t2) -> bool {
-                          auto a = std::get<1>(t1);
-                          auto b = std::get<1>(t2);
-                          return coord.distance_to(a) < coord.distance_to(b);
-                      });
     result = paginate(result, count, start_page);
     make_pb(pb_creator, result, depth, data, coord);
     pb_creator.make_paginate(total_result, start_page, count, result.size());

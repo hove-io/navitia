@@ -62,6 +62,7 @@ struct NotFound : public recoverable_exception {
 // find_within Dispatch Tag
 struct IndexOnly {};
 struct IndexCoord {};
+struct IndexCoordDistance {};
 
 template <typename T, typename Tag>
 struct ReturnTypeTrait;
@@ -76,6 +77,10 @@ struct ReturnTypeTrait<T, IndexCoord> {
     typedef std::pair<T, GeographicalCoord> ValueType;
 };
 
+template <typename T>
+struct ReturnTypeTrait<T, IndexCoordDistance> {
+    typedef std::tuple<T, GeographicalCoord, float> ValueType;
+};
 /* A structure allows to find K Nearest Neighbours with a given radius.
  *
  * The Item contains T(in practice, the Idx of the wanted object) and the coord of the object.
@@ -162,6 +167,9 @@ private:
      * */
     auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
         -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType>;
+
+    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoordDistance) const
+        -> std::vector<typename ReturnTypeTrait<T, IndexCoordDistance>::ValueType>;
 
     /*
      * This implementation is used for edge projection

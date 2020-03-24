@@ -47,7 +47,6 @@ typedef uint32_t idx_t;
 
 namespace proximitylist {
 
-typedef std::vector<std::pair<type::idx_t, type::GeographicalCoord>> vector_idx_coord;
 void find(navitia::PbCreator& pb_creator,
           const type::GeographicalCoord& coord,
           const double distance,
