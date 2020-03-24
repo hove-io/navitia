@@ -27,12 +27,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
-from . import helper_future
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
-from jormungandr.scenarios.utils import switch_back_to_ridesharing
-from navitiacommon import response_pb2
+from .helper_utils import timed_logger
 
 
 class StreetNetworkPath:
@@ -74,28 +72,28 @@ class StreetNetworkPath:
         self._request = request
         self._path_type = streetnetwork_path_type
         self._value = None
-
+        self._logger = logging.getLogger(__name__)
         self._async_request()
 
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
-        try:
-            return self._streetnetwork_service.direct_path_with_fp(
-                self._instance,
-                self._mode,
-                self._orig_obj,
-                self._dest_obj,
-                self._fallback_extremity,
-                self._request,
-                self._path_type,
-            )
-        except Exception as e:
-            logging.getLogger(__name__).error("Exception':{}".format(str(e)))
-            return None
+        with timed_logger(self._logger, 'direct_path_calling_external_service'):
+            try:
+                return self._streetnetwork_service.direct_path_with_fp(
+                    self._instance,
+                    self._mode,
+                    self._orig_obj,
+                    self._dest_obj,
+                    self._fallback_extremity,
+                    self._request,
+                    self._path_type,
+                )
+            except Exception as e:
+                self._logger.error("Exception':{}".format(str(e)))
+                return None
 
     def _do_request(self):
-        logger = logging.getLogger(__name__)
-        logger.debug(
+        self._logger.debug(
             "requesting %s direct path from %s to %s by %s",
             self._path_type,
             self._orig_obj.uri,
@@ -108,7 +106,7 @@ class StreetNetworkPath:
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
 
-        logger.debug(
+        self._logger.debug(
             "finish %s direct path from %s to %s by %s",
             self._path_type,
             self._orig_obj.uri,
@@ -121,9 +119,10 @@ class StreetNetworkPath:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        if self._value:
-            return self._value.wait_and_get()
-        return None
+        with timed_logger(self._logger, 'waiting_for_direct_path'):
+            if self._value:
+                return self._value.wait_and_get()
+            return None
 
 
 class StreetNetworkPathPool:

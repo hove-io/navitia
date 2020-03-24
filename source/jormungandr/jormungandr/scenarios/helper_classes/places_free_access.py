@@ -27,11 +27,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
-from . import helper_future
 from navitiacommon import type_pb2
 from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
+from .helper_utils import timed_logger
 
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
 
@@ -53,18 +53,20 @@ class PlacesFreeAccess:
         self._requested_place_obj = requested_place_obj
         self._value = None
         self._async_request()
+        self._logger = logging.getLogger(__name__)
 
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
-        return self._instance.georef.get_stop_points_for_stop_area(uri)
+        with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service'):
+            return self._instance.georef.get_stop_points_for_stop_area(uri)
 
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
-        return self._instance.georef.get_odt_stop_points(coord)
+        with timed_logger(self._logger, 'odt_stop_points_calling_external_service'):
+            return self._instance.georef.get_odt_stop_points(coord)
 
     def _do_request(self):
-        logger = logging.getLogger(__name__)
-        logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
+        self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
 
         stop_points = []
         place = self._requested_place_obj
@@ -85,7 +87,7 @@ class PlacesFreeAccess:
             odt_sps = self._get_odt_stop_points(self._instance.georef, coord)
             [odt.add(stop_point.uri) for stop_point in odt_sps]
 
-        logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
+        self._logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 
         # free_radius is empty until the proximities by crowfly are available
         free_radius = set()
@@ -96,4 +98,5 @@ class PlacesFreeAccess:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get()
+        with timed_logger(self._logger, 'waiting_for_places_free_acess'):
+            return self._value.wait_and_get()

@@ -38,6 +38,8 @@ import copy
 import logging
 import six
 from functools import cmp_to_key
+from contextlib import contextmanager
+import time
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -463,3 +465,14 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
         raise EntryPointException(
             error_message="no destination point", error_id=response_pb2.Error.no_destination
         )
+
+
+@contextmanager
+def timed_logger(logger, task_name):
+    start = time.time()
+    try:
+        yield logger
+    finally:
+        collapsed_time = time.time() - start
+        if collapsed_time > 1e-5:
+            logger.info('time collapsed in {}: {}s'.format(task_name, '%.2e' % collapsed_time))
