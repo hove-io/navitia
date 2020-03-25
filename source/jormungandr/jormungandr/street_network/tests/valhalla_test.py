@@ -523,7 +523,7 @@ def sources_to_targets_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         valhalla_response = valhalla.get_street_network_routing_matrix(
-            instance, [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST
+            instance, [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST, None
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -563,6 +563,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='walking',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -579,6 +580,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='bike',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42 + 30
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -595,6 +597,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='car',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42 + 5 * 60
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached

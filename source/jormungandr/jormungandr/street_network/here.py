@@ -320,7 +320,7 @@ class Here(AbstractStreetNetworkService):
         return params
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         params = self.get_matrix_params(origins, destinations, mode, max_duration, request)
         r = self._call_here(self.matrix_service_url, params=params)

@@ -117,7 +117,7 @@ class Kraken(object):
         req.ptref.start_page = 0
         req.ptref.depth = 0
         req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
-        result = self.instance.send_and_receive(req, request_id)
+        result = self.instance.send_and_receive(req, request_id=request_id)
         return result.stop_points
 
     def get_odt_stop_points(self, coord, request_id):

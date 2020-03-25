@@ -159,7 +159,6 @@ class Distributed(object):
                         request=request,
                         period_extremity=period_extremity,
                         streetnetwork_path_type=StreetNetworkPathType.DIRECT,
-                        request_id=request_id,
                     )
                     for mode in requested_direct_path_modes
                 ]
@@ -311,8 +310,11 @@ class Distributed(object):
         requested_modes = {mode_getter(call) for call in krakens_call}
 
         logger.debug('requesting places by uri orig: %s', isochrone_center)
+        request_id = request.get("request_id", None)
 
-        requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=isochrone_center)
+        requested_orig = PlaceByUri(
+            future_manager=future_manager, instance=instance, uri=isochrone_center, request_id=request_id
+        )
 
         requested_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
 
@@ -326,10 +328,14 @@ class Distributed(object):
             request=request,
             direct_paths_by_mode=direct_paths_by_mode,
             max_nb_crowfly_by_mode=request.get('max_nb_crowfly_by_mode', {}),
+            request_id=request_id,
         )
 
         places_free_access = PlacesFreeAccess(
-            future_manager=future_manager, instance=instance, requested_place_obj=requested_obj
+            future_manager=future_manager,
+            instance=instance,
+            requested_place_obj=requested_obj,
+            request_id=request_id,
         )
 
         direct_path_type = (
@@ -347,6 +353,7 @@ class Distributed(object):
             places_free_access=places_free_access,
             direct_paths_by_mode=direct_paths_by_mode,
             request=request,
+            request_id=request_id,
             direct_path_type=direct_path_type,
         )
 
@@ -360,6 +367,7 @@ class Distributed(object):
             "krakens_call": krakens_call,
             "request": request,
             "request_type": request_type,
+            "request_id": request_id,
             "isochrone_center": isochrone_center,
         }
         if request['origin']:
