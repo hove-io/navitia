@@ -58,6 +58,7 @@ from navitiacommon.parser_args_type import (
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
+from copy import deepcopy
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -487,6 +488,11 @@ class Journeys(JourneyCommon):
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
+        # If there are several possible regions to query:
+        # copy base request arguments before setting region specific parameters
+        if len(possible_regions) > 1:
+            base_args = deepcopy(args)
+
         # Store the different errors
         responses = {}
         for r in possible_regions:
@@ -527,7 +533,7 @@ class Journeys(JourneyCommon):
                 response.error.message = "no solution found for this journey"
                 response.response_type = response_pb2.NO_SOLUTION
 
-            if response.HasField(str('error')) and len(possible_regions) != 1:
+            if response.HasField(str('error')) and len(possible_regions) > 1:
 
                 if args['debug']:
                     # In debug we store all errors
@@ -540,13 +546,19 @@ class Journeys(JourneyCommon):
                     " we'll try the next possible region ".format(r)
                 )
                 responses[r] = response
+                # Before requesting the next region, reset args before region specific settings
+                args = base_args
                 continue
 
+            # If every journeys found doesn't use PT, request the next possible region
             non_pt_types = ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car")
             if all(j.type in non_pt_types for j in response.journeys) or all(
                 "non_pt" in j.tags for j in response.journeys
             ):
                 responses[r] = response
+                if len(possible_regions) > 1:
+                    # Before requesting the next region, reset args before region specific settings
+                    args = base_args
                 continue
 
             if args['equipment_details']:

@@ -1612,11 +1612,17 @@ class WithoutPt:
         assert response['debug']['regions_called'][1] == "main_routing_test"
 
 
-@dataset({"main_routing_test": {'max_nb_journeys': 1}})
+@dataset(
+    {
+        "main_routing_without_pt_test": {"priority": 42, "min_nb_journeys": 10},
+        "main_routing_test": {"max_nb_journeys": 1},
+    }
+)
 class NoCoverageParams:
     def test_db_params_when_no_coverage(self):
         """
         Test that parameters from coverage are applied when no coverage is set in the query
+        Also, when several coverage are possible, test that each requested coverage parameters are set
         """
         query = "v1/" + journey_basic_query
         response = self.query(query)
