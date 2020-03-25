@@ -95,11 +95,16 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     pb_rsjs = []
     pb_tickets = []
     pb_feed_publishers = [_make_pb_fp(fp) for fp in fps if fp is not None]
+    request_id = None
 
     for rsj in rsjs:
         pb_rsj = response_pb2.Journey()
-        pb_rsj_pickup = instance.georef.place("{};{}".format(rsj.pickup_place.lon, rsj.pickup_place.lat))
-        pb_rsj_dropoff = instance.georef.place("{};{}".format(rsj.dropoff_place.lon, rsj.dropoff_place.lat))
+        pb_rsj_pickup = instance.georef.place(
+            "{};{}".format(rsj.pickup_place.lon, rsj.pickup_place.lat), request_id
+        )
+        pb_rsj_dropoff = instance.georef.place(
+            "{};{}".format(rsj.dropoff_place.lon, rsj.dropoff_place.lat), request_id
+        )
         pickup_coord = get_pt_object_coord(pb_rsj_pickup)
         dropoff_coord = get_pt_object_coord(pb_rsj_dropoff)
 

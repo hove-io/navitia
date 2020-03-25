@@ -97,7 +97,7 @@ class Asgard(TransientSocket, Kraken):
         }
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         speed_switcher = make_speed_switcher(request)
 

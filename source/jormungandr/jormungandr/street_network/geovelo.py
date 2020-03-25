@@ -185,7 +185,7 @@ class Geovelo(AbstractStreetNetworkService):
             raise TechnicalError('Geovelo service unavailable, impossible to query : {}'.format(response.url))
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         if street_network_mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(street_network_mode))
