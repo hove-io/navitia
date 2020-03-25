@@ -203,7 +203,7 @@ class AbstractTestFixture(unittest.TestCase):
         cls.launch_all_krakens()
         instances_config_files = cls.create_dummy_json()
         i_manager.configuration_files = instances_config_files
-        i_manager.initialisation()
+        i_manager.initialization()
         cls.mocks = []
         for name in cls.krakens_pool:
             priority = cls.data_sets[name].get('priority', 0)
