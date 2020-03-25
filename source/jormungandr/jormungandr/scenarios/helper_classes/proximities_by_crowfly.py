@@ -40,7 +40,15 @@ class ProximitiesByCrowfly:
     """
 
     def __init__(
-        self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly, request
+        self,
+        future_manager,
+        instance,
+        requested_place_obj,
+        mode,
+        max_duration,
+        max_nb_crowfly,
+        request,
+        request_id,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -51,18 +59,19 @@ class ProximitiesByCrowfly:
         self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
         self._value = None
         self._logger = logging.getLogger(__name__)
+        self._request_id = request_id
         self._async_request()
 
     @new_relic.distributedEvent("get_crowf_ly", "street_network")
     def _get_crow_fly(self):
-        with timed_logger(self._logger, 'get_crow_fly_calling_external_service'):
-            return self._instance.georef.get_crow_fly(
-                utils.get_uri_pt_object(self._requested_place_obj),
-                self._mode,
-                self._max_duration,
-                self._max_nb_crowfly,
-                **self._speed_switcher
-            )
+        return self._instance.georef.get_crow_fly(
+            utils.get_uri_pt_object(self._requested_place_obj),
+            self._mode,
+            self._max_duration,
+            self._max_nb_crowfly,
+            self._request_id,
+            **self._speed_switcher
+        )
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -76,7 +85,7 @@ class ProximitiesByCrowfly:
             logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri):
+            if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri, self._request_id):
                 return [self._requested_place_obj]
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
@@ -109,6 +118,7 @@ class ProximitiesByCrowflyPool:
         request,
         direct_paths_by_mode,
         max_nb_crowfly_by_mode,
+        request_id,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -137,7 +147,7 @@ class ProximitiesByCrowflyPool:
 
         self._future = None
         self._value = {}
-
+        self._request_id = request_id
         self._async_request()
 
     def _async_request(self):
@@ -154,6 +164,7 @@ class ProximitiesByCrowflyPool:
                 max_duration=max_fallback_duration,
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
                 request=self._request,
+                request_id=self._request_id,
             )
 
             self._value[mode] = p

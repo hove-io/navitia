@@ -354,6 +354,7 @@ def compute_fallback(
     dest_places_free_access,
     request,
     pt_journeys,
+    request_id,
 ):
     """
     Launching fallback computation asynchronously once the pt_journey is finished
@@ -376,7 +377,7 @@ def compute_fallback(
         fallback_extremity_dep = PeriodExtremity(pt_departure, False)
         if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
             streetnetwork_path_pool.add_async_request(
-                from_obj, pt_orig, dep_mode, fallback_extremity_dep, request, direct_path_type
+                from_obj, pt_orig, dep_mode, fallback_extremity_dep, request, direct_path_type, request_id
             )
 
         # to
@@ -387,7 +388,7 @@ def compute_fallback(
         fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
         if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
             streetnetwork_path_pool.add_async_request(
-                pt_dest, to_obj, arr_mode, fallback_extremity_arr, request, direct_path_type
+                pt_dest, to_obj, arr_mode, fallback_extremity_arr, request, direct_path_type, request_id
             )
 
 

@@ -313,6 +313,7 @@ class Geovelo(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))

@@ -559,13 +559,25 @@ class Instance(object):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
         with self.socket(self.context) as socket:
-            try:
-                request.request_id = flask.request.id
-            except RuntimeError:
-                # we aren't in a flask context, so there is no request
+            if 'request_id' in kwargs and kwargs['request_id']:
+                request.request_id = kwargs['request_id']
+            else:
+                logger.debug("No request id")
+                # import sys
+                # sys.exit()
+                # import inspect
+                # my_stack = inspect.stack()
+                # trace = ""
+                # for i in my_stack:
+                #     trace = trace + "{}:{}  {}\n".format(i[1], i[2], i[3])
+                # logger.debug(trace)
+                # raise
+                # try:
+                #     request.request_id = flask.request.id
+                # except RuntimeError:
+                #     # we aren't in a flask context, so there is no request
+                #     pass
 
-                if 'flask_request_id' in kwargs:
-                    request.request_id = kwargs['flask_request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
@@ -678,9 +690,10 @@ class Instance(object):
         pub_date = self.publication_date
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
+        request_id = "instance_init"
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, timeout=1000, quiet=True)
+            resp = self._send_and_receive(req, request_id=request_id, timeout=1000, quiet=True)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True

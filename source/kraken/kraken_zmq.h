@@ -106,6 +106,7 @@ inline void doWork(zmq::context_t& context,
 
         api = pb_req.requested_api();
         log4cplus::NDCContextCreator ndc(pb_req.request_id());
+        LOG4CPLUS_INFO(logger, "receive request : " << pbnavitia::API_Name(api));
         if (api != pbnavitia::METADATAS) {
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }

@@ -33,18 +33,19 @@ from .helper_utils import timed_logger
 
 
 class PlaceByUri:
-    def __init__(self, future_manager, instance, uri):
+    def __init__(self, future_manager, instance, uri, request_id):
         self._future_manager = future_manager
         self._instance = instance
         self._uri = uri
         self._value = None
         self._logger = logging.getLogger(__name__)
+        self._request_id = request_id
         self._async_request()
 
     @new_relic.distributedEvent("place_by_uri", "places")
     def _place(self):
         with timed_logger(self._logger, 'place_by_uri_calling_external_service'):
-            return self._instance.georef.place(self._uri)
+            return self._instance.georef.place(self._uri, request_id=self._request_id)
 
     def _do_request(self):
         return self._place(self._instance.georef)

@@ -138,6 +138,7 @@ class Asgard(TransientSocket, Kraken):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request

@@ -74,6 +74,7 @@ class Taxi(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
 
         copy_request = copy.deepcopy(request)
@@ -86,6 +87,7 @@ class Taxi(AbstractStreetNetworkService):
             fallback_extremity,
             copy_request,
             direct_path_type,
+            request_id,
         )
         if not response:
             return response

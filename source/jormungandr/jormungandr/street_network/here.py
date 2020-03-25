@@ -242,6 +242,7 @@ class Here(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode, fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)

@@ -54,7 +54,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def get_by_uri(self, uri, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
         """
         look for an object with its uri
 
@@ -80,7 +80,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
             data["cause"] = str(exc)
         record_custom_event('autocomplete_status', data)
 
-    def get_object_by_uri(self, uri, instances=None, current_datetime=None):
+    def get_object_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
         """
         same as get_by_uri, but more user friendly, return the object or none if nothing was found
 
@@ -90,7 +90,9 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         """
         details = None
         try:
-            details = self.get_by_uri(uri, instances=instances, current_datetime=current_datetime)
+            details = self.get_by_uri(
+                uri, request_id=request_id, instances=instances, current_datetime=current_datetime
+            )
         except AutocompleteUnavailable as e:
             self.record_status('unavailable', e)
             return None

@@ -62,6 +62,7 @@ class PtJourney:
         request,
         isochrone_center,
         request_type,
+        request_id,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -77,7 +78,7 @@ class PtJourney:
         self._isochrone_center = isochrone_center
         self._request_type = request_type
         self._logger = logging.getLogger(__name__)
-
+        self._request_id = request_id
         self._async_request()
 
     @new_relic.distributedEvent("journeys", "journeys")
@@ -90,6 +91,7 @@ class PtJourney:
                 self._periode_extremity.represents_start,
                 self._journey_params,
                 self._bike_in_pt,
+                self._request_id
             )
 
     def _do_journeys_request(self):
@@ -255,6 +257,7 @@ class PtJourneyPool:
         dest_fallback_durations_pool,
         request,
         request_type,
+        request_id,
         isochrone_center=None,
     ):
         self._future_manager = future_manager
@@ -270,7 +273,7 @@ class PtJourneyPool:
         self._journey_params = self._create_parameters(request, self._isochrone_center, self._request_type)
         self._request = request
         self._value = []
-
+        self._request_id = request_id
         self._async_request()
 
     @staticmethod
@@ -355,6 +358,7 @@ class PtJourneyPool:
                 request=self._request,
                 isochrone_center=self._isochrone_center,
                 request_type=self._request_type,
+                request_id=self._request_id,
             )
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
