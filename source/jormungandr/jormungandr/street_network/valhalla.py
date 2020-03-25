@@ -287,6 +287,7 @@ class Valhalla(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         data = self._make_request_arguments(
             mode, [pt_object_origin], [pt_object_destination], request, api='route'

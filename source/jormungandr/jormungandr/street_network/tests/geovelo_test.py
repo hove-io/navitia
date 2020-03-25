@@ -267,7 +267,7 @@ def direct_path_geovelo_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -305,7 +305,7 @@ def direct_path_geovelo_zero_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND

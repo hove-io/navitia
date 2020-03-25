@@ -97,6 +97,8 @@ class Distributed(object):
 
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
+        request_id = request["request_id"]
+        logger.debug("request_id : {}".format(request_id))
 
         requested_dep_modes_with_pt = {
             mode for mode, _, direct_path_type in krakens_call if direct_path_type != "only"
@@ -117,10 +119,13 @@ class Distributed(object):
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
             context.requested_orig = PlaceByUri(
-                future_manager=future_manager, instance=instance, uri=request['origin']
+                future_manager=future_manager, instance=instance, uri=request['origin'], request_id=request_id
             )
             context.requested_dest = PlaceByUri(
-                future_manager=future_manager, instance=instance, uri=request['destination']
+                future_manager=future_manager,
+                instance=instance,
+                uri=request['destination'],
+                request_id=request_id,
             )
 
             context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
@@ -140,6 +145,7 @@ class Distributed(object):
                     period_extremity=period_extremity,
                     request=request,
                     streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+                    request_id=request_id,
                 )
 
             # if max_duration(time to pass in pt) is zero, there is no need to continue,
@@ -153,6 +159,7 @@ class Distributed(object):
                         request=request,
                         period_extremity=period_extremity,
                         streetnetwork_path_type=StreetNetworkPathType.DIRECT,
+                        request_id=request_id,
                     )
                     for mode in requested_direct_path_modes
                 ]
@@ -170,6 +177,7 @@ class Distributed(object):
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+                request_id=request_id,
             )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
@@ -180,13 +188,20 @@ class Distributed(object):
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+                request_id=request_id,
             )
 
             context.orig_places_free_access = PlacesFreeAccess(
-                future_manager=future_manager, instance=instance, requested_place_obj=context.requested_orig_obj
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                request_id=request_id,
             )
             context.dest_places_free_access = PlacesFreeAccess(
-                future_manager=future_manager, instance=instance, requested_place_obj=context.requested_dest_obj
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_dest_obj,
+                request_id=request_id,
             )
 
             context.orig_fallback_durations_pool = FallbackDurationsPool(
@@ -199,6 +214,7 @@ class Distributed(object):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+                request_id=request_id,
             )
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
@@ -211,6 +227,7 @@ class Distributed(object):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 request=request,
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
+                request_id=request_id,
             )
 
         pt_journey_pool = PtJourneyPool(
@@ -224,6 +241,7 @@ class Distributed(object):
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
             request_type=request_type,
+            request_id=request_id,
         )
 
         pt_journey_elements = wait_and_build_crowflies(
@@ -261,7 +279,7 @@ class Distributed(object):
 
         return res
 
-    def finalise_journeys(self, future_manager, request, responses, context, instance, is_debug):
+    def finalise_journeys(self, future_manager, request, responses, context, instance, is_debug, request_id):
         """
         Update responses that contains filtered journeys with their proper streetnetwork fallback sections.
         Fallbacks will only be computed for journeys not tagged as 'to_delete'
@@ -280,6 +298,7 @@ class Distributed(object):
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             request=request,
             journeys=journeys_to_complete,
+            request_id=request_id,
         )
 
     def _compute_isochrone_common(self, future_manager, request, instance, krakens_call, request_type):
@@ -415,7 +434,8 @@ class Scenario(new_default.Scenario):
 
         try:
             with FutureManager() as future_manager, timed_logger(logger, 'finalise_journeys'):
-                self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug)
+                self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug, request_id)
+
 
                 from jormungandr.scenarios import journey_filter
 

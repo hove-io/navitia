@@ -65,6 +65,7 @@ class Ridesharing(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
         # a proper way to handle this is to override car_no_park_speed use the ridesharing_speed here
@@ -78,6 +79,7 @@ class Ridesharing(AbstractStreetNetworkService):
             fallback_extremity,
             request,
             direct_path_type,
+            request_id,
         )
         for journey in response.journeys:
             journey.durations.ridesharing = journey.durations.car

@@ -64,6 +64,7 @@ class WithParking(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         response = self.street_network._direct_path(
             instance,
@@ -73,6 +74,7 @@ class WithParking(AbstractStreetNetworkService):
             fallback_extremity,
             request,
             direct_path_type,
+            request_id,
         )
         if response and len(response.journeys):
             # Depending of the fallback type(beginning/ending fallback), the parking section's

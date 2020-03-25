@@ -504,6 +504,8 @@ class Journeys(JourneyCommon):
         #  - does not depend on the _override_scenario argument
         #  - if  _override_scenario is present, its type is added at the end of the id in
         #    order to identify identical requests made with the different scenarios
+        #  - we add the current_datetime of the request so as to differentiate
+        #    the same request made at distinct moments
         def generate_request_id():
             import flask, json, hashlib
 
@@ -522,13 +524,14 @@ class Journeys(JourneyCommon):
             m.update(json_repr)
             json_hash = m.hexdigest()
 
-            result = "{}_{}".format(json_hash, scenario)
+            result = "journeys_{}_{}_{}".format(json_hash, scenario, args['_current_datetime'])
 
             logger.debug("Generating id {} for request {}".format(result, json_repr))
 
             return result
 
         request_id = generate_request_id()
+        args["request_id"] = request_id
 
 
         # Store the different errors
