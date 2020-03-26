@@ -1,0 +1,44 @@
+{
+    "impacts": [
+        {
+            "pt_object": "LineSection('line:DUA:810801041', 'stop_area:DUA:SA:8775810', 'stop_area:DUA:SA:8738221')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "LineSection('line:DUA:810987658', 'stop_area:DUA:SA:8775657', 'stop_area:DUA:SA:7890861')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "LineSection('line:DUA:810806753', 'stop_area:DUA:SA:8876553', 'stop_area:DUA:SA:6252567')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "Line('line:DUA:800853022')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "Line('line:DUA:800999022')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "Route('route:DUA:80054622')",
+            "impact_type": "REDUCED_SERVICE"
+        },
+        {
+            "pt_object": "Route('route:DUA:800736022')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "StopPoint('stop_point:DUA:SP:93:1317')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "StopArea('stop_area:DUA:SA:8876553')",
+            "impact_type": "NO_SERVICE"
+        },
+        {
+            "pt_object": "Network('network:DUA855')",
+            "impact_type": "NO_SERVICE"
+        }
+    ]
+}
