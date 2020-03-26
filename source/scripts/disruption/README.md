@@ -1,11 +1,11 @@
 # Disruptor
 
-Create and send disruption inside navitia core. It can be usefull to debug Kraken.<br>
+Create and send **disruption** inside navitia core. It can be usefull to debug Kraken.<br>
 RabbitMq is used as a broker to exchange disruption messages.
 
 ## Set up
 
-Disruptor depends on chaos-proto sources for disrurption messages.
+Disruptor depends on **chaos-proto** sources for disrurption messages.
 
 ```
 # Install protobuf compiler
@@ -19,10 +19,10 @@ protoc chaos.proto gtfs-realtime.proto --python_out=.
 sudo apt install rabbitmq-server
 ```
 
-Update your krkaken.ini with broker and rt_topics
+Update your **kraken.ini** with broker and rt_topics
 
 ```
-######################### w#####
+#############################
 # BROKER
 #############################
 [BROKER]
@@ -45,7 +45,7 @@ Disruptor has several options
 ### Run help
 
 ```
-PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -h
+# PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -h
 
 usage: disruption.py [-h] [-b BROKER_CONNECTION] [-e EXCHANGE] [-t TOPIC]
                      [-p PT_OBJECT] [-i IMPACT_TYPE] [-f FILE]
@@ -137,13 +137,13 @@ optional arguments:
 
 ### Examples
 
-Simple empty disruption
+Simple **empty disruption**
 
 ```
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" --empty_disruption
 ```
 
-Simple disruption with pt object impacted
+Simple disruption **with pt object** impacted
 
 ```
 # Line - impact No SERVICE
@@ -156,7 +156,7 @@ PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pya
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -p "Route('route_uri')" -i "REDUCED_SERVICE"
 ```
 
-Disruptions file
+Disruptions **with file**
 
 Example of file (`impact.json <https://github.com/canaltp/navitia/blob/dev/source/scripts/disruption/impacts.json>`).
 
@@ -208,20 +208,20 @@ Example of file (`impact.json <https://github.com/canaltp/navitia/blob/dev/sourc
 ```
 
 ```
-# play file with sleep = 5 sec
+# play file with sleep = 5 secs between disruptions
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -f path_to_file -s 5
 
-# play file with sleep = 5 sec and loop forever
+# play file with sleep = 5 secs between disruptions and loop forever
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -f path_to_file -s 5 -l
 ```
 
 ### Disruption in playground
 
-You can find out your disruption inside a jormun response.<br>
-Example
+You can find out your disruption inside the jormun response.<br>
+Example:
 
 ```
-# disruption on line 1 (line:DUA:100110001)
+# Add disruption on line 1 (line:DUA:100110001)
 PYTHONPATH="/navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -p "Line('line:DUA:100110001')" -i "REDUCED_SERVICE"
 ```
 
