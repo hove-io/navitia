@@ -1623,6 +1623,9 @@ class NoCoverageParams:
         """
         Test that parameters from coverage are applied when no coverage is set in the query
         Also, when several coverage are possible, test that each requested coverage parameters are set
+
+        In this test, the dataset with the higher priority will be chosen first and its parameters set.
+        However, as there's no PT, the request will be done on the second dataset and its parameters will also be set: the result will only 1 journey as the parameter "max_nb_journeys = 1" is set for this coverage only
         """
         query = "v1/" + journey_basic_query
         response = self.query(query)
