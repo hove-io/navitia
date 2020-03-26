@@ -127,6 +127,10 @@ optional arguments:
   --empty_disruption    Create only empty disruption without impact. Allows
                         one shot disruption
 
+  -d DISRUPTION_DURATION, --disruption_duration DISRUPTION_DURATION
+                        Duration of disruption (minutes).
+                        default=10min
+
   -s SLEEP, --sleep SLEEP
                         Sleep time between 2 disruptions in file mode (secondes).
 

@@ -258,14 +258,14 @@ def parse_args(parser, logger):
         "-f",
         "--file",
         dest="file",
-        help='file to import an impacts list from json. It is a simple python list of PT object. '
+        help='File to import an impacts list from json. It is a simple python list of PT object. '
         'Here an example of what the file can contain: '
-        '{"impacts": [{"pt_object": "Line("line:DUA:800853022")}, '
-        '{"pt_object": LineSection("line:DUA:800803071", "stop_area:DUA:SA:8778543", "stop_area:DUA:SA:8732832")}, '
-        '{"pt_object": StopArea("stop_area:DUA:SA:93:1316")}, '
-        '{"pt_object": StopPoint("stop_point:DUA:SP:93:1317")}, '
-        '{"pt_object": Route("route:DUA:8008555486001")}, '
-        '{"pt_object": Network(network:DUA855)}]}',
+        '{"impacts": [{"pt_object": "Line("line:DUA:800853022"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": LineSection("line:DUA:800803071", "stop_area:DUA:SA:8778543", "stop_area:DUA:SA:8732832"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": StopArea("stop_area:DUA:SA:93:1316"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": StopPoint("stop_point:DUA:SP:93:1317"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": Route("route:DUA:8008555486001"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": Network(network:DUA855),"impact_type":"NO_SERVICE"}]}',
     )
     parser.add_argument(
         "--empty_disruption",
@@ -276,6 +276,13 @@ def parse_args(parser, logger):
         "-s",
         "--sleep",
         help="sleep time between 2 disruptions in file mode (secondes). default=10s",
+        default=10,
+        type=int,
+    )
+    parser.add_argument(
+        "-d",
+        "--disruption_duration",
+        help="Duration of disruption (minutes). default=10min",
         default=10,
         type=int,
     )
@@ -345,7 +352,7 @@ def main():
                     disruption = Disruption(
                         eval(impact['pt_object']),
                         datetime.datetime.utcnow(),
-                        datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+                        datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
                         logger,
                         impact['impact_type'],
                     )
@@ -362,7 +369,7 @@ def main():
             disruption = Disruption(
                 None,
                 datetime.datetime.utcnow(),
-                datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+                datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
                 logger,
                 args.impact_type,
             )
@@ -370,7 +377,7 @@ def main():
             disruption = Disruption(
                 eval(args.pt_object),
                 datetime.datetime.utcnow(),
-                datetime.datetime.utcnow() + datetime.timedelta(minutes=10),
+                datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
                 logger,
                 args.impact_type,
             )
