@@ -123,13 +123,12 @@ class InstanceManager(object):
         )
         self.instances[instance.name] = instance
 
-    def initialisation(self):
-        """ Charge la configuration à partir d'un fichier ini indiquant
-            les chemins des fichiers contenant :
-            - géométries de la région sur laquelle s'applique le moteur
-            - la socket pour chaque identifiant navitia
+    def initialization(self):
         """
-
+        Load  configuration from ini file providing files paths to:
+            - region geometry
+            - zmq socket
+        """
         self.instances.clear()
         for key, value in os.environ.items():
             if key.startswith('JORMUNGANDR_INSTANCE_'):

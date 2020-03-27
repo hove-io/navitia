@@ -104,7 +104,7 @@ i_manager = InstanceManager(
     instance_filename_pattern=app.config.get(str('INSTANCES_FILENAME_PATTERN'), '*.json'),
     start_ping=app.config.get(str('START_MONITORING_THREAD'), True),
 )
-i_manager.initialisation()
+i_manager.initialization()
 
 
 from jormungandr.stat_manager import StatManager
