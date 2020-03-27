@@ -41,7 +41,7 @@ from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -57,8 +57,8 @@ from navitiacommon.parser_args_type import (
     DepthArgument,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
-from jormungandr.scenarios import new_default, distributed
 from jormungandr.fallback_modes import FallbackModes
+from copy import deepcopy
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -397,6 +397,7 @@ class Journeys(JourneyCommon):
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()
         possible_regions = compute_possible_region(region, args)
+        logging.getLogger(__name__).debug("Possible regions for the request : {}".format(possible_regions))
         args.update(self.parse_args(region, uri))
 
         # count override min_nb_journey or max_nb_journey
@@ -473,11 +474,6 @@ class Journeys(JourneyCommon):
                 if args.get(tmp) is None:
                     args[tmp] = getattr(mod, tmp)
 
-        if region:
-            _set_specific_params(i_manager.instances[region])
-        else:
-            _set_specific_params(default_values)
-
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
@@ -491,16 +487,19 @@ class Journeys(JourneyCommon):
 
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
-        logging.getLogger(__name__).debug(
-            "We are about to ask journeys on regions : {}".format(possible_regions)
-        )
+
+        # If there are several possible regions to query:
+        # copy base request arguments before setting region specific parameters
+        if len(possible_regions) > 1:
+            base_args = deepcopy(args)
 
         # Store the different errors
         responses = {}
         for r in possible_regions:
             self.region = r
-
+            _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)
+            logging.getLogger(__name__).debug("Querying region : {}".format(r))
 
             # Store the region in the 'g' object, which is local to a request
             if args['debug']:
@@ -534,7 +533,7 @@ class Journeys(JourneyCommon):
                 response.error.message = "no solution found for this journey"
                 response.response_type = response_pb2.NO_SOLUTION
 
-            if response.HasField(str('error')) and len(possible_regions) != 1:
+            if response.HasField(str('error')) and len(possible_regions) > 1:
 
                 if args['debug']:
                     # In debug we store all errors
@@ -547,13 +546,19 @@ class Journeys(JourneyCommon):
                     " we'll try the next possible region ".format(r)
                 )
                 responses[r] = response
+                # Before requesting the next region, reset args before region specific settings
+                args = base_args
                 continue
 
+            # If every journeys found doesn't use PT, request the next possible region
             non_pt_types = ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car")
             if all(j.type in non_pt_types for j in response.journeys) or all(
                 "non_pt" in j.tags for j in response.journeys
             ):
                 responses[r] = response
+                if len(possible_regions) > 1:
+                    # Before requesting the next region, reset args before region specific settings
+                    args = base_args
                 continue
 
             if args['equipment_details']:

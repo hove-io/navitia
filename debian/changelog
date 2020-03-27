@@ -1,3 +1,17 @@
+navitia2 (3.8.0) unstable; urgency=low
+
+  * [Mergify] Configuration update  <https://github.com/CanalTP/navitia/pull/3182>
+  * [Jormun] Handle params for sereval possible regions  <https://github.com/CanalTP/navitia/pull/3179>
+  * [Distributed] Add timed logger  <https://github.com/CanalTP/navitia/pull/3176>
+  * [Jormun] Add better logs for geolocation  <https://github.com/CanalTP/navitia/pull/3177>
+  * [Kraken] Refactor code in departure board  <https://github.com/CanalTP/navitia/pull/3173>
+  * [Jormun] Minor perf enhancement in jormun  <https://github.com/CanalTP/navitia/pull/3175>
+  * [Doc] Add missing profiling package  <https://github.com/CanalTP/navitia/pull/3174>
+  * [CI] Fix debian compatibility to build sources  <https://github.com/CanalTP/navitia/pull/3172>
+  * [Jormun] Set parameter for region  <https://github.com/CanalTP/navitia/pull/3164>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 27 Mar 2020 12:03:04 +0100
+
 navitia2 (3.7.0) unstable; urgency=low
 
   * CI: trigger Jenkins for publishing packages on internal server  <https://github.com/CanalTP/navitia/pull/3170>

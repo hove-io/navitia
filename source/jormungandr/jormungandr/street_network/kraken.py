@@ -42,6 +42,7 @@ from jormungandr.street_network.street_network import (
 from jormungandr import utils
 import six
 from functools import cmp_to_key
+from jormungandr.street_network.utils import crowfly_distance_between
 
 
 class Kraken(AbstractStreetNetworkService):
@@ -88,7 +89,23 @@ class Kraken(AbstractStreetNetworkService):
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
-        direct_path_request = copy.deepcopy(request)
+        direct_path_request = {}
+        for attr in [
+            'walking_speed',
+            'max_walking_duration_to_pt',
+            'bike_speed',
+            'max_bike_duration_to_pt',
+            'bss_speed',
+            'max_bss_duration_to_pt',
+            'car_speed',
+            'max_car_duration_to_pt',
+            'car_no_park_speed',
+            'max_car_no_park_duration_to_pt',
+            'taxi_speed',
+            'max_taxi_duration_to_pt',
+        ]:
+            direct_path_request[attr] = request[attr]
+
         if direct_path_type == StreetNetworkPathType.DIRECT:
             # in distributed scenario, we allow the street network calculator to compute a very long direct path
             # in case of Kraken, the stop condition of direct path in Kraken is defined as
@@ -99,8 +116,18 @@ class Kraken(AbstractStreetNetworkService):
 
             kraken_mode = 'car_no_park' if mode in (fm.taxi.name, fm.ridesharing.name) else mode
             direct_path_request['max_{mode}_duration_to_pt'.format(mode=kraken_mode)] = int(
-                direct_path_request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
+                request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
             )
+            # if the crowfly distance between origin and destination is too large, there is no need to call kraken
+            crowfly_distance = crowfly_distance_between(
+                utils.get_pt_object_coord(pt_object_origin), utils.get_pt_object_coord(pt_object_destination)
+            )
+
+            if (
+                crowfly_distance / float(direct_path_request['{mode}_speed'.format(mode=kraken_mode)])
+                > request['max_{mode}_direct_path_duration'.format(mode=mode)]
+            ):
+                return None
 
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
@@ -172,14 +199,12 @@ class Kraken(AbstractStreetNetworkService):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        for o in origins:
-            orig = req.sn_routing_matrix.origins.add()
-            orig.place = self.get_uri_pt_object(o)
-            orig.access_duration = 0
-        for d in destinations:
-            dest = req.sn_routing_matrix.destinations.add()
-            dest.place = self.get_uri_pt_object(d)
-            dest.access_duration = 0
+        req.sn_routing_matrix.origins.extend(
+            (type_pb2.LocationContext(place=self.get_uri_pt_object(o), access_duration=0) for o in origins)
+        )
+        req.sn_routing_matrix.destinations.extend(
+            (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
+        )
 
         req.sn_routing_matrix.mode = street_network_mode
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))

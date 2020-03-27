@@ -3,8 +3,9 @@ pull_request_rules:
     conditions:
       - "#approved-reviews-by>=2"
       - "#changes-requested-reviews-by=0"
-      - "#commented-reviews-by=0"
-      - status-success~=build
+      - status-success=build (navitia/debian8_dev)
+      - status-success=build (navitia/debian9_dev)
+      - status-success=build (navitia/debian10_dev)
       - status-success=check_submodules
       - status-success=precommit
       - status-success=check_artemis

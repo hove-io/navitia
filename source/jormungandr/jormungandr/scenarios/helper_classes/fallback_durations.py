@@ -35,8 +35,9 @@ from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr import new_relic, utils
+from jormungandr import new_relic
 import logging
+from .helper_utils import timed_logger
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
 
@@ -93,31 +94,31 @@ class FallbackDurations:
         self._value = None
         self._direct_path_type = direct_path_type
         self._streetnetwork_service = instance.get_street_network(mode, request)
+        self._logger = logging.getLogger(__name__)
+
         self._async_request()
 
     def _get_duration(self, resp, place):
-        map_response = {
-            response_pb2.reached: resp.duration,
-            # Calculate duration
-            response_pb2.unknown: int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode)),
-        }
-        return map_response[resp.routing_status]
+        if resp.routing_status == response_pb2.reached:
+            return resp.duration
+        return int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode))
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
-        try:
-            return self._streetnetwork_service.get_street_network_routing_matrix(
-                self._instance,
-                origins,
-                destinations,
-                self._mode,
-                self._max_duration_to_pt,
-                self._request,
-                **self._speed_switcher
-            )
-        except Exception as e:
-            logging.getLogger(__name__).error("Exception':{}".format(str(e)))
-            return None
+        with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
+            try:
+                return self._streetnetwork_service.get_street_network_routing_matrix(
+                    self._instance,
+                    origins,
+                    destinations,
+                    self._mode,
+                    self._max_duration_to_pt,
+                    self._request,
+                    **self._speed_switcher
+                )
+            except Exception as e:
+                self._logger.exception("Exception':{}".format(str(e)))
+                return None
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -206,7 +207,8 @@ class FallbackDurations:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get() if self._value else None
+        with timed_logger(self._logger, 'waiting_for_routing_matrix'):
+            return self._value.wait_and_get() if self._value else None
 
 
 class FallbackDurationsPool(dict):

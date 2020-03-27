@@ -737,3 +737,8 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
             "min_nb_journeys_test", "stop_point:sa1:s1", "stop_point:sa3:s1", "20180309T080000"
         )
         self._call_and_check_journeys_on_coverage("main_routing_test", "stopB", "stopC", "20120614T080000")
+
+
+@config({"scenario": "distributed"})
+class TesDistributedJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenarioAbstractTestFixture):
+    pass

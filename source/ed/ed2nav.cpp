@@ -57,6 +57,12 @@ namespace pt = boost::posix_time;
 namespace georef = navitia::georef;
 namespace ed {
 
+#if PQXX_COMPATIBILITY
+typedef pqxx::tuple pqxx_row;
+#else
+typedef pqxx::row pqxx_row;
+#endif
+
 // A functor that first asks to GeoRef the admins of coord, and, if
 // GeoRef found nothing, asks to the cities database.
 struct FindAdminWithCities {
@@ -190,11 +196,11 @@ struct FindAdminWithCities {
             )sql") % c.lon() % c.lat();
         pqxx::result db_result = work->exec(sql_req.str());
 
-        auto not_in_insee_admins_map = [&](const pqxx::tuple& row) {
+        auto not_in_insee_admins_map = [&](const pqxx_row& row) {
             return insee_admins_map.count(row["insee"].c_str()) == 0;
         };
-        auto not_already_added = [&](const pqxx::tuple& row) { return added_admins.count(row["uri"].c_str()) == 0; };
-        auto make_admin_from_row = [&](const pqxx::tuple& row) { return make_admin(row); };
+        auto not_already_added = [&](const pqxx_row& row) { return added_admins.count(row["uri"].c_str()) == 0; };
+        auto make_admin_from_row = [&](const pqxx_row& row) { return make_admin(row); };
 
         std::vector<georef::Admin*> new_admins;
         // clang-format off

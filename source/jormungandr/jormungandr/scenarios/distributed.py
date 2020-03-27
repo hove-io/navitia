@@ -51,6 +51,7 @@ from jormungandr.scenarios.utils import (
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import type_pb2
 from flask_restful import abort
+from .helper_classes.helper_utils import timed_logger
 
 
 class PartialResponseContext(object):
@@ -391,7 +392,7 @@ class Scenario(new_default.Scenario):
         Note that the cleaning process depends on the implementation of futures.
         """
         try:
-            with FutureManager() as future_manager:
+            with FutureManager() as future_manager, timed_logger(logger, 'call_kraken'):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
                         future_manager, request, instance, krakens_call, type_pb2.ISOCHRONE
@@ -410,8 +411,10 @@ class Scenario(new_default.Scenario):
             return [e.get()]
 
     def finalise_journeys(self, request, responses, context, instance, is_debug):
+        logger = logging.getLogger(__name__)
+
         try:
-            with FutureManager() as future_manager:
+            with FutureManager() as future_manager, timed_logger(logger, 'finalise_journeys'):
                 self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug)
 
                 from jormungandr.scenarios import journey_filter
@@ -421,7 +424,7 @@ class Scenario(new_default.Scenario):
                 journey_filter.filter_detailed_journeys(responses, request)
 
         except Exception as e:
-            logging.getLogger(__name__).exception('')
+            logger.exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
 

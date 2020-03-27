@@ -37,9 +37,6 @@ import os
 from datetime import timedelta
 import mock
 import retrying
-from retrying import RetryError
-import six
-from mock import MagicMock
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ[str('JORMUNGANDR_CONFIG_FILE')] = str(
@@ -59,7 +56,10 @@ from jormungandr.parking_space_availability import (
     ParkingPlaces,
 )
 from jormungandr.equipments.sytral import SytralProvider
+from jormungandr.ptref import FeedPublisher
+
 import uuid
+
 
 krakens_dir = os.environ[str('KRAKEN_BUILD_DIR')] + '/tests/mock-kraken'
 
@@ -70,6 +70,7 @@ class FakeModel(object):
         priority,
         is_free,
         is_open_data,
+        max_nb_journeys,
         scenario='new_default',
         equipment_details_providers=[],
         poi_dataset=None,
@@ -80,6 +81,7 @@ class FakeModel(object):
         self.scenario = scenario
         self.equipment_details_providers = equipment_details_providers
         self.poi_dataset = poi_dataset
+        self.max_nb_journeys = max_nb_journeys
 
 
 class AbstractTestFixture(unittest.TestCase):
@@ -201,7 +203,7 @@ class AbstractTestFixture(unittest.TestCase):
         cls.launch_all_krakens()
         instances_config_files = cls.create_dummy_json()
         i_manager.configuration_files = instances_config_files
-        i_manager.initialisation()
+        i_manager.initialization()
         cls.mocks = []
         for name in cls.krakens_pool:
             priority = cls.data_sets[name].get('priority', 0)
@@ -210,11 +212,19 @@ class AbstractTestFixture(unittest.TestCase):
             is_open_data = cls.data_sets[name].get('is_open_data', False)
             scenario = cls.data_sets[name].get('scenario', 'new_default')
             poi_dataset = cls.data_sets[name].get('poi_dataset', None)
+            max_nb_journeys = cls.data_sets[name].get('max_nb_journeys', None)
             cls.mocks.append(
                 mock.patch.object(
                     i_manager.instances[name],
                     'get_models',
-                    return_value=FakeModel(priority, is_free, is_open_data, scenario, poi_dataset=poi_dataset),
+                    return_value=FakeModel(
+                        priority=priority,
+                        is_free=is_free,
+                        is_open_data=is_open_data,
+                        scenario=scenario,
+                        poi_dataset=poi_dataset,
+                        max_nb_journeys=max_nb_journeys,
+                    ),
                 )
             )
 
@@ -230,7 +240,7 @@ class AbstractTestFixture(unittest.TestCase):
                     wait_fixed=10,
                     retry_on_result=lambda x: not instance.is_initialized,
                 ).call(instance.init)
-            except RetryError:
+            except retrying.RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))
                 assert False, 'impossible to start a kraken'
 
@@ -505,11 +515,6 @@ def config(configs=None):
     return deco
 
 
-from mock import PropertyMock
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider, Stands, StandsStatus
-from jormungandr.ptref import FeedPublisher
-
-
 class MockBssProvider(AbstractParkingPlacesProvider):
     def __init__(self, pois_supported, name='mock bss provider'):
         self.pois_supported = pois_supported
@@ -536,7 +541,7 @@ def mock_bss_providers(pois_supported):
     providers = [MockBssProvider(pois_supported=pois_supported)]
     return mock.patch(
         'jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
-        new_callable=PropertyMock,
+        new_callable=mock.PropertyMock,
         return_value=lambda: providers,
     )
 
@@ -572,4 +577,6 @@ def mock_equipment_providers(equipment_provider_manager, data, code_types_list):
     equipment_provider_manager._equipment_providers = {
         "sytral": SytralProvider(url="fake.url", timeout=3, code_types=code_types_list)
     }
-    equipment_provider_manager._equipment_providers["sytral"]._call_webservice = MagicMock(return_value=data)
+    equipment_provider_manager._equipment_providers["sytral"]._call_webservice = mock.MagicMock(
+        return_value=data
+    )

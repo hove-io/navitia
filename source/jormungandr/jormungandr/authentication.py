@@ -45,8 +45,8 @@ import six
 
 def authentication_required(func):
     """
-    decorateur chargé de l'authentification des requetes
-    fonctionne pour chaque API prenant un paramétre la région
+    decorator handling requests authentication
+    works for every endpoints with region as parameter
     """
 
     @wraps(func)
@@ -54,7 +54,7 @@ def authentication_required(func):
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
-            # TODO revoir comment on gere le lon/lat
+            # TODO: better lon/lat handling
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:  # quick fix to avoid circular dependencies
                 from jormungandr import i_manager
