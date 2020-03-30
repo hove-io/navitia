@@ -61,7 +61,7 @@ Projection& Projection::operator=(const Projection& other) {
     return *this;
 }
 
-Projection& Projection::operator=(Projection&& other) {
+Projection& Projection::operator=(Projection&& other) noexcept {
     pj_free(proj_pj);
 
     name = other.name;
@@ -73,7 +73,7 @@ Projection& Projection::operator=(Projection&& other) {
     return *this;
 }
 
-Projection::Projection(Projection&& other)
+Projection::Projection(Projection&& other) noexcept
     : name(other.name), definition(other.definition), is_degree(other.is_degree), proj_pj(other.proj_pj) {
     // we got the proj4 ptr, no need for another allocation
     other.proj_pj = nullptr;

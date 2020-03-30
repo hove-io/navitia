@@ -18,7 +18,7 @@ if(${ENABLE_CLANG_TIDY})
     # Get all .cpp files in navitia/source/ and remove everything
     # From /tests (including unit tests) and /third_party
     file(GLOB_RECURSE FILES_TO_SCAN "${CMAKE_SOURCE_DIR}/*.cpp")
-    list(FILTER FILES_TO_SCAN EXCLUDE REGEX "(tests|third_party)")
+    list(FILTER FILES_TO_SCAN EXCLUDE REGEX "(tests|third_party|utils)")
 
     list(APPEND RUN_CLANG_TIDY_BIN_ARGS
         -clang-tidy-binary ${CLANG_TIDY_BIN}

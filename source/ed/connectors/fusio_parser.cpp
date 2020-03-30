@@ -1153,7 +1153,7 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
             if (co2_emission >= 0.) {
                 mode->co2_emission = co2_emission;
             }
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             LOG4CPLUS_WARN(logger, "Impossible to parse the co2_emission for " + mode->uri + " " + mode->name);
         }
     }
