@@ -165,7 +165,8 @@ PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pya
 
 Disruptions **with file**
 
-Example of file (`impact.json <https://github.com/canaltp/navitia/blob/dev/source/scripts/disruption/impacts.json>`).
+Example of file (`impact.json <https://github.com/canaltp/navitia/blob/dev/source/scripts/disruption/impacts.json>`).<br>
+You have to add real ID object. Values on the example file are indicative.
 
 ```
 {
