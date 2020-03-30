@@ -49,7 +49,7 @@ struct Thermometer {
     std::vector<uint32_t> stop_times_order(const type::VehicleJourney&) const;
     std::vector<uint32_t> stop_times_order_helper(const vector_idx& stop_point_list) const;
 
-    struct cant_match {
+    struct cant_match : public std::exception {
         type::idx_t jpp_idx;
         cant_match() : jpp_idx(type::invalid_idx) {}
         cant_match(type::idx_t rp_idx) : jpp_idx(rp_idx) {}

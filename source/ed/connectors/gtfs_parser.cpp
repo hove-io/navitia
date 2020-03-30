@@ -180,7 +180,7 @@ int time_to_int(const std::string& time) {
         result = boost::lexical_cast<int>(elts[0]) * 3600;
         result += boost::lexical_cast<int>(elts[1]) * 60;
         result += boost::lexical_cast<int>(elts[2]);
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         return std::numeric_limits<int>::min();
     }
     return result;
@@ -374,7 +374,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     try {
         stop->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
         stop->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(logger,
                        "Impossible to parse the coordinate for " + row[id_c] + " " + row[code_c] + " " + row[name_c]);
         return false;
@@ -495,10 +495,9 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             return_wrapper.first = sp;
         }
         return return_wrapper;
-    } else {
-        // we ignore pathways nodes
-        return {};
     }
+    // we ignore pathways nodes
+    return {};
 }
 
 void RouteGtfsHandler::init(Data& /*unused*/) {
@@ -738,8 +737,7 @@ static boost::gregorian::date_period compute_smallest_active_period(const nt::Va
         return {vp.beginning_date, vp.beginning_date};  // return null period
     }
 
-    return boost::gregorian::date_period(vp.beginning_date + boost::gregorian::days(beg),
-                                         vp.beginning_date + boost::gregorian::days(end + 1));
+    return {vp.beginning_date + boost::gregorian::days(beg), vp.beginning_date + boost::gregorian::days(end + 1)};
 }
 
 /*

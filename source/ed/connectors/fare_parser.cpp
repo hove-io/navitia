@@ -199,7 +199,7 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
     if (condition.key == "duration") {
         try {
             boost::lexical_cast<int>(condition.value);
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             LOG4CPLUS_WARN(logger, "A transition has a condition with a duration "
                                        << condition.value << " but this string is not parsable as an integer.");
             return false;
@@ -217,7 +217,7 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
                 LOG4CPLUS_WARN(logger, "A transition has a condition with a nb_changes equals to "
                                            << condition.value << " which is <= -1 .");
             }
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             LOG4CPLUS_WARN(logger, "A transition has a condition with a nb_changes "
                                        << condition.value << " but this string is not parsable as an integer.");
             return false;

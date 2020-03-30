@@ -486,7 +486,7 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             unsigned int boarding_duration(0);
             try {
                 boarding_duration = boost::lexical_cast<unsigned int>(row[boarding_duration_c]);
-            } catch (boost::bad_lexical_cast) {
+            } catch (const boost::bad_lexical_cast&) {
                 LOG4CPLUS_INFO(logger, "Impossible to parse boarding_duration for stop_time number "
                                            << stop_time->order << " on trip " << stop_time->vehicle_journey->uri
                                            << " : " << stop_time->departure_time << " / " << stop_time->arrival_time
@@ -500,7 +500,7 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             unsigned int alighting_duration(0);
             try {
                 alighting_duration = boost::lexical_cast<unsigned int>(row[alighting_duration_c]);
-            } catch (boost::bad_lexical_cast) {
+            } catch (const boost::bad_lexical_cast&) {
                 LOG4CPLUS_INFO(logger, "Impossible to parse boarding_duration for stop_time number "
                                            << stop_time->order << " on trip " << stop_time->vehicle_journey->uri
                                            << " : " << stop_time->departure_time << " / " << stop_time->arrival_time

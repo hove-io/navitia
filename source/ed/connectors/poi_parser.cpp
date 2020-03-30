@@ -30,11 +30,11 @@ www.navitia.io
 
 #include "poi_parser.h"
 
-#include <utility>
 #include "projection_system_reader.h"
 #include "type/data.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
+#include <utility>
 
 namespace ed {
 namespace connectors {
@@ -106,13 +106,13 @@ void PoiParser::fill_poi() {
                     poi.name = row[name_c];
                     try {
                         poi.visible = boost::lexical_cast<bool>(row[visible_c]);
-                    } catch (boost::bad_lexical_cast) {
+                    } catch (const boost::bad_lexical_cast&) {
                         LOG4CPLUS_WARN(logger, "Impossible to parse the visible for " + row[id_c] + " " + row[name_c]);
                         poi.visible = true;
                     }
                     try {
                         poi.weight = boost::lexical_cast<int>(row[weight_c]);
-                    } catch (boost::bad_lexical_cast) {
+                    } catch (const boost::bad_lexical_cast&) {
                         LOG4CPLUS_WARN(logger, "Impossible to parse the weight for " + row[id_c] + " " + row[name_c]);
                         poi.weight = 0;
                     }

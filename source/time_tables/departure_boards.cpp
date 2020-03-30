@@ -271,7 +271,7 @@ static std::vector<routing::JppIdx> get_jpp_from_route_point(const RoutePointIdx
 
 // JppIdx represents here the final part of a Journey Pattern (from JPP to the end), blind from what's before JPP.
 struct JourneyPatternEndsByDirection {
-    explicit JourneyPatternEndsByDirection(const routing::JppIdx& direction) : direction(direction), {}
+    explicit JourneyPatternEndsByDirection(const routing::JppIdx& direction) : direction(direction) {}
     // direction is the "richest" JP's final part (the one with the most JPP after given JPP)
     routing::JppIdx direction;
     // jp_ends groups JP omnibus and direct JP if they use the same succession of SP in the same order

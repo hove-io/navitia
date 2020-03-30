@@ -3,7 +3,7 @@
 
 ---
 Checks:          'clang-diagnostic-*,clang-analyzer-*,*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses'
-WarningsAsErrors: 'clang-diagnostic-*,clang-analyzer-*,*, -fuchsia-overloaded-operator, -fuchsia-default-arguments,-google*, -cppcoreguidelines-pro-bounds-array-to-pointer-decay, -hicpp-no-array-decay, -readability-implicit-bool-conversion, -misc-macro-parentheses'
+WarningsAsErrors: 'clang-diagnostic-*,clang-analyzer-*,*, -cppcoreguidelines-owning-memory, -hicpp-signed-bitwise, -cert-err60-cpp, -cppcoreguidelines-pro-type-reinterpret-cast, -cppcoreguidelines-pro-bounds-pointer-arithmetic, -clang-analyzer-optin.cplusplus.VirtualCall, -clang-analyzer-core.StackAddressEscape, -readability-static-accessed-through-instance'
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     none

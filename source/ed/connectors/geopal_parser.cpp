@@ -30,9 +30,9 @@ www.navitia.io
 
 #include "geopal_parser.h"
 
-#include <utility>
 #include "data_cleaner.h"
 #include "projection_system_reader.h"
+#include <utility>
 
 namespace ed {
 namespace connectors {

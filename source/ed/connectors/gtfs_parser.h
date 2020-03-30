@@ -401,14 +401,14 @@ void normalize_extcodes(Data& data);
  */
 int time_to_int(const std::string& time);
 
-struct FileNotFoundException {
+struct FileNotFoundException : public std::exception {
     std::string filename;
     FileNotFoundException(std::string filename) : filename(filename) {}
 };
 
-struct UnableToFindProductionDateException {};
+struct UnableToFindProductionDateException : public std::exception {};
 
-struct InvalidHeaders {
+struct InvalidHeaders : public std::exception {
     std::string filename;
     InvalidHeaders(std::string filename) : filename(filename) {}
 };
