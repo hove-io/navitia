@@ -36,7 +36,8 @@ vhost = /
 rt_topics = shortterm.coverage_name
 ```
 
-Compile kraken and run it. You are ready to send disruption
+Compile Kraken and run it. You are ready to send disruption.<br>
+Don't forget to run the script with the **Jormungandr virtualenv** for dependencies.
 
 ## Run
 
@@ -140,6 +141,8 @@ optional arguments:
 ```
 
 ### Examples
+
+Run inside the **Jormungandr Virtualenv**
 
 Simple **empty disruption**
 
