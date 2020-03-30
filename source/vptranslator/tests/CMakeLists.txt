@@ -1,0 +1,2 @@
+add_executable (vptranslator_test vptranslator_test.cpp)
+target_link_libraries(vptranslator_test types ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
