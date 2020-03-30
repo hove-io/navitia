@@ -349,13 +349,18 @@ def main():
             while True:
                 for impact in pt_objects_dict['impacts']:
                     logger.info("prepare disruption with {}".format(impact['pt_object']))
-                    disruption = Disruption(
-                        eval(impact['pt_object']),
-                        datetime.datetime.utcnow(),
-                        datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
-                        logger,
-                        impact['impact_type'],
-                    )
+                    try:
+                        disruption = Disruption(
+                            eval(impact['pt_object']),
+                            datetime.datetime.utcnow(),
+                            datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
+                            logger,
+                            impact['impact_type'],
+                        )
+                    except NameError:
+                        logger.error("pt_object is badly formatted - {}".format(sys.exc_info()[0]))
+                        raise
+
                     publish(logger, args, disruption)
                     logger.info("wait {} secs before next disruption".format(args.sleep))
                     time.sleep(args.sleep)
@@ -365,22 +370,26 @@ def main():
             logger.error("error during disruption creation - {}".format(sys.exc_info()[0]))
             raise
     else:
-        if args.empty_disruption:
-            disruption = Disruption(
-                None,
-                datetime.datetime.utcnow(),
-                datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
-                logger,
-                args.impact_type,
-            )
-        else:
-            disruption = Disruption(
-                eval(args.pt_object),
-                datetime.datetime.utcnow(),
-                datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
-                logger,
-                args.impact_type,
-            )
+        try:
+            if args.empty_disruption:
+                disruption = Disruption(
+                    None,
+                    datetime.datetime.utcnow(),
+                    datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
+                    logger,
+                    args.impact_type,
+                )
+            else:
+                disruption = Disruption(
+                    eval(args.pt_object),
+                    datetime.datetime.utcnow(),
+                    datetime.datetime.utcnow() + datetime.timedelta(minutes=args.disruption_duration),
+                    logger,
+                    args.impact_type,
+                )
+        except NameError:
+            logger.error("pt_object is badly formatted - {}".format(sys.exc_info()[0]))
+            raise
         publish(logger, args, disruption)
     logger.info("close disruptor")
 

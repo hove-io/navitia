@@ -59,7 +59,7 @@ optional arguments:
                         AMQ broker connection string (mandatory). Example: -b
                         pyamqp://guest:guest@localhost:5672
 
--e EXCHANGE, --exchange EXCHANGE
+  -e EXCHANGE, --exchange EXCHANGE
                         AMQ exhange (mandatory). Example: -e navitia
 
   -t TOPIC, --topic TOPIC
