@@ -31,10 +31,10 @@ www.navitia.io
 #include "meta_vehicle_journey.h"
 
 #include "type/concerns_base_at_period.h"
-#include "type/pt_data.h"
-#include "type/route.h"
 #include "type/dataset.h"
 #include "type/physical_mode.h"
+#include "type/pt_data.h"
+#include "type/route.h"
 #include "type/serialization.h"
 #include "type/type_utils.h"
 #include "utils/logger.h"

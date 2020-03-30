@@ -52,7 +52,7 @@ struct FeedInfoFusioHandler : public GenericHandler {
     boost::optional<boost::gregorian::date> feed_creation_date;
     boost::optional<boost::posix_time::time_duration> feed_creation_time;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     void finish(Data&);
 };
 
@@ -60,7 +60,7 @@ struct AgencyFusioHandler : public AgencyGtfsHandler {
     AgencyFusioHandler(GtfsData& gdata, CsvReader& reader) : AgencyGtfsHandler(gdata, reader) {}
     int ext_code_c, sort_c, agency_url_c;
     void init(Data& data);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {}; }
     // const std::vector<std::string> required_headers() const { return {"network_id", "network_name", "network_url",
     // "network_timezone"}; }
@@ -71,14 +71,14 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     int property_id_c, comment_id_c, visible_c, geometry_id_c;
 
     void init(Data& data);
-    stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
+    stop_point_and_area handle_line(Data& data, const csv_row& row, bool is_first_line);
     void handle_stop_point_without_area(Data& data);
     const std::vector<std::string> required_headers() const {
         return {"stop_id", "stop_name", "location_type", "stop_lat", "stop_lon"};
     }
 
-    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
-    ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    ed::types::StopPoint* build_stop_point(Data& data, const csv_row& row);
+    ed::types::StopArea* build_stop_area(Data& data, const csv_row& row);
 };
 
 struct RouteFusioHandler : public GenericHandler {
@@ -87,7 +87,7 @@ struct RouteFusioHandler : public GenericHandler {
         geometry_id_c, destination_id_c;
     int ignored;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"route_id", "route_name", "line_id"}; }
 };
 
@@ -103,7 +103,7 @@ struct GeometriesFusioHandler : public GenericHandler {
     GeometriesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int geometry_id_c = -1, geometry_wkt_c = -1;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     void finish(Data& data);
     const std::vector<std::string> required_headers() const { return {"geometry_id", "geometry_wkt"}; }
 };
@@ -117,7 +117,7 @@ struct TripsFusioHandler : public GenericHandler {
     int ignored_vj = 0;
     void init(Data&);
     std::vector<ed::types::VehicleJourney*> get_split_vj(Data& data, const csv_row& row, bool is_first_line);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "service_id", "trip_id", "physical_mode_id", "company_id"};
     }
@@ -130,14 +130,14 @@ struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     int desc_c, itl_c, date_time_estimated_c, id_c, headsign_c, boarding_duration_c, alighting_duration_c;
     bool is_stop_time_precision;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
 };
 
 struct ContributorFusioHandler : public GenericHandler {
     ContributorFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, website_c, license_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"contributor_name", "contributor_id"}; }
 };
 
@@ -167,7 +167,7 @@ struct LineFusioHandler : public GenericHandler {
     int id_c, name_c, external_code_c, code_c, forward_name_c, backward_name_c, color_c, sort_c, network_c, comment_c,
         commercial_mode_c, contributor_c, geometry_id_c, opening_c, closing_c, text_color_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"line_id", "line_name", "commercial_mode_id"}; }
 };
 
@@ -175,7 +175,7 @@ struct LineGroupFusioHandler : public GenericHandler {
     LineGroupFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, main_line_id_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"line_group_id", "line_group_name", "main_line_id"};
     }
@@ -185,7 +185,7 @@ struct LineGroupLinksFusioHandler : public GenericHandler {
     LineGroupLinksFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int line_group_id_c, line_id_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"line_group_id", "line_id"}; }
 };
 
@@ -194,7 +194,7 @@ struct CompanyFusioHandler : public GenericHandler {
     int id_c, name_c, company_address_name_c, company_address_number_c, company_address_type_c, company_url_c,
         company_mail_c, company_phone_c, company_fax_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"company_name", "company_id"}; }
 };
 
@@ -202,7 +202,7 @@ struct PhysicalModeFusioHandler : public GenericHandler {
     PhysicalModeFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c, co2_emission_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"physical_mode_id", "physical_mode_name"}; }
 };
 
@@ -210,7 +210,7 @@ struct CommercialModeFusioHandler : public GenericHandler {
     CommercialModeFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, name_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"commercial_mode_id", "commercial_mode_name"}; }
 };
 
@@ -218,7 +218,7 @@ struct CommentFusioHandler : public GenericHandler {
     CommentFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, comment_c, type_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"comment_id", "comment_name"}; }
 };
 
@@ -226,7 +226,7 @@ struct OdtConditionsFusioHandler : public GenericHandler {
     OdtConditionsFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int odt_condition_id_c, odt_condition_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"odt_condition_id", "odt_condition"}; }
 };
 
@@ -262,7 +262,7 @@ struct PeriodFusioHandler : public GenericHandler {
     PeriodFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int id_c, start_c, end_c;
     void init(Data&);
-    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    void handle_line(Data& data, const csv_row& row, bool is_first_line);
     const std::vector<std::string> required_headers() const { return {"end_date"}; }
 };
 

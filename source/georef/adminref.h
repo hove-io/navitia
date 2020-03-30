@@ -84,10 +84,10 @@ struct Admin : nt::Header, nt::Nameable {
           const std::string& uri,
           const std::string& name,
           int level,
-          const std::string& insee,
-          const std::string& label,
+          std::string insee,
+          std::string label,
           const nt::GeographicalCoord& coord,
-          const Postal_codes& postal_codes);
+          Postal_codes postal_codes);
     std::string get_range_postal_codes();
     std::string postal_codes_to_string() const;
     template <class Archive>

@@ -40,13 +40,13 @@ www.navitia.io
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/program_options.hpp>
-#include <boost/format.hpp>
-#include <boost/range/algorithm/transform.hpp>
-#include <boost/range/algorithm/for_each.hpp>
-#include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/algorithm/copy.hpp>
+#include <boost/range/algorithm/for_each.hpp>
+#include <boost/range/algorithm/transform.hpp>
 #include <pqxx/pqxx>
 
 #include <fstream>
@@ -58,7 +58,7 @@ namespace georef = navitia::georef;
 namespace ed {
 
 #if PQXX_COMPATIBILITY
-typedef pqxx::tuple pqxx_row;
+using pqxx_row = pqxx::tuple;
 #else
 typedef pqxx::row pqxx_row;
 #endif
@@ -268,8 +268,9 @@ bool rename_file(const std::string& source_name, const std::string& dest_name) {
 }
 
 bool remove_file(const std::string& filename) {
-    if(!boost::filesystem::exists(filename))
+    if(!boost::filesystem::exists(filename)) {
         return true;
+    }
 
     if(!boost::filesystem::remove(filename)) {
         auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");

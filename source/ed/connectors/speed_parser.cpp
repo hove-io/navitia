@@ -29,13 +29,13 @@ www.navitia.io
 */
 
 #include "speed_parser.h"
-#include "utils/functions.h"
-#include <boost/lexical_cast.hpp>
-#include <iostream>
-#include <algorithm>
 #include "utils/exception.h"
+#include "utils/functions.h"
+#include <algorithm>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/optional/optional_io.hpp>
+#include <iostream>
 
 namespace ed {
 namespace connectors {

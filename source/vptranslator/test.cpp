@@ -31,14 +31,14 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE vptranslator_test
 
-#include <boost/test/unit_test.hpp>
-#include "vptranslator/vptranslator.h"
 #include "tests/utils_test.h"
+#include "vptranslator/vptranslator.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace navitia::vptranslator;
 using navitia::type::ExceptionDate;
 using navitia::type::ValidityPattern;
-typedef navitia::type::Calendar::Week Week;
+using Week = navitia::type::Calendar::Week;
 using boost::gregorian::date;
 using boost::gregorian::date_period;
 

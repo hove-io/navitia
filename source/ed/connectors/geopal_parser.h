@@ -55,14 +55,14 @@ private:
     void fill_admins();
     void fill_postal_codes();
     void fill_ways_edges();
-    bool starts_with(std::string filename, const std::string& prefex);
+    bool starts_with(const std::string& filename, const std::string& prefex);
 
 public:
     ConvCoord conv_coord = ConvCoord(Projection("Lambert 2 étendu", "27572", false));
 
     ed::Georef data;
 
-    GeopalParser(const std::string& path);
+    GeopalParser(std::string path);
 
     void fill();
 };

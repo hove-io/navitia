@@ -30,18 +30,18 @@ www.navitia.io
 
 #include "type/vehicle_journey.h"
 
-#include "type/concerns_base_at_period.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/serialization.h"
-#include "type/type_utils.h"
 #include "type/company.h"
+#include "type/concerns_base_at_period.h"
 #include "type/dataset.h"
+#include "type/indexes.h"
+#include "type/meta_vehicle_journey.h"
+#include "type/physical_mode.h"
+#include "type/pt_data.h"
 #include "type/route.h"
+#include "type/serialization.h"
 #include "type/stop_area.h"
 #include "type/stop_point.h"
-#include "type/physical_mode.h"
-#include "type/meta_vehicle_journey.h"
+#include "type/type_utils.h"
 
 namespace navitia {
 namespace type {

@@ -29,17 +29,19 @@ www.navitia.io
 */
 
 #include "poi_parser.h"
+
+#include <utility>
+#include "projection_system_reader.h"
 #include "type/data.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
-#include "projection_system_reader.h"
 
 namespace ed {
 namespace connectors {
 
-PoiParserException::~PoiParserException() noexcept {}
+PoiParserException::~PoiParserException() noexcept = default;
 
-PoiParser::PoiParser(const std::string& path) : path(path) {
+PoiParser::PoiParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
 }
 
@@ -60,7 +62,7 @@ void PoiParser::fill_poi_type() {
         if (reader.is_valid(id_c, row) && reader.is_valid(name_c, row)) {
             const auto& itm = this->data.poi_types.find(row[id_c]);
             if (itm == this->data.poi_types.end()) {
-                ed::types::PoiType* poi_type = new ed::types::PoiType;
+                auto* poi_type = new ed::types::PoiType;
                 poi_type->id = this->data.poi_types.size() + 1;
                 poi_type->name = row[name_c];
                 this->data.poi_types[row[id_c]] = poi_type;

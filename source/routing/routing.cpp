@@ -30,8 +30,8 @@ www.navitia.io
 
 #include "routing.h"
 
-#include "type/data.h"
 #include "type/base_pt_objects.h"
+#include "type/data.h"
 
 namespace navitia {
 namespace routing {
@@ -132,7 +132,7 @@ std::ostream& operator<<(std::ostream& ss, const PathItem& t) {
 }
 
 std::ostream& operator<<(std::ostream& ss, const Path& t) {
-    for (auto item : t.items) {
+    for (const auto& item : t.items) {
         ss << item;
     }
 

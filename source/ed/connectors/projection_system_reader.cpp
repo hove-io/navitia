@@ -29,14 +29,16 @@ www.navitia.io
 */
 
 #include "projection_system_reader.h"
-#include <boost/filesystem.hpp>
-#include "utils/exception.h"
 #include "utils/csv.h"
+#include <utility>
+#include "utils/exception.h"
+#include <boost/filesystem.hpp>
 
 namespace ed {
 namespace connectors {
 
-ProjectionSystemReader::ProjectionSystemReader(const std::string& p, ConvCoord d) : file(p), default_conv_coord(d) {}
+ProjectionSystemReader::ProjectionSystemReader(std::string p, ConvCoord d)
+    : file(std::move(p)), default_conv_coord(std::move(d)) {}
 
 ConvCoord ProjectionSystemReader::read_conv_coord() const {
     CsvReader reader(file, ';', true, true);

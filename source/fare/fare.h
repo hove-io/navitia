@@ -235,7 +235,7 @@ struct Condition {
     }
 };
 
-std::ostream& operator<<(std::ostream& ss, const Condition& k);
+std::ostream& operator<<(std::ostream& ss, const Condition& condition);
 
 /// Structure représentant une étiquette
 struct Label {

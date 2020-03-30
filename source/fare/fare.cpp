@@ -31,8 +31,8 @@ www.navitia.io
 #include "fare.h"
 
 #include "routing/routing.h"
-#include "type/datetime.h"
 #include "type/base_pt_objects.h"
+#include "type/datetime.h"
 #include "type/network.h"
 #include "type/physical_mode.h"
 
@@ -372,7 +372,8 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
         if (cond.key == "zone" && cond.value != section.start_zone) {
             LOG4CPLUS_TRACE(logger, "start_zone " << cond.value << " vs " << section.start_zone);
             return false;
-        } else if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
+        }
+        if (cond.key == "stoparea" && cond.value != section.start_stop_area) {
             LOG4CPLUS_TRACE(logger, "start_stop_area " << cond.value << " vs " << section.start_stop_area);
 
             return false;
@@ -437,7 +438,8 @@ bool Transition::valid(const SectionKey& section, const Label& label) const {
             LOG4CPLUS_TRACE(logger, "dest_zone " << cond.value << " vs " << section.dest_zone);
 
             return false;
-        } else if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
+        }
+        if (cond.key == "stoparea" && cond.value != section.dest_stop_area) {
             LOG4CPLUS_TRACE(logger, "dest_stop_are " << cond.value << " vs " << section.dest_stop_area);
 
             return false;

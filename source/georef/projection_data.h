@@ -50,7 +50,7 @@ struct ProjectionData {
     // enum used to acces the nodes and the distances
     enum class Direction { Source = 0, Target, size };
     // 2 possible nodes (each end of the edge where the coordinate has been projected)
-    flat_enum_map<Direction, vertex_t> vertices;
+    flat_enum_map<Direction, vertex_t> vertices{};
 
     // The edge we projected on. Needed since we can't be sure to get the right edge with only the source and the target
     // because of parallel edges.

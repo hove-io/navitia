@@ -29,14 +29,14 @@ www.navitia.io
 */
 
 #include "fare_parser.h"
-#include "utils/csv.h"
-#include "utils/base64_encode.h"
-#include "utils/functions.h"
 #include "ed/data.h"
 #include "fare_utils.h"
+#include "utils/base64_encode.h"
+#include "utils/csv.h"
+#include "utils/functions.h"
 
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace fa = navitia::fare;
@@ -80,7 +80,7 @@ void fare_parser::load_transitions() {
         std::string str_condition = boost::algorithm::trim_copy(row.at(4));
         boost::algorithm::split(global_conditions, str_condition, boost::algorithm::is_any_of("&"));
 
-        for (std::string cond : global_conditions) {
+        for (const std::string& cond : global_conditions) {
             if (cond == "symetric") {
                 symetric = true;
             } else {
@@ -102,13 +102,13 @@ void fare_parser::load_transitions() {
             is_valid(condition);
         }
 
-        data.transitions.push_back(std::make_tuple(start, end, transition));
+        data.transitions.emplace_back(start, end, transition);
 
         if (symetric) {
             fa::Transition sym_transition = transition;
             sym_transition.start_conditions = transition.end_conditions;
             sym_transition.end_conditions = transition.start_conditions;
-            data.transitions.push_back(std::make_tuple(start, end, sym_transition));
+            data.transitions.emplace_back(start, end, sym_transition);
         }
     }
 }
@@ -212,7 +212,7 @@ bool fare_parser::is_valid(const navitia::fare::Condition& condition) {
             return false;
         }
         try {
-            int nb_changes = boost::lexical_cast<int>(condition.value);
+            auto nb_changes = boost::lexical_cast<int>(condition.value);
             if (nb_changes <= -1) {
                 LOG4CPLUS_WARN(logger, "A transition has a condition with a nb_changes equals to "
                                            << condition.value << " which is <= -1 .");
@@ -285,8 +285,9 @@ void fare_parser::load_od() {
         for (size_t i = 6; i < row.size(); ++i) {
             std::string price_key = boost::algorithm::trim_copy(row[i]);
 
-            if (price_key.empty())
+            if (price_key.empty()) {
                 continue;
+            }
 
             // coherence check
             if (data.fare_map.find(price_key) == data.fare_map.end()) {

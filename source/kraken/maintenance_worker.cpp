@@ -34,9 +34,9 @@ www.navitia.io
 #include "make_disruption_from_chaos.h"
 #include "metrics.h"
 #include "realtime.h"
+#include "type/kirin.pb.h"
 #include "type/pt_data.h"
 #include "type/task.pb.h"
-#include "type/kirin.pb.h"
 #include "utils/get_hostname.h"
 
 #include <SimpleAmqpClient/Envelope.h>

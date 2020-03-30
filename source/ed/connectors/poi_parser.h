@@ -56,7 +56,7 @@ private:
 public:
     ed::Georef data;
 
-    PoiParser(const std::string& path);
+    PoiParser(std::string path);
     void fill();
 };
 }  // namespace connectors

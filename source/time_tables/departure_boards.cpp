@@ -89,7 +89,7 @@ static void fill_date_times(PbCreator& pb_creator,
 static void fill_first_last_date_times(PbCreator& pb_creator,
                                        pbnavitia::ScheduleStopTime* date_time,
                                        const std::pair<unsigned int, const navitia::type::StopTime*> stop_time,
-                                       const boost::optional<const std::string> calendar_id) {
+                                       const boost::optional<const std::string>& calendar_id) {
     const auto& st_calendar = navitia::StopTimeCalendar(stop_time.second, stop_time.first, calendar_id);
     pb_creator.fill(&st_calendar, date_time, 0);
 }
@@ -165,7 +165,7 @@ static void render(PbCreator& pb_creator,
                    const std::map<routing::JppIdx, first_and_last_stop_time>& map_route_point_first_last_st,
                    const DateTime& datetime,
                    const DateTime& max_datetime,
-                   const boost::optional<const std::string> calendar_id,
+                   const boost::optional<const std::string>& calendar_id,
                    const uint32_t depth) {
     pb_creator.action_period =
         pt::time_period(to_posix_time(datetime, *pb_creator.data), to_posix_time(max_datetime, *pb_creator.data));
@@ -271,7 +271,7 @@ static std::vector<routing::JppIdx> get_jpp_from_route_point(const RoutePointIdx
 
 // JppIdx represents here the final part of a Journey Pattern (from JPP to the end), blind from what's before JPP.
 struct JourneyPatternEndsByDirection {
-    JourneyPatternEndsByDirection(const routing::JppIdx& direction) : direction(direction), jp_ends() {}
+    explicit JourneyPatternEndsByDirection(const routing::JppIdx& direction) : direction(direction), {}
     // direction is the "richest" JP's final part (the one with the most JPP after given JPP)
     routing::JppIdx direction;
     // jp_ends groups JP omnibus and direct JP if they use the same succession of SP in the same order
@@ -458,7 +458,7 @@ void terminus_schedules(PbCreator& pb_creator,
     RequestHandle handler(pb_creator, date, duration, calendar_id);
     handler.init_jpp(request, forbidden_uris);
 
-    if (pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)) {
+    if (pb_creator.has_error() || (handler.journey_pattern_points.empty())) {
         return;
     }
 
@@ -526,7 +526,7 @@ void terminus_schedules(PbCreator& pb_creator,
                     is_jp_end_associated_to_a_direction = true;
                 }
             }
-            while (to_erase.size()) {
+            while (!to_erase.empty()) {
                 // erase from the end to keep valid indexes to erase
                 jp_ends_by_directions_it->second.erase(jp_ends_by_directions_it->second.begin() + to_erase.back());
                 to_erase.pop_back();

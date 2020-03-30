@@ -30,8 +30,8 @@ www.navitia.io
 
 #include "data_cleaner.h"
 #include "ed/data.h"
-#include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <boost/graph/strong_components.hpp>
 
 namespace ed {
 namespace connectors {
@@ -49,7 +49,7 @@ void data_cleaner::fusion_ways() {
     typedef std::unordered_map<std::string, std::vector<types::Edge*>> wayname_ways;
     std::unordered_map<std::string, wayname_ways> admin_wayname_way;
     for (auto way : this->data.ways) {
-        if (way.second->admin == nullptr || way.second->edges.empty() || way.second->name == "") {
+        if (way.second->admin == nullptr || way.second->edges.empty() || way.second->name.empty()) {
             continue;
         }
         auto admin_it = admin_wayname_way.find(way.second->admin->insee);

@@ -30,11 +30,11 @@ www.navitia.io
 
 #include "type/message.h"
 
-#include "type/pt_data.h"
-#include "type/company.h"
-#include "type/network.h"
 #include "type/base_pt_objects.h"
+#include "type/company.h"
 #include "type/meta_vehicle_journey.h"
+#include "type/network.h"
+#include "type/pt_data.h"
 #include "type/serialization.h"
 #include "utils/logger.h"
 

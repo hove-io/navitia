@@ -56,7 +56,7 @@ std::vector<navitia::fare::Condition> parse_conditions(const std::string& condit
 
 navitia::fare::State parse_state(const std::string& state_str);
 
-void add_in_state_str(std::string& str, std::string key, const std::string& val);
+void add_in_state_str(std::string& str, const std::string& key, const std::string& val);
 
 std::string to_string(navitia::fare::State state);
 

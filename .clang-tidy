@@ -8,7 +8,7 @@ HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
 User:            CanalTP
-CheckOptions:    
+CheckOptions:
   - key:             bugprone-argument-comment.StrictMode
     value:           '0'
   - key:             bugprone-assert-side-effect.AssertMacros
