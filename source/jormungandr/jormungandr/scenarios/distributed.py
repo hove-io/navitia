@@ -437,13 +437,14 @@ class Scenario(new_default.Scenario):
             logger.exception('')
             return [e.get()]
 
-    def finalise_journeys(self, request, responses, context, instance, is_debug):
+    def finalise_journeys(self, request, responses, context, instance, is_debug, request_id):
         logger = logging.getLogger(__name__)
 
         try:
             with FutureManager() as future_manager, timed_logger(logger, 'finalise_journeys'):
-                self._scenario.finalise_journeys(future_manager, request, responses, context, instance, is_debug, request_id)
-
+                self._scenario.finalise_journeys(
+                    future_manager, request, responses, context, instance, is_debug, request_id
+                )
 
                 from jormungandr.scenarios import journey_filter
 
