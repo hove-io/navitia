@@ -14,6 +14,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: CanalTP/navitia-docker-compose
+    - name: install httpie dependency
+      run: apt update && apt install -y httpie
     - name: build navitia_builder docker image
       working-directory: builder
       run: docker build --pull --no-cache=true -t navitia_builder .
@@ -23,3 +25,7 @@ jobs:
     - if: github.ref == 'refs/heads/release'
       name: create and publish RELEASE images
       run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock navitia_builder -b release -l -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+    - name: slack notification (the job has failed)
+      if: failure()
+      run: |
+          echo '{"text":"Github Actions: publish_docker_compose_images failed ! (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Publish+Docker+Compose+Images%22)"}' | http --json POST ${{secrets.SLACK_URL}}

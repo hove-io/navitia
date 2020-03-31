@@ -35,3 +35,7 @@ jobs:
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
       run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
+    - name: slack notification (the job has failed)
+      if: failure()
+      run: |
+          echo '{"text":"Github Actions: build_navitia_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)"}' | http --json POST ${{secrets.SLACK_URL}}
