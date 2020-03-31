@@ -90,7 +90,7 @@ class PtJourney:
                 self._periode_extremity.represents_start,
                 self._journey_params,
                 self._bike_in_pt,
-                self._request_id
+                self._request_id,
             )
 
     def _do_journeys_request(self):
