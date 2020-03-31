@@ -162,20 +162,6 @@ def wait_and_complete_pt_journey(
             request_id=request_id,
         )
 
-    for pt_element in journeys:
-        complete_pt_journey(
-            requested_orig_obj=requested_orig_obj,
-            requested_dest_obj=requested_dest_obj,
-            dep_mode=pt_element.dep_mode,
-            arr_mode=pt_element.arr_mode,
-            pt_journey=pt_element.pt_journeys,
-            streetnetwork_path_pool=streetnetwork_path_pool,
-            orig_places_free_access=orig_places_free_access,
-            dest_places_free_access=dest_places_free_access,
-            request=request,
-            pt_journeys=journeys,
-        )
-
     with timed_logger(logger, 'complete_pt_journeys'):
         for pt_element in journeys:
             complete_pt_journey(

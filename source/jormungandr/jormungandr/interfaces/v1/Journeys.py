@@ -488,15 +488,7 @@ class Journeys(JourneyCommon):
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
 
-
-        # If there are several possible regions to query:
-        # copy base request arguments before setting region specific parameters
-        if len(possible_regions) > 1:
-            base_args = deepcopy(args)
-
         logger = logging.getLogger(__name__)
-
-        logger.debug("We are about to ask journeys on regions : {}".format(possible_regions))
 
         # generate an id that :
         #  - depends on the coverage and differents arguments of the request (from, to, datetime, etc.)
@@ -518,7 +510,6 @@ class Journeys(JourneyCommon):
                 scenario = ""
 
             json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
-
             # we could use the json_repr as an id, but we hash it to have something smaller
             m = hashlib.sha256()
             m.update(json_repr)
@@ -533,6 +524,12 @@ class Journeys(JourneyCommon):
         request_id = generate_request_id()
         args["request_id"] = request_id
 
+        # If there are several possible regions to query:
+        # copy base request arguments before setting region specific parameters
+        if len(possible_regions) > 1:
+            base_args = deepcopy(args)
+
+        logger.debug("We are about to ask journeys on regions : {}".format(possible_regions))
 
         # Store the different errors
         responses = {}

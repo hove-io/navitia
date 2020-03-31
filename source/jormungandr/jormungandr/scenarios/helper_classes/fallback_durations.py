@@ -115,7 +115,7 @@ class FallbackDurations:
                     self._mode,
                     self._max_duration_to_pt,
                     self._request,
-                    self._request_id
+                    self._request_id,
                     **self._speed_switcher
                 )
             except Exception as e:
