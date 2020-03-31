@@ -333,7 +333,7 @@ Indexes make_indexes(const Cont& objs) {
 }
 
 template <>
-Indexes make_indexes(const idx_t& idx) {
+Indexes make_indexes(const idx_t& idx) {  // NOLINT(readability-inconsistent-declaration-parameter-name)
     Indexes indexes;
     indexes.insert(idx);
     return indexes;

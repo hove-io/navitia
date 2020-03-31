@@ -84,10 +84,10 @@ struct FindAdminWithCities {
         work = std::make_shared<pqxx::work>(*conn);
     }
 
-    FindAdminWithCities(const FindAdminWithCities&) = default;
-    FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
-    FindAdminWithCities(FindAdminWithCities&&) noexcept = default;
-    FindAdminWithCities& operator=(FindAdminWithCities&&) = delete;
+    FindAdminWithCities(const FindAdminWithCities& other) = default;
+    FindAdminWithCities& operator=(const FindAdminWithCities& other) = delete;
+    FindAdminWithCities(FindAdminWithCities&& other) noexcept;
+    FindAdminWithCities& operator=(FindAdminWithCities&& other) = delete;
     ~FindAdminWithCities() {
         if (nb_call == 0) {
             return;
@@ -128,6 +128,7 @@ struct FindAdminWithCities {
         double lon, lat;
         r["lon"] >> lon;
         r["lat"] >> lat;
+        // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
         admin->coord = navitia::type::GeographicalCoord(lon, lat);
         admin->idx = georef.admins.size();
         admin->from_original_dataset = false;
@@ -253,6 +254,10 @@ struct FindAdminWithCities {
         return res;
     }
 };
+
+// For some reason the compiler can't see the noexcept
+// If it is not defined here
+FindAdminWithCities::FindAdminWithCities(FindAdminWithCities&& other) noexcept = default;
 
 bool rename_file(const std::string& source_name, const std::string& dest_name) {
     auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");

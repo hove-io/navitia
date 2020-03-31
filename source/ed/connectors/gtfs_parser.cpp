@@ -107,7 +107,7 @@ std::string generate_unique_vj_uri(const GtfsData& gtfs_data, const std::string&
         // for debugging purpose (since vj uri are useful only for dev purpose)
         // we store if the vj is in conflict
         const std::string separator = (i == 0 ? "dst" : "conflit");
-        const std::string vj_uri = original_uri + "_" + separator + "_" + std::to_string(cpt_vj + i);
+        const std::string vj_uri = std::string(original_uri + "_").append(separator + "_") + std::to_string(cpt_vj + i);
         // to avoid collision, we check if we find a vj with the name we want to create
         if (gtfs_data.vj_uri.find(vj_uri) == gtfs_data.vj_uri.end()) {
             return vj_uri;

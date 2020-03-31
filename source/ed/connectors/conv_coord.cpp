@@ -74,7 +74,10 @@ Projection& Projection::operator=(Projection&& other) noexcept {
 }
 
 Projection::Projection(Projection&& other) noexcept
-    : name(other.name), definition(other.definition), is_degree(other.is_degree), proj_pj(other.proj_pj) {
+    : name(std::move(other.name)),
+      definition(std::move(other.definition)),
+      is_degree(other.is_degree),
+      proj_pj(other.proj_pj) {
     // we got the proj4 ptr, no need for another allocation
     other.proj_pj = nullptr;
 }

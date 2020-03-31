@@ -332,7 +332,7 @@ struct Eval : boost::static_visitor<Indexes> {
                 std::vector<std::string> splited;
                 boost::algorithm::split(splited, f.args.at(1), boost::algorithm::is_any_of(";"));
                 if (splited.size() != 2) {
-                    throw 0;
+                    throw 0;  // NOLINT (hicpp-exception-baseclass)
                 }
                 coord = type::GeographicalCoord(boost::lexical_cast<double>(splited[0]),
                                                 boost::lexical_cast<double>(splited[1]));

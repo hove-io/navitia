@@ -281,6 +281,7 @@ private:
         //
         // We translate our current position using the vector vec to
         // go from point to point.
+        // NOLINTNEXTLINE (bugprone-integer-division)
         const auto nb = double((last_num - begin_num) / 2 + 1);
         const Coord vec((to.lon() - from.lon()) / nb, (to.lat() - from.lat()) / nb);
         Coord coord = translate(from, Coord(vec.lon() / 2, vec.lat() / 2));

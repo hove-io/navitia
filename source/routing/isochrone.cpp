@@ -240,19 +240,19 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
     if (!boundary_duration.empty()) {
         type::MultiPolygon max_isochrone = build_single_isochrone(
             raptor, raptor.data.pt_data->stop_points, clockwise, coord_origin,
-            build_bound(clockwise, boundary_duration[0], init_dt), origin, speed, boundary_duration[0]);
+            build_bound(clockwise, boundary_duration.at(0), init_dt), origin, speed, boundary_duration.at(0));
         for (size_t i = 1; i < boundary_duration.size(); i++) {
             type::MultiPolygon output;
-            if (boundary_duration[i] > 0) {
+            if (boundary_duration.at(i) > 0) {
                 type::MultiPolygon min_isochrone = build_single_isochrone(
                     raptor, raptor.data.pt_data->stop_points, clockwise, coord_origin,
-                    build_bound(clockwise, boundary_duration[i], init_dt), origin, speed, boundary_duration[i]);
+                    build_bound(clockwise, boundary_duration.at(i), init_dt), origin, speed, boundary_duration.at(i));
                 boost::geometry::difference(max_isochrone, min_isochrone, output);
                 max_isochrone = std::move(min_isochrone);
             } else {
                 output = max_isochrone;
             }
-            isochrone.emplace_back(std::move(output), boundary_duration[i], boundary_duration[i - 1]);
+            isochrone.emplace_back(std::move(output), boundary_duration.at(i), boundary_duration.at(i - 1));
         }
     }
     std::reverse(isochrone.begin(), isochrone.end());

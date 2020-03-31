@@ -594,6 +594,7 @@ void apply_impact(const boost::shared_ptr<nt::disruption::Impact>& impact,
 
 using impact_sptr = boost::shared_ptr<nt::disruption::Impact>;
 
+// NOLINTNEXTLINE (cert-err58-cpp)
 auto comp = [](const impact_sptr& lhs, const impact_sptr& rhs) {
     // lexical sort by update datetime then uri
     if (lhs->updated_at != rhs->updated_at) {

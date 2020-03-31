@@ -163,7 +163,7 @@ struct DateTicket {
     }
 };
 
-struct no_ticket {};
+struct no_ticket : public std::exception {};
 
 /// Defines the current state
 struct State {
