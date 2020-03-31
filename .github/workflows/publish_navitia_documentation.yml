@@ -17,7 +17,7 @@ jobs:
     - name: install bundle
       run: sudo apt update && sudo apt install -y bundler
     - name: install httpie dependency
-      run: apt update && apt install -y httpie
+      run: sudo apt update && sudo apt install -y httpie
     - name: git checkout on dev
       run: git checkout dev
     - name: generate documentation on dev

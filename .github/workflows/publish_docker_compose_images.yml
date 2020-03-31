@@ -15,7 +15,7 @@ jobs:
       with:
         repository: CanalTP/navitia-docker-compose
     - name: install httpie dependency
-      run: apt update && apt install -y httpie
+      run: sudo apt update && sudo apt install -y httpie
     - name: build navitia_builder docker image
       working-directory: builder
       run: docker build --pull --no-cache=true -t navitia_builder .
