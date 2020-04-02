@@ -44,7 +44,7 @@ class PlaceByUri:
 
     @new_relic.distributedEvent("place_by_uri", "places")
     def _place(self):
-        with timed_logger(self._logger, 'place_by_uri_calling_external_service'):
+        with timed_logger(self._logger, 'place_by_uri_calling_external_service', self._request_id):
             return self._instance.georef.place(self._uri, request_id=self._request_id)
 
     def _do_request(self):
@@ -54,5 +54,5 @@ class PlaceByUri:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_place_by_uri'):
+        with timed_logger(self._logger, 'waiting_for_place_by_uri', self._request_id):
             return self._value.wait_and_get()

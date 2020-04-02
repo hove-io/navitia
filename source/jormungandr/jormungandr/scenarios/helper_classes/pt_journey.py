@@ -83,7 +83,7 @@ class PtJourney:
 
     @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
-        with timed_logger(self._logger, 'pt_journyes_calling_kraken'):
+        with timed_logger(self._logger, 'pt_journyes_calling_kraken', self._request_id):
             return self._instance.planner.journeys(
                 orig_fallback_durations,
                 dest_fallback_durations,
@@ -207,7 +207,7 @@ class PtJourney:
             self._value = self._future_manager.create_future(self._do_journeys_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_pt_journeys'):
+        with timed_logger(self._logger, 'waiting_for_pt_journeys', self._request_id):
             return self._value.wait_and_get()
 
 

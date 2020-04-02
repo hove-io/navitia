@@ -517,6 +517,10 @@ class Journeys(JourneyCommon):
 
             result = "journeys_{}_{}_{}".format(json_hash, scenario, args['_current_datetime'])
 
+            import uuid
+
+            result = str(uuid.uuid4())
+
             logger.debug("Generating id {} for request {}".format(result, json_repr))
 
             return result
