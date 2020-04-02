@@ -106,7 +106,7 @@ class FallbackDurations:
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
-        with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
+        with timed_logger(self._logger, 'routing_matrix_calling_external_service', self._request_id):
             try:
                 return self._streetnetwork_service.get_street_network_routing_matrix(
                     self._instance,
@@ -209,7 +209,7 @@ class FallbackDurations:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_routing_matrix'):
+        with timed_logger(self._logger, 'waiting_for_routing_matrix', self._request_id):
             return self._value.wait_and_get() if self._value else None
 
 

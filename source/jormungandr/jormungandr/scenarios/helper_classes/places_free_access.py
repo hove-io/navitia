@@ -58,12 +58,12 @@ class PlacesFreeAccess:
 
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
-        with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service'):
+        with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
             return self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
 
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
-        with timed_logger(self._logger, 'odt_stop_points_calling_external_service'):
+        with timed_logger(self._logger, 'odt_stop_points_calling_external_service', self._request_id):
             return self._instance.georef.get_odt_stop_points(coord, self._request_id)
 
     def _do_request(self):
@@ -99,5 +99,5 @@ class PlacesFreeAccess:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_places_free_acess'):
+        with timed_logger(self._logger, 'waiting_for_places_free_acess', self._request_id):
             return self._value.wait_and_get()

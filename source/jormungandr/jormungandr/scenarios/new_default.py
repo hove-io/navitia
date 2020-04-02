@@ -1027,7 +1027,14 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call, distributed_context)
+            new_resp = self.call_kraken(
+                request_type,
+                request,
+                instance,
+                krakens_call,
+                "{}_try_{}".format(request_id, nb_try),
+                distributed_context,
+            )
 
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
@@ -1099,7 +1106,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call, context=None):
+    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context=None):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1113,17 +1120,15 @@ class Scenario(simple.Scenario):
         futures = []
         reqctx = copy_flask_request_context()
 
-        def worker(dep_mode, arr_mode, instance, request, request_id):
+        def worker(dep_mode, arr_mode, instance, request, _request_id):
             with copy_context_in_greenlet_stack(reqctx):
-                return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
+                return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=_request_id))
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode, direct_path_type in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode, direct_path_type)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
-            futures.append(
-                pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, request_id=request["request_id"])
-            )
+            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, _request_id=request_id))
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
@@ -1161,8 +1166,11 @@ class Scenario(simple.Scenario):
         krakens_call = get_kraken_calls(request)
         # Initialize a context for distributed
         distributed_context = self.get_context()
+        request_id = request.get("request_id", None)
         resp = merge_responses(
-            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call, distributed_context),
+            self.call_kraken(
+                type_pb2.ISOCHRONE, request, instance, krakens_call, request_id, distributed_context
+            ),
             request['debug'],
         )
         if not request['debug']:
