@@ -51,7 +51,7 @@ from navitiacommon import models
 from importlib import import_module
 from jormungandr import cache, memory_cache, app, global_autocomplete
 from shapely import wkt, geometry
-from shapely.geos import ReadingError, PredicateError
+from shapely.geos import PredicateError, ReadingError, TopologicalError
 from flask import g
 import flask
 import pybreaker
@@ -608,6 +608,9 @@ class Instance(object):
             return False
         except PredicateError:
             logging.getLogger(__name__).exception("has_coord failed")
+            return False
+        except TopologicalError:
+            logging.getLogger(__name__).exception("check_topology failed")
             return False
 
     def get_external_codes(self, type_, id_):
