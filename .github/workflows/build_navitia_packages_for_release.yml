@@ -15,6 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: retreive version number
+      run: |
+          version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
+          echo "::set-env name=VERSION_NUMBER::$version_number"
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -35,3 +39,12 @@ jobs:
       run: rm -rf ../navitia-*
     - name: trigger jenkins to publish Artifacts on internal server
       run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/publish_navitia_release_packages_from_github/build
+    - name: slack notification (the job has failed)
+      if: failure()
+      run: |
+          echo '{"text":":warning: Github Actions: build_navitia_packages_for_release failed ! (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22). Navboys, this is a release alert !!!"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+    - name: slack notification (the job has successed)
+      if: success()
+      run: |
+          echo '{"text":":information_source: Github Actions: build_navitia_packages_for_release succeded - ${{env.VERSION_NUMBER}} navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Navitia Release: The version ${{env.VERSION_NUMBER}} is available. changelog: https://github.com/CanalTP/navitia/releases/tag/v${{env.VERSION_NUMBER}}"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
