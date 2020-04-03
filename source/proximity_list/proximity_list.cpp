@@ -148,8 +148,8 @@ static int radius_search(const std::shared_ptr<index_t>& NN_index,
 
 template <class T>
 auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
-                                        double radius,
-                                        int size,
+                                        const double radius,
+                                        const int size,
                                         IndexCoord /*unused*/) const
     -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType> {
     // Containers are auto-sized by NN_index, Flann will return all objects inside of the given radius
@@ -166,10 +166,10 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
     return res;
 }
 
-template <class T>
+template <typename T>
 auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
-                                        double radius,
-                                        int size,
+                                        const double radius,
+                                        const int size,
                                         IndexCoordDistance /*unused*/) const
     -> std::vector<typename ReturnTypeTrait<T, IndexCoordDistance>::ValueType> {
     // Containers are auto-sized by NN_index, Flann will return all objects inside of the given radius
@@ -188,8 +188,8 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
 
 template <class T>
 auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
-                                        double radius,
-                                        int size,
+                                        const double radius,
+                                        const int size,
                                         IndexOnly /*unused*/) const
     -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType> {
     // Using small sized std::array will avoid heap allocation and limit the research
@@ -203,7 +203,6 @@ auto ProximityList<T>::find_within_impl(const GeographicalCoord& coord,
     std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType> res;
     auto op = [](const Item& item, float /*unused*/) { return item.element; };
     make_result<T>(coord, items, indices_data, distances_data, nb_found, res, op);
-    ;
 
     return res;
 }

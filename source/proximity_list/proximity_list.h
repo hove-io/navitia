@@ -120,10 +120,12 @@ struct ProximityList {
     void build();
 
     /*
-     * This method can return two types of result
+     * This method can return three types of result
      *
      * When Tag is IndexCorrd, the method returns a vector of Index and Coord, which is useful for searching
      * features nearby a wanted place.
+
+     * When Tag is IndexCorrdDistance, the method returns a vector of Index, Coord and the Distance.
      *
      * If Tag is IndexOnly, the method returns a vector of Index, which is useful for coord projections.
      *
@@ -165,10 +167,10 @@ private:
      *
      * Note that this implementation returns the indices AND the coords of all the nearest elements
      * */
-    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoord) const
+    auto find_within_impl(const GeographicalCoord& coord, const double radius, const int size, IndexCoord) const
         -> std::vector<typename ReturnTypeTrait<T, IndexCoord>::ValueType>;
 
-    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexCoordDistance) const
+    auto find_within_impl(const GeographicalCoord& coord, const double radius, const int size, IndexCoordDistance) const
         -> std::vector<typename ReturnTypeTrait<T, IndexCoordDistance>::ValueType>;
 
     /*
@@ -179,7 +181,7 @@ private:
      * .
      * Note that this implementation returns ONLY indices of nearest elements
      * */
-    auto find_within_impl(const GeographicalCoord& coord, double radius, int size, IndexOnly) const
+    auto find_within_impl(const GeographicalCoord& coord, const double radius, const int size, IndexOnly) const
         -> std::vector<typename ReturnTypeTrait<T, IndexOnly>::ValueType>;
 };
 
