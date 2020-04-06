@@ -138,6 +138,31 @@ class Job(flask_restful.Resource):
 
         return {'message': 'OK'}, 200
 
+    def delete(self, instance_name=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument('state', type=str, required=False, case_sensitive=True, help='filter by job state')
+        args = parser.parse_args()
+
+        query = models.Job.query
+        if "state" in args and args["state"]:
+            query = query.filter_by(state=args["state"])
+        if instance_name:
+            query = query.join(models.Instance).filter(models.Instance.name == instance_name)
+
+        jobs_to_delete = query.all()
+        if not jobs_to_delete:
+            return json.loads('{}'), 204
+
+        for job in jobs_to_delete:
+            try:
+                db.session.delete(job)
+            except Exception:
+                logging.exception("Failed to delete Job {} - Operation aborted".format(job.id))
+                raise
+
+        db.session.commit()
+        return json.loads('{}'), 200
+
 
 def _validate_poi_types_json(poi_types_json):
     """
