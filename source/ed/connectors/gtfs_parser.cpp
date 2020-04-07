@@ -287,8 +287,10 @@ void StopsGtfsHandler::init(Data& data) {
     wheelchair_c = csv.get_pos_col("wheelchair_boarding");
     platform_c = csv.get_pos_col("platform_code");
     timezone_c = csv.get_pos_col("stop_timezone");
-    if (code_c == -1) {
+    if (code_c == UNKNOWN_COLUMN) {
         code_c = id_c;
+    } else {
+        stop_code_is_present = true;
     }
 }
 
@@ -400,6 +402,7 @@ nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) 
     }
     gtfs_data.stop_area_map[sa->uri] = sa;
     data.stop_areas.push_back(sa);
+    add_gtfs_stop_code(data, sa, row[code_c]);
 
     if (has_col(timezone_c, row)) {
         auto tz_name = row[timezone_c];
@@ -438,6 +441,8 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     }
     gtfs_data.stop_point_map[sp->uri] = sp;
     data.stop_points.push_back(sp);
+    add_gtfs_stop_code(data, sp, row[code_c]);
+
     if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
         auto it = gtfs_data.sa_spmap.find(row[parent_c]);
         if (it == gtfs_data.sa_spmap.end()) {
