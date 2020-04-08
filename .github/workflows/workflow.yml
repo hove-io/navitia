@@ -30,6 +30,7 @@ jobs:
     strategy:
         matrix:
             docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
+            python-version: [2.7, 3.6]
 
     container:
         image: ${{matrix.docker_image}}
@@ -46,6 +47,10 @@ jobs:
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
@@ -54,12 +59,6 @@ jobs:
       run:  make -j $(nproc)
     - name: tests
       run: |
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
-    - name: tests python3
-      run: |
-        update-alternatives --install /usr/bin/python python /usr/local/bin/python3.6 1
         python -V
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
@@ -73,26 +72,14 @@ jobs:
       run: |
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
-    - name: docker_test python3
-      run: |
-        python -V
-        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
-        echo $NAVITIA_CHAOS_DUMP_PATH
-        make docker_test
-      env:
-        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
-        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     - name: docker_test
       run: |
-        update-alternatives --install /usr/bin/python python /usr/bin/python2.7 2
-        python -V
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
-
 
   precommit:
     runs-on: ubuntu-latest
