@@ -169,7 +169,7 @@ class Job(flask_restful.Resource):
             db.session.commit()
             return json.loads('{}'), 200
         else:
-            return {'message': 'confirm the deletion'}, 400
+            return {'message': 'confirm the deletion with parameter "confirm=yes"'}, 400
 
 
 def _validate_poi_types_json(poi_types_json):
