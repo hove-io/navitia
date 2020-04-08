@@ -100,10 +100,10 @@ def test_jobs_deletion(create_instances):
 
     # ---1--- DELETE WITH FILTER BY INSTANCE AND BY STATE
     # delete "running" job for 'Instance_1'
-    api_delete("/v0/jobs/{}?state=running".format("Instance_1"))
+    api_delete("/v0/jobs/{}?confirm=yes&state=running".format("Instance_1"))
 
     # two jobs remaining for 'Instance_1'
-    resp = api_get("/v0/jobs/Instance_1")
+    resp = api_get("/v0/jobs/Instance_1?confirm=yes")
     assert len(resp["jobs"]) == 2
 
     # other instances still have 3 jobs
@@ -112,7 +112,7 @@ def test_jobs_deletion(create_instances):
         assert len(resp["jobs"]) == 3
 
     # --- 2 --- DELETE WITH FILTER BY STATE
-    api_delete("/v0/jobs?state=running")
+    api_delete("/v0/jobs?confirm=yes&state=running")
 
     # two jobs remaining for each instance
     for instance in instances:
@@ -120,7 +120,7 @@ def test_jobs_deletion(create_instances):
         assert len(resp["jobs"]) == 2
 
     # --- 3 --- DELETE WITH FILTER BY INSTANCE
-    api_delete("/v0/jobs/Instance_1")
+    api_delete("/v0/jobs/Instance_1?confirm=yes")
 
     # no job remaining for 'Instance_1'
     resp = api_get("/v0/jobs/Instance_1")
@@ -133,19 +133,32 @@ def test_jobs_deletion(create_instances):
 
     # --- 4 --- DELETE WITH FILTER BY ID
     job_id = api_get("/v0/jobs/Instance_2")["jobs"][0]["id"]
-    api_delete("/v0/jobs/{}".format(job_id))
+    api_delete("/v0/jobs/{}?confirm=yes".format(job_id))
 
     # one job remaining for 'Instance_2'
     resp = api_get("/v0/jobs/Instance_2")
     assert len(resp["jobs"]) == 1
 
-    # --- 5 --- DELETE WITHOUT FILTER - ARMAGEDDON
-    api_delete("/v0/jobs")
+    # --- 5 --- DELETE WITHOUT CONFIRMATION
+    query_no_confirm = "/v0/jobs"
+    query_confirm_not_yes = "/v0/jobs?confirm=no"
+    query_confirm_wrong_case = "/v0/jobs?Confirm=no"
+
+    for query in [query_no_confirm, query_confirm_not_yes, query_confirm_wrong_case]:
+        _, status_code = api_delete(query, check=False)
+        assert status_code == 400
+
+        # jobs still remaining
+        resp = api_get("/v0/jobs")
+        assert len(resp["jobs"])
+
+    # --- 6 --- DELETE WITHOUT FILTER - ARMAGEDDON
+    api_delete("/v0/jobs?confirm=yes")
 
     # no job remaining
     resp = api_get("/v0/jobs")
     assert len(resp["jobs"]) == 0
 
-    # --- 6 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
-    resp, status_code = api_delete("/v0/jobs", check=False, no_json=True)
+    # --- 7 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
+    resp, status_code = api_delete("/v0/jobs?confirm=yes", check=False, no_json=True)
     assert status_code == 204
