@@ -53,8 +53,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        which python
-        python -V
+        python -c "import sys; print(sys.version)"
         pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
       run: cmake -DSTRIP_SYMBOLS=ON source
@@ -62,7 +61,7 @@ jobs:
       run:  make -j $(nproc)
     - name: tests
       run: |
-        python -V
+        python -c "import sys; print(sys.version)"
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
