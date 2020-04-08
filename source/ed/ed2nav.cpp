@@ -86,7 +86,7 @@ struct FindAdminWithCities {
 
     FindAdminWithCities(const FindAdminWithCities&) = default;
     FindAdminWithCities& operator=(const FindAdminWithCities&) = delete;
-    FindAdminWithCities(FindAdminWithCities&&) = default;  // NOLINT(hicpp-noexcept-move)
+    FindAdminWithCities(FindAdminWithCities&&) = default;  // NOLINT
     FindAdminWithCities& operator=(FindAdminWithCities&&) = delete;
     ~FindAdminWithCities() {
         if (nb_call == 0) {

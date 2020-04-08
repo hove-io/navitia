@@ -80,7 +80,7 @@ static void make_pb(navitia::PbCreator& pb_creator,
     }
 }
 
-static void cut(vector_idx_coord_distance& list, const size_t end_pagination, const nt::GeographicalCoord& coord) {
+static void cut(vector_idx_coord_distance& list, const size_t end_pagination) {
     const auto nb_sort = std::min(list.size(), end_pagination);
     list.resize(nb_sort);
 }
@@ -155,12 +155,12 @@ void find(navitia::PbCreator& pb_creator,
             }
         }
         total_result += final_list.size();
-        cut(final_list, end_pagination, coord);
+        cut(final_list, end_pagination);
         for (const auto& e : final_list) {
             auto idx = std::get<0>(e);
             auto coord = std::get<1>(e);
             auto distance = std::get<2>(e);
-            result.emplace_back(idx, std::move(coord), distance, type);
+            result.emplace_back(idx, coord, distance, type);
         }
     }
     result = paginate(result, count, start_page);
