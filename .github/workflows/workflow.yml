@@ -41,7 +41,7 @@ jobs:
           - 5672:5672
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
