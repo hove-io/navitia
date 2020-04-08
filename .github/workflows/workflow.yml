@@ -42,10 +42,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: get submodule
-      run: |
-        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
+    #- name: get submodule
+      #run: |
+        #sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        #git submodule update --init --recursive
+    - name: Checkout submodules
+      uses: srt32/git-actions@v0.0.3
+      with:
+        args: git submodule update --init --recursive
     - name: Install dependencies
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
