@@ -131,13 +131,21 @@ def test_jobs_deletion(create_instances):
         resp = api_get("/v0/jobs/{}".format(instance))
         assert len(resp["jobs"]) == 2
 
-    # --- 4 --- DELETE WITHOUT FILTER - ARMAGEDDON
+    # --- 4 --- DELETE WITH FILTER BY ID
+    job_id = api_get("/v0/jobs/Instance_2")["jobs"][0]["id"]
+    api_delete("/v0/jobs/{}".format(job_id))
+
+    # one job remaining for 'Instance_2'
+    resp = api_get("/v0/jobs/Instance_2")
+    assert len(resp["jobs"]) == 1
+
+    # --- 5 --- DELETE WITHOUT FILTER - ARMAGEDDON
     api_delete("/v0/jobs")
 
     # no job remaining
     resp = api_get("/v0/jobs")
     assert len(resp["jobs"]) == 0
 
-    # --- 5 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
+    # --- 6 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
     resp, status_code = api_delete("/v0/jobs", check=False, no_json=True)
     assert status_code == 204

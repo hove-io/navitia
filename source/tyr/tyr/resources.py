@@ -138,18 +138,23 @@ class Job(flask_restful.Resource):
 
         return {'message': 'OK'}, 200
 
-    def delete(self, instance_name=None):
-        parser = reqparse.RequestParser()
-        parser.add_argument('state', type=str, required=False, case_sensitive=True, help='filter by job state')
-        args = parser.parse_args()
+    def delete(self, id=None, instance_name=None):
+        if id:
+            jobs_to_delete = [models.Job.get(id)]
+        else:
+            parser = reqparse.RequestParser()
+            parser.add_argument(
+                'state', type=str, required=False, case_sensitive=True, help='filter by job state'
+            )
+            args = parser.parse_args()
 
-        query = models.Job.query
-        if "state" in args and args["state"]:
-            query = query.filter_by(state=args["state"])
-        if instance_name:
-            query = query.join(models.Instance).filter(models.Instance.name == instance_name)
+            query = models.Job.query
+            if "state" in args and args["state"]:
+                query = query.filter_by(state=args["state"])
+            if instance_name:
+                query = query.join(models.Instance).filter(models.Instance.name == instance_name)
+            jobs_to_delete = query.all()
 
-        jobs_to_delete = query.all()
         if not jobs_to_delete:
             return json.loads('{}'), 204
 
