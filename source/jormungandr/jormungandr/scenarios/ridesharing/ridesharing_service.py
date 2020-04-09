@@ -113,7 +113,7 @@ class AbstractRidesharingService(object):
         params = {
             'ridesharing_service_id': self._get_rs_id(),
             'status': status,
-            'ridesharing_service_url': self.service_url,
+            'ridesharing_service_url': self.service_url + '?' + self.call_params,
         }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_status', params)
