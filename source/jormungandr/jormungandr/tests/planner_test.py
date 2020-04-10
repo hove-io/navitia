@@ -88,6 +88,17 @@ def create_journeys_request_test():
     check_basic_journeys_request(req.journeys)
 
 
+def test_journey_request_current_time():
+    origin = {"Kisio Digital": 42}
+    destination = {"Somewhere": 666}
+    datetime = str_to_time_stamp("20120614T080000")
+    journey_parameters = JourneyParameters(current_datetime=123456789)
+    planner = Kraken(None)
+
+    req = planner._create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    assert req._current_datetime == 123456789
+
+
 def create_graphical_isochrones_request_test():
     origin = {"Kisio Digital": 42}
     destination = {"Somewhere": 666}
