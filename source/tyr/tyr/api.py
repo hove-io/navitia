@@ -61,7 +61,9 @@ api.add_resource(resources.Index, '/')
 
 api.add_resource(resources.Status, '/v0/status')
 
-api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint=str('jobs'))
+api.add_resource(
+    resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', '/v0/jobs/<int:id>/', endpoint=str('jobs')
+)
 
 api.add_resource(
     resources.EndPoint,
