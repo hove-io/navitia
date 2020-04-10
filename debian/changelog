@@ -1,3 +1,13 @@
+navitia2 (3.9.0) unstable; urgency=low
+
+  * Jormungandr: write full url of ridesharing service  <https://github.com/CanalTP/navitia/pull/3187>
+  * Tyr: Add DELETE to /jobs  <https://github.com/CanalTP/navitia/pull/3189>
+  * Kraken: optim proximitylist_api  <https://github.com/CanalTP/navitia/pull/3178>
+  * CI: add notifications to slack  <https://github.com/CanalTP/navitia/pull/3184>
+  * Tools: Add disruptor  <https://github.com/CanalTP/navitia/pull/3181>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 10 Apr 2020 10:04:45 +0100
+
 navitia2 (3.8.0) unstable; urgency=low
 
   * [Mergify] Configuration update  <https://github.com/CanalTP/navitia/pull/3182>
