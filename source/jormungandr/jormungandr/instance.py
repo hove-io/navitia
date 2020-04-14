@@ -563,20 +563,6 @@ class Instance(object):
                 request.request_id = kwargs['request_id']
             else:
                 logger.debug("No request id")
-                # import sys
-                # sys.exit()
-                # import inspect
-                # my_stack = inspect.stack()
-                # trace = ""
-                # for i in my_stack:
-                #     trace = trace + "{}:{}  {}\n".format(i[1], i[2], i[3])
-                # logger.debug(trace)
-                # raise
-                # try:
-                #     request.request_id = flask.request.id
-                # except RuntimeError:
-                #     # we aren't in a flask context, so there is no request
-                #     pass
 
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:

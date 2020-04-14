@@ -504,10 +504,10 @@ class Journeys(JourneyCommon):
             path = str(flask.request.path)
             args_for_id = dict(flask.request.args)
             if "_override_scenario" in args_for_id:
-                scenario = str(args_for_id["_override_scenario"])
+                scenario = str(args_for_id["_override_scenario"][0])
                 args_for_id["_override_scenario"] = ""
             else:
-                scenario = ""
+                scenario = "new_default"
 
             json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
             # we could use the json_repr as an id, but we hash it to have something smaller
@@ -515,11 +515,7 @@ class Journeys(JourneyCommon):
             m.update(json_repr)
             json_hash = m.hexdigest()
 
-            result = "journeys_{}_{}_{}".format(json_hash, scenario, args['_current_datetime'])
-
-            import uuid
-
-            result = str(uuid.uuid4())
+            result = "journeys_{}#{}#".format(json_hash, scenario)
 
             logger.debug("Generating id {} for request {}".format(result, json_repr))
 

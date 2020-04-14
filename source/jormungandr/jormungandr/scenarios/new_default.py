@@ -967,9 +967,11 @@ class Scenario(simple.Scenario):
             return response_pb2.Response()
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
-        origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance, request_id=request_id)
+        origin_detail = self.get_entrypoint_detail(
+            api_request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
+        )
         destination_detail = self.get_entrypoint_detail(
-            api_request.get('destination'), instance, request_id=request_id
+            api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
@@ -1080,7 +1082,7 @@ class Scenario(simple.Scenario):
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
-        compute_car_co2_emission(pb_resp, api_request, instance, request_id)
+        compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
         tag_journeys(pb_resp)
 
         if instance.ridesharing_services and (

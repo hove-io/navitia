@@ -161,7 +161,8 @@ inline void doWork(zmq::context_t& context,
 
         auto start_timestamp = (start - navitia::posix_epoch).total_milliseconds();
         auto end_timestamp = (end - navitia::posix_epoch).total_milliseconds();
-        LOG4CPLUS_INFO(logger, "Worker : " << worker_id << ", request : " << request_id
-                                           << ", start : " << start_timestamp << ", end : " << end_timestamp);
+        LOG4CPLUS_INFO(logger, "Api : " << pbnavitia::API_Name(api) << ", worker : " << worker_id
+                                        << ", request : " << request_id << ", start : " << start_timestamp
+                                        << ", end : " << end_timestamp);
     }
 }
