@@ -64,14 +64,15 @@ class ProximitiesByCrowfly:
 
     @new_relic.distributedEvent("get_crowf_ly", "street_network")
     def _get_crow_fly(self):
-        return self._instance.georef.get_crow_fly(
-            utils.get_uri_pt_object(self._requested_place_obj),
-            self._mode,
-            self._max_duration,
-            self._max_nb_crowfly,
-            self._request_id,
-            **self._speed_switcher
-        )
+        with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
+            return self._instance.georef.get_crow_fly(
+                utils.get_uri_pt_object(self._requested_place_obj),
+                self._mode,
+                self._max_duration,
+                self._max_nb_crowfly,
+                self._request_id,
+                **self._speed_switcher
+            )
 
     def _do_request(self):
         logger = logging.getLogger(__name__)

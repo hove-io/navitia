@@ -484,6 +484,6 @@ def timed_logger(logger, task_name, request_id):
     finally:
         end = time.time()
         collapsed_time = end - start
-        logger.info("{} for {} started at : {}, ended at : {}".format(task_name, request_id, start, end))
+        logger.info("Task : {}, request : {},  start : {}, end : {}".format(task_name, request_id, start, end))
         if collapsed_time > 1e-5:
             logger.info('time  in {}: {}s'.format(task_name, '%.2e' % collapsed_time))

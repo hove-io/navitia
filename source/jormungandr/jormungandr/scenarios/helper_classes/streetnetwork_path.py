@@ -79,21 +79,22 @@ class StreetNetworkPath:
 
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
-        try:
-            return self._streetnetwork_service.direct_path_with_fp(
-                self._instance,
-                self._mode,
-                self._orig_obj,
-                self._dest_obj,
-                self._fallback_extremity,
-                self._request,
-                self._path_type,
-                self._request_id,
-            )
-        except Exception as e:
-            logging.getLogger(__name__).error("Exception':{}\n".format(str(e)))
+        with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
+            try:
+                return self._streetnetwork_service.direct_path_with_fp(
+                    self._instance,
+                    self._mode,
+                    self._orig_obj,
+                    self._dest_obj,
+                    self._fallback_extremity,
+                    self._request,
+                    self._path_type,
+                    self._request_id,
+                )
+            except Exception as e:
+                logging.getLogger(__name__).error("Exception':{}\n".format(str(e)))
 
-            return None
+                return None
 
     def _do_request(self):
         self._logger.debug(
