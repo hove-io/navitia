@@ -444,7 +444,9 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
 
         try:
-            with FutureManager() as future_manager, timed_logger(logger, 'finalise_journeys', request_id):
+            with FutureManager() as future_manager, timed_logger(
+                logger, 'finalise_journeys', "{}_finalise_journeys".format(request_id)
+            ):
                 self._scenario.finalise_journeys(
                     future_manager, request, responses, context, instance, is_debug, request_id
                 )

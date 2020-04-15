@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
+import logging, flask, json, hashlib, datetime
 from flask import request, g
 from flask_restful import abort
 from jormungandr import i_manager, app, fallback_modes
@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.make_links import create_external_link, create_in
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, dt_to_str
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
@@ -59,6 +59,7 @@ from navitiacommon.parser_args_type import (
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
+
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -499,7 +500,6 @@ class Journeys(JourneyCommon):
         #  - we add the current_datetime of the request so as to differentiate
         #    the same request made at distinct moments
         def generate_request_id():
-            import flask, json, hashlib
 
             path = str(flask.request.path)
             args_for_id = dict(flask.request.args)
@@ -515,9 +515,11 @@ class Journeys(JourneyCommon):
             m.update(json_repr)
             json_hash = m.hexdigest()
 
-            result = "journeys_{}#{}#".format(json_hash, scenario)
+            now = dt_to_str(datetime.datetime.utcnow())
 
-            logger.debug("Generating id {} for request {}".format(result, json_repr))
+            result = "journeys_{}_{}#{}#".format(json_hash, now, scenario)
+
+            logger.debug("Generating id : {} for request : {}".format(result, flask.request.url))
 
             return result
 
