@@ -75,10 +75,10 @@ class Request:
         sorted_jormun_tasks = sorted(self.jormun_tasks, key=lambda task: (task.start, -task.end))
         df = [
             dict(
-                Task="Jormun{}".format(task.sub_request_id),
+                Task="J{}#{}".format(task.sub_request_id, task.task_name),
                 Start=task.start,
                 Finish=task.end,
-                SubRequest="Jormun{}".format(task.sub_request_id),
+                SubRequest="J{}#{}".format(task.sub_request_id, task.task_name),
             )
             for task in sorted_jormun_tasks
         ]
@@ -89,7 +89,7 @@ class Request:
                         Task="Kraken_{}".format(task.worker),
                         Start=task.start,
                         Finish=task.end,
-                        SubRequest="{}".format(task.sub_request_id),
+                        SubRequest="K{}".format(task.sub_request_id),
                     )
                 )
 
