@@ -51,7 +51,7 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
         is_deleted=False,
         blocking=False,
         start_period="20100412T165200",
-        end_period="20200412T165200",
+        end_period="30200412T165200",
         cause='CauseTest',
         category=None,
         routes=None,
@@ -167,7 +167,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
     def test_current_datetime_out_of_bounds(self):
         """
         current_datetime out of bounds
-        publication date of disruption          20100412T165200                        20200412T165200
+        publication date of disruption          20100412T165200                        30200412T165200
         current_datetime    20080412T165200
         """
         response = self.query_region('stop_areas/stopB')
@@ -422,7 +422,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
     def test_journey_with_current_datetime_out_of_bounds(self):
         """
         current_datetime out of bounds
-        publication date of disruption          20100412T165200                        20200412T165200
+        publication date of disruption          20100412T165200                        30200412T165200
         current_datetime    20090314T144100
         """
         query = journey_basic_query + '&_current_datetime=20090314T144100'
@@ -975,7 +975,7 @@ def make_mock_chaos_item(
     is_deleted=False,
     blocking=False,
     start_period="20100412T165200",
-    end_period="20200412T165200",
+    end_period="30200412T165200",
     cause='CauseTest',
     category=None,
     routes=None,
