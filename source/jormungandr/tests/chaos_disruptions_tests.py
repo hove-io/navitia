@@ -110,7 +110,9 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         self.send_mock("bob_the_disruption", "stopB", "stop_area", properties=properties, tags=tags)
 
         # and we call again, we must have the disruption now
-        response = self.query_region('stop_areas/stopB?_current_datetime=20160314T104600')
+        response = self.query_region(
+            'stop_areas/stopB?datetime=20160314T104600&_current_datetime=20160314T104600'
+        )
         stops = get_not_null(response, 'stop_areas')
         assert len(stops) == 1
         stop = stops[0]
@@ -180,7 +182,9 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         self.send_mock("bob_the_disruption", "stopB", "stop_area")
 
-        response = self.query_region('stop_areas/stopB?_current_datetime=20080412T165200')
+        response = self.query_region(
+            'stop_areas/stopB?datetime=20080412T165200&_current_datetime=20080412T165200'
+        )
         assert len(response['disruptions']) == 0
 
 
@@ -218,7 +222,9 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
 
         def query_on_date(q, **kwargs):
             """We do the query on a dt inside the disruption application period"""
-            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
+            return self.query_region(
+                '{q}?datetime=20120614T120000&_current_datetime=20120614T120000'.format(q=q), **kwargs
+            )
 
         def has_dis(obj_get, dis):
             r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
@@ -266,7 +272,9 @@ class TestChaosDisruptionsLineSectionOnOneStop(ChaosDisruptionsFixture):
 
         def query_on_date(q, **kwargs):
             """We do the query on a dt inside the disruption application period"""
-            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
+            return self.query_region(
+                '{q}?datetime=20120614T120000&_current_datetime=20120614T120000'.format(q=q), **kwargs
+            )
 
         def has_dis(obj_get, dis):
             r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
@@ -323,7 +331,9 @@ class TestChaosDisruptionsLineSectionOnOneStopWithRoute(ChaosDisruptionsFixture)
 
         def query_on_date(q, **kwargs):
             """We do the query on a dt inside the disruption application period"""
-            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
+            return self.query_region(
+                '{q}?datetime=20120614T120000&_current_datetime=20120614T120000'.format(q=q), **kwargs
+            )
 
         def has_dis(obj_get, dis):
             r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
@@ -396,7 +406,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         # we create a list with every 'to' section to the stop B (the one we added the disruption on)
         self.send_mock("bob_the_disruption", "stopB", "stop_area")
-        query = journey_basic_query + '&_current_datetime=20160314T144100'
+        query = journey_basic_query + '&datetime=20160314T144100&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
         # the response must be still valid (this tests the kraken data reloading)
@@ -425,7 +435,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         publication date of disruption          20100412T165200                        30200412T165200
         current_datetime    20090314T144100
         """
-        query = journey_basic_query + '&_current_datetime=20090314T144100'
+        query = journey_basic_query + '&dateime=20090314T144100&_current_datetime=20090314T144100'
         response = self.query_region(query)
 
         # the response must be still valid (this tests the kraken data reloading)
@@ -451,7 +461,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         """
 
         # we already have created a disruption on stopA (stop_area stopB)
-        query = journey_basic_query + '&_current_datetime=20160314T144100'
+        query = journey_basic_query + '&datetime=20160314T144100&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
         # the response must be still valid (this tests the kraken data reloading)
@@ -470,7 +480,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         # we create a disruption on line
         self.send_mock("bob_the_disruption_on_line", "A", "line")
-        query = journey_basic_query + '&_current_datetime=20160314T144100'
+        query = journey_basic_query + '&datetime=20160314T144100&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
         # the response must be still valid (this tests the kraken data reloading)
@@ -490,7 +500,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         # we create a disruption on a stop_point A
         self.send_mock("bob_the_disruption_on_stop_point", "stop_point:stopA", "stop_point")
-        query = journey_basic_query + '&_current_datetime=20160314T144100'
+        query = journey_basic_query + '&datetime=20160314T144100&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
         # the response must be still valid (this tests the kraken data reloading)
@@ -743,7 +753,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         """
         test /disruptions and check that an update of a disruption is correctly done
         """
-        query = 'traffic_reports?_current_datetime=20120801T000000'
+        query = 'traffic_reports?datetime=20120801T000000&_current_datetime=20120801T000000'
         response = self.query_region(query)
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
