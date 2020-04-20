@@ -30,7 +30,7 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
@@ -144,39 +144,29 @@ class FallbackDurations:
 
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
+        places_isochrone = proximities_by_crowfly
+
         # if a place is freely accessible, there is no need to compute it's access duration in isochrone
         if all_free_access:
             deque(
-                (
-                    setattr(p, "access_duration", 0)
-                    for p in proximities_by_crowfly
-                    if p.uri not in all_free_access
-                ),
+                (setattr(p, "access_duration", 0) for p in places_isochrone if p.place in all_free_access),
                 maxlen=1,
             )
-        else:
-            places_isochrone = proximities_by_crowfly
-
-        result = {}
-        # Since we have already places that have free access, we add them into the result
-        deque(
-            (result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access), maxlen=1
-        )
 
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
         # 2. All proximities by crowfly are free access
-        if not places_isochrone:
-            return result
+        if all(p.access_duration == 0 for p in places_isochrone) or not places_isochrone:
+            return places_isochrone
 
         if self._max_duration_to_pt == 0:
             logger.debug("max_duration_to_pt equals to 0")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
+                return [type_pb2.LocationContext(place=center_isochrone.uri, access_duration=0)]
             else:
-                return result
+                return places_isochrone
 
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             origins = [center_isochrone]
@@ -195,25 +185,14 @@ class FallbackDurations:
             or not len(sn_routing_matrix.rows[0].routing_response)
         ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
-            return result
+            return places_isochrone
 
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
-            if r.routing_status != response_pb2.unreached:
-                duration = self._get_duration(r, places_isochrone[pos])
-                if duration < self._max_duration_to_pt:
-                    result.update({places_isochrone[pos].uri: DurationElement(duration, r.routing_status)})
+            if r.routing_status == response_pb2.unreached:
+                continue
+            places_isochrone[pos].access_duration = r.duration
 
-        # We update the fallback duration matrix if the requested origin/destination is also
-        # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
-        # Ex:
-        #                stop_point1   stop_point2  stop_point3
-        # stop_point_1         0(s)       ...          ...
-        if center_isochrone.uri in result:
-            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached)
-
-        logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
-
-        return result
+        return places_isochrone
 
     def _async_request(self):
         self._logger.info('routing_matrix_calling_external_service future created!!!!!!!!!!!')

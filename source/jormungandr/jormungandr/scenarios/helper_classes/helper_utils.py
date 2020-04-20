@@ -69,8 +69,8 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
 
 def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_path):
     # Unable to project
-    f = fallback_durations.get(uri, None)
-    is_unknown_projection = f.status == response_pb2.unknown if f else False
+    f = next((f for f in fallback_durations if f.place == uri), None)
+    is_unknown_projection = f.access_duration == -1 if f else False
 
     is_crowfly_sp = uri in crowfly_sps
 
@@ -250,7 +250,7 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
 
     section_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
     pt_datetime = fallback_logic.get_journey_bound_datetime(pt_journey)
-    fallback_duration = fallback_durations[pt_obj.uri].duration
+    fallback_duration = next(f.access_duration for f in fallback_durations if f.place == pt_obj.uri)
 
     crowfly_dt = fallback_logic.get_fallback_datetime(pt_datetime, fallback_duration)
 

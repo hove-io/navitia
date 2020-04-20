@@ -201,12 +201,12 @@ class Kraken(AbstractStreetNetworkService):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        origin = req.sn_routing_matrix.new_origins.add()
-        origin.embedded_type = origins[0].embedded_type
+        origin = req.sn_routing_matrix.origins.add()
         origin.coord.CopyFrom(origins[0].address.coord)
-        origin.uri = origins[0].uri
+        origin.place = origins[0].uri
+        origin.access_duration = -1
 
-        req.sn_routing_matrix.new_destinations.extend(destinations)
+        req.sn_routing_matrix.destinations.extend(destinations)
 
         req.sn_routing_matrix.mode = street_network_mode
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))

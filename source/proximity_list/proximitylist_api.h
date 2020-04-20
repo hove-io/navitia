@@ -56,6 +56,6 @@ void find(navitia::PbCreator& pb_creator,
           const uint32_t count,
           const uint32_t start_page,
           const type::Data& data,
-          const bool make_short = false);
+          const bool distributed = false);
 }  // namespace proximitylist
 }  // namespace navitia

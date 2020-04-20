@@ -482,26 +482,13 @@ template void PbCreator::Filler::fill_pb_object<nt::StopArea>(const nt::StopArea
 template void PbCreator::Filler::fill_pb_object<nt::StopPoint>(const nt::StopPoint*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::VehicleJourney>(const nt::VehicleJourney*, pbnavitia::PtObject*);
 
-template <typename T>
-void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::ShortPtObject* short_pt_object) {
-    if (value == nullptr) {
+void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::LocationContext* location) {
+    if (sp == nullptr) {
         return;
     }
-    fill_pb_object(value, short_pt_object);
-    short_pt_object->set_uri(value->uri);
-    short_pt_object->set_embedded_type(get_pb_type<T>());
-}
-
-template void PbCreator::Filler::fill_pb_object<nt::StopPoint>(const nt::StopPoint* sp,
-                                                               pbnavitia::ShortPtObject* short_pt_object);
-
-void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::ShortPtObject* short_pt_object) {
-    if (sp->coord.is_initialized()) {
-        short_pt_object->mutable_coord()->set_lon(sp->coord.lon());
-        short_pt_object->mutable_coord()->set_lat(sp->coord.lat());
-    }
-    short_pt_object->set_uri(sp->uri);
-    short_pt_object->set_embedded_type(get_pb_type<nt::StopPoint>());
+    location->mutable_coord()->set_lat(sp->coord.lat());
+    location->mutable_coord()->set_lon(sp->coord.lon());
+    location->set_place(sp->uri);
 }
 
 PbCreator::Filler PbCreator::Filler::copy(int depth, const DumpMessageOptions& dump_message_options) {
@@ -2139,8 +2126,8 @@ pbnavitia::PtObject* PbCreator::add_places_nearby() {
     return response.add_places_nearby();
 }
 
-pbnavitia::ShortPtObject* PbCreator::add_short_places_nearby() {
-    return response.add_short_places_nearby();
+pbnavitia::LocationContext* PbCreator::add_distributed_places_nearby() {
+    return response.add_distributed_places_nearby();
 }
 
 pbnavitia::PtObject* PbCreator::add_places() {

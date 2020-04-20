@@ -108,6 +108,7 @@ private:
     void place_uri(const pbnavitia::PlaceUriRequest& request);
     void next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbnavitia::API api);
     void proximity_list(const pbnavitia::PlacesNearbyRequest& request);
+    void distributed_places_nearby(const pbnavitia::DistributedPlacesNearByRequest& request);
 
     JourneysArg fill_journeys(const pbnavitia::JourneysRequest& request);
     void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);

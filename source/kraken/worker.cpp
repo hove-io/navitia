@@ -503,7 +503,21 @@ void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest& request) {
         return;
     }
     proximitylist::find(this->pb_creator, coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                        request.depth(), request.count(), request.start_page(), *data, request.make_short());
+                        request.depth(), request.count(), request.start_page(), *data);
+}
+
+void Worker::distributed_places_nearby(const pbnavitia::DistributedPlacesNearByRequest& request) {
+    const auto* data = this->pb_creator.data;
+    type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
+    type::GeographicalCoord coord;
+    try {
+        coord = coord_of_entry_point(ep, *data);
+    } catch (const navitia::coord_conversion_exception& e) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
+        return;
+    }
+    proximitylist::find(this->pb_creator, coord, request.distance(), {type::Type_e::StopPoint}, "", 0, request.count(),
+                        0, *data, true);
 }
 
 static type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& request,
@@ -682,11 +696,17 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& req
     type::EntryPoints origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for (int i = 0; i < request.origin().size(); i++) {
+        if (request.origin(i).access_duration() == -1 && request.origin().size() > 1) {
+            continue;
+        }
         origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
     }
 
     type::EntryPoints destinations;
     for (int i = 0; i < request.destination().size(); i++) {
+        if (request.destination(i).access_duration() == -1 && request.destination().size() > 1) {
+            continue;
+        }
         destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
     }
 
@@ -967,7 +987,10 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
     dest_coords.reserve(5000);
 
     // In this loop, we try to get the coordinates of all destinations
-    for (const auto& dest : request.new_destinations()) {
+    for (const auto& dest : request.destinations()) {
+        if (dest.access_duration() != -1) {
+            continue;
+        }
         try {
             dest_coords.push_back(type::GeographicalCoord{dest.coord().lon(), dest.coord().lat()});
         } catch (const navitia::coord_conversion_exception& e) {
@@ -976,7 +999,7 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
         }
     }
 
-    for (const auto& origin : request.new_origins()) {
+    for (const auto& origin : request.origins()) {
         auto mode = type::static_data::get()->modeByCaption(request.mode());
         float speed_factor;
         switch (mode) {
@@ -994,9 +1017,9 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
             throw navitia::recoverable_exception("invalid speed factor");
         }
 
+        auto origin_coord = type::GeographicalCoord{origin.coord().lon(), origin.coord().lat()};
         street_network_worker->departure_path_finder.init(
-            type::GeographicalCoord{origin.coord().lon(), origin.coord().lat()},
-            type::static_data::get()->modeByCaption(request.mode()), speed_factor);
+            origin_coord, type::static_data::get()->modeByCaption(request.mode()), speed_factor);
 
         auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
             navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
@@ -1009,16 +1032,24 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
             if (it == nearest.end()) {
                 throw navitia::recoverable_exception("Cannot find object: " + coord.uri());
             }
-            k->set_duration(it->second.time_duration.total_seconds());
-            switch (it->second.routing_status) {
-                case georef::RoutingStatus_e::reached:
-                    k->set_routing_status(pbnavitia::RoutingStatus::reached);
-                    break;
-                case georef::RoutingStatus_e::unreached:
+            if (coord == origin_coord) {
+                k->set_duration(0);
+                k->set_routing_status(pbnavitia::RoutingStatus::reached);
+                continue;
+            }
+            if (it->second.routing_status == georef::RoutingStatus_e::unreached) {
+                auto crowfly_duration =
+                    navitia::seconds(coord.distance_to(origin_coord) / request.speed()).total_seconds();
+                if (crowfly_duration > request.max_duration()) {
+                    k->set_duration(-1);
                     k->set_routing_status(pbnavitia::RoutingStatus::unreached);
-                    break;
-                default:
-                    k->set_routing_status(pbnavitia::RoutingStatus::unknown);
+                } else {
+                    k->set_duration(crowfly_duration);
+                    k->set_routing_status(pbnavitia::RoutingStatus::reached);
+                }
+            } else {
+                k->set_duration(it->second.time_duration.total_seconds());
+                k->set_routing_status(pbnavitia::RoutingStatus::reached);
             }
         }
     }
@@ -1086,6 +1117,9 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
             break;
         case pbnavitia::places_nearby:
             proximity_list(request.places_nearby());
+            break;
+        case pbnavitia::distributed_places_nearby:
+            distributed_places_nearby(request.distributed_places_nearby());
             break;
         case pbnavitia::PTREFERENTIAL:
             pt_ref(request.ptref());

@@ -48,7 +48,7 @@ static void make_pb(navitia::PbCreator& pb_creator,
                     uint32_t depth,
                     const nt::Data& data,
                     type::GeographicalCoord coord,
-                    const bool make_short) {
+                    const bool distributed) {
     for (auto result_item : result) {
         auto idx = std::get<0>(result_item);
         auto coord_item = std::get<1>(result_item);
@@ -62,10 +62,11 @@ static void make_pb(navitia::PbCreator& pb_creator,
                 break;
             }
             case nt::Type_e::StopPoint: {
-                if (make_short) {
-                    pbnavitia::ShortPtObject* place = pb_creator.add_short_places_nearby();
+                if (distributed) {
+                    pbnavitia::LocationContext* place = pb_creator.add_distributed_places_nearby();
                     pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
                     place->set_distance(distance);
+                    place->set_access_duration(-1);
                     break;
                 } else {
                     pbnavitia::PtObject* place = pb_creator.add_places_nearby();
@@ -94,7 +95,7 @@ static void make_pb(navitia::PbCreator& pb_creator,
     }
 }
 
-static void cut(vector_idx_coord_distance& list, const size_t end_pagination, const nt::GeographicalCoord& coord) {
+static void cut(vector_idx_coord_distance& list, const size_t end_pagination) {
     const auto nb_sort = std::min(list.size(), end_pagination);
     list.resize(nb_sort);
 }
@@ -108,7 +109,7 @@ void find(navitia::PbCreator& pb_creator,
           const uint32_t count,
           const uint32_t start_page,
           const type::Data& data,
-          const bool make_short) {
+          const bool distributed) {
     int total_result = 0;
     std::vector<t_result> result;
     auto end_pagination = (start_page + 1) * count;
@@ -170,7 +171,7 @@ void find(navitia::PbCreator& pb_creator,
             }
         }
         total_result += final_list.size();
-        cut(final_list, end_pagination, coord);
+        cut(final_list, end_pagination);
         for (const auto& e : final_list) {
             auto idx = std::get<0>(e);
             auto coord = std::get<1>(e);
@@ -179,7 +180,7 @@ void find(navitia::PbCreator& pb_creator,
         }
     }
     result = paginate(result, count, start_page);
-    make_pb(pb_creator, result, depth, data, coord, make_short);
+    make_pb(pb_creator, result, depth, data, coord, distributed);
     pb_creator.make_paginate(total_result, start_page, count, result.size());
 }
 }  // namespace proximitylist
