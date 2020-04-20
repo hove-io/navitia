@@ -47,27 +47,41 @@ static void make_pb(navitia::PbCreator& pb_creator,
                     const std::vector<t_result>& result,
                     uint32_t depth,
                     const nt::Data& data,
-                    type::GeographicalCoord coord) {
+                    type::GeographicalCoord coord,
+                    const bool make_short) {
     for (auto result_item : result) {
-        pbnavitia::PtObject* place = pb_creator.add_places_nearby();
         auto idx = std::get<0>(result_item);
         auto coord_item = std::get<1>(result_item);
         auto distance = sqrt(std::get<2>(result_item));
         auto type = std::get<3>(result_item);
         switch (type) {
-            case nt::Type_e::StopArea:
+            case nt::Type_e::StopArea: {
+                pbnavitia::PtObject* place = pb_creator.add_places_nearby();
                 pb_creator.fill(data.pt_data->stop_areas[idx], place, depth);
                 place->set_distance(distance);
                 break;
-            case nt::Type_e::StopPoint:
-                pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
-                place->set_distance(distance);
-                break;
-            case nt::Type_e::POI:
+            }
+            case nt::Type_e::StopPoint: {
+                if (make_short) {
+                    pbnavitia::ShortPtObject* place = pb_creator.add_short_places_nearby();
+                    pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
+                    place->set_distance(distance);
+                    break;
+                } else {
+                    pbnavitia::PtObject* place = pb_creator.add_places_nearby();
+                    pb_creator.fill(data.pt_data->stop_points[idx], place, depth);
+                    place->set_distance(distance);
+                    break;
+                }
+            }
+            case nt::Type_e::POI: {
+                pbnavitia::PtObject* place = pb_creator.add_places_nearby();
                 pb_creator.fill(data.geo_ref->pois[idx], place, depth);
                 place->set_distance(distance);
                 break;
+            }
             case nt::Type_e::Address: {
+                pbnavitia::PtObject* place = pb_creator.add_places_nearby();
                 const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx], coord,
                                                           data.geo_ref->ways[idx]->nearest_number(coord).first);
                 pb_creator.fill(&way_coord, place, depth);
@@ -93,7 +107,8 @@ void find(navitia::PbCreator& pb_creator,
           const uint32_t depth,
           const uint32_t count,
           const uint32_t start_page,
-          const type::Data& data) {
+          const type::Data& data,
+          const bool make_short) {
     int total_result = 0;
     std::vector<t_result> result;
     auto end_pagination = (start_page + 1) * count;
@@ -164,7 +179,7 @@ void find(navitia::PbCreator& pb_creator,
         }
     }
     result = paginate(result, count, start_page);
-    make_pb(pb_creator, result, depth, data, coord);
+    make_pb(pb_creator, result, depth, data, coord, make_short);
     pb_creator.make_paginate(total_result, start_page, count, result.size());
 }
 }  // namespace proximitylist

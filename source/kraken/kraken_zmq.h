@@ -107,7 +107,7 @@ inline void doWork(zmq::context_t& context,
         api = pb_req.requested_api();
         log4cplus::NDCContextCreator ndc(pb_req.request_id());
         if (api != pbnavitia::METADATAS) {
-            LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
+            LOG4CPLUS_DEBUG(logger, "receive request: !!!!!      " << pb_req.requested_api());
         }
 
         auto deadline = navitia::Deadline();
@@ -123,6 +123,7 @@ inline void doWork(zmq::context_t& context,
         const auto data = data_manager.get_data();
         try {
             deadline.check();
+
             w.dispatch(pb_req, *data);
             if (api != pbnavitia::METADATAS) {
                 LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());

@@ -566,11 +566,14 @@ class Instance(object):
 
                 if 'flask_request_id' in kwargs:
                     request.request_id = kwargs['flask_request_id']
+            logger.error('send request !!!!!!!')
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
                 resp = response_pb2.Response()
+                logger.error('ffffffffffffffffffffffffffffffffffffffffffffffff')
                 resp.ParseFromString(pb)
+                logger.error('parsed!!!!!!!!!!!!!!!')
                 self.update_property(resp)  # we update the timezone and geom of the instances at each request
                 return resp
             else:

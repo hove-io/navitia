@@ -43,11 +43,7 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
     wait_and_build_crowflies,
     get_journeys_to_complete,
 )
-from jormungandr.scenarios.utils import (
-    fill_uris,
-    switch_back_to_ridesharing,
-    updated_common_journey_request_with_default,
-)
+from jormungandr.scenarios.utils import fill_uris, updated_common_journey_request_with_default
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import type_pb2
 from flask_restful import abort
@@ -162,21 +158,21 @@ class Distributed(object):
             # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
             context.direct_paths_by_mode = context.streetnetwork_path_pool.get_all_direct_paths()
 
-            context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
-                future_manager=future_manager,
-                instance=instance,
-                requested_place_obj=context.requested_orig_obj,
-                modes=requested_dep_modes_with_pt,
-                request=request,
-                direct_paths_by_mode=context.direct_paths_by_mode,
-                max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
-            )
-
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_dest_obj,
                 modes=requested_arr_modes_with_pt,
+                request=request,
+                direct_paths_by_mode=context.direct_paths_by_mode,
+                max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
+            )
+
+            context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
+                future_manager=future_manager,
+                instance=instance,
+                requested_place_obj=context.requested_orig_obj,
+                modes=requested_dep_modes_with_pt,
                 request=request,
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],

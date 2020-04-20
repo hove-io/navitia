@@ -70,11 +70,14 @@ class _GeventFuture(_AbstractFuture):
     def __init__(self, pool, fun, *args, **kwargs):
         self._future = pool.spawn(fun, *args, **kwargs)
 
-    def get_future(self):
+    def get_future(self, timeout=None):
         return self._future
 
     def wait_and_get(self):
         return self._future.get()
+
+    def is_ready(self):
+        return self._future.ready()
 
 
 class _GeventPoolManager(_AbstractPoolManager):

@@ -96,15 +96,17 @@ class Kraken(object):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
-        for stop_point_id, access_duration in origins.items():
+        import six
+
+        for stop_point_id, access_duration in six.iteritems(origins):
             location = req.journeys.origin.add()
             location.place = stop_point_id
-            location.access_duration = access_duration
+            location.access_duration = access_duration.duration
 
-        for stop_point_id, access_duration in destinations.items():
+        for stop_point_id, access_duration in six.iteritems(destinations):
             location = req.journeys.destination.add()
             location.place = stop_point_id
-            location.access_duration = access_duration
+            location.access_duration = access_duration.duration
 
         req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
         req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
@@ -185,9 +187,15 @@ class Kraken(object):
         return req
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
+
+        import logging
+
+        logging.getLogger(__name__).info("Creating journey request!!------------")
         req = self._create_journeys_request(
             origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
         )
+        logging.getLogger(__name__).info("finish creating journey request!!-------------")
+
         return self.instance.send_and_receive(req)
 
     def graphical_isochrones(

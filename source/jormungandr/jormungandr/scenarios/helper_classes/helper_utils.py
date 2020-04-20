@@ -471,6 +471,7 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
 def timed_logger(logger, task_name):
     start = time.time()
     try:
+        logger.info("{} is actually launched".format(task_name))
         yield logger
     finally:
         collapsed_time = time.time() - start

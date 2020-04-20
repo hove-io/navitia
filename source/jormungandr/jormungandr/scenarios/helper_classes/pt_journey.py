@@ -102,18 +102,19 @@ class PtJourney:
             self._dep_mode,
             self._arr_mode,
         )
-
-        orig_fallback_durations = {k: v.duration for k, v in orig_fallback_duration_status.items()}
-        dest_fallback_durations = {k: v.duration for k, v in dest_fallback_duration_status.items()}
+        # orig_fallback_durations = {k: v.duration for k, v in orig_fallback_duration_status.items()}
+        # dest_fallback_durations = {k: v.duration for k, v in dest_fallback_duration_status.items()}
 
         if (
-            not orig_fallback_durations
-            or not dest_fallback_durations
+            not orig_fallback_duration_status
+            or not dest_fallback_duration_status
             or not self._request.get('max_duration', 0)
         ):
             return None
 
-        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
+        resp = self._journeys(
+            self._instance.planner, orig_fallback_duration_status, dest_fallback_duration_status
+        )
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -123,10 +124,10 @@ class PtJourney:
                 "pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
             )
             # Here needs to modify error message of no_solution
-            if not orig_fallback_durations:
+            if not orig_fallback_duration_status:
                 resp.error.id = response_pb2.Error.no_origin
                 resp.error.message = "no origin point"
-            elif not dest_fallback_durations:
+            elif not dest_fallback_duration_status:
                 resp.error.id = response_pb2.Error.no_destination
                 resp.error.message = "no destination point"
 
@@ -198,6 +199,8 @@ class PtJourney:
         return resp
 
     def _async_request(self):
+        self._logger.info('pt_journyes_calling_kraken future created!!!!!!!!!!!')
+
         if self._request_type in [type_pb2.ISOCHRONE, type_pb2.graphical_isochrone]:
             self._value = self._future_manager.create_future(self._do_isochrone_common_request)
         else:

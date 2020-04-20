@@ -470,6 +470,7 @@ void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_o
     pt_object->set_uri(value->uri);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
+
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::Calendar>(const nt::Calendar*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::Company>(const nt::Company*, pbnavitia::PtObject*);
@@ -480,6 +481,28 @@ template void PbCreator::Filler::fill_pb_object<nt::Route>(const nt::Route*, pbn
 template void PbCreator::Filler::fill_pb_object<nt::StopArea>(const nt::StopArea*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::StopPoint>(const nt::StopPoint*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::VehicleJourney>(const nt::VehicleJourney*, pbnavitia::PtObject*);
+
+template <typename T>
+void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::ShortPtObject* short_pt_object) {
+    if (value == nullptr) {
+        return;
+    }
+    fill_pb_object(value, short_pt_object);
+    short_pt_object->set_uri(value->uri);
+    short_pt_object->set_embedded_type(get_pb_type<T>());
+}
+
+template void PbCreator::Filler::fill_pb_object<nt::StopPoint>(const nt::StopPoint* sp,
+                                                               pbnavitia::ShortPtObject* short_pt_object);
+
+void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::ShortPtObject* short_pt_object) {
+    if (sp->coord.is_initialized()) {
+        short_pt_object->mutable_coord()->set_lon(sp->coord.lon());
+        short_pt_object->mutable_coord()->set_lat(sp->coord.lat());
+    }
+    short_pt_object->set_uri(sp->uri);
+    short_pt_object->set_embedded_type(get_pb_type<nt::StopPoint>());
+}
 
 PbCreator::Filler PbCreator::Filler::copy(int depth, const DumpMessageOptions& dump_message_options) {
     if (depth <= 0) {
@@ -568,15 +591,16 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
     add_contributor(sp);
     stop_point->set_name(sp->name);
     stop_point->set_label(sp->label);
-    if (!sp->platform_code.empty()) {
-        stop_point->set_platform_code(sp->platform_code);
-    }
-    fill_comments(sp, stop_point);
 
     if (sp->coord.is_initialized()) {
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
     }
+
+    if (!sp->platform_code.empty()) {
+        stop_point->set_platform_code(sp->platform_code);
+    }
+    fill_comments(sp, stop_point);
 
     pbnavitia::hasEquipments* has_equipments = stop_point->mutable_has_equipments();
     if (sp->wheelchair_boarding()) {
@@ -2113,6 +2137,10 @@ pbnavitia::GeographicalCoord PbCreator::get_coord(const pbnavitia::PtObject& pt_
 
 pbnavitia::PtObject* PbCreator::add_places_nearby() {
     return response.add_places_nearby();
+}
+
+pbnavitia::ShortPtObject* PbCreator::add_short_places_nearby() {
+    return response.add_short_places_nearby();
 }
 
 pbnavitia::PtObject* PbCreator::add_places() {

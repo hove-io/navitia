@@ -116,6 +116,7 @@ class StreetNetworkPath:
         return dp
 
     def _async_request(self):
+        self._logger.info('direct_path_calling_external_service future created!!!!!!!!!!!')
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):

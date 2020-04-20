@@ -303,6 +303,7 @@ struct PbCreator {
     void clear_feed_publishers();
 
     pbnavitia::PtObject* add_places_nearby();
+    pbnavitia::ShortPtObject* add_short_places_nearby();
     pbnavitia::Journey* add_journeys();
     pbnavitia::GraphicalIsochrone* add_graphical_isochrones();
     pbnavitia::HeatMap* add_heat_maps();
@@ -515,9 +516,14 @@ private:
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);
         void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
 
+        void fill_pb_object(const nt::StopPoint* sp, pbnavitia::ShortPtObject* short_pt_object);
+
         // Used for place
         template <typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
+
+        template <typename T>
+        void fill_pb_object(const T* value, pbnavitia::ShortPtObject* short_pt_object);
     };
     // Raptor api
     pbnavitia::Section* create_section(pbnavitia::Journey*, const ng::PathItem&, int);

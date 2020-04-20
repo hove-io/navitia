@@ -53,18 +53,24 @@ class ProximitiesByCrowfly:
         self._logger = logging.getLogger(__name__)
         self._async_request()
 
-    @new_relic.distributedEvent("get_crowf_ly", "street_network")
+    @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
-        with timed_logger(self._logger, 'get_crow_fly_calling_external_service'):
+        with timed_logger(
+            self._logger, 'get_proximity_by_crowfly_calling_external_service: {}'.format(self._mode)
+        ):
             return self._instance.georef.get_crow_fly(
                 utils.get_uri_pt_object(self._requested_place_obj),
                 self._mode,
-                self._max_duration,
+                self._max_duration(),
                 self._max_nb_crowfly,
                 **self._speed_switcher
             )
 
     def _do_request(self):
+        return self._get_crow_fly(self._instance.georef)
+
+    def _async_request(self):
+        self._logger.info('get_crow_fly_calling_external_service future created!!!!!!!!!!!')
         logger = logging.getLogger(__name__)
         logger.debug(
             "requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
@@ -72,7 +78,7 @@ class ProximitiesByCrowfly:
 
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
         # or a stop_area
-        if self._max_duration == 0:
+        if self._max_duration() == 0:
             logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
@@ -81,22 +87,20 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._get_crow_fly(self._instance.georef)
-
-            logger.debug(
-                "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
-            )
-            return crow_fly
-
-        logger.debug("the coord of requested places is not valid: %s", coord)
-        return []
-
-    def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+            self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly'):
-            return self._value.wait_and_get()
+        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly: {}'.format(self._mode)):
+            coord = utils.get_pt_object_coord(self._requested_place_obj)
+            if coord.lat and coord.lon:
+                crow_fly = self._value.wait_and_get()
+                self._logger.debug(
+                    "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
+                )
+                return crow_fly
+
+            self._logger.debug("the coord of requested places is not valid: %s", coord)
+            return []
 
 
 class ProximitiesByCrowflyPool:
@@ -143,7 +147,7 @@ class ProximitiesByCrowflyPool:
     def _async_request(self):
 
         for mode in self._modes:
-            max_fallback_duration = get_max_fallback_duration(
+            max_duration_getter = lambda: get_max_fallback_duration(
                 self._request, mode, self._direct_paths_by_mode.get(mode)
             )
             p = ProximitiesByCrowfly(
@@ -151,7 +155,7 @@ class ProximitiesByCrowflyPool:
                 instance=self._instance,
                 requested_place_obj=self._requested_place_obj,
                 mode=mode,
-                max_duration=max_fallback_duration,
+                max_duration=max_duration_getter,
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
                 request=self._request,
             )

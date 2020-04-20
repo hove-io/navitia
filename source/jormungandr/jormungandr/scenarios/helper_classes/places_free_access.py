@@ -52,8 +52,8 @@ class PlacesFreeAccess:
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._value = None
-        self._async_request()
         self._logger = logging.getLogger(__name__)
+        self._async_request()
 
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
@@ -63,7 +63,7 @@ class PlacesFreeAccess:
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
         with timed_logger(self._logger, 'odt_stop_points_calling_external_service'):
-            return self._instance.georef.get_odt_stop_points(coord)
+            return []
 
     def _do_request(self):
         self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)

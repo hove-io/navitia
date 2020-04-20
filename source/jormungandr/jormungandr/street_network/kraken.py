@@ -183,10 +183,12 @@ class Kraken(AbstractStreetNetworkService):
                 raise TechnicalError('routing matrix error, no unique center point')
             else:
                 origins, destinations = destinations, origins
+        logging.getLogger(__name__).error('creatinggggggggggggggggggggggggg!')
 
         req = self._create_sn_routing_matrix_request(
             origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
         )
+        logging.getLogger(__name__).error('finish creatinggggggggggggggggggggggggg!')
 
         res = instance.send_and_receive(req)
         self._check_for_error_and_raise(res)
@@ -199,12 +201,12 @@ class Kraken(AbstractStreetNetworkService):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        req.sn_routing_matrix.origins.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(o), access_duration=0) for o in origins)
-        )
-        req.sn_routing_matrix.destinations.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
-        )
+        origin = req.sn_routing_matrix.new_origins.add()
+        origin.embedded_type = origins[0].embedded_type
+        origin.coord.CopyFrom(origins[0].address.coord)
+        origin.uri = origins[0].uri
+
+        req.sn_routing_matrix.new_destinations.extend(destinations)
 
         req.sn_routing_matrix.mode = street_network_mode
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))

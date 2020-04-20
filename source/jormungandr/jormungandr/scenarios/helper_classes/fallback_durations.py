@@ -38,6 +38,7 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr import new_relic
 import logging
 from .helper_utils import timed_logger
+from collections import deque
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
 
@@ -105,7 +106,7 @@ class FallbackDurations:
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
-        with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
+        with timed_logger(self._logger, 'routing_matrix_calling_external_service: {}'.format(self._mode)):
             try:
                 return self._streetnetwork_service.get_street_network_routing_matrix(
                     self._instance,
@@ -122,8 +123,7 @@ class FallbackDurations:
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
-        logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
-
+        logger.info("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a
         # stop_point or a stop_area
         center_isochrone = self._requested_place_obj
@@ -145,11 +145,23 @@ class FallbackDurations:
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
         # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+        if all_free_access:
+            deque(
+                (
+                    setattr(p, "access_duration", 0)
+                    for p in proximities_by_crowfly
+                    if p.uri not in all_free_access
+                ),
+                maxlen=1,
+            )
+        else:
+            places_isochrone = proximities_by_crowfly
 
         result = {}
         # Since we have already places that have free access, we add them into the result
-        [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
+        deque(
+            (result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access), maxlen=1
+        )
 
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
@@ -204,10 +216,11 @@ class FallbackDurations:
         return result
 
     def _async_request(self):
+        self._logger.info('routing_matrix_calling_external_service future created!!!!!!!!!!!')
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_routing_matrix'):
+        with timed_logger(self._logger, 'waiting_for_routing_matrix: {}'.format(self._mode)):
             return self._value.wait_and_get() if self._value else None
 
 

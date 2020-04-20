@@ -32,7 +32,8 @@ www.navitia.io
 
 #include "georef/georef.h"
 #include "utils/logger.h"
-
+#include <chrono>
+#include <ctime>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 namespace navitia {
@@ -166,8 +167,17 @@ routing::map_stop_point_duration DijkstraPathFinder::find_nearest_stop_points(
             dest_sp_idx.emplace_back(routing::SpIdx{e.first});
         }
         ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
+        auto start = std::chrono::system_clock::now();
+        // Some computation here
         auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
             max_duration, dest_sp_idx, projection_getter);
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+        LOG4CPLUS_INFO(
+            log4cplus::Logger::getInstance("Logger"),
+            "finished computation at " << std::ctime(&end_time) << "elapsed time: " << elapsed_seconds.count() << "s");
         for (const auto& r : resp) {
             if (r.second.routing_status == RoutingStatus_e::reached) {
                 result[r.first] = r.second.time_duration;

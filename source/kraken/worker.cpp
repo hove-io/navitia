@@ -503,7 +503,7 @@ void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest& request) {
         return;
     }
     proximitylist::find(this->pb_creator, coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                        request.depth(), request.count(), request.start_page(), *data);
+                        request.depth(), request.count(), request.start_page(), *data, request.make_short());
 }
 
 static type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& request,
@@ -964,32 +964,40 @@ type::EntryPoint make_sn_entry_point(const std::string& place,
 void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request) {
     const auto* data = this->pb_creator.data;
     std::vector<type::GeographicalCoord> dest_coords;
+    dest_coords.reserve(5000);
 
     // In this loop, we try to get the coordinates of all destinations
-    for (const auto& dest : request.destinations()) {
-        Type_e origin_type = data->get_type_of_id(dest.place());
-        auto entry_point = type::EntryPoint{origin_type, dest.place(), 0};
+    for (const auto& dest : request.new_destinations()) {
         try {
-            dest_coords.push_back(coord_of_entry_point(entry_point, *data));
+            dest_coords.push_back(type::GeographicalCoord{dest.coord().lon(), dest.coord().lat()});
         } catch (const navitia::coord_conversion_exception& e) {
             this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
             return;
         }
     }
 
-    for (const auto& origin : request.origins()) {
-        type::EntryPoint entry_point;
-        try {
-            entry_point =
-                make_sn_entry_point(origin.place(), request.mode(), request.speed(), request.max_duration(), *data);
-        } catch (const navitia::coord_conversion_exception& e) {
-            this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-            return;
+    for (const auto& origin : request.new_origins()) {
+        auto mode = type::static_data::get()->modeByCaption(request.mode());
+        float speed_factor;
+        switch (mode) {
+            case type::Mode_e::Bike:
+            case type::Mode_e::Car:
+            case type::Mode_e::Bss:
+            case type::Mode_e::CarNoPark:
+                speed_factor = request.speed() / georef::default_speed[mode];
+                break;
+            default:
+                speed_factor = request.speed() / georef::default_speed[type::Mode_e::Walking];
+                break;
+        }
+        if (speed_factor <= 0) {
+            throw navitia::recoverable_exception("invalid speed factor");
         }
 
-        street_network_worker->departure_path_finder.init(entry_point.coordinates,
-                                                          entry_point.streetnetwork_params.mode,
-                                                          entry_point.streetnetwork_params.speed_factor);
+        street_network_worker->departure_path_finder.init(
+            type::GeographicalCoord{origin.coord().lon(), origin.coord().lat()},
+            type::static_data::get()->modeByCaption(request.mode()), speed_factor);
+
         auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
             navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
             dest_coords);

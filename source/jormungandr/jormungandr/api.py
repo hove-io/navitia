@@ -130,7 +130,7 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'a')
     rest_api.app.wsgi_app = ProfilerMiddleware(
-        rest_api.app.wsgi_app, f, restrictions=[80], profile_dir='/tmp/profile'
+        rest_api.app.wsgi_app, f, restrictions=[80], profile_dir=rest_api.app.config['OUTPUT_PROFILER_DIR']
     )
 
 index(rest_api)
