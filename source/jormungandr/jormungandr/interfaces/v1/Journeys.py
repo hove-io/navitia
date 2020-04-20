@@ -519,7 +519,7 @@ class Journeys(JourneyCommon):
 
             result = "journeys_{}_{}#{}#".format(json_hash, now, scenario)
 
-            logger.debug("Generating id : {} for request : {}".format(result, flask.request.url))
+            logger.info("Generating id : {} for request : {}".format(result, flask.request.url))
 
             return result
 
