@@ -502,10 +502,7 @@ void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest& request) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
         return;
     }
-    bool active_stop_points_nearby_options = false;
-    if (request.has_find_stop_points_nearby() && request.find_stop_points_nearby() == true) {
-        active_stop_points_nearby_options = true;
-    }
+    bool active_stop_points_nearby_options = request.has_find_stop_points_nearby() && request.find_stop_points_nearby();
     proximitylist::find(this->pb_creator, coord, request.distance(), vector_of_pb_types(request), request.filter(),
                         request.depth(), request.count(), request.start_page(), *data,
                         active_stop_points_nearby_options);

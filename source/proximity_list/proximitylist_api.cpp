@@ -80,12 +80,10 @@ static void make_pb(navitia::PbCreator& pb_creator,
                 break;
         }
         // add stop points nearby into response
-        if (!stop_points_nearby_idx_distance.empty()) {
-            for (const auto& sp_idx_distance : stop_points_nearby_idx_distance) {
-                pbnavitia::PtObject* pt_obj = place->add_stop_points_nearby();
-                pb_creator.fill(data.pt_data->stop_points[std::get<0>(sp_idx_distance)], pt_obj, depth);
-                pt_obj->set_distance(std::get<1>(sp_idx_distance));
-            }
+        for (const auto& sp_idx_distance : stop_points_nearby_idx_distance) {
+            pbnavitia::PtObject* pt_obj = place->add_stop_points_nearby();
+            pb_creator.fill(data.pt_data->stop_points[std::get<0>(sp_idx_distance)], pt_obj, depth);
+            pt_obj->set_distance(std::get<1>(sp_idx_distance));
         }
     }
 }
