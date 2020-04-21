@@ -378,74 +378,71 @@ BOOST_AUTO_TEST_CASE(test_find_stop_points_nearby_options) {
     c.set_lat(47.218515);
 
     // POIs
-    {
-        auto poitype = new navitia::georef::POIType();
-        poitype->uri = "poi_type_1";
-        poitype->idx = 0;
-        data.geo_ref->poitypes.push_back(poitype);
-        auto poi = new navitia::georef::POI();
-        poi->uri = "poi_1";
-        poi->poitype_idx = 0;
-        poi->idx = 0;
-        poi->coord.set_lon(-1.557000);
-        poi->coord.set_lat(47.218515);
-        data.geo_ref->pois.push_back(poi);
-    }
-    {
-        auto poitype = new navitia::georef::POIType();
-        poitype->uri = "poi_type_2";
-        poitype->idx = 1;
-        data.geo_ref->poitypes.push_back(poitype);
-        auto poi_2 = new navitia::georef::POI();
-        poi_2->uri = "poi_2";
-        poi_2->idx = 1;
-        poi_2->poitype_idx = 1;
-        poi_2->coord.set_lon(-1.552000);
-        poi_2->coord.set_lat(47.218516);
-        data.geo_ref->pois.push_back(poi_2);
-        // This POI is too far
-        auto poi_3 = new navitia::georef::POI();
-        poi_3->uri = "poi_3";
-        poi_3->idx = 2;
-        poi_3->poitype_idx = 1;
-        poi_3->coord.set_lon(-1.551000);
-        poi_3->coord.set_lat(47.218516);
-        data.geo_ref->pois.push_back(poi_3);
-    }
-    // Stop Points
-    {
-        auto sp = new navitia::type::StopPoint();
-        sp->uri = "sp_1";
-        sp->idx = 0;
-        sp->coord.set_lon(-1.554514);
-        sp->coord.set_lat(47.214516);
-        data.pt_data->stop_points.push_back(sp);
-    }
-    {
-        auto sp = new navitia::type::StopPoint();
-        sp->uri = "sp_2";
-        sp->idx = 1;
-        sp->coord.set_lon(-1.554514);
-        sp->coord.set_lat(47.215515);
-        data.pt_data->stop_points.push_back(sp);
-    }
+    auto poitype_1 = std::make_unique<navitia::georef::POIType>();
+    poitype_1->uri = "poi_type_1";
+    poitype_1->idx = 0;
+    data.geo_ref->poitypes.push_back(poitype_1.release());
+    auto poi_1 = std::make_unique<navitia::georef::POI>();
+    poi_1->uri = "poi_1";
+    poi_1->poitype_idx = 0;
+    poi_1->idx = 0;
+    poi_1->coord.set_lon(-1.554654);
+    poi_1->coord.set_lat(47.218515);
+    data.geo_ref->pois.push_back(poi_1.release());
+
+    auto poitype_2 = std::make_unique<navitia::georef::POIType>();
+    poitype_2->uri = "poi_type_2";
+    poitype_2->idx = 1;
+    data.geo_ref->poitypes.push_back(poitype_2.release());
+    auto poi_2 = std::make_unique<navitia::georef::POI>();
+    poi_2->uri = "poi_2";
+    poi_2->idx = 1;
+    poi_2->poitype_idx = 1;
+    poi_2->coord.set_lon(-1.554614);
+    poi_2->coord.set_lat(47.218515);
+    data.geo_ref->pois.push_back(poi_2.release());
+    // This POI is too far
+    auto poi_3 = std::make_unique<navitia::georef::POI>();
+    poi_3->uri = "poi_3";
+    poi_3->idx = 2;
+    poi_3->poitype_idx = 1;
+    poi_3->coord.set_lon(-1.554754);
+    poi_3->coord.set_lat(47.218515);
+    data.geo_ref->pois.push_back(poi_3.release());
+
+    // Stop Points nearby poi_2
+    auto sp_1 = std::make_unique<navitia::type::StopPoint>();
+    sp_1->uri = "sp_1";
+    sp_1->idx = 0;
+    sp_1->coord.set_lon(-1.554634);
+    sp_1->coord.set_lat(47.218515);
+    data.pt_data->stop_points.push_back(sp_1.release());
+    auto sp_2 = std::make_unique<navitia::type::StopPoint>();
+    sp_2->uri = "sp_2";
+    sp_2->idx = 1;
+    sp_2->coord.set_lon(-1.554644);
+    sp_2->coord.set_lat(47.218515);
+    data.pt_data->stop_points.push_back(sp_2.release());
+
     data.geo_ref->init();
     data.build_proximity_list();
     data.build_uri();
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator, c, 200, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, true);
+    find(pb_creator, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, true);
     auto result = pb_creator.get_response();
 
     // Only poi_2 is available (poi_type_2)
     BOOST_REQUIRE_EQUAL(result.places_nearby().size(), 1);
     BOOST_CHECK(result.places_nearby(0).uri() == "poi_2");
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby().size(), 2);
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).uri(), "sp_2");
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).uri(), "sp_1");
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).uri(), "sp_1");
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).distance(), 2);
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).uri(), "sp_2");
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).distance(), 5);
 
     // Same request without stop_points_nearby option
     navitia::PbCreator pb_creator2(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator2, c, 200, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, false);
+    find(pb_creator2, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, false);
     result = pb_creator2.get_response();
 
     // Only poi_2 is available (poi_type_2)
