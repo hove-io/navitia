@@ -85,6 +85,8 @@ jobs:
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
     - uses: actions/setup-python@v1
+    - name: set PY
+      run: echo "::set-env name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
     - uses: actions/cache@v1
       with:
         path: ~/.cache/pre-commit
