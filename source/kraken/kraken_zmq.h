@@ -107,7 +107,7 @@ inline void doWork(zmq::context_t& context,
         }
 
         api = pb_req.requested_api();
-        std::string request_id = pb_req.request_id();
+        const std::string& request_id = pb_req.request_id();
         log4cplus::NDCContextCreator ndc(request_id);
 
         LOG4CPLUS_INFO(logger, "receive request : " << pbnavitia::API_Name(api));
