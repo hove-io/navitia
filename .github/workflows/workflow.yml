@@ -84,10 +84,9 @@ jobs:
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
-    - name: install pre-commit
-      run: |
-        pip install pre-commit
-        pre-commit --version
+    - uses: pre-commit/action@v1.0.1
+    - name: print install pre-commit
+      run: pre-commit --version
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
     - name: Pre-commit Run
