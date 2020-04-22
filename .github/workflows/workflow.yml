@@ -43,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-          submodules: true
+          submodules: 'recursive'
     - name: Install dependencies
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
