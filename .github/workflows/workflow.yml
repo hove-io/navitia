@@ -76,24 +76,21 @@ jobs:
 
   precommit:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+      # we need python 3.6 and clang-format-6.0
+      # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
+      # resolved
     steps:
-    - uses: actions/checkout@v2
-      with:
-          submodules: true
+    - uses: actions/checkout@v1
     - name: install dependencies
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
-    - uses: actions/setup-python@v1
-    - name: set PY
-      run: echo "::set-env name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pre-commit
-        key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-    - uses: pre-commit/action@v1.0.1
-    - name: print install pre-commit
-      run: pre-commit --version
+    - name: get submodule
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
     - name: Pre-commit Run
