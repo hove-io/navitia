@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import plotly
+from sortedcontainers import SortedKeyList
 import re, os, argparse
 
 
@@ -33,8 +34,11 @@ class Request:
     def __init__(self, request_id, scenario):
         self.request_id = request_id
         self.scenario = scenario
-        self.kraken_tasks_by_worker = {}  # dict worker -> list of tasks
-        self.jormun_tasks = []
+        self.kraken_tasks_by_worker = {}  # dict worker -> list of kraken tasks
+
+        # list of JormunTask, sorted to have first tasks with the earliest start time
+        #  and between two tasks with the same start time, the one with the latest end time comes first
+        self.jormun_tasks = SortedKeyList([], key=lambda task: (task.start, -task.end))
         self.url = ""
 
     def add_kraken_task(self, api, sub_request_id, worker, start, end):
@@ -43,7 +47,7 @@ class Request:
         self.kraken_tasks_by_worker[worker] = worker_tasks
 
     def add_jormun_task(self, task_name, sub_request_id, start, end):
-        self.jormun_tasks.append(JormunTask(task_name, sub_request_id, start, end))
+        self.jormun_tasks.add(JormunTask(task_name, sub_request_id, start, end))
 
     def set_url(self, url):
         self.url = url
@@ -72,26 +76,29 @@ class Request:
         # https://plotly.com/python/gantt/
         import plotly.figure_factory
 
-        sorted_jormun_tasks = sorted(self.jormun_tasks, key=lambda task: (task.start, -task.end))
-        df = [
-            dict(
+        def make_jormun_dict(task):
+            return dict(
                 Task="J{}#{}".format(task.sub_request_id, task.task_name),
                 Start=task.start,
                 Finish=task.end,
                 SubRequest="J{}#{}".format(task.sub_request_id, task.task_name),
             )
-            for task in sorted_jormun_tasks
-        ]
-        for worker, tasks in self.kraken_tasks_by_worker.items():
-            for task in tasks:
-                df.append(
-                    dict(
-                        Task="Kraken_{}".format(task.worker),
-                        Start=task.start,
-                        Finish=task.end,
-                        SubRequest="K{}".format(task.sub_request_id),
-                    )
-                )
+
+        def make_kraken_dict(task):
+            return dict(
+                Task="Kraken_{}".format(task.worker),
+                Start=task.start,
+                Finish=task.end,
+                SubRequest="K{}".format(task.sub_request_id),
+            )
+
+        df = [make_jormun_dict(task) for task in self.jormun_tasks]
+        df.extend([make_kraken_dict(task) for tasks in self.kraken_tasks_by_worker.values() for task in tasks])
+
+        # if the dict is empty, there is nothing to plot
+        if not df:
+            print("Nothing to plot for request_id : ", self.request_id)
+            return
 
         import colorsys
 
@@ -165,8 +172,8 @@ def run(kraken_log_filepath, jormun_log_filepath, output_dir):
                     requests[(request_id, scenario)] = request
 
     for request in requests.values():
-        request.create_gantt(output_dir)
         # request.myprint()
+        request.create_gantt(output_dir)
 
 
 def main():
