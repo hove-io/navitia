@@ -84,6 +84,11 @@ jobs:
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
+    - uses: actions/setup-python@v1
+    - uses: actions/cache@v1
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
     - uses: pre-commit/action@v1.0.1
     - name: print install pre-commit
       run: pre-commit --version
