@@ -483,7 +483,7 @@ def timed_logger(logger, task_name, request_id):
         yield logger
     finally:
         end = time.time()
-        collapsed_time = end - start
+        elapsed_time = end - start
         start_in_ms = int(start * 1000)
         end_in_ms = int(end * 1000)
         logger.info(
@@ -491,5 +491,5 @@ def timed_logger(logger, task_name, request_id):
                 task_name, request_id, start_in_ms, end_in_ms
             )
         )
-        if collapsed_time > 1e-5:
-            logger.info('time  in {}: {}s'.format(task_name, '%.2e' % collapsed_time))
+        if elapsed_time > 1e-5:
+            logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))
