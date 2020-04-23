@@ -16,7 +16,7 @@ stop_point,SP:C,navitia1,C
 stop_point,SP:D,navitia1,D
 stop_point,SP:E,navitia1,E
 stop_point,SP:F,navitia1,F
-stop_point,SP:J,navitia1,J
+stop_point,SP:J,gtfs_stop_code,J
 route,route_1,navitia1,route_1
 route,route_2,navitia1,route_2
 route,route_3,navitia1,route_3
