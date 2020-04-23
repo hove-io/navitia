@@ -78,6 +78,7 @@ jobs:
         pip install -r source/sql/requirements.txt
     - name: docker_test for python2
       run: |
+        python -V
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
