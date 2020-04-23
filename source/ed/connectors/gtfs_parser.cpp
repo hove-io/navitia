@@ -441,7 +441,9 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     }
     gtfs_data.stop_point_map[sp->uri] = sp;
     data.stop_points.push_back(sp);
-    add_gtfs_stop_code(data, sp, row[code_c]);
+    if (has_col(code_c, row) && row[code_c] != "") {
+        add_gtfs_stop_code(data, sp, row[code_c]);
+    }
 
     if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
         auto it = gtfs_data.sa_spmap.find(row[parent_c]);
