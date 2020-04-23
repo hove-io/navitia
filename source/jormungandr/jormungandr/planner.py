@@ -58,7 +58,7 @@ class JourneyParameters(object):
         self.depth = depth
         self.isochrone_center = isochrone_center
         self.sn_params = sn_params
-        self.current_datetime = current_datetime or None
+        self.current_datetime = current_datetime
 
 
 # Needed for GraphicalIsochrones
