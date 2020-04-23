@@ -550,6 +550,7 @@ BOOST_AUTO_TEST_CASE(gtfs_stop_code_tests) {
     parser.fill(data);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("stop_code_for_sa", "gtfs_stop_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("stop_code_for_sp", "gtfs_stop_code"), true);
+    BOOST_REQUIRE_EQUAL(data.if_object_code_exist("stop_code_not_exist", "gtfs_stop_code"), false);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("J", "gtfs_stop_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("E", "external_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("A", "external_code"), true);
