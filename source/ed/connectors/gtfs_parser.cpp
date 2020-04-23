@@ -402,7 +402,9 @@ nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) 
     }
     gtfs_data.stop_area_map[sa->uri] = sa;
     data.stop_areas.push_back(sa);
-    add_gtfs_stop_code(data, sa, row[code_c]);
+    if (stop_code_is_present) {
+        add_gtfs_stop_code(data, sa, row[code_c]);
+    }
 
     if (has_col(timezone_c, row)) {
         auto tz_name = row[timezone_c];
@@ -441,7 +443,7 @@ nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row
     }
     gtfs_data.stop_point_map[sp->uri] = sp;
     data.stop_points.push_back(sp);
-    if (has_col(code_c, row) && row[code_c] != "") {
+    if (stop_code_is_present) {
         add_gtfs_stop_code(data, sp, row[code_c]);
     }
 

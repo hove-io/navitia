@@ -243,7 +243,7 @@ struct StopsGtfsHandler : public GenericHandler {
 
 template <typename T>
 bool StopsGtfsHandler::add_gtfs_stop_code(Data& data, const T& obj, const std::string& value) {
-    if (stop_code_is_present && value != "") {
+    if (value != "") {
         data.add_object_code(obj, value, "gtfs_stop_code");
         return true;
     }
