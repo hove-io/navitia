@@ -1,3 +1,13 @@
+navitia2 (4.0.0) unstable; urgency=low
+
+  * Fusio2ed: take into account of stop_code within stops.txt  <https://github.com/CanalTP/navitia/pull/3190>
+  * CI: Test debian 8 dev docker built by our CI  <https://github.com/CanalTP/navitia/pull/3205>
+  * Kraken: Add stop_points_nearby option within places_nearby  <https://github.com/CanalTP/navitia/pull/3201>
+  * Jormun: _current_datetime parameter was missing from distributed.  <https://github.com/CanalTP/navitia/pull/3194>
+  * Jormun: Fix chaos tests  <https://github.com/CanalTP/navitia/pull/3199>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 24 Apr 2020 12:04:00 +0100
+
 navitia2 (3.9.0) unstable; urgency=low
 
   * Jormungandr: write full url of ridesharing service  <https://github.com/CanalTP/navitia/pull/3187>

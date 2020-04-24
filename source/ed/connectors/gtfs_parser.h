@@ -48,6 +48,8 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
+static const int UNKNOWN_COLUMN = -1;
+
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
 nt::RTLevel get_rtlevel_enum(const std::string& str);
@@ -214,13 +216,14 @@ struct DefaultContributorHandler : public GenericHandler {
 };
 
 struct StopsGtfsHandler : public GenericHandler {
-    StopsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    StopsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader), stop_code_is_present(false) {}
     using stop_point_and_area = std::pair<ed::types::StopPoint*, ed::types::StopArea*>;
 
     int id_c, code_c, name_c, desc_c, lat_c, lon_c, zone_c, type_c, parent_c, wheelchair_c, platform_c, timezone_c,
         ext_code_c;
 
     int ignored = 0;
+    bool stop_code_is_present;
     std::vector<types::StopPoint*> wheelchair_heritance;
     void init(Data& data);
     void finish(Data& data);
@@ -228,6 +231,8 @@ struct StopsGtfsHandler : public GenericHandler {
     const std::vector<std::string> required_headers() const { return {"stop_id", "stop_name", "stop_lat", "stop_lon"}; }
     template <typename T>
     bool parse_common_data(const csv_row& row, T* stop);
+    template <typename T>
+    bool add_gtfs_stop_code(Data& data, const T& obj, const std::string& value);
 
     void handle_stop_point_without_area(Data& data);  // might be different between stops parser
 
@@ -235,6 +240,15 @@ struct StopsGtfsHandler : public GenericHandler {
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
     bool is_duplicate(const csv_row& row);
 };
+
+template <typename T>
+bool StopsGtfsHandler::add_gtfs_stop_code(Data& data, const T& obj, const std::string& value) {
+    if (value != "") {
+        data.add_object_code(obj, value, "gtfs_stop_code");
+        return true;
+    }
+    return false;
+}
 
 struct RouteGtfsHandler : public GenericHandler {
     RouteGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}

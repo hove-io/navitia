@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import
 from jormungandr import utils, new_relic
+from jormungandr.utils import date_to_timestamp
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
@@ -315,6 +316,7 @@ class PtJourneyPool:
                 timeframe=request['timeframe_duration'],
                 depth=request['depth'],
                 isochrone_center=isochrone_center,
+                current_datetime=date_to_timestamp(request['_current_datetime']),
             )
 
     def _async_request(self):

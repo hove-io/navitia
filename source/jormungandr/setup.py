@@ -35,8 +35,8 @@ from setuptools import find_packages
 setup(
     name='jormungandr',
     description='webservice d\'exposition en http de kraken',
-    author='CanalTP',
-    author_email='vincent.lara@canaltp.fr',
+    author='Kisio Digital',
+    author_email='navitia.pt.core@kisio.com',
     url='www.navitia.io',
     packages=find_packages(),
     data_files=[('/usr/share/jormungandr', ['requirements.txt'])],
