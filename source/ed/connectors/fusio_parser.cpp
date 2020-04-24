@@ -1835,12 +1835,14 @@ void ObjectCodesFusioHandler::handle_line(Data& data, const csv_row& row, bool) 
         }
     } else if (object_type == "stop_area") {
         const auto& it_object = gtfs_data.stop_area_map.find(row[object_uri_c]);
-        if (it_object != gtfs_data.stop_area_map.end()) {
+        if (it_object != gtfs_data.stop_area_map.end()
+            && !data.if_object_code_exist(it_object->second, row[code_c], key)) {
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "stop_point") {
         const auto& it_object = gtfs_data.stop_point_map.find(row[object_uri_c]);
-        if (it_object != gtfs_data.stop_point_map.end()) {
+        if (it_object != gtfs_data.stop_point_map.end()
+            && !data.if_object_code_exist(it_object->second, row[code_c], key)) {
             data.add_object_code(it_object->second, row[code_c], key);
         }
     } else if (object_type == "company") {

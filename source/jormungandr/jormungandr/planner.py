@@ -40,6 +40,7 @@ class JourneyParameters(object):
         depth=1,
         isochrone_center=None,
         sn_params=None,
+        current_datetime=None,
     ):
 
         self.max_duration = max_duration
@@ -57,6 +58,7 @@ class JourneyParameters(object):
         self.depth = depth
         self.isochrone_center = isochrone_center
         self.sn_params = sn_params
+        self.current_datetime = current_datetime
 
 
 # Needed for GraphicalIsochrones
@@ -152,6 +154,9 @@ class Kraken(object):
             sn_params_request.car_speed = journey_parameters.sn_params.car_speed
             sn_params_request.bss_speed = journey_parameters.sn_params.bss_speed
             sn_params_request.car_no_park_speed = journey_parameters.sn_params.car_no_park_speed
+
+        if journey_parameters.current_datetime:
+            req._current_datetime = journey_parameters.current_datetime
 
         return req
 

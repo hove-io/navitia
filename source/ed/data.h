@@ -175,6 +175,9 @@ public:
 
     template <typename T>
     void add_object_code(const T& obj, const std::string& value, const std::string& key = "external_code");
+    template <typename T>
+    bool if_object_code_exist(const T& obj, const std::string& value, const std::string& key);
+    bool if_object_code_exist(const std::string& value, const std::string& key);
 
     template <typename T>
     void add_pt_object_comment(const T* obj, const std::string& comment);
@@ -310,6 +313,35 @@ void Data::add_object_code(const T& obj, const std::string& value, const std::st
     const auto pt_object = ed::types::make_pt_object(obj);
     auto& codes = object_codes[pt_object];
     codes[key].push_back(value);
+}
+
+template <typename T>
+bool Data::if_object_code_exist(const T& obj, const std::string& value, const std::string& key) {
+    const auto pt_object = ed::types::make_pt_object<T>(obj);
+    const auto& pt_object_it = object_codes.find(pt_object);
+    if (pt_object_it != object_codes.end()) {
+        const auto& codes = pt_object_it->second;
+        const auto& codes_it = codes.find(key);
+        if (codes_it != codes.end()) {
+            const auto& values = codes_it->second;
+            if (std::find(values.begin(), values.end(), value) != values.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+inline bool Data::if_object_code_exist(const std::string& value, const std::string& key) {
+    for (const auto& pt_object : object_codes) {
+        const auto& codes_it = pt_object.second.find(key);
+        if (codes_it != pt_object.second.end()) {
+            const auto& values = codes_it->second;
+            if (std::find(values.begin(), values.end(), value) != values.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 template <typename T>
