@@ -28,7 +28,7 @@ six==1.10.0
 validate-email==1.3
 wsgiref==0.1.2; python_version < '3.2'
 retrying==1.3.3
-ujson==2.0.3
+git+https://github.com/esnme/ultrajson.git@ac4637fbc4e72bd59f221d9bba19127820d21023
 jsonschema==2.6.0
 python-dateutil==2.5.3
 typing==3.7.4
