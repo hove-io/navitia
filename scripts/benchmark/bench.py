@@ -120,7 +120,7 @@ def submit_work(pool, reqs, extra_args, scenario):
 
 
 def make_requests(input_file_name):
-    with fileinput.input(input_file_name) as f:
+    with fileinput.input(input_file_name or '-') as f:
         return [(req['path'], req['parameters']) for req in csv.DictReader(f)]
 
 
@@ -128,7 +128,8 @@ def bench(args):
     extra_args = args['--extra-args'] or ''
     concurrent = int(args['--concurrent'] or 1)
 
-    reqs = make_requests(args['--input'] or '-')
+    # if no input file is given, it will read from stdin
+    reqs = make_requests(args['--input'])
 
     scenarios = {s: Scenario(s, OUTPUT_DIR) for s in args['--scenario']}
 
