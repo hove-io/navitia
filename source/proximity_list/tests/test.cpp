@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(test_find_stop_points_nearby_options) {
     data.build_proximity_list();
     data.build_uri();
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, true);
+    find(pb_creator, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, 15);
     auto result = pb_creator.get_response();
 
     // Only poi_2 is available (poi_type_2)
@@ -436,13 +436,13 @@ BOOST_AUTO_TEST_CASE(test_find_stop_points_nearby_options) {
     BOOST_CHECK(result.places_nearby(0).uri() == "poi_2");
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby().size(), 2);
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).uri(), "sp_1");
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).distance(), 2);
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).distance(), 1);
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).uri(), "sp_2");
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).distance(), 5);
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).distance(), 2);
 
     // Same request without stop_points_nearby option
     navitia::PbCreator pb_creator2(&data, boost::gregorian::not_a_date_time, null_time_period);
-    find(pb_creator2, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data, false);
+    find(pb_creator2, c, 15, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type_2", 1, 10, 0, data);
     result = pb_creator2.get_response();
 
     // Only poi_2 is available (poi_type_2)
