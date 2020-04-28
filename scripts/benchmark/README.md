@@ -43,4 +43,4 @@ The `bench` command takes both a file and `stdin` as its input. If you want to g
 
 
 ## Benchmark other endpoints
-You can alos use this tool to test other endpoints. In order to test only once, you need to speficy on which scenario you want to run the benchmark.
+You can also use this tool to test other endpoints. In order to test only once, you need to specify on which scenario you want to run the benchmark.
