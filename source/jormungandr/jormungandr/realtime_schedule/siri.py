@@ -226,10 +226,7 @@ class Siri(RealtimeProxy):
                 # maybe it means that there is no next departure, maybe not...
                 # There is no departures and status is false: this looks like a real error...
                 # If description contains error message use it in exception (ex:[BAD_ID] MonitoringRef (01001713:TOC))
-                if description:
-                    message = description
-                else:
-                    message = 'response status = false'
+                message = description or 'response status = false'
                 raise RealtimeProxyError(message)
 
     def _get_passages(self, tree, ns, route_point):
