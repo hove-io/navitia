@@ -39,9 +39,8 @@ To use this tool, you should make sure that you have the right configuration in 
 ## Benchmark /journeys
 
 This benchmark tool is developped to compare `/journeys` performance between `new_default` scenario and `distributed` scenario at the fisrt place. So it will run the request on both scenarios by default.
-The `bench` command takes botha a file and `stdin` as its input. If you want to generate randomly journeys request, you can run the `sample` command as shown in the help message. It will pick randomly two coordinates in the given bouding box then output it on `stdout`. The randomly generated requests can be save by `python bench.py sample 2.298255 2.411574 48.821590 48.898 1000 -a '&datetime=20200318T100000' > requests.csv` then you can feed it to `bench` by `cat requests.csv | python bench.py bench -c 1`.
+The `bench` command takes both a file and `stdin` as its input. If you want to generate random journeys requests, you can run the `sample` command as shown in the help message. It will pick randomly two coordinates in the given bounding box then output it on `stdout`. The randomly generated requests can be saved by `python bench.py sample 2.298255 2.411574 48.821590 48.898 1000 -a '&datetime=20200318T100000' > requests.csv` then you can feed it to `bench` by `cat requests.csv | python bench.py bench -c 1`.
 
 
 ## Benchmark other endpoints
 You can alos use this tool to test other endpoints. In order to test only once, you need to speficy on which scenario you want to run the benchmark.
-
