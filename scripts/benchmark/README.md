@@ -30,7 +30,7 @@ Example:
   python bench.py sample 2.298255 2.411574 48.821590 48.898 1000 -a '&datetime=20200318T100000'
 ```
 
-To launch the benchmark, you will need to generate a file in which contains the requests to navitia. You can find the example in this folder.
+To launch the benchmark, you will need to generate a file which contains the requests to navitia. You can find an example in this folder.
 
 ## Summary
 
@@ -44,5 +44,4 @@ The `bench` command takes botha a file and `stdin` as its input. If you want to 
 
 ## Benchmark other endpoints
 You can alos use this tool to test other endpoints. In order to test only once, you need to speficy on which scenario you want to run the benchmark.
-
 
