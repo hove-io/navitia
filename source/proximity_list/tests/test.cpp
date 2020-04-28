@@ -436,9 +436,9 @@ BOOST_AUTO_TEST_CASE(test_find_stop_points_nearby_options) {
     BOOST_CHECK(result.places_nearby(0).uri() == "poi_2");
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby().size(), 2);
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).uri(), "sp_1");
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).distance(), 2);
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(0).distance(), 1);
     BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).uri(), "sp_2");
-    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).distance(), 5);
+    BOOST_REQUIRE_EQUAL(result.places_nearby(0).stop_points_nearby(1).distance(), 2);
 
     // Same request without stop_points_nearby option
     navitia::PbCreator pb_creator2(&data, boost::gregorian::not_a_date_time, null_time_period);
