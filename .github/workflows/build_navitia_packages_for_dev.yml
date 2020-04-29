@@ -15,13 +15,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: install zip dependency
+      run: apt update && apt install -y zip httpie
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
-    - name: install zip dependency
-      run: apt update && apt install -y zip httpie
     - name: create navitia_debian_packages.zip
       run: |
         zip navitia_debian_packages.zip ../navitia-*
