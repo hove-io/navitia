@@ -268,6 +268,17 @@ struct calendar_fixture {
         b.lines["line:A"]->text_color = "FFD700";
         b.lines["line:A"]->code = "A";
 
+        // Add admins to test display_informations.direction
+        navitia::georef::Admin* ad = new navitia::georef::Admin();
+        ad->name = "admin_name";
+        ad->uri = "admin_uri";
+        ad->level = 8;
+        ad->postal_codes.push_back("29000");
+        ad->idx = 0;
+        b.data->geo_ref->admins.push_back(ad);
+        auto* sp_ptr = b.sps.at("Tstop3");
+        sp_ptr->stop_area->admin_list.push_back(ad);
+
         b.finish();
         b.data->build_uri();
 

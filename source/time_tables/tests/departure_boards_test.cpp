@@ -1911,6 +1911,24 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
     b.vj("bob").route("bobette")("C", "11:00"_t)("B", "12:00"_t)("A", "13:00"_t);
     b.vj("bob").route("bobette")("D", "11:55"_t)("B", "12:55"_t)("A", "13:55"_t);
 
+    // Add admins to test display_informations.direction
+    auto adminA = std::make_unique<navitia::georef::Admin>();
+    adminA->name = "adminA";
+    adminA->level = 8;
+    auto adminC = std::make_unique<navitia::georef::Admin>();
+    adminC->name = "adminC";
+    adminC->level = 8;
+    auto adminD = std::make_unique<navitia::georef::Admin>();
+    adminD->name = "adminD";
+    adminD->level = 8;
+
+    auto* sp_ptr = b.sps.at("C");
+    sp_ptr->stop_area->admin_list.push_back(adminC.release());
+    sp_ptr = b.sps.at("A");
+    sp_ptr->stop_area->admin_list.push_back(adminA.release());
+    sp_ptr = b.sps.at("D");
+    sp_ptr->stop_area->admin_list.push_back(adminD.release());
+
     b.finish();
     b.data->pt_data->sort_and_index();
     b.data->build_raptor();
@@ -1930,7 +1948,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
         // Directions B -> C and B -> D
         auto stop_schedule = resp.stop_schedules(0);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "bob");
-        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C (adminC)");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 00, 00));
@@ -1938,7 +1956,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
         // Direction B -> A
         stop_schedule = resp.stop_schedules(1);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "bobette");
-        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A (adminA)");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12, 00, 00));
@@ -1955,21 +1973,21 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
         // Direction B -> C
         auto terminus_schedule = resp.terminus_schedules(0);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bob");
-        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "C (adminC)");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 00, 00));
         // Direction B -> D
         terminus_schedule = resp.terminus_schedules(1);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bob");
-        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D (adminD)");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 15, 00));
         // Direction B -> A
         terminus_schedule = resp.terminus_schedules(2);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "bobette");
-        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A (adminA)");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12, 00, 00));
