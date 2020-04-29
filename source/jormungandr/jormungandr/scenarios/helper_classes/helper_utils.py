@@ -41,6 +41,8 @@ from functools import cmp_to_key
 from contextlib import contextmanager
 import time
 
+DEFAULT_STOP_POINTS_NEARBY_DURATION = 5 * 60  # In secs
+
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
     section = response_pb2.Section()
@@ -271,7 +273,7 @@ def _build_fallback(
     fallback_type,
 ):
     accessibles_by_crowfly = obj_accessible_by_crowfly.wait_and_get()
-    fallback_durations = fallback_durations_pool.wait_and_get(mode)
+    fallback_durations, orig_to_poi_fallback_durations = fallback_durations_pool.wait_and_get(mode)
     fallback_logic = _get_fallback_logic(fallback_type)
 
     pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
@@ -344,6 +346,15 @@ def get_max_fallback_duration(request, mode, dp_future):
     dp = dp_future.wait_and_get() if dp_future else None
     dp_duration = dp.journeys[0].durations.total if getattr(dp, 'journeys', None) else max_duration
     return min(max_duration, dp_duration)
+
+
+def get_fallback_duration_for_stop_point_nearby(request):
+    """
+    Select parameter option to set the max duration for stop point nearby crowfly
+    :param request:
+    :return: stop_point_nearby_duration
+    """
+    return request.get('max_stop_point_nearby_duration', DEFAULT_STOP_POINTS_NEARBY_DURATION)
 
 
 def compute_fallback(

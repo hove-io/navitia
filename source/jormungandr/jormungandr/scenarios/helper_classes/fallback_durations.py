@@ -30,7 +30,7 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
@@ -40,6 +40,8 @@ import logging
 from .helper_utils import timed_logger
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
+
+PARK_RIDE_VALUES = ['yes']
 
 
 class FallbackDurations:
@@ -101,17 +103,22 @@ class FallbackDurations:
     def _get_duration(self, resp, place):
         if resp.routing_status == response_pb2.reached:
             return resp.duration
-        return int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode))
+        return self._get_manhattan_duration(place.distance, self._speed_switcher.get(self._mode))
+
+    def _get_manhattan_duration(self, distance, speed):
+        return int((distance * sqrt(2)) / speed)
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
-    def _get_street_network_routing_matrix(self, origins, destinations):
+    def _get_street_network_routing_matrix(self, origins, destinations, mode=None):
+        if mode == None:
+            mode = self._mode
         with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
             try:
                 return self._streetnetwork_service.get_street_network_routing_matrix(
                     self._instance,
                     origins,
                     destinations,
-                    self._mode,
+                    mode,
                     self._max_duration_to_pt,
                     self._request,
                     **self._speed_switcher
@@ -119,6 +126,17 @@ class FallbackDurations:
             except Exception as e:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None
+
+    def _pick_up_parking_nearby(self, pt_objects):
+        logger = logging.getLogger(__name__)
+        parkings = []
+        for pt_object in pt_objects:
+            if pt_object.embedded_type == type_pb2.POI:
+                for properties in pt_object.poi.properties:
+                    if properties.type == 'park_ride' and properties.value.lower() in PARK_RIDE_VALUES:
+                        parkings.append(pt_object)
+                        break
+        return parkings
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -128,6 +146,10 @@ class FallbackDurations:
         # stop_point or a stop_area
         center_isochrone = self._requested_place_obj
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
+        if self._mode == 'car':
+            # pick up only parkings with park_ride = yes
+            proximities_by_crowfly = self._pick_up_parking_nearby(proximities_by_crowfly)
 
         free_access = self._places_free_access.wait_and_get()
 
@@ -148,6 +170,7 @@ class FallbackDurations:
         places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
 
         result = {}
+        orig_to_parking_durations = {}
         # Since we have already places that have free access, we add them into the result
         [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
 
@@ -155,16 +178,19 @@ class FallbackDurations:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
         # 2. All proximities by crowfly are free access
         if not places_isochrone:
-            return result
+            return result, orig_to_parking_durations
 
         if self._max_duration_to_pt == 0:
             logger.debug("max_duration_to_pt equals to 0")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
+                return (
+                    {center_isochrone.uri: DurationElement(0, response_pb2.reached)},
+                    orig_to_parking_durations,
+                )
             else:
-                return result
+                return result, orig_to_parking_durations
 
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             origins = [center_isochrone]
@@ -183,13 +209,26 @@ class FallbackDurations:
             or not len(sn_routing_matrix.rows[0].routing_response)
         ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
-            return result
+            return result, orig_to_parking_durations
 
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
             if r.routing_status != response_pb2.unreached:
                 duration = self._get_duration(r, places_isochrone[pos])
-                if duration < self._max_duration_to_pt:
-                    result.update({places_isochrone[pos].uri: DurationElement(duration, r.routing_status)})
+                if self._mode == 'car':
+                    for sp_nearby in places_isochrone[pos].stop_points_nearby:
+                        duration_to_stop_point = self._get_manhattan_duration(
+                            sp_nearby.distance, self._speed_switcher.get('walking')
+                        )
+                        if (duration + duration_to_stop_point) < self._max_duration_to_pt:
+                            result[sp_nearby.uri] = DurationElement(
+                                duration_to_stop_point + duration, response_pb2.reached
+                            )
+                            orig_to_parking_durations.update(
+                                {places_isochrone[pos].uri: DurationElement(duration, r.routing_status)}
+                            )
+                else:
+                    if duration < self._max_duration_to_pt:
+                        result.update({places_isochrone[pos].uri: DurationElement(duration, r.routing_status)})
 
         # We update the fallback duration matrix if the requested origin/destination is also
         # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
@@ -201,7 +240,7 @@ class FallbackDurations:
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
-        return result
+        return result, orig_to_parking_durations
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

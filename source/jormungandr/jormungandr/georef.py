@@ -73,8 +73,19 @@ class Kraken(object):
             return None
         return response.car_co2_emission
 
-    def get_crow_fly(self, origin, streetnetwork_mode, max_duration, max_nb_crowfly, **kwargs):
+    def get_crow_fly(
+        self,
+        origin,
+        streetnetwork_mode,
+        max_duration,
+        max_nb_crowfly,
+        object_type=type_pb2.STOP_POINT,
+        filter=None,
+        stop_points_nearby_duration=300,
+        **kwargs
+    ):
 
+        logger = logging.getLogger(__name__)
         # Getting stop_points or stop_areas using crow fly
         # the distance of crow fly is defined by the mode speed and max_duration
         req = request_pb2.Request()
@@ -85,11 +96,15 @@ class Kraken(object):
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
         req.disable_feedpublisher = True
-        # we are only interested in public transports
-        req.places_nearby.types.append(type_pb2.STOP_POINT)
+        req.places_nearby.types.append(object_type)
+        if filter != None:
+            req.places_nearby.filter = filter
+        if streetnetwork_mode == "car":
+            req.places_nearby.stop_points_nearby_radius = (
+                kwargs.get("walking", 1.11) * stop_points_nearby_duration
+            )
         res = self.instance.send_and_receive(req)
         if len(res.feed_publishers) != 0:
-            logger = logging.getLogger(__name__)
             logger.error("feed publisher not empty: expect performance regression!")
         return res.places_nearby
 
