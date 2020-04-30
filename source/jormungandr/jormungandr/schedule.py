@@ -342,7 +342,36 @@ class MixedSchedule(object):
         return resp
 
     def terminus_schedules(self, request):
-        return self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
+        resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
+
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
+            return resp
+
+        futures = []
+        pool = gevent.pool.Pool(self.instance.realtime_pool_size)
+
+        # Copy the current request context to be used in greenlet
+        reqctx = utils.copy_flask_request_context()
+
+        def worker(rt_proxy, route_point, request, stop_schedule):
+            # Use the copied request context in greenlet
+            with utils.copy_context_in_greenlet_stack(reqctx):
+                return (
+                    rt_proxy,
+                    stop_schedule,
+                    self._get_next_realtime_passages(rt_proxy, route_point, request),
+                )
+
+        for terminus_schedule in resp.terminus_schedules:
+            route_point = _get_route_point_from_stop_schedule(terminus_schedule)
+            rt_proxy = self._get_realtime_proxy(route_point)
+            if rt_proxy:
+                futures.append(pool.spawn(worker, rt_proxy, route_point, request, terminus_schedule))
+
+        for future in gevent.iwait(futures):
+            rt_proxy, terminus_schedule, next_rt_passages = future.get()
+            rt_proxy._update_stop_schedule(terminus_schedule, next_rt_passages)
+        return resp
 
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
