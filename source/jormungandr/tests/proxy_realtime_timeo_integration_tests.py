@@ -214,7 +214,9 @@ class TestDepartures(AbstractTestFixture):
         """
         When timeo service responds a empty list, we return the empty rt list
         """
-        query = self.query_template_scs.format(sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(
+            sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
@@ -222,7 +224,9 @@ class TestDepartures(AbstractTestFixture):
         assert len(stop_times) == 0
 
     def test_stop_schedule_with_rt_and_without_destination(self):
-        query = self.query_template_scs.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(
+            sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
@@ -248,7 +252,9 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:7a0967bbb281e0d1548d2d5bc6933a20"
 
     def test_stop_schedule_with_rt_and_with_destination(self):
-        query = self.query_template_scs.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(
+            sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
 
         response = self.query_region(query)
         is_valid_notes(response["notes"])
@@ -275,7 +281,9 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:b5b328cb593ae7b1d73228345fe634fc"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
-        query = self.query_template_scs.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900')
+        query = self.query_template_scs.format(
+            sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900'
+        )
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
@@ -289,7 +297,9 @@ class TestDepartures(AbstractTestFixture):
         """
         Here we have realtime stop_times from proxy_realtime_timeo
         """
-        query = self.query_template_ter.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_ter.format(
+            sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
 
         response = self.query_region(query)
         is_valid_notes(response["notes"])

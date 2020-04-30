@@ -566,9 +566,9 @@ void terminus_schedules(PbCreator& pb_creator,
         std::vector<routing::datetime_stop_time> stop_times;
         int32_t utc_offset = 0;
         if (!calendar_id) {
-            stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
-                                                 handler.max_datetime, items_per_route_point, *pb_creator.data,
-                                                 rt_level);
+            stop_times =
+                routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                        handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
             if (route->line->opening_time && !stop_times.empty()) {
@@ -604,8 +604,8 @@ void terminus_schedules(PbCreator& pb_creator,
 
             if (rt_level != navitia::type::RTLevel::Base) {
                 auto tmp_stop_times =
-                        routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
-                                                handler.max_datetime, 1, *pb_creator.data, navitia::type::RTLevel::Base);
+                    routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                            handler.max_datetime, 1, *pb_creator.data, navitia::type::RTLevel::Base);
                 if (!tmp_stop_times.empty()) {
                     resp_status = pbnavitia::ResponseStatus::active_disruption;
                 }

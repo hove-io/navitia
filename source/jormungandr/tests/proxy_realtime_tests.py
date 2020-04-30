@@ -172,9 +172,7 @@ class TestDepartures(AbstractTestFixture):
 
         notes = {n['id']: n for n in response.get('notes', [])}
 
-        directions = [
-            notes[l['id']]['value'] for dt in date_times for l in dt['links'] if l['rel'] == 'notes'
-        ]
+        directions = [notes[l['id']]['value'] for dt in date_times for l in dt['links'] if l['rel'] == 'notes']
 
         assert directions == ["l'infini", "l'au dela"]
 

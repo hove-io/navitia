@@ -700,8 +700,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
     b.data->pt_data->build_uri();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
-                       nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0, nt::RTLevel::Base,
+                       std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
