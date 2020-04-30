@@ -408,7 +408,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
         is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
-        assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["terminus_schedules"][0]["additional_informations"] == "active_disruption"
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
         assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"

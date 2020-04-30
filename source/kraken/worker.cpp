@@ -473,12 +473,12 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
                     request.count(), request.start_page(), rt_level);
                 break;
             case pbnavitia::terminus_schedules:
-                timetables::terminus_schedules(this->pb_creator, request.departure_filter(),
-                                               request.has_calendar()
-                                                   ? boost::optional<const std::string>(request.calendar())
-                                                   : boost::optional<const std::string>(),
-                                               forbidden_uri, from_datetime, request.duration(), request.depth(),
-                                               request.count(), request.start_page(), request.items_per_schedule());
+                timetables::terminus_schedules(
+                    this->pb_creator, request.departure_filter(),
+                    request.has_calendar() ? boost::optional<const std::string>(request.calendar())
+                                           : boost::optional<const std::string>(),
+                    forbidden_uri, from_datetime, request.duration(), request.depth(),
+                    request.count(), request.start_page(), rt_level, request.items_per_schedule());
                 break;
             default:
                 LOG4CPLUS_WARN(logger, "Unknown timetable query");
