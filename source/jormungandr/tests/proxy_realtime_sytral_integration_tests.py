@@ -62,6 +62,9 @@ class TestSytralSchedules(AbstractTestFixture):
         'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
     )
     query_template_dep = 'stop_points/{sp}/departures?data_freshness=realtime&_current_datetime=20160102T0800'
+    query_template_ter = (
+        'stop_points/{sp}/terminus_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+    )
 
     def test_stop_schedule_with_realtime_only(self):
         mock_requests = MockRequests(
@@ -96,7 +99,7 @@ class TestSytralSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            # 2016-01-02 08:17:00
+            # 2016-01-02 08:17:17
             assert get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': True, 'dt': '20160102T091717'},
@@ -107,6 +110,16 @@ class TestSytralSchedules(AbstractTestFixture):
             dep = get_not_null(response, 'departures')
             assert len(dep) == 2
             assert get_departure(dep, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': True, 'dt': '20160102T091717'},
+            ]
+
+            query = self.query_template_ter.format(sp='SP_1')
+            response = self.query_region(query)
+            ter = get_not_null(response, 'terminus_schedules')
+            assert len(ter) == 1
+            # 2016-01-02 08:17:17
+            assert get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': True, 'dt': '20160102T091717'},
             ]
@@ -144,7 +157,7 @@ class TestSytralSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            # 2016-01-02 08:17:00
+            # 2016-01-02 08:17:17
             assert get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': False, 'dt': '20160102T091717'},
@@ -155,6 +168,16 @@ class TestSytralSchedules(AbstractTestFixture):
             dep = get_not_null(response, 'departures')
             assert len(dep) == 2
             assert get_departure(dep, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': False, 'dt': '20160102T091717'},
+            ]
+
+            query = self.query_template_ter.format(sp='SP_1')
+            response = self.query_region(query)
+            ter = get_not_null(response, 'terminus_schedules')
+            assert len(ter) == 1
+            # 2016-01-02 08:17:17
+            assert get_schedule(ter, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': False, 'dt': '20160102T091717'},
             ]

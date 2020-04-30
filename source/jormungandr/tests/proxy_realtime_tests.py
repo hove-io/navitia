@@ -91,10 +91,11 @@ DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'data_freshness', 
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
 
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template_scs = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template_ter = 'stop_points/{sp}/terminus_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
 
     def test_stop_schedule(self):
-        query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
+        query = self.query_template_scs.format(sp='C:S0', dt='20160102T1100', data_freshness='')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
@@ -112,7 +113,7 @@ class TestDepartures(AbstractTestFixture):
         assert directions == ["l'infini", "l'au dela"]
 
     def test_stop_schedule_base(self):
-        query = self.query_template.format(
+        query = self.query_template_scs.format(
             sp='C:S0', dt='20160102T1100', data_freshness='&data_freshness=base_schedule'
         )
         response = self.query_region(query)
@@ -124,7 +125,7 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_empty_stop_schedule(self):
-        query = self.query_template.format(sp='C:S1', dt='20160102T1100', data_freshness='')
+        query = self.query_template_scs.format(sp='C:S1', dt='20160102T1100', data_freshness='')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
@@ -134,7 +135,7 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_stop_schedule_stop_point_has_no_rt(self):
-        query = self.query_template.format(sp='S1', dt='20160102T1030', data_freshness='')
+        query = self.query_template_scs.format(sp='S1', dt='20160102T1030', data_freshness='')
         response = self.query_region(query)
 
         stop_schedule_A = response['stop_schedules'][0]
@@ -154,6 +155,39 @@ class TestDepartures(AbstractTestFixture):
         assert ['20160102T113000'] == next_passage_dts
 
         for dt in stop_schedule_B['date_times']:
+            assert dt['data_freshness'] == 'base_schedule'
+
+    def test_terminus_schedules_realtime(self):
+        """
+        Here we have two realtime date_times from a realtime proxy
+        """
+        query = self.query_template_ter.format(sp='C:S0', dt='20160102T1100', data_freshness='')
+        response = self.query_region(query)
+        date_times = response['terminus_schedules'][0]['date_times']
+        next_passage_dts = [dt["date_time"] for dt in date_times]
+        assert ["20160102T113242", "20160102T114242"] == next_passage_dts
+
+        for dt in date_times:
+            assert dt['data_freshness'] == 'realtime'
+
+        notes = {n['id']: n for n in response.get('notes', [])}
+
+        directions = [
+            notes[l['id']]['value'] for dt in date_times for l in dt['links'] if l['rel'] == 'notes'
+        ]
+
+        assert directions == ["l'infini", "l'au dela"]
+
+    def test_terminus_schedules_base(self):
+        query = self.query_template_ter.format(
+            sp='C:S0', dt='20160102T1100', data_freshness='&data_freshness=base_schedule'
+        )
+        response = self.query_region(query)
+        date_times = response['terminus_schedules'][0]['date_times']
+        next_passage_dts = [dt["date_time"] for dt in date_times]
+        assert "20160102T113000" in next_passage_dts
+
+        for dt in date_times:
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
@@ -317,7 +351,7 @@ class TestDepartures(AbstractTestFixture):
         test the limit of item per stop_schedule with a realtime proxy
         """
         query = (
-            self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
+            self.query_template_scs.format(sp='C:S0', dt='20160102T1100', data_freshness='')
             + '&items_per_schedule=1'
         )
         response = self.query_region(query)
@@ -335,7 +369,7 @@ class TestDepartures(AbstractTestFixture):
 
         # same with a big limit, we get only 2 items (because there are only 2)
         query = (
-            self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='')
+            self.query_template_scs.format(sp='C:S0', dt='20160102T1100', data_freshness='')
             + '&items_per_schedule=42'
         )
         response = self.query_region(query)

@@ -711,6 +711,15 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
 
+        # it's not in terminus_schedules
+        response = self.query_region(
+            "stop_points/stop_point:stopB/lines/A/terminus_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert not has_the_disruption(response, 'vjA_on_time')
+        assert response['terminus_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+        assert response['terminus_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
+        assert response['terminus_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
+
         # it's not in route_schedules
         response = self.query_region(
             "stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
@@ -779,6 +788,16 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # it's in terminus_schedules
+        response = self.query_region(
+            "stop_points/stop_point:stopB/lines/A/terminus_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert has_the_disruption(response, 'vjA_late')
+        assert response['terminus_schedules'][0]['date_times'][0]['links'][1]['type'] == 'disruption'
+        assert response['terminus_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
+        assert response['terminus_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
+        assert response['terminus_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
 
         # it's in route_schedules
         response = self.query_region(

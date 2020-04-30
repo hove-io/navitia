@@ -170,13 +170,17 @@ MOCKED_PROXY_CONF = [
 
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
-    query_template = (
+    query_template_scs = (
         'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+        '&_current_datetime={c_dt}'
+    )
+    query_template_ter = (
+        'stop_points/{sp}/terminus_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
         '&_current_datetime={c_dt}'
     )
 
     def test_stop_schedule_without_rt(self):
-        query = self.query_template.format(
+        query = self.query_template_scs.format(
             sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
         )
         response = self.query_region(query)
@@ -194,7 +198,7 @@ class TestDepartures(AbstractTestFixture):
         When timeo service responds a error code >= 100 (into MessageResponse.ResponseCode field),
         we return base schedule results
         """
-        query = self.query_template.format(
+        query = self.query_template_scs.format(
             sp='C:S1', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
         )
         response = self.query_region(query)
@@ -210,7 +214,7 @@ class TestDepartures(AbstractTestFixture):
         """
         When timeo service responds a empty list, we return the empty rt list
         """
-        query = self.query_template.format(sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(sp='S40', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
@@ -218,7 +222,7 @@ class TestDepartures(AbstractTestFixture):
         assert len(stop_times) == 0
 
     def test_stop_schedule_with_rt_and_without_destination(self):
-        query = self.query_template.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
@@ -244,7 +248,7 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:7a0967bbb281e0d1548d2d5bc6933a20"
 
     def test_stop_schedule_with_rt_and_with_destination(self):
-        query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+        query = self.query_template_scs.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
 
         response = self.query_region(query)
         is_valid_notes(response["notes"])
@@ -271,7 +275,7 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:b5b328cb593ae7b1d73228345fe634fc"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
-        query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900')
+        query = self.query_template_scs.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900')
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
@@ -280,3 +284,44 @@ class TestDepartures(AbstractTestFixture):
             assert len(stop_schedule['date_times']) > 0
             for stop_time in stop_schedule['date_times']:
                 assert stop_time['data_freshness'] == 'base_schedule'
+
+    def test_terminus_schedule_with_realtime(self):
+        """
+        Here we have realtime stop_times from proxy_realtime_timeo
+        """
+        query = self.query_template_ter.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
+
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 3
+        date_times = terminus_schedules[0]['date_times']
+        assert len(date_times) == 2
+        assert date_times[0]['data_freshness'] == 'realtime'
+        assert date_times[0]['date_time'] == '20160102T090052'
+        links = date_times[0]["links"]
+        assert len(links) == 1
+        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+
+        assert date_times[1]['data_freshness'] == 'realtime'
+        assert date_times[1]['date_time'] == '20160102T091352'
+        links = date_times[1]["links"]
+        assert len(links) == 1
+        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+
+    def test_terminus_schedule_without_realtime(self):
+        """
+        Here we have theoretical stop_times only as C:S0 is absent in proxy_realtime_timeo
+        """
+        query = self.query_template_ter.format(
+            sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        date_times = terminus_schedules[0]['date_times']
+        assert len(date_times) == 1
+        stop_time = date_times[0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160102T113000'
