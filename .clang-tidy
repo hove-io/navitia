@@ -1,0 +1,6 @@
+Checks:          '-*, clang-analyzer-*'
+HeaderFilterRegex: '*'
+AnalyzeTemporaryDtors: false
+FormatStyle:     file
+User:            Navitia
+CheckOptions:

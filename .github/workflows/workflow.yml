@@ -11,7 +11,15 @@ on:
 
 
 jobs:
-  check_submodules:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump GitHub context
+      env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+  checks:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -23,9 +31,32 @@ jobs:
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          ref: ${{ github.head_ref }}
+          submodules: 'recursive'
+    - name : Install dependencies
+      run: sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3
+    - name: Cmake
+      run: cmake source
+    - name: Clang Tidy
+      run: make tidy_fix
+    - name: Commit and push changes
+      uses: stefanzweifel/git-auto-commit-action@v4.1.6
+      with:
+        commit_message: "Applying automatic clang-tidy changes"
+        commit_user_name: "Github-action"
+        commit_user_email: "github-action@kisio.com"
+        branch: ${{ github.head_ref }}
+        repository: source
+
 
   build:
     runs-on: ubuntu-latest
+    needs: lint
 
     strategy:
         matrix:
@@ -41,11 +72,9 @@ jobs:
           - 5672:5672
 
     steps:
-    - uses: actions/checkout@v1
-    - name: get submodule
-      run: |
-        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
