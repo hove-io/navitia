@@ -103,6 +103,7 @@ class Kraken(object):
             req.places_nearby.stop_points_nearby_radius = (
                 kwargs.get("walking", 1.11) * stop_points_nearby_duration
             )
+            req.places_nearby.depth = 1
         res = self.instance.send_and_receive(req)
         if len(res.feed_publishers) != 0:
             logger.error("feed publisher not empty: expect performance regression!")
