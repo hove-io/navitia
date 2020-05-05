@@ -184,7 +184,7 @@ static void render(PbCreator& pb_creator,
         auto pt_display_information = schedule->mutable_pt_display_informations();
         pb_creator.fill(route, pt_display_information, 0);
         const auto& jpc = pb_creator.data->dataRaptor->jp_container;
-        // We should rewrite direction with destination stop_area name istead of route.destination
+        // We should rewrite direction with destination stop_area name instead of route.destination
         const type::StopArea* sa =
             pb_creator.data->pt_data->stop_points[jpc.get(jp_dir.jpps.back()).sp_idx.val]->stop_area;
         pt_display_information->set_direction(sa->name + get_admin_name(sa));
