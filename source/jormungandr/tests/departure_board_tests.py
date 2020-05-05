@@ -444,6 +444,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["stop_schedules"][0]["display_informations"]["direction"] == "Tstop3 (admin_name)"
 
     def test_terminus_schedules_on_no_departure_this_day(self):
         """
@@ -456,6 +457,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
         assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["terminus_schedules"][0]["display_informations"]["direction"] == "Tstop3 (admin_name)"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
 
     def test_routes_schedule(self):
