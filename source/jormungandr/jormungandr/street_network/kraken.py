@@ -189,13 +189,13 @@ class Kraken(AbstractStreetNetworkService):
             else:
                 origins, destinations = destinations, origins
 
-        # Ask the PO, what do we want really?
-        if street_network_mode == 'car':
-            street_network_mode = 'car_no_park'
-
         req = self._create_sn_routing_matrix_request(
             origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
         )
+
+        # Ask the PO, what do we want really?
+        if street_network_mode == 'car':
+            req.sn_routing_matrix.mode = 'car_no_park'
 
         res = instance.send_and_receive(req)
         self._check_for_error_and_raise(res)
