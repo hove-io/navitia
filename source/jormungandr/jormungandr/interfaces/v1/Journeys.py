@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging, flask, json, hashlib, datetime
+import logging, json, hashlib, datetime
 from flask import request, g
 from flask_restful import abort
 from jormungandr import i_manager, app, fallback_modes
@@ -501,8 +501,8 @@ class Journeys(JourneyCommon):
         #    the same request made at distinct moments
         def generate_request_id():
 
-            path = str(flask.request.path)
-            args_for_id = dict(flask.request.args)
+            path = str(request.path)
+            args_for_id = dict(request.args)
             if "_override_scenario" in args_for_id:
                 scenario = str(args_for_id["_override_scenario"][0])
                 args_for_id["_override_scenario"] = ""
@@ -519,7 +519,7 @@ class Journeys(JourneyCommon):
 
             result = "journeys_{}_{}#{}#".format(json_hash, now, scenario)
 
-            logger.info("Generating id : {} for request : {}".format(result, flask.request.url))
+            logger.info("Generating id : {} for request : {}".format(result, request.url))
 
             return result
 
@@ -530,8 +530,6 @@ class Journeys(JourneyCommon):
         # copy base request arguments before setting region specific parameters
         if len(possible_regions) > 1:
             base_args = deepcopy(args)
-
-        logger.debug("We are about to ask journeys on regions : {}".format(possible_regions))
 
         # Store the different errors
         responses = {}
