@@ -1,6 +1,6 @@
 # Log Analyzer
 
-The log analyzer produces and Gantt chart of the different computations performed during a "journey" call to Navitia.
+The log analyzer produces a Gantt chart of the different computations performed during a "journey" call to Navitia.
 It does so by parsing the logs of Jormungandr and Kraken.
 
 
@@ -19,7 +19,7 @@ log4cplus.appender.ALL_MSGS.layout.ConversionPattern=[%D{%y-%m-%d %H:%M:%S,%q}] 
 
 ```
 
-- prepare the needed python environement with `virtualenvwrapper` (see https://virtualenvwrapper.readthedocs.io/en/latest/ for installation instructions).
+- prepare the needed python environment with `virtualenvwrapper` (see https://virtualenvwrapper.readthedocs.io/en/latest/ for installation instructions).
   You can also install the python librairies listed in `requirements.txt` in your own environment
 
 ```
@@ -27,7 +27,7 @@ cd log_analyzer/
 mkvirtualenv -p python3 -r requirements.txt log_analyzer
 ```
 
-- then load the python environement, and launch the tool
+- then load the python environment, and launch the tool
 
 ```
 workon log_analyzer
@@ -35,7 +35,7 @@ python3 log_analyzer.py --kraken_log_file path/to/kraken.log --jormun_log_file p
 
 ```
 
-This will create in `my/output/dir/` and html file containing the gantt chart for each journey request found in the logs of Jormungandr and Kraken.
+This will create in `my/output/dir/` an html file containing the gantt chart for each journey request found in the logs of Jormungandr and Kraken.
 
 
 ## How does it work
