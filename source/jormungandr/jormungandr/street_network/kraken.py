@@ -129,13 +129,14 @@ class Kraken(AbstractStreetNetworkService):
             ):
                 return None
 
-        # Ask the PO, what do we want really?
-        if direct_path_type != StreetNetworkPathType.DIRECT and mode == 'car':
-            mode = 'car_no_park'
-
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
         )
+
+        # Ask the PO, what do we want really?
+        if direct_path_type != StreetNetworkPathType.DIRECT and mode == 'car':
+            req.direct_path.streetnetwork_params.origin_mode = 'car_no_park'
+            req.direct_path.streetnetwork_params.destination_mode = 'car_no_park'
 
         response = instance.send_and_receive(req)
         if should_invert_journey:
@@ -188,6 +189,10 @@ class Kraken(AbstractStreetNetworkService):
             else:
                 origins, destinations = destinations, origins
 
+        # Ask the PO, what do we want really?
+        if street_network_mode == 'car':
+            street_network_mode = 'car_no_park'
+
         req = self._create_sn_routing_matrix_request(
             origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
         )
@@ -210,7 +215,7 @@ class Kraken(AbstractStreetNetworkService):
             (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
         )
 
-        req.sn_routing_matrix.mode = 'car_no_park' if street_network_mode == 'car' else street_network_mode
+        req.sn_routing_matrix.mode = street_network_mode
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
 

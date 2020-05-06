@@ -101,6 +101,7 @@ class Asgard(TransientSocket, Kraken):
     ):
         speed_switcher = make_speed_switcher(request)
 
+        mode = 'car' if mode == 'car_no_park' else mode
         req = self._create_sn_routing_matrix_request(
             origins, destinations, mode, max_duration, speed_switcher, **kwargs
         )
