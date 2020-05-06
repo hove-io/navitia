@@ -456,6 +456,7 @@ void terminus_schedules(PbCreator& pb_creator,
                         const uint32_t depth,
                         const uint32_t count,
                         const uint32_t start_page,
+                        const type::RTLevel rt_level,
                         const size_t items_per_route_point) {
     RequestHandle handler(pb_creator, date, duration, calendar_id);
     handler.init_jpp(request, forbidden_uris);
@@ -565,9 +566,9 @@ void terminus_schedules(PbCreator& pb_creator,
         std::vector<routing::datetime_stop_time> stop_times;
         int32_t utc_offset = 0;
         if (!calendar_id) {
-            stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
-                                                 handler.max_datetime, items_per_route_point, *pb_creator.data,
-                                                 navitia::type::RTLevel::Base);
+            stop_times =
+                routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                        handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
             if (route->line->opening_time && !stop_times.empty()) {
@@ -599,6 +600,15 @@ void terminus_schedules(PbCreator& pb_creator,
             auto resp_status = pbnavitia::ResponseStatus::no_departure_this_day;
             if (line_closed(navitia::seconds(duration), route, date)) {
                 resp_status = pbnavitia::ResponseStatus::no_active_circulation_this_day;
+            }
+
+            if (rt_level != navitia::type::RTLevel::Base) {
+                auto tmp_stop_times =
+                    routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
+                                            handler.max_datetime, 1, *pb_creator.data, navitia::type::RTLevel::Base);
+                if (!tmp_stop_times.empty()) {
+                    resp_status = pbnavitia::ResponseStatus::active_disruption;
+                }
             }
             response_status[route_point] = resp_status;
         }
