@@ -512,7 +512,7 @@ class Journeys(JourneyCommon):
             json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
             # we could use the json_repr as an id, but we hash it to have something smaller
             m = hashlib.sha256()
-            m.update(json_repr)
+            m.update(json_repr.encode("UTF-8"))
             json_hash = m.hexdigest()
 
             now = dt_to_str(datetime.datetime.utcnow())
