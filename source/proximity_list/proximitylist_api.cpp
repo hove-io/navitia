@@ -83,7 +83,7 @@ static void make_pb(navitia::PbCreator& pb_creator,
         for (const auto& sp_idx_distance : stop_points_nearby_idx_distance) {
             pbnavitia::PtObject* pt_obj = place->add_stop_points_nearby();
             pb_creator.fill(data.pt_data->stop_points[std::get<0>(sp_idx_distance)], pt_obj, depth);
-            pt_obj->set_distance(std::get<1>(sp_idx_distance));
+            pt_obj->set_distance(sqrt(std::get<1>(sp_idx_distance)));
         }
     }
 }
@@ -102,7 +102,7 @@ void find(navitia::PbCreator& pb_creator,
           const uint32_t count,
           const uint32_t start_page,
           const type::Data& data,
-          const bool find_stop_points_nearby) {
+          const double stop_points_nearby_radius) {
     int total_result = 0;
     std::vector<t_result> result;
     auto end_pagination = (start_page + 1) * count;
@@ -176,10 +176,10 @@ void find(navitia::PbCreator& pb_creator,
             auto distance = std::get<2>(elem);
             std::vector<std::tuple<nt::idx_t, float>> stop_points_nearby_idx_distance;
             // for each result found, we perform a new proximity research for stop point type.
-            if (find_stop_points_nearby) {
+            if (stop_points_nearby_radius > 0) {
                 auto stop_points_nearby_idx_coord_distance =
                     pb_creator.data->pt_data->stop_point_proximity_list.find_within<IndexCoordDistance>(
-                        std::get<1>(elem), limit, search_count);
+                        std::get<1>(elem), stop_points_nearby_radius, search_count);
                 stop_points_nearby_idx_distance.reserve(stop_points_nearby_idx_coord_distance.size());
                 for (const auto& sp_idx : stop_points_nearby_idx_coord_distance) {
                     stop_points_nearby_idx_distance.emplace_back(std::get<0>(sp_idx), std::get<2>(sp_idx));

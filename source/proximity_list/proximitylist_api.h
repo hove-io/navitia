@@ -56,6 +56,6 @@ void find(navitia::PbCreator& pb_creator,
           const uint32_t count,
           const uint32_t start_page,
           const type::Data& data,
-          const bool find_stop_points_nearby = false);
+          const double stop_points_nearby_radius = 0);
 }  // namespace proximitylist
 }  // namespace navitia

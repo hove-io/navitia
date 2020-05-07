@@ -1,6 +1,6 @@
 
 # Jormungandr
-Web service around the c++ core(s). This is the navitia api front end, based on flask.
+Web service around the c++ core(s). This is the navitia api front end, based on Flask.
 
 :snake: **python module**
 

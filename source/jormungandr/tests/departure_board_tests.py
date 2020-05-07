@@ -400,6 +400,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
         # terminus_schedules on partial_terminus with calendar
         # There is neither terminus nor partial_terminus in terminus_schedules
+        # Here the disruption could be injected by chaos or kirin
         response = self.query_region(
             "stop_areas/Tstop2/terminus_schedules?" "from_datetime=20120615T080000&calendar=cal_partial_terminus"
         )
@@ -408,7 +409,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
         is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
-        assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["terminus_schedules"][0]["additional_informations"] == "active_disruption"
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
         assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"
@@ -444,6 +445,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["stop_schedules"][0]["display_informations"]["direction"] == "Tstop3 (admin_name)"
 
     def test_terminus_schedules_on_no_departure_this_day(self):
         """
@@ -456,6 +458,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "terminus_schedules" in response
         assert len(response["terminus_schedules"]) == 1
         assert response["terminus_schedules"][0]["additional_informations"] == "no_departure_this_day"
+        assert response["terminus_schedules"][0]["display_informations"]["direction"] == "Tstop3 (admin_name)"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
 
     def test_routes_schedule(self):

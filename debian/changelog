@@ -1,3 +1,12 @@
+navitia2 (4.1.0) unstable; urgency=low
+
+  * [Jormungandr] Write BAD_ID message in new_relic for SIRI_TAO  <https://github.com/CanalTP/navitia/pull/3207>
+  * [Kraken] Limit stop points nearby for place_nearby by radius option  <https://github.com/CanalTP/navitia/pull/3210>
+  * Activate realtime in terminus schedules  <https://github.com/CanalTP/navitia/pull/3215>
+  * Add cityname in direction and test  <https://github.com/CanalTP/navitia/pull/3212>
+
+ -- Pascal Benchimol <pascal.benchimol@kisio.com>  Thu, 07 May 2020 11:05:04 +0100
+
 navitia2 (4.0.0) unstable; urgency=low
 
   * Fusio2ed: take into account of stop_code within stops.txt  <https://github.com/CanalTP/navitia/pull/3190>
