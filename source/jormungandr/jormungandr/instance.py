@@ -500,6 +500,7 @@ class Instance(object):
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
     max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')
     max_car_direct_path_duration = _make_property_getter('max_car_direct_path_duration')
+    max_car_no_park_direct_path_duration = _make_property_getter('max_car_no_park_direct_path_duration')
     max_taxi_direct_path_duration = _make_property_getter('max_taxi_direct_path_duration')
     max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 

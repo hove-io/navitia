@@ -141,7 +141,10 @@ class TestJourneysDistributed(
         """
         Test when departure/arrival fallback modes are different
         """
-        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true&_car_park_duration=5"
+        )
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']

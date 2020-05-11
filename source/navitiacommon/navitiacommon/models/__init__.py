@@ -454,6 +454,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.max_car_direct_path_duration),
     )
 
+    max_car_no_park_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_no_park_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_no_park_direct_path_duration),
+    )
+
     max_taxi_direct_path_duration = db.Column(
         db.Integer,
         default=default_values.max_taxi_direct_path_duration,
@@ -479,6 +486,14 @@ class Instance(db.Model):  # type: ignore
         nullable=False,
         default=default_values.street_network_car,
     )
+
+    street_network_car_no_park = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_car_no_park,
+    )
+
     street_network_walking = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
@@ -691,7 +706,7 @@ class TravelerProfile(db.Model):  # type: ignore
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
     fallback_mode = db.Enum(
-        'walking', 'car', 'bss', 'bike', 'ridesharing', name='fallback_mode'
+        'walking', 'car', 'car_no_park', 'bss', 'bike', 'ridesharing', name='fallback_mode'
     )  # TODO alembic migration
 
     first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)

@@ -36,8 +36,9 @@ from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr import new_relic
+from jormungandr.fallback_modes import FallbackModes
 import logging
-from .helper_utils import timed_logger, CAR_PARK_DURATION
+from .helper_utils import timed_logger
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
@@ -211,13 +212,17 @@ class FallbackDurations:
             if r.routing_status != response_pb2.unreached:
                 duration = self._get_duration(r, places_isochrone[pos])
                 # if the mode is car, we need to find where to park the car :)
-                if self._mode == 'car':
+                if self._mode == FallbackModes.car.name:
                     for sp_nearby in places_isochrone[pos].stop_points_nearby:
                         duration_to_stop_point = self._get_manhattan_duration(
                             sp_nearby.distance, self._speed_switcher.get('walking')
                         )
-                        durations_sum = duration + duration_to_stop_point + CAR_PARK_DURATION
-                        if durations_sum < self._max_duration_to_pt:
+                        durations_sum = (
+                            duration + duration_to_stop_point + self._request.get('_car_park_duration')
+                        )
+                        if durations_sum < min(
+                            self._max_duration_to_pt, result.get(sp_nearby.uri, float('inf'))
+                        ):
                             result[sp_nearby.uri] = DurationElement(
                                 durations_sum,
                                 response_pb2.reached,

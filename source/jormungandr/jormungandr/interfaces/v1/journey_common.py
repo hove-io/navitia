@@ -271,6 +271,11 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "max_car_duration_to_pt", type=int, help="Maximal duration of car on public transport in second"
         )
         parser_get.add_argument(
+            "max_car_no_park_duration_to_pt",
+            type=int,
+            help="Maximal duration of car no park on public transport in second",
+        )
+        parser_get.add_argument(
             "max_ridesharing_duration_to_pt",
             type=int,
             dest="max_car_no_park_duration_to_pt",
@@ -303,6 +308,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "car_speed",
             type=PositiveFloat(),
             help='Driving speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+        )
+        parser_get.add_argument(
+            "car_no_park_speed",
+            type=PositiveFloat(),
+            help='Driving speed without car park for the fallback sections.\n'
+            'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "ridesharing_speed",

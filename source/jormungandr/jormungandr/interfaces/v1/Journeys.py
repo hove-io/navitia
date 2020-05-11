@@ -351,6 +351,12 @@ class Journeys(JourneyCommon):
             help="limit nb of stop points accesible by car crowfly, " "used especially in distributed scenario",
         )
         parser_get.add_argument(
+            "_max_nb_crowfly_by_car_nor_park",
+            type=int,
+            hidden=True,
+            help="limit nb of stop points accesible by car no park crowfly, used especially in distributed scenario",
+        )
+        parser_get.add_argument(
             "_max_nb_crowfly_by_taxi",
             type=int,
             hidden=True,
@@ -367,6 +373,13 @@ class Journeys(JourneyCommon):
             type=int,
             hidden=True,
             help="limit nb of stop points accesible by bss crowfly, " "used especially in distributed scenario",
+        )
+        parser_get.add_argument(
+            "_car_park_duration",
+            type=int,
+            default=default_values.car_park_duration,
+            hidden=True,
+            help="how long it takes to park the car, " "used especially in distributed scenario",
         )
         parser_get.add_argument(
             "equipment_details",

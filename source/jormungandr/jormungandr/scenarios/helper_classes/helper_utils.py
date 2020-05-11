@@ -131,6 +131,7 @@ def _make_beginning_car_park_sections(
     extremity_date_time,
     pt_journey_extremity,
     car_park,
+    car_park_duration,
     car_park_crowfly_duration,
 ):
     # car_park section
@@ -138,8 +139,8 @@ def _make_beginning_car_park_sections(
     car_park_section.origin.CopyFrom(dp_extremity)
     car_park_section.destination.CopyFrom(car_park)
     car_park_section.begin_date_time = extremity_date_time
-    car_park_section.end_date_time = car_park_section.begin_date_time + CAR_PARK_DURATION
-    car_park_section.duration = CAR_PARK_DURATION
+    car_park_section.end_date_time = car_park_section.begin_date_time + car_park_duration
+    car_park_section.duration = car_park_duration
 
     # crowfly_section
     car_park_to_sp_section.type = response_pb2.SectionType.CROW_FLY
@@ -160,6 +161,7 @@ def _make_ending_car_park_sections(
     extremity_date_time,
     pt_journey_extremity,
     car_park,
+    car_park_duration,
     car_park_crowfly_duration,
 ):
 
@@ -168,8 +170,8 @@ def _make_ending_car_park_sections(
     car_park_section.origin.CopyFrom(car_park)
     car_park_section.destination.CopyFrom(dp_extremity)
     car_park_section.end_date_time = extremity_date_time
-    car_park_section.begin_date_time = car_park_section.end_date_time - CAR_PARK_DURATION
-    car_park_section.duration = CAR_PARK_DURATION
+    car_park_section.begin_date_time = car_park_section.end_date_time - car_park_duration
+    car_park_section.duration = car_park_duration
 
     # crowfly_section
     car_park_to_sp_section.type = response_pb2.SectionType.CROW_FLY
@@ -184,11 +186,12 @@ def _make_ending_car_park_sections(
 
 
 def _extend_with_car_park(
-    fallback_dp, pt_journey, fallback_type, walking_speed, car_park, car_park_crowfly_duration
+    fallback_dp, pt_journey, fallback_type, walking_speed, car_park, car_park_duration, car_park_crowfly_duration
 ):
     dp_journey = fallback_dp.journeys[0]
 
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+        dp_journey.sections[-1].destination.CopyFrom(car_park)
         dp_extremity = dp_journey.sections[-1].destination
         # the first section of pt_journey is a fake crowfly section,
         # the origin of the second section is the real start of the public transport journey
@@ -203,13 +206,14 @@ def _extend_with_car_park(
             dp_journey.arrival_date_time,
             pt_journey_extrimity,
             car_park,
+            car_park_duration,
             car_park_crowfly_duration,
         )
 
         dp_journey.arrival_date_time = car_park_to_sp_section.end_date_time
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
-
+        dp_journey.sections[0].origin.CopyFrom(car_park)
         dp_extremity = dp_journey.sections[0].origin
         # the last section of pt_journey is a fake crowfly section,
         # the destination of the second section before the last is the real end of the public transport journey
@@ -225,6 +229,7 @@ def _extend_with_car_park(
             dp_journey.departure_date_time,
             pt_journey_extrimity,
             car_park,
+            car_park_duration,
             car_park_crowfly_duration,
         )
 
@@ -424,13 +429,14 @@ def _build_fallback(
                         fallback_type,
                         request['walking_speed'],
                         car_park,
+                        request['_car_park_duration'],
                         car_park_crowfly_duration,
                     )
                 _update_fallback_sections(pt_journey, fallback_dp_copy, fallback_period_extremity, fallback_type)
 
                 # update distances and durations by mode if it's a proper computed streetnetwork fallback
                 if fallback_dp_copy and fallback_dp_copy.journeys:
-                    for m in all_fallback_modes - {FallbackModes.bss.name}:
+                    for m in all_fallback_modes - {FallbackModes.bss.name, FallbackModes.car_no_park.name}:
                         fb_distance = getattr(fallback_dp_copy.journeys[0].distances, m)
                         main_distance = getattr(pt_journey.distances, m)
                         setattr(pt_journey.distances, m, fb_distance + main_distance)

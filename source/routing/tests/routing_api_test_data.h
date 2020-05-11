@@ -425,6 +425,8 @@ struct routing_api_data {
         poi_3->poitype_idx = 1;
         poi_3->idx = 2;
         poi_3->admin_list.push_back(admin);
+        poi_3->properties["park_ride"] = "yes";
+
         navitia::georef::POI* poi_4 = new navitia::georef::POI();
         poi_4->uri = "poi:parking_2";
         poi_4->name = "second parking";
@@ -432,6 +434,7 @@ struct routing_api_data {
         poi_4->poitype_idx = 1;
         poi_4->idx = 3;
         poi_4->admin_list.push_back(admin);
+        poi_4->properties["park_ride"] = "yes";
 
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);

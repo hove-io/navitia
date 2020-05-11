@@ -30,7 +30,7 @@ from __future__ import absolute_import
 
 import jormungandr.street_network.utils
 from .helper_utils import get_max_fallback_duration, get_fallback_duration_for_stop_point_nearby, timed_logger
-from jormungandr import utils, new_relic
+from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2
 
@@ -160,12 +160,12 @@ class ProximitiesByCrowflyPool:
     def _async_request(self):
 
         for mode in self._modes:
-            if mode == 'car':
+            object_type = type_pb2.STOP_POINT
+            filter = None
+            if mode == fm.FallbackModes.car.name:
                 object_type = type_pb2.POI
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
-            else:
-                object_type = type_pb2.STOP_POINT
-                filter = None
+
             max_fallback_duration = get_max_fallback_duration(
                 self._request, mode, self._direct_paths_by_mode.get(mode)
             )

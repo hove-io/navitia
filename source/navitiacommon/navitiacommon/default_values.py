@@ -72,6 +72,8 @@ min_car = 5 * 60
 
 min_taxi = 4 * 60
 
+car_park_duration = 5 * 60
+
 # specify the latest time point of request, relative to datetime, in second
 max_duration = 60 * 60 * 24  # seconds
 
@@ -122,7 +124,14 @@ final_line_filter = False
 # Maximum number of second pass to get more itineraries
 max_extra_second_pass = 0
 
-max_nb_crowfly_by_mode = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 5000, 'taxi': 5000}
+max_nb_crowfly_by_mode = {
+    'walking': 5000,
+    'car': 5000,
+    'car_no_park': 5000,
+    'bike': 5000,
+    'bss': 5000,
+    'taxi': 5000,
+}
 
 autocomplete_backend = 'kraken'
 
@@ -140,11 +149,14 @@ max_bss_direct_path_duration = 24 * 60 * 60
 
 max_car_direct_path_duration = 24 * 60 * 60
 
+max_car_no_park_direct_path_duration = 24 * 60 * 60
+
 max_taxi_direct_path_duration = 24 * 60 * 60
 
 max_ridesharing_direct_path_duration = 24 * 60 * 60
 
 street_network_car = "kraken"
+street_network_car_no_park = "kraken"
 street_network_walking = "kraken"
 street_network_bike = "kraken"
 street_network_bss = "kraken"

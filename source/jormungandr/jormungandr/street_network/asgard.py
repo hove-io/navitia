@@ -101,10 +101,13 @@ class Asgard(TransientSocket, Kraken):
     ):
         speed_switcher = make_speed_switcher(request)
 
-        mode = 'car' if mode == 'car_no_park' else mode
         req = self._create_sn_routing_matrix_request(
             origins, destinations, mode, max_duration, speed_switcher, **kwargs
         )
+
+        # asgard doesn't know what to do with 'car_no_park'...
+        if mode == fm.FallbackModes.car_no_park.name:
+            req.sn_routing_matrix.mode = fm.FallbackModes.car.name
 
         res = self._call_asgard(req)
         self._check_for_error_and_raise(res)
@@ -143,6 +146,10 @@ class Asgard(TransientSocket, Kraken):
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
         )
+
+        # asgard doesn't know what to do with 'car_no_park'...
+        if mode == fm.FallbackModes.car_no_park.name:
+            req.direct_path.streetnetwork_params.origin_mode = fm.FallbackModes.car.name
 
         response = self._call_asgard(req)
 
