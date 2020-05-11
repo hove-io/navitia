@@ -156,7 +156,7 @@ class PtJourney:
         )
         mode = self._dep_mode if self._orig_fallback_durtaions_pool is not None else self._arr_mode
         self._logger.debug("waiting for fallback durations with %s", mode)
-        fallback_duration_status, _ = fallback_durations_pool.wait_and_get(mode)
+        fallback_duration_status = fallback_durations_pool.wait_and_get(mode)
 
         self._logger.debug("requesting public transport journey with dep_mode: %s", mode)
 
