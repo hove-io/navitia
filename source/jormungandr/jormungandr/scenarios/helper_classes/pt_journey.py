@@ -94,9 +94,9 @@ class PtJourney:
 
     def _do_journeys_request(self):
         self._logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
-        orig_fallback_duration_status = self._orig_fallback_durtaions_pool.wait_and_get(self._dep_mode)
+        orig_fallback_duration_status, _ = self._orig_fallback_durtaions_pool.wait_and_get(self._dep_mode)
         self._logger.debug("waiting for dest fallback durations with %s", self._arr_mode)
-        dest_fallback_duration_status = self._dest_fallback_durations_pool.wait_and_get(self._arr_mode)
+        dest_fallback_duration_status, _ = self._dest_fallback_durations_pool.wait_and_get(self._arr_mode)
 
         self._logger.debug(
             "requesting public transport journey with dep_mode: %s and arr_mode: %s",

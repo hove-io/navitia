@@ -110,16 +110,14 @@ class FallbackDurations:
         return int((distance * sqrt(2)) / speed)
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
-    def _get_street_network_routing_matrix(self, origins, destinations, mode=None):
-        if mode == None:
-            mode = self._mode
+    def _get_street_network_routing_matrix(self, origins, destinations):
         with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
             try:
                 return self._streetnetwork_service.get_street_network_routing_matrix(
                     self._instance,
                     origins,
                     destinations,
-                    mode,
+                    self._mode,
                     self._max_duration_to_pt,
                     self._request,
                     **self._speed_switcher
