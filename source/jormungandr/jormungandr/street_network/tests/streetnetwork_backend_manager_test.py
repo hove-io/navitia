@@ -403,6 +403,7 @@ def get_street_network_db_test():
 
 class FakeInstance(Instance):
     street_network_car = "asgard"
+    street_network_car_no_park = "asgard"
     street_network_walking = "asgard"
     street_network_bike = "geovelo"
     street_network_bss = "kraken"
@@ -435,7 +436,7 @@ def get_all_street_networks_db_test():
     all_sn_sorted = sorted(all_sn, key=lambda sn: sn.url)
 
     assert all_sn_sorted[0].url == "asgard.url"
-    assert sorted(all_sn_sorted[0].modes) == sorted(["walking", "car"])
+    assert sorted(all_sn_sorted[0].modes) == sorted(["walking", "car", "car_no_park"])
 
     assert all_sn_sorted[1].url == "kraken.url"
     assert all_sn_sorted[1].modes == ["bss"]
