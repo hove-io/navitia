@@ -401,7 +401,7 @@ def _build_fallback(
     car_park_crowfly_duration = None
 
     if mode == 'car':
-        _, _, car_park, car_park_crowfly_duration = fallback_durations_pool.wait_and_get(mode)[pt_obj.uri]
+        _, _, car_park, car_park_crowfly_duration = fallback_durations[pt_obj.uri]
 
     if requested_obj.uri != pt_obj.uri:
         if pt_obj.uri in accessibles_by_crowfly.odt:
