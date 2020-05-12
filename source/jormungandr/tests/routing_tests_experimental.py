@@ -742,6 +742,50 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
         self._call_and_check_journeys_on_coverage("main_routing_test", "stopB", "stopC", "20120614T080000")
 
 
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_max_car_no_park_duration_to_pt(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=car_no_park"
+            + "&car_no_park_speed=0.1"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        # find the pt journey with taxi as it fallback mode
+        car_no_park_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert car_no_park_with_pt
+
+        # get the fallback duration (it's the addition of wait time and taxi journey's duration)
+        car_no_park_with_pt_fallback_time = car_no_park_with_pt['sections'][0]['duration']
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=car_no_park"
+            + "&car_no_park_speed=0.1"
+            # Now we set the max_taxi_duration_to_pt
+            + "&max_car_no_park_duration_to_pt={}".format(car_no_park_with_pt_fallback_time - 1)
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        journeys = get_not_null(response, 'journeys')
+
+        assert len(journeys) == 1
+        # the pt journey is gone....
+        assert 'non_pt' in journeys[0]['tags']
+
+
 @config({"scenario": "distributed"})
 class TesDistributedJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenarioAbstractTestFixture):
     pass
