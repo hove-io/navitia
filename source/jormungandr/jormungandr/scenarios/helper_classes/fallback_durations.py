@@ -147,7 +147,7 @@ class FallbackDurations:
         center_isochrone = self._requested_place_obj
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
 
-        if self._mode == 'car':
+        if self._mode == FallbackModes.car.name:
             # pick up only parkings with park_ride = yes
             proximities_by_crowfly = self._pick_up_parking_nearby(proximities_by_crowfly)
 
