@@ -175,12 +175,13 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
     sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
     sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
     sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
-    sn_params.max_car_no_park_duration_to_pt = request["max_car_no_park_duration_to_pt"]
+    # So far, ridesharing is the only mode using 'car_no_park' in new_default
+    sn_params.max_car_no_park_duration_to_pt = request["max_ridesharing_duration_to_pt"]
     sn_params.walking_speed = request["walking_speed"]
     sn_params.bike_speed = request["bike_speed"]
     sn_params.car_speed = request["car_speed"]
     sn_params.bss_speed = request["bss_speed"]
-    sn_params.car_no_park_speed = request["car_no_park_speed"]
+    sn_params.car_no_park_speed = request["ridesharing_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
     # we always want direct path, even for car

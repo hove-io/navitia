@@ -33,7 +33,7 @@ import copy
 
 import jormungandr.street_network.utils
 from jormungandr.exceptions import TechnicalError
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, type_pb2, response_pb2
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathType,
@@ -104,6 +104,8 @@ class Kraken(AbstractStreetNetworkService):
             'max_car_no_park_duration_to_pt',
             'taxi_speed',
             'max_taxi_duration_to_pt',
+            'ridesharing_speed',
+            'max_ridesharing_duration_to_pt',
         ]:
             direct_path_request[attr] = request[attr]
 
@@ -115,8 +117,7 @@ class Kraken(AbstractStreetNetworkService):
             # max_{mode}_direct_path_duration / 2.0
             from jormungandr.fallback_modes import FallbackModes as fm
 
-            kraken_mode = 'car_no_park' if mode in (fm.taxi.name, fm.ridesharing.name) else mode
-            direct_path_request['max_{mode}_duration_to_pt'.format(mode=kraken_mode)] = int(
+            direct_path_request['max_{mode}_duration_to_pt'.format(mode=mode)] = int(
                 request['max_{mode}_direct_path_duration'.format(mode=mode)] / 2
             )
             # if the crowfly distance between origin and destination is too large, there is no need to call kraken
@@ -125,25 +126,25 @@ class Kraken(AbstractStreetNetworkService):
             )
 
             if (
-                crowfly_distance / float(direct_path_request['{mode}_speed'.format(mode=kraken_mode)])
+                crowfly_distance / float(direct_path_request['{mode}_speed'.format(mode=mode)])
                 > request['max_{mode}_direct_path_duration'.format(mode=mode)]
             ):
-                return None
+                return response_pb2.Response()
 
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
         )
-
-        # Ask the PO, what do we want really?
-        if direct_path_type != StreetNetworkPathType.DIRECT and mode == 'car':
-            req.direct_path.streetnetwork_params.origin_mode = 'car_no_park'
-            req.direct_path.streetnetwork_params.destination_mode = 'car_no_park'
 
         response = instance.send_and_receive(req)
         if should_invert_journey:
             return self._reverse_journeys(response)
 
         return response
+
+    def _hanlde_car_no_park_modes(self, mode):
+        if mode in (FallbackModes.ridesharing.name, FallbackModes.taxi.name, FallbackModes.car.name):
+            return FallbackModes.car_no_park.name
+        return mode
 
     def _create_direct_path_request(
         self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request
@@ -156,8 +157,8 @@ class Kraken(AbstractStreetNetworkService):
         req.direct_path.destination.access_duration = 0
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
-        req.direct_path.streetnetwork_params.origin_mode = mode
-        req.direct_path.streetnetwork_params.destination_mode = mode
+        req.direct_path.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(mode)
+        req.direct_path.streetnetwork_params.destination_mode = self._hanlde_car_no_park_modes(mode)
         req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
         req.direct_path.streetnetwork_params.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
         req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
@@ -166,10 +167,16 @@ class Kraken(AbstractStreetNetworkService):
         req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
         req.direct_path.streetnetwork_params.car_speed = request['car_speed']
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
-        req.direct_path.streetnetwork_params.car_no_park_speed = request['car_no_park_speed']
-        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
-            'max_car_no_park_duration_to_pt'
-        ]
+        if mode in (
+            FallbackModes.ridesharing.name,
+            FallbackModes.taxi.name,
+            FallbackModes.car_no_park.name,
+            FallbackModes.car.name,
+        ):
+            req.direct_path.streetnetwork_params.car_no_park_speed = request['{}_speed'.format(mode)]
+            req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
+                'max_{}_duration_to_pt'.format(mode)
+            ]
 
         return req
 
@@ -212,7 +219,7 @@ class Kraken(AbstractStreetNetworkService):
             (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
         )
 
-        req.sn_routing_matrix.mode = street_network_mode
+        req.sn_routing_matrix.mode = self._hanlde_car_no_park_modes(street_network_mode)
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
 

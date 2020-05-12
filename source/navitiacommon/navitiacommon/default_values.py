@@ -46,6 +46,8 @@ max_car_duration_to_pt = 30 * 60
 
 max_car_no_park_duration_to_pt = 30 * 60
 
+max_ridesharing_duration_to_pt = 30 * 60
+
 max_taxi_duration_to_pt = 30 * 60
 
 walking_speed = 1.12
@@ -56,7 +58,9 @@ bss_speed = 4.1
 
 car_speed = 11.11
 
-car_no_park_speed = 6.94  # 25km/h
+car_no_park_speed = 11.11
+
+ridesharing_speed = 6.94  # 25km/h
 
 taxi_speed = 11.11  # same as car_speed
 

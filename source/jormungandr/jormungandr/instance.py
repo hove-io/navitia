@@ -293,6 +293,12 @@ class Instance(object):
         return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_ridesharing_duration_to_pt(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_ridesharing_duration_to_pt', instance_db, self.name)
+
+    @property
     def max_taxi_duration_to_pt(self):
         # type: () -> int
         instance_db = self.get_models()
@@ -327,6 +333,12 @@ class Instance(object):
         # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('car_no_park_speed', instance_db, self.name)
+
+    @property
+    def ridesharing_speed(self):
+        # type: () -> float
+        instance_db = self.get_models()
+        return get_value_or_default('ridesharing_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
