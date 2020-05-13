@@ -1894,7 +1894,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         """
         from_datetime = "20170105T073000"
         response = self.query_region(
-            "stop_points/X_S2/stop_schedules?from_datetime=20170105T0730"
+            "stop_points/X_S2/stop_schedules?from_datetime={}"
             "&data_freshness=base_schedule".format(from_datetime)
         )
 

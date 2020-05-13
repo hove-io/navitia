@@ -434,7 +434,6 @@ struct routing_api_data {
         poi_4->poitype_idx = 1;
         poi_4->idx = 3;
         poi_4->admin_list.push_back(admin);
-        poi_4->properties["park_ride"] = "yes";
 
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
