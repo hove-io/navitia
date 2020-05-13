@@ -24,9 +24,7 @@ def upgrade():
         sa.Column('max_car_no_park_direct_path_duration', sa.Integer(), server_default='86400', nullable=False),
     )
 
-    op.add_column(
-        'instance', sa.Column('ridesharing_speed', sa.Integer(), server_default='6.94', nullable=False)
-    )
+    op.add_column('instance', sa.Column('ridesharing_speed', sa.Float(), server_default='6.94', nullable=False))
 
     op.add_column(
         'instance',
