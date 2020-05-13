@@ -135,7 +135,7 @@ def _make_beginning_car_park_sections(
     car_park_crowfly_duration,
 ):
     # car_park section
-    car_park_section.type = response_pb2.SectionType.PARK
+    car_park_section.type = response_pb2.PARK
     car_park_section.origin.CopyFrom(dp_extremity)
     car_park_section.destination.CopyFrom(car_park)
     car_park_section.begin_date_time = extremity_date_time
@@ -143,7 +143,7 @@ def _make_beginning_car_park_sections(
     car_park_section.duration = car_park_duration
 
     # crowfly_section
-    car_park_to_sp_section.type = response_pb2.SectionType.CROW_FLY
+    car_park_to_sp_section.type = response_pb2.CROW_FLY
     car_park_to_sp_section.street_network.CopyFrom(
         response_pb2.StreetNetwork(duration=car_park_crowfly_duration, mode=response_pb2.Walking)
     )
@@ -166,7 +166,7 @@ def _make_ending_car_park_sections(
 ):
 
     # car_park section
-    car_park_section.type = response_pb2.SectionType.LEAVE_PARKING
+    car_park_section.type = response_pb2.LEAVE_PARKING
     car_park_section.origin.CopyFrom(car_park)
     car_park_section.destination.CopyFrom(dp_extremity)
     car_park_section.end_date_time = extremity_date_time
@@ -174,7 +174,7 @@ def _make_ending_car_park_sections(
     car_park_section.duration = car_park_duration
 
     # crowfly_section
-    car_park_to_sp_section.type = response_pb2.SectionType.CROW_FLY
+    car_park_to_sp_section.type = response_pb2.CROW_FLY
     car_park_to_sp_section.street_network.CopyFrom(
         response_pb2.StreetNetwork(duration=car_park_crowfly_duration, mode=response_pb2.Walking)
     )
