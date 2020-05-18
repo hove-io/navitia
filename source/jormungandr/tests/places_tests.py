@@ -206,7 +206,7 @@ class TestPlaces(AbstractTestFixture):
         assert get_not_null(response, 'message')
 
         # same with a line (it has no meaning)
-        response, status = self.query_region("lines/A/places_nearby".format(lon, lat), check=False)
+        response, status = self.query_region("lines/A/places_nearby", check=False)
 
         assert status == 404
         assert get_not_null(response, 'message')

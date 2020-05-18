@@ -752,7 +752,7 @@ context object is a complex object provided in any endpoint's response.
 It serves several goals:
 
 -   `timezone` provides timezone of any datetime in the response.
--   `current_datetime` provides the time the call was made.  
+-   `current_datetime` provides the time the call was made.
     It is precious to compute the waiting time until next passages (journeys, departures, etc.),
     as when no datetime is provided at call, Navitia uses that "current_datetime" as reference time.
 -   `car_direct_path` can also be provided in journeys to help compare ecological footprint of transport.

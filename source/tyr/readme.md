@@ -637,12 +637,12 @@ The API handles the users's billing plan.
 
  - Parameters:
 
-name               | description                                                                          | required | default  
+name               | description                                                                          | required | default
 -------------------|--------------------------------------------------------------------------------------|----------|-----------------------------------------
-name               | name of the billing plan                                                             | yep      |  
+name               | name of the billing plan                                                             | yep      |
 end_point_id       | the id of the endpoint for this billing plan (in most case the default value is good enough) | nope     | the default end_point (navitia.io)
 default            | if this plan is the default one for the end_point                                    | nope     | false
-max_request_count  | max request count for this billing plan                                              | nope     |  
+max_request_count  | max request count for this billing plan                                              | nope     |
 max_object_count   | max object count for this billing plan                                               | nope     |
 
 

@@ -20,8 +20,8 @@ Have a look at the examples below to learn what services we provide and how to u
 
 ### Approach
 
-Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.  
-Its main purpose is to provide day-to-day informations to travelers.  
+Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.
+Its main purpose is to provide day-to-day informations to travelers.
 Over time, Navitia has been able to do way more, _sometimes_ for technical and debuging purpose _or_ because other functional needs fit quite well in what Navitia can do _or_ just because it was quite easy and super cool.
 
 Technically, Navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results.
@@ -29,8 +29,8 @@ Technically, Navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API th
 
 ### Who's who
 
-Navitia is instanciated and exposed publicly through [api.navitia.io](http://api.navitia.io).  
-Developments on Navitia are lead by Kisio Digital (previously CanalTP).  
+Navitia is instanciated and exposed publicly through [api.navitia.io](http://api.navitia.io).
+Developments on Navitia are lead by Kisio Digital (previously CanalTP).
 Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 
