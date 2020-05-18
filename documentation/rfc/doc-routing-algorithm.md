@@ -153,19 +153,19 @@ Advantages:
 * Flexibility
 
 Drawbacks:
-* Not exact walking objective:  
-  The first pass does not optimize walking. This can lead to situations where the first pass removes options that would be valid in term of walking optimization.  
+* Not exact walking objective:
+  The first pass does not optimize walking. This can lead to situations where the first pass removes options that would be valid in term of walking optimization.
   The second pass is also bound by the `max_extra_second_pass` parameter (default to `0`) which can lead to sub-optimal journeys for the walking part.
 * Difficulty to add objectives
 * RAPTOR variants are quite complex and not really combinable
 
 #### Troubleshooting
 
-**Walking issue impacting the _start_ of the journey**  
+**Walking issue impacting the _start_ of the journey**
 By default, second passes only take walking into consideration at the arrival.
 It is possible to improve that by increasing the `_max_extra_second_pass` parameter (passing it to `10` is an acceptable value).
 
-**Journey with trade-off using unexpected stop_points in terms of walking**  
+**Journey with trade-off using unexpected stop_points in terms of walking**
 This can be related to the first pass removing options that would be valid for the walking minimization.
 It is possible to check:
 * if another journey arrives at the desired stop-point before (or at the same time with less connections) the desired journey

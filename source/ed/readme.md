@@ -57,7 +57,7 @@ Component that loads a GTFS data set into `ed`.
 
 The directory containing all gtfs text files is given with the `-i` option
 
-Warning: This component will soon be deprecated and replaced by our gtfs2ntfs converter.  
+Warning: This component will soon be deprecated and replaced by our gtfs2ntfs converter.
 You can check it in [navitia_model](https://github.com/CanalTP/navitia_model).
 The output NTFS will then be provided to fusio2ed.
 

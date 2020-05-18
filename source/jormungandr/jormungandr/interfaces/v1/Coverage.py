@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.converters_collection_type import collections_to_
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from navitiacommon.parser_args_type import BooleanType
+import flask
 
 collections = list(collections_to_resource_type.keys())
 
@@ -59,7 +60,8 @@ class Coverage(StatedResource):
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 
-        resp = i_manager.regions(region, lon, lat)
+        request_id = "coverage_{}".format(flask.request.id)
+        resp = i_manager.regions(region, lon, lat, request_id=request_id)
         if 'regions' in resp:
             resp['regions'] = sorted(resp['regions'], key=lambda r: r.get('name', r.get('region_id')))
         if args['disable_geojson']:

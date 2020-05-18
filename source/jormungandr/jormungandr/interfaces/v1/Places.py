@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import abort
 from flask.globals import g
-
+import flask
 from jormungandr.authentication import get_all_available_instances
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
@@ -232,6 +232,9 @@ class PlaceUri(ResourceUri):
     def get(self, id, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         args.update({"uri": transform_id(id), "_current_datetime": datetime.utcnow()})
+        request_id = "places_{}".format(flask.request.id)
+        args["request_id"] = request_id
+
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
             timezone.set_request_timezone(self.region)
@@ -242,7 +245,7 @@ class PlaceUri(ResourceUri):
             autocomplete = global_autocomplete.get('bragi')
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
-            response = autocomplete.get_by_uri(args["uri"], instances=available_instances)
+            response = autocomplete.get_by_uri(args["uri"], request_id=request_id, instances=available_instances)
 
         return response, 200
 

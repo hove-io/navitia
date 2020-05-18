@@ -130,7 +130,7 @@ That means :
 Objects order
 -------------
 
-Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.  
+Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.
 This is also true for the ordering of the attributes of objects.
 
 Examples of sorted objects tables:
@@ -152,7 +152,7 @@ Examples of unsorted responses:
 Objects attributes
 ------------------
 
-Like almost any API, objects are subject to adaptations.  
+Like almost any API, objects are subject to adaptations.
 Please be warned that we allow Navitia to add new attributes to objects, and it will never be considered a breaking change.
 
 We also allow Navitia to add values to enum, so be prepared to that. For example [section's](#section) type of journeys are regularly evolving.
