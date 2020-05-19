@@ -1,13 +1,11 @@
 # Log Analyzer
 
-The log analyzer produces a Gantt chart of the different computations performed during a "journey" call to Navitia.
-It does so by parsing the logs of Jormungandr and Kraken.
+The log analyzer produces a Gantt chart of the different computations performed during a "journey" call to Navitia.<br>It does so by parsing the logs of Jormungandr and Kraken.
 
 
 # How to use
 
-- Configure Jormungandr and Kraken logs to record the `info` level (on by default)
-The logs are on by default for Jormungandr. For Kraken, you can add these lines to the `kraken.ini` configuration file :
+- Configure Jormungandr and Kraken logs to record the `info` level (on by default)<br>The logs are on by default for Jormungandr. For Kraken, you can add these lines to the `kraken.ini` configuration file :
 
 ```
 [LOG]
@@ -19,8 +17,7 @@ log4cplus.appender.ALL_MSGS.layout.ConversionPattern=[%D{%y-%m-%d %H:%M:%S,%q}] 
 
 ```
 
-- prepare the needed python environment with `virtualenvwrapper` (see https://virtualenvwrapper.readthedocs.io/en/latest/ for installation instructions).
-  You can also install the python librairies listed in `requirements.txt` in your own environment
+- prepare the needed python environment with `virtualenvwrapper` (see https://virtualenvwrapper.readthedocs.io/en/latest/ for installation instructions).<br>You can also install the python librairies listed in `requirements.txt` in your own environment
 
 ```
 cd log_analyzer/
