@@ -218,10 +218,10 @@ class TestJourneysDistributed(
         from navitiacommon import response_pb2
 
         instance = i_manager.instances['main_routing_test']
-        origin = instance.georef.place("stopB")
+        origin = instance.georef.place("stopB", None)
         assert origin
 
-        destination = instance.georef.place("stopA")
+        destination = instance.georef.place("stopA", None)
         assert destination
 
         max_duration = 18000
@@ -243,8 +243,9 @@ class TestJourneysDistributed(
             "taxi_speed": instance.taxi_speed,
         }
         service = instance.get_street_network(mode, request)
+        request_id = None
         resp = service.get_street_network_routing_matrix(
-            instance, [origin], [destination], mode, max_duration, request, **kwargs
+            instance, [origin], [destination], mode, max_duration, request, request_id, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
@@ -252,7 +253,7 @@ class TestJourneysDistributed(
 
         max_duration = 106
         resp = service.get_street_network_routing_matrix(
-            instance, [origin], [destination], mode, max_duration, request, **kwargs
+            instance, [origin], [destination], mode, max_duration, request, request_id, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0

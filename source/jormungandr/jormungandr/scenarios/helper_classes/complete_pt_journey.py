@@ -139,6 +139,7 @@ def wait_and_complete_pt_journey(
     dest_fallback_durations_pool,
     request,
     journeys,
+    request_id,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -150,7 +151,9 @@ def wait_and_complete_pt_journey(
 
     logger = logging.getLogger(__name__)
     # launch fallback direct path asynchronously
-    with timed_logger(logger, 'compute_fallback'):
+    sub_request_id = "{}_fallback".format(request_id)
+    with timed_logger(logger, 'compute_fallback', sub_request_id):
+
         compute_fallback(
             from_obj=requested_orig_obj,
             to_obj=requested_dest_obj,
@@ -161,9 +164,10 @@ def wait_and_complete_pt_journey(
             dest_fallback_durations_pool=dest_fallback_durations_pool,
             request=request,
             pt_journeys=journeys,
+            request_id=sub_request_id,
         )
 
-    with timed_logger(logger, 'complete_pt_journeys'):
+    with timed_logger(logger, 'complete_pt_journeys', request_id):
         for pt_element in journeys:
             complete_pt_journey(
                 requested_orig_obj=requested_orig_obj,

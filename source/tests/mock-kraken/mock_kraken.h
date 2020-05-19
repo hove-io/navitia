@@ -74,7 +74,7 @@ struct mock_kraken {
         }
 
         // Launch only one thread for the tests
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metric)));
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metric), 0));
 
         // Connect work threads to client threads via a queue
         do {

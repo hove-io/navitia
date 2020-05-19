@@ -45,9 +45,7 @@ The results are sorted by type, with the following order:
   - other (stop_points by example)
 
 
-For each type, we have the following order:  
-In firsts positions, we have the results with a 100 quality (exact match). After them, the order is based
-on the *global score*, then by the length of the longest, then by the position of this substring,
+For each type, we have the following order:<br>In firsts positions, we have the results with a 100 quality (exact match). After them, the order is based on the *global score*, then by the length of the longest, then by the position of this substring,
 and finally by the quality.
 
 

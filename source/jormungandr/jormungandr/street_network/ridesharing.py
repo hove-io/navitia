@@ -65,6 +65,7 @@ class Ridesharing(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
         # a proper way to handle this is to override car_no_park_speed use the ridesharing_speed here
@@ -78,6 +79,7 @@ class Ridesharing(AbstractStreetNetworkService):
             fallback_extremity,
             request,
             direct_path_type,
+            request_id,
         )
         for journey in response.journeys:
             journey.durations.ridesharing = journey.durations.car
@@ -90,14 +92,14 @@ class Ridesharing(AbstractStreetNetworkService):
         return response
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
         # a proper way to handle this is to override car_no_park_speed use the ridesharing_speed here
         # copy_request = copy.deepcopy(request)
         # copy_request["car_no_park_speed"] = copy_request["ridesharing_speed"]
         return self.street_network.get_street_network_routing_matrix(
-            instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
+            instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
         )
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):

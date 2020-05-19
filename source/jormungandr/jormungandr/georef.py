@@ -37,12 +37,12 @@ class Kraken(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def place(self, place):
+    def place(self, place, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place
         req.place_uri.depth = 2
-        response = self.instance.send_and_receive(req)
+        response = self.instance.send_and_receive(req, request_id=request_id)
         if response.places:
             return response.places[0]
         if utils.is_coord(place):
@@ -58,7 +58,7 @@ class Kraken(object):
             return p
         return None
 
-    def get_car_co2_emission_on_crow_fly(self, origin, destination):
+    def get_car_co2_emission_on_crow_fly(self, origin, destination, request_id):
         logger = logging.getLogger(__name__)
         req = request_pb2.Request()
         req.requested_api = type_pb2.car_co2_emission
@@ -67,7 +67,7 @@ class Kraken(object):
         req.car_co2_emission.destination.place = destination
         req.car_co2_emission.destination.access_duration = 0
 
-        response = self.instance.send_and_receive(req)
+        response = self.instance.send_and_receive(req, request_id=request_id)
         if response.error and response.error.id == response_pb2.Error.error_id.Value('no_solution'):
             logger.error("Cannot compute car co2 emission from {} to {}".format(origin, destination))
             return None
@@ -82,6 +82,7 @@ class Kraken(object):
         object_type=type_pb2.STOP_POINT,
         filter=None,
         stop_points_nearby_duration=300,
+        request_id=None,
         **kwargs
     ):
 
@@ -104,12 +105,12 @@ class Kraken(object):
                 kwargs.get("walking", 1.11) * stop_points_nearby_duration
             )
             req.places_nearby.depth = 1
-        res = self.instance.send_and_receive(req)
+        res = self.instance.send_and_receive(req, request_id=request_id)
         if len(res.feed_publishers) != 0:
             logger.error("feed publisher not empty: expect performance regression!")
         return res.places_nearby
 
-    def get_stop_points_for_stop_area(self, uri):
+    def get_stop_points_for_stop_area(self, uri, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
         req.ptref.requested_type = type_pb2.STOP_POINT
@@ -118,14 +119,14 @@ class Kraken(object):
         req.ptref.depth = 0
         req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
 
-        result = self.instance.send_and_receive(req)
+        result = self.instance.send_and_receive(req, request_id=request_id)
         if not result.stop_points:
             logging.getLogger(__name__).info(
                 'PtRef, Unable to find stop_point with filter {}'.format(req.ptref.filter)
             )
         return result.stop_points
 
-    def get_stop_points_from_uri(self, uri):
+    def get_stop_points_from_uri(self, uri, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
         req.ptref.requested_type = type_pb2.STOP_POINT
@@ -133,12 +134,12 @@ class Kraken(object):
         req.ptref.start_page = 0
         req.ptref.depth = 0
         req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
-        result = self.instance.send_and_receive(req)
+        result = self.instance.send_and_receive(req, request_id=request_id)
         return result.stop_points
 
-    def get_odt_stop_points(self, coord):
+    def get_odt_stop_points(self, coord, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.odt_stop_points
         req.coord.lon = coord.lon
         req.coord.lat = coord.lat
-        return self.instance.send_and_receive(req).stop_points
+        return self.instance.send_and_receive(req, request_id=request_id).stop_points

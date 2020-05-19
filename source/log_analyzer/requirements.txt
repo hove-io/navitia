@@ -1,0 +1,3 @@
+plotly==4.6.0
+numpy==1.18.2
+sortedcontainers==2.1.0

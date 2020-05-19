@@ -347,7 +347,7 @@ class InstanceManager(object):
         else:
             return valid_instances
 
-    def regions(self, region=None, lon=None, lat=None):
+    def regions(self, region=None, lon=None, lat=None, request_id=None):
         response = {'regions': []}
         regions = []
         if region or lon or lat:
@@ -357,8 +357,9 @@ class InstanceManager(object):
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
+
             try:
-                resp = self.instances[key_region].send_and_receive(req, timeout=1000)
+                resp = self.instances[key_region].send_and_receive(req, request_id=request_id, timeout=1000)
                 resp_dict = protobuf_to_dict(resp.metadatas)
             except DeadSocketException:
                 resp_dict = {

@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
+import logging, json, hashlib, datetime
 from flask import request, g
 from flask_restful import abort
 from jormungandr import i_manager, app, fallback_modes
@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.make_links import create_external_link, create_in
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, dt_to_str
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
@@ -59,6 +59,7 @@ from navitiacommon.parser_args_type import (
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
+
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -500,6 +501,43 @@ class Journeys(JourneyCommon):
 
         # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
+
+        logger = logging.getLogger(__name__)
+
+        # generate an id that :
+        #  - depends on the coverage and differents arguments of the request (from, to, datetime, etc.)
+        #  - does not depends on the order of the arguments in the request (only on their values)
+        #  - does not depend on the _override_scenario argument
+        #  - if  _override_scenario is present, its type is added at the end of the id in
+        #    order to identify identical requests made with the different scenarios
+        #  - we add the current_datetime of the request so as to differentiate
+        #    the same request made at distinct moments
+        def generate_request_id():
+
+            path = str(request.path)
+            args_for_id = dict(request.args)
+            if "_override_scenario" in args_for_id:
+                scenario = str(args_for_id["_override_scenario"][0])
+                args_for_id["_override_scenario"] = ""
+            else:
+                scenario = "new_default"
+
+            json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
+            # we could use the json_repr as an id, but we hash it to have something smaller
+            m = hashlib.sha256()
+            m.update(json_repr.encode("UTF-8"))
+            json_hash = m.hexdigest()
+
+            now = dt_to_str(datetime.datetime.utcnow())
+
+            result = "journeys_{}_{}#{}#".format(json_hash, now, scenario)
+
+            logger.info("Generating id : {} for request : {}".format(result, request.url))
+
+            return result
+
+        request_id = generate_request_id()
+        args["request_id"] = request_id
 
         # If there are several possible regions to query:
         # copy base request arguments before setting region specific parameters

@@ -145,9 +145,13 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
+        request_id = request.get('request_id', None)
         try:
             return autocomplete.get_by_uri(
-                uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+                uri=request["uri"],
+                request_id=request_id,
+                instances=[instance],
+                current_datetime=request['_current_datetime'],
             )
         except UnknownObject as e:
             # the autocomplete have not found anything
@@ -157,7 +161,10 @@ class Scenario(object):
                 if autocomplete_system == autocomplete:
                     continue
                 res = autocomplete_system.get_by_uri(
-                    uri=request["uri"], instances=[instance], current_datetime=request['_current_datetime']
+                    uri=request["uri"],
+                    request_id=request_id,
+                    instances=[instance],
+                    current_datetime=request['_current_datetime'],
                 )
                 if res.get("places"):
                     return res
