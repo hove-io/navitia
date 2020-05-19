@@ -85,13 +85,11 @@ Simplified output:
 }
 ```
 
-The main principle is to show a `crowfly` section with `ridesharing` as mode in the journey.
-This allows Navitia to have a succession of sections that:
+The main principle is to show a `crowfly` section with `ridesharing` as mode in the journey.<br>This allows Navitia to have a succession of sections that:
 * is consistent in both time and space _(A @7:00 -> B @9:00 -> C @10:00)_
 * respects constraints provided in parameters _(journey starting after 7:00)_
 
-Inside that ridesharing-crowfly section we find the `ridesharing_journeys`.
-They are showing multiple possible journeys using ridesharing and covering that crowfly section.
+Inside that ridesharing-crowfly section we find the `ridesharing_journeys`.<br>They are showing multiple possible journeys using ridesharing and covering that crowfly section.
 * Each journey will have a starting and ending crowfly to manage succession of sections in space (even with top-level sections).
 * Time-consistency is respected in that sub-journey _(A @6:30 -> A1 @6:30 -> A2 @9:30 -> B @9:30)_,
 * However time-consistency is not respected if an integrator chooses to substitute those sub-journey's sections to the top ridesharing-crowfly section

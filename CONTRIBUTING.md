@@ -54,12 +54,9 @@ At the root of the repository, several directories can be found:
 The data_version stored into [source/type/data.cpp](source/type/data.cpp) is used to know if a given `nav` file
 is readable using a given kraken (both contain their version).
 
-So this number **must** be incremented when data serialization changes.
-In case multiple changes occur between 2 releases, only one increment is enough.
+So this number **must** be incremented when data serialization changes.<br>In case multiple changes occur between 2 releases, only one increment is enough.
 
-This number is also used to tag major versions of Navitia.
-Major version is tracked externally to know if nav-files must be regenerated.
-So please update this `data_version` to indicate a need for re-binarization.
+This number is also used to tag major versions of Navitia.<br>Major version is tracked externally to know if nav-files must be regenerated.<br>So please update this `data_version` to indicate a need for re-binarization.
 
 
 ## Tools
@@ -92,8 +89,7 @@ pre-commit init-templatedir ~/.git-template
 
 Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/)
 You should enable the pre-commit git hook to make sure it's being run before commiting your changes, it's
-also the easiest way to run Black.
-Otherwise, to only update the files that you've changed, simply run:
+also the easiest way to run Black.<br>Otherwise, to only update the files that you've changed, simply run:
 ```
 pre-commit run black
 ```
