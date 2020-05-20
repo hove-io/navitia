@@ -130,7 +130,6 @@ class FallbackDurations:
                 return None
 
     def _pick_up_parking_nearby(self, pt_objects):
-        logger = logging.getLogger(__name__)
         parkings = []
         for pt_object in pt_objects:
             if pt_object.embedded_type == type_pb2.POI:
