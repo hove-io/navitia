@@ -60,7 +60,7 @@ def get_realtime_system_code(route_point):
         return None
 
     # for the moment we consider that there can be only one rt_system
-    return rt_system[0]
+    return six.text_type(rt_system[0])
 
 
 class RealTimePassage(object):
@@ -198,7 +198,7 @@ class MixedSchedule(object):
         if not route_point:
             return None
 
-        rt_system_code = six.text_type(get_realtime_system_code(route_point))
+        rt_system_code = get_realtime_system_code(route_point)
         if not rt_system_code:
             return None
 
