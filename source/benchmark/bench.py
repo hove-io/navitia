@@ -20,7 +20,7 @@ Options:
 
 Example:
   bench.py bench --input=benchmark_example.csv -a 'first_section_mode[]=car&last_section_mode[]=car'
-  cat benchmark_example.csv | bench.py bench  -a 'first_section_mode[]=car&last_section_mode[]=car' --scenario= new_default
+  cat benchmark_example.csv | bench.py bench  -a 'first_section_mode[]=car&last_section_mode[]=car' --scenario=new_default
   bench.py replot new_default.csv distributed.csv
   bench.py plot-latest 30
   bench.py sample 2.298255 2.411574 48.821590 48.898 1000 -a '&datetime=20200318T100000'
