@@ -267,7 +267,7 @@ def direct_path_geovelo_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -305,7 +305,7 @@ def direct_path_geovelo_zero_test():
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
-            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -346,7 +346,7 @@ def isochrone_geovelo_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/api/v2/routes_m2m', json=resp_json, status_code=200)
         geovelo_response = geovelo.get_street_network_routing_matrix(
-            instance, origins, destinations, 'bike', 13371337, MOCKED_REQUEST
+            instance, origins, destinations, 'bike', 13371337, MOCKED_REQUEST, None
         )
         assert geovelo_response.rows[0].routing_response[0].duration == 1051
         assert geovelo_response.rows[0].routing_response[0].routing_status == response_pb2.reached

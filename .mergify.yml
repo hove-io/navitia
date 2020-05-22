@@ -10,7 +10,7 @@ pull_request_rules:
       - status-success=precommit
       - status-success=check_artemis
       - base=dev
-      - label!=dot_not_merge
+      - label!=do_not_merge
       - label!=wip
       - label!=waiting
       - label!=merge_after_release

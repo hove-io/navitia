@@ -432,7 +432,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path_with_fp(None, None, None, None, None, None, None)
+        valhalla.direct_path_with_fp(None, None, None, None, None, None, None, None)
     assert '500 Internal Server Error' in str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -448,7 +448,7 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
         with pytest.raises(TechnicalError) as excinfo:
             req.post('http://bob.com/route', json={'error_code': 42}, status_code=400)
             valhalla.direct_path_with_fp(
-                instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+                instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
             )
         assert '500 Internal Server Error' in str(excinfo.value)
         assert (
@@ -468,7 +468,7 @@ def direct_path_func_with_no_response_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json={'error_code': 442}, status_code=400)
         valhalla_response = valhalla.direct_path_with_fp(
-            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.NO_SOLUTION
@@ -487,7 +487,7 @@ def direct_path_func_with_valid_response_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json=resp_json)
         valhalla_response = valhalla.direct_path_with_fp(
-            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None
+            instance, 'walking', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
         )
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
@@ -523,7 +523,7 @@ def sources_to_targets_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         valhalla_response = valhalla.get_street_network_routing_matrix(
-            instance, [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST
+            instance, [origin], [destination, destination, destination], 'walking', 42, MOCKED_REQUEST, None
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -563,6 +563,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='walking',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -579,6 +580,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='bike',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42 + 30
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -595,6 +597,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
             mode='car',
             max_duration=42,
             request=MOCKED_REQUEST,
+            request_id=None,
         )
         assert valhalla_response.rows[0].routing_response[0].duration == 42 + 5 * 60
         assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached

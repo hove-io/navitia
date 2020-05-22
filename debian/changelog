@@ -1,3 +1,12 @@
+navitia2 (4.2.0) unstable; urgency=low
+
+  * tools: add bench tool  <https://github.com/CanalTP/navitia/pull/3202>
+  * tools: Log analyzer for distributed  <https://github.com/CanalTP/navitia/pull/3180>
+  * mergify: Fix do_not_merge label for mergify  <https://github.com/CanalTP/navitia/pull/3222>
+  * doc: adapt markdown for double blank space  <https://github.com/CanalTP/navitia/pull/3221>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 22 May 2020 09:05:17 +0100
+
 navitia2 (4.1.0) unstable; urgency=low
 
   * [Jormungandr] Write BAD_ID message in new_relic for SIRI_TAO  <https://github.com/CanalTP/navitia/pull/3207>

@@ -49,6 +49,7 @@ class StreetNetworkPath:
         fallback_extremity,
         request,
         streetnetwork_path_type,
+        request_id,
     ):
         """
         :param future_manager: a module that manages the future pool properly
@@ -73,11 +74,12 @@ class StreetNetworkPath:
         self._path_type = streetnetwork_path_type
         self._value = None
         self._logger = logging.getLogger(__name__)
+        self._request_id = request_id
         self._async_request()
 
     @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self):
-        with timed_logger(self._logger, 'direct_path_calling_external_service'):
+        with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
             try:
                 return self._streetnetwork_service.direct_path_with_fp(
                     self._instance,
@@ -87,9 +89,11 @@ class StreetNetworkPath:
                     self._fallback_extremity,
                     self._request,
                     self._path_type,
+                    self._request_id,
                 )
             except Exception as e:
-                self._logger.error("Exception':{}".format(str(e)))
+                logging.getLogger(__name__).error("Exception':{}\n".format(str(e)))
+
                 return None
 
     def _do_request(self):
@@ -119,10 +123,9 @@ class StreetNetworkPath:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_direct_path'):
-            if self._value:
-                return self._value.wait_and_get()
-            return None
+        if self._value:
+            return self._value.wait_and_get()
+        return None
 
 
 class StreetNetworkPathPool:
@@ -138,7 +141,14 @@ class StreetNetworkPathPool:
         self._direct_paths_future_by_mode = {}
 
     def add_async_request(
-        self, requested_orig_obj, requested_dest_obj, mode, period_extremity, request, streetnetwork_path_type
+        self,
+        requested_orig_obj,
+        requested_dest_obj,
+        mode,
+        period_extremity,
+        request,
+        streetnetwork_path_type,
+        request_id,
     ):
 
         streetnetwork_service = self._instance.get_street_network(mode, request)
@@ -161,6 +171,7 @@ class StreetNetworkPathPool:
                 period_extremity,
                 request,
                 streetnetwork_path_type,
+                request_id,
             )
         if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
             self._direct_paths_future_by_mode[mode] = path

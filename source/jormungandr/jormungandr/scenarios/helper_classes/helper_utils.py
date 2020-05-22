@@ -354,6 +354,7 @@ def compute_fallback(
     dest_places_free_access,
     request,
     pt_journeys,
+    request_id,
 ):
     """
     Launching fallback computation asynchronously once the pt_journey is finished
@@ -365,7 +366,7 @@ def compute_fallback(
     places_free_access = dest_places_free_access.wait_and_get()
     dest_all_free_access = places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
 
-    for (dep_mode, arr_mode, journey) in pt_journeys:
+    for (i, (dep_mode, arr_mode, journey)) in enumerate(pt_journeys):
         logger.debug("completing pt journey that starts with %s and ends with %s", dep_mode, arr_mode)
 
         # from
@@ -374,9 +375,16 @@ def compute_fallback(
         pt_orig = fallback.get_pt_boundaries(journey)
         pt_departure = fallback.get_pt_section_datetime(journey)
         fallback_extremity_dep = PeriodExtremity(pt_departure, False)
+        from_sub_request_id = "{}_{}_from".format(request_id, i)
         if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
             streetnetwork_path_pool.add_async_request(
-                from_obj, pt_orig, dep_mode, fallback_extremity_dep, request, direct_path_type
+                from_obj,
+                pt_orig,
+                dep_mode,
+                fallback_extremity_dep,
+                request,
+                direct_path_type,
+                from_sub_request_id,
             )
 
         # to
@@ -385,9 +393,10 @@ def compute_fallback(
         pt_dest = fallback.get_pt_boundaries(journey)
         pt_arrival = fallback.get_pt_section_datetime(journey)
         fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
+        to_sub_request_id = "{}_{}_to".format(request_id, i)
         if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
             streetnetwork_path_pool.add_async_request(
-                pt_dest, to_obj, arr_mode, fallback_extremity_arr, request, direct_path_type
+                pt_dest, to_obj, arr_mode, fallback_extremity_arr, request, direct_path_type, to_sub_request_id
             )
 
 
@@ -468,11 +477,19 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
 
 
 @contextmanager
-def timed_logger(logger, task_name):
+def timed_logger(logger, task_name, request_id):
     start = time.time()
     try:
         yield logger
     finally:
-        collapsed_time = time.time() - start
-        if collapsed_time > 1e-5:
-            logger.info('time collapsed in {}: {}s'.format(task_name, '%.2e' % collapsed_time))
+        end = time.time()
+        elapsed_time = end - start
+        start_in_ms = int(start * 1000)
+        end_in_ms = int(end * 1000)
+        logger.info(
+            "Task : {}, request : {},  start : {}, end : {}".format(
+                task_name, request_id, start_in_ms, end_in_ms
+            )
+        )
+        if elapsed_time > 1e-5:
+            logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))

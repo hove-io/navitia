@@ -41,7 +41,7 @@ class PlacesFreeAccess:
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
 
-    def __init__(self, future_manager, instance, requested_place_obj):
+    def __init__(self, future_manager, instance, requested_place_obj, request_id):
         """
 
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
@@ -52,18 +52,19 @@ class PlacesFreeAccess:
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._value = None
+        self._request_id = request_id
         self._async_request()
         self._logger = logging.getLogger(__name__)
 
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
-        with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service'):
-            return self._instance.georef.get_stop_points_for_stop_area(uri)
+        with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
+            return self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
 
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
-        with timed_logger(self._logger, 'odt_stop_points_calling_external_service'):
-            return self._instance.georef.get_odt_stop_points(coord)
+        with timed_logger(self._logger, 'odt_stop_points_calling_external_service', self._request_id):
+            return self._instance.georef.get_odt_stop_points(coord, self._request_id)
 
     def _do_request(self):
         self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
@@ -98,5 +99,5 @@ class PlacesFreeAccess:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_places_free_acess'):
+        with timed_logger(self._logger, 'waiting_for_places_free_acess', self._request_id):
             return self._value.wait_and_get()

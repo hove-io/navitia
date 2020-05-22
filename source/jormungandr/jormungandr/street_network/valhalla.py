@@ -287,6 +287,7 @@ class Valhalla(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         data = self._make_request_arguments(
             mode, [pt_object_origin], [pt_object_destination], request, api='route'
@@ -330,7 +331,7 @@ class Valhalla(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         # for now valhalla only manages 1-n request, so we reverse request if needed
         if len(origins) > 1:

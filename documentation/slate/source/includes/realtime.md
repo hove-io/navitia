@@ -27,19 +27,15 @@ A disruption is present in the response of the endpoints described if the reques
 
 ## <a name="PT_object_collections_data_freshness"></a>Public transport object collections
 
-Several public transport objects have separate collections for `base_schedule` and `realtime`.  
-So the data_freshness parameter may affect the number of objects returned depending on the request.
+Several public transport objects have separate collections for `base_schedule` and `realtime`.<br>So the data_freshness parameter may affect the number of objects returned depending on the request.
 
-For example when looking for a specific circulation with the collection vehicle_journey using the request:  
-`http://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
+For example when looking for a specific circulation with the collection vehicle_journey using the request:<br>`http://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
 
 A vehicle_journey circulating between since and until that is **fully deleted** (NO_SERVICE) by a disruption will
-of course be **visible** if `data_freshness=base_schedule`.  
-But it **will not appear** with the parameter `data_freshness=realtime` as it does not exist in that collection.
+of course be **visible** if `data_freshness=base_schedule`.<br>But it **will not appear** with the parameter `data_freshness=realtime` as it does not exist in that collection.
 
 On the other hand, a vehicle_journey that is **created** by a realtime feed will only be **visible** if
-`data_freshness=realtime` on that same request.  
-And it will **not appear** if `data_freshness=base_schedule`.
+`data_freshness=realtime` on that same request.<br>And it will **not appear** if `data_freshness=base_schedule`.
 
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
@@ -145,11 +141,9 @@ In a public transport section of the response:
 * "base_arrival_date_time"/"base_departure_date_time" represent the scheduled arrival/departure time without taking into account the delay
 * whereas "arrival_date_time"/"departure_date_time" are the actual arrival/departure time, after the delay is applied
 
-The delay can also be observed for every stop point of the journey with the same parameters in "stop_date_times".  
-If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
+The delay can also be observed for every stop point of the journey with the same parameters in "stop_date_times".<br>If the parameter "data_freshness" is set to "base_schedule", then "base_arrival_date_time"/"base_departure_date_time" = "arrival_date_time"/"departure_date_time".
 
-A list of the disruptions impacting the journey is also present at the root level of the response.  
-A link to the concerned disruption can be found in the section "display_informations".
+A list of the disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Departures
@@ -203,8 +197,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop
 
 In the "stop_date_time" section of the response, the parameter "stop_date_time" is "realtime" and the fields "arrival_date_time"/"departure_date_time" take the delay into account, whereas "base_arrival_date_time"/"base_departure_date_time" show the base-schedule departure/arrival datetime.
 
-A list of the disruptions impacting the departures is also present at the root level of the response.  
-A link to the concerned disruption can be found in the section "display_informations".
+A list of the disruptions impacting the departures is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Stop Schedules
@@ -250,8 +243,7 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 
 In the list of "date_times" available in the response, the parameter "data_freshness" is "realtime" and the field "date_time" takes the delay into account, whereas "base_date_time" shows the base-schedule departure datetime.
 
-A list of the disruptions impacting the stop schedules is also present at the root level of the response.  
-A link to the concerned disruption can be found in the in the "date_times" object itself.
+A list of the disruptions impacting the stop schedules is also present at the root level of the response.<br>A link to the concerned disruption can be found in the in the "date_times" object itself.
 
 ## <a name="REDUCED_SERVICE"></a>Reduced service
 
@@ -269,22 +261,18 @@ A link to the concerned disruption can be found in the in the "date_times" objec
 ```
 The effect of the disruption is `REDUCED_SERVICE`. It means that the train won't be serving one or more stations in its journey.
 
-In the disruption, the deleted stations can be found in the list of "impacted_stops" with the departure/arrival status set to "deleted".  
-See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, the deleted stations can be found in the list of "impacted_stops" with the departure/arrival status set to "deleted".<br>See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
 
-If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.  
-If not (deleting intermediate stop), the journey won't be affected.  
-Either way, a link to this disruption can be found in the section "display_informations" like for other disruptions.
+If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.<br>If not (deleting intermediate stop), the journey won't be affected.<br>Either way, a link to this disruption can be found in the section "display_informations" like for other disruptions.
 
 ### Departures & Stop Schedules
 
 At the deleted stop area, the departure time of the train with a reduced service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
 
-If "data_freshness" is "base_schedule", then the depature time is displayed.  
-In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+If "data_freshness" is "base_schedule", then the depature time is displayed.<br>In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 ## <a name="NO_SERVICE"></a>No service
 
@@ -318,22 +306,19 @@ In that case, a link to this disruption can be found in the section "display_inf
 The effect of the disruption is `NO_SERVICE`. It means that the train won't be circulating at all.
 
 In the disruption, the deleted trip can be found in the "impacted_objects" list with the
-"application_periods" describing the period(s) of unavailability for the trip.  
-See the [disruption](#disruption) objects section for its full content and description.
+"application_periods" describing the period(s) of unavailability for the trip.<br>See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
 
 If the deleted trip is used by a section of the `base_schedule` journey, Navitia will compute a different
-itinerary to the requested station in `realtime`, or a later one (without using that trip).  
-A link to this disruption can be found in the section "display_informations" like for other disruptions, on a `base_schedule` journey.
+itinerary to the requested station in `realtime`, or a later one (without using that trip).<br>A link to this disruption can be found in the section "display_informations" like for other disruptions, on a `base_schedule` journey.
 
 ### Departures & Stop Schedules
 
 At the deleted stop area, the departure time of the cancelled train simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "realtime".
 
-If "data_freshness" is "base_schedule", then the depature time is displayed.  
-In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+If "data_freshness" is "base_schedule", then the depature time is displayed.<br>In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 ## <a name="MODIFIED_SERVICE"></a>Modified service
 
@@ -353,8 +338,7 @@ In that case, a link to this disruption can be found in the section "display_inf
 ```
 The effect of the disruption is `MODIFIED_SERVICE`. It means that there is one or several stop points added into the trip. This can be at any position in the trip (origin and destination included).
 
-In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".  
-See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, new stop points can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".<br>See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
@@ -422,14 +406,12 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
 
 The status of the journey is `MODIFIED_SERVICE`. In a public transport section of the response, "arrival_date_time"/"departure_date_time" are the arrival/departure times of an added stop point. New stop points are only used when the "data_freshness" parameter is set to "realtime".
 
-A list of the disruptions impacting the journey is also present at the root level of the response.  
-A link to the concerned disruption can be found in the section "display_informations".
+A list of the disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Departures & Stop Schedules
 
-At the added stop area, the departure time of the train with a modified service is displayed if "data_freshness" is set to "realtime".  
-In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+At the added stop area, the departure time of the train with a modified service is displayed if "data_freshness" is set to "realtime".<br>In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 The departure time of the train with a modified service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "base_schedule".
 
@@ -453,8 +435,7 @@ The departure time of the train with a modified service simply won't be displaye
 ```
 The effect of the disruption is `ADDITIONAL_SERVICE`. It means that a new trip has been scheduled.
 
-In the disruption, every stops served by the new train can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".  
-See the [disruption](#disruption) objects section for its full content and description.
+In the disruption, every stops served by the new train can be found in the list of "impacted_stops" with the departure/arrival status set to "added". The scheduled arrival/departure at the new stop point can be found in "amended_arrival_time"/"amended_departure_time".<br>See the [disruption](#disruption) objects section for its full content and description.
 
 
 <div></div>
@@ -523,19 +504,16 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
     ]
 ```
 
-The status of the journey is `ADDITIONAL_SERVICE`. This new journey can only be displayed if "data_freshness" is set to "realtime".  
-A list of disruptions impacting the journey is also present at the root level of the response.  
-A link to the concerned disruption can be found in the section "display_informations".  
+The status of the journey is `ADDITIONAL_SERVICE`. This new journey can only be displayed if "data_freshness" is set to "realtime".<br>A list of disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 ### Departures & Stop Schedules
-At one of the added stop area from the additional trip, the departure time of the added train is displayed if "data_freshness" is set to "realtime".  
-In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
+At one of the added stop area from the additional trip, the departure time of the added train is displayed if "data_freshness" is set to "realtime".<br>In that case, a link to this disruption can be found in the section "display_informations" for departures, in the "date_times" object itself for stop_schedules.
 
 The departure time of the train with an additional service simply won't be displayed in the list of departures/stop_schedules if "data_freshness" is set to "base_schedule".
 
 
-## <a name="UNKNOWN_EFFECT"></a>Unknown effect aka "Back to normal"  
+## <a name="UNKNOWN_EFFECT"></a>Unknown effect aka "Back to normal"
 
 ``` shell
 # Extract of an impacted stop from /disruptions
@@ -552,18 +530,15 @@ The departure time of the train with an additional service simply won't be displ
     "stop_time_effect": "unchanged",
 },
 ```
-The effect of the disruption is `UNKNOWN_EFFECT`. It means that the disruption affecting the journey is no longer effective, and the trip is back to its theoritical schedule.  
-In the list of "impacted_stops" in the disruption, the "arrival_status"/"departure_status" is set to "unchanged".  
-See the [disruption](#disruption) objects section for its full content and description.
+The effect of the disruption is `UNKNOWN_EFFECT`. It means that the disruption affecting the journey is no longer effective, and the trip is back to its theoritical schedule.<br>In the list of "impacted_stops" in the disruption, the "arrival_status"/"departure_status" is set to "unchanged".<br>See the [disruption](#disruption) objects section for its full content and description.
 
 <div></div>
 ### Journeys
 
-When requesting a journey that was previously disrupted and is now back to normal, the journey response will be the same with the parameter "data_freshness" set to "realtime" or to "base_schedule".  
-In this case, no disruption is present in the response.
+When requesting a journey that was previously disrupted and is now back to normal, the journey response will be the same with the parameter "data_freshness" set to "realtime" or to "base_schedule".<br>In this case, no disruption is present in the response.
 
 <div></div>
-### Departures  
+### Departures
 
 ``` shell
 # Request example for /departures (data_freshness=realtime by default)
@@ -608,7 +583,7 @@ In the "stop_date_time" section of the response, the field "stop_date_time" is "
 No disruption is present at the root level of the response and so, in the section "display_informations", there's no link to any disruption.
 
 <div></div>
-### Stop Schedules  
+### Stop Schedules
 
 ``` shell
 # Request example for /stop_schedules (data_freshness=realtime by default)
@@ -642,4 +617,4 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 
 In the list of "date_times" available in the response, the field "data_freshness" is "realtime" and the field "date_time" is equal to the field "base_date_time".
 
-No disruption is present at the root level of the response and so, in the sections "date_times" and "display_informations", there's no link to any disruption.  
+No disruption is present at the root level of the response and so, in the sections "date_times" and "display_informations", there's no link to any disruption.

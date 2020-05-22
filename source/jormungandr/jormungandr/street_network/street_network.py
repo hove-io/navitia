@@ -58,7 +58,7 @@ StreetNetworkPathKey = namedtuple(
 class AbstractStreetNetworkService(ABC):  # type: ignore
     @abc.abstractmethod
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         pass
 
@@ -75,6 +75,7 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         resp = self._direct_path(
             instance,
@@ -84,6 +85,7 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
             fallback_extremity,
             request,
             direct_path_type,
+            request_id,
         )
 
         self._add_feed_publisher(resp)
@@ -99,6 +101,7 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
