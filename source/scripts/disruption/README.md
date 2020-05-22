@@ -243,7 +243,7 @@ http://localhost:8080/v1/coverage/idfm/lines/line%3ADUA%3A100110001/lines?
 
 ## How to debug
 
-In fisrt step, when you have any troubles with the disruptions loading, please use the rabbitMQ management plugin (https://www.rabbitmq.com/management.html). It checks if the script send properly the disruption message.<br>
+In first step, when you have any troubles with the disruptions loading, please use the rabbitMQ management plugin (https://www.rabbitmq.com/management.html). It checks if the script send properly the disruption message.<br>
 With a local installation, the default address is http://localhost:15672 (default user/password: guest/guest). You can easily monitor the corresponding queue.
 
 ### Verify your config file again
@@ -251,7 +251,7 @@ With a local installation, the default address is http://localhost:15672 (defaul
 kraken.ini needs the same RabbitMQ parameters as the disruptor script.<br>
 Exemple:
 
-*kraken.ini*
+**kraken.ini**
 
 ```
 [GENERAL]
