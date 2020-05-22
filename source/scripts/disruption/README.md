@@ -243,7 +243,7 @@ http://localhost:8080/v1/coverage/idfm/lines/line%3ADUA%3A100110001/lines?
 
 ## How to debug
 
-In fisrt step, when you have any troubles with the disruptions loading is to use the rabbitMQ management plugin (https://www.rabbitmq.com/management.html). It checks if the script send properly the disruption message.<br>
+In fisrt step, when you have any troubles with the disruptions loading, please use the rabbitMQ management plugin (https://www.rabbitmq.com/management.html). It checks if the script send properly the disruption message.<br>
 With a local installation, the default address is http://localhost:15672 (default user/password: guest/guest). You can easily monitor the corresponding queue.
 
 ### Verify your config file again
@@ -285,12 +285,12 @@ rt_topics = shortterm.coveragename
 The script needs the following parameters
 
 ```
-b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.coveragename"
+-b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.coveragename"
 ```
 
 ### Verify if disruptions are well received within Kraken
 
-Just look inside the Kraken logs if it as received the message properly.<br>
+Just look inside the *Kraken logs* if it as received the message properly.<br>
 Logs looks like that:
 
 ```
@@ -330,6 +330,6 @@ Logs looks like that:
 ### IDs have to be the same
 
 When you load a disruption with Disruptor, like **-p Line('line:DUA:800853022')**, you need to be sure of your ID.<br>
-Kraken loads a data.nav.lz' that have to contain the same ID. Otherwise, the disruption will not be loaded.<br>
+Kraken loads a data.nav.lz4' that have to contain the same ID. Otherwise, the disruption will not be loaded.<br>
 You can use **navitia API** like lines/stop_points/networks/... to find if the concerned ID exists.
 
