@@ -36,6 +36,7 @@ class FallbackModes(Enum):
     bike = response_pb2.Bike
     bss = response_pb2.Bss
     car = response_pb2.Car
+    car_no_park = response_pb2.CarNoPark
     ridesharing = response_pb2.Ridesharing
     taxi = response_pb2.Taxi
 

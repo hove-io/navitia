@@ -82,7 +82,7 @@ static void make_pb(navitia::PbCreator& pb_creator,
         // add stop points nearby (PtObject) into response
         for (const auto& sp_idx_distance : stop_points_nearby_idx_distance) {
             pbnavitia::PtObject* pt_obj = place->add_stop_points_nearby();
-            pb_creator.fill(data.pt_data->stop_points[std::get<0>(sp_idx_distance)], pt_obj, depth);
+            pb_creator.fill(data.pt_data->stop_points[std::get<0>(sp_idx_distance)], pt_obj, 0);
             pt_obj->set_distance(sqrt(std::get<1>(sp_idx_distance)));
         }
     }

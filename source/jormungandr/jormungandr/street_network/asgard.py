@@ -29,17 +29,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
-import datetime
 from jormungandr.exceptions import TechnicalError
 from jormungandr import app
 from jormungandr.transient_socket import TransientSocket
-from jormungandr import fallback_modes as fm
+from jormungandr.fallback_modes import FallbackModes
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.utils import make_speed_switcher
 
-from contextlib import contextmanager
-import queue
 from navitiacommon import response_pb2
 from zmq import green as zmq
 import six
@@ -105,6 +102,10 @@ class Asgard(TransientSocket, Kraken):
             origins, destinations, mode, max_duration, speed_switcher, **kwargs
         )
 
+        # asgard doesn't know what to do with 'car_no_park'...
+        if mode == FallbackModes.car_no_park.name:
+            req.sn_routing_matrix.mode = FallbackModes.car.name
+
         res = self._call_asgard(req)
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
@@ -129,6 +130,11 @@ class Asgard(TransientSocket, Kraken):
 
         return response
 
+    def _hanlde_car_no_park_modes(self, mode):
+        if mode in (FallbackModes.ridesharing.name, FallbackModes.taxi.name, FallbackModes.car_no_park.name):
+            return FallbackModes.car.name
+        return mode
+
     def _direct_path(
         self,
         instance,
@@ -146,7 +152,7 @@ class Asgard(TransientSocket, Kraken):
 
         response = self._call_asgard(req)
 
-        if response and mode == fm.FallbackModes.bike.name:
+        if response and mode == FallbackModes.bike.name:
             response = self._add_cycle_lane_length(response)
 
         return response

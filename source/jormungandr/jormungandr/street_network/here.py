@@ -39,6 +39,7 @@ from jormungandr.exceptions import TechnicalError
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
+from jormungandr.fallback_modes import FallbackModes as fm
 from six import text_type
 
 DEFAULT_HERE_FEED_PUBLISHER = {
@@ -55,13 +56,17 @@ def _get_coord(pt_object):
 
 
 def get_here_mode(mode):
-    if mode == 'walking':
-        return 'pedestrian'
-    elif mode == 'bike':
-        return 'bicycle'
-    elif mode == 'car':
-        return 'car'
-    else:  # HERE does not handle bss
+    map_mode = {
+        fm.walking.name: 'pedestrian',
+        fm.bike.name: 'bicycle',
+        fm.car.name: 'car',
+        fm.car_no_park.name: 'car',
+        fm.taxi.name: 'car',
+        fm.ridesharing.name: 'car',
+    }
+    try:
+        return map_mode[mode]
+    except KeyError:
         raise TechnicalError('HERE does not handle the mode {}'.format(mode))
 
 
@@ -193,7 +198,12 @@ class Here(AbstractStreetNetworkService):
 
         section.street_network.length = section.length
         section.street_network.duration = section.duration
-        map_mode = {"walking": response_pb2.Walking, "car": response_pb2.Car, "bike": response_pb2.Bike}
+        map_mode = {
+            fm.walking.name: response_pb2.Walking,
+            fm.car.name: response_pb2.Car,
+            fm.bike.name: response_pb2.Bike,
+            fm.car_no_park.name: response_pb2.Car,
+        }
         section.street_network.mode = map_mode[mode]
         for maneuver in leg.get('maneuver', []):
             path_item = section.street_network.path_items.add()
