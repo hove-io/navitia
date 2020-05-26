@@ -98,7 +98,7 @@ class Kraken(object):
         req.places_nearby.start_page = 0
         req.disable_feedpublisher = True
         req.places_nearby.types.append(object_type)
-        if filter != None:
+        if filter is not None:
             req.places_nearby.filter = filter
         if streetnetwork_mode == "car":
             req.places_nearby.stop_points_nearby_radius = (

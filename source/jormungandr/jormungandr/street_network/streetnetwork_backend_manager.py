@@ -195,9 +195,9 @@ class StreetNetworkBackendManager(object):
 
         return [sn for sn in all_street_networks_with_modes]
 
-    def get_street_network_legacy(self, instance, mode, request):
+    def get_street_network_legacy(self, instance, mode, request=None):
         # type: (Instance, str, Dict[str, Any]) -> AbstractStreetNetworkService
-        overriden_sn_id = request.get('_street_network')
+        overriden_sn_id = (request or {}).get('_street_network')
         if overriden_sn_id:
 
             def predicate(s):

@@ -709,7 +709,6 @@ class Instance(object):
         return False
 
     def get_street_network(self, mode, request):
-
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
