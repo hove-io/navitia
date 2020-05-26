@@ -71,6 +71,17 @@ class TestNullStatus(AbstractTestFixture):
         context = response['context']
         assert context['timezone'] == 'Africa/Abidjan'
 
+    def test_street_network_backend_status(self):
+        """
+        There are two regions (main_routing_test, null_status_test),
+        null_status_test must be hidden
+        """
+        response = self.query("/v1/coverage/main_routing_test/status", display=False)
+        sn_backends = response['status']['street_networks']
+        modes = [mode for sn in sn_backends for mode in sn['modes']]
+        assert len(modes) == 7
+        assert set(modes) == set(['walking', 'bike', 'bss', 'car', 'car_no_park', 'ridesharing', 'taxi'])
+
     # @raises(AssertionError)
     # def test_couverage_with_headers(self):
     #     """test coverage with headers"""
