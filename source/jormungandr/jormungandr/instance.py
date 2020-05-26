@@ -517,6 +517,7 @@ class Instance(object):
     max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 
     street_network_car = _make_property_getter('street_network_car')
+    street_network_car_no_park = _make_property_getter('street_network_car_no_park')
     street_network_walking = _make_property_getter('street_network_walking')
     street_network_bike = _make_property_getter('street_network_bike')
     street_network_bss = _make_property_getter('street_network_bss')
