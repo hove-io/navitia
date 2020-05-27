@@ -9,7 +9,7 @@
 From the your build directory, run the command:
 
 ```sh
-# make test
+$ make test
 ```
 
 This will trigger all unit and integration tests for the different modules (c++ and python).
@@ -20,7 +20,7 @@ This will trigger all unit and integration tests for the different modules (c++ 
 To understand what's going on under the hood, enable cmake's verbose output:
 
 ```sh
-# VERBOSE=1 make test
+$ VERBOSE=1 make test
 ```
 
 The first few lines should tell you that `ctest` is being invoked
@@ -45,7 +45,7 @@ This means that `make test` is an alias to `ctest`.
 To get the actual command line used for `jormungandr_serpy` test for instance, you can run:
 
 ```sh
-# ctest -V -N -R serpy$
+$ ctest -V -N -R serpy$
 ```
 
 This should give you:
