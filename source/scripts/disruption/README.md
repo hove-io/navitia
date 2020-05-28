@@ -240,3 +240,96 @@ http://localhost:8080/v1/coverage/idfm/lines/line%3ADUA%3A100110001/lines?
 ```
 
 ![disruption_response](disruption_response.png)
+
+## How to debug
+
+In first step, when you have any troubles with the disruptions loading, please use the rabbitMQ management plugin (https://www.rabbitmq.com/management.html). It checks if the script send properly the disruption message.<br>
+With a local installation, the default address is http://localhost:15672 (default user/password: guest/guest). You can easily monitor the corresponding queue.
+
+### Verify your config file again
+
+kraken.ini needs the same RabbitMQ parameters as the disruptor script.<br>
+Exemple:
+
+**kraken.ini**
+
+```
+[GENERAL]
+
+# coverage
+#database = /path/to/covarage/data.nav.lz4
+
+# ipc socket
+zmq_socket = ipc:///tmp/default_kraken
+
+# number of threads
+nb_threads = 1
+
+# name of the instance
+instance_name=default
+
+##############################
+# BROKER
+#############################
+[BROKER]
+host = localhost
+port = 5672
+username = guest
+password = guest
+exchange = navitia
+vhost = /
+
+rt_topics = shortterm.coveragename
+```
+
+The script needs the following parameters
+
+```
+-b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.coveragename"
+```
+
+### Verify if disruptions are well received within Kraken
+
+Just look inside the *Kraken logs* if it as received the message properly.<br>
+Logs looks like that:
+
+```
+[20-05-19 15:59:24,868] maintenance_worker.cpp:179 [DEBUG] - realtime info received from shortterm.transilien
+[20-05-19 16:00:02,696] maintenance_worker.cpp:193 [INFO ] - data copied in 00:00:37.827953
+[20-05-19 16:00:02,696] maintenance_worker.cpp:199 [DEBUG] - add/update of disruption 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c
+[20-05-19 16:00:02,696] apply_disruption.cpp:755 [DEBUG] - Deleting disruption: 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c
+[20-05-19 16:00:02,696] apply_disruption.cpp:766 [DEBUG] - disruption 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c deleted
+[20-05-19 16:00:02,696] make_disruption_from_chaos.cpp:344 [DEBUG] - Adding disruption: 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c
+[20-05-19 16:00:02,696] make_disruption_from_chaos.cpp:373 [DEBUG] - 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c disruption added
+[20-05-19 16:00:02,696] apply_disruption.cpp:772 [DEBUG] - applying disruption: 6213dc54-b0aa-4cf9-a8f6-cc8f770c9e4c
+[20-05-19 16:00:02,717] maintenance_worker.cpp:213 [INFO ] - rebuilding relations
+[20-05-19 16:00:03,255] maintenance_worker.cpp:219 [INFO ] - cleaning weak impacts
+[20-05-19 16:00:03,266] maintenance_worker.cpp:221 [INFO ] - rebuilding data raptor
+[20-05-19 16:00:03,266] data.cpp:208 [DEBUG] - Start to build data Raptor
+[20-05-19 16:00:16,600] data.cpp:210 [DEBUG] - Finished to build data Raptor
+[20-05-19 16:00:16,600] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 20007 items
+[20-05-19 16:00:16,606] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 41923 items
+[20-05-19 16:00:16,616] georef.cpp:397 [INFO ] - Building Proximity list for walking graph
+[20-05-19 16:00:16,647] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 875079 items
+[20-05-19 16:00:16,897] georef.cpp:400 [INFO ] - Building Proximity list for bike graph
+[20-05-19 16:00:16,931] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 781857 items
+[20-05-19 16:00:17,146] georef.cpp:403 [INFO ] - Building Proximity list for car graph
+[20-05-19 16:00:17,178] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 739281 items
+[20-05-19 16:00:17,381] georef.cpp:406 [INFO ] - Building Proximity list for POIs
+[20-05-19 16:00:17,382] proximity_list.cpp:75 [INFO ] - Building Proximitylist's NN index with 45080 items
+[20-05-19 16:00:22,736] georef.cpp:612 [DEBUG] - Number of stop point projected on the georef network : 41866 (on 41923)
+[20-05-19 16:00:22,736] georef.cpp:615 [DEBUG] - Number of stop point projected on the walking georef network : 41866 (on 41923)
+[20-05-19 16:00:22,736] georef.cpp:617 [DEBUG] - Number of stop point projected on the biking georef network : 41866 (on 41923)
+[20-05-19 16:00:22,736] georef.cpp:619 [DEBUG] - Number of stop point projected on the car georef network : 41866 (on 41923)
+[20-05-19 16:00:22,736] georef.cpp:622 [DEBUG] - Number of stop point rejected (X=0 or Y=0)1
+[20-05-19 16:00:22,736] georef.cpp:628 [DEBUG] - Number of stop point rejected (other issues)56
+[20-05-19 16:00:22,757] next_stop_time.cpp:493 [INFO ] - Cache miss : 0 / 0
+[20-05-19 16:00:24,955] maintenance_worker.cpp:229 [INFO ] - data updated 1 disruption applied in 00:01:00.087307
+```
+
+### IDs have to be the same
+
+When you load a disruption with Disruptor, like **-p Line('line:DUA:800853022')**, you need to be sure of your ID.<br>
+Kraken loads a data.nav.lz4' that have to contain the same ID. Otherwise, the disruption will not be loaded.<br>
+You can use **navitia API** like lines/stop_points/networks/... to find if the concerned ID exists.
+
