@@ -169,6 +169,9 @@ def import_data(
             current_app.logger.info("skipping mimir import")
 
         actions.append(finish_job.si(job.id))
+
+        # We should delete old backup directories related to this instance
+        actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))
         if asynchronous:
             return chain(*actions).delay()
         else:
