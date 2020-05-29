@@ -227,6 +227,7 @@ class FallbackDurations:
                         durations_sum = (
                             duration + duration_to_stop_point + self._request.get('_car_park_duration')
                         )
+
                         if durations_sum < min(
                             self._max_duration_to_pt,
                             result.get(sp_nearby.uri, DurationElement(float('inf'), None, None, None)).duration,

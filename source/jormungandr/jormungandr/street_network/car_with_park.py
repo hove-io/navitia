@@ -40,7 +40,7 @@ class CarWithPark(AbstractStreetNetworkService):
         self._walking_service = walking_service
         self._car_service = car_service
 
-    def _direct(self, object_origin, object_destination, fallback_extremity, request, request_id):
+    def _direct(self, object_origin, object_destination, direct_path_extremity, request, request_id):
 
         object_type = type_pb2.POI
         filter = 'poi_type.uri="poi_type:amenity:parking"'
@@ -91,12 +91,22 @@ class CarWithPark(AbstractStreetNetworkService):
         best_ind = min(range(len(routing_response)), key=key)
         best_car_park = park_ride_car_parks[best_ind]
 
+        if direct_path_extremity.represents_start:
+            car_extremity = direct_path_extremity
+        else:
+            car_extremity = PeriodExtremity(
+                datetime=direct_path_extremity.datetime
+                - request['_car_park_duration']
+                - routing_response[best_ind].duration,
+                represents_start=False,
+            )
+
         car_direct_path = self._car_service.direct_path_with_fp(
             self._instance,
             FallbackModes.car.name,
             object_origin,
             best_car_park,
-            fallback_extremity,
+            car_extremity,
             request,
             StreetNetworkPathType.DIRECT,
             request_id,
@@ -105,13 +115,10 @@ class CarWithPark(AbstractStreetNetworkService):
         if not car_direct_path.journeys:
             return None
 
-        if fallback_extremity.represents_start:
-            walking_extremity = PeriodExtremity(
-                datetime=fallback_extremity.datetime
-                + car_direct_path.journeys[0].duration
-                + request['_car_park_duration'],
-                represents_start=True,
-            )
+        walking_extremity = PeriodExtremity(
+            datetime=car_direct_path.journeys[0].arrival_date_time + request['_car_park_duration'],
+            represents_start=True,
+        )
 
         walking_direct_path = self._walking_service.direct_path_with_fp(
             self._instance,
@@ -144,6 +151,9 @@ class CarWithPark(AbstractStreetNetworkService):
         )
         car_direct_path.journeys[0].durations.walking += walking_direct_path.journeys[0].duration
 
+        car_direct_path.journeys[0].arrival_date_time = (
+            car_direct_path.journeys[0].departure_date_time + car_direct_path.journeys[0].duration
+        )
         return car_direct_path
 
     def status(self):
@@ -155,19 +165,19 @@ class CarWithPark(AbstractStreetNetworkService):
         mode,
         object_origin,
         object_destination,
-        fallback_extremity,
+        direct_path_extremity,
         request,
         direct_path_type,
         request_id,
     ):
         if direct_path_type == StreetNetworkPathType.DIRECT:
-            return self._direct(object_origin, object_destination, fallback_extremity, request, request_id)
+            return self._direct(object_origin, object_destination, direct_path_extremity, request, request_id)
         return self._car_service._direct_path(
             instance,
             mode,
             object_origin,
             object_destination,
-            fallback_extremity,
+            direct_path_extremity,
             request,
             direct_path_type,
             request_id,
