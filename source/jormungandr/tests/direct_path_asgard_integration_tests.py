@@ -216,6 +216,8 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['duration'] == 2000
         assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
+        assert not response.get('feed_publishers')
+
 
 @dataset(
     {
@@ -238,6 +240,10 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert len(response['journeys']) == 1
 
         assert len(response['journeys'][0]['sections']) == 3
-        assert response['journeys'][0]['sections'][0]['type'] == 'crow_fly'  # replace the street network
+        assert (
+            response['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        ), "A crow fly should replace the street network"
         assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
-        assert response['journeys'][0]['sections'][2]['type'] == 'crow_fly'  # replace the street network
+        assert (
+            response['journeys'][0]['sections'][2]['type'] == 'crow_fly'
+        ), "A crow fly should replace the street network"
