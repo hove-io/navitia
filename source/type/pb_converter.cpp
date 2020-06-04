@@ -833,6 +833,7 @@ void PbCreator::Filler::fill_pb_object(const nt::ValidityPattern* vp, pbnavitia:
 void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::VehicleJourney* vehicle_journey) {
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    vehicle_journey->set_headsign(vj->headsign);
     add_contributor(vj);
     fill_comments(vj, vehicle_journey);
     vehicle_journey->set_odt_message(vj->odt_message);
