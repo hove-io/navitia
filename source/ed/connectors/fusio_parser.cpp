@@ -436,6 +436,7 @@ void StopTimeFusioHandler::init(Data& data) {
     }
     id_c = csv.get_pos_col("stop_time_id");
     headsign_c = csv.get_pos_col("stop_headsign");
+    short_name_c = csv.get_pos_col("trip_short_name_at_stop");
     boarding_duration_c = csv.get_pos_col("boarding_duration");
     alighting_duration_c = csv.get_pos_col("alighting_duration");
 }
@@ -476,8 +477,11 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
             }
         }
 
+        // stop_headsign value has priority over trip_short_name_at_stop
         if (is_valid(headsign_c, row)) {
             stop_time->headsign = row[headsign_c];
+        } else if (is_valid(short_name_c, row)) {
+            stop_time->headsign = row[short_name_c];
         }
 
         if (is_valid(boarding_duration_c, row)) {
@@ -567,6 +571,7 @@ void TripsFusioHandler::init(Data& d) {
     if (dataset_id_c == -1) {
         dataset_id_c = csv.get_pos_col("frame_id");
     }
+    trip_short_name_c = csv.get_pos_col("trip_short_name");
 }
 
 std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& data, const csv_row& row, bool) {
@@ -623,10 +628,19 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         }
         vj->uri = vj_uri;
 
-        if (is_valid(headsign_c, row))
+        if (is_valid(headsign_c, row)) {
+            vj->headsign = row[headsign_c];
+        } else {
+            vj->headsign = vj->uri;
+        }
+
+        if (is_valid(trip_short_name_c, row)) {
+            vj->name = row[trip_short_name_c];
+        } else if (is_valid(headsign_c, row)) {
             vj->name = row[headsign_c];
-        else
+        } else {
             vj->name = vj->uri;
+        }
 
         vj->validity_pattern = vp_xx;
         vj->adapted_validity_pattern = vp_xx;
