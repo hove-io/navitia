@@ -206,6 +206,13 @@ class FallbackDurations:
             or not len(sn_routing_matrix.rows[0].routing_response)
         ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
+            for sp in places_isochrone:
+                result[sp.uri] = DurationElement(
+                    self._get_manhattan_duration(sp.distance, self._speed_switcher.get(self._mode)),
+                    response_pb2.reached,
+                    None,
+                    0,
+                )
             return result
 
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
