@@ -78,6 +78,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     MetaVehicleJourney* meta_vj = nullptr;
     std::string odt_message;  // TODO It seems a VJ can have either a comment or an odt_message but never both, so we
                               // could use only the 'comment' to store the odt_message
+    std::string headsign;
 
     // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
     VehicleJourneyType vehicle_journey_type = VehicleJourneyType::regular;
