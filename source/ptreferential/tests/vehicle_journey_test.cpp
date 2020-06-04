@@ -130,6 +130,8 @@ BOOST_AUTO_TEST_CASE(stop_points_in_vehicle_journeys_test) {
     const auto resp_sp2 = pb_creator_sp2.get_response();
     BOOST_REQUIRE_EQUAL(resp_sp2.vehicle_journeys().size(), 1);
     BOOST_CHECK_EQUAL(resp_sp2.vehicle_journeys(0).uri(), "vehicle_journey:vj1");
+    BOOST_CHECK_EQUAL(resp_sp2.vehicle_journeys(0).name(), "vj1");
+    BOOST_CHECK_EQUAL(resp_sp2.vehicle_journeys(0).headsign(), "vj1");
 
     // Check that both vj0 and vj1 are linked to sp0
     navitia::PbCreator pb_creator_sp0(data, bt::second_clock::universal_time(), null_time_period);
@@ -139,5 +141,7 @@ BOOST_AUTO_TEST_CASE(stop_points_in_vehicle_journeys_test) {
     const auto resp_sp0 = pb_creator_sp0.get_response();
     BOOST_REQUIRE_EQUAL(resp_sp0.vehicle_journeys().size(), 2);
     BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(0).uri(), "vehicle_journey:vj0");
+    BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(0).name(), "vj0");
+    BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(0).headsign(), "vj0");
     BOOST_CHECK_EQUAL(resp_sp0.vehicle_journeys(1).uri(), "vehicle_journey:vj1");
 }

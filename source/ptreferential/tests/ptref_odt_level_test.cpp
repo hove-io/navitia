@@ -83,10 +83,11 @@ public:
     void add_vj(const std::string& vj_name) {
         auto mvj = data.pt_data->meta_vjs.get_or_create(vj_name);
         std::vector<nt::StopTime> sts;
+        std::string headsign = vj_name + "_hs";
         sts.emplace_back();
         sts.back().stop_point = data.pt_data->stop_points.at(0);
-        mvj->create_discrete_vj("vehicle_journey:" + vj_name, vj_name, nt::RTLevel::Base, nt::ValidityPattern(),
-                                current_rt, std::move(sts), *data.pt_data);
+        mvj->create_discrete_vj("vehicle_journey:" + vj_name, vj_name, headsign, nt::RTLevel::Base,
+                                nt::ValidityPattern(), current_rt, std::move(sts), *data.pt_data);
     }
     void set_estimated(const std::string& vj_name) {
         data.pt_data->vehicle_journeys_map.at(vj_name)->stop_time_list.front().set_date_time_estimated(true);

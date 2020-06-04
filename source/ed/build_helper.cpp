@@ -55,6 +55,7 @@ VJ::VJ(builder& b,
        const bool is_frequency,
        const bool wheelchair_boarding,
        std::string name,
+       std::string headsign,
        std::string meta_vj_name,
        std::string physical_mode,
        const uint32_t start_time,
@@ -68,6 +69,7 @@ VJ::VJ(builder& b,
       is_frequency(is_frequency),
       wheelchair_boarding(wheelchair_boarding),
       _name(std::move(name)),
+      _headsign(std::move(headsign)),
       _meta_vj_name(std::move(meta_vj_name)),
       _physical_mode(std::move(physical_mode)),
       start_time(start_time),
@@ -150,17 +152,19 @@ nt::VehicleJourney* VJ::make() {
     }
 
     const auto vj_name = _name.empty() ? mvj_name : _name;
+    const auto vj_headsign = _headsign.empty() ? vj_name : _headsign;
     const auto vj_uri = "vehicle_journey:"
                         + (_name.empty() ? line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) : _name);
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(vj_uri, vj_name, vj_type, _vp, route, sts, pt_data);
+        auto* fvj = mvj->create_frequency_vj(vj_uri, vj_name, vj_headsign, vj_type, _vp, route, sts, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
+
     } else {
-        vj = mvj->create_discrete_vj(vj_uri, vj_name, vj_type, _vp, route, sts, pt_data);
+        vj = mvj->create_discrete_vj(vj_uri, vj_name, vj_headsign, vj_type, _vp, route, sts, pt_data);
     }
     // default dataset
     if (!vj->dataset) {
@@ -193,7 +197,19 @@ nt::VehicleJourney* VJ::make() {
     }
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, mvj_name);
+    /*
+    std::cout << "*** Before ****" << std::endl;
+    std::cout << "vj.uri: " << vj->uri << std::endl;
+    std::cout << "vj.name: " << vj->name << std::endl;
+    std::cout << "vj.headsign: " << vj->headsign << std::endl;
+    */
+    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_headsign);
+    /*
+    std::cout << "*** After ****" << std::endl;
+    std::cout << "vj.uri: " << vj->uri << std::endl;
+    std::cout << "vj.name: " << vj->name << std::endl;
+    std::cout << "vj.headsign: " << vj->headsign << std::endl << std::endl;
+    */
 
     if (!_block_id.empty()) {
         b.block_vjs.insert(std::make_pair(_block_id, vj));
@@ -526,11 +542,12 @@ VJ builder::vj(const std::string& line_name,
                const std::string& block_id,
                const bool wheelchair_boarding,
                const std::string& name,
+               const std::string& headsign,
                const std::string& meta_vj,
                const std::string& physical_mode,
                const nt::RTLevel vj_type) {
-    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, name, meta_vj,
-                           physical_mode, false, 0, 0, 0, vj_type);
+    return vj_with_network("base_network", line_name, validity_pattern, block_id, wheelchair_boarding, name, headsign,
+                           meta_vj, physical_mode, false, 0, 0, 0, vj_type);
 }
 
 VJ builder::vj_with_network(const std::string& network_name,
@@ -539,6 +556,7 @@ VJ builder::vj_with_network(const std::string& network_name,
                             const std::string& block_id,
                             const bool wheelchair_boarding,
                             const std::string& name,
+                            const std::string& headsign,
                             const std::string& meta_vj,
                             const std::string& physical_mode,
                             const bool is_frequency,
@@ -547,7 +565,7 @@ VJ builder::vj_with_network(const std::string& network_name,
                             const uint32_t headway_secs,
                             const nt::RTLevel vj_type) {
     return VJ(*this, network_name, line_name, validity_pattern, block_id, is_frequency, wheelchair_boarding, name,
-              meta_vj, physical_mode, start_time, end_time, headway_secs, vj_type);
+              headsign, meta_vj, physical_mode, start_time, end_time, headway_secs, vj_type);
 }
 
 VJ builder::frequency_vj(const std::string& line_name,
@@ -559,9 +577,10 @@ VJ builder::frequency_vj(const std::string& line_name,
                          const std::string& block_id,
                          const bool wheelchair_boarding,
                          const std::string& name,
+                         const std::string& headsign,
                          const std::string& meta_vj) {
-    return vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, name, meta_vj, "",
-                           true, start_time, end_time, headway_secs);
+    return vj_with_network(network_name, line_name, validity_pattern, block_id, wheelchair_boarding, name, headsign,
+                           meta_vj, "", true, start_time, end_time, headway_secs);
 }
 
 SA builder::sa(const std::string& name,
