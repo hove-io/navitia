@@ -226,9 +226,9 @@ class TestAsgardDirectPath(AbstractTestFixture):
     }
 )
 class TestAsgardDirectPath(AbstractTestFixture):
-    def test_crowfly_replaces_section_if_streetwork_failed(self):
+    def test_crowfly_replaces_section_if_street_network_failed(self):
         """
-        Topic: This case arrives when the street network computation failed.
+        Topic: This case arrives when the street network computation has failed.
                In this case, we replace the lost street network section by a crowfly, like in New Default
         """
         response, status = self.query_region(journey_basic_query, check=False)
