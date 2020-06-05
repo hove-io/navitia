@@ -851,16 +851,14 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         if (mvj_name.empty()) {
             mvj_name = vj_name;
         }
-        std::string headsign = const_it["headsign"].as<std::string>();
-        if (!headsign.empty()) {
-            vj->headsign = headsign;
-        }
 
         auto mvj = data.pt_data->meta_vjs.get_or_create(mvj_name);
         auto rt_level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
         const auto& vp = *validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
         const auto uri = const_it["uri"].as<std::string>();
         const auto name = const_it["name"].as<std::string>();
+        const auto headsign = const_it["headsign"].as<std::string>();
+
         const auto vj_id = const_it["id"].as<idx_t>();
         if (const_it["is_frequency"].as<bool>()) {
             auto f_vj = mvj->create_frequency_vj(uri, name, headsign, rt_level, vp, route,

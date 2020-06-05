@@ -556,6 +556,7 @@ class VehicleJourneySerializer(PbGenericSerializer):
     start_time = TimeField(display_none=False)
     end_time = TimeField(display_none=False)
     headway_secs = jsonschema.MethodField(schema_type=int, display_none=False)
+    headsign = jsonschema.Field(schema_type=str, display_none=False)
 
     def get_headway_secs(self, obj):
         if obj.HasField(str('headway_secs')):

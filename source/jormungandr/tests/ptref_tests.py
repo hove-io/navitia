@@ -84,6 +84,8 @@ class TestPtRef(AbstractTestFixture):
         assert len(vjs) == 4
         vj = vjs[0]
         assert vj['id'] == 'vehicle_journey:vj1'
+        assert vj['name'] == 'vj1'
+        assert vj['headsign'] == 'vj1'
 
         assert len(vj['stop_times']) == 2
 
@@ -1052,6 +1054,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
+        assert vjs[0]['name'] == 'vjA'
+        assert vjs[0]['headsign'] == 'vjA'
 
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
@@ -1108,6 +1112,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
+        assert vjs[0]['name'] == "vjA"
+        assert vjs[0]['headsign'] == "vjA"
         assert len(vjs[0]['stop_times']) == 2
         assert vjs[0]['stop_times'][0]['headsign'] == "A00"
         assert vjs[0]['stop_times'][1]['headsign'] == "vjA"
@@ -1157,7 +1163,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         vjs = get_not_null(response, 'vehicle_journeys')
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
-        assert any(vj['name'] == "vjB" and vj['trip']['id'] == "vjB" for vj in vjs)
+        assert any(vj['name'] == "vjB" and vj['headsign'] == "vjB" and vj['trip']['id'] == "vjB" for vj in vjs)
 
     def test_disruptions(self):
         """test the /disruptions api"""
