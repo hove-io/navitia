@@ -29,9 +29,10 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from .helper_utils import get_max_fallback_duration, timed_logger
-from jormungandr import utils, new_relic
+from .helper_utils import get_max_fallback_duration, get_fallback_duration_for_stop_point_nearby, timed_logger
+from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
+from navitiacommon import type_pb2
 
 
 class ProximitiesByCrowfly:
@@ -47,6 +48,9 @@ class ProximitiesByCrowfly:
         mode,
         max_duration,
         max_nb_crowfly,
+        object_type,
+        filter,
+        stop_points_nearby_duration,
         request,
         request_id,
     ):
@@ -56,6 +60,9 @@ class ProximitiesByCrowfly:
         self._mode = mode
         self._max_duration = max_duration
         self._max_nb_crowfly = max_nb_crowfly
+        self._object_type = object_type
+        self._filter = filter
+        self._stop_points_nearby_duration = stop_points_nearby_duration
         self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
         self._value = None
         self._logger = logging.getLogger(__name__)
@@ -70,6 +77,9 @@ class ProximitiesByCrowfly:
                 self._mode,
                 self._max_duration,
                 self._max_nb_crowfly,
+                self._object_type,
+                self._filter,
+                self._stop_points_nearby_duration,
                 self._request_id,
                 **self._speed_switcher
             )
@@ -154,6 +164,12 @@ class ProximitiesByCrowflyPool:
     def _async_request(self):
 
         for mode in self._modes:
+            object_type = type_pb2.STOP_POINT
+            filter = None
+            if mode == fm.FallbackModes.car.name:
+                object_type = type_pb2.POI
+                filter = "poi_type.uri=\"poi_type:amenity:parking\""
+
             max_fallback_duration = get_max_fallback_duration(
                 self._request, mode, self._direct_paths_by_mode.get(mode)
             )
@@ -164,6 +180,9 @@ class ProximitiesByCrowflyPool:
                 mode=mode,
                 max_duration=max_fallback_duration,
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
+                object_type=object_type,
+                filter=filter,
+                stop_points_nearby_duration=get_fallback_duration_for_stop_point_nearby(self._request),
                 request=self._request,
                 request_id=self._request_id,
             )

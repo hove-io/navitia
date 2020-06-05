@@ -159,6 +159,7 @@ instance_fields = {
     'car_park_provider': fields.Raw,
     'equipment_details_providers': fields.Nested(equipment_provider_fields),
     'street_network_car': FieldUrlStreetNetworkBackend(),
+    'street_network_car_no_park': FieldUrlStreetNetworkBackend(),
     'street_network_walking': FieldUrlStreetNetworkBackend(),
     'street_network_bike': FieldUrlStreetNetworkBackend(),
     'street_network_bss': FieldUrlStreetNetworkBackend(),

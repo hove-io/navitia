@@ -54,6 +54,7 @@ def make_speed_switcher(req):
         FallbackModes.walking.name: req['walking_speed'],
         FallbackModes.bike.name: req['bike_speed'],
         FallbackModes.car.name: req['car_speed'],
+        FallbackModes.car_no_park.name: req['car_no_park_speed'],
         FallbackModes.bss.name: req['bss_speed'],
         FallbackModes.ridesharing.name: req['car_no_park_speed'],
         FallbackModes.taxi.name: req['taxi_speed'],

@@ -293,6 +293,12 @@ class Instance(object):
         return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_ridesharing_duration_to_pt(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_ridesharing_duration_to_pt', instance_db, self.name)
+
+    @property
     def max_taxi_duration_to_pt(self):
         # type: () -> int
         instance_db = self.get_models()
@@ -327,6 +333,12 @@ class Instance(object):
         # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('car_no_park_speed', instance_db, self.name)
+
+    @property
+    def ridesharing_speed(self):
+        # type: () -> float
+        instance_db = self.get_models()
+        return get_value_or_default('ridesharing_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
@@ -500,10 +512,12 @@ class Instance(object):
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
     max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')
     max_car_direct_path_duration = _make_property_getter('max_car_direct_path_duration')
+    max_car_no_park_direct_path_duration = _make_property_getter('max_car_no_park_direct_path_duration')
     max_taxi_direct_path_duration = _make_property_getter('max_taxi_direct_path_duration')
     max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 
     street_network_car = _make_property_getter('street_network_car')
+    street_network_car_no_park = _make_property_getter('street_network_car_no_park')
     street_network_walking = _make_property_getter('street_network_walking')
     street_network_bike = _make_property_getter('street_network_bike')
     street_network_bss = _make_property_getter('street_network_bss')

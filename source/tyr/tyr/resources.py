@@ -667,7 +667,7 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
-        list_modes = ["car", "walking", "bike", "bss", "ridesharing", "taxi"]
+        list_modes = ["car", "car_no_park", "walking", "bike", "bss", "ridesharing", "taxi"]
         for mode in list_modes:
             parser.add_argument(
                 'street_network_{}'.format(mode),
@@ -738,6 +738,7 @@ class Instance(flask_restful.Resource):
                         'max_additional_connections',
                         'car_park_provider',
                         'street_network_car',
+                        'street_network_car_no_park',
                         'street_network_walking',
                         'street_network_bike',
                         'street_network_bss',
