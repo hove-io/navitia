@@ -81,8 +81,8 @@ struct Labels {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
 
-        fallback_duration_pts = clean.fallback_duration_pts;
-        fallback_duration_transfers = clean.fallback_duration_transfers;
+        walking_duration_pts = clean.walking_duration_pts;
+        walking_duration_transfers = clean.walking_duration_transfers;
     }
     inline const DateTime& dt_transfer(SpIdx sp_idx) const { return dt_transfers[sp_idx]; }
     inline const DateTime& dt_pt(SpIdx sp_idx) const { return dt_pts[sp_idx]; }
@@ -92,13 +92,11 @@ struct Labels {
     inline bool pt_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_pt(sp_idx)); }
     inline bool transfer_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_transfer(sp_idx)); }
 
-    inline const DateTime& fallback_duration_pt(SpIdx sp_idx) const { return fallback_duration_pts[sp_idx]; }
-    inline const DateTime& fallback_duration_transfer(SpIdx sp_idx) const {
-        return fallback_duration_transfers[sp_idx];
-    }
+    inline const DateTime& walking_duration_pt(SpIdx sp_idx) const { return walking_duration_pts[sp_idx]; }
+    inline const DateTime& walking_duration_transfer(SpIdx sp_idx) const { return walking_duration_transfers[sp_idx]; }
 
-    inline DateTime& mut_fallback_duration_pt(SpIdx sp_idx) { return fallback_duration_pts[sp_idx]; }
-    inline DateTime& mut_fallback_duration_transfer(SpIdx sp_idx) { return fallback_duration_transfers[sp_idx]; }
+    inline DateTime& mut_walking_duration_pt(SpIdx sp_idx) { return walking_duration_pts[sp_idx]; }
+    inline DateTime& mut_walking_duration_transfer(SpIdx sp_idx) { return walking_duration_transfers[sp_idx]; }
 
     const IdxMap<type::StopPoint, DateTime>& get_dt_pts() { return dt_pts; }
 
@@ -107,8 +105,8 @@ private:
         dt_pts.assign(stops, val);
         dt_transfers.assign(stops, val);
 
-        fallback_duration_pts.assign(stops, DateTimeUtils::not_valid);
-        fallback_duration_transfers.assign(stops, DateTimeUtils::not_valid);
+        walking_duration_pts.assign(stops, DateTimeUtils::not_valid);
+        walking_duration_transfers.assign(stops, DateTimeUtils::not_valid);
     }
 
     // All these vectors are indexed by sp_idx
@@ -122,12 +120,12 @@ private:
     // to board a vehicle leaving from stop_point (i.e. a transfer to stop_point has been done).
     IdxMap<type::StopPoint, DateTime> dt_transfers;
 
-    // fallback_duration_pts[stop_point] stores the fallback duration at departure of a
+    // walking_duration_pts[stop_point] stores the total walking duration (fallback + transfers)  of a
     // journey that alight to stop_point at DateTime dt_pts[stop_point]
-    IdxMap<type::StopPoint, DateTime> fallback_duration_pts;
-    // fallback_duration_pts[stop_point] stores the fallback duration at departure of a
+    IdxMap<type::StopPoint, DateTime> walking_duration_pts;
+    // waling_duration_transfers[stop_point] stores the total walking duration (fallback + transfers) of a
     // journey that allows to board a vehicle at stop_point at DateTime transfers_pts[stop_point]
-    IdxMap<type::StopPoint, DateTime> fallback_duration_transfers;
+    IdxMap<type::StopPoint, DateTime> walking_duration_transfers;
 };
 
 }  // namespace routing

@@ -62,7 +62,7 @@ struct StartingPointSndPhase {
     SpIdx sp_idx;
     unsigned count;
     DateTime end_dt;
-    unsigned fallback_dur;
+    unsigned walking_dur;
     bool has_priority;
 };
 
@@ -82,8 +82,8 @@ struct RAPTOR {
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
-    IdxMap<type::StopPoint, DateTime> best_labels_pts_fallback;
-    IdxMap<type::StopPoint, DateTime> best_labels_transfers_fallback;
+    IdxMap<type::StopPoint, DateTime> best_labels_pts_walking;
+    IdxMap<type::StopPoint, DateTime> best_labels_transfers_walking;
 
     /// Number of transfers done for the moment
     unsigned int count;
@@ -102,8 +102,8 @@ struct RAPTOR {
         : data(data),
           best_labels_pts(data.pt_data->stop_points),
           best_labels_transfers(data.pt_data->stop_points),
-          best_labels_pts_fallback(data.pt_data->stop_points),
-          best_labels_transfers_fallback(data.pt_data->stop_points),
+          best_labels_pts_walking(data.pt_data->stop_points),
+          best_labels_transfers_walking(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
