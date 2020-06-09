@@ -1447,6 +1447,7 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes, pbnaviti
         fill_with_creator(vj_stoptimes->vj, [&]() { return has_equipments; });
     }
     fill(pb_creator.data->pt_data->comments.get(vj_stoptimes->vj), pt_display_info->mutable_notes());
+    pt_display_info->set_trip_short_name(vj_stoptimes->vj->name);
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::hasEquipments* has_equipments) {

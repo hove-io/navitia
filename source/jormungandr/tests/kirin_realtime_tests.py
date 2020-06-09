@@ -2112,6 +2112,9 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         assert resp["routes"][0]["id"] == "route:stopC_stopB"
         resp = self.query_region("lines/line:stopC_stopB/vehicle_journeys")
         assert resp["vehicle_journeys"][0]["id"] == "vehicle_journey:additional-trip:modified:0:new_trip"
+        # Name and headsign are empty
+        assert resp["vehicle_journeys"][0]["name"] == ""
+        assert resp["vehicle_journeys"][0]["headsign"] == ""
 
         # We should be able to get the line from vehicle_journey recently added
         resp = self.query_region("vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/lines")
@@ -2454,6 +2457,7 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
         # Check the vehicle_journey created by real-time
         new_vj = self.query_region('vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip')
         assert len(new_vj['vehicle_journeys']) == 1
+        # Name is empty but headsign assigned from the disruption
         assert (new_vj['vehicle_journeys'][0]['name']) == ''
         assert (new_vj['vehicle_journeys'][0]['headsign']) == 'trip_headsign'
 
