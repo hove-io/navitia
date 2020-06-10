@@ -58,9 +58,9 @@ struct Journey {
 
     bool is_pt() const;
 
-    bool better_on_dt(const Journey& that, bool request_clockwise) const;
+    bool better_on_dt(const Journey& that, bool request_clockwise, const navitia::time_duration transfer_penalty) const;
     bool better_on_transfer(const Journey& that) const;
-    bool better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const;
+    bool better_on_sn(const Journey& that) const;
     bool operator==(const Journey& rhs) const;
     bool operator!=(const Journey& rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);

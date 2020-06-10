@@ -50,20 +50,31 @@ bool Journey::is_pt() const {
     return !sections.empty();
 }
 
-bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
+bool Journey::better_on_dt(const Journey& that,
+                           bool request_clockwise,
+                           const navitia::time_duration transfer_penalty) const {
+    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it reduces the arrival time by at least transfer_penalty
+    DateTime penalized_arrival = arrival_dt + transfer_penalty * sections.size();
+    DateTime that_penalized_arrival = that.arrival_dt + transfer_penalty * that.sections.size();
+    // Similary, we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it increases the departure time by at least transfer_penalty
+    DateTime penalized_departure = departure_dt - transfer_penalty * sections.size();
+    DateTime that_penalized_departure = that.departure_dt - transfer_penalty * that.sections.size();
     if (request_clockwise) {
-        if (arrival_dt != that.arrival_dt) {
-            return arrival_dt <= that.arrival_dt;
+        if (penalized_arrival != that_penalized_arrival) {
+            return penalized_arrival <= that_penalized_arrival;
         }
-        if (departure_dt != that.departure_dt) {
-            return departure_dt >= that.departure_dt;
+
+        if (penalized_departure != that_penalized_departure) {
+            return penalized_departure >= that_penalized_departure;
         }
     } else {
-        if (departure_dt != that.departure_dt) {
-            return departure_dt >= that.departure_dt;
+        if (penalized_departure != that_penalized_departure) {
+            return penalized_departure >= that_penalized_departure;
         }
-        if (arrival_dt != that.arrival_dt) {
-            return arrival_dt <= that.arrival_dt;
+        if (penalized_arrival != that_penalized_arrival) {
+            return penalized_arrival <= that_penalized_arrival;
         }
     }
 
@@ -80,13 +91,10 @@ bool Journey::better_on_transfer(const Journey& that) const {
 
     return total_waiting_dur <= that.total_waiting_dur;
 }
-bool Journey::better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const {
+bool Journey::better_on_sn(const Journey& that) const {
     // we consider that the transfer duration as well as the street network duration are
     // walking duration
-    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
-    // only if it reduces the walking duration by at least transfer_penalty
-    return sn_dur + transfer_dur + transfer_penalty * sections.size()
-           <= that.sn_dur + that.transfer_dur + transfer_penalty * that.sections.size();
+    return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
     ;
 }
 

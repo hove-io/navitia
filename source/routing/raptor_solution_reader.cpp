@@ -622,8 +622,8 @@ void read_solutions(const RAPTOR& raptor,
                                    raptor.labels[0].dt_transfer(end_point.sp_idx), end_point_street_network_duration,
                                    count, raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
             LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
-                                                                  << std::endl
-                                                                  << j);
+                            //<< std::endl << j
+            );
 
             if (reader.solutions.contains_better_than(j)) {
                 LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
@@ -646,6 +646,7 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
        << "departure_dt : " << navitia::str(j.departure_dt) << ", "
        << "arrival_dt : " << navitia::str(j.arrival_dt) << ", "
        << "min_waiting_dur : " << j.min_waiting_dur << ", "
+       << "total_waiting_dur : " << j.total_waiting_dur << ", "
        << "transfer_dur : " << j.transfer_dur << "], ["
        << "nb sections : " << j.sections.size() << ", "
        << "nb extensions : " << unsigned(j.nb_vj_extentions) << "], "

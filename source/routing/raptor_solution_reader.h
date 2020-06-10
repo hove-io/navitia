@@ -50,12 +50,12 @@ struct Dominates {
     Dominates(bool rc, navitia::time_duration transfer_penalty)
         : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs)
-               && lhs.better_on_sn(rhs, transfer_penalty);
+        return lhs.better_on_dt(rhs, request_clockwise, transfer_penalty) && lhs.better_on_transfer(rhs)
+               && lhs.better_on_sn(rhs);
     }
 };
 
-// #define LOG_PARETO_FRONT
+#define LOG_PARETO_FRONT
 // to activate logs of the updates of the pareto front of journeys
 // inside raptor
 #ifdef LOG_PARETO_FRONT
