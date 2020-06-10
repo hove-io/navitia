@@ -794,9 +794,25 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                         continue;
                     }
 
-                    bool update_boarding_stop_point =
-                        !is_onboard || visitor.comp(tmp_st_dt.second, workingDt)
-                        || (tmp_st_dt.second == workingDt && previous_walking_duration <= working_walking_duration);
+                    const auto candidate_board_time = tmp_st_dt.second;
+                    const auto candidate_base_dt = tmp_st_dt.first->base_dt(candidate_board_time, visitor.clockwise());
+                    const auto candidate_debark_time = visitor.clockwise()
+                                                           ? tmp_st_dt.first->arrival(candidate_base_dt)
+                                                           : tmp_st_dt.first->departure(candidate_base_dt);
+
+                    bool update_boarding_stop_point = !is_onboard || visitor.comp(candidate_debark_time, workingDt)
+                                                      || (candidate_debark_time == workingDt
+                                                          && previous_walking_duration <= working_walking_duration);
+
+                    LOG4CPLUS_TRACE(raptor_logger, "Try boarding stop point  "
+                                                       << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                       << " debark : " << iso_string(candidate_debark_time, data)
+                                                       << " onboard  : " << iso_string(tmp_st_dt.second, data)
+                                                       << " waiting  : " << iso_string(previous_dt, data)
+                                                       << " walking : " << navitia::str(previous_walking_duration)
+                                                       << "\n vs : "
+                                                       << " working dt : " << iso_string(workingDt, data)
+                                                       << " walking : " << navitia::str(working_walking_duration));
 
                     if (update_boarding_stop_point) {
                         /// we are at stop point jpp.idx at time previous_dt
@@ -828,28 +844,28 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                                 l_zone = std::numeric_limits<uint16_t>::max();
                             }
 
-                            // if (boarding_stop_point == SpIdx()) {
-                            //     LOG4CPLUS_TRACE(raptor_logger, "Setting boarding stop point  "
-                            //                                 << " to " <<
-                            //                                 data.pt_data->stop_points[jpp.sp_idx.val]->uri
-                            //                                 << " fallback after : " << previous_fallback_duration);
-                            // } else {
-                            //     LOG4CPLUS_TRACE(raptor_logger, "Switching boarding stop point : "
-                            //                                 << " from "
-                            //                                 <<
-                            //                                 data.pt_data->stop_points[boarding_stop_point.val]->uri
-                            //                                 << " to " <<
-                            //                                 data.pt_data->stop_points[jpp.sp_idx.val]->uri
-                            //                                 << " working dt before : " << workingDt
-                            //                                 << " working dt after : " << tmp_st_dt.second
-                            //                                 << " fallback before : " << working_fallback_duration
-                            //                                 << " fallback after : " << previous_fallback_duration);
-                            // }
-                            workingDt = tmp_st_dt.second;
+                            if (boarding_stop_point == SpIdx()) {
+                                LOG4CPLUS_TRACE(raptor_logger,
+                                                "Setting boarding stop point  "
+                                                    << " to " << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                    << " working dt : " << iso_string(tmp_st_dt.second, data)
+                                                    << " walking : " << navitia::str(previous_walking_duration));
+                            } else {
+                                LOG4CPLUS_TRACE(raptor_logger,
+                                                "Switching boarding stop point : "
+                                                    << " from "
+                                                    << data.pt_data->stop_points[boarding_stop_point.val]->uri << " to "
+                                                    << data.pt_data->stop_points[jpp.sp_idx.val]->uri
+                                                    << " working dt before : " << iso_string(workingDt, data)
+                                                    << " working dt after : " << iso_string(tmp_st_dt.second, data)
+                                                    << " walking before : " << navitia::str(working_walking_duration)
+                                                    << " walking after : " << navitia::str(previous_walking_duration));
+                            }
+                            workingDt = candidate_debark_time;
                             working_walking_duration = previous_walking_duration;
                             boarding_stop_point = jpp.sp_idx;
 
-                            base_dt = tmp_st_dt.first->base_dt(workingDt, visitor.clockwise());
+                            base_dt = candidate_base_dt;
                             BOOST_ASSERT(!visitor.comp(workingDt, previous_dt));
                         }
                     }
@@ -944,6 +960,7 @@ std::string RAPTOR::print_all_labels() {
 
                 if (current_labels.pt_is_initialized(sp_idx)) {
                     output << iso_string(current_labels.dt_pt(sp_idx), data);
+                    output << ", " << navitia::str(current_labels.walking_duration_pt(sp_idx));
                 } else {
                     output << "not init";
                 }
@@ -952,6 +969,7 @@ std::string RAPTOR::print_all_labels() {
 
                 if (current_labels.transfer_is_initialized(sp_idx)) {
                     output << iso_string(current_labels.dt_transfer(sp_idx), data);
+                    output << ", " << navitia::str(current_labels.walking_duration_transfer(sp_idx));
                 } else {
                     output << "not init";
                 }
