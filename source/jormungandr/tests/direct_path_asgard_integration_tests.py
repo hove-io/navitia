@@ -35,7 +35,7 @@ from navitiacommon import response_pb2, type_pb2
 
 MOCKED_ASGARD_CONF = [
     {
-        "modes": ['walking', 'car', 'bss', 'bike'],
+        "modes": ['walking', 'car', 'bss', 'bike', 'car_no_park'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgard",
         "args": {
             "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
@@ -87,8 +87,8 @@ def add_cycle_path_type_in_section(section):
 
 
 def route_response(mode):
-    map_mode_dist = {"walking": 200, "car": 50, "bike": 100}
-    map_mode_time = {"walking": 2000, "car": 500, "bike": 1000}
+    map_mode_dist = {"walking": 200, "car": 50, "bike": 100, "car_no_park": 50}
+    map_mode_time = {"walking": 2000, "car": 500, "bike": 1000, "car_no_park": 500}
     response = response_pb2.Response()
     response.response_type = response_pb2.ITINERARY_FOUND
     journey = response.journeys.add()
@@ -178,7 +178,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
             journey_basic_query
             + "&first_section_mode[]=walking"
             + "&first_section_mode[]=bike"
-            + "&first_section_mode[]=car"
+            + "&first_section_mode[]=car_no_park"
             + "&forbidden_uris[]=stop_point:stopA"
             + "&forbidden_uris[]=stop_point:stopB"
         )

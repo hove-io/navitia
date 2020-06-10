@@ -29,9 +29,25 @@
 
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr.fallback_modes import FallbackModes
-from jormungandr.street_network import utils
+from jormungandr.street_network import utils, with_parking
 from jormungandr.utils import PeriodExtremity
 from navitiacommon import type_pb2, response_pb2
+import logging
+
+# python2 python3 compatibility
+import six.moves
+from collections import deque
+
+
+class NoResponse(Exception):
+    def __init__(self, error_id, error_message):
+        super(NoResponse, self).__init__()
+        self.r = response_pb2.Response()
+        self.r.error.message = error_message
+        self.r.error.id = error_id
+
+    def get_response(self):
+        return self.r
 
 
 class CarWithPark(AbstractStreetNetworkService):
@@ -39,6 +55,7 @@ class CarWithPark(AbstractStreetNetworkService):
         self._instance = instance
         self._walking_service = walking_service
         self._car_service = car_service
+        self._logger = logging.getLogger(__name__)
 
     def _direct(self, object_origin, object_destination, direct_path_extremity, request, request_id):
 
@@ -61,27 +78,27 @@ class CarWithPark(AbstractStreetNetworkService):
         park_ride_car_parks = utils.pick_up_park_ride_car_park(car_parks)
 
         if not park_ride_car_parks:
-            return None
+            raise NoResponse(response_pb2.Error.no_destination, "no car parks available around")
 
-        routing_response = (
-            self._walking_service.get_street_network_routing_matrix(
-                self._instance,
-                park_ride_car_parks,
-                [object_destination],
-                FallbackModes.walking.name,
-                request.get('max_walking_duration_to_pt', 1800),
-                request,
-                request_id,
-                **speed_switcher
-            )
-            .rows[0]
-            .routing_response
-        )
+        rows = self._walking_service.get_street_network_routing_matrix(
+            self._instance,
+            park_ride_car_parks,
+            [object_destination],
+            FallbackModes.walking.name,
+            request.get('max_walking_duration_to_pt', 1800),
+            request,
+            request_id,
+            **speed_switcher
+        ).rows
 
-        if not routing_response or all(
-            element.routing_status == response_pb2.unreached for element in routing_response
+        if (
+            not rows
+            or not rows[0].routing_response
+            or all(element.routing_status == response_pb2.unreached for element in rows[0].routing_response)
         ):
-            return None
+            raise NoResponse(response_pb2.Error.no_solution, "cannot compute the isochrone for car parks")
+
+        routing_response = rows[0].routing_response
 
         def key(i, response=routing_response):
             if response[i].routing_status == response_pb2.reached:
@@ -113,7 +130,9 @@ class CarWithPark(AbstractStreetNetworkService):
         )
 
         if not car_direct_path.journeys:
-            return None
+            raise NoResponse(
+                response_pb2.Error.no_solution, "cannot compute the direct path from origin to car park"
+            )
 
         walking_extremity = PeriodExtremity(
             datetime=car_direct_path.journeys[0].arrival_date_time + request['_car_park_duration'],
@@ -132,7 +151,10 @@ class CarWithPark(AbstractStreetNetworkService):
         )
 
         if not walking_direct_path.journeys:
-            return None
+            raise NoResponse(
+                response_pb2.Error.no_solution, "cannot compute the direct path from car park to destination"
+            )
+
         car_last_section = car_direct_path.journeys[0].sections[-1]
         walking_first_section = walking_direct_path.journeys[0].sections[0]
 
@@ -150,10 +172,20 @@ class CarWithPark(AbstractStreetNetworkService):
             request['_car_park_duration'] + walking_direct_path.journeys[0].duration
         )
         car_direct_path.journeys[0].durations.walking += walking_direct_path.journeys[0].duration
+        car_direct_path.journeys[0].durations.total = sum(
+            s.duration for s in car_direct_path.journeys[0].sections
+        )
 
         car_direct_path.journeys[0].arrival_date_time = (
             car_direct_path.journeys[0].departure_date_time + car_direct_path.journeys[0].duration
         )
+
+        def rename_section_id(n_section):
+            n, section = n_section
+            section.id = 'section_{}'.format(n)
+
+        deque(six.moves.map(rename_section_id, enumerate(car_direct_path.journeys[0].sections)), maxlen=1)
+
         return car_direct_path
 
     def status(self):
@@ -170,8 +202,19 @@ class CarWithPark(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        if direct_path_type == StreetNetworkPathType.DIRECT:
-            return self._direct(object_origin, object_destination, direct_path_extremity, request, request_id)
+        if direct_path_type == StreetNetworkPathType.DIRECT and not isinstance(
+            self._car_service, with_parking.WithParking
+        ):
+            try:
+                return self._direct(
+                    object_origin, object_destination, direct_path_extremity, request, request_id
+                )
+            except NoResponse as e:
+                return e.get_response()
+            except Exception:
+                self._logger.exception('')
+                raise
+
         return self._car_service._direct_path(
             instance,
             mode,

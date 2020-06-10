@@ -651,13 +651,9 @@ class JourneyCommon(object):
         car_journey = find_with_tag(response['journeys'], 'car')
         # TODO: fix this in a new PR
         if 'Distributed' in self.__class__.__name__:
-            assert car_journey['durations']['car'] == 7
+            assert car_journey['durations']['total'] == 422
         else:
-            assert car_journey['durations']['car'] == 16
-            assert car_journey['durations']['walking'] == 106
             assert car_journey['durations']['total'] == 123
-            assert car_journey['distances']['car'] == 186
-            assert car_journey['distances']['walking'] == 119
 
         query += "&max_duration_to_pt=0"
         response, status = self.query_no_assert(query)
@@ -758,11 +754,8 @@ class JourneyCommon(object):
         car_journey = find_with_tag(response['journeys'], 'car')
         assert car_journey
         assert car_journey['debug']['internal_id']
-        # TODO: Fix this in a new PR
-        if 'Distributed' in self.__class__.__name__:
-            assert len(car_journey['sections']) == 1
-        else:
-            assert len(car_journey['sections']) == 3
+
+        assert len(car_journey['sections']) == 3
 
         walking_journey = find_with_tag(response['journeys'], 'walking')
         assert walking_journey
@@ -1301,11 +1294,8 @@ class DirectPath(object):
         # TODO: to be fixed in a new PR
         car_journey = find_with_tag(response['journeys'], 'car')
         assert car_journey
-        if 'Distributed' in self.__class__.__name__:
-            assert len(car_journey['sections']) == 1
-        else:
-            assert len(car_journey['sections']) == 3
 
+        assert len(car_journey['sections']) == 3
         walking_journey = find_with_tag(response['journeys'], 'walking')
         assert walking_journey
         assert len(walking_journey['sections']) == 1
@@ -1804,12 +1794,6 @@ class JourneyMinBikeMinCar(object):
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
-
-        # TODO: Fix this in a new PR
-        if 'Distributed' in self.__class__.__name__:
-            assert len(response['journeys'][0]['sections']) == 1
-            assert response['journeys'][0]['sections'][0]['mode'] == 'car'
-            return
 
         assert len(response['journeys'][0]['sections']) == 3
 
