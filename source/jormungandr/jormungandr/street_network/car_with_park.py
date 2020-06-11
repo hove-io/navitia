@@ -202,9 +202,7 @@ class CarWithPark(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        if direct_path_type == StreetNetworkPathType.DIRECT and not isinstance(
-            self._car_service, with_parking.WithParking
-        ):
+        if direct_path_type == StreetNetworkPathType.DIRECT:
             try:
                 return self._direct(
                     object_origin, object_destination, direct_path_extremity, request, request_id
