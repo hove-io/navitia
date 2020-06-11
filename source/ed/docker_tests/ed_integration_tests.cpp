@@ -225,7 +225,6 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(vj_from_headsign_4.size(), 1);
     BOOST_REQUIRE_EQUAL(vj_from_headsign_4[0]->headsign, "trip_5_dst_2");
     BOOST_REQUIRE_EQUAL(vj_from_headsign_4[0]->name, "trip_5_short_name");
-
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {

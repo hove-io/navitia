@@ -435,8 +435,8 @@ void StopTimeFusioHandler::init(Data& data) {
         date_time_estimated_c = csv.get_pos_col("date_time_estimated");
     }
     id_c = csv.get_pos_col("stop_time_id");
-    headsign_c = csv.get_pos_col("stop_headsign");
-    short_name_c = csv.get_pos_col("trip_short_name_at_stop");
+    stop_headsign_c = csv.get_pos_col("stop_headsign");
+    trip_short_name_at_stop_c = csv.get_pos_col("trip_short_name_at_stop");
     boarding_duration_c = csv.get_pos_col("boarding_duration");
     alighting_duration_c = csv.get_pos_col("alighting_duration");
 }
@@ -478,10 +478,10 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
         }
 
         // stop_headsign value has priority over trip_short_name_at_stop
-        if (is_valid(headsign_c, row)) {
-            stop_time->headsign = row[headsign_c];
-        } else if (is_valid(short_name_c, row)) {
-            stop_time->headsign = row[short_name_c];
+        if (is_valid(stop_headsign_c, row)) {
+            stop_time->headsign = row[stop_headsign_c];
+        } else if (is_valid(trip_short_name_at_stop_c, row)) {
+            stop_time->headsign = row[trip_short_name_at_stop_c];
         }
 
         if (is_valid(boarding_duration_c, row)) {
@@ -555,7 +555,7 @@ void TripsFusioHandler::init(Data& d) {
     route_id_c = csv.get_pos_col("route_id");
     service_c = csv.get_pos_col("service_id");
     trip_c = csv.get_pos_col("trip_id");
-    headsign_c = csv.get_pos_col("trip_headsign");
+    trip_headsign_c = csv.get_pos_col("trip_headsign");
     block_id_c = csv.get_pos_col("block_id");
     comment_id_c = csv.get_pos_col("comment_id");
     trip_propertie_id_c = csv.get_pos_col("trip_property_id");
@@ -628,16 +628,16 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
         }
         vj->uri = vj_uri;
 
-        if (is_valid(headsign_c, row)) {
-            vj->headsign = row[headsign_c];
+        if (is_valid(trip_headsign_c, row)) {
+            vj->headsign = row[trip_headsign_c];
         } else {
             vj->headsign = vj->uri;
         }
 
         if (is_valid(trip_short_name_c, row)) {
             vj->name = row[trip_short_name_c];
-        } else if (is_valid(headsign_c, row)) {
-            vj->name = row[headsign_c];
+        } else if (is_valid(trip_headsign_c, row)) {
+            vj->name = row[trip_headsign_c];
         } else {
             vj->name = vj->uri;
         }

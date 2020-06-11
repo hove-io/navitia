@@ -310,7 +310,7 @@ struct ShapesGtfsHandler : public GenericHandler {
 
 struct TripsGtfsHandler : public GenericHandler {
     TripsGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int id_c, service_c, trip_c, headsign_c, block_id_c, wheelchair_c, bikes_c, shape_id_c, direction_id_c;
+    int id_c, service_c, trip_c, trip_headsign_c, block_id_c, wheelchair_c, bikes_c, shape_id_c, direction_id_c;
 
     int ignored = 0;
     int ignored_vj = 0;

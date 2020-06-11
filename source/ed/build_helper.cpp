@@ -197,19 +197,7 @@ nt::VehicleJourney* VJ::make() {
     }
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    /*
-    std::cout << "*** Before ****" << std::endl;
-    std::cout << "vj.uri: " << vj->uri << std::endl;
-    std::cout << "vj.name: " << vj->name << std::endl;
-    std::cout << "vj.headsign: " << vj->headsign << std::endl;
-    */
     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_headsign);
-    /*
-    std::cout << "*** After ****" << std::endl;
-    std::cout << "vj.uri: " << vj->uri << std::endl;
-    std::cout << "vj.name: " << vj->name << std::endl;
-    std::cout << "vj.headsign: " << vj->headsign << std::endl << std::endl;
-    */
 
     if (!_block_id.empty()) {
         b.block_vjs.insert(std::make_pair(_block_id, vj));
