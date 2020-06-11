@@ -1050,16 +1050,16 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign(self):
         """test basic usage of headsign"""
-        response = self.query_region('vehicle_journeys?headsign=vjA')
+        response = self.query_region('vehicle_journeys?headsign=vjA_hs')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
         assert vjs[0]['name'] == 'vjA'
-        assert vjs[0]['headsign'] == 'vjA'
+        assert vjs[0]['headsign'] == 'vjA_hs'
 
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
-        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA')
+        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
@@ -1067,7 +1067,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_headsign_with_code_filter_and_resource_uri(self):
         """test usage of headsign with code filter and resource uri"""
         response = self.query_region(
-            'physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA&filter=line.code=1A'
+            'physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs&filter=line.code=1A'
         )
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
@@ -1113,10 +1113,10 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
         assert vjs[0]['name'] == "vjA"
-        assert vjs[0]['headsign'] == "vjA"
+        assert vjs[0]['headsign'] == "vjA_hs"
         assert len(vjs[0]['stop_times']) == 2
         assert vjs[0]['stop_times'][0]['headsign'] == "A00"
-        assert vjs[0]['stop_times'][1]['headsign'] == "vjA"
+        assert vjs[0]['stop_times'][1]['headsign'] == "vjA_hs"
 
     def test_headsign_display_info_journeys(self):
         """test basic print of headsign in section for journeys"""
@@ -1154,7 +1154,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert len(route_schedules[0]['table']['headers']) == 1
         display_info = route_schedules[0]['table']['headers'][0]['display_informations']
         assert display_info['headsign'] == "vjA"
-        assert {"A00", "vjA"} == set(display_info['headsigns'])
+        assert {"A00", "vjA_hs"} == set(display_info['headsigns'])
 
     def test_trip_id_vj(self):
         """test basic print of trip and its id in vehicle_journeys"""

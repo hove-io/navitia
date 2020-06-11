@@ -1121,7 +1121,17 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
         assert r['journeys'][0]['type'] == 'best'
         assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        # Here the heassign is modified by the headsign at stop.
+        assert r['journeys'][0]['sections'][1]['display_informations']['trip_short_name'] == 'vjA'
+        assert r['journeys'][0]['sections'][1]['display_informations']['headsign'] == 'A00'
         first_journey_pt = r['journeys'][0]['sections'][1]['display_informations']['name']
+
+        # we can also verify the properties of the vehicle_journey in the section
+        vj = self.query(
+            '/v1/coverage/main_routing_test/vehicle_journeys/vehicle_journey:vjA?datetime=20120614T080100'
+        )
+        assert vj['vehicle_journeys'][0]['name'] == 'vjA'
+        assert vj['vehicle_journeys'][0]['headsign'] == 'vjA_hs'
 
         # Query same journey schedules
         # A new journey vjM is available
@@ -1133,6 +1143,9 @@ class JourneyCommon(object):
         assert len(r['journeys']) > 1
         next_journey_pt = r['journeys'][1]['sections'][1]['display_informations']['name']
         assert next_journey_pt != first_journey_pt
+        # here we have the same headsign as well as trip_short_name
+        assert r['journeys'][1]['sections'][1]['display_informations']['trip_short_name'] == 'vjM'
+        assert r['journeys'][1]['sections'][1]['display_informations']['headsign'] == 'vjM'
 
         # Activate 'no_shared_section' parameter and query the same journey schedules
         # The parameter 'no_shared_section' shouldn't be taken into account
