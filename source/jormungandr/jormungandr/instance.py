@@ -722,7 +722,7 @@ class Instance(object):
         if mode != fallback_modes.FallbackModes.car.name:
             return self._get_street_network(mode, request)
 
-        walking_service = self._get_street_network(fallback_modes.FallbackModes.car.name, request)
+        walking_service = self._get_street_network(fallback_modes.FallbackModes.walking.name, request)
         car_service = self._get_street_network(fallback_modes.FallbackModes.car.name, request)
         return street_network.CarWithPark(
             instance=self, walking_service=walking_service, car_service=car_service

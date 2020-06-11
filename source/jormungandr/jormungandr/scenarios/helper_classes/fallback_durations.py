@@ -35,6 +35,7 @@ from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from jormungandr.street_network.utils import PARK_RIDE_VALUES, pick_up_park_ride_car_park
 from jormungandr import new_relic
 from jormungandr.fallback_modes import FallbackModes
 import logging
@@ -42,8 +43,6 @@ from .helper_utils import timed_logger
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
-
-PARK_RIDE_VALUES = ['yes']
 
 
 class FallbackDurations:
@@ -129,16 +128,6 @@ class FallbackDurations:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None
 
-    def _pick_up_parking_nearby(self, pt_objects):
-        parkings = []
-        for pt_object in pt_objects:
-            if pt_object.embedded_type == type_pb2.POI:
-                for properties in pt_object.poi.properties:
-                    if properties.type == 'park_ride' and properties.value.lower() in PARK_RIDE_VALUES:
-                        parkings.append(pt_object)
-                        break
-        return parkings
-
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
@@ -150,7 +139,7 @@ class FallbackDurations:
 
         if self._mode == FallbackModes.car.name:
             # pick up only parkings with park_ride = yes
-            proximities_by_crowfly = self._pick_up_parking_nearby(proximities_by_crowfly)
+            proximities_by_crowfly = pick_up_park_ride_car_park(proximities_by_crowfly)
 
         free_access = self._places_free_access.wait_and_get()
 
