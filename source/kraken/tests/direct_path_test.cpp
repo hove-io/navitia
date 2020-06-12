@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 7);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 27);
 
     // ridesharing: it is a synonyms for car_no_park
     sn_params->set_origin_mode("ridesharing");
@@ -124,5 +124,5 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 7);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 27);
 }

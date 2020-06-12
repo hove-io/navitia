@@ -119,7 +119,7 @@ struct routing_api_data {
                               &debug=true
 
                     *) The bikeway is: A->G->H->I->J->K->B
-                    *) The car way is: A->E->F->C->B
+                    *) The car way is: R->A->E->F->C->B
                     *) We can walk on A->B
                     *) A->B has public transport
                     *) S->B and B->D can be used by walk, bike or car
