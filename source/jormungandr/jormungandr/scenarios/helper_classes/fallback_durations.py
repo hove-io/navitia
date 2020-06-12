@@ -30,12 +30,12 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2
 from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.street_network.utils import PARK_RIDE_VALUES, pick_up_park_ride_car_park
+from jormungandr.street_network.utils import pick_up_park_ride_car_park
 from jormungandr import new_relic
 from jormungandr.fallback_modes import FallbackModes
 import logging
