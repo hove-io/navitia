@@ -1190,18 +1190,37 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
 }
 
 DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise) {
-    DateTime lastest_arrival = DateTimeUtils::min;
-    DateTime earliest_departure = DateTimeUtils::inf;  // clockwise
+    if (clockwise) {
+        // among the journeys with the earliest arrival time, we compute the latest departure time
+        DateTime earliest_arrival = DateTimeUtils::inf;
+        DateTime latest_departure = DateTimeUtils::min;
+        for (const auto& journey : journeys) {
+            if (journey.arrival_dt <= earliest_arrival) {
+                earliest_arrival = journey.arrival_dt;
+                if (journey.arrival_dt == earliest_arrival && journey.departure_dt > latest_departure) {
+                    latest_departure = journey.departure_dt;
+                }
+            }
+        }
 
-    for (const auto& journey : journeys) {
-        earliest_departure = std::min(earliest_departure, journey.departure_dt);
-        lastest_arrival = std::max(lastest_arrival, journey.arrival_dt);
+        return latest_departure + 1;
     }
 
-    earliest_departure += 1;
-    lastest_arrival -= 1;
+    else {
+        // among the journeys with the latest departure time, we compute the earliest arrival time
+        DateTime earliest_arrival = DateTimeUtils::inf;
+        DateTime latest_departure = DateTimeUtils::min;
+        for (const auto& journey : journeys) {
+            if (journey.departure_dt >= latest_departure) {
+                latest_departure = journey.departure_dt;
+                if (journey.departure_dt == latest_departure && journey.arrival_dt < earliest_arrival) {
+                    earliest_arrival = journey.arrival_dt;
+                }
+            }
+        }
 
-    return clockwise ? earliest_departure : lastest_arrival;
+        return earliest_arrival - 1;
+    }
 }
 
 static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
