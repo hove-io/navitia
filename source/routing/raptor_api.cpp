@@ -1195,11 +1195,11 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
         DateTime earliest_arrival = DateTimeUtils::inf;
         DateTime latest_departure = DateTimeUtils::min;
         for (const auto& journey : journeys) {
-            if (journey.arrival_dt <= earliest_arrival) {
+            if (journey.arrival_dt < earliest_arrival) {
                 earliest_arrival = journey.arrival_dt;
-                if (journey.arrival_dt == earliest_arrival && journey.departure_dt > latest_departure) {
-                    latest_departure = journey.departure_dt;
-                }
+                latest_departure = journey.departure_dt;
+            } else if (journey.arrival_dt == earliest_arrival && journey.departure_dt > latest_departure) {
+                latest_departure = journey.departure_dt;
             }
         }
 
@@ -1211,11 +1211,11 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
         DateTime earliest_arrival = DateTimeUtils::inf;
         DateTime latest_departure = DateTimeUtils::min;
         for (const auto& journey : journeys) {
-            if (journey.departure_dt >= latest_departure) {
+            if (journey.departure_dt > latest_departure) {
                 latest_departure = journey.departure_dt;
-                if (journey.departure_dt == latest_departure && journey.arrival_dt < earliest_arrival) {
-                    earliest_arrival = journey.arrival_dt;
-                }
+                earliest_arrival = journey.arrival_dt;
+            } else if (journey.departure_dt == latest_departure && journey.arrival_dt < earliest_arrival) {
+                earliest_arrival = journey.arrival_dt;
             }
         }
 
