@@ -91,10 +91,13 @@ bool Journey::better_on_transfer(const Journey& that) const {
 
     return total_waiting_dur <= that.total_waiting_dur;
 }
-bool Journey::better_on_sn(const Journey& that) const {
+bool Journey::better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const {
     // we consider that the transfer duration as well as the street network duration are
     // walking duration
-    return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
+    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it reduces the walking duration by at least transfer_penalty
+    return sn_dur + transfer_dur + transfer_penalty * sections.size()
+           <= that.sn_dur + that.transfer_dur + transfer_penalty * that.sections.size();
     ;
 }
 

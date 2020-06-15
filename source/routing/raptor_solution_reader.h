@@ -51,7 +51,7 @@ struct Dominates {
         : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
         return lhs.better_on_dt(rhs, request_clockwise, transfer_penalty) && lhs.better_on_transfer(rhs)
-               && lhs.better_on_sn(rhs);
+               && lhs.better_on_sn(rhs, navitia::time_duration(0, 0, 30, 0));
     }
 };
 
@@ -65,7 +65,8 @@ struct ParetoFrontLogger {
 
     void at_dominated(const Journey& to_insert, const Journey& in_pool) {
         LOG4CPLUS_DEBUG(logger, "Journey dominated ! " << std::endl
-                                                       << to_insert << "  dominated by : " << std::endl
+                                                       << to_insert << "\n  dominated by : \n"
+                                                       << std::endl
                                                        << in_pool);
     }
     void at_dominates(const Journey& /*to_insert*/, const Journey& in_pool) {
