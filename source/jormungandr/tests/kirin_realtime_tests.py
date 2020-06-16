@@ -1774,7 +1774,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert status == 404
         assert len(stop_schedules['stop_schedules']) == 0
 
-        # New disruption, a new trip with 2 stop_times in realtime
+        # New disruption, a new trip without headsign with 2 stop_times in realtime
         self.send_mock(
             "additional-trip",
             "20120614",
@@ -1845,6 +1845,9 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         response = self.query_region(vj_query)
         assert has_the_disruption(response, 'new_trip')
         assert len(response['vehicle_journeys']) == 1
+        # Check that name and headsign are empty
+        assert response['vehicle_journeys'][0]['name'] == ''
+        assert response['vehicle_journeys'][0]['headsign'] == ''
         assert response['vehicle_journeys'][0]['disruptions'][0]['id'] == 'new_trip'
         assert len(response['vehicle_journeys'][0]['stop_times']) == 2
         assert response['vehicle_journeys'][0]['stop_times'][0]['drop_off_allowed'] is True
@@ -2109,6 +2112,9 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         assert resp["routes"][0]["id"] == "route:stopC_stopB"
         resp = self.query_region("lines/line:stopC_stopB/vehicle_journeys")
         assert resp["vehicle_journeys"][0]["id"] == "vehicle_journey:additional-trip:modified:0:new_trip"
+        # Name and headsign are empty
+        assert resp["vehicle_journeys"][0]["name"] == ""
+        assert resp["vehicle_journeys"][0]["headsign"] == ""
 
         # We should be able to get the line from vehicle_journey recently added
         resp = self.query_region("vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/lines")
@@ -2447,6 +2453,13 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
         assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['headsign'] == 'trip_headsign'
+
+        # Check the vehicle_journey created by real-time
+        new_vj = self.query_region('vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip')
+        assert len(new_vj['vehicle_journeys']) == 1
+        # Name is empty but headsign assigned from the disruption
+        assert (new_vj['vehicle_journeys'][0]['name']) == ''
+        assert (new_vj['vehicle_journeys'][0]['headsign']) == 'trip_headsign'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)

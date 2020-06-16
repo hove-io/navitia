@@ -186,8 +186,10 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[3]->headsign, "N2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[4]->headsign, "N2");
 
-    // vj_headsign
-    BOOST_REQUIRE_EQUAL(vj->name, "vehiclejourney1");
+    // vj_headsign feed from trip_headsign if not empty
+    BOOST_REQUIRE_EQUAL(vj->headsign, "vehiclejourney1");
+    // vj_name feed from trip_short_name if empty from vj_headsign
+    BOOST_REQUIRE_EQUAL(vj->name, "trip_1_short_name");
 
     navitia::type::hasVehicleProperties has_vehicle_properties;
     has_vehicle_properties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
@@ -249,8 +251,10 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     // stop_headsign
     const types::VehicleJourney* vj1 = data.vehicle_journeys.at(6);
 
-    // headsign of vj and stop_times
+    // vj_name feed from trip_short_name if empty from vj_headsign
     BOOST_REQUIRE_EQUAL(vj1->name.substr(0, 6), "NULL");
+    // headsign of vj and stop_times
+    BOOST_REQUIRE_EQUAL(vj1->headsign.substr(0, 6), "NULL");
 
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[0]->headsign, "HS");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[1]->headsign, "HS");
@@ -268,6 +272,11 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj1->start_time, "04:55:00"_t);
     BOOST_REQUIRE_EQUAL(vj1->end_time, "26:55:00"_t);
     BOOST_REQUIRE_EQUAL(vj1->headway_secs, "01:00:00"_t);
+
+    // vehicle_journey without trip_headsign takes trip_id value
+    BOOST_REQUIRE_EQUAL(vj1->headsign, "trip_5_dst_1");
+    // vj_name feed from trip_short_name if empty from vj_headsign
+    BOOST_REQUIRE_EQUAL(vj1->name, "trip_5_short_name");
 
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list.size(), 4);
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(0)->departure_time, 300);

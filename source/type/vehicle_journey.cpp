@@ -49,12 +49,12 @@ namespace type {
 template <class Archive>
 void VehicleJourney::save(Archive& ar, const unsigned int /*unused*/) const {
     ar& name& uri& route& physical_mode& company& validity_patterns& idx& stop_time_list& realtime_level&
-        vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset;
+        vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset& headsign;
 }
 template <class Archive>
 void VehicleJourney::load(Archive& ar, const unsigned int /*unused*/) {
     ar& name& uri& route& physical_mode& company& validity_patterns& idx& stop_time_list& realtime_level&
-        vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset;
+        vehicle_journey_type& odt_message& _vehicle_properties& next_vj& prev_vj& meta_vj& shift& dataset& headsign;
 
     // due to circular references we can't load the vjs in the dataset using only boost::serialize
     // so we need to save the vj in it's dataset

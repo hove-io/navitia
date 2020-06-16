@@ -827,6 +827,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         "vj.meta_vj_name as meta_vj_name, "
         "vj.vj_class as vj_class, "
         "vj.dataset_id as dataset_id, "
+        "vj.headsign as headsign, "
         "vp.wheelchair_accessible as wheelchair_accessible,"
         "vp.bike_accepted as bike_accepted,"
         "vp.air_conditioned as air_conditioned,"
@@ -850,21 +851,25 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
         if (mvj_name.empty()) {
             mvj_name = vj_name;
         }
+
         auto mvj = data.pt_data->meta_vjs.get_or_create(mvj_name);
         auto rt_level = navitia::type::get_rt_level_from_string(const_it["vj_class"].as<std::string>());
         const auto& vp = *validity_pattern_map[const_it["validity_pattern_id"].as<idx_t>()];
         const auto uri = const_it["uri"].as<std::string>();
         const auto name = const_it["name"].as<std::string>();
+        const auto headsign = const_it["headsign"].as<std::string>();
+
         const auto vj_id = const_it["id"].as<idx_t>();
         if (const_it["is_frequency"].as<bool>()) {
-            auto f_vj =
-                mvj->create_frequency_vj(uri, name, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
+            auto f_vj = mvj->create_frequency_vj(uri, name, headsign, rt_level, vp, route,
+                                                 std::move(sts_from_vj[vj_id]), *data.pt_data);
             const_it["start_time"].to(f_vj->start_time);
             const_it["end_time"].to(f_vj->end_time);
             const_it["headway_sec"].to(f_vj->headway_secs);
             vj = f_vj;
         } else {
-            vj = mvj->create_discrete_vj(uri, name, rt_level, vp, route, std::move(sts_from_vj[vj_id]), *data.pt_data);
+            vj = mvj->create_discrete_vj(uri, name, headsign, rt_level, vp, route, std::move(sts_from_vj[vj_id]),
+                                         *data.pt_data);
         }
         const_it["odt_message"].to(vj->odt_message);
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
@@ -915,7 +920,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
         }
 
-        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->name);
+        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->headsign);
         vehicle_journey_map[vj_id] = vj;
 
         // we check if we have some comments

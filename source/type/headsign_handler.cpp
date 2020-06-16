@@ -48,10 +48,10 @@ void HeadsignHandler::serialize(Archive& ar, const unsigned int /*unused*/) {
 SERIALIZABLE(HeadsignHandler)
 
 void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj, const std::string& new_name) {
-    std::string prev_name = vj.name;
-    vj.name = new_name;
-    headsign_mvj[vj.name].insert(vj.meta_vj);
-    if (prev_name != vj.name) {
+    std::string prev_name = vj.headsign;
+    vj.headsign = new_name;
+    headsign_mvj[vj.headsign].insert(vj.meta_vj);
+    if (prev_name != vj.headsign) {
         update_headsign_mvj_after_remove(vj, prev_name);
     }
 }
@@ -81,7 +81,7 @@ void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj,
 const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) const {
     // if no headsign map for vj: return name
     if (!navitia::contains(headsign_changes, stop_time.vehicle_journey)) {
-        return stop_time.vehicle_journey->name;
+        return stop_time.vehicle_journey->headsign;
     }
 
     // otherwise use headsign change map
@@ -90,14 +90,14 @@ const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) cons
 
     // if no headsign change stored: return name
     if (map_stop_time_headsign_change.empty()) {
-        return stop_time.vehicle_journey->name;
+        return stop_time.vehicle_journey->headsign;
     }
 
     // get next change
     auto it_headsign = map_stop_time_headsign_change.upper_bound(order_stop_time);
     // if next change is the first: return name
     if (it_headsign == map_stop_time_headsign_change.begin()) {
-        return stop_time.vehicle_journey->name;
+        return stop_time.vehicle_journey->headsign;
     }
 
     // get previous change and return headsign
@@ -123,7 +123,7 @@ std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* v
 }
 
 bool HeadsignHandler::has_headsign_or_name(const VehicleJourney& vj, const std::string& headsign) const {
-    if (vj.name == headsign) {
+    if (vj.headsign == headsign) {
         return true;
     }
 
@@ -157,7 +157,7 @@ std::vector<const VehicleJourney*> HeadsignHandler::get_vj_from_headsign(const s
 
 void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, const std::string& headsign) {
     const VehicleJourney* vj = stop_time.vehicle_journey;
-    assert(find_or_default(vj->name, headsign_mvj).count(vj->meta_vj));
+    assert(find_or_default(vj->headsign, headsign_mvj).count(vj->meta_vj));
     std::string prev_headsign_for_stop_time = get_headsign(stop_time);
     if (headsign == prev_headsign_for_stop_time) {
         return;
