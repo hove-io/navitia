@@ -61,8 +61,10 @@ bool Journey::better_on_dt(const Journey& that,
     // only if it increases the departure time by at least transfer_penalty
     DateTime penalized_departure = departure_dt - transfer_penalty * sections.size();
     DateTime that_penalized_departure = that.departure_dt - transfer_penalty * that.sections.size();
+
     if (request_clockwise) {
-        if (penalized_arrival != that_penalized_arrival) {
+        // if the (non-penalized) arrival times are the same, we compare the penalized departure times
+        if (arrival_dt != that.arrival_dt) {
             return penalized_arrival <= that_penalized_arrival;
         }
 
@@ -70,7 +72,7 @@ bool Journey::better_on_dt(const Journey& that,
             return penalized_departure >= that_penalized_departure;
         }
     } else {
-        if (penalized_departure != that_penalized_departure) {
+        if (departure_dt != that.departure_dt) {
             return penalized_departure >= that_penalized_departure;
         }
         if (penalized_arrival != that_penalized_arrival) {
