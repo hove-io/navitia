@@ -652,10 +652,32 @@ def _get_worst_similar(j1, j2, request):
     """
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
-            return j1 if j1.arrival_date_time > j2.arrival_date_time else j2
+            # we dont want to arrive a few seconds earlier if it means walking more
+            # so we consider that arriving 1s earlier is better if we walk at most 1s more
+            # hence we compare arrival_time + walking_time instead of just arrival time
+            j1_penalized_arrival = j1.arrival_date_time + fallback_duration(j1)
+            j2_penalized_arrival = j2.arrival_date_time + fallback_duration(j2)
+            return j1 if j1_penalized_arrival > j2_penalized_arrival else j2
+
+        # arrival times are the same, let's look at departure times
+        if j1.departure_date_time != j2.departure_date_time:
+            # we dont want to depart a few seconds later if it means walking more
+            # so we consider that departing 1s later is better if we walk at most 1s more
+            # hence we compare departure_time - walking_time instead of just departure time
+            j1_penalized_departure = j1.departure_date_time - fallback_duration(j1)
+            j2_penalized_departure = j2.departure_date_time - fallback_duration(j2)
+            return j1 if j1_penalized_departure < j2_penalized_departure else j2
     else:
         if j1.departure_date_time != j2.departure_date_time:
-            return j1 if j1.departure_date_time < j2.departure_date_time else j2
+            j1_penalized_departure = j1.departure_date_time - fallback_duration(j1)
+            j2_penalized_departure = j2.departure_date_time - fallback_duration(j2)
+            return j1 if j1_penalized_departure < j2_penalized_departure else j2
+
+        # departure times are the same, let's look at arrival times
+        if j1.arrival_date_time != j2.arrival_date_time:
+            j1_penalized_arrival = j1.arrival_date_time + fallback_duration(j1)
+            j2_penalized_arrival = j2.arrival_date_time + fallback_duration(j2)
+            return j1 if j1_penalized_arrival > j2_penalized_arrival else j2
 
     if j1.duration != j2.duration:
         return j1 if j1.duration > j2.duration else j2
