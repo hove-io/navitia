@@ -1,4 +1,4 @@
-#  Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2020, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -36,11 +36,26 @@ import pybreaker
 import requests as requests
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError
-from jormungandr.utils import get_pt_object_coord
+from jormungandr.utils import get_pt_object_coord, PeriodExtremity
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
 from six import text_type
+from enum import Enum
+
+MAX_MATRIX_POINTS = 100  # The limit is fixed by Here API
+
+# Possible values to active/deactivate realtime traffic
+class RealTimeTraffic(Enum):
+    enabled = "enabled"
+    disabled = "disabled"
+
+
+# Possible values to choose a matrix method
+class MatrixType(Enum):
+    simple_matrix = "simple_matrix"
+    multi_direct_path = "multi_direct_path"
+
 
 DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
@@ -83,8 +98,10 @@ class Here(AbstractStreetNetworkService):
         modes=[],
         id='here',
         timeout=10,
-        api_id=None,
-        api_code=None,
+        apiKey=None,
+        matrix_type=MatrixType.simple_matrix.value,
+        max_matrix_points=MAX_MATRIX_POINTS,
+        realtime_traffic=RealTimeTraffic.enabled.value,
         feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
         **kwargs
     ):
@@ -97,17 +114,50 @@ class Here(AbstractStreetNetworkService):
         self.matrix_service_url = 'https://matrix.{base_url}/calculatematrix.json'.format(
             base_url=service_base_url
         )
-        self.api_id = api_id
-        self.api_code = api_code
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': text_type(id)})
+        self.apiKey = apiKey
         self.modes = modes
         self.timeout = timeout
-        self.max_points = 100  # max number of point asked in the routing matrix
+        self.matrix_type = matrix_type
+        if (
+            self.matrix_type != MatrixType.simple_matrix.value
+            and self.matrix_type != MatrixType.multi_direct_path.value
+        ):
+            self.log.error(
+                'Here confifguration matrix_type={} is badly formatted (option simple_matrix/multi_direct_path) - force to simple_matrix'.format(
+                    self.matrix_type
+                )
+            )
+            self.matrix_type = MatrixType.simple_matrix.value
+        self.max_matrix_points = (
+            max_matrix_points
+        )  # max number of allowed point for the routing matrix computation
+        if int(max_matrix_points) > MAX_MATRIX_POINTS:
+            self.log.error(
+                'Here confifguration max_matrix_points={} is > 100. Force to 100'.format(max_matrix_points)
+            )
+            self.max_matrix_points = MAX_MATRIX_POINTS
+        self.realtime_traffic = realtime_traffic
+        if (
+            self.realtime_traffic != RealTimeTraffic.enabled.value
+            and self.realtime_traffic != RealTimeTraffic.disabled.value
+        ):
+            self.log.error(
+                'Here confifguration realtime_traffic={} is badly formatted (option enabled/disabled) - force to disabled'.format(
+                    self.realtime_traffic
+                )
+            )
+            self.realtime_traffic = RealTimeTraffic.disabled.value
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
         )
 
-        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': text_type(id)})
+        self.log.debug(
+            'Here, load confifguration max_matrix_points={} - matrix_type={} - realtime_traffic={}'.format(
+                self.max_matrix_points, self.matrix_type, self.realtime_traffic
+            )
+        )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
@@ -116,7 +166,9 @@ class Here(AbstractStreetNetworkService):
             'class': self.__class__.__name__,
             'modes': self.modes,
             'timeout': self.timeout,
-            'max_points': self.max_points,
+            'matrix_type': self.matrix_type,
+            'max_matrix_points': self.max_matrix_points,
+            'realtime_traffic': self.realtime_traffic,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
@@ -131,17 +183,17 @@ class Here(AbstractStreetNetworkService):
             self.record_call('ok')
             return r
         except pybreaker.CircuitBreakerError as e:
-            self.log.error('Valhalla routing service dead (error: {})'.format(e))
+            self.log.error('Here routing service dead (error: {})'.format(e))
             self.record_call('failure', reason='circuit breaker open')
             raise TechnicalError('HERE service not available')
         except requests.Timeout as t:
-            self.log.error('Valhalla routing service dead (error: {})'.format(t))
+            self.log.error('Here routing service dead (error: {})'.format(t))
             self.record_call('failure', reason='timeout')
             raise TechnicalError('impossible to access HERE service, timeout reached')
         except Exception as e:
-            self.log.exception('Valhalla routing error')
+            self.log.exception('Here routing error')
             self.record_call('failure', reason=str(e))
-            raise TechnicalError('impossible to access HERE service')
+            raise TechnicalError('impossible to access Here service')
 
     @staticmethod
     def _read_response(response, origin, destination, mode, fallback_extremity, request):
@@ -222,22 +274,67 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
-    def get_direct_path_params(self, origin, destination, mode, fallback_extremity):
+    def get_realtime_traffic_parameter(self, request):
+        _realtime_traffic = request.get('_here_realtime_traffic', None)
+        if _realtime_traffic == None:
+            return self.realtime_traffic
+        if (
+            _realtime_traffic != None
+            and _realtime_traffic != RealTimeTraffic.enabled.value
+            and _realtime_traffic != RealTimeTraffic.disabled.value
+        ):
+            self.log.error(
+                'Here parameters _here_realtime_traffic={} is badly formatted (option enabled/disabled) - force to disabled'.format(
+                    _realtime_traffic
+                )
+            )
+            return RealTimeTraffic.disabled.value
+        return _realtime_traffic
+
+    def get_max_matrix_points_parameters(self, request):
+        # max_matrix_ppints
+        _max_matrix_points = request.get('_here_max_matrix_points', None)
+        if _max_matrix_points == None:
+            _max_matrix_points = self.max_matrix_points
+        if int(_max_matrix_points) > MAX_MATRIX_POINTS:
+            self.log.error(
+                'Here parameters _here_max_matrix_points={} is > 100. Force to 100'.format(_max_matrix_points)
+            )
+            _max_matrix_points = MAX_MATRIX_POINTS
+        # matrix_type
+        _matrix_type = request.get('_here_matrix_type', None)
+        if _matrix_type == None:
+            _matrix_type = self.matrix_type
+        if (
+            _matrix_type != None
+            and _matrix_type != MatrixType.simple_matrix.value
+            and _matrix_type != MatrixType.multi_direct_path.value
+        ):
+            self.log.error(
+                'Here parameters _here_matrix_type={} is badly formatted (option simple_matrix/multi_direct_path) - force to simple_matrix'.format(
+                    _matrix_type
+                )
+            )
+            _matrix_type = MatrixType.simple_matrix.value
+        return _max_matrix_points, _matrix_type
+
+    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, realtime_traffic):
         datetime, clockwise = fallback_extremity
         params = {
-            # those are used to identify in the API
-            'app_id': self.api_id,
-            'app_code': self.api_code,
+            'apiKey': self.apiKey,
             'waypoint0': _get_coord(origin),
             'waypoint1': _get_coord(destination),
-            'routeAttributes': 'sh',  # to get the shape in the response
+            # to get the shape in the response
+            'routeAttributes': 'sh',
             # used to get the travel time in the response
             'summaryAttributes': 'traveltime',
             # used to get the base time
             'legAttributes': 'baseTime',
             # used to get the fasted journeys using the given mode and with traffic data
-            'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
-            # in HERE it's only possible to constraint the departure
+            'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
+                mode=get_here_mode(mode), realtime_traffic=realtime_traffic
+            ),
+            # With HERE, it's only possible to constraint the departure
             'departure': _str_to_dt(datetime),
         }
 
@@ -254,7 +351,11 @@ class Here(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode, fallback_extremity)
+        realtime_traffic = self.get_realtime_traffic_parameter(request)
+
+        params = self.get_direct_path_params(
+            pt_object_origin, pt_object_destination, mode, fallback_extremity, realtime_traffic
+        )
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
             self.log.debug(
@@ -276,15 +377,15 @@ class Here(AbstractStreetNetworkService):
         )
 
     @classmethod
-    def _get_matrix(cls, json_response, origins, destinations):
+    def _create_matrix_response(cls, json_response, origins, destinations):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         # by convenience we create a temporary structure. If it's a bottleneck, refactor this
         entries = {
             (e.get('startIndex'), e.get('destinationIndex')): e.get('summary', {}).get('travelTime')
             for e in json_response.get('response', {}).get('matrixEntry', [])
         }
+        row = sn_routing_matrix.rows.add()
         for i_o, o in enumerate(origins):
-            row = sn_routing_matrix.rows.add()
             for i_d, d in enumerate(destinations):
                 routing = row.routing_response.add()
                 travel_time = entries.get((i_o, i_d))
@@ -299,15 +400,36 @@ class Here(AbstractStreetNetworkService):
 
         return sn_routing_matrix
 
-    def get_matrix_params(self, origins, destinations, mode, max_duration, request):
+    @classmethod
+    def _create_matrix_response_with_direct_path(cls, json_response, origin, destination, row):
+        routing = row.routing_response.add()
+        routes = json_response.get('response', {}).get('route', [])
+        if not routes:
+            return row
+        route = routes[0]
+        travel_time = route.get('summary', {}).get('travelTime')
+        if travel_time:
+            routing.duration = travel_time
+            routing.routing_status = response_pb2.reached
+        else:
+            # since we limit the number of points given to HERE, we say that all the others cannot be
+            # reached (and not response_pb2.unkown since we don't want a crow fly section)
+            routing.duration = -1
+            routing.routing_status = response_pb2.unreached
+
+        return row
+
+    def get_matrix_params(
+        self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
+    ):
         params = {
-            # those are used to identify in the API
-            'app_id': self.api_id,
-            'app_code': self.api_code,
+            'apiKey': self.apiKey,
             # used to get the travel time in the response
             'summaryAttributes': 'traveltime',
             # used to get the fasted journeys using the given mode and with traffic data
-            'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
+            'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
+                mode=get_here_mode(mode), realtime_traffic=realtime_traffic
+            ),
         }
 
         # for the ending fallback matrix (or the beginning of non clockwise query), we do not know the
@@ -318,32 +440,73 @@ class Here(AbstractStreetNetworkService):
         datetime = request['datetime']
         params['departure'] = _str_to_dt(datetime)
 
-        # Note: for the moment we limit to self.max_points the number of n:m asked
-        for i, o in enumerate(origins[: self.max_points]):
+        for i, o in enumerate(origins[: int(max_matrix_points)]):
             params['start{}'.format(i)] = _get_coord(o)
 
-        for i, o in enumerate(destinations[: self.max_points]):
+        for i, o in enumerate(destinations[: int(max_matrix_points)]):
             params['destination{}'.format(i)] = _get_coord(o)
 
         # TODO handle max_duration (but the API can only handle a max distance (searchRange)
 
         return params
 
-    def get_street_network_routing_matrix(
-        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
+    def _get_sn_routing_matrix_with_simple_matrix(
+        self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
     ):
-        params = self.get_matrix_params(origins, destinations, mode, max_duration, request)
+        params = self.get_matrix_params(
+            origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
+        )
         r = self._call_here(self.matrix_service_url, params=params)
-
         if r.status_code != 200:
             self.log.error(
                 'impossible to query HERE: {} with {} response: {}'.format(r.url, r.status_code, r.text)
             )
             raise TechnicalError('invalid HERE call, impossible to query: {}'.format(r.url))
 
-        resp_json = r.json()
+        return self._create_matrix_response(r.json(), origins, destinations)
 
-        return self._get_matrix(resp_json, origins, destinations)
+    def _get_sn_routing_matrix_with_multi_direct_path(
+        self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
+    ):
+        sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
+        row = sn_routing_matrix.rows.add()
+        for origin in origins[: int(max_matrix_points)]:
+            for destination in destinations[: int(max_matrix_points)]:
+                params = self.get_direct_path_params(
+                    origin,
+                    destination,
+                    mode,
+                    PeriodExtremity(datetime=request['datetime'], represents_start=request['clockwise']),
+                    realtime_traffic,
+                )
+                r = self._call_here(self.routing_service_url, params=params)
+                if r.status_code != 200:
+                    self.log.error(
+                        'impossible to query HERE: {} with {} response: {}'.format(r.url, r.status_code, r.text)
+                    )
+                    raise TechnicalError('invalid HERE call, impossible to query: {}'.format(r.url))
+                self._create_matrix_response_with_direct_path(r.json(), origin, destination, row)
+        return sn_routing_matrix
+
+    def get_street_network_routing_matrix(
+        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
+    ):
+        realtime_traffic = self.get_realtime_traffic_parameter(request)
+        max_matrix_points, matrix_type = self.get_max_matrix_points_parameters(request)
+
+        # call tha matrix API (one call for multiple origins/destinations)
+        if matrix_type == MatrixType.simple_matrix.value:
+            return self._get_sn_routing_matrix_with_simple_matrix(
+                origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
+            )
+        # call several direct path API step by step (one call for each origin/destination)
+        elif matrix_type == MatrixType.multi_direct_path.value:
+            return self._get_sn_routing_matrix_with_multi_direct_path(
+                origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
+            )
+        else:
+            self.log.error('Here, invalid matrix_type : {}, impossible to query'.format(self.matrix_type))
+            raise TechnicalError('Here, invalid matrix_type : {}, impossible to query'.format(self.matrix_type))
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
@@ -354,7 +517,7 @@ class Here(AbstractStreetNetworkService):
         :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the
         fallback period)
         Nota: period_extremity is taken into consideration so far because we assume that a
-        direct path from A to B change change with the realtime
+        direct path from A to B change with the realtime
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity)
 

@@ -383,6 +383,24 @@ class Journeys(JourneyCommon):
             help="how long it takes to park the car, " "used especially in distributed scenario",
         )
         parser_get.add_argument(
+            "_here_realtime_traffic",
+            type=six.text_type,
+            hidden=True,
+            help="Here, Active or not the realtime traffic information (enabled/disabled)",
+        )
+        parser_get.add_argument(
+            "_here_matrix_type",
+            type=six.text_type,
+            hidden=True,
+            help="Here, street network matrix type (simple_matrix/multi_direct_path)",
+        )
+        parser_get.add_argument(
+            "_here_max_matrix_points",
+            type=six.text_type,
+            hidden=True,
+            help="Here, Max number of matrix points for the street network computation (limited to 100)",
+        )
+        parser_get.add_argument(
             "equipment_details",
             default=True,
             type=BooleanType(),
