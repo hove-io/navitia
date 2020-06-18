@@ -137,6 +137,7 @@ Examples of sorted objects tables:
 * journeys in a `/journeys` response
 * `/departures` and `/arrivals`
 * `/stop_schedules`
+* `/terminus_schedules`
 * stop_points in `/routes/{route_id}?depth=3`
 * `/places_nearby`
 * `/places`
