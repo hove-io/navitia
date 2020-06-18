@@ -401,8 +401,10 @@ class TestDepartureBoard(AbstractTestFixture):
         # terminus_schedules on partial_terminus with calendar
         # There is neither terminus nor partial_terminus in terminus_schedules
         # Here the disruption could be injected by chaos or kirin
+
         response = self.query_region(
-            "stop_areas/Tstop2/terminus_schedules?" "from_datetime=20120615T080000&calendar=cal_partial_terminus"
+            "stop_areas/Tstop2/terminus_schedules?"
+            "from_datetime=20120615T080000&calendar=cal_partial_terminus&data_freshness=realtime"
         )
 
         is_valid_notes(response["notes"])
