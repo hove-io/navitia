@@ -418,7 +418,7 @@ class AbstractTestFixture(unittest.TestCase):
                 assert 'from=' in j['links'][0]['href']
                 assert 'to=' in j['links'][0]['href']
             elif has_stop_point and 'public_transport' in (s['type'] for s in j['sections']):
-                assert len(j['links']) == 1  # same_journey_schedules link
+                assert len(j['links']) == 2  # same_journey_schedules and this_journey link
                 assert j['links'][0]['rel'] == 'same_journey_schedules'
                 assert j['links'][0]['type'] == 'journeys'
                 assert '/journeys?' in j['links'][0]['href']
@@ -426,6 +426,9 @@ class AbstractTestFixture(unittest.TestCase):
                 assert j['links'][0]['href'].count('first_section_mode%5B%5D=') == 1
                 assert j['links'][0]['href'].count('last_section_mode%5B%5D=') == 1
                 assert j['links'][0]['href'].count('direct_path=none') == 1
+                assert j['links'][1]['rel'] == 'this_journey'
+                assert j['links'][1]['href'].count('count=1') == 1
+                assert j['links'][1]['href'].count('min_nb_journeys=1') == 1
             else:
                 assert 'links' not in j
 
