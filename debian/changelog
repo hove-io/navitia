@@ -1,3 +1,10 @@
+navitia2 (5.0.0) unstable; urgency=low
+
+  * [ALL] Manage trip shortname and headsign  <https://github.com/CanalTP/navitia/pull/3230>
+  * [Jormun] Set distributed scenario on call to kraken.  <https://github.com/CanalTP/navitia/pull/3231>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 19 Jun 2020 10:06:18 +0100
+
 navitia2 (4.3.0) unstable; urgency=low
 
   * [Jormun] crowfly replaces street network section when the computation has failed  <https://github.com/CanalTP/navitia/pull/3229>
