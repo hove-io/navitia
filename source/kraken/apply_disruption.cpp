@@ -70,8 +70,8 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     auto odt_message = vj->odt_message;
     auto vehicle_properties = vj->_vehicle_properties;
 
-    auto* new_vj =
-        mvj->create_discrete_vj(new_vj_uri, vj->name, rt_level, new_vp, vj->route, std::move(new_stop_times), pt_data);
+    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, vj->name, vj->headsign, rt_level, new_vp, vj->route,
+                                           std::move(new_stop_times), pt_data);
     vj = nullptr;  // after create_discrete_vj, the vj can have been deleted
 
     new_vj->company = company;
@@ -82,6 +82,7 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     if (!mvj->get_base_vj().empty()) {
         new_vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
         new_vj->name = mvj->get_base_vj().at(0)->name;
+        new_vj->headsign = mvj->get_base_vj().at(0)->headsign;
     } else {
         // If we set nothing for physical_mode, it'll crash when building raptor
         new_vj->physical_mode = pt_data.physical_modes[0];
@@ -248,7 +249,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             // Create new VJ (default name/headsign is empty)
-            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", type::RTLevel::RealTime, canceled_vp, r,
+            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", "", type::RTLevel::RealTime, canceled_vp, r,
                                                std::move(stoptimes), pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
@@ -321,11 +322,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             // name and dataset
             if (!mvj->get_base_vj().empty()) {
                 vj->name = mvj->get_base_vj().at(0)->name;
+                vj->headsign = mvj->get_base_vj().at(0)->headsign;
                 vj->dataset = mvj->get_base_vj().at(0)->dataset;
             } else {
                 // Affect the headsign to vj if present in gtfs-rt
                 if (!impact->headsign.empty()) {
-                    vj->name = impact->headsign;
+                    vj->headsign = impact->headsign;
                     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
                 }
 

@@ -108,8 +108,9 @@ struct GeometriesFusioHandler : public GenericHandler {
 
 struct TripsFusioHandler : public GenericHandler {
     TripsFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int route_id_c, service_c, trip_c, headsign_c, block_id_c, comment_id_c, trip_propertie_id_c, odt_type_c,
-        company_id_c, odt_condition_id_c, physical_mode_c, ext_code_c, geometry_id_c, contributor_id_c, dataset_id_c;
+    int route_id_c, service_c, trip_c, trip_headsign_c, block_id_c, comment_id_c, trip_propertie_id_c, odt_type_c,
+        company_id_c, odt_condition_id_c, physical_mode_c, ext_code_c, geometry_id_c, contributor_id_c, dataset_id_c,
+        trip_short_name_c;
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -125,7 +126,8 @@ struct TripsFusioHandler : public GenericHandler {
 struct StopTimeFusioHandler : public StopTimeGtfsHandler {
     StopTimeFusioHandler(GtfsData& gdata, CsvReader& reader)
         : StopTimeGtfsHandler(gdata, reader), is_stop_time_precision(true) {}
-    int desc_c, itl_c, date_time_estimated_c, id_c, headsign_c, boarding_duration_c, alighting_duration_c;
+    int desc_c, itl_c, date_time_estimated_c, id_c, stop_headsign_c, boarding_duration_c, alighting_duration_c,
+        trip_short_name_at_stop_c;
     bool is_stop_time_precision;
     void init(Data&);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
