@@ -142,7 +142,6 @@ class add_journey_href(object):
                     allowed_ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
-                    args['rel'] = 'same_journey_schedules'
 
                     # Delete arguments that are contradictory to the 'same_journey_schedules' concept
                     if '_final_line_filter' in args:
@@ -150,7 +149,24 @@ class add_journey_href(object):
                     if '_no_shared_section' in args:
                         del args['_no_shared_section']
 
-                    journey['links'] = [create_external_link('v1.journeys', **args)]
+                    # Add datetime depending on datetime_represents parameter
+                    if 'datetime_represents' not in args:
+                        args['datetime'] = journey['departure_date_time']
+                    else:
+                        args['datetime'] = (
+                            journey['departure_date_time']
+                            if 'departure' in args.get('datetime_represents')
+                            else journey['arrival_date_time']
+                        )
+
+                    # Here we create two links same_journey_schedules and this_journey
+                    args['rel'] = 'same_journey_schedules'
+                    same_journey_schedules_link = create_external_link('v1.journeys', **args)
+                    args['rel'] = 'this_journey'
+                    args['min_nb_journeys'] = 1
+                    args['count'] = 1
+                    this_journey_link = create_external_link('v1.journeys', **args)
+                    journey['links'] = [same_journey_schedules_link, this_journey_link]
             return objects
 
         return wrapper
