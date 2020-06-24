@@ -51,7 +51,7 @@ struct Dominates {
         : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
         return lhs.better_on_dt(rhs, request_clockwise, transfer_penalty) && lhs.better_on_transfer(rhs)
-               && lhs.better_on_sn(rhs, navitia::time_duration(0, 0, 30, 0));
+               && lhs.better_on_sn(rhs, navitia::time_duration(0, 0, 90, 0));
     }
 };
 
