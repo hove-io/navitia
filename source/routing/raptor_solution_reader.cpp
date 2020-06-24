@@ -301,8 +301,7 @@ Journey make_bound_journey(DateTime beg,
                            DateTime end,
                            const navitia::time_duration& end_sn_dur,
                            unsigned count,
-                           uint32_t lower_bound_conn,
-                           const navitia::time_duration& transfer_penalty,
+                           const navitia::time_duration& transfer_duration,
                            bool clockwise) {
     Journey journey;
     journey.sections.resize(count);  // only the number of sections is part of the dominance function
@@ -316,7 +315,7 @@ Journey make_bound_journey(DateTime beg,
     }
 
     // for the rest KPI, we don't know yet the accurate values, so we'll provide the best lb possible
-    journey.transfer_dur = navitia::seconds((count - 1) * lower_bound_conn);
+    journey.transfer_dur = transfer_duration;
     journey.min_waiting_dur = navitia::time_duration(boost::date_time::pos_infin);
     journey.total_waiting_dur = navitia::seconds(0);
     journey.nb_vj_extentions = 0;
@@ -617,13 +616,13 @@ void read_solutions(const RAPTOR& raptor,
             }
             reader.nb_sol_added = 0;
             // we check that it's worth to explore this possible journey
-            auto j =
-                make_bound_journey(working_labels.dt_pt(a.first), a.second,
-                                   raptor.labels[0].dt_transfer(end_point.sp_idx), end_point_street_network_duration,
-                                   count, raptor.data.dataRaptor->min_connection_time, transfer_penalty, v.clockwise());
+            auto transfer_duration = working_labels.walking_duration_pt(a.first) - end_point_street_network_duration;
+            auto j = make_bound_journey(
+                working_labels.dt_pt(a.first), a.second, raptor.labels[0].dt_transfer(end_point.sp_idx),
+                end_point_street_network_duration, count, navitia::seconds(transfer_duration), v.clockwise());
             LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
-                            //<< std::endl << j
-            );
+                                                                  << std::endl
+                                                                  << j);
 
             if (reader.solutions.contains_better_than(j)) {
                 LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
@@ -647,7 +646,7 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
        << "arrival_dt : " << navitia::str(j.arrival_dt) << ", "
        << "min_waiting_dur : " << j.min_waiting_dur << ", "
        << "total_waiting_dur : " << j.total_waiting_dur << ", "
-       << "transfer_dur : " << j.transfer_dur << "], ["
+       << "transfer_dur : " << j.transfer_dur << "],\n ["
        << "nb sections : " << j.sections.size() << ", "
        << "nb extensions : " << unsigned(j.nb_vj_extentions) << "], "
        << "fallback duration : " << j.sn_dur << ")" << std::endl;
@@ -663,7 +662,7 @@ std::ostream& operator<<(std::ostream& os, const Journey& j) {
         } else {
             os << "NULL";
         }
-        os << "@" << navitia::str(s.get_out_dt) << ")";
+        os << "@" << navitia::str(s.get_out_dt) << ")\n";
     }
     return os;
 }
