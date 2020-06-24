@@ -91,7 +91,7 @@ bool Journey::better_on_transfer(const Journey& that) const {
         return nb_vj_extentions <= that.nb_vj_extentions;
     }
 
-    return total_waiting_dur <= that.total_waiting_dur;
+    return true;
 }
 bool Journey::better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const {
     // we consider that the transfer duration as well as the street network duration are
