@@ -384,9 +384,10 @@ class Journeys(JourneyCommon):
         )
         parser_get.add_argument(
             "_here_realtime_traffic",
-            type=six.text_type,
+            type=BooleanType(),
+            default=True,
             hidden=True,
-            help="Here, Active or not the realtime traffic information (enabled/disabled)",
+            help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
             "_here_matrix_type",
@@ -396,7 +397,8 @@ class Journeys(JourneyCommon):
         )
         parser_get.add_argument(
             "_here_max_matrix_points",
-            type=six.text_type,
+            type=int,
+            default=default_values.here_max_matrix_points,
             hidden=True,
             help="Here, Max number of matrix points for the street network computation (limited to 100)",
         )

@@ -18,8 +18,8 @@ Insert into **Jormun** configuration:
         "args": {
             "service_base_url": "route.ls.hereapi.com/routing/7.2",
             "apiKey": "Token",
-            "timeout": 20,                      # optional,
-            "realtime_traffic": "enabled",      # optional
+            "timeout": 20,                      # optional
+            "realtime_traffic": true,           # optional
             "matrix_type": "simple_matrix",     # optional
             "max_matrix_points": 100,           # optional
         }
@@ -29,7 +29,7 @@ Insert into **Jormun** configuration:
 
 Available optional parameters list:
 * timeout: circuit breaker timeout. By default 10 secs
-* realtime_traffic: activation of realtime traffic informations - enable/disabled. By default, enabled
+* realtime_traffic: activation of realtime traffic informations - true/false. By default, true
 * matrix_type: the matrix method - simple_matrix/multi_direct_path. By default simple_matrix
 * max_matrix_points: the max number of allowed matrix points. By default 100 (the maximum)
 
@@ -37,12 +37,12 @@ Available optional parameters list:
 
 You can easily override parameters for tests inside requests.<br>
 List of available API parameters:
-* _here_realtime_traffic: enabled/disabled
+* _here_realtime_traffic: true/false
 * _here_matrix_type: simple_matrix/multi_direct_path
 * _here_max_matrix_points: int value [1-100]
 
 Example:
 
 ```
-http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=disabled&_here_max_matrix_points=50
+http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50
 ```
