@@ -42,6 +42,7 @@ from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
 from six import text_type
 from enum import Enum
+import itertools
 
 # Possible values to active/deactivate realtime traffic
 class RealTimeTraffic(Enum):
@@ -378,8 +379,7 @@ class Here(AbstractStreetNetworkService):
             json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request
         )
 
-    @classmethod
-    def _create_matrix_response(cls, json_response, origins, destinations):
+    def _create_matrix_response(self, json_response, origins, destinations):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         # by convenience we create a temporary structure. If it's a bottleneck, refactor this
         entries = {
@@ -402,15 +402,14 @@ class Here(AbstractStreetNetworkService):
 
         return sn_routing_matrix
 
-    @classmethod
-    def _create_matrix_response_with_direct_path(cls, json_response, origin, destination, row):
+    def _create_matrix_response_with_direct_path(self, json_response, row):
         routing = row.routing_response.add()
         routes = json_response.get('response', {}).get('route', [])
         if not routes:
             return row
         route = routes[0]
         travel_time = route.get('summary', {}).get('travelTime')
-        if travel_time:
+        if travel_time is not None:
             routing.duration = travel_time
             routing.routing_status = response_pb2.reached
         else:
@@ -441,10 +440,10 @@ class Here(AbstractStreetNetworkService):
         datetime = request['datetime']
         params['departure'] = _str_to_dt(datetime)
 
-        for i, o in enumerate(origins[: int(max_matrix_points)]):
+        for i, o in enumerate(itertools.islice(origins, int(max_matrix_points))):
             params['start{}'.format(i)] = _get_coord(o)
 
-        for i, o in enumerate(destinations[: int(max_matrix_points)]):
+        for i, o in enumerate(itertools.islice(destinations, int(max_matrix_points))):
             params['destination{}'.format(i)] = _get_coord(o)
 
         # TODO handle max_duration (but the API can only handle a max distance (searchRange)
@@ -466,8 +465,8 @@ class Here(AbstractStreetNetworkService):
     ):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        for origin in origins[: int(max_matrix_points)]:
-            for destination in destinations[: int(max_matrix_points)]:
+        for origin in itertools.islice(origins, int(max_matrix_points)):
+            for destination in itertools.islice(destinations, int(max_matrix_points)):
                 params = self.get_direct_path_params(
                     origin,
                     destination,
@@ -477,7 +476,7 @@ class Here(AbstractStreetNetworkService):
                 )
                 r = self._call_here(self.routing_service_url, params=params)
                 r.raise_for_status()
-                self._create_matrix_response_with_direct_path(r.json(), origin, destination, row)
+                self._create_matrix_response_with_direct_path(r.json(), row)
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(
