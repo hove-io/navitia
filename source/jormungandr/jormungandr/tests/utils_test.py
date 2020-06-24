@@ -55,6 +55,9 @@ class MockResponse(object):
     def json(self):
         return self.data
 
+    def raise_for_status(self):
+        return self.status_code
+
     @property
     def text(self):
         return self.data
