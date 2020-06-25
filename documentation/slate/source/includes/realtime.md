@@ -618,3 +618,20 @@ http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/line
 In the list of "date_times" available in the response, the field "data_freshness" is "realtime" and the field "date_time" is equal to the field "base_date_time".
 
 No disruption is present at the root level of the response and so, in the sections "date_times" and "display_informations", there's no link to any disruption.
+
+<div></div>
+### Terminus Schedules
+
+``` shell
+# Request example for /terminus_schedules (data_freshness=base_schedule by default)
+http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/terminus_schedules?from_datetime=<from_date>&data_freshness=realtime
+```
+
+``` shell
+# Extract of an impacted terminus_schedules object from the response /terminus_schedules
+Same elements as in stop_scedule object.
+```
+
+In the list of "date_times" available in the response, the field "data_freshness" is "realtime" and the field "date_time" is equal to the field "base_date_time".
+
+No disruption is present at the root level of the response and so, in the sections "date_times" and "display_informations", there's no link to any disruption.

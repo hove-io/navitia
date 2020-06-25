@@ -160,8 +160,11 @@ class TestDepartures(AbstractTestFixture):
     def test_terminus_schedules_realtime(self):
         """
         Here we have two realtime date_times from a realtime proxy
+        data_freshness default value is base_schedule for terminus_schedules
         """
-        query = self.query_template_ter.format(sp='C:S0', dt='20160102T1100', data_freshness='')
+        query = self.query_template_ter.format(
+            sp='C:S0', dt='20160102T1100', data_freshness='&data_freshness=realtime'
+        )
         response = self.query_region(query)
         date_times = response['terminus_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in date_times]

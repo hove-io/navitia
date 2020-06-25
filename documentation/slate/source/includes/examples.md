@@ -166,6 +166,7 @@ We could push the exploration further and:
     - <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby>
     - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines>
     - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules>
+    - or <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/terminus_schedules>
     - or ...
 
 Seek and search
