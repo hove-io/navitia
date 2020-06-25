@@ -136,6 +136,11 @@ def test_update_instances(create_instance):
         "street_network_bss": "taxiKraken",
         "street_network_ridesharing": "taxiKraken",
         "street_network_taxi": "kraken",
+        "poi_dataset": "priv.poi_dataset",
+        "max_taxi_duration_to_pt": 200,
+        "max_car_no_park_direct_path_duration": 555,
+        "ridesharing_speed": 3.3,
+        "max_ridesharing_duration_to_pt": 777,
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
@@ -154,6 +159,12 @@ def test_update_instances(create_instance):
             assert resp[key] == "http://localhost/v0/streetnetwork_backends/{}".format(param)
         else:
             assert resp[key] == param
+
+    assert resp['poi_dataset'] == 'priv.poi_dataset'
+    assert resp['max_taxi_duration_to_pt'] == 200
+    assert resp['max_car_no_park_direct_path_duration'] == 555
+    assert resp['ridesharing_speed'] == 3.3
+    assert resp['max_ridesharing_duration_to_pt'] == 777
 
 
 def test_update_instances_is_free(create_instance):
@@ -191,6 +202,13 @@ def test_update_instances_is_free(create_instance):
     )
     assert resp['is_free'] == True
     assert resp['is_open_data'] == True
+
+    # testing default values
+    assert resp['poi_dataset'] is None
+    assert resp['max_taxi_duration_to_pt'] == 1800
+    assert resp['max_car_no_park_direct_path_duration'] == 86400
+    assert resp['ridesharing_speed'] == 6.94
+    assert resp['max_ridesharing_duration_to_pt'] == 1800
 
 
 def test_delete_instance_by_id(create_instance):
