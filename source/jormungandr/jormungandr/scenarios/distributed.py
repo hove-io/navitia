@@ -35,7 +35,7 @@ except ImportError:
     pass
 import logging, operator
 from jormungandr.scenarios import new_default
-from jormungandr.utils import PeriodExtremity
+from jormungandr.utils import PeriodExtremity, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.helper_classes.complete_pt_journey import (
@@ -43,6 +43,7 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
     wait_and_build_crowflies,
     get_journeys_to_complete,
 )
+from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.scenarios.utils import (
     fill_uris,
     switch_back_to_ridesharing,
@@ -171,6 +172,9 @@ class Distributed(object):
             # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
             context.direct_paths_by_mode = context.streetnetwork_path_pool.get_all_direct_paths()
 
+            crowfly_distance = crowfly_distance_between(
+                get_pt_object_coord(context.requested_orig_obj), get_pt_object_coord(context.requested_dest_obj)
+            )
             context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
@@ -180,6 +184,7 @@ class Distributed(object):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_orig".format(request_id),
+                o_d_crowfly_distance=crowfly_distance,
             )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
@@ -191,6 +196,7 @@ class Distributed(object):
                 direct_paths_by_mode=context.direct_paths_by_mode,
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_dest".format(request_id),
+                o_d_crowfly_distance=crowfly_distance,
             )
 
             context.orig_places_free_access = PlacesFreeAccess(
@@ -332,6 +338,7 @@ class Distributed(object):
             direct_paths_by_mode=direct_paths_by_mode,
             max_nb_crowfly_by_mode=request.get('max_nb_crowfly_by_mode', {}),
             request_id=request_id,
+            o_d_crowfly_distance=None,
         )
 
         places_free_access = PlacesFreeAccess(

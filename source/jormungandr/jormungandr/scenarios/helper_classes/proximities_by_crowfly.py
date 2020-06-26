@@ -69,7 +69,7 @@ class ProximitiesByCrowfly:
         self._request_id = request_id
         self._async_request()
 
-    @new_relic.distributedEvent("get_crowf_ly", "street_network")
+    @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
         with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
             return self._instance.georef.get_crow_fly(
@@ -130,6 +130,7 @@ class ProximitiesByCrowflyPool:
         direct_paths_by_mode,
         max_nb_crowfly_by_mode,
         request_id,
+        o_d_crowfly_distance,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -146,6 +147,7 @@ class ProximitiesByCrowflyPool:
                                      15min (max_duration is 30min by default).
         :param max_nb_crowfly_by_mode: a map of "mode" vs "nb of proximities by crowfly", used to reduce the load of
                                        street network services if necessary
+        :param o_d_crowfly_distance: if no direct_path is found with the given mode, we use min(o_d_crowfly_distance, max_fallback_duration_to_pt)
         """
         self._future_manager = future_manager
         self._instance = instance
@@ -159,6 +161,7 @@ class ProximitiesByCrowflyPool:
         self._future = None
         self._value = {}
         self._request_id = request_id
+        self._o_d_crowfly_distance = o_d_crowfly_distance
         self._async_request()
 
     def _async_request(self):
@@ -170,9 +173,17 @@ class ProximitiesByCrowflyPool:
                 object_type = type_pb2.POI
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
 
-            max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.get(mode)
+            dp_future = self._direct_paths_by_mode.get(mode)
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, dp_future)
+            speed = jormungandr.street_network.utils.make_speed_switcher(self._request).get(mode)
+
+            no_dp = (
+                dp_future is None or dp_future.wait_and_get() is None or not dp_future.wait_and_get().journeys
             )
+
+            if no_dp and self._o_d_crowfly_distance is not None:
+                max_fallback_duration = min(max_fallback_duration, self._o_d_crowfly_distance / float(speed))
+
             p = ProximitiesByCrowfly(
                 future_manager=self._future_manager,
                 instance=self._instance,
