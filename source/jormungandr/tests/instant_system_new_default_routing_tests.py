@@ -223,13 +223,13 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         sections = journeys[0].get('sections')
         assert len(sections) == 1
         assert sections[0].get('mode') == 'ridesharing'
-        assert journeys[0].get('durations').get('ridesharing') == 37
-        assert journeys[0].get('durations').get('total') == 37
+        assert journeys[0].get('durations').get('ridesharing') == 121
+        assert journeys[0].get('durations').get('total') == 121
 
         # The second one is of combination of ridesharing + public_transport + walking
         assert 'ridesharing' in journeys[1].get('tags')
         assert 'non_pt' not in journeys[1].get('tags')
-        assert journeys[1].get('type') == 'rapid'
+        assert journeys[1].get('type') == 'fastest'
         sections = journeys[1].get('sections')
         assert len(sections) == 3
         assert journeys[1].get('durations').get('ridesharing') == 7
@@ -272,7 +272,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 1
         assert 'ridesharing' in journeys[0].get('tags')
-        assert journeys[0].get('durations').get('ridesharing') == 37
+        assert journeys[0].get('durations').get('ridesharing') == 121
 
         q = journey_basic_query + (
             "&first_section_mode[]=ridesharing"
@@ -323,7 +323,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         assert rs_section.get('type') == 'street_network'
 
         # test the ridesharing durations in all journeys
-        assert journeys[0].get('durations').get('ridesharing') == 37
+        assert journeys[0].get('durations').get('ridesharing') == 121
         assert journeys[1].get('durations').get('ridesharing') == 7
         assert journeys[2].get('durations').get('ridesharing') == 0
         assert journeys[3].get('durations').get('ridesharing') == 0

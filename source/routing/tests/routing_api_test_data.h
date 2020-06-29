@@ -119,11 +119,11 @@ struct routing_api_data {
                               &debug=true
 
                     *) The bikeway is: A->G->H->I->J->K->B
-                    *) The car way is: A->E->F->C->B
+                    *) The car way is: R->A->E->F->C->B
                     *) We can walk on A->B
                     *) A->B has public transport
-                    *) S->B and B->D can be use by walk, bike or car
-                    *) A->R is a pedestrian street
+                    *) S->B and B->D can be used by walk, bike or car
+                    *) A->R is a pedestrian and car street
 
                     Coordinates:
                                 A(120,  80)    0
@@ -364,6 +364,7 @@ struct routing_api_data {
 
         // A->R
         add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::Walking);
+        add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(AA, RR));
         b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(RR, AA));
 
@@ -434,6 +435,7 @@ struct routing_api_data {
         poi_4->poitype_idx = 1;
         poi_4->idx = 3;
         poi_4->admin_list.push_back(admin);
+        poi_4->properties["park_ride"] = "yes";
 
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);

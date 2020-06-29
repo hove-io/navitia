@@ -708,8 +708,7 @@ class Instance(object):
             logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False
 
-    def get_street_network(self, mode, request):
-
+    def _get_street_network(self, mode, request):
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
@@ -718,6 +717,16 @@ class Instance(object):
             column_in_db = "street_network_{}".format(mode)
             streetnetwork_backend_conf = getattr(self, column_in_db)
             return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
+
+    def get_street_network(self, mode, request):
+        if mode != fallback_modes.FallbackModes.car.name:
+            return self._get_street_network(mode, request)
+
+        walking_service = self._get_street_network(fallback_modes.FallbackModes.walking.name, request)
+        car_service = self._get_street_network(fallback_modes.FallbackModes.car.name, request)
+        return street_network.CarWithPark(
+            instance=self, walking_service=walking_service, car_service=car_service
+        )
 
     def get_all_street_networks(self):
         if app.config[str('DISABLE_DATABASE')]:

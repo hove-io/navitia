@@ -346,7 +346,7 @@ def _make_function_over_upper_limit(from_coord, to_coord, mode, op):
 
         direct_path_duration = response['journeys'][0]['duration']
 
-        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}' + '&debug=true').format(
+        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}').format(
             mode=mode, max_dp_duration=direct_path_duration - 1
         )
         response = self.query_region(query)
@@ -499,20 +499,20 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         taxi_direct = journeys[0]
 
         assert taxi_direct.get('departure_date_time') == '20120614T075000'
-        assert taxi_direct.get('arrival_date_time') == '20120614T075007'
-        assert taxi_direct.get('duration') == 7
+        assert taxi_direct.get('arrival_date_time') == '20120614T075027'
+        assert taxi_direct.get('duration') == 27
         assert taxi_direct.get('durations', {}).get("car") == 0
-        assert taxi_direct.get('durations', {}).get("taxi") == 7
-        assert taxi_direct.get('durations', {}).get("total") == 7
+        assert taxi_direct.get('durations', {}).get("taxi") == 27
+        assert taxi_direct.get('durations', {}).get("total") == 27
         assert taxi_direct.get('distances', {}).get("car") == 0
-        assert taxi_direct.get('distances', {}).get("taxi") == 87
+        assert taxi_direct.get('distances', {}).get("taxi") == 304
 
         sections = taxi_direct.get('sections')
         assert len(sections) == 1
         assert sections[0].get('mode') == 'taxi'
         assert sections[0].get('departure_date_time') == '20120614T075000'
-        assert sections[0].get('arrival_date_time') == '20120614T075007'
-        assert sections[0].get('duration') == 7
+        assert sections[0].get('arrival_date_time') == '20120614T075027'
+        assert sections[0].get('duration') == 27
         assert sections[0].get('type') == 'street_network'
 
         query += "&taxi_speed=0.15"
@@ -524,25 +524,27 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        taxi_direct = journeys[0]
+        taxi_direct = next((j for j in journeys if 'non_pt' in j['tags']), None)
+        assert taxi_direct
 
         assert taxi_direct.get('departure_date_time') == '20120614T075000'
-        assert taxi_direct.get('arrival_date_time') == '20120614T080051'
-        assert taxi_direct.get('duration') == 651
+        assert taxi_direct.get('arrival_date_time') == '20120614T082349'
+        assert taxi_direct.get('duration') == 2029
         assert taxi_direct.get('durations', {}).get("car") == 0
-        assert taxi_direct.get('durations', {}).get("taxi") == 651
-        assert taxi_direct.get('durations', {}).get("total") == 651
+        assert taxi_direct.get('durations', {}).get("taxi") == 2029
+        assert taxi_direct.get('durations', {}).get("total") == 2029
         assert taxi_direct.get('distances', {}).get("car") == 0
-        assert taxi_direct.get('distances', {}).get("taxi") == 97
+        assert taxi_direct.get('distances', {}).get("taxi") == 304
         sections = taxi_direct.get('sections')
         assert len(sections) == 1
         assert sections[0].get('mode') == 'taxi'
         assert sections[0].get('departure_date_time') == '20120614T075000'
-        assert sections[0].get('arrival_date_time') == '20120614T080051'
-        assert sections[0].get('duration') == 651
+        assert sections[0].get('arrival_date_time') == '20120614T082349'
+        assert sections[0].get('duration') == 2029
         assert sections[0].get('type') == 'street_network'
 
-        taxi_fallback = journeys[1]
+        taxi_fallback = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert taxi_fallback
 
         assert taxi_fallback.get('departure_date_time') == '20120614T075355'
         assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
@@ -593,16 +595,17 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        taxi_fallback = journeys[0]
+        taxi_fallback = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert taxi_fallback
 
         assert taxi_fallback.get('departure_date_time') == '20120614T080021'
-        assert taxi_fallback.get('arrival_date_time') == '20120614T080612'
+        assert taxi_fallback.get('arrival_date_time') == '20120614T080610'
 
-        assert taxi_fallback.get('durations', {}).get('taxi') == 10
+        assert taxi_fallback.get('durations', {}).get('taxi') == 8
         assert taxi_fallback.get('durations', {}).get('walking') == 39
-        assert taxi_fallback.get('durations', {}).get('total') == 351
+        assert taxi_fallback.get('durations', {}).get('total') == 349
 
-        assert taxi_fallback.get('distances', {}).get('taxi') == 117
+        assert taxi_fallback.get('distances', {}).get('taxi') == 88
         assert taxi_fallback.get('distances', {}).get('walking') == 19
 
         sections = taxi_fallback.get('sections')
@@ -625,8 +628,8 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         assert sections[3].get('mode') == 'taxi'
         assert sections[3].get('departure_date_time') == '20120614T080602'
-        assert sections[3].get('arrival_date_time') == '20120614T080612'
-        assert sections[3].get('duration') == 10
+        assert sections[3].get('arrival_date_time') == '20120614T080610'
+        assert sections[3].get('duration') == 8
         assert sections[3].get('type') == 'street_network'
 
     def test_min_taxi(self):
