@@ -181,7 +181,7 @@ class ProximitiesByCrowflyPool:
                 dp_future is None or dp_future.wait_and_get() is None or not dp_future.wait_and_get().journeys
             )
 
-            if no_dp and self._o_d_crowfly_distance is not None:
+            if mode == fm.FallbackModes.car.name and no_dp and self._o_d_crowfly_distance is not None:
                 max_fallback_duration = min(max_fallback_duration, self._o_d_crowfly_distance / float(speed))
 
             p = ProximitiesByCrowfly(
