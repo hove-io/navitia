@@ -1118,7 +1118,7 @@ Here is a typical journey, all sections are detailed below
   sections            | array of [section](#section) |  All the sections of the journey
   from                | [places](#place)            | The place from where the journey starts
   to                  | [places](#place)            | The place from where the journey ends
-  links               | [link](#link)                | Links related to this journey <ul><li>`same_journey_schedules`: search link for same journey schedules between two stop_areas using the same combination of public transport </li><li>`this_journey`: search link whick returns the same journey </li></ul>
+  links               | [link](#link)                | Links related to this journey <ul><li>`same_journey_schedules`: search link for same journey schedules between two stop_areas using the same combination of public transport </li><li>`this_journey`: search link which returns the same journey </li></ul>
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
