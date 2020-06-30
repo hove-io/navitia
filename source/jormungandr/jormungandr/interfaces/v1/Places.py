@@ -44,7 +44,7 @@ from jormungandr.exceptions import TechnicalError, InvalidArguments
 from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
-from jormungandr.scenarios.utils import places_type
+from jormungandr.scenarios.utils import places_type, places_nearby_type
 from navitiacommon import parser_args_type
 from navitiacommon.parser_args_type import (
     TypeSchema,
@@ -270,7 +270,7 @@ class PlacesNearby(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument(
             "type[]",
-            type=OptionValue(list(places_type.keys())),
+            type=OptionValue(list(places_nearby_type.keys())),
             action="append",
             default=["stop_area", "stop_point", "poi"],
             help="Type of the objects to return",

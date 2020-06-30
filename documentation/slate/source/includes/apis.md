@@ -762,7 +762,7 @@ coordinates, returning a [places](#place) collection.
   Required | name        | Type            | Description                       | Default value
   ---------|-------------|-----------------|-----------------------------------|---------------------------------------------------------------
   nop      | distance    | int             | Distance range in meters          | 500
-  nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`, `administrative_region`]
+  nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`]
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
