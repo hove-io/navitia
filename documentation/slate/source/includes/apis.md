@@ -1101,10 +1101,10 @@ Here is a typical journey, all sections are detailed below
 
 #### Main response
 
-|Field|Type|Description|
-|-----|----|-----------|
-|journeys|array of [journeys](#journey)|List of computed journeys|
-|links|array of [link](#link)|Links related to the journeys|
+|Field|Type|Description
+|-----|----|-----------
+|journeys|array of [journeys](#journey)|List of computed journeys
+|links|array of [link](#link)|Links related to the journeys <ul><li>`next`: search link with `&datetime = departure datetime of first journey + 1 second` and `&datetime_represents=departure` </li><li>`prev`: search link with `&datetime = arrival datetime of first journey - 1 second` and `&datetime_represents=arrival` </li><li> `first`: search link with `&datetime = departure date of first journey with 0 time part` and `&datetime_represents=departure` </li><li>`last`: search link with `&datetime = arrival date of last journey with 232359 time part` and `&datetime_represents=arrival` </li><li>`physical_modes`: physical_modes </li><li>and others: `physical_modes, pois lines, stop_areas, stop_points, poi_types, commercial_modes, addresses, networks, vehicle_journeys, routes` </li></ul>
 
 #### Journey
 
@@ -1118,7 +1118,7 @@ Here is a typical journey, all sections are detailed below
   sections            | array of [section](#section) |  All the sections of the journey
   from                | [places](#place)            | The place from where the journey starts
   to                  | [places](#place)            | The place from where the journey ends
-  links               | [link](#link)                | Links related to this journey
+  links               | [link](#link)                | Links related to this journey <ul><li>`same_journey_schedules`: search link for same journey schedules between two stop_areas using the same combination of public transport </li><li>`this_journey`: search link which returns the same journey </li></ul>
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
