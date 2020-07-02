@@ -251,13 +251,27 @@ class Here(AbstractStreetNetworkService):
             fm.car_no_park.name: response_pb2.Car,
         }
         section.street_network.mode = map_mode[mode]
+
+        # handle maneuvers to fill Path field
+        def _convert_direction(direction):
+            sentence = direction.lower()
+            if "right" in sentence:
+                return 90
+            elif "left" in sentence:
+                return -90
+            else:
+                return 0
+
         for maneuver in leg.get('maneuver', []):
             path_item = section.street_network.path_items.add()
-            # TODO get the street name
-            path_item.length = maneuver.get('length')
-            path_item.duration = maneuver.get('travelTime')
-            # TODO: calculate direction
-            path_item.direction = 0
+            path_item.id = int(maneuver.get('id', -1).replace('M', ''))
+            path_item.length = maneuver.get('length', 0)
+            path_item.duration = maneuver.get('travelTime', 0)
+            path_item.instruction = maneuver.get('instruction', '')
+            path_item.name = maneuver.get('roadName', '')
+            path_item.direction = _convert_direction(maneuver.get('direction', ''))
+            path_item.coordinate.lat = float(maneuver.get('position', 0.0).get('latitude', 0.0))
+            path_item.coordinate.lon = float(maneuver.get('position', 0.0).get('longitude', 0.0))
 
         shape = route.get('shape', [])
         for sh in shape:
@@ -327,13 +341,13 @@ class Here(AbstractStreetNetworkService):
             'apiKey': self.apiKey,
             'waypoint0': _get_coord(origin),
             'waypoint1': _get_coord(destination),
-            # to get the shape in the response
+            # for more information about Attributes
+            # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-route-representation-options.html
             'routeAttributes': 'sh',
-            # used to get the travel time in the response
             'summaryAttributes': 'traveltime',
-            # used to get the base time
-            'legAttributes': 'baseTime',
-            # used to get the fasted journeys using the given mode and with traffic data
+            'legAttributes': 'bt,tt,mn',
+            'maneuverAttributes': 'di,rn,le,tt,po',
+            # street network mode + realtime activation
             'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
             ),

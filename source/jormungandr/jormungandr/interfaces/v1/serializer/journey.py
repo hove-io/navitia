@@ -38,7 +38,12 @@ from jormungandr.interfaces.v1.serializer.pt import (
     StringListField,
 )
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField
+from jormungandr.interfaces.v1.serializer.fields import (
+    LinkSchema,
+    RoundedField,
+    SectionGeoJsonField,
+    CoordSerializer,
+)
 from jormungandr.interfaces.v1.serializer.base import (
     AmountSerializer,
     PbNestedSerializer,
@@ -167,10 +172,31 @@ class JourneyDebugSerializer(PbNestedSerializer):
 
 
 class PathSerializer(PbNestedSerializer):
+    id = jsonschema.MethodField(schema_type=int, display_none=False)
     length = RoundedField(display_none=True)
     name = jsonschema.Field(schema_type=str, display_none=True)
     duration = RoundedField(display_none=True)
     direction = jsonschema.Field(schema_type=int, display_none=True)
+    instruction = jsonschema.MethodField(schema_type=int, display_none=False)
+    coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
+
+    def get_id(self, obj):
+        if obj.HasField(str('id')):
+            return obj.id
+        else:
+            return None
+
+    def get_instruction(self, obj):
+        if obj.HasField(str('instruction')):
+            return obj.instruction
+        else:
+            return None
+
+    def get_coordinate(self, obj):
+        if obj.HasField(str('coordinate')):
+            return CoordSerializer(obj.coordinate, display_none=False).data
+        else:
+            return None
 
 
 class SectionTypeEnum(EnumField):
