@@ -296,9 +296,10 @@ class TestDepartures(AbstractTestFixture):
     def test_terminus_schedule_with_realtime(self):
         """
         Here we have realtime stop_times from proxy_realtime_timeo
+        data_freshness default value is base_schedule for terminus_schedules
         """
         query = self.query_template_ter.format(
-            sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+            sp='S42', dt='20160102T0900', data_freshness='&data_freshness=realtime', c_dt='20160102T0900'
         )
 
         response = self.query_region(query)
@@ -324,7 +325,7 @@ class TestDepartures(AbstractTestFixture):
         Here we have theoretical stop_times only as C:S0 is absent in proxy_realtime_timeo
         """
         query = self.query_template_ter.format(
-            sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900'
+            sp='C:S0', dt='20160102T0900', data_freshness='&data_freshness=realtime', c_dt='20160102T0900'
         )
         response = self.query_region(query)
         is_valid_notes(response["notes"])

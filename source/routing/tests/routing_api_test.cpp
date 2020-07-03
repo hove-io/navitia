@@ -1161,8 +1161,8 @@ BOOST_FIXTURE_TEST_CASE(admin_explicit_fall_back, streetnetworkmode_fixture<test
     BOOST_CHECK_EQUAL(pathitem.direction(), 0);  // first direction is always 0°
 }
 
-// direct journey using only car
-BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provider>) {
+// direct journey using only car as fallback mode
+BOOST_FIXTURE_TEST_CASE(car_as_fallback_mode, streetnetworkmode_fixture<test_speed_provider>) {
     auto total_distance =
         S.distance_to(B) + B.distance_to(C) + C.distance_to(F) + F.distance_to(E) + E.distance_to(A) + 1;
 
@@ -1208,20 +1208,20 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     // Car mode
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().value(), 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().value(), 48.944);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(6).co2_emission().unit(), "gEC");
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.58 + 32.568);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.58 + 48.944);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
 
-    BOOST_CHECK_EQUAL(resp.journeys(0).durations().walking(), 30);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().walking(), 40);
     BOOST_CHECK_EQUAL(resp.journeys(0).durations().bike(), 0);
-    BOOST_CHECK_EQUAL(resp.journeys(0).durations().car(), 22);
-    BOOST_CHECK_EQUAL(resp.journeys(0).durations().total(), 57);
-    BOOST_CHECK_EQUAL(resp.journeys(0).distances().walking(), 33);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().car(), 30);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().total(), 75);
+    BOOST_CHECK_EQUAL(resp.journeys(0).distances().walking(), 44);
     BOOST_CHECK_EQUAL(resp.journeys(0).distances().bike(), 0);
-    BOOST_CHECK_EQUAL(resp.journeys(0).distances().car(), 243);
+    BOOST_CHECK_EQUAL(resp.journeys(0).distances().car(), 332);
 }
 
 // car + bus using parking

@@ -167,6 +167,9 @@ street_network_bss = "kraken"
 street_network_ridesharing = "ridesharingKraken"
 street_network_taxi = "taxiKraken"
 
+# Here - https://developer.here.com/
+here_max_matrix_points = 100
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

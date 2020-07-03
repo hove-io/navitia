@@ -65,6 +65,9 @@ Then the process is less automated (but still, instructions are given):
 
         * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>
     ```
+
+## And Finally
+
 * Merge the 'release' branch to the 'dev' branch:
 	```
 	git checkout dev
@@ -72,7 +75,7 @@ Then the process is less automated (but still, instructions are given):
 	```
 * Push the release and dev branches to the repo
 	```
-	git push upstream release dev --tags
+	git push <canaltp_distant_repo_name> release dev --tags
 	```
 
 # Troubleshooting

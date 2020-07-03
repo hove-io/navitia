@@ -234,6 +234,7 @@ class _PtJourneySorter(object):
         FallbackModes.bike.name: 100,
         FallbackModes.bss.name: 500,
         FallbackModes.car.name: 1000,
+        FallbackModes.car_no_park.name: 1000,
         FallbackModes.ridesharing.name: 1000,
         FallbackModes.taxi.name: 1000,
     }

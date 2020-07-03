@@ -39,8 +39,7 @@ MOCKED_INSTANCE_CONF = {
         'street_network': [
             {
                 "args": {
-                    "api_id": "bob_id",
-                    "api_code": "bob_code",
+                    "apiKey": "bob_id",
                     "service_base_url": "route.bob.here.com/routing/7.2/",
                     "timeout": 20,
                 },

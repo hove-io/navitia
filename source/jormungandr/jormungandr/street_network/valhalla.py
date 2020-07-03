@@ -151,7 +151,12 @@ class Valhalla(AbstractStreetNetworkService):
         """
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         """
-        map_mode = {"walking": response_pb2.Walking, "car": response_pb2.Car, "bike": response_pb2.Bike}
+        map_mode = {
+            "walking": response_pb2.Walking,
+            "car": response_pb2.Car,
+            "bike": response_pb2.Bike,
+            "car_no_park": response_pb2.Car,
+        }
         resp = response_pb2.Response()
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
@@ -236,7 +241,7 @@ class Valhalla(AbstractStreetNetworkService):
 
     @classmethod
     def _get_valhalla_mode(cls, kraken_mode):
-        map_mode = {"walking": "pedestrian", "car": "auto", "bike": "bicycle"}
+        map_mode = {"walking": "pedestrian", "car": "auto", "car_no_park": "auto", "bike": "bicycle"}
         if kraken_mode not in map_mode:
             logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(kraken_mode))
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))

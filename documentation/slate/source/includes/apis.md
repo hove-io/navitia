@@ -1101,10 +1101,10 @@ Here is a typical journey, all sections are detailed below
 
 #### Main response
 
-|Field|Type|Description|
-|-----|----|-----------|
-|journeys|array of [journeys](#journey)|List of computed journeys|
-|links|array of [link](#link)|Links related to the journeys|
+|Field|Type|Description
+|-----|----|-----------
+|journeys|array of [journeys](#journey)|List of computed journeys
+|links|array of [link](#link)|Links related to the journeys <ul><li>`next`: search link with `&datetime = departure datetime of first journey + 1 second` and `&datetime_represents=departure` </li><li>`prev`: search link with `&datetime = arrival datetime of first journey - 1 second` and `&datetime_represents=arrival` </li><li> `first`: search link with `&datetime = departure date of first journey with 0 time part` and `&datetime_represents=departure` </li><li>`last`: search link with `&datetime = arrival date of last journey with 232359 time part` and `&datetime_represents=arrival` </li><li>`physical_modes`: physical_modes </li><li>and others: `physical_modes, pois lines, stop_areas, stop_points, poi_types, commercial_modes, addresses, networks, vehicle_journeys, routes` </li></ul>
 
 #### Journey
 
@@ -1118,7 +1118,7 @@ Here is a typical journey, all sections are detailed below
   sections            | array of [section](#section) |  All the sections of the journey
   from                | [places](#place)            | The place from where the journey starts
   to                  | [places](#place)            | The place from where the journey ends
-  links               | [link](#link)                | Links related to this journey
+  links               | [link](#link)                | Links related to this journey <ul><li>`same_journey_schedules`: search link for same journey schedules between two stop_areas using the same combination of public transport </li><li>`this_journey`: search link which returns the same journey </li></ul>
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
@@ -1590,6 +1590,53 @@ nop      | direction_type     | enum                            | Allow to filte
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 |additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
+
+
+<a name="terminus-schedules"></a>Terminus Schedules
+---------------------------------------------------
+
+>[Try it on Navitia playground (click on "EXT" buttons to see times)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fterminus_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0``` shell
+
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/terminus_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+Same as stop_schedule but objects are embedded in the `terminus_schedules` section instead
+
+HTTP/1.1 200 OK
+{
+    "terminus_schedules": [],
+    "pagination": {...},
+    "links": [...],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [...],
+    "exceptions": []
+}
+```
+
+Also known as `/terminus_schedules` service.
+
+This endpoint gives you access to time tables going through a stop point.
+Departures are grouped observing all served stations after considered stop point. This can also be same as:<br>
+![terminus_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
+
+The response is made of an array of [terminus_schedule](#terminus-schedule), and another one of [note](#note).<br>[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/terminus_schedules>
+
+### Accesses
+
+| url | Result |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/terminus_schedules` | List of the schedules grouped by observing all served stations after considered stop_point for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/terminus_schedules`  | List of the schedules grouped by observing all served stations after considered stop_point for coordinates, navitia guesses the region from coordinates |
+
+### Parameters
+Same as stop_schedule parametres
+
+### <a name="terminus-schedule"></a>Terminus_schedule object
+Same as stop_schedule object
 
 
 <a name="departures"></a>Departures

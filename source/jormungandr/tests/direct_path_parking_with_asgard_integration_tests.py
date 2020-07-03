@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import
 from .tests_mechanism import AbstractTestFixture, dataset
+import pytest
 
 MOCKED_PARKING_WITH_ASGARD_CONF = [
     {
@@ -76,6 +77,7 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     }
 )
 class TestWithParkingDirectPath(AbstractTestFixture):
+    @pytest.mark.xfail
     def test_journey_direct_path(self):
         query = journey_basic_query + "&first_section_mode[]=car" + "&last_section_mode[]=car" + "&debug=true"
 
@@ -147,6 +149,7 @@ MOCKED_AUGEAS_WITH_ASGARD_CONF = [
     }
 )
 class TestWithParkingAugeasDirectPath(AbstractTestFixture):
+    @pytest.mark.xfail
     def test_journey_direct_path(self):
         query = journey_basic_query + "&first_section_mode[]=car" + "&last_section_mode[]=car" + "&debug=true"
 
