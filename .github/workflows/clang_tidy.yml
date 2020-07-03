@@ -1,0 +1,58 @@
+name: Run Clang Tidy after a Release
+
+on:
+  push:
+    branches:
+    ## TODO ! #####
+    # Change to `release` branch once testing is Done
+    - clang-tidy
+    ################
+
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+    - name : Dump Github Context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo $GITHUB_CONTEXT
+
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          ref: ${{ github.head_ref }}
+          submodules: 'recursive'
+    - name : Install dependencies
+      run: sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3
+    - name : Clang-tidy Info
+      run: clang-tidy --version
+    - name: Cmake
+      run: cmake source
+    - name: Clang-tidy
+      run: make tidy_fix
+    - name: Commit and push changes
+      uses: peter-evans/create-pull-request@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Clang-tidy the code base
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        title: '[Clang-Tidy] Code maintenance and modernisation'
+        body: |
+          🤖 This is an automatic PR 🤖
+
+          Clang-tidy suggests the following changes so far:
+          - `clang-analyzer-*` : clang Static Analyzer checks.
+
+          [#clang-tidy documentation](https://clang.llvm.org/extra/clang-tidy/)
+        labels: not_in_changelog
+        team-reviewers: CanalTP/coreteam
+        branch: auto/clang-tidy
+    - name: Check outputs
+      run: |
+        echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
+        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+
