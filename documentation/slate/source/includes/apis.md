@@ -270,10 +270,7 @@ paginate results.
 
 #### <a name="depth"></a>depth
 
-You are looking for something, but Navitia doesn't output it in your favorite endpoint?  
-You want to request more from navitia feed?  
-You are receiving feeds that are too important and too slow with low bandwidth?  
-You would like Navitia to serve GraphQL but it is still not planned?
+You are looking for something, but Navitia doesn't output it in your favorite endpoint?<br>You want to request more from navitia feed?<br>You are receiving feeds that are too important and too slow with low bandwidth?<br>You would like Navitia to serve GraphQL but it is still not planned?
 
 Feeds from endpoint might miss informations, but this tiny `depth=` parameter can
 expand Navitia power by making it more wordy. Or lighter if you want it.
@@ -281,19 +278,19 @@ expand Navitia power by making it more wordy. Or lighter if you want it.
 Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
-	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>  
+	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>
 	The id is "line:RAT:M1"
 - Get routes for this line
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>  
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>
 	Default depth is `depth=1`
 - Want to get a tiny response? Just add `depth=0`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>  
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>
 	The response is lighter (parent lines disappear for example)
 - Want more informations, just add `depth=2`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>  
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>
 	The response is a little more verbose (some geojson can appear in response when using your open data token)
 - Wanna fat more informations, let's try `depth=3`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>  
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>
 	Big response: all stop_points are shown
 - Wanna spam the internet bandwidth? Try `depth=42`
 	- No. There is a technical limit with `depth=3`
@@ -765,7 +762,7 @@ coordinates, returning a [places](#place) collection.
   Required | name        | Type            | Description                       | Default value
   ---------|-------------|-----------------|-----------------------------------|---------------------------------------------------------------
   nop      | distance    | int             | Distance range in meters          | 500
-  nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`, `administrative_region`]
+  nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`]
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
@@ -1104,10 +1101,10 @@ Here is a typical journey, all sections are detailed below
 
 #### Main response
 
-|Field|Type|Description|
-|-----|----|-----------|
-|journeys|array of [journeys](#journey)|List of computed journeys|
-|links|array of [link](#link)|Links related to the journeys|
+|Field|Type|Description
+|-----|----|-----------
+|journeys|array of [journeys](#journey)|List of computed journeys
+|links|array of [link](#link)|Links related to the journeys <ul><li>`next`: search link with `&datetime = departure datetime of first journey + 1 second` and `&datetime_represents=departure` </li><li>`prev`: search link with `&datetime = arrival datetime of first journey - 1 second` and `&datetime_represents=arrival` </li><li> `first`: search link with `&datetime = departure date of first journey with 0 time part` and `&datetime_represents=departure` </li><li>`last`: search link with `&datetime = arrival date of last journey with 232359 time part` and `&datetime_represents=arrival` </li><li>`physical_modes`: physical_modes </li><li>and others: `physical_modes, pois lines, stop_areas, stop_points, poi_types, commercial_modes, addresses, networks, vehicle_journeys, routes` </li></ul>
 
 #### Journey
 
@@ -1121,7 +1118,7 @@ Here is a typical journey, all sections are detailed below
   sections            | array of [section](#section) |  All the sections of the journey
   from                | [places](#place)            | The place from where the journey starts
   to                  | [places](#place)            | The place from where the journey ends
-  links               | [link](#link)                | Links related to this journey
+  links               | [link](#link)                | Links related to this journey <ul><li>`same_journey_schedules`: search link for same journey schedules between two stop_areas using the same combination of public transport </li><li>`this_journey`: search link which returns the same journey </li></ul>
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
@@ -1312,15 +1309,13 @@ Please remember that isochrones use crowfly at the end so they are less precise 
 
 #### Isochrones without public transport
 
-The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.  
-However if your are willing to do that, you can use a little trick and
+The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.<br>However if your are willing to do that, you can use a little trick and
 pass the parameters `&allowed_id=physical_mode:Bus&forbidden_id=physical_mode:Bus`.
 You will only get circles.
 
 #### Car isochrones
 
-Using car in Navitia isochrones is not recommended.  
-It is only handled for compatibility with `/journeys` but tends to squash every other result.
+Using car in Navitia isochrones is not recommended.<br>It is only handled for compatibility with `/journeys` but tends to squash every other result.
 
 
 <a name="route-schedules"></a>Route Schedules
@@ -1560,9 +1555,7 @@ This endpoint gives you access to time tables going through a stop
 point as:
 ![stop_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
 
-The response is made of an array of [stop_schedule](#stop-schedule), and another one of [note](#note).  
-[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.  
-Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
+The response is made of an array of [stop_schedule](#stop-schedule), and another one of [note](#note).<br>[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 See how disruptions affect stop schedules in the [real time](#realtime) section.
 
@@ -1597,6 +1590,53 @@ nop      | direction_type     | enum                            | Allow to filte
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 |additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
+
+
+<a name="terminus-schedules"></a>Terminus Schedules
+---------------------------------------------------
+
+>[Try it on Navitia playground (click on "EXT" buttons to see times)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fterminus_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0``` shell
+
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/terminus_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response
+Same as stop_schedule but objects are embedded in the `terminus_schedules` section instead
+
+HTTP/1.1 200 OK
+{
+    "terminus_schedules": [],
+    "pagination": {...},
+    "links": [...],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [...],
+    "exceptions": []
+}
+```
+
+Also known as `/terminus_schedules` service.
+
+This endpoint gives you access to time tables going through a stop point.
+Departures are grouped observing all served stations after considered stop point. This can also be same as:<br>
+![terminus_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
+
+The response is made of an array of [terminus_schedule](#terminus-schedule), and another one of [note](#note).<br>[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/terminus_schedules>
+
+### Accesses
+
+| url | Result |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/terminus_schedules` | List of the schedules grouped by observing all served stations after considered stop_point for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/terminus_schedules`  | List of the schedules grouped by observing all served stations after considered stop_point for coordinates, navitia guesses the region from coordinates |
+
+### Parameters
+Same as stop_schedule parametres
+
+### <a name="terminus-schedule"></a>Terminus_schedule object
+Same as stop_schedule object
 
 
 <a name="departures"></a>Departures
@@ -1790,9 +1830,7 @@ HTTP/1.1 200 OK
 
 ```
 
-This service provides the state of public transport traffic, grouped by lines and all their stops.  
-It can be called for an overall coverage or for a specific object.  
-Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
+This service provides the state of public transport traffic, grouped by lines and all their stops.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
 
 <img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 
@@ -1923,8 +1961,7 @@ Details for disruption objects : [disruptions](#disruptions)
 #### What a line_report object **contains**
 
 -   1 line which is the grouping object
-    -   it can contain links to its disruptions.  
-    These disruptions are globals and might not be applied on stop_areas and stop_points.
+    -   it can contain links to its disruptions.<br>These disruptions are globals and might not be applied on stop_areas and stop_points.
 -   1..n pt_objects
     -   each one contains at least a link to its disruptions.
 
@@ -1959,9 +1996,7 @@ HTTP/1.1 200 OK
 
 Also known as `/traffic_reports` service. We recommand to use line_reports in place of traffic_reports.
 
-This service provides the state of public transport traffic, grouped by network.  
-It can be called for an overall coverage or for a specific object.  
-Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
+This service provides the state of public transport traffic, grouped by network.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
 
 ### Parameters
 
@@ -2148,13 +2183,11 @@ Details for disruption objects : [disruptions](#disruptions)
 #### What a traffic_report object **contains**
 
 -   1 network which is the grouping object
-    -   it can contain links to its disruptions.  
-    These disruptions are globals and might not be applied on lines or stop_areas.
+    -   it can contain links to its disruptions.<br>These disruptions are globals and might not be applied on lines or stop_areas.
 -   0..n lines
     -   each line contains at least a link to its disruptions
 -   0..n stop_areas
-    -   each stop_area contains at least a link to its disruptions  
-    If a stop_area is used by multiple networks, it will appear each time.
+    -   each stop_area contains at least a link to its disruptions<br>If a stop_area is used by multiple networks, it will appear each time.
 
 
 Equipment_Reports
@@ -2173,7 +2206,7 @@ HTTP/1.1 200 OK
         {
             "line": {15 items},
             "stop_area_equipments": [
-                {  
+                {
                     "equipment_details": [
                         {
                             "current_availability": {
@@ -2207,11 +2240,7 @@ HTTP/1.1 200 OK
 
 Also known as the `"/equipment_reports"` service.
 
-This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.  
-The endpoint will report accessible equipment per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered per line.  
-Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.  
-For more information, refer to [Equipment reports](#equipment-reports) API description.  
-Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/equipment_reports>
+This service provides the state of equipments such as lifts or elevators that are giving you better accessibility to public transport facilities.<br>The endpoint will report accessible equipment per stop area and per line. Which means that an equipment detail is reported at the stop area level, with all stop areas gathered per line.<br>Some of the fields (cause, effect, periods etc...) are only displayed if a realtime equipment provider is setup with available data. Otherwise, only information provided by the NTFS will be reported.<br>For more information, refer to [Equipment reports](#equipment-reports) API description.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/equipment_reports>
 
 <aside class="warning">
     This feature requires a specific configuration from a equipment service provider.

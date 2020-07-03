@@ -130,14 +130,14 @@ That means :
 Objects order
 -------------
 
-Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.  
-This is also true for the ordering of the attributes of objects.
+Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.<br>This is also true for the ordering of the attributes of objects.
 
 Examples of sorted objects tables:
 
 * journeys in a `/journeys` response
 * `/departures` and `/arrivals`
 * `/stop_schedules`
+* `/terminus_schedules`
 * stop_points in `/routes/{route_id}?depth=3`
 * `/places_nearby`
 * `/places`
@@ -152,8 +152,7 @@ Examples of unsorted responses:
 Objects attributes
 ------------------
 
-Like almost any API, objects are subject to adaptations.  
-Please be warned that we allow Navitia to add new attributes to objects, and it will never be considered a breaking change.
+Like almost any API, objects are subject to adaptations.<br>Please be warned that we allow Navitia to add new attributes to objects, and it will never be considered a breaking change.
 
 We also allow Navitia to add values to enum, so be prepared to that. For example [section's](#section) type of journeys are regularly evolving.
 

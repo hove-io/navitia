@@ -273,8 +273,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "max_ridesharing_duration_to_pt",
             type=int,
-            dest="max_car_no_park_duration_to_pt",
+            dest="max_ridesharing_duration_to_pt",
             help="Maximal duration of ridesharing on public transport in second",
+        )
+        parser_get.add_argument(
+            "max_car_no_park_duration_to_pt",
+            type=int,
+            help="Maximal duration of car no park on public transport in second",
         )
         parser_get.add_argument(
             "max_taxi_duration_to_pt",
@@ -307,8 +312,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "ridesharing_speed",
             type=PositiveFloat(),
-            dest="car_no_park_speed",
+            dest="ridesharing_speed",
             help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+        )
+        parser_get.add_argument(
+            "car_no_park_speed",
+            type=PositiveFloat(),
+            help='Driving speed without car park for the fallback sections.\n'
+            'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "taxi_speed",
@@ -450,6 +461,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_no_park_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_ridesharing_duration_to_pt'] = args['max_duration_to_pt']
             args['max_taxi_duration_to_pt'] = args['max_duration_to_pt']
 
         if args['data_freshness'] is None:

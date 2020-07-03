@@ -298,6 +298,8 @@ def test_purge_instance_jobs():
     """
     Delete old jobs created before the time limit
     Do not delete jobs with state = 'running'
+    Deletes only directories of delete able jobs but not in the table 'job'
+    Is used by the job 'purge_datasets' planned daily to purge old jobs
     """
     app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
 
@@ -320,6 +322,15 @@ def test_purge_instance_jobs():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 4
+
+    # No job is deleted in the table 'job'
+    jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
+    assert len(jobs_resp['jobs']) == 6
+
+    # if we use the task purge_jobs, data related to old jobs also deleted from the table 'job'
+    tasks.purge_jobs()
+    jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
+    assert len(jobs_resp['jobs']) == 4
 
 
 @pytest.mark.usefixtures("init_cities_dir")

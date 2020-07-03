@@ -35,8 +35,21 @@ from navitiacommon import response_pb2, type_pb2
 
 MOCKED_ASGARD_CONF = [
     {
-        "modes": ['walking', 'car', 'bss', 'bike'],
+        "modes": ['walking', 'car', 'bss', 'bike', 'car_no_park'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgard",
+        "args": {
+            "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
+            "api_key": "",
+            "asgard_socket": "bob_socket",
+            "service_url": "http://bob.com",
+            "timeout": 10,
+        },
+    }
+]
+MOCKED_ASGARD_CONF_WITH_BAD_RESPONSE = [
+    {
+        "modes": ['walking', 'car', 'bss', 'bike'],
+        "class": "tests.direct_path_asgard_integration_tests.MockAsgardWithBadResponse",
         "args": {
             "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
             "api_key": "",
@@ -74,8 +87,8 @@ def add_cycle_path_type_in_section(section):
 
 
 def route_response(mode):
-    map_mode_dist = {"walking": 200, "car": 50, "bike": 100}
-    map_mode_time = {"walking": 2000, "car": 500, "bike": 1000}
+    map_mode_dist = {"walking": 200, "car": 50, "bike": 100, "car_no_park": 50}
+    map_mode_time = {"walking": 2000, "car": 500, "bike": 1000, "car_no_park": 500}
     response = response_pb2.Response()
     response.response_type = response_pb2.ITINERARY_FOUND
     journey = response.journeys.add()
@@ -114,11 +127,15 @@ def route_response(mode):
     return response
 
 
-def response_valid(request):
+def valid_response(request):
     if request.requested_api == type_pb2.direct_path:
         return route_response(request.direct_path.streetnetwork_params.origin_mode)
     else:
         return response_pb2.Response()
+
+
+def bad_response(request):
+    return response_pb2.Response()
 
 
 def check_journeys(resp):
@@ -134,26 +151,43 @@ class MockAsgard(Asgard):
         )
 
     def _call_asgard(self, request):
-        return response_valid(request)
+        return valid_response(request)
+
+
+class MockAsgardWithBadResponse(Asgard):
+    def __init__(
+        self, instance, service_url, asgard_socket, modes=None, id=None, timeout=10, api_key=None, **kwargs
+    ):
+        Asgard.__init__(
+            self, instance, service_url, asgard_socket, modes or [], id or 'asgard', timeout, api_key, **kwargs
+        )
+
+    def _call_asgard(self, request):
+        return bad_response(request)
 
 
 @dataset(
     {'main_routing_test': {'scenario': 'distributed', 'instance_config': {'street_network': MOCKED_ASGARD_CONF}}}
 )
 class TestAsgardDirectPath(AbstractTestFixture):
-    def test_journey_with_bike_direct_path(self):
+    def test_journey_with_direct_path(self):
+        """
+        we only want direct path
+        """
         query = (
             journey_basic_query
             + "&first_section_mode[]=walking"
             + "&first_section_mode[]=bike"
-            + "&first_section_mode[]=car"
-            + "&debug=true"
+            + "&first_section_mode[]=car_no_park"
+            + "&forbidden_uris[]=stop_point:stopA"
+            + "&forbidden_uris[]=stop_point:stopB"
         )
         response = self.query_region(query)
         check_journeys(response)
+
         assert len(response['journeys']) == 3
 
-        # car from asgard
+        # car direct path from asgard
         assert 'car' in response['journeys'][0]['tags']
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['duration'] == 500
@@ -162,7 +196,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['distances']['car'] == 50
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
 
-        # bike from asgard
+        # bike direct path from asgard
         assert 'bike' in response['journeys'][1]['tags']
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][1]['duration'] == 1000
@@ -172,7 +206,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['duration'] == 1000
         assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30
 
-        # walking from asgard
+        # walking direct path from asgard
         assert 'walking' in response['journeys'][2]['tags']
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 2000
@@ -183,3 +217,33 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
+
+
+@dataset(
+    {
+        'main_routing_test': {
+            'scenario': 'distributed',
+            'instance_config': {'street_network': MOCKED_ASGARD_CONF_WITH_BAD_RESPONSE},
+        }
+    }
+)
+class TestAsgardDirectPath(AbstractTestFixture):
+    def test_crowfly_replaces_section_if_street_network_failed(self):
+        """
+        Topic: This case arrives when the street network computation has failed.
+               In this case, we replace the lost street network section by a crowfly, like in New Default
+        """
+        response, status = self.query_region(journey_basic_query, check=False)
+        assert status == 200
+        check_journeys(response)
+
+        assert len(response['journeys']) == 1
+
+        assert len(response['journeys'][0]['sections']) == 3
+        assert (
+            response['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        ), "A crow fly should replace the street network"
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert (
+            response['journeys'][0]['sections'][2]['type'] == 'crow_fly'
+        ), "A crow fly should replace the street network"

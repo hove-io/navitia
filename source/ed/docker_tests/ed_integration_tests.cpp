@@ -203,6 +203,28 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
+
+    // Here we check trip_short_name as well as headsign of some vjs
+    const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
+    // vjs with headsign="vehiclejourney1" and trip_short_name="trip_1_short_name"
+    const auto vj_from_headsign_1 = headsigns.get_vj_from_headsign("vehiclejourney1");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_1.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_1[0]->headsign, "vehiclejourney1");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_1[0]->name, "trip_1_short_name");
+    // vjs with headsign="vehiclejourney3" but without trip_short_name
+    const auto vj_from_headsign_2 = headsigns.get_vj_from_headsign("vehiclejourney3");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_2.size(), 2);
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_2[0]->headsign, "vehiclejourney3");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_2[0]->name, "vehiclejourney3");
+    // vjs without headsign but with trip_short_name="trip_5_short_name"
+    const auto vj_from_headsign_3 = headsigns.get_vj_from_headsign("trip_5_dst_1");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_3.size(), 1);
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_3[0]->headsign, "trip_5_dst_1");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_3[0]->name, "trip_5_short_name");
+    const auto vj_from_headsign_4 = headsigns.get_vj_from_headsign("trip_5_dst_2");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_4.size(), 1);
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_4[0]->headsign, "trip_5_dst_2");
+    BOOST_REQUIRE_EQUAL(vj_from_headsign_4[0]->name, "trip_5_short_name");
 }
 
 BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {

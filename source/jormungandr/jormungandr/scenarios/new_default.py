@@ -175,12 +175,13 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
     sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
     sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
     sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
-    sn_params.max_car_no_park_duration_to_pt = request["max_car_no_park_duration_to_pt"]
+    # So far, ridesharing is the only mode using 'car_no_park' in new_default
+    sn_params.max_car_no_park_duration_to_pt = request["max_ridesharing_duration_to_pt"]
     sn_params.walking_speed = request["walking_speed"]
     sn_params.bike_speed = request["bike_speed"]
     sn_params.car_speed = request["car_speed"]
     sn_params.bss_speed = request["bss_speed"]
-    sn_params.car_no_park_speed = request["car_no_park_speed"]
+    sn_params.car_no_park_speed = request["ridesharing_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
     # we always want direct path, even for car
@@ -242,7 +243,7 @@ def sort_journeys(resp, journey_order, clockwise):
         resp.journeys.sort(key=cmp_to_key(journey_sorter[journey_order](clockwise=clockwise)))
 
 
-def compute_car_co2_emission(pb_resp, api_request, instance):
+def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
     if not pb_resp.journeys:
         return
     car = next((j for j in pb_resp.journeys if helpers.is_car_direct_path(j)), None)
@@ -250,7 +251,7 @@ def compute_car_co2_emission(pb_resp, api_request, instance):
         # if there is no car journey found, we request kraken to give us an estimation of
         # co2 emission
         co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(
-            api_request['origin'], api_request['destination']
+            api_request['origin'], api_request['destination'], request_id
         )
         if co2_estimation:
             # Assign car_co2_emission into the resp, these value will be exposed in the final result
@@ -956,18 +957,23 @@ class Scenario(simple.Scenario):
     def get_context(self):
         return None
 
-    def finalise_journeys(self, request, pt_journey_elements, context, instance, is_debug):
+    def finalise_journeys(self, request, pt_journey_elements, context, instance, is_debug, request_id):
         pass
 
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
+        request_id = api_request.get("request_id", None)
 
         if api_request['max_nb_journeys'] is not None and api_request['max_nb_journeys'] <= 0:
             return response_pb2.Response()
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
-        origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
-        destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
+        origin_detail = self.get_entrypoint_detail(
+            api_request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
+        )
+        destination_detail = self.get_entrypoint_detail(
+            api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
+        )
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
@@ -1024,7 +1030,14 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call, distributed_context)
+            new_resp = self.call_kraken(
+                request_type,
+                request,
+                instance,
+                krakens_call,
+                "{}_try_{}".format(request_id, nb_try),
+                distributed_context,
+            )
 
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
@@ -1063,12 +1076,14 @@ class Scenario(simple.Scenario):
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
-        self.finalise_journeys(api_request, responses, distributed_context, instance, api_request['debug'])
+        self.finalise_journeys(
+            api_request, responses, distributed_context, instance, api_request['debug'], request_id
+        )
 
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
-        compute_car_co2_emission(pb_resp, api_request, instance)
+        compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
         tag_journeys(pb_resp)
 
         if instance.ridesharing_services and (
@@ -1094,7 +1109,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call, context=None):
+    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context=None):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1108,21 +1123,15 @@ class Scenario(simple.Scenario):
         futures = []
         reqctx = copy_flask_request_context()
 
-        def worker(dep_mode, arr_mode, instance, request, flask_request_id):
+        def worker(dep_mode, arr_mode, instance, request, _request_id):
             with copy_context_in_greenlet_stack(reqctx):
-                return (
-                    dep_mode,
-                    arr_mode,
-                    instance.send_and_receive(request, flask_request_id=flask_request_id),
-                )
+                return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=_request_id))
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode, direct_path_type in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode, direct_path_type)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
-            futures.append(
-                pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id)
-            )
+            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, _request_id=request_id))
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
@@ -1160,8 +1169,11 @@ class Scenario(simple.Scenario):
         krakens_call = get_kraken_calls(request)
         # Initialize a context for distributed
         distributed_context = self.get_context()
+        request_id = request.get("request_id", None)
         resp = merge_responses(
-            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call, distributed_context),
+            self.call_kraken(
+                type_pb2.ISOCHRONE, request, instance, krakens_call, request_id, distributed_context
+            ),
             request['debug'],
         )
         if not request['debug']:
@@ -1223,9 +1235,9 @@ class Scenario(simple.Scenario):
         one_second = 1
         return best.arrival_date_time - one_second
 
-    def get_entrypoint_detail(self, entrypoint, instance):
+    def get_entrypoint_detail(self, entrypoint, instance, request_id):
         logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
-        detail = instance.autocomplete.get_object_by_uri(entrypoint, instances=[instance])
+        detail = instance.autocomplete.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
 
         if detail:
             return detail
@@ -1235,7 +1247,7 @@ class Scenario(simple.Scenario):
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_object_by_uri(entrypoint, instances=[instance])
+                return bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
 
         return None
 

@@ -271,6 +271,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     std::string odt_message;
     std::string meta_vj_name;  // link to it's meta vj
     std::string shape_id;
+    std::string headsign;
 
     int start_time = std::numeric_limits<int>::max();    /// First departure of vehicle
     int end_time = std::numeric_limits<int>::max();      /// Last departure of vehicle journey

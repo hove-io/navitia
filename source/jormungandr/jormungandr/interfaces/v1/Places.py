@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import abort
 from flask.globals import g
-
+import flask
 from jormungandr.authentication import get_all_available_instances
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
@@ -44,7 +44,7 @@ from jormungandr.exceptions import TechnicalError, InvalidArguments
 from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
-from jormungandr.scenarios.utils import places_type
+from jormungandr.scenarios.utils import places_type, places_nearby_type
 from navitiacommon import parser_args_type
 from navitiacommon.parser_args_type import (
     TypeSchema,
@@ -232,6 +232,9 @@ class PlaceUri(ResourceUri):
     def get(self, id, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         args.update({"uri": transform_id(id), "_current_datetime": datetime.utcnow()})
+        request_id = "places_{}".format(flask.request.id)
+        args["request_id"] = request_id
+
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
             timezone.set_request_timezone(self.region)
@@ -242,7 +245,7 @@ class PlaceUri(ResourceUri):
             autocomplete = global_autocomplete.get('bragi')
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
-            response = autocomplete.get_by_uri(args["uri"], instances=available_instances)
+            response = autocomplete.get_by_uri(args["uri"], request_id=request_id, instances=available_instances)
 
         return response, 200
 
@@ -267,7 +270,7 @@ class PlacesNearby(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument(
             "type[]",
-            type=OptionValue(list(places_type.keys())),
+            type=OptionValue(list(places_nearby_type.keys())),
             action="append",
             default=["stop_area", "stop_point", "poi"],
             help="Type of the objects to return",

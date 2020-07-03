@@ -159,6 +159,7 @@ instance_fields = {
     'car_park_provider': fields.Raw,
     'equipment_details_providers': fields.Nested(equipment_provider_fields),
     'street_network_car': FieldUrlStreetNetworkBackend(),
+    'street_network_car_no_park': FieldUrlStreetNetworkBackend(),
     'street_network_walking': FieldUrlStreetNetworkBackend(),
     'street_network_bike': FieldUrlStreetNetworkBackend(),
     'street_network_bss': FieldUrlStreetNetworkBackend(),
@@ -170,6 +171,11 @@ instance_fields = {
     'max_car_direct_path_duration': fields.Raw,
     'max_taxi_direct_path_duration': fields.Raw,
     'max_ridesharing_direct_path_duration': fields.Raw,
+    'poi_dataset': fields.Raw,
+    'max_taxi_duration_to_pt': fields.Raw,
+    'max_car_no_park_direct_path_duration': fields.Raw,
+    'ridesharing_speed': fields.Raw,
+    'max_ridesharing_duration_to_pt': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

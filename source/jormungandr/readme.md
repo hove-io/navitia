@@ -1,6 +1,6 @@
 
 # Jormungandr
-Web service around the c++ core(s). This is the navitia api front end, based on flask.
+Web service around the c++ core(s). This is the navitia api front end, based on Flask.
 
 :snake: **python module**
 
@@ -20,7 +20,7 @@ mkvirtualenv -r requirements_dev.txt -p /usr/bin/python2 jormungandr
 Jormungandr uses 2 different levels of config:
 * `jormungandr.json` : that describes Kraken's instances and coverages
 * Jormungandr's core config via :
-	* Environment variables [the prefered option]  
+	* Environment variables [the prefered option]
 	* A custom setting file `custom_settings.py` [for advanced usage] - that overwrites default settings
 
 ## jormungandr.json
@@ -57,7 +57,7 @@ PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JOR
 
 This helps you overwrite the default settings from a file. Prevent from mixing both custom file settings and environment variables.
 
-Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:  
+Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:
 
 ```sh
 PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py FLASK_APP=jormungandr:app flask run

@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "metrics.h"
 #include "utils/deadline.h"
+#include "type/datetime.h"
 
 #include <log4cplus/ndc.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -65,7 +66,8 @@ namespace pt = boost::posix_time;
 inline void doWork(zmq::context_t& context,
                    DataManager<navitia::type::Data>& data_manager,
                    navitia::kraken::Configuration conf,
-                   const navitia::Metrics& metrics) {
+                   const navitia::Metrics& metrics,
+                   int worker_id) {
     auto logger = log4cplus::Logger::getInstance("worker");
 
     zmq::socket_t socket(context, ZMQ_REQ);
@@ -105,7 +107,10 @@ inline void doWork(zmq::context_t& context,
         }
 
         api = pb_req.requested_api();
-        log4cplus::NDCContextCreator ndc(pb_req.request_id());
+        const std::string& request_id = pb_req.request_id();
+        log4cplus::NDCContextCreator ndc(request_id);
+
+        LOG4CPLUS_INFO(logger, "receive request : " << pbnavitia::API_Name(api));
         if (api != pbnavitia::METADATAS) {
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
@@ -144,7 +149,8 @@ inline void doWork(zmq::context_t& context,
             w.pb_creator.set_publication_date(data->meta->publication_date);
         }
         respond(socket, address, w.pb_creator.get_response());
-        auto duration = pt::microsec_clock::universal_time() - start;
+        auto end = pt::microsec_clock::universal_time();
+        auto duration = end - start;
         metrics.observe_api(api, duration.total_milliseconds() / 1000.0);
         if (duration >= slow_request_duration) {
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()
@@ -152,5 +158,11 @@ inline void doWork(zmq::context_t& context,
         } else if (api != pbnavitia::METADATAS) {
             LOG4CPLUS_DEBUG(logger, "processing time : " << duration.total_milliseconds());
         }
+
+        auto start_timestamp = (start - navitia::posix_epoch).total_milliseconds();
+        auto end_timestamp = (end - navitia::posix_epoch).total_milliseconds();
+        LOG4CPLUS_INFO(logger, "Api : " << pbnavitia::API_Name(api) << ", worker : " << worker_id
+                                        << ", request : " << request_id << ", start : " << start_timestamp
+                                        << ", end : " << end_timestamp);
     }
 }

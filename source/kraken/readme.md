@@ -1,8 +1,7 @@
 # Kraken
 Kraken is a public transport trip planner and much more, it provides schedules, timetables and expose public
 transport data via
-[PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).  
-It also provides:
+[PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).<br>It also provides:
   - (bad) street network routing that will be replaced by [asgard](https://github.com/CanalTP/asgard)
   - autocomplete that will be replaced by [mimir](https://github.com/CanalTP/mimirsbrunn)
 

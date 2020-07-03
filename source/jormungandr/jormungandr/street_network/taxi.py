@@ -74,6 +74,7 @@ class Taxi(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
 
         copy_request = copy.deepcopy(request)
@@ -86,6 +87,7 @@ class Taxi(AbstractStreetNetworkService):
             fallback_extremity,
             copy_request,
             direct_path_type,
+            request_id,
         )
         if not response:
             return response
@@ -179,13 +181,20 @@ class Taxi(AbstractStreetNetworkService):
         journey.nb_sections += 1
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, street_network_mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
 
         copy_request = copy.deepcopy(request)
         copy_request["car_no_park_speed"] = copy_request["taxi_speed"]
         response = self.street_network.get_street_network_routing_matrix(
-            instance, origins, destinations, street_network_mode, max_duration, copy_request, **kwargs
+            instance,
+            origins,
+            destinations,
+            street_network_mode,
+            max_duration,
+            copy_request,
+            request_id,
+            **kwargs
         )
 
         if response and len(response.rows):

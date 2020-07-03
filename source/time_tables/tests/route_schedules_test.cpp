@@ -103,10 +103,10 @@ struct route_schedule_fixture {
 
     route_schedule_fixture() {
         const std::string a_name = "stopA", b_name = "stopB", c_name = "stopC", d_name = "stopD";
-        b.vj("A", "1111111", "", true, "1", "1")(c_name, 8 * 3600 + 5 * 60)(d_name, 9 * 3600 + 30 * 60);
-        b.vj("A", "1111111", "", true, "2", "2")(a_name, 8 * 3600)(b_name, 8 * 3600 + 10 * 60);
-        b.vj("A", "1111111", "", true, "3", "3")(a_name, 8 * 3600 + 5 * 60)(b_name, 8 * 3600 + 20 * 60);
-        b.vj("A", "1111111", "", true, "4", "4")(b_name, 8 * 3600 + 25 * 60)(d_name, 9 * 3600 + 35 * 60);
+        b.vj("A", "1111111", "", true, "1", "hs_1", "1")(c_name, 8 * 3600 + 5 * 60)(d_name, 9 * 3600 + 30 * 60);
+        b.vj("A", "1111111", "", true, "2", "hs_2", "2")(a_name, 8 * 3600)(b_name, 8 * 3600 + 10 * 60);
+        b.vj("A", "1111111", "", true, "3", "hs_3", "3")(a_name, 8 * 3600 + 5 * 60)(b_name, 8 * 3600 + 20 * 60);
+        b.vj("A", "1111111", "", true, "4", "hs_4", "4")(b_name, 8 * 3600 + 25 * 60)(d_name, 9 * 3600 + 35 * 60);
         b.finish();
         b.data->pt_data->sort_and_index();
         b.data->build_raptor();
@@ -176,11 +176,14 @@ struct route_schedule_calendar_fixture {
         boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
-        vj5 = b.vj("B", "1111111", "", true, "VJ5", "MVJ5")(S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name, "11:00"_t)
+        vj5 = b.vj("B", "1111111", "", true, "VJ5", "hs_VJ5", "MVJ5")(S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name,
+                                                                                                              "11:00"_t)
                   .make();
-        vj6 = b.vj("B", "1111111", "", true, "VJ6", "MVJ6")(S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name, "12:00"_t)
+        vj6 = b.vj("B", "1111111", "", true, "VJ6", "hs_VJ6", "MVJ6")(S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name,
+                                                                                                              "12:00"_t)
                   .make();
-        vj7 = b.vj("B", "1111111", "", true, "VJ7", "MVJ7")(S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name, "14:00"_t)
+        vj7 = b.vj("B", "1111111", "", true, "VJ7", "hs_VJ7", "MVJ7")(S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name,
+                                                                                                              "14:00"_t)
                   .make();
 
         auto save_cal = [&](navitia::type::Calendar* cal) {
@@ -444,9 +447,9 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20160101");
 
-    b.vj("L", "111111", "", true, "A", "A")("st1", "23:30"_t)("st2", "23:40"_t)("st3", "23:50"_t);
-    b.vj("L", "111111", "", true, "B", "B")("st1", "23:50"_t)("st2", "24:00"_t)("st3", "24:10"_t);
-    b.vj("L", "111110", "", true, "C", "C")("st1", "24:10"_t)("st2", "24:20"_t)("st3", "24:30"_t);
+    b.vj("L", "111111", "", true, "A", "hs_A", "A")("st1", "23:30"_t)("st2", "23:40"_t)("st3", "23:50"_t);
+    b.vj("L", "111111", "", true, "B", "hs_B", "B")("st1", "23:50"_t)("st2", "24:00"_t)("st3", "24:10"_t);
+    b.vj("L", "111110", "", true, "C", "hs_C", "C")("st1", "24:10"_t)("st2", "24:20"_t)("st3", "24:30"_t);
 
     auto save_cal = [&](navitia::type::Calendar* cal) {
         b.data->pt_data->calendars.push_back(cal);
@@ -495,10 +498,11 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
 // st6 5 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_1) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A")("st4", "5:00"_t)("st5", "6:00"_t)("st6", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B")("st1", "1:00"_t)("st2", "3:00"_t)("st3", "5:00"_t)("st4", "6:00"_t)(
-        "st5", "7:00"_t)("st6", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C")("st1", "2:00"_t)("st4", "3:00"_t)("st5", "4:00"_t)("st6", "5:00"_t);
+    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st4", "5:00"_t)("st5", "6:00"_t)("st6", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "3:00"_t)("st3", "5:00"_t)(
+        "st4", "6:00"_t)("st5", "7:00"_t)("st6", "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st4", "3:00"_t)("st5", "4:00"_t)("st6",
+                                                                                                        "5:00"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -533,10 +537,11 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
 // st8 10 11
 BOOST_AUTO_TEST_CASE(complicated_order_2) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)("st4", "5:00"_t)(
-        "st5", "7:00"_t)("st6", "9:00"_t)("st7", "10:00"_t)("st8", "11:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B")("st1", "2:00"_t)("st2", "3:00"_t)("st3", "4:00"_t)("st6", "7:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C")("st6", "8:00"_t)("st7", "9:00"_t)("st8", "10:00"_t);
+    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
+        "st4", "5:00"_t)("st5", "7:00"_t)("st6", "9:00"_t)("st7", "10:00"_t)("st8", "11:00"_t);
+    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "2:00"_t)("st2", "3:00"_t)("st3", "4:00"_t)("st6",
+                                                                                                        "7:00"_t);
+    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st6", "8:00"_t)("st7", "9:00"_t)("st8", "10:00"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -567,11 +572,12 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
 // st4 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_3) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
-    b.vj("L", "1111111", "", true, "D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
-    b.vj("L", "1111111", "", true, "E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
+    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
+                                                                                                        "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
+    b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
+    b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -638,11 +644,12 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
 
 BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
-    b.vj("L", "1111111", "", true, "D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
-    b.vj("L", "1111111", "", true, "E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
+    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
+    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
+                                                                                                        "8:00"_t);
+    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
+    b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
+    b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
 
     b.finish();
     b.data->pt_data->sort_and_index();

@@ -325,6 +325,10 @@ class Instance(db.Model):  # type: ignore
         db.Integer, default=default_values.max_car_no_park_duration_to_pt, nullable=False
     )
 
+    max_ridesharing_duration_to_pt = db.Column(
+        db.Integer, default=default_values.max_ridesharing_duration_to_pt, nullable=False
+    )
+
     max_taxi_duration_to_pt = db.Column(
         db.Integer, default=default_values.max_taxi_duration_to_pt, nullable=False
     )
@@ -338,6 +342,8 @@ class Instance(db.Model):  # type: ignore
     car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
 
     car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)
+
+    ridesharing_speed = db.Column(db.Float, default=default_values.ridesharing_speed, nullable=False)
 
     taxi_speed = db.Column(db.Float, default=default_values.taxi_speed, nullable=False)
 
@@ -454,6 +460,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.max_car_direct_path_duration),
     )
 
+    max_car_no_park_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_no_park_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_no_park_direct_path_duration),
+    )
+
     max_taxi_direct_path_duration = db.Column(
         db.Integer,
         default=default_values.max_taxi_direct_path_duration,
@@ -479,6 +492,14 @@ class Instance(db.Model):  # type: ignore
         nullable=False,
         default=default_values.street_network_car,
     )
+
+    street_network_car_no_park = db.Column(
+        db.Text,
+        db.ForeignKey('streetnetwork_backend.id'),
+        nullable=False,
+        default=default_values.street_network_car_no_park,
+    )
+
     street_network_walking = db.Column(
         db.Text,
         db.ForeignKey('streetnetwork_backend.id'),
@@ -691,7 +712,7 @@ class TravelerProfile(db.Model):  # type: ignore
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
     fallback_mode = db.Enum(
-        'walking', 'car', 'bss', 'bike', 'ridesharing', name='fallback_mode'
+        'walking', 'car', 'car_no_park', 'bss', 'bike', 'ridesharing', name='fallback_mode'
     )  # TODO alembic migration
 
     first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)

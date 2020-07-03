@@ -29,9 +29,10 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from .helper_utils import get_max_fallback_duration, timed_logger
-from jormungandr import utils, new_relic
+from .helper_utils import get_max_fallback_duration, get_fallback_duration_for_stop_point_nearby, timed_logger
+from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
+from navitiacommon import type_pb2
 
 
 class ProximitiesByCrowfly:
@@ -40,7 +41,18 @@ class ProximitiesByCrowfly:
     """
 
     def __init__(
-        self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly, request
+        self,
+        future_manager,
+        instance,
+        requested_place_obj,
+        mode,
+        max_duration,
+        max_nb_crowfly,
+        object_type,
+        filter,
+        stop_points_nearby_duration,
+        request,
+        request_id,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -48,19 +60,27 @@ class ProximitiesByCrowfly:
         self._mode = mode
         self._max_duration = max_duration
         self._max_nb_crowfly = max_nb_crowfly
+        self._object_type = object_type
+        self._filter = filter
+        self._stop_points_nearby_duration = stop_points_nearby_duration
         self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
         self._value = None
         self._logger = logging.getLogger(__name__)
+        self._request_id = request_id
         self._async_request()
 
-    @new_relic.distributedEvent("get_crowf_ly", "street_network")
+    @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
-        with timed_logger(self._logger, 'get_crow_fly_calling_external_service'):
+        with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
             return self._instance.georef.get_crow_fly(
                 utils.get_uri_pt_object(self._requested_place_obj),
                 self._mode,
                 self._max_duration,
                 self._max_nb_crowfly,
+                self._object_type,
+                self._filter,
+                self._stop_points_nearby_duration,
+                self._request_id,
                 **self._speed_switcher
             )
 
@@ -76,7 +96,7 @@ class ProximitiesByCrowfly:
             logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri):
+            if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri, self._request_id):
                 return [self._requested_place_obj]
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
@@ -95,7 +115,7 @@ class ProximitiesByCrowfly:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly'):
+        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly', self._request_id):
             return self._value.wait_and_get()
 
 
@@ -109,6 +129,8 @@ class ProximitiesByCrowflyPool:
         request,
         direct_paths_by_mode,
         max_nb_crowfly_by_mode,
+        request_id,
+        o_d_crowfly_distance,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -125,6 +147,7 @@ class ProximitiesByCrowflyPool:
                                      15min (max_duration is 30min by default).
         :param max_nb_crowfly_by_mode: a map of "mode" vs "nb of proximities by crowfly", used to reduce the load of
                                        street network services if necessary
+        :param o_d_crowfly_distance: if no direct_path is found with the given mode, we use min(o_d_crowfly_distance, max_fallback_duration_to_pt)
         """
         self._future_manager = future_manager
         self._instance = instance
@@ -137,15 +160,30 @@ class ProximitiesByCrowflyPool:
 
         self._future = None
         self._value = {}
-
+        self._request_id = request_id
+        self._o_d_crowfly_distance = o_d_crowfly_distance
         self._async_request()
 
     def _async_request(self):
 
         for mode in self._modes:
-            max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.get(mode)
+            object_type = type_pb2.STOP_POINT
+            filter = None
+            if mode == fm.FallbackModes.car.name:
+                object_type = type_pb2.POI
+                filter = "poi_type.uri=\"poi_type:amenity:parking\""
+
+            dp_future = self._direct_paths_by_mode.get(mode)
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, dp_future)
+            speed = jormungandr.street_network.utils.make_speed_switcher(self._request).get(mode)
+
+            no_dp = (
+                dp_future is None or dp_future.wait_and_get() is None or not dp_future.wait_and_get().journeys
             )
+
+            if mode == fm.FallbackModes.car.name and no_dp and self._o_d_crowfly_distance is not None:
+                max_fallback_duration = min(max_fallback_duration, self._o_d_crowfly_distance / float(speed))
+
             p = ProximitiesByCrowfly(
                 future_manager=self._future_manager,
                 instance=self._instance,
@@ -153,7 +191,11 @@ class ProximitiesByCrowflyPool:
                 mode=mode,
                 max_duration=max_fallback_duration,
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
+                object_type=object_type,
+                filter=filter,
+                stop_points_nearby_duration=get_fallback_duration_for_stop_point_nearby(self._request),
                 request=self._request,
+                request_id=self._request_id,
             )
 
             self._value[mode] = p

@@ -353,7 +353,7 @@ class GeocodeJson(AbstractAutocomplete):
         """
         return param.split(";")
 
-    def get_by_uri(self, uri, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
 
         params = self.basic_params(instances)
         lon, lat = get_lon_lat_from_id(uri)

@@ -35,11 +35,14 @@ from collections import namedtuple
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from jormungandr.street_network.utils import pick_up_park_ride_car_park
 from jormungandr import new_relic
+from jormungandr.fallback_modes import FallbackModes
 import logging
 from .helper_utils import timed_logger
 
-DurationElement = namedtuple('DurationElement', ['duration', 'status'])
+# use dataclass when python3.7 is available
+DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
 
 
 class FallbackDurations:
@@ -68,6 +71,7 @@ class FallbackDurations:
         max_duration_to_pt,
         request,
         speed_switcher,
+        request_id,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     ):
         """
@@ -95,17 +99,20 @@ class FallbackDurations:
         self._direct_path_type = direct_path_type
         self._streetnetwork_service = instance.get_street_network(mode, request)
         self._logger = logging.getLogger(__name__)
-
+        self._request_id = request_id
         self._async_request()
 
     def _get_duration(self, resp, place):
         if resp.routing_status == response_pb2.reached:
             return resp.duration
-        return int((place.distance * sqrt(2)) / self._speed_switcher.get(self._mode))
+        return self._get_manhattan_duration(place.distance, self._speed_switcher.get(self._mode))
+
+    def _get_manhattan_duration(self, distance, speed):
+        return int((distance * sqrt(2)) / speed)
 
     @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
-        with timed_logger(self._logger, 'routing_matrix_calling_external_service'):
+        with timed_logger(self._logger, 'routing_matrix_calling_external_service', self._request_id):
             try:
                 return self._streetnetwork_service.get_street_network_routing_matrix(
                     self._instance,
@@ -114,6 +121,7 @@ class FallbackDurations:
                     self._mode,
                     self._max_duration_to_pt,
                     self._request,
+                    self._request_id,
                     **self._speed_switcher
                 )
             except Exception as e:
@@ -128,6 +136,10 @@ class FallbackDurations:
         # stop_point or a stop_area
         center_isochrone = self._requested_place_obj
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
+        if self._mode == FallbackModes.car.name:
+            # pick up only parkings with park_ride = yes
+            proximities_by_crowfly = pick_up_park_ride_car_park(proximities_by_crowfly)
 
         free_access = self._places_free_access.wait_and_get()
 
@@ -149,7 +161,7 @@ class FallbackDurations:
 
         result = {}
         # Since we have already places that have free access, we add them into the result
-        [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
+        [result.update({uri: DurationElement(0, response_pb2.reached, None, 0)}) for uri in all_free_access]
 
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
@@ -161,8 +173,8 @@ class FallbackDurations:
             logger.debug("max_duration_to_pt equals to 0")
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
+            if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri, self._request_id):
+                return {center_isochrone.uri: DurationElement(0, response_pb2.reached, None, 0)}
             else:
                 return result
 
@@ -183,13 +195,43 @@ class FallbackDurations:
             or not len(sn_routing_matrix.rows[0].routing_response)
         ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
+            for sp in places_isochrone:
+                result[sp.uri] = DurationElement(
+                    self._get_manhattan_duration(sp.distance, self._speed_switcher.get(self._mode)),
+                    response_pb2.reached,
+                    None,
+                    0,
+                )
             return result
 
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
             if r.routing_status != response_pb2.unreached:
                 duration = self._get_duration(r, places_isochrone[pos])
-                if duration < self._max_duration_to_pt:
-                    result.update({places_isochrone[pos].uri: DurationElement(duration, r.routing_status)})
+                # if the mode is car, we need to find where to park the car :)
+                if self._mode == FallbackModes.car.name:
+                    for sp_nearby in places_isochrone[pos].stop_points_nearby:
+                        duration_to_stop_point = self._get_manhattan_duration(
+                            sp_nearby.distance, self._speed_switcher.get('walking')
+                        )
+                        durations_sum = (
+                            duration + duration_to_stop_point + self._request.get('_car_park_duration')
+                        )
+
+                        if durations_sum < min(
+                            self._max_duration_to_pt,
+                            result.get(sp_nearby.uri, DurationElement(float('inf'), None, None, None)).duration,
+                        ):
+                            result[sp_nearby.uri] = DurationElement(
+                                durations_sum,
+                                response_pb2.reached,
+                                places_isochrone[pos],
+                                duration_to_stop_point,
+                            )
+                else:
+                    if duration < self._max_duration_to_pt:
+                        result.update(
+                            {places_isochrone[pos].uri: DurationElement(duration, r.routing_status, None, 0)}
+                        )
 
         # We update the fallback duration matrix if the requested origin/destination is also
         # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
@@ -197,7 +239,7 @@ class FallbackDurations:
         #                stop_point1   stop_point2  stop_point3
         # stop_point_1         0(s)       ...          ...
         if center_isochrone.uri in result:
-            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached)
+            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached, None, 0)
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
@@ -207,7 +249,7 @@ class FallbackDurations:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_routing_matrix'):
+        with timed_logger(self._logger, 'waiting_for_routing_matrix', self._request_id):
             return self._value.wait_and_get() if self._value else None
 
 
@@ -226,6 +268,7 @@ class FallbackDurationsPool(dict):
         places_free_access,
         direct_paths_by_mode,
         request,
+        request_id,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     ):
         super(FallbackDurationsPool, self).__init__()
@@ -241,7 +284,7 @@ class FallbackDurationsPool(dict):
         self._speed_switcher = jormungandr.street_network.utils.make_speed_switcher(request)
 
         self._value = {}
-
+        self._request_id = request_id
         self._async_request()
 
     def _async_request(self):
@@ -259,6 +302,7 @@ class FallbackDurationsPool(dict):
                 max_fallback_duration,
                 self._request,
                 self._speed_switcher,
+                self._request_id,
                 self._direct_path_type,
             )
             self._value[mode] = fallback_durations

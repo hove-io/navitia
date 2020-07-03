@@ -1,3 +1,51 @@
+navitia2 (5.1.0) unstable; urgency=low
+
+  * [DOC] some descriptions on links  <https://github.com/CanalTP/navitia/pull/3237>
+  * [Jormungandr] Direct path with p+r  <https://github.com/CanalTP/navitia/pull/3228>
+  * [Jormun] Add Here street network connector  <https://github.com/CanalTP/navitia/pull/3232>
+  * [terminus_schedules] Add endpoint in the documentation and set data_fressness default value to 'base_schedule'  <https://github.com/CanalTP/navitia/pull/3233>
+  * [Jormun] same_journey_schedules modified and this_journey added in journey.links  <https://github.com/CanalTP/navitia/pull/3235>
+  * [DOC] minor modification dans la doc release  <https://github.com/CanalTP/navitia/pull/3234>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 03 Jul 2020 10:07:58 +0100
+
+navitia2 (5.0.0) unstable; urgency=low
+
+  * [ALL] Manage trip shortname and headsign  <https://github.com/CanalTP/navitia/pull/3230>
+  * [Jormun] Set distributed scenario on call to kraken.  <https://github.com/CanalTP/navitia/pull/3231>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 19 Jun 2020 10:06:18 +0100
+
+navitia2 (4.3.0) unstable; urgency=low
+
+  * [Jormun] crowfly replaces street network section when the computation has failed  <https://github.com/CanalTP/navitia/pull/3229>
+  * [Doc] Document how tests are being invoked  <https://github.com/CanalTP/navitia/pull/3226>
+  * [Jormun] get_realtime_proxy on non-realtime object causing 'no handler found'  <https://github.com/CanalTP/navitia/pull/3224>
+  * [Tyr] Purge instance after each bina  <https://github.com/CanalTP/navitia/pull/3227>
+  * [Doc] Extend Disruptor doc with troubles sections  <https://github.com/CanalTP/navitia/pull/3223>
+  * [Jormun Tyr] Fix street_network_car_no_park  <https://github.com/CanalTP/navitia/pull/3225>
+  * [Distributed]: add parking P+R section for car mode  <https://github.com/CanalTP/navitia/pull/3213>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 05 Jun 2020 11:06:12 +0100
+
+navitia2 (4.2.0) unstable; urgency=low
+
+  * tools: add bench tool  <https://github.com/CanalTP/navitia/pull/3202>
+  * tools: Log analyzer for distributed  <https://github.com/CanalTP/navitia/pull/3180>
+  * mergify: Fix do_not_merge label for mergify  <https://github.com/CanalTP/navitia/pull/3222>
+  * doc: adapt markdown for double blank space  <https://github.com/CanalTP/navitia/pull/3221>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 22 May 2020 09:05:17 +0100
+
+navitia2 (4.1.0) unstable; urgency=low
+
+  * [Jormungandr] Write BAD_ID message in new_relic for SIRI_TAO  <https://github.com/CanalTP/navitia/pull/3207>
+  * [Kraken] Limit stop points nearby for place_nearby by radius option  <https://github.com/CanalTP/navitia/pull/3210>
+  * Activate realtime in terminus schedules  <https://github.com/CanalTP/navitia/pull/3215>
+  * Add cityname in direction and test  <https://github.com/CanalTP/navitia/pull/3212>
+
+ -- Pascal Benchimol <pascal.benchimol@kisio.com>  Thu, 07 May 2020 11:05:04 +0100
+
 navitia2 (4.0.0) unstable; urgency=low
 
   * Fusio2ed: take into account of stop_code within stops.txt  <https://github.com/CanalTP/navitia/pull/3190>

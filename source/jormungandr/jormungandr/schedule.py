@@ -60,7 +60,7 @@ def get_realtime_system_code(route_point):
         return None
 
     # for the moment we consider that there can be only one rt_system
-    return rt_system[0]
+    return six.text_type(rt_system[0])
 
 
 class RealTimePassage(object):
@@ -198,7 +198,7 @@ class MixedSchedule(object):
         if not route_point:
             return None
 
-        rt_system_code = six.text_type(get_realtime_system_code(route_point))
+        rt_system_code = get_realtime_system_code(route_point)
         if not rt_system_code:
             return None
 
@@ -341,15 +341,7 @@ class MixedSchedule(object):
 
         return resp
 
-    def terminus_schedules(self, request):
-        return self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
-
-    def departure_boards(self, request):
-        resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
-
-        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
-            return resp
-
+    def _manage_realtime(self, request, schedules):
         futures = []
         pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
@@ -365,13 +357,29 @@ class MixedSchedule(object):
                     self._get_next_realtime_passages(rt_proxy, route_point, request),
                 )
 
-        for stop_schedule in resp.stop_schedules:
-            route_point = _get_route_point_from_stop_schedule(stop_schedule)
+        for schedule in schedules:
+            route_point = _get_route_point_from_stop_schedule(schedule)
             rt_proxy = self._get_realtime_proxy(route_point)
             if rt_proxy:
-                futures.append(pool.spawn(worker, rt_proxy, route_point, request, stop_schedule))
+                futures.append(pool.spawn(worker, rt_proxy, route_point, request, schedule))
 
         for future in gevent.iwait(futures):
-            rt_proxy, stop_schedule, next_rt_passages = future.get()
-            rt_proxy._update_stop_schedule(stop_schedule, next_rt_passages)
+            rt_proxy, schedule, next_rt_passages = future.get()
+            rt_proxy._update_stop_schedule(schedule, next_rt_passages)
+
+    def terminus_schedules(self, request):
+        resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
+
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
+            return resp
+        self._manage_realtime(request, resp.terminus_schedules)
+        return resp
+
+    def departure_boards(self, request):
+        resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
+
+        if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
+            return resp
+
+        self._manage_realtime(request, resp.stop_schedules)
         return resp

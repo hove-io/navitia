@@ -204,9 +204,7 @@ class ReleaseManager:
         while True:
             query = (
                 "https://api.github.com/repos/CanalTP/navitia/"
-                "pulls?state=closed&base=dev&sort=updated&direction=desc&page={page}".format(
-                    latest_tag=self.latest_tag, page=page
-                )
+                "pulls?state=closed&base=dev&sort=updated&direction=desc&page={page}".format(page=page)
             )
             print("query github api: " + query)
             github_response = requests.get(query, auth=self.auth)

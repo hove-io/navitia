@@ -38,3 +38,4 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.ridesharing import Ridesharing
 from jormungandr.street_network.taxi import Taxi
 from jormungandr.street_network.with_parking import WithParking
+from jormungandr.street_network.car_with_park import CarWithPark

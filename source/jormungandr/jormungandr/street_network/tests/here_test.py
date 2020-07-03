@@ -116,7 +116,7 @@ def valid_here_routing_response():
 def test_matrix(valid_here_matrix):
     instance = MagicMock()
     instance.walking_speed = 1.12
-    here = Here(instance=instance, service_base_url='bob.com', app_id='toto', app_code='tata')
+    here = Here(instance=instance, service_base_url='bob.com', apiKey='toto')
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     with requests_mock.Mocker() as req:
@@ -128,6 +128,7 @@ def test_matrix(valid_here_matrix):
             mode='walking',
             max_duration=42,
             request={'datetime': str_to_time_stamp('20170621T174600')},
+            request_id=None,
         )
         assert response.rows[0].routing_response[0].duration == 440
         assert response.rows[0].routing_response[0].routing_status == response_pb2.reached
@@ -140,7 +141,7 @@ def test_matrix(valid_here_matrix):
 def test_matrix_timeout():
     instance = MagicMock()
     instance.walking_speed = 1.12
-    here = Here(instance=instance, service_base_url='bob.com', app_id='toto', app_code='tata')
+    here = Here(instance=instance, service_base_url='bob.com', apiKey='toto')
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     with requests_mock.Mocker() as req:
@@ -154,6 +155,7 @@ def test_matrix_timeout():
                 mode='walking',
                 max_duration=42,
                 request={'datetime': str_to_time_stamp('20170621T174600')},
+                request_id=None,
             )
 
 
@@ -193,12 +195,14 @@ def status_test():
         timeout=89,
     )
     status = here.status()
-    assert len(status) == 6
+    assert len(status) == 8
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
     assert status['class'] == "Here"
     assert status['modes'] == ["walking", "bike", "car"]
     assert status['timeout'] == 89
-    assert status['max_points'] == 100
+    assert status['matrix_type'] == "simple_matrix"
+    assert status['max_matrix_points'] == 100
+    assert status['realtime_traffic'] == "enabled"
     assert len(status['circuit_breaker']) == 3
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0

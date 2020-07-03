@@ -42,6 +42,12 @@ places_type = {
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
 }
 
+places_nearby_type = {
+    'stop_area': type_pb2.STOP_AREA,
+    'stop_point': type_pb2.STOP_POINT,
+    'address': type_pb2.ADDRESS,
+    'poi': type_pb2.POI,
+}
 
 pt_object_type = {
     'network': type_pb2.NETWORK,
@@ -212,6 +218,9 @@ def updated_common_journey_request_with_default(request, instance):
     if request['max_car_no_park_duration_to_pt'] is None:
         request['max_car_no_park_duration_to_pt'] = instance.max_car_no_park_duration_to_pt
 
+    if request['max_ridesharing_duration_to_pt'] is None:
+        request['max_ridesharing_duration_to_pt'] = instance.max_ridesharing_duration_to_pt
+
     if request['max_taxi_duration_to_pt'] is None:
         request['max_taxi_duration_to_pt'] = instance.max_taxi_duration_to_pt
 
@@ -232,6 +241,9 @@ def updated_common_journey_request_with_default(request, instance):
 
     if request['car_no_park_speed'] is None:
         request['car_no_park_speed'] = instance.car_no_park_speed
+
+    if request['ridesharing_speed'] is None:
+        request['ridesharing_speed'] = instance.ridesharing_speed
 
     if request['taxi_speed'] is None:
         request['taxi_speed'] = instance.taxi_speed

@@ -994,11 +994,26 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 }
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys) {
-    this->lotus.prepare_bulk_insert(
-        "navitia.vehicle_journey",
-        {"id", "uri", "name", "validity_pattern_id", "dataset_id", "start_time", "end_time", "headway_sec",
-         "adapted_validity_pattern_id", "company_id", "route_id", "physical_mode_id", "theoric_vehicle_journey_id",
-         "vehicle_properties_id", "odt_type_id", "odt_message", "is_frequency", "meta_vj_name", "vj_class"});
+    this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id",
+                                                                "uri",
+                                                                "name",
+                                                                "validity_pattern_id",
+                                                                "dataset_id",
+                                                                "start_time",
+                                                                "end_time",
+                                                                "headway_sec",
+                                                                "adapted_validity_pattern_id",
+                                                                "company_id",
+                                                                "route_id",
+                                                                "physical_mode_id",
+                                                                "theoric_vehicle_journey_id",
+                                                                "vehicle_properties_id",
+                                                                "odt_type_id",
+                                                                "odt_message",
+                                                                "is_frequency",
+                                                                "meta_vj_name",
+                                                                "vj_class",
+                                                                "headsign"});
 
     for (types::VehicleJourney* vj : vehicle_journeys) {
         std::vector<std::string> values;
@@ -1050,6 +1065,8 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         values.push_back(vj->meta_vj_name);
         // vj_class
         values.push_back(navitia::type::get_string_from_rt_level(vj->realtime_level));
+        // headsign
+        values.push_back(vj->headsign);
 
         this->lotus.insert(values);
     }

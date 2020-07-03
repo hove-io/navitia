@@ -667,7 +667,7 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
-        list_modes = ["car", "walking", "bike", "bss", "ridesharing", "taxi"]
+        list_modes = ["car", "car_no_park", "walking", "bike", "bss", "ridesharing", "taxi"]
         for mode in list_modes:
             parser.add_argument(
                 'street_network_{}'.format(mode),
@@ -683,6 +683,35 @@ class Instance(flask_restful.Resource):
                 location=('json', 'values'),
                 default=getattr(instance, "max_{}_direct_path_duration".format(mode)),
             )
+
+        parser.add_argument(
+            'poi_dataset',
+            type=str,
+            help='poi dataset utilisé pour autocomplete',
+            location=('json', 'values'),
+            default=instance.poi_dataset,
+        )
+        parser.add_argument(
+            'max_taxi_duration_to_pt',
+            type=int,
+            help='the maximum duration of taxi in fallback section',
+            location=('json', 'values'),
+            default=instance.max_taxi_duration_to_pt,
+        )
+        parser.add_argument(
+            'ridesharing_speed',
+            type=float,
+            help='the ridesharing speed',
+            location=('json', 'values'),
+            default=instance.ridesharing_speed,
+        )
+        parser.add_argument(
+            'max_ridesharing_duration_to_pt',
+            type=int,
+            help='the maximum duration of ridesharing in fallback section',
+            location=('json', 'values'),
+            default=instance.max_ridesharing_duration_to_pt,
+        )
 
         args = parser.parse_args()
 
@@ -738,6 +767,7 @@ class Instance(flask_restful.Resource):
                         'max_additional_connections',
                         'car_park_provider',
                         'street_network_car',
+                        'street_network_car_no_park',
                         'street_network_walking',
                         'street_network_bike',
                         'street_network_bss',
@@ -749,6 +779,11 @@ class Instance(flask_restful.Resource):
                         'max_car_direct_path_duration',
                         'max_taxi_direct_path_duration',
                         'max_ridesharing_direct_path_duration',
+                        'poi_dataset',
+                        'max_taxi_duration_to_pt',
+                        'max_car_no_park_direct_path_duration',
+                        'ridesharing_speed',
+                        'max_ridesharing_duration_to_pt',
                     ],
                 ),
                 maxlen=0,

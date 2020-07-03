@@ -54,7 +54,29 @@ def make_speed_switcher(req):
         FallbackModes.walking.name: req['walking_speed'],
         FallbackModes.bike.name: req['bike_speed'],
         FallbackModes.car.name: req['car_speed'],
+        FallbackModes.car_no_park.name: req['car_no_park_speed'],
         FallbackModes.bss.name: req['bss_speed'],
         FallbackModes.ridesharing.name: req['car_no_park_speed'],
         FallbackModes.taxi.name: req['taxi_speed'],
     }
+
+
+PARK_RIDE_VALUES = {'yes'}
+
+
+def pick_up_park_ride_car_park(pt_objects):
+    from navitiacommon import type_pb2
+    from jormungandr import utils
+
+    def is_poi(pt_object):
+        return pt_object.embedded_type == type_pb2.POI
+
+    def is_park_ride(pt_object):
+        return any(
+            prop.type == 'park_ride' and prop.value.lower() in PARK_RIDE_VALUES
+            for prop in pt_object.poi.properties
+        )
+
+    park_ride_poi_filter = utils.ComposedFilter().add_filter(is_poi).add_filter(is_park_ride).compose_filters()
+
+    return list(park_ride_poi_filter(pt_objects))

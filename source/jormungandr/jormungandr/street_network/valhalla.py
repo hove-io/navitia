@@ -151,7 +151,12 @@ class Valhalla(AbstractStreetNetworkService):
         """
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         """
-        map_mode = {"walking": response_pb2.Walking, "car": response_pb2.Car, "bike": response_pb2.Bike}
+        map_mode = {
+            "walking": response_pb2.Walking,
+            "car": response_pb2.Car,
+            "bike": response_pb2.Bike,
+            "car_no_park": response_pb2.Car,
+        }
         resp = response_pb2.Response()
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
@@ -236,7 +241,7 @@ class Valhalla(AbstractStreetNetworkService):
 
     @classmethod
     def _get_valhalla_mode(cls, kraken_mode):
-        map_mode = {"walking": "pedestrian", "car": "auto", "bike": "bicycle"}
+        map_mode = {"walking": "pedestrian", "car": "auto", "car_no_park": "auto", "bike": "bicycle"}
         if kraken_mode not in map_mode:
             logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(kraken_mode))
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
@@ -287,6 +292,7 @@ class Valhalla(AbstractStreetNetworkService):
         fallback_extremity,
         request,
         direct_path_type,
+        request_id,
     ):
         data = self._make_request_arguments(
             mode, [pt_object_origin], [pt_object_destination], request, api='route'
@@ -330,7 +336,7 @@ class Valhalla(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(
-        self, instance, origins, destinations, mode, max_duration, request, **kwargs
+        self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         # for now valhalla only manages 1-n request, so we reverse request if needed
         if len(origins) > 1:

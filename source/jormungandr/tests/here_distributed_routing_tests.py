@@ -39,12 +39,11 @@ MOCKED_INSTANCE_CONF = {
         'street_network': [
             {
                 "args": {
-                    "api_id": "bob_id",
-                    "api_code": "bob_code",
+                    "apiKey": "bob_id",
                     "service_base_url": "route.bob.here.com/routing/7.2/",
                     "timeout": 20,
                 },
-                "modes": ["car"],
+                "modes": ["car", "car_no_park"],
                 "class": "jormungandr.street_network.here.Here",
             },
             {"modes": ["walking", "bike", "bss"], "class": "jormungandr.street_network.kraken.Kraken"},
@@ -227,8 +226,8 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         test with car fallback and car direct path
         """
         q = (
-            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car"
-            "&last_section_mode[]=car&debug=true&min_nb_journeys=0".format(
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car_no_park"
+            "&last_section_mode[]=car_no_park&debug=true&min_nb_journeys=0".format(
                 from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR
             )
         )

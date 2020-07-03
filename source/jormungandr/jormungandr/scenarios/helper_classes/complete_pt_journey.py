@@ -82,19 +82,21 @@ def wait_and_build_crowflies(
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
         if pt_journeys and pt_journeys.journeys:
+            orig_fallback_durations = orig_fallback_durations_pool.wait_and_get(dep_mode)
             origin_crowfly = {
                 "entry_point": requested_orig_obj,
                 "mode": dep_mode,
                 "places_free_access": orig_places_free_access.wait_and_get(),
-                "fallback_durations": orig_fallback_durations_pool.wait_and_get(dep_mode),
+                "fallback_durations": orig_fallback_durations,
                 "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
             }
 
+            dest_fallback_durations = dest_fallback_durations_pool.wait_and_get(arr_mode)
             dest_crowfly = {
                 "entry_point": requested_dest_obj,
                 "mode": arr_mode,
                 "places_free_access": dest_places_free_acces.wait_and_get(),
-                "fallback_durations": dest_fallback_durations_pool.wait_and_get(arr_mode),
+                "fallback_durations": dest_fallback_durations,
                 "fallback_type": StreetNetworkPathType.ENDING_FALLBACK,
             }
 
@@ -137,6 +139,7 @@ def wait_and_complete_pt_journey(
     dest_fallback_durations_pool,
     request,
     journeys,
+    request_id,
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -148,18 +151,23 @@ def wait_and_complete_pt_journey(
 
     logger = logging.getLogger(__name__)
     # launch fallback direct path asynchronously
-    with timed_logger(logger, 'compute_fallback'):
+    sub_request_id = "{}_fallback".format(request_id)
+    with timed_logger(logger, 'compute_fallback', sub_request_id):
+
         compute_fallback(
             from_obj=requested_orig_obj,
             to_obj=requested_dest_obj,
             streetnetwork_path_pool=streetnetwork_path_pool,
             orig_places_free_access=orig_places_free_access,
             dest_places_free_access=dest_places_free_access,
+            orig_fallback_durations_pool=orig_fallback_durations_pool,
+            dest_fallback_durations_pool=dest_fallback_durations_pool,
             request=request,
             pt_journeys=journeys,
+            request_id=sub_request_id,
         )
 
-    with timed_logger(logger, 'complete_pt_journeys'):
+    with timed_logger(logger, 'complete_pt_journeys', request_id):
         for pt_element in journeys:
             complete_pt_journey(
                 requested_orig_obj=requested_orig_obj,

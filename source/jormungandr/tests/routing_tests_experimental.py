@@ -141,7 +141,10 @@ class TestJourneysDistributed(
         """
         Test when departure/arrival fallback modes are different
         """
-        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true&_car_park_duration=5"
+        )
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']
@@ -215,10 +218,10 @@ class TestJourneysDistributed(
         from navitiacommon import response_pb2
 
         instance = i_manager.instances['main_routing_test']
-        origin = instance.georef.place("stopB")
+        origin = instance.georef.place("stopB", None)
         assert origin
 
-        destination = instance.georef.place("stopA")
+        destination = instance.georef.place("stopA", None)
         assert destination
 
         max_duration = 18000
@@ -240,8 +243,9 @@ class TestJourneysDistributed(
             "taxi_speed": instance.taxi_speed,
         }
         service = instance.get_street_network(mode, request)
+        request_id = None
         resp = service.get_street_network_routing_matrix(
-            instance, [origin], [destination], mode, max_duration, request, **kwargs
+            instance, [origin], [destination], mode, max_duration, request, request_id, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
@@ -249,7 +253,7 @@ class TestJourneysDistributed(
 
         max_duration = 106
         resp = service.get_street_network_routing_matrix(
-            instance, [origin], [destination], mode, max_duration, request, **kwargs
+            instance, [origin], [destination], mode, max_duration, request, request_id, **kwargs
         )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0
@@ -342,7 +346,7 @@ def _make_function_over_upper_limit(from_coord, to_coord, mode, op):
 
         direct_path_duration = response['journeys'][0]['duration']
 
-        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}' + '&debug=true').format(
+        query = (query + '&max_{mode}_direct_path_duration={max_dp_duration}').format(
             mode=mode, max_dp_duration=direct_path_duration - 1
         )
         response = self.query_region(query)
@@ -495,20 +499,20 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         taxi_direct = journeys[0]
 
         assert taxi_direct.get('departure_date_time') == '20120614T075000'
-        assert taxi_direct.get('arrival_date_time') == '20120614T075007'
-        assert taxi_direct.get('duration') == 7
+        assert taxi_direct.get('arrival_date_time') == '20120614T075027'
+        assert taxi_direct.get('duration') == 27
         assert taxi_direct.get('durations', {}).get("car") == 0
-        assert taxi_direct.get('durations', {}).get("taxi") == 7
-        assert taxi_direct.get('durations', {}).get("total") == 7
+        assert taxi_direct.get('durations', {}).get("taxi") == 27
+        assert taxi_direct.get('durations', {}).get("total") == 27
         assert taxi_direct.get('distances', {}).get("car") == 0
-        assert taxi_direct.get('distances', {}).get("taxi") == 87
+        assert taxi_direct.get('distances', {}).get("taxi") == 304
 
         sections = taxi_direct.get('sections')
         assert len(sections) == 1
         assert sections[0].get('mode') == 'taxi'
         assert sections[0].get('departure_date_time') == '20120614T075000'
-        assert sections[0].get('arrival_date_time') == '20120614T075007'
-        assert sections[0].get('duration') == 7
+        assert sections[0].get('arrival_date_time') == '20120614T075027'
+        assert sections[0].get('duration') == 27
         assert sections[0].get('type') == 'street_network'
 
         query += "&taxi_speed=0.15"
@@ -520,25 +524,27 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        taxi_direct = journeys[0]
+        taxi_direct = next((j for j in journeys if 'non_pt' in j['tags']), None)
+        assert taxi_direct
 
         assert taxi_direct.get('departure_date_time') == '20120614T075000'
-        assert taxi_direct.get('arrival_date_time') == '20120614T080051'
-        assert taxi_direct.get('duration') == 651
+        assert taxi_direct.get('arrival_date_time') == '20120614T082349'
+        assert taxi_direct.get('duration') == 2029
         assert taxi_direct.get('durations', {}).get("car") == 0
-        assert taxi_direct.get('durations', {}).get("taxi") == 651
-        assert taxi_direct.get('durations', {}).get("total") == 651
+        assert taxi_direct.get('durations', {}).get("taxi") == 2029
+        assert taxi_direct.get('durations', {}).get("total") == 2029
         assert taxi_direct.get('distances', {}).get("car") == 0
-        assert taxi_direct.get('distances', {}).get("taxi") == 97
+        assert taxi_direct.get('distances', {}).get("taxi") == 304
         sections = taxi_direct.get('sections')
         assert len(sections) == 1
         assert sections[0].get('mode') == 'taxi'
         assert sections[0].get('departure_date_time') == '20120614T075000'
-        assert sections[0].get('arrival_date_time') == '20120614T080051'
-        assert sections[0].get('duration') == 651
+        assert sections[0].get('arrival_date_time') == '20120614T082349'
+        assert sections[0].get('duration') == 2029
         assert sections[0].get('type') == 'street_network'
 
-        taxi_fallback = journeys[1]
+        taxi_fallback = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert taxi_fallback
 
         assert taxi_fallback.get('departure_date_time') == '20120614T075355'
         assert taxi_fallback.get('arrival_date_time') == '20120614T080222'
@@ -589,16 +595,17 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        taxi_fallback = journeys[0]
+        taxi_fallback = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert taxi_fallback
 
         assert taxi_fallback.get('departure_date_time') == '20120614T080021'
-        assert taxi_fallback.get('arrival_date_time') == '20120614T080612'
+        assert taxi_fallback.get('arrival_date_time') == '20120614T080610'
 
-        assert taxi_fallback.get('durations', {}).get('taxi') == 10
+        assert taxi_fallback.get('durations', {}).get('taxi') == 8
         assert taxi_fallback.get('durations', {}).get('walking') == 39
-        assert taxi_fallback.get('durations', {}).get('total') == 351
+        assert taxi_fallback.get('durations', {}).get('total') == 349
 
-        assert taxi_fallback.get('distances', {}).get('taxi') == 117
+        assert taxi_fallback.get('distances', {}).get('taxi') == 88
         assert taxi_fallback.get('distances', {}).get('walking') == 19
 
         sections = taxi_fallback.get('sections')
@@ -621,8 +628,8 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         assert sections[3].get('mode') == 'taxi'
         assert sections[3].get('departure_date_time') == '20120614T080602'
-        assert sections[3].get('arrival_date_time') == '20120614T080612'
-        assert sections[3].get('duration') == 10
+        assert sections[3].get('arrival_date_time') == '20120614T080610'
+        assert sections[3].get('duration') == 8
         assert sections[3].get('type') == 'street_network'
 
     def test_min_taxi(self):
@@ -737,6 +744,50 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
             "min_nb_journeys_test", "stop_point:sa1:s1", "stop_point:sa3:s1", "20180309T080000"
         )
         self._call_and_check_journeys_on_coverage("main_routing_test", "stopB", "stopC", "20120614T080000")
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_max_car_no_park_duration_to_pt(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=car_no_park"
+            + "&car_no_park_speed=0.1"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        # find the pt journey with taxi as it fallback mode
+        car_no_park_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert car_no_park_with_pt
+
+        # get the fallback duration (it's the addition of wait time and taxi journey's duration)
+        car_no_park_with_pt_fallback_time = car_no_park_with_pt['sections'][0]['duration']
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=car_no_park"
+            + "&car_no_park_speed=0.1"
+            # Now we set the max_taxi_duration_to_pt
+            + "&max_car_no_park_duration_to_pt={}".format(car_no_park_with_pt_fallback_time - 1)
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        journeys = get_not_null(response, 'journeys')
+
+        assert len(journeys) == 1
+        # the pt journey is gone....
+        assert 'non_pt' in journeys[0]['tags']
 
 
 @config({"scenario": "distributed"})

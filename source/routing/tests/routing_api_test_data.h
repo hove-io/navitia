@@ -119,11 +119,11 @@ struct routing_api_data {
                               &debug=true
 
                     *) The bikeway is: A->G->H->I->J->K->B
-                    *) The car way is: A->E->F->C->B
+                    *) The car way is: R->A->E->F->C->B
                     *) We can walk on A->B
                     *) A->B has public transport
-                    *) S->B and B->D can be use by walk, bike or car
-                    *) A->R is a pedestrian street
+                    *) S->B and B->D can be used by walk, bike or car
+                    *) A->R is a pedestrian and car street
 
                     Coordinates:
                                 A(120,  80)    0
@@ -364,6 +364,7 @@ struct routing_api_data {
 
         // A->R
         add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::Walking);
+        add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::CarNoPark);
         b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(AA, RR));
         b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(RR, AA));
 
@@ -425,6 +426,8 @@ struct routing_api_data {
         poi_3->poitype_idx = 1;
         poi_3->idx = 2;
         poi_3->admin_list.push_back(admin);
+        poi_3->properties["park_ride"] = "yes";
+
         navitia::georef::POI* poi_4 = new navitia::georef::POI();
         poi_4->uri = "poi:parking_2";
         poi_4->name = "second parking";
@@ -432,6 +435,7 @@ struct routing_api_data {
         poi_4->poitype_idx = 1;
         poi_4->idx = 3;
         poi_4->admin_list.push_back(admin);
+        poi_4->properties["park_ride"] = "yes";
 
         b.data->geo_ref->pois.push_back(poi_1);
         b.data->geo_ref->pois.push_back(poi_2);
@@ -443,7 +447,8 @@ struct routing_api_data {
         b.sa("stopB", B.lon(), B.lat());
         if (activate_pt) {
             // we add a very fast bus (2 seconds) to be faster than walking and biking
-            b.vj("A", "111111", "", false, "vjA")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
+            b.vj("A", "111111", "", false, "vjA", "vjA_hs")("stop_point:stopB", "08:01"_t)("stop_point:stopA",
+                                                                                           "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
             b.lines["A"]->color = "289728";

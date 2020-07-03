@@ -12,7 +12,7 @@ The `line_reports` endpoint builds its response on the `lines` collection.
 
 The `route_schedules` endpoint builds its response on the `routes` collections.
 
-The `arrivals`, `departures` and `stop_schedules` endpoint builds their responses on the `journey_pattern_points` collection.
+The `arrivals`, `departures`, `stop_schedules` and `terminus_schedules` endpoint builds their responses on the `journey_pattern_points` collection.
 
 ## Predicates
 

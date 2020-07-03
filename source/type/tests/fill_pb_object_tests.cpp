@@ -104,13 +104,13 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     // Physical_mode = Tram
-    b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
+    b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
         "stop2", 8200, 8250);
     // Physical_mode = Metro
-    b.vj("A", "11110000", "", true, "", "", "physical_mode:0x1")("stop1", 8000, 8050)("stop2", 8200, 8250)("stop3",
-                                                                                                           8500, 8500);
+    b.vj("A", "11110000", "", true, "", "", "", "physical_mode:0x1")("stop1", 8000, 8050)("stop2", 8200, 8250)(
+        "stop3", 8500, 8500);
     // Physical_mode = Car
-    b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "physical_mode:Car")("stop4", 8000, 8050)(
+    b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "", "physical_mode:Car")("stop4", 8000, 8050)(
         "stop5", 8200, 8250)("stop6", 8500, 8500);
 
     nt::Line* ln = b.lines.find("A")->second;

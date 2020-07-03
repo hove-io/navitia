@@ -293,6 +293,12 @@ class Instance(object):
         return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_ridesharing_duration_to_pt(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_ridesharing_duration_to_pt', instance_db, self.name)
+
+    @property
     def max_taxi_duration_to_pt(self):
         # type: () -> int
         instance_db = self.get_models()
@@ -327,6 +333,12 @@ class Instance(object):
         # type: () -> float
         instance_db = self.get_models()
         return get_value_or_default('car_no_park_speed', instance_db, self.name)
+
+    @property
+    def ridesharing_speed(self):
+        # type: () -> float
+        instance_db = self.get_models()
+        return get_value_or_default('ridesharing_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
@@ -491,6 +503,12 @@ class Instance(object):
         instance_db = self.get_models()
         return instance_db.poi_dataset if instance_db else None
 
+    @property
+    def max_car_no_park_direct_path_duration(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_car_no_park_direct_path_duration', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
@@ -504,6 +522,7 @@ class Instance(object):
     max_ridesharing_direct_path_duration = _make_property_getter('max_ridesharing_direct_path_duration')
 
     street_network_car = _make_property_getter('street_network_car')
+    street_network_car_no_park = _make_property_getter('street_network_car_no_park')
     street_network_walking = _make_property_getter('street_network_walking')
     street_network_bike = _make_property_getter('street_network_bike')
     street_network_bss = _make_property_getter('street_network_bss')
@@ -559,13 +578,16 @@ class Instance(object):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
         with self.socket(self.context) as socket:
-            try:
-                request.request_id = flask.request.id
-            except RuntimeError:
-                # we aren't in a flask context, so there is no request
+            if 'request_id' in kwargs and kwargs['request_id']:
+                request.request_id = kwargs['request_id']
+            else:
+                try:
+                    request.request_id = flask.request.id
+                except RuntimeError:
+                    # we aren't in a flask context, so there is no request
+                    if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
+                        request.request_id = kwargs['flask_request_id']
 
-                if 'flask_request_id' in kwargs:
-                    request.request_id = kwargs['flask_request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
@@ -678,9 +700,10 @@ class Instance(object):
         pub_date = self.publication_date
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
+        request_id = "instance_init"
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, timeout=1000, quiet=True)
+            resp = self._send_and_receive(req, request_id=request_id, timeout=1000, quiet=True)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True
@@ -690,8 +713,7 @@ class Instance(object):
             logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False
 
-    def get_street_network(self, mode, request):
-
+    def _get_street_network(self, mode, request):
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
@@ -700,6 +722,16 @@ class Instance(object):
             column_in_db = "street_network_{}".format(mode)
             streetnetwork_backend_conf = getattr(self, column_in_db)
             return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
+
+    def get_street_network(self, mode, request):
+        if mode != fallback_modes.FallbackModes.car.name:
+            return self._get_street_network(mode, request)
+
+        walking_service = self._get_street_network(fallback_modes.FallbackModes.walking.name, request)
+        car_service = self._get_street_network(fallback_modes.FallbackModes.car.name, request)
+        return street_network.CarWithPark(
+            instance=self, walking_service=walking_service, car_service=car_service
+        )
 
     def get_all_street_networks(self):
         if app.config[str('DISABLE_DATABASE')]:

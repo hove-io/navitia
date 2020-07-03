@@ -78,6 +78,7 @@ struct VJ {
     const bool is_frequency;
     const bool wheelchair_boarding;
     std::string _name;
+    std::string _headsign;
     std::string _meta_vj_name;
     std::string _physical_mode;
     const uint32_t start_time;
@@ -98,6 +99,7 @@ struct VJ {
        const bool is_frequency,
        const bool wheelchair_boarding = true,
        std::string name = "",
+       std::string headsign = "",
        std::string meta_vj_name = "",
        std::string physical_mode = "",
        const uint32_t start_time = 0,
@@ -152,6 +154,10 @@ struct VJ {
 
     VJ& name(const std::string& u) {
         _name = u;
+        return *this;
+    }
+    VJ& headsign(const std::string& u) {
+        _headsign = u;
         return *this;
     }
     VJ& valid_all_days() {
@@ -297,6 +303,7 @@ struct builder {
           const std::string& block_id = "",
           const bool wheelchair_boarding = true,
           const std::string& name = "",
+          const std::string& headsign = "",
           const std::string& meta_vj = "",
           const std::string& physical_mode = "",
           const nt::RTLevel vj_type = nt::RTLevel::Base);
@@ -307,6 +314,7 @@ struct builder {
                        const std::string& block_id = "",
                        const bool wheelchair_boarding = true,
                        const std::string& name = "",
+                       const std::string& headsign = "",
                        const std::string& meta_vj = "",
                        const std::string& physical_mode = "",
                        const bool is_frequency = false,
@@ -324,6 +332,7 @@ struct builder {
                     const std::string& block_id = "",
                     const bool wheelchair_boarding = true,
                     const std::string& name = "",
+                    const std::string& headsign = "",
                     const std::string& meta_vj = "");
 
     // Create a new stop area
