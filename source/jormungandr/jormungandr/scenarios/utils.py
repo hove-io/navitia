@@ -42,6 +42,12 @@ places_type = {
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
 }
 
+places_nearby_type = {
+    'stop_area': type_pb2.STOP_AREA,
+    'stop_point': type_pb2.STOP_POINT,
+    'address': type_pb2.ADDRESS,
+    'poi': type_pb2.POI,
+}
 
 pt_object_type = {
     'network': type_pb2.NETWORK,
