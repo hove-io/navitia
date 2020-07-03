@@ -1,0 +1,2 @@
+/usr/bin/ar qc libworkers.a  CMakeFiles/workers.dir/worker.cpp.o CMakeFiles/workers.dir/maintenance_worker.cpp.o CMakeFiles/workers.dir/configuration.cpp.o CMakeFiles/workers.dir/metrics.cpp.o
+/usr/bin/ranlib libworkers.a

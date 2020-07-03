@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcalendar_api.a  CMakeFiles/calendar_api.dir/calendar_api.cpp.o CMakeFiles/calendar_api.dir/calendar.cpp.o
+/usr/bin/ranlib libcalendar_api.a

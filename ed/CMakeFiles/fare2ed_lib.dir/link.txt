@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfare2ed_lib.a  CMakeFiles/fare2ed_lib.dir/fare2ed.cpp.o
+/usr/bin/ranlib libfare2ed_lib.a

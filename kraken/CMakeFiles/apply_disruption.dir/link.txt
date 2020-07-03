@@ -1,0 +1,2 @@
+/usr/bin/ar qc libapply_disruption.a  CMakeFiles/apply_disruption.dir/apply_disruption.cpp.o
+/usr/bin/ranlib libapply_disruption.a

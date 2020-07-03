@@ -1,0 +1,2 @@
+/usr/bin/ar qc libthermometer.a  CMakeFiles/thermometer.dir/thermometer.cpp.o
+/usr/bin/ranlib libthermometer.a

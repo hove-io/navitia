@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++14 -rdynamic -g -fno-omit-frame-pointer -Wall -Wextra -Woverloaded-virtual -Wundef -pedantic -fuse-ld=gold -O3 -DNDEBUG  -rdynamic CMakeFiles/lz4_tests.dir/test.cpp.o CMakeFiles/lz4_tests.dir/__/__/third_party/lz4/lz4.c.o  -o lz4_tests  -lboost_unit_test_framework -lboost_iostreams 

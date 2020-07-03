@@ -1,0 +1,2 @@
+/usr/bin/ar qc libautocomplete.a  CMakeFiles/autocomplete.dir/autocomplete.cpp.o CMakeFiles/autocomplete.dir/autocomplete_api.cpp.o CMakeFiles/autocomplete.dir/utils.cpp.o
+/usr/bin/ranlib libautocomplete.a

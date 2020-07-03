@@ -1,0 +1,2 @@
+/usr/bin/ar qc libprometheus-cpp-pull.a  CMakeFiles/prometheus-cpp-pull.dir/src/exposer.cc.o CMakeFiles/prometheus-cpp-pull.dir/src/handler.cc.o CMakeFiles/civetweb.dir/__/3rdparty/civetweb/src/CivetServer.cpp.o CMakeFiles/civetweb.dir/__/3rdparty/civetweb/src/civetweb.c.o
+/usr/bin/ranlib libprometheus-cpp-pull.a

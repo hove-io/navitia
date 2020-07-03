@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdisruption_api.a  CMakeFiles/disruption_api.dir/traffic_reports_api.cpp.o CMakeFiles/disruption_api.dir/line_reports_api.cpp.o
+/usr/bin/ranlib libdisruption_api.a

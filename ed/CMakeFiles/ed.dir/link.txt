@@ -1,0 +1,2 @@
+/usr/bin/ar qc libed.a  CMakeFiles/ed.dir/data.cpp.o CMakeFiles/ed.dir/types.cpp.o CMakeFiles/ed.dir/build_helper.cpp.o
+/usr/bin/ranlib libed.a

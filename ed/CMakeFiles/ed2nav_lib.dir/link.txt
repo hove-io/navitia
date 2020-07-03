@@ -1,0 +1,2 @@
+/usr/bin/ar qc libed2nav_lib.a  CMakeFiles/ed2nav_lib.dir/ed2nav.cpp.o CMakeFiles/ed2nav_lib.dir/ed_reader.cpp.o
+/usr/bin/ranlib libed2nav_lib.a

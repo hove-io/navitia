@@ -1,0 +1,2 @@
+/usr/bin/ar qc libvptranslator.a  CMakeFiles/vptranslator.dir/vptranslator.cpp.o
+/usr/bin/ranlib libvptranslator.a

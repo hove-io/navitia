@@ -1,0 +1,2 @@
+/usr/bin/ar qc libosm2ed_lib.a  CMakeFiles/osm2ed_lib.dir/osm2ed.cpp.o
+/usr/bin/ranlib libosm2ed_lib.a

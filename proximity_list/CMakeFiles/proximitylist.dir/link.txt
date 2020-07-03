@@ -1,0 +1,2 @@
+/usr/bin/ar qc libproximitylist.a  CMakeFiles/proximitylist.dir/proximity_list.cpp.o CMakeFiles/proximitylist.dir/proximitylist_api.cpp.o CMakeFiles/proximitylist.dir/__/third_party/lz4/lz4hc.c.o CMakeFiles/proximitylist.dir/__/third_party/lz4/lz4.c.o
+/usr/bin/ranlib libproximitylist.a

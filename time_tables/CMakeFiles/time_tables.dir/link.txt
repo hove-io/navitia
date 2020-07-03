@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtime_tables.a  CMakeFiles/time_tables.dir/passages.cpp.o CMakeFiles/time_tables.dir/route_schedules.cpp.o CMakeFiles/time_tables.dir/departure_boards.cpp.o CMakeFiles/time_tables.dir/request_handle.cpp.o
+/usr/bin/ranlib libtime_tables.a

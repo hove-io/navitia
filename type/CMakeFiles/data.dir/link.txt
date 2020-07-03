@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdata.a  CMakeFiles/data.dir/data.cpp.o CMakeFiles/data.dir/data_exceptions.cpp.o CMakeFiles/data.dir/__/third_party/lz4/lz4.c.o CMakeFiles/data.dir/pt_data.cpp.o CMakeFiles/data.dir/headsign_handler.cpp.o
+/usr/bin/ranlib libdata.a

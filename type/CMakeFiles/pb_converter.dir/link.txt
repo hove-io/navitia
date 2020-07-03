@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpb_converter.a  CMakeFiles/pb_converter.dir/pb_converter.cpp.o
+/usr/bin/ranlib libpb_converter.a

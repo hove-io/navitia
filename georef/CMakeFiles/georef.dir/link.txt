@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgeoref.a  CMakeFiles/georef.dir/georef.cpp.o CMakeFiles/georef.dir/street_network.cpp.o CMakeFiles/georef.dir/adminref.cpp.o CMakeFiles/georef.dir/path_finder.cpp.o CMakeFiles/georef.dir/dijkstra_path_finder.cpp.o CMakeFiles/georef.dir/astar_path_finder.cpp.o
+/usr/bin/ranlib libgeoref.a

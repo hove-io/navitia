@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgeoref_test_utils.a  CMakeFiles/georef_test_utils.dir/builder.cpp.o
+/usr/bin/ranlib libgeoref_test_utils.a

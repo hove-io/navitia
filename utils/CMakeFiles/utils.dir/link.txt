@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils.a  CMakeFiles/utils.dir/csv.cpp.o CMakeFiles/utils.dir/encoding_converter.cpp.o CMakeFiles/utils.dir/configuration.cpp.o CMakeFiles/utils.dir/coord_parser.cpp.o CMakeFiles/utils.dir/timer.cpp.o CMakeFiles/utils.dir/functions.cpp.o CMakeFiles/utils.dir/base64_encode.cpp.o CMakeFiles/utils.dir/exception.cpp.o CMakeFiles/utils.dir/lotus.cpp.o CMakeFiles/utils.dir/threadbuf.cpp.o CMakeFiles/utils.dir/get_hostname.cpp.o CMakeFiles/utils.dir/zmq.cpp.o CMakeFiles/utils.dir/deadline.cpp.o
+/usr/bin/ranlib libutils.a

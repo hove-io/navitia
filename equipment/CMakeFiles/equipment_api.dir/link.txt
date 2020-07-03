@@ -1,0 +1,2 @@
+/usr/bin/ar qc libequipment_api.a  CMakeFiles/equipment_api.dir/equipment_api.cpp.o
+/usr/bin/ranlib libequipment_api.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtransportation_data_import.a  CMakeFiles/transportation_data_import.dir/ed_persistor.cpp.o
+/usr/bin/ranlib libtransportation_data_import.a

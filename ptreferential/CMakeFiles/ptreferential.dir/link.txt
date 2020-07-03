@@ -1,0 +1,2 @@
+/usr/bin/ar qc libptreferential.a  CMakeFiles/ptreferential.dir/ptreferential.cpp.o CMakeFiles/ptreferential.dir/ptreferential_utils.cpp.o CMakeFiles/ptreferential.dir/ptreferential_ng.cpp.o CMakeFiles/ptreferential.dir/ptreferential_api.cpp.o CMakeFiles/ptreferential.dir/ptref_graph.cpp.o
+/usr/bin/ranlib libptreferential.a

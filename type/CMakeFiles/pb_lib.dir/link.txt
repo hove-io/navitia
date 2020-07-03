@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpb_lib.a  CMakeFiles/pb_lib.dir/chaos.pb.cc.o CMakeFiles/pb_lib.dir/gtfs-realtime.pb.cc.o CMakeFiles/pb_lib.dir/kirin.pb.cc.o CMakeFiles/pb_lib.dir/request.pb.cc.o CMakeFiles/pb_lib.dir/response.pb.cc.o CMakeFiles/pb_lib.dir/task.pb.cc.o CMakeFiles/pb_lib.dir/type.pb.cc.o
+/usr/bin/ranlib libpb_lib.a
