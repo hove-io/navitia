@@ -414,7 +414,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -497,7 +497,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         if args['datetime']:
             args['original_datetime'] = args['datetime']
         else:
-            args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
+            args['original_datetime'] = args['_current_datetime']
 
         if args.get('traveler_type'):
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])

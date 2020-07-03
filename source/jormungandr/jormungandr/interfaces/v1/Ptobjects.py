@@ -37,6 +37,7 @@ from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.parsers import default_count_arg_type
 from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFormat, DepthArgument
@@ -48,7 +49,7 @@ pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "ro
 pt_object_type_default_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]
 
 
-class Ptobjects(ResourceUri):
+class Ptobjects(ResourceUri, ResourceUtc):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=api.PtObjectsSerializer, *args, **kwargs)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True, help="The data to search")
@@ -77,7 +78,7 @@ class Ptobjects(ResourceUri):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -98,6 +99,10 @@ class Ptobjects(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
+
+        # change dt to utc
+        args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
+
         if args['disable_geojson']:
             g.disable_geojson = True
         self._register_interpreted_parameters(args)
