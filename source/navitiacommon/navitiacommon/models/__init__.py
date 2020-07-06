@@ -534,6 +534,13 @@ class Instance(db.Model):  # type: ignore
 
     poi_dataset = db.Column(db.Text, default=None, nullable=True)
 
+    stop_points_nearby_duration = db.Column(
+        db.Integer,
+        default=default_values.stop_points_nearby_duration,
+        nullable=False,
+        server_default=str(default_values.stop_points_nearby_duration),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

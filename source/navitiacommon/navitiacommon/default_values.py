@@ -170,6 +170,8 @@ street_network_taxi = "taxiKraken"
 # Here - https://developer.here.com/
 here_max_matrix_points = 100
 
+stop_points_nearby_duration = 5 * 60  # In secs
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

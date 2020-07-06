@@ -529,6 +529,8 @@ class Instance(object):
     street_network_ridesharing = _make_property_getter('street_network_ridesharing')
     street_network_taxi = _make_property_getter('street_network_taxi')
 
+    stop_points_nearby_duration = _make_property_getter('stop_points_nearby_duration')
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':

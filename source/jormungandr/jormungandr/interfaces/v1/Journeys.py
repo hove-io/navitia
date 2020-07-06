@@ -424,6 +424,12 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
+        parser_get.add_argument(
+            "_stop_points_nearby_duration",
+            type=int,
+            hidden=True,
+            help="define the duration between the stop points and the Park&Ride car park",
+        )
         for mode in FallbackModes.modes_str():
             parser_get.add_argument(
                 "max_{}_direct_path_duration".format(mode),
@@ -510,6 +516,9 @@ class Journeys(JourneyCommon):
                 args['additional_time_after_first_section_taxi'] = mod.additional_time_after_first_section_taxi
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
+
+            if args.get('_stop_points_nearby_duration') is None:
+                args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
