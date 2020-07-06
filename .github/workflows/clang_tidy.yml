@@ -1,4 +1,4 @@
-name: Run Clang Tidy after a Release
+name: Clang-tidy
 
 on:
   push:
