@@ -16,7 +16,7 @@ jobs:
       run: echo $GITHUB_CONTEXT
 
   clang-tidy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
       with:
