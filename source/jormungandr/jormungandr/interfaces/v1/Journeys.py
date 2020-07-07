@@ -424,12 +424,7 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
-        parser_get.add_argument(
-            "_stop_points_nearby_duration",
-            type=int,
-            hidden=True,
-            help="define the duration between the stop points and the Park&Ride car park",
-        )
+
         for mode in FallbackModes.modes_str():
             parser_get.add_argument(
                 "max_{}_direct_path_duration".format(mode),
