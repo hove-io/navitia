@@ -177,7 +177,7 @@ class PathSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True)
     duration = RoundedField(display_none=True)
     direction = jsonschema.Field(schema_type=int, display_none=True)
-    instruction = jsonschema.MethodField(schema_type=int, display_none=False)
+    instruction = jsonschema.MethodField(schema_type=str, display_none=False)
     coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
 
     def get_id(self, obj):
