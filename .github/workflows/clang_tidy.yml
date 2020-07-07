@@ -27,10 +27,10 @@ jobs:
     - name : Clang-tidy Info
       run: clang-tidy --version
     - name: CMake
-      working-directory: /tmp
+      working-directory: ${{ runner.temp }}
       run: cmake $GITHUB_WORKSPACE/source
     - name: Clang-tidy
-      working-directory: /tmp
+      working-directory: ${{ runner.temp }}
       run: make tidy_fix
     - name: Commit and push changes
       uses: peter-evans/create-pull-request@v2
