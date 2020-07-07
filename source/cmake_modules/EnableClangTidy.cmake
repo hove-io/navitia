@@ -3,6 +3,18 @@ message(STATUS "cland-tools")
 
 # Generates a compile_commands.json file containing the exact compiler calls for all translation units
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(COMPILE_COMMANDS_LINK "${CMAKE_SOURCE_DIR}/compile_commands.json")
+set(COMPILE_COMMANDS_SRC "${CMAKE_BINARY_DIR}/compile_commands.json")
+add_custom_command(
+    OUTPUT ${COMPILE_COMMANDS_LINK}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${COMPILE_COMMANDS_SRC} ${COMPILE_COMMANDS_LINK}
+    COMMENT "Symlink clang compile commands file into source folder"
+)
+add_custom_target(
+    NAME symlink_compile_command
+    COMMENT "Symlink ${COMPILE_COMMANDS_LINK}"
+    DEPENDS ${COMPILE_COMMANDS_LINK}
+)
 
 set(CLANG_TIDY_BINARY_NAME
     NAMES clang-tidy clang-tidy-6.0)
@@ -24,7 +36,7 @@ if( NOT CLANG_TIDY_BIN STREQUAL "CLANG_TIDY_BIN-NOTFOUND"
         tidy
         COMMAND ${RUN_CLANG_TIDY_BIN} ${RUN_CLANG_TIDY_BIN_ARGS}
         COMMENT "running clang tidy -- ${CMAKE_SOURCE_DIR}"
-        DEPENDS protobuf_files
+        DEPENDS protobuf_files ${COMPILE_COMMANDS_LINK}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
@@ -32,7 +44,7 @@ if( NOT CLANG_TIDY_BIN STREQUAL "CLANG_TIDY_BIN-NOTFOUND"
         tidy_fix
         COMMAND ${RUN_CLANG_TIDY_BIN} -fix ${RUN_CLANG_TIDY_BIN_ARGS}
         COMMENT "running clang tidy -fix -- ${CMAKE_SOURCE_DIR}"
-        DEPENDS protobuf_files
+        DEPENDS protobuf_files ${COMPILE_COMMANDS_LINK}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
     message(STATUS "found")
