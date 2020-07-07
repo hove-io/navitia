@@ -1,4 +1,4 @@
-Checks:          '-*, clang-analyzer-*'
+Checks:          '-*, modernize-avoid-bind, modernize-concat-nested-namespaces, modernize-deprecated-headers, modernize-deprecated-ios-base-aliases, modernize-loop-convert'
 HeaderFilterRegex: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file

@@ -3,11 +3,8 @@ name: Clang-tidy
 on:
   push:
     branches:
-    ## TODO ! #####
-    # Change to `release` branch once testing is Done
     - clang-tidy
-    ################
-
+    - release
 
 jobs:
   info:
@@ -29,10 +26,11 @@ jobs:
       run: sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3
     - name : Clang-tidy Info
       run: clang-tidy --version
-    - name: Cmake
-      run: cmake source
-    - name: Clang-tidy
-      run: make tidy_fix
+    - name: Make & Tidy
+      working-directory: /tmp
+      run: |
+        cmake ${{ GITHUB_WORKSPACE }}/source
+        make tidy_fix
     - name: Commit and push changes
       uses: peter-evans/create-pull-request@v2
       with:
