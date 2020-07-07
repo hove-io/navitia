@@ -454,7 +454,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "_stop_points_nearby_duration",
             type=int,
             hidden=True,
-            help="define the duration between the stop points and the Park&Ride car park",
+            help="define the duration to reach stop points by crow fly",
         )
 
     def parse_args(self, region=None, uri=None):
