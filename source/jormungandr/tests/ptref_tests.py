@@ -220,13 +220,13 @@ class TestPtRef(AbstractTestFixture):
         stop_area:stop1 with _current_datetime
         """
 
-        # In Europe/Paris timezone, the diff between UTC and
-        # local time is 2 Hours
-        utc_datetime = '20140115T235959'
+        # parameter _current_datetime accepts local datetime as well as datetime with timezone
+        # Possible values are 20140116T005959 or 20140115T235959Z or 20140116T005959+0100
+        # In Europe/Paris timezone, the diff between UTC and local time is 1 Hour
         local_date_time = '20140116T005959'
         timezone = 'Europe/Paris'
 
-        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(utc_datetime))
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(local_date_time))
 
         disruptions = get_not_null(response, 'disruptions')
 
@@ -624,6 +624,33 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region(query, display=True)
 
         self.is_valid_journey_response(response, query)
+
+    def test_journey_with_current_datetime(self):
+        base_query = query = 'journeys?from={}&to={}'.format(
+            quote_plus(u'stop_with name bob \" , é'.encode('utf-8')),
+            quote_plus(u'stop_area:stop1'.encode('utf-8')),
+        )
+        # we use _current_datetime with local datetime value 2014-01-05T08:00:00
+        query = base_query + '&_current_datetime=20140105T080000'
+        response = self.query_region(query, display=True)
+        self.is_valid_journey_response(response, query)
+        assert response['context']['timezone'] == 'Europe/Paris'
+        assert response['context']['current_datetime'] == '20140105T080000'
+        assert response['journeys'][0]['departure_date_time'] == '20140105T090000'
+
+        # we use _current_datetime with local datetime value 2014-01-05T08:30:00
+        query = base_query + '&_current_datetime=20140105T083000'
+        response = self.query_region(query, display=True)
+        assert response['context']['timezone'] == 'Europe/Paris'
+        assert response['context']['current_datetime'] == '20140105T083000'
+        assert response['journeys'][0]['departure_date_time'] == '20140105T090000'
+
+        # we use _current_datetime with local datetime value 2014-01-05T09:10:00
+        query = base_query + '&_current_datetime=20140105T091000'
+        response = self.query_region(query, check=False, display=True)
+        assert response[0]['context']['timezone'] == 'Europe/Paris'
+        assert response[0]['context']['current_datetime'] == '20140105T091000'
+        assert response[0]['error']['id'] == 'no_solution'
 
     def test_vj_period_filter(self):
         """with just a since in the middle of the period, we find vj1"""
