@@ -426,7 +426,6 @@ class Journeys(JourneyCommon):
                 ]
             ),
             hidden=True,
-            # hidden=True,
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
             '- afrikaans = af\n'
