@@ -33,8 +33,9 @@ from jormungandr.street_network.streetnetwork_backend_manager import StreetNetwo
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
-from unittest import skip
-import operator, datetime
+import operator
+import datetime
+import math
 
 """
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
@@ -778,6 +779,44 @@ class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
             + "&car_no_park_speed=0.1"
             # Now we set the max_taxi_duration_to_pt
             + "&max_car_no_park_duration_to_pt={}".format(car_no_park_with_pt_fallback_time - 1)
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        journeys = get_not_null(response, 'journeys')
+
+        assert len(journeys) == 1
+        # the pt journey is gone....
+        assert 'non_pt' in journeys[0]['tags']
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestCarDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_stop_points_nearby_duration_park_n_ride(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        query = sub_query + "&datetime=20120614T080000" + "&first_section_mode[]=car" + "&car_speed=1"
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        # find the pt journey with taxi as it fallback mode
+        car_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        assert car_with_pt
+
+        # get the fallback duration (it's the addition of wait time and taxi journey's duration)
+        park_to_stop_point_duration = car_with_pt['sections'][2]['duration']
+        query = (
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=car"
+            + "&car_speed=1"
+            # now we set _stop_points_nearby_duration
+            + "&_stop_points_nearby_duration={}".format(int(park_to_stop_point_duration / math.sqrt(2)) - 1)
         )
 
         response = self.query_region(query)

@@ -450,6 +450,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "If this list is not empty, we only compute direct_path for modes in this list"
             "And filter all the direct_paths of modes in first_section_mode[]",
         )
+        parser_get.add_argument(
+            "_stop_points_nearby_duration",
+            type=int,
+            hidden=True,
+            help="define the duration to reach stop points by crow fly",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
