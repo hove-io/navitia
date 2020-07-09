@@ -425,6 +425,7 @@ class Journeys(JourneyCommon):
                     'spanish',
                 ]
             ),
+            hidden=True,
             # hidden=True,
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
