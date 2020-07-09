@@ -406,6 +406,44 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
+            "_here_language",
+            type=OptionValue(
+                [
+                    'afrikaans',
+                    'arabic',
+                    'chinese',
+                    'dutch',
+                    'english',
+                    'french',
+                    'german',
+                    'hebrew',
+                    'hindi',
+                    'italian',
+                    'japanese',
+                    'portuguese',
+                    'russian',
+                    'spanish',
+                ]
+            ),
+            # hidden=True,
+            help='Here, select a specific language for guidance instruction.\n'
+            'list available:\n'
+            '- afrikaans = af\n'
+            '- arabic = ar-sa\n'
+            '- chinese = zh-cn\n'
+            '- dutch = nl-nl\n'
+            '- english = en-gb\n'
+            '- french = fr-fr\n'
+            '- german = de-de\n'
+            '- hebrew = he\n'
+            '- hindi = hi\n'
+            '- italian = it-it\n'
+            '- japanese = ja-jp\n'
+            '- portuguese = pt-pt\n'
+            '- russian = ru-ru\n'
+            '- spanish = es-es\n',
+        )
+        parser_get.add_argument(
             "_here_matrix_type",
             type=six.text_type,
             hidden=True,
