@@ -139,7 +139,8 @@ class Kraken(AbstractStreetNetworkService):
         response = instance.send_and_receive(req, request_id=request_id)
         if should_invert_journey:
             return self._reverse_journeys(response)
-
+        if response.journeys:
+            response.journeys[0].sections[0].street_network.mode = FallbackModes[mode].value
         return response
 
     def _hanlde_car_no_park_modes(self, mode):
