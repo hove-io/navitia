@@ -714,7 +714,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         assert len(journeys) == 2
 
         # find the pt journey with taxi as it fallback mode
-        taxi_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
+        taxi_with_pt = next((j for j in journeys if 'non_pt_taxi' not in j['tags']), None)
         assert taxi_with_pt
 
         # get the fallback duration (it's the addition of wait time and taxi journey's duration)
@@ -736,7 +736,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         # the pt journey is gone....
-        assert 'non_pt' in journeys[0]['tags']
+        assert 'non_pt_taxi' in journeys[0]['tags']
 
 
 @dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})
@@ -822,7 +822,7 @@ class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         # the pt journey is gone....
-        assert 'non_pt' in journeys[0]['tags']
+        assert 'non_pt_car_no_park' in journeys[0]['tags']
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
