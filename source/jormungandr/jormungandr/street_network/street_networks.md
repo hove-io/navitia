@@ -43,6 +43,7 @@ Available optional parameters list:
     * hindi
     * italian
     * japanese
+    * nepali
     * portuguese
     * russian
     * spanish

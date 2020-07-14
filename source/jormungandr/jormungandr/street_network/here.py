@@ -59,6 +59,7 @@ class Languages(Enum):
     hindi = "hi"
     italian = "it-it"
     japanese = "ja-jp"
+    nepali = "ne-np"
     portuguese = "pt-pt"
     russian = "ru-ru"
     spanish = "es-es"
@@ -77,6 +78,7 @@ def _convert_here_language(language):
         "hindi": Languages.hindi,
         "italian": Languages.italian,
         "japanese": Languages.japanese,
+        "nepali": Languages.nepali,
         "portuguese": Languages.portuguese,
         "russian": Languages.russian,
         "spanish": Languages.spanish,

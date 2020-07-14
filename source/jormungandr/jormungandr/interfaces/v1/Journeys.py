@@ -420,6 +420,7 @@ class Journeys(JourneyCommon):
                     'hindi',
                     'italian',
                     'japanese',
+                    'nepali',
                     'portuguese',
                     'russian',
                     'spanish',
@@ -439,6 +440,7 @@ class Journeys(JourneyCommon):
             '- hindi = hi\n'
             '- italian = it-it\n'
             '- japanese = ja-jp\n'
+            '- nepali = ne-np\n'
             '- portuguese = pt-pt\n'
             '- russian = ru-ru\n'
             '- spanish = es-es\n',
