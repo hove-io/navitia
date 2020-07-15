@@ -65,30 +65,6 @@ class Languages(Enum):
     spanish = "es-es"
 
 
-def _convert_here_language(language):
-    map_language = {
-        "afrikaans": Languages.afrikaans,
-        "arabic": Languages.arabic,
-        "chinese": Languages.chinese,
-        "dutch": Languages.dutch,
-        "english": Languages.english,
-        "french": Languages.french,
-        "german": Languages.german,
-        "hebrew": Languages.hebrew,
-        "hindi": Languages.hindi,
-        "italian": Languages.italian,
-        "japanese": Languages.japanese,
-        "nepali": Languages.nepali,
-        "portuguese": Languages.portuguese,
-        "russian": Languages.russian,
-        "spanish": Languages.spanish,
-    }
-    try:
-        return map_language[language]
-    except KeyError:
-        raise TechnicalError('HERE does not handle the language {}'.format(language))
-
-
 # Possible values to active/deactivate realtime traffic
 class RealTimeTraffic(Enum):
     enabled = "enabled"
@@ -331,11 +307,11 @@ class Here(AbstractStreetNetworkService):
         return resp
 
     def _get_language(self, language):
-        _language = _convert_here_language(language)
-        if _language not in Languages:
+        try:
+            return Languages[language]
+        except KeyError:
             self.log.error('Here parameters language={} not exist - force to english'.format(language))
             return Languages.english
-        return _language
 
     def get_language_parameter(self, request):
         _language = request.get('_here_language', None)
