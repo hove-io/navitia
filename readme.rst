@@ -7,17 +7,20 @@
 =========
 ``(pronounce [navi-sia])``
 
-.. class:: no-web no-pdf
+.. image:: https://img.shields.io/github/v/tag/CanalTp/navitia?style=flat-square
+    :target: https://github.com/CanalTP/navitia/releases
+    :alt: version
 
-    Release branch: |last_release_build|
-
-.. |last_release_build| image:: https://img.shields.io/github/workflow/status/CanalTP/navitia/Build%20Navitia%20Packages%20For%20Release?logo=github&style=flat-square
+.. image:: https://img.shields.io/github/workflow/status/CanalTP/navitia/Build%20Navitia%20Packages%20For%20Release?logo=github&style=flat-square
     :target: https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22
     :alt: Last build
 
 .. image:: https://img.shields.io/github/license/CanalTP/navitia?color=9873b9&style=flat-square
     :alt: license
-    :align: center
+
+.. image:: https://img.shields.io/matrix/navitia:matrix.org?style=flat-square
+    :target: https://riot.im/app/#/room/#navitia:matrix.org
+    :alt: chat
 
 Presentation
 ============
