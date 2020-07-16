@@ -3,7 +3,7 @@
 
 ## Overview on how-to contribute
 
-Dev branch: [![Last build](https://ci.navitia.io/job/navitia_dev/badge/icon)](https://ci.navitia.io/job/navitia_dev)
+Dev branch: [![Last build](https://github.com/CanalTP/navitia/workflows/Build%20Navitia%20Packages%20For%20Dev/badge.svg)](https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)
 
 Fork the github repo, create a new branch from dev, and submit your pull request!
 
