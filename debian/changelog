@@ -1,3 +1,13 @@
+navitia2 (5.2.0) unstable; urgency=low
+
+  * [Jormungandr] convert crowfly time, for folding section, in an adaptable parameter  <https://github.com/CanalTP/navitia/pull/3243>
+  * [Jormungandr] correction of datetime tranformation for current_datetime  <https://github.com/CanalTP/navitia/pull/3241>
+  * [Jormungandr] take SN maneuvers into account with Here  <https://github.com/CanalTP/navitia/pull/3239>
+  * [Jormungandr] remove administrative_region from places_nearby param &type[]  <https://github.com/CanalTP/navitia/pull/3238>
+  * [ED] Publication date in UTC as for last_load_at  <https://github.com/CanalTP/navitia/pull/3240>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Thu, 16 Jul 2020 15:07:26 +0100
+
 navitia2 (5.1.0) unstable; urgency=low
 
   * [DOC] some descriptions on links  <https://github.com/CanalTP/navitia/pull/3237>
