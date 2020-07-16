@@ -141,7 +141,7 @@ class Schedules(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -247,6 +247,7 @@ class Schedules(ResourceUri, ResourceUtc):
 
         if not args["from_datetime"] and not args["until_datetime"]:
             # no datetime given, default is the current time, and we activate the realtime
+            args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
             args['from_datetime'] = args['_current_datetime']
             if args["calendar"]:  # if we have a calendar, the dt is only used for sorting, so 00:00 is fine
                 args['from_datetime'] = args['from_datetime'].replace(hour=0, minute=0)

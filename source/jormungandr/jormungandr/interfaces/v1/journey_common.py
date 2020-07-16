@@ -414,7 +414,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -449,6 +449,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="Force the direct-path modes."
             "If this list is not empty, we only compute direct_path for modes in this list"
             "And filter all the direct_paths of modes in first_section_mode[]",
+        )
+        parser_get.add_argument(
+            "_stop_points_nearby_duration",
+            type=int,
+            hidden=True,
+            help="define the duration to reach stop points by crow fly",
         )
 
     def parse_args(self, region=None, uri=None):
@@ -497,7 +503,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         if args['datetime']:
             args['original_datetime'] = args['datetime']
         else:
-            args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
+            args['original_datetime'] = args['_current_datetime']
 
         if args.get('traveler_type'):
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])

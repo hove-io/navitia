@@ -29,7 +29,7 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from .helper_utils import get_max_fallback_duration, get_fallback_duration_for_stop_point_nearby, timed_logger
+from .helper_utils import get_max_fallback_duration, timed_logger
 from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2
@@ -193,7 +193,7 @@ class ProximitiesByCrowflyPool:
                 max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
                 object_type=object_type,
                 filter=filter,
-                stop_points_nearby_duration=get_fallback_duration_for_stop_point_nearby(self._request),
+                stop_points_nearby_duration=self._request['_stop_points_nearby_duration'],
                 request=self._request,
                 request_id=self._request_id,
             )
