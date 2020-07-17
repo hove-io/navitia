@@ -59,6 +59,7 @@ from navitiacommon.parser_args_type import (
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
+from jormungandr.travelers_profile import TravelerProfile
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -640,6 +641,10 @@ class Journeys(JourneyCommon):
         responses = {}
         for r in possible_regions:
             self.region = r
+            if args.get('traveler_type'):
+                traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+                traveler_profile.override_params(args)
+
             _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)
             logging.getLogger(__name__).debug("Querying region : {}".format(r))
