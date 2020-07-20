@@ -44,6 +44,27 @@ from six import text_type
 from enum import Enum
 import itertools
 
+# Possible values implemented. Full languages within the doc:
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
+# Be careful, the syntax has to be exact
+class Languages(Enum):
+    afrikaans = "af"
+    arabic = "ar-sa"
+    chinese = "zh-cn"
+    dutch = "nl-nl"
+    english = "en-gb"
+    french = "fr-fr"
+    german = "de-de"
+    hebrew = "he"
+    hindi = "hi"
+    italian = "it-it"
+    japanese = "ja-jp"
+    nepali = "ne-np"
+    portuguese = "pt-pt"
+    russian = "ru-ru"
+    spanish = "es-es"
+
+
 # Possible values to active/deactivate realtime traffic
 class RealTimeTraffic(Enum):
     enabled = "enabled"
@@ -123,6 +144,7 @@ class Here(AbstractStreetNetworkService):
         matrix_type=MatrixType.simple_matrix.value,
         max_matrix_points=default_values.here_max_matrix_points,
         realtime_traffic=True,
+        language="english",
         feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
         **kwargs
     ):
@@ -142,14 +164,15 @@ class Here(AbstractStreetNetworkService):
         self.matrix_type = self._get_matrix_type(matrix_type)
         self.max_matrix_points = self._get_max_matrix_points(max_matrix_points)
         self.realtime_traffic = self._get_realtime_traffic(realtime_traffic)
+        self.language = self._get_language(language.lower())
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
         )
 
         self.log.debug(
-            'Here, load confifguration max_matrix_points={} - matrix_type={} - realtime_traffic={}'.format(
-                self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value
+            'Here, load confifguration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={}'.format(
+                self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value, self.language.value
             )
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
@@ -163,6 +186,7 @@ class Here(AbstractStreetNetworkService):
             'matrix_type': self.matrix_type.value,
             'max_matrix_points': self.max_matrix_points,
             'realtime_traffic': self.realtime_traffic.value,
+            'language': self.language.value,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
@@ -282,6 +306,20 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
+    def _get_language(self, language):
+        try:
+            return Languages[language]
+        except KeyError:
+            self.log.error('Here parameters language={} not exist - force to english'.format(language))
+            return Languages.english
+
+    def get_language_parameter(self, request):
+        _language = request.get('_here_language', None)
+        if _language == None:
+            return self.language
+        else:
+            return self._get_language(_language.lower())
+
     def _get_realtime_traffic(self, rt_traffic):
         realtime_traffic = _convert_realtime_traffic(rt_traffic)
         if realtime_traffic == RealTimeTraffic.unknown:
@@ -335,7 +373,7 @@ class Here(AbstractStreetNetworkService):
             matrix_type = self._get_matrix_type(_matrix_type)
         return max_matrix_points, matrix_type
 
-    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, realtime_traffic):
+    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, realtime_traffic, language):
         datetime, clockwise = fallback_extremity
         params = {
             'apiKey': self.apiKey,
@@ -347,6 +385,7 @@ class Here(AbstractStreetNetworkService):
             'summaryAttributes': 'traveltime',
             'legAttributes': 'bt,tt,mn',
             'maneuverAttributes': 'di,rn,le,tt,po',
+            'language': '{language}'.format(language=language.value),
             # street network mode + realtime activation
             'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
@@ -369,9 +408,10 @@ class Here(AbstractStreetNetworkService):
         request_id,
     ):
         realtime_traffic = self.get_realtime_traffic_parameter(request)
+        language = self.get_language_parameter(request)
 
         params = self.get_direct_path_params(
-            pt_object_origin, pt_object_destination, mode, fallback_extremity, realtime_traffic
+            pt_object_origin, pt_object_destination, mode, fallback_extremity, realtime_traffic, language
         )
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:

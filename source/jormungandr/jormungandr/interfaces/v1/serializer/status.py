@@ -130,6 +130,7 @@ class StreetNetworkSerializer(OutsideServiceCommon):
     matrix_type = MethodField(schema_type=str, display_none=False)
     max_matrix_points = MethodField(schema_type=int, display_none=False)
     realtime_traffic = MethodField(schema_type=str, display_none=False)
+    language = MethodField(schema_type=str, display_none=False)
 
     def get_timeout(self, obj):
         return obj.get('timeout', None)
@@ -145,6 +146,9 @@ class StreetNetworkSerializer(OutsideServiceCommon):
 
     def get_realtime_traffic(self, obj):
         return obj.get('realtime_traffic', None)
+
+    def get_language(self, obj):
+        return obj.get('language', None)
 
 
 class RidesharingServicesSerializer(OutsideServiceCommon):
