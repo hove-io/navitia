@@ -212,11 +212,11 @@ class Instance(object):
         return models.Instance.get_by_name(self.name)
 
     def scenario(self, override_scenario=None):
-        if hasattr(g, 'scenario') and g.scenario:
-            """
-            once a scenario has been chosen for a request, we cannot change it
-            """
-            return g.scenario
+        """
+        once a scenario has been chosen for a request for an instance (coverage), we cannot change it
+        """
+        if hasattr(g, 'scenario') and g.scenario.get(self.name):
+            return g.scenario[self.name]
 
         def replace_experimental_scenario(s):
             return 'distributed' if s == 'experimental' else s
@@ -232,7 +232,12 @@ class Instance(object):
                 logger.exception('scenario not found')
                 abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
-            g.scenario = scenario
+            # Save scenario_name and scenario
+            self._scenario_name = override_scenario
+            self._scenario = scenario
+            if not hasattr(g, 'scenario'):
+                g.scenario = {}
+            g.scenario[self.name] = scenario
             return scenario
 
         instance_db = self.get_models()
@@ -247,7 +252,9 @@ class Instance(object):
             self._scenario = module.Scenario()
 
         # we save the used scenario for future use
-        g.scenario = self._scenario
+        if not hasattr(g, 'scenario'):
+            g.scenario = {}
+        g.scenario[self.name] = self._scenario
         return self._scenario
 
     @property

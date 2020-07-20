@@ -77,7 +77,10 @@ class TestOverlappingCoverage(AbstractTestFixture):
         debug_query = "/v1/{q}&debug=true".format(q=journey_basic_query)
         response = self.query(debug_query)
         self.is_valid_journey_response(response, debug_query)
-        assert set(response['debug']['regions_called']) == {"main_routing_test", "empty_routing_test"}
+        assert response['debug']['regions_called'][0]['name'] == 'empty_routing_test'
+        assert response['debug']['regions_called'][0]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][1]['name'] == 'main_routing_test'
+        assert response['debug']['regions_called'][1]['scenario'] == 'new_default'
 
     def test_journeys_on_empty(self):
         """
@@ -142,7 +145,10 @@ class TestOverlappingCoverage(AbstractTestFixture):
         # we also should have the region called in the debug node
         # (and the empty one should be first since it has been called first)
         assert 'regions_called' in response['debug']
-        assert response['debug']['regions_called'] == ['empty_routing_test', 'main_routing_test']
+        assert response['debug']['regions_called'][0]['name'] == 'empty_routing_test'
+        assert response['debug']['regions_called'][0]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][1]['name'] == 'main_routing_test'
+        assert response['debug']['regions_called'][1]['scenario'] == 'new_default'
 
     def test_journeys_no_debug(self):
         """no debug in query, no debug in answer"""

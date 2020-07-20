@@ -632,13 +632,6 @@ class Journeys(JourneyCommon):
             set_request_timezone(self.region)
             logging.getLogger(__name__).debug("Querying region : {}".format(r))
 
-            # Store the region in the 'g' object, which is local to a request
-            if args['debug']:
-                # In debug we store all queried region
-                if not hasattr(g, 'regions_called'):
-                    g.regions_called = []
-                g.regions_called.append(r)
-
             # Save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
             if original_datetime:
@@ -653,6 +646,15 @@ class Journeys(JourneyCommon):
                 abort(400, message="taxi is not available with new_default scenario")
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
+
+            # Store the region in the 'g' object, which is local to a request
+            if args['debug']:
+                instance = i_manager.instances.get(self.region)
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                region = {"name": instance.name, "scenario": instance._scenario_name}
+                g.regions_called.append(region)
 
             # If journeys list is empty and error field not exist, we create
             # the error message field
