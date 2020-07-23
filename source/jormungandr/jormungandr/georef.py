@@ -83,6 +83,8 @@ class Kraken(object):
         filter=None,
         stop_points_nearby_duration=300,
         request_id=None,
+        forbidden_uris=None,
+        allowed_id=None,
         **kwargs
     ):
 
@@ -98,13 +100,33 @@ class Kraken(object):
         req.places_nearby.start_page = 0
         req.disable_feedpublisher = True
         req.places_nearby.types.append(object_type)
+
+        allowed_id_filter = ''
+        if allowed_id is not None:
+            allowed_id_count = len(allowed_id)
+            if allowed_id_count > 0:
+                # Retrieve first element(uri) of the set
+                allowed_id_items = 'poi.id={}'.format(allowed_id.pop())
+                # For the rest of elements use 'or' in between two elements(uris)
+                for uri in allowed_id:
+                    allowed_id_items = allowed_id_items + ' or poi.id={}'.format(uri)
+                # Format the filter for all allowed_ids uris
+                if allowed_id_count == 1:
+                    allowed_id_filter = ' and {}'.format(allowed_id_items)
+                elif allowed_id_count > 1:
+                    allowed_id_filter = ' and ({})'.format(allowed_id_items)
+
+        # We implement filter only for poi with poi_type.uri=poi_type:amenity:parking
         if filter is not None:
-            req.places_nearby.filter = filter
+            req.places_nearby.filter = filter + allowed_id_filter
         if streetnetwork_mode == "car":
             req.places_nearby.stop_points_nearby_radius = (
                 kwargs.get("walking", 1.11) * stop_points_nearby_duration
             )
             req.places_nearby.depth = 1
+        if forbidden_uris is not None:
+            for uri in forbidden_uris:
+                req.places_nearby.forbidden_uris.append(uri)
         res = self.instance.send_and_receive(req, request_id=request_id)
         if len(res.feed_publishers) != 0:
             logger.error("feed publisher not empty: expect performance regression!")

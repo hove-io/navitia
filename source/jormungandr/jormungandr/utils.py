@@ -640,3 +640,13 @@ def portable_min(*args, **kwargs):
 
 def mps_to_kmph(speed):
     return round(3.6 * speed)
+
+
+def get_poi_params(codes):
+    poi_params = set()
+    if codes is not None:
+        for code in codes:
+            split_code = code.decode().split(':')
+            if len(split_code) > 0 and split_code[0] == 'poi':
+                poi_params.add(code)
+    return poi_params
