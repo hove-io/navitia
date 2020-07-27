@@ -45,6 +45,10 @@ from six import text_type
 from enum import Enum
 import itertools
 
+# this limit is fixed by Here Api. See avoidAreas parameter
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-route.html
+HERE_MAX_LIMIT_AVOID_AREAS = 20
+
 # Possible values implemented. Full languages within the doc:
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
 # Be careful, the syntax has to be exact
@@ -313,12 +317,16 @@ class Here(AbstractStreetNetworkService):
         See the Here doc for avoidAreas option
         https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-matrix.html
         """
-        _exclusion_areas = request.get('_sn_exclusion_areas', None)
+        _exclusion_areas = request.get('_here_exclusion_area[]', None)
         if _exclusion_areas == None:
             return None
         else:
             boxes = ""
-            for idx, exclusion_area in enumerate(_exclusion_areas):
+            if len(_exclusion_areas) > HERE_MAX_LIMIT_AVOID_AREAS:
+                self.log.error(
+                    'Here parameters _here_exclusion_area[] is limited to 20 exclusion areas. truncate list !'
+                )
+            for idx, exclusion_area in enumerate(_exclusion_areas[:HERE_MAX_LIMIT_AVOID_AREAS]):
                 if exclusion_area.count('!') == 1:
                     coord_1, coord_2 = exclusion_area.split('!')
                     if is_coord(coord_1) and is_coord(coord_2):
@@ -334,13 +342,13 @@ class Here(AbstractStreetNetworkService):
                             boxes += "!"
                     else:
                         self.log.error(
-                            'Here parameters _sn_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                            'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
                                 exclusion_area
                             )
                         )
                 else:
                     self.log.error(
-                        'Here parameters _sn_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                        'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
                             exclusion_area
                         )
                     )
