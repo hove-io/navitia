@@ -155,7 +155,7 @@ class Distributed(object):
             # if max_duration(time to pass in pt) is zero, there is no need to continue,
             # we return all direct path without pt
             if request['max_duration'] == 0:
-                return [
+                res = [
                     context.streetnetwork_path_pool.wait_and_get(
                         requested_orig_obj=context.requested_orig_obj,
                         requested_dest_obj=context.requested_dest_obj,
@@ -166,6 +166,9 @@ class Distributed(object):
                     )
                     for mode in requested_direct_path_modes
                 ]
+                # add SN feed publishers
+                context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
+                return res
 
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
             # FallbackDurationsPool.
@@ -284,6 +287,9 @@ class Distributed(object):
             fill_uris(r)
 
         context.partial_response_is_empty = False
+
+        # add SN feed publishers
+        context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
 
         return res
 
