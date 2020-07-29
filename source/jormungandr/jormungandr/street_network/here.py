@@ -40,9 +40,14 @@ from jormungandr.utils import get_pt_object_coord, PeriodExtremity
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
+from jormungandr.utils import is_coord, get_lon_lat
 from six import text_type
 from enum import Enum
 import itertools
+
+# this limit is fixed by Here Api. See avoidAreas parameter
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-route.html
+HERE_MAX_LIMIT_AVOID_AREAS = 20
 
 # Possible values implemented. Full languages within the doc:
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
@@ -171,7 +176,7 @@ class Here(AbstractStreetNetworkService):
         )
 
         self.log.debug(
-            'Here, load confifguration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={}'.format(
+            'Here, load configuration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={}'.format(
                 self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value, self.language.value
             )
         )
@@ -306,6 +311,49 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
+    def get_exclusion_areas(self, request):
+        """
+        Retreive and adapt exclusion parameters for Here API.
+        See the Here doc for avoidAreas option
+        https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-matrix.html
+        """
+        _exclusion_areas = request.get('_here_exclusion_area[]', None)
+        if _exclusion_areas == None:
+            return None
+        else:
+            boxes = ""
+            if len(_exclusion_areas) > HERE_MAX_LIMIT_AVOID_AREAS:
+                self.log.error(
+                    'Here parameters _here_exclusion_area[] is limited to 20 exclusion areas. truncate list !'
+                )
+            for idx, exclusion_area in enumerate(_exclusion_areas[:HERE_MAX_LIMIT_AVOID_AREAS]):
+                if exclusion_area.count('!') == 1:
+                    coord_1, coord_2 = exclusion_area.split('!')
+                    if is_coord(coord_1) and is_coord(coord_2):
+                        lon_1, lat_1 = get_lon_lat(coord_1)
+                        lon_2, lat_2 = get_lon_lat(coord_2)
+                        # The superior latitude has to be the first coord for Here API
+                        # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-bounding-box.html
+                        if lat_1 > lat_2:
+                            boxes += "{},{};{},{}".format(lat_1, lon_1, lat_2, lon_2)
+                        else:
+                            boxes += "{},{};{},{}".format(lat_2, lon_2, lat_1, lon_1)
+                        if idx < (len(_exclusion_areas) - 1):
+                            boxes += "!"
+                    else:
+                        self.log.error(
+                            'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                                exclusion_area
+                            )
+                        )
+                else:
+                    self.log.error(
+                        'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                            exclusion_area
+                        )
+                    )
+            return {"avoidAreas": boxes}
+
     def _get_language(self, language):
         try:
             return Languages[language]
@@ -373,7 +421,9 @@ class Here(AbstractStreetNetworkService):
             matrix_type = self._get_matrix_type(_matrix_type)
         return max_matrix_points, matrix_type
 
-    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, realtime_traffic, language):
+    def get_direct_path_params(
+        self, origin, destination, mode, fallback_extremity, request, realtime_traffic, language
+    ):
         datetime, clockwise = fallback_extremity
         params = {
             'apiKey': self.apiKey,
@@ -393,6 +443,9 @@ class Here(AbstractStreetNetworkService):
             # With HERE, it's only possible to constraint the departure
             'departure': _str_to_dt(datetime),
         }
+        exclusion_areas = self.get_exclusion_areas(request)
+        if exclusion_areas != None:
+            params.update(exclusion_areas)
 
         return params
 
@@ -411,7 +464,13 @@ class Here(AbstractStreetNetworkService):
         language = self.get_language_parameter(request)
 
         params = self.get_direct_path_params(
-            pt_object_origin, pt_object_destination, mode, fallback_extremity, realtime_traffic, language
+            pt_object_origin,
+            pt_object_destination,
+            mode,
+            fallback_extremity,
+            request,
+            realtime_traffic,
+            language,
         )
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
@@ -485,6 +544,9 @@ class Here(AbstractStreetNetworkService):
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
             ),
         }
+        exclusion_areas = self.get_exclusion_areas(request)
+        if exclusion_areas != None:
+            params.update(exclusion_areas)
 
         # for the ending fallback matrix (or the beginning of non clockwise query), we do not know the
         # precise departure/arrival (as it depend on the public transport taken)
@@ -526,6 +588,7 @@ class Here(AbstractStreetNetworkService):
                     destination,
                     mode,
                     PeriodExtremity(datetime=request['datetime'], represents_start=request['clockwise']),
+                    request,
                     realtime_traffic,
                 )
                 r = self._call_here(self.routing_service_url, params=params)

@@ -459,6 +459,18 @@ class Journeys(JourneyCommon):
             help="Here, Max number of matrix points for the street network computation (limited to 100)",
         )
         parser_get.add_argument(
+            '_here_exclusion_area[]',
+            type=six.text_type,
+            case_sensitive=False,
+            hidden=True,
+            action='append',
+            dest='_here_exclusion_area[]',
+            help='Give 2 coords for an exclusion box. The format is like that:\n'
+            'Coord_1!Coord_2 with Coord=lat;lon\n'
+            ' - exemple : _here_exclusion_area[]=2.40553;48.84866!2.41453;48.85677\n'
+            ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
+        )
+        parser_get.add_argument(
             "equipment_details",
             default=True,
             type=BooleanType(),
