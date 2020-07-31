@@ -40,9 +40,35 @@ from jormungandr.utils import get_pt_object_coord, PeriodExtremity
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
+from jormungandr.utils import is_coord, get_lon_lat
 from six import text_type
 from enum import Enum
 import itertools
+
+# this limit is fixed by Here Api. See avoidAreas parameter
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-route.html
+HERE_MAX_LIMIT_AVOID_AREAS = 20
+
+# Possible values implemented. Full languages within the doc:
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
+# Be careful, the syntax has to be exact
+class Languages(Enum):
+    afrikaans = "af"
+    arabic = "ar-sa"
+    chinese = "zh-cn"
+    dutch = "nl-nl"
+    english = "en-gb"
+    french = "fr-fr"
+    german = "de-de"
+    hebrew = "he"
+    hindi = "hi"
+    italian = "it-it"
+    japanese = "ja-jp"
+    nepali = "ne-np"
+    portuguese = "pt-pt"
+    russian = "ru-ru"
+    spanish = "es-es"
+
 
 # Possible values to active/deactivate realtime traffic
 class RealTimeTraffic(Enum):
@@ -123,6 +149,7 @@ class Here(AbstractStreetNetworkService):
         matrix_type=MatrixType.simple_matrix.value,
         max_matrix_points=default_values.here_max_matrix_points,
         realtime_traffic=True,
+        language="english",
         feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
         **kwargs
     ):
@@ -142,14 +169,15 @@ class Here(AbstractStreetNetworkService):
         self.matrix_type = self._get_matrix_type(matrix_type)
         self.max_matrix_points = self._get_max_matrix_points(max_matrix_points)
         self.realtime_traffic = self._get_realtime_traffic(realtime_traffic)
+        self.language = self._get_language(language.lower())
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
         )
 
         self.log.debug(
-            'Here, load confifguration max_matrix_points={} - matrix_type={} - realtime_traffic={}'.format(
-                self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value
+            'Here, load configuration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={}'.format(
+                self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value, self.language.value
             )
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
@@ -163,6 +191,7 @@ class Here(AbstractStreetNetworkService):
             'matrix_type': self.matrix_type.value,
             'max_matrix_points': self.max_matrix_points,
             'realtime_traffic': self.realtime_traffic.value,
+            'language': self.language.value,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
@@ -282,6 +311,63 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
+    def get_exclusion_areas(self, request):
+        """
+        Retreive and adapt exclusion parameters for Here API.
+        See the Here doc for avoidAreas option
+        https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-matrix.html
+        """
+        _exclusion_areas = request.get('_here_exclusion_area[]', None)
+        if _exclusion_areas == None:
+            return None
+        else:
+            boxes = ""
+            if len(_exclusion_areas) > HERE_MAX_LIMIT_AVOID_AREAS:
+                self.log.error(
+                    'Here parameters _here_exclusion_area[] is limited to 20 exclusion areas. truncate list !'
+                )
+            for idx, exclusion_area in enumerate(_exclusion_areas[:HERE_MAX_LIMIT_AVOID_AREAS]):
+                if exclusion_area.count('!') == 1:
+                    coord_1, coord_2 = exclusion_area.split('!')
+                    if is_coord(coord_1) and is_coord(coord_2):
+                        lon_1, lat_1 = get_lon_lat(coord_1)
+                        lon_2, lat_2 = get_lon_lat(coord_2)
+                        # The superior latitude has to be the first coord for Here API
+                        # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-bounding-box.html
+                        if lat_1 > lat_2:
+                            boxes += "{},{};{},{}".format(lat_1, lon_1, lat_2, lon_2)
+                        else:
+                            boxes += "{},{};{},{}".format(lat_2, lon_2, lat_1, lon_1)
+                        if idx < (len(_exclusion_areas) - 1):
+                            boxes += "!"
+                    else:
+                        self.log.error(
+                            'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                                exclusion_area
+                            )
+                        )
+                else:
+                    self.log.error(
+                        'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
+                            exclusion_area
+                        )
+                    )
+            return {"avoidAreas": boxes}
+
+    def _get_language(self, language):
+        try:
+            return Languages[language]
+        except KeyError:
+            self.log.error('Here parameters language={} not exist - force to english'.format(language))
+            return Languages.english
+
+    def get_language_parameter(self, request):
+        _language = request.get('_here_language', None)
+        if _language == None:
+            return self.language
+        else:
+            return self._get_language(_language.lower())
+
     def _get_realtime_traffic(self, rt_traffic):
         realtime_traffic = _convert_realtime_traffic(rt_traffic)
         if realtime_traffic == RealTimeTraffic.unknown:
@@ -335,7 +421,9 @@ class Here(AbstractStreetNetworkService):
             matrix_type = self._get_matrix_type(_matrix_type)
         return max_matrix_points, matrix_type
 
-    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, realtime_traffic):
+    def get_direct_path_params(
+        self, origin, destination, mode, fallback_extremity, request, realtime_traffic, language
+    ):
         datetime, clockwise = fallback_extremity
         params = {
             'apiKey': self.apiKey,
@@ -347,6 +435,7 @@ class Here(AbstractStreetNetworkService):
             'summaryAttributes': 'traveltime',
             'legAttributes': 'bt,tt,mn',
             'maneuverAttributes': 'di,rn,le,tt,po',
+            'language': '{language}'.format(language=language.value),
             # street network mode + realtime activation
             'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
@@ -354,6 +443,9 @@ class Here(AbstractStreetNetworkService):
             # With HERE, it's only possible to constraint the departure
             'departure': _str_to_dt(datetime),
         }
+        exclusion_areas = self.get_exclusion_areas(request)
+        if exclusion_areas != None:
+            params.update(exclusion_areas)
 
         return params
 
@@ -369,9 +461,16 @@ class Here(AbstractStreetNetworkService):
         request_id,
     ):
         realtime_traffic = self.get_realtime_traffic_parameter(request)
+        language = self.get_language_parameter(request)
 
         params = self.get_direct_path_params(
-            pt_object_origin, pt_object_destination, mode, fallback_extremity, realtime_traffic
+            pt_object_origin,
+            pt_object_destination,
+            mode,
+            fallback_extremity,
+            request,
+            realtime_traffic,
+            language,
         )
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
@@ -445,6 +544,9 @@ class Here(AbstractStreetNetworkService):
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
             ),
         }
+        exclusion_areas = self.get_exclusion_areas(request)
+        if exclusion_areas != None:
+            params.update(exclusion_areas)
 
         # for the ending fallback matrix (or the beginning of non clockwise query), we do not know the
         # precise departure/arrival (as it depend on the public transport taken)
@@ -486,6 +588,7 @@ class Here(AbstractStreetNetworkService):
                     destination,
                     mode,
                     PeriodExtremity(datetime=request['datetime'], represents_start=request['clockwise']),
+                    request,
                     realtime_traffic,
                 )
                 r = self._call_here(self.routing_service_url, params=params)

@@ -1,3 +1,11 @@
+navitia2 (5.3.0) unstable; urgency=low
+
+  * [jormun] Here, add exclusion areas option  <https://github.com/CanalTP/navitia/pull/3250>
+  * [jormun] Fix scenario and add debug infos  <https://github.com/CanalTP/navitia/pull/3248>
+  * [Jormun] Here SN, language instruction is now configurable  <https://github.com/CanalTP/navitia/pull/3244>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 31 Jul 2020 11:07:36 +0100
+
 navitia2 (5.2.0) unstable; urgency=low
 
   * [Jormungandr] convert crowfly time, for folding section, in an adaptable parameter  <https://github.com/CanalTP/navitia/pull/3243>

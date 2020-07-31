@@ -406,6 +406,46 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
+            "_here_language",
+            type=OptionValue(
+                [
+                    'afrikaans',
+                    'arabic',
+                    'chinese',
+                    'dutch',
+                    'english',
+                    'french',
+                    'german',
+                    'hebrew',
+                    'hindi',
+                    'italian',
+                    'japanese',
+                    'nepali',
+                    'portuguese',
+                    'russian',
+                    'spanish',
+                ]
+            ),
+            hidden=True,
+            help='Here, select a specific language for guidance instruction.\n'
+            'list available:\n'
+            '- afrikaans = af\n'
+            '- arabic = ar-sa\n'
+            '- chinese = zh-cn\n'
+            '- dutch = nl-nl\n'
+            '- english = en-gb\n'
+            '- french = fr-fr\n'
+            '- german = de-de\n'
+            '- hebrew = he\n'
+            '- hindi = hi\n'
+            '- italian = it-it\n'
+            '- japanese = ja-jp\n'
+            '- nepali = ne-np\n'
+            '- portuguese = pt-pt\n'
+            '- russian = ru-ru\n'
+            '- spanish = es-es\n',
+        )
+        parser_get.add_argument(
             "_here_matrix_type",
             type=six.text_type,
             hidden=True,
@@ -417,6 +457,18 @@ class Journeys(JourneyCommon):
             default=default_values.here_max_matrix_points,
             hidden=True,
             help="Here, Max number of matrix points for the street network computation (limited to 100)",
+        )
+        parser_get.add_argument(
+            '_here_exclusion_area[]',
+            type=six.text_type,
+            case_sensitive=False,
+            hidden=True,
+            action='append',
+            dest='_here_exclusion_area[]',
+            help='Give 2 coords for an exclusion box. The format is like that:\n'
+            'Coord_1!Coord_2 with Coord=lat;lon\n'
+            ' - exemple : _here_exclusion_area[]=2.40553;48.84866!2.41453;48.85677\n'
+            ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
         )
         parser_get.add_argument(
             "equipment_details",
@@ -592,13 +644,6 @@ class Journeys(JourneyCommon):
             set_request_timezone(self.region)
             logging.getLogger(__name__).debug("Querying region : {}".format(r))
 
-            # Store the region in the 'g' object, which is local to a request
-            if args['debug']:
-                # In debug we store all queried region
-                if not hasattr(g, 'regions_called'):
-                    g.regions_called = []
-                g.regions_called.append(r)
-
             # Save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
             if original_datetime:
@@ -613,6 +658,15 @@ class Journeys(JourneyCommon):
                 abort(400, message="taxi is not available with new_default scenario")
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
+
+            # Store the region in the 'g' object, which is local to a request
+            if args['debug']:
+                instance = i_manager.instances.get(self.region)
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                region = {"name": instance.name, "scenario": instance._scenario_name}
+                g.regions_called.append(region)
 
             # If journeys list is empty and error field not exist, we create
             # the error message field

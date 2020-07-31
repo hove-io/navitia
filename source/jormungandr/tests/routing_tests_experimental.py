@@ -720,7 +720,7 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
         )
         response = self.query(query)
         self.is_valid_journey_response(response, query)
-        assert response['debug']['regions_called'][0] == coverage
+        assert response['debug']['regions_called'][0]['name'] == coverage
 
     def sn_backends_getter(self):
         kraken = StreetNetworkBackend(id='kraken')
