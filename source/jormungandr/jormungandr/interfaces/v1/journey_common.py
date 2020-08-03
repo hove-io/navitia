@@ -40,7 +40,6 @@ import logging
 from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
-from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 import pytz
 import six
@@ -504,17 +503,5 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             args['original_datetime'] = args['datetime']
         else:
             args['original_datetime'] = args['_current_datetime']
-
-        if args.get('traveler_type'):
-            traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
-            traveler_profile.override_params(args)
-
-        # We set default modes for fallback modes.
-        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
-        # fallback modes will always have a value, and traveler_type will never override fallback modes.
-        if args.get('origin_mode') is None:
-            args['origin_mode'] = ['walking']
-        if args.get('destination_mode') is None:
-            args['destination_mode'] = ['walking']
 
         return args
