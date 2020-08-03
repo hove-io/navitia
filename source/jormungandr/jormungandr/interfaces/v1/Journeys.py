@@ -534,7 +534,7 @@ class Journeys(JourneyCommon):
             # we have custom default values for isochrone because they are very resource expensive
             if args.get('max_duration') is None:
                 args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
-            if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
+            if 'ridesharing' in (args['origin_mode'] or []) or 'ridesharing' in (args['destination_mode'] or []):
                 abort(400, message='ridesharing isn\'t available on isochrone')
 
         def _set_specific_params(mod):
@@ -644,6 +644,12 @@ class Journeys(JourneyCommon):
             if args.get('traveler_type'):
                 traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
                 traveler_profile.override_params(args)
+
+            # We set default modes for fallback modes.
+            # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+            # fallback modes will always have a value, and traveler_type will never override fallback modes.
+            args['origin_mode'] = args.get('origin_mode') or ['walking']
+            args['destination_mode'] = args['destination_mode'] or ['walking']
 
             _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)

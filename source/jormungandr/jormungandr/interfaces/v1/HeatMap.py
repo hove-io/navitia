@@ -54,6 +54,12 @@ class HeatMap(JourneyCommon):
         self.region = i_manager.get_region(region, lon, lat)
         args.update(self.parse_args(region, uri))
 
+        # We set default modes for fallback modes.
+        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+        # fallback modes will always have a value, and traveler_type will never override fallback modes.
+        args['origin_mode'] = args.get('origin_mode') or ['walking']
+        args['destination_mode'] = args['destination_mode'] or ['walking']
+
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
         if not args['max_duration']:

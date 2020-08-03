@@ -504,12 +504,4 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         else:
             args['original_datetime'] = args['_current_datetime']
 
-        # We set default modes for fallback modes.
-        # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
-        # fallback modes will always have a value, and traveler_type will never override fallback modes.
-        if args.get('origin_mode') is None:
-            args['origin_mode'] = ['walking']
-        if args.get('destination_mode') is None:
-            args['destination_mode'] = ['walking']
-
         return args
