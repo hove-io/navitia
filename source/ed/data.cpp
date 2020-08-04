@@ -113,7 +113,19 @@ void Data::build_block_id() {
                 // This is not supposed to happen
                 // @TODO: Add a parameter to avoid too long connection
                 // they can be for instance due to bad data
-                if (vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
+                auto* vj_first_st = vj->stop_time_list.front();
+                auto* prev_vj_last_st = prev_vj->stop_time_list.back();
+                if (vj_first_st->departure_time >= prev_vj_last_st->arrival_time) {
+                    if (!vj->has_prev_vj_prolongation_on_same_stop_point()) {
+                        if (prev_vj_last_st->departure_time > vj_first_st->arrival_time) {
+                            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                            "Prolongation on different stop points with overlapping stop_times. "
+                                            "Prolongation cannot be done between vj "
+                                                << prev_vj->uri << " and " << vj->uri);
+                            break;
+                        }
+                    }
+
                     // we add another check that the vjs are on the same offset (that they are not the from vj split on
                     // different dst)
                     if (tz_wrapper.tz_handler.get_utc_offset(*vj->validity_pattern)
@@ -578,11 +590,24 @@ void Data::pick_up_drop_of_on_borders() {
         if (vj->stop_time_list.empty()) {
             continue;
         }
-        if (!vj->prev_vj) {
-            vj->stop_time_list.front()->drop_off_allowed = false;
-        }
-        if (!vj->next_vj) {
-            vj->stop_time_list.back()->pick_up_allowed = false;
+
+        auto* first_st = vj->stop_time_list.front();
+        auto* last_st = vj->stop_time_list.back();
+
+        /*
+         * The first arrival and last departure of a vehicle don't make sense as they can't be used.
+         * So let's forbid them
+         *
+         * This is true unless the vehicle has a prolongation on different stop points.
+         */
+        first_st->drop_off_allowed = false;
+        last_st->pick_up_allowed = false;
+
+        if (vj->prev_vj) {
+            if (!vj->has_prev_vj_prolongation_on_same_stop_point()) {
+                first_st->drop_off_allowed = true;
+                vj->prev_vj->stop_time_list.back()->pick_up_allowed = true;
+            }
         }
     }
 }

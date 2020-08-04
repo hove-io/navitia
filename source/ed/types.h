@@ -282,8 +282,8 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     ValidityPattern* adapted_validity_pattern = nullptr;
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey = nullptr;
-    VehicleJourney* prev_vj = nullptr;
-    VehicleJourney* next_vj = nullptr;
+    VehicleJourney* prev_vj = nullptr;  // previous vj with the same block_id
+    VehicleJourney* next_vj = nullptr;  // next vj with the same block_id
 
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
 
@@ -291,6 +291,8 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     int earliest_time() const;
 
     bool operator<(const VehicleJourney& other) const;
+
+    bool has_prev_vj_prolongation_on_same_stop_point() const;
 };
 
 struct StopPoint : public Header, Nameable, hasProperties {

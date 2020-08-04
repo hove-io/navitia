@@ -124,6 +124,15 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
+bool VehicleJourney::has_prev_vj_prolongation_on_same_stop_point() const {
+    if (prev_vj) {
+        const auto* vj_first_st = stop_time_list.front();
+        const auto* prev_vj_last_st = prev_vj->stop_time_list.back();
+        return vj_first_st->stop_point->idx == prev_vj_last_st->stop_point->idx;
+    }
+    return false;
+}
+
 bool StopPointConnection::operator<(const StopPointConnection& other) const {
     if (this->departure == other.departure) {
         if (this->destination == other.destination) {
