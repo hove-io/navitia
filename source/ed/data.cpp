@@ -591,10 +591,10 @@ void Data::pick_up_drop_of_on_borders() {
         }
 
         /*
-         * The first arrival and last departure of a vehicle don't make sense as they can't be used.
+         * The first arrival and last departure of a vehicle-journey don't make sense as they can't be used.
          * So let's forbid them
          *
-         * This is true unless the vehicle has a stay-in on different stop points as described below
+         * This is true unless the vehicle-journey has a stay-in on different stop points as described below
          */
 
         auto* first_st = vj->stop_time_list.front();
