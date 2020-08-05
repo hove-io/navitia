@@ -291,8 +291,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     int earliest_time() const;
 
     bool operator<(const VehicleJourney& other) const;
-
-    bool has_prev_vj_prolongation_on_same_stop_point() const;
+    bool joins_on_different_stop_points(const ed::types::VehicleJourney& prev_vj) const;
 };
 
 struct StopPoint : public Header, Nameable, hasProperties {
@@ -310,6 +309,7 @@ struct StopPoint : public Header, Nameable, hasProperties {
     StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
 
     bool operator<(const StopPoint& other) const;
+    bool operator!=(const StopPoint& sp) const;
 };
 
 struct Shape {
