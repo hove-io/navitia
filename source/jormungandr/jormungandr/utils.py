@@ -145,11 +145,20 @@ def date_to_timestamp(date):
 
 
 def str_datetime_utc_to_local(dt, timezone):
+    local = pytz.timezone(timezone)
     if dt:
-        utc_dt = DateTimeFormat()(dt)
+        obj_dt = DateTimeFormat()(dt)
+        if obj_dt.tzinfo is not None:
+            localized_dt = obj_dt
+        else:
+            # if we don't have a timezone in the datetime, we consider it a local time from the coverage's tz
+            localized_dt = local.normalize(local.localize(obj_dt))
+        # convert to utc as datetime is in local
+        utc_dt = localized_dt.astimezone(pytz.utc)
     else:
         utc_dt = datetime.utcnow()
-    local = pytz.timezone(timezone)
+
+    # Finally convert to local datetime
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
 
 

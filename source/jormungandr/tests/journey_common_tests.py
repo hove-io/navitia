@@ -1597,7 +1597,7 @@ class OneDeadRegion:
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert len(response['debug']['regions_called']) == 1
-        assert response['debug']['regions_called'][0] == "main_routing_test"
+        assert response['debug']['regions_called'][0]['name'] == "main_routing_test"
 
 
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
@@ -1615,8 +1615,8 @@ class WithoutPt:
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
         assert len(response['debug']['regions_called']) == 2
-        assert response['debug']['regions_called'][0] == "main_routing_without_pt_test"
-        assert response['debug']['regions_called'][1] == "main_routing_test"
+        assert response['debug']['regions_called'][0]['name'] == "main_routing_without_pt_test"
+        assert response['debug']['regions_called'][1]['name'] == "main_routing_test"
 
     def test_one_region_without_pt_new_default(self):
         """
@@ -1631,8 +1631,8 @@ class WithoutPt:
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
         assert len(response['debug']['regions_called']) == 2
-        assert response['debug']['regions_called'][0] == "main_routing_without_pt_test"
-        assert response['debug']['regions_called'][1] == "main_routing_test"
+        assert response['debug']['regions_called'][0]['name'] == "main_routing_without_pt_test"
+        assert response['debug']['regions_called'][1]['name'] == "main_routing_test"
 
 
 @dataset(

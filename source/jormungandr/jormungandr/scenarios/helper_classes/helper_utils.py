@@ -43,8 +43,6 @@ from contextlib import contextmanager
 import time
 
 
-DEFAULT_STOP_POINTS_NEARBY_DURATION = 5 * 60  # In secs
-
 CAR_PARK_DURATION = 300  # secs
 
 
@@ -483,15 +481,6 @@ def get_max_fallback_duration(request, mode, dp_future):
     dp = dp_future.wait_and_get() if dp_future else None
     dp_duration = dp.journeys[0].durations.total if getattr(dp, 'journeys', None) else max_duration
     return min(max_duration, dp_duration)
-
-
-def get_fallback_duration_for_stop_point_nearby(request):
-    """
-    Select parameter option to set the max duration for stop point nearby crowfly
-    :param request:
-    :return: stop_point_nearby_duration
-    """
-    return request.get('max_stop_point_nearby_duration', DEFAULT_STOP_POINTS_NEARBY_DURATION)
 
 
 def compute_fallback(

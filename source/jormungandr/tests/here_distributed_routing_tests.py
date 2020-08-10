@@ -41,6 +41,7 @@ MOCKED_INSTANCE_CONF = {
                 "args": {
                     "apiKey": "bob_id",
                     "service_base_url": "route.bob.here.com/routing/7.2/",
+                    "language": "french",
                     "timeout": 20,
                 },
                 "modes": ["car", "car_no_park"],
@@ -78,7 +79,23 @@ HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH = {
     "response": {
         "route": [
             {
-                "leg": [{"length": 10, "maneuver": [{"length": 10, "travelTime": 15}], "travelTime": 15}],
+                "leg": [
+                    {
+                        "length": 10,
+                        "maneuver": [
+                            {
+                                "id": "M1",
+                                "length": 10,
+                                "travelTime": 15,
+                                "direction": "left",
+                                "position": {"latitude": 48.9995432, "longitude": 2.3498600},
+                                "roadName": "street 1",
+                                "instruction": "blabla turn left 1",
+                            }
+                        ],
+                        "travelTime": 15,
+                    }
+                ],
                 "shape": ["52.4999825,13.3999652", "52.4987912,13.4510744"],
                 "summary": {
                     "_type": "RouteSummaryType",
@@ -100,7 +117,26 @@ HERE_ROUTING_RESPONSE_END_FALLBACK_PATH = {
                 "leg": [
                     {
                         "length": 100,
-                        "maneuver": [{"length": 10, "travelTime": 10}, {"length": 90, "travelTime": 50}],
+                        "maneuver": [
+                            {
+                                "id": "M1",
+                                "length": 10,
+                                "travelTime": 10,
+                                "direction": "left",
+                                "position": {"latitude": 48.8765432, "longitude": 2.2798654},
+                                "roadName": "street 2",
+                                "instruction": "blabla turn left 2",
+                            },
+                            {
+                                "id": "M2",
+                                "length": 90,
+                                "travelTime": 50,
+                                "direction": "forward",
+                                "position": {"latitude": 60.8765432, "longitude": 3.2798654},
+                                "roadName": "street 3",
+                                "instruction": "blabla continue on 3",
+                            },
+                        ],
                         "travelTime": 60,
                         'BaseTime': 60,
                     }
@@ -126,7 +162,26 @@ HERE_ROUTING_RESPONSE_DIRECT_PATH = {
                 "leg": [
                     {
                         "length": 100,
-                        "maneuver": [{"length": 20, "travelTime": 100}, {"length": 80, "travelTime": 200}],
+                        "maneuver": [
+                            {
+                                "id": "M1",
+                                "length": 20,
+                                "travelTime": 100,
+                                "direction": "left",
+                                "position": {"latitude": 48.8756444, "longitude": 2.0944333},
+                                "roadName": "street 4",
+                                "instruction": "blabla turn left 4",
+                            },
+                            {
+                                "id": "M2",
+                                "length": 80,
+                                "travelTime": 200,
+                                "direction": "right",
+                                "position": {"latitude": 50.0061111, "longitude": 2.2468054},
+                                "roadName": "street 5",
+                                "instruction": "blabla turn right 5",
+                            },
+                        ],
                         "travelTime": 300,
                         'BaseTime': 200,
                     }
@@ -250,6 +305,24 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert sections[0].get('arrival_date_time') == '20120614T070500'
         assert sections[0].get('duration') == 300
         assert sections[0].get('type') == 'street_network'
+        # check path
+        path = sections[0].get('path')
+        assert path[0].get('id') == 1
+        assert path[0].get('name') == "street 4"
+        assert path[0].get('length') == 20
+        assert path[0].get('duration') == 100
+        assert path[0].get('direction') == -90
+        assert path[0].get('instruction') == "blabla turn left 4"
+        assert path[0].get('coordinate').get('lat') == "48.8756444"
+        assert path[0].get('coordinate').get('lon') == "2.0944333"
+        assert path[1].get('id') == 2
+        assert path[1].get('name') == "street 5"
+        assert path[1].get('length') == 80
+        assert path[1].get('duration') == 200
+        assert path[1].get('direction') == 90
+        assert path[1].get('instruction') == "blabla turn right 5"
+        assert path[1].get('coordinate').get('lat') == "50.0061111"
+        assert path[1].get('coordinate').get('lon') == "2.2468054"
 
         car_fallback = journeys[1]
 
@@ -259,9 +332,20 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         sections = car_fallback.get('sections')
         assert len(sections) == 3
         assert sections[0].get('mode') == 'car'
+        assert sections[0].get('type') == 'street_network'
         assert sections[0].get('departure_date_time') == '20120614T080045'
         assert sections[0].get('arrival_date_time') == '20120614T080100'
         assert sections[0].get('duration') == 15
+        # check path
+        path = sections[0].get('path')
+        assert path[0].get('id') == 1
+        assert path[0].get('name') == "street 1"
+        assert path[0].get('length') == 10
+        assert path[0].get('duration') == 15
+        assert path[0].get('direction') == -90
+        assert path[0].get('instruction') == "blabla turn left 1"
+        assert path[0].get('coordinate').get('lat') == "48.9995432"
+        assert path[0].get('coordinate').get('lon') == "2.34986"
 
         assert sections[1].get('departure_date_time') == '20120614T080100'
         assert sections[1].get('arrival_date_time') == '20120614T080102'
@@ -273,6 +357,24 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert sections[2].get('duration') == 60
         assert sections[2].get('type') == 'street_network'
         assert sections[2].get('mode') == 'car'
+        # check path
+        path = sections[2].get('path')
+        assert path[0].get('id') == 1
+        assert path[0].get('name') == "street 2"
+        assert path[0].get('length') == 10
+        assert path[0].get('duration') == 10
+        assert path[0].get('direction') == -90
+        assert path[0].get('instruction') == "blabla turn left 2"
+        assert path[0].get('coordinate').get('lat') == "48.8765432"
+        assert path[0].get('coordinate').get('lon') == "2.2798654"
+        assert path[1].get('id') == 2
+        assert path[1].get('name') == "street 3"
+        assert path[1].get('length') == 90
+        assert path[1].get('duration') == 50
+        assert path[1].get('direction') == 0
+        assert path[1].get('instruction') == "blabla continue on 3"
+        assert path[1].get('coordinate').get('lat') == "60.8765432"
+        assert path[1].get('coordinate').get('lon') == "3.2798654"
 
         feeds = get_not_null(response, 'feed_publishers')
         assert len(feeds) == 2

@@ -37,12 +37,13 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
+from jormungandr.resources_utils import ResourceUtc
 from navitiacommon.parser_args_type import DateTimeFormat, DepthArgument
 from datetime import datetime
 import six
 
 
-class Calendars(ResourceUri):
+class Calendars(ResourceUri, ResourceUtc):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.CalendarsSerializer)
         parser_get = self.parsers["get"]
@@ -83,7 +84,7 @@ class Calendars(ResourceUri):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -110,6 +111,9 @@ class Calendars(ResourceUri):
             args["filter"] = self.get_filter(split_uri(uri), args)
         else:
             args["filter"] = ""
+
+        # change dt to utc
+        args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
 
         self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "calendars", instance_name=self.region)

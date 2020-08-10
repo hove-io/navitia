@@ -383,7 +383,7 @@ int ed2nav(int argc, const char* argv[]) {
 
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
-    data.meta->publication_date = pt::microsec_clock::local_time();
+    data.meta->publication_date = pt::microsec_clock::universal_time();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
     LOG4CPLUS_INFO(logger, "line_groups: " << data.pt_data->line_groups.size());

@@ -113,6 +113,13 @@ bool StopPoint::operator<(const StopPoint& other) const {
     return *(this->stop_area) < *(other.stop_area);
 }
 
+bool StopPoint::operator!=(const StopPoint& sp) const {
+    /*
+     * We assume that URI are all unique accross stop points
+     */
+    return uri != sp.uri;
+}
+
 int VehicleJourney::earliest_time() const {
     const auto& st = std::min_element(stop_time_list.begin(), stop_time_list.end(), [](StopTime* st1, StopTime* st2) {
         return std::min(st1->boarding_time, st1->arrival_time) < std::min(st2->boarding_time, st2->arrival_time);
@@ -122,6 +129,13 @@ int VehicleJourney::earliest_time() const {
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
+}
+
+bool VehicleJourney::joins_on_different_stop_points(const ed::types::VehicleJourney& prev_vj) const {
+    const auto* vj_first_st = stop_time_list.front();
+    const auto* prev_vj_last_st = prev_vj.stop_time_list.back();
+
+    return *vj_first_st->stop_point != *prev_vj_last_st->stop_point;
 }
 
 bool StopPointConnection::operator<(const StopPointConnection& other) const {

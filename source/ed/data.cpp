@@ -113,7 +113,18 @@ void Data::build_block_id() {
                 // This is not supposed to happen
                 // @TODO: Add a parameter to avoid too long connection
                 // they can be for instance due to bad data
-                if (vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
+                auto* vj_first_st = vj->stop_time_list.front();
+                auto* prev_vj_last_st = prev_vj->stop_time_list.back();
+                if (vj_first_st->departure_time >= prev_vj_last_st->arrival_time) {
+                    if (vj->joins_on_different_stop_points(*prev_vj)
+                        && prev_vj_last_st->departure_time > vj_first_st->arrival_time) {
+                        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                        "Stay-in on different stop points with overlapping stop_times. "
+                                        "Stay-in cannot be done between vjs '"
+                                            << prev_vj->uri << "' and '" << vj->uri << "'");
+                        break;
+                    }
+
                     // we add another check that the vjs are on the same offset (that they are not the from vj split on
                     // different dst)
                     if (tz_wrapper.tz_handler.get_utc_offset(*vj->validity_pattern)
@@ -578,11 +589,56 @@ void Data::pick_up_drop_of_on_borders() {
         if (vj->stop_time_list.empty()) {
             continue;
         }
-        if (!vj->prev_vj) {
-            vj->stop_time_list.front()->drop_off_allowed = false;
-        }
-        if (!vj->next_vj) {
-            vj->stop_time_list.back()->pick_up_allowed = false;
+
+        /*
+         * The first arrival and last departure of a vehicle-journey don't make sense as they can't be used.
+         * So let's forbid them
+         *
+         * This is true unless the vehicle-journey has a stay-in on different stop points as described below
+         */
+
+        auto* first_st = vj->stop_time_list.front();
+        auto* last_st = vj->stop_time_list.back();
+
+        first_st->drop_off_allowed = false;
+        last_st->pick_up_allowed = false;
+
+        /*
+         * In the example below we are assuming that VJ:1 and VJ:2 are sharing the same block_id.
+         *
+         * The stay-in section is allowed with 2 configurations:
+         *  - when two VJ share the same stop point with similar stop times (example 1)
+         *  - when two VJ are joined on 2 different stop points with consecutive stop times (example 2)
+         *
+         *   Example 1:
+         *   ----------
+         *         out          in   out         in
+         *          X    SP1    |    ▲    SP2    X
+         *          X           ▼    |           X
+         *    VJ:1   08:00-09:00      10:00-11:00
+         *    VJ:2                    10:00-11:00      14:00-15:00
+         *                           X           ▲    |           X
+         *                           X           |    ▼   SP3     X
+         *                           out         in   out         in
+         *                           |- Stay-In -|
+         *
+         *   Example 2:
+         *   ----------
+         *                                       (1)  (2)
+         *         out          in   out         in   out         in   out         in
+         *          X    SP1    |    ▲    SP2    |    ▲    SP3    |    ▲   SP4     X
+         *          X           ▼    |           ▼    |           |    |           X
+         *    VJ:1   08:00-09:00      10:00-11:00     |           ▼    |           X
+         *    VJ:2                                     12:00-13:00      14:00-15:00
+         *                           |---------- Stay In ---------|
+         *
+         *  Example 2 is the only case were we allow specific pick-up and drop-off
+         */
+        if (vj->prev_vj) {
+            if (vj->joins_on_different_stop_points(*vj->prev_vj)) {
+                vj->prev_vj->stop_time_list.back()->pick_up_allowed = true;  // (1) in example 2
+                first_st->drop_off_allowed = true;                           // (2) in example 2
+            }
         }
     }
 }

@@ -59,6 +59,7 @@ from navitiacommon.parser_args_type import (
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
+from jormungandr.travelers_profile import TravelerProfile
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -406,6 +407,46 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
+            "_here_language",
+            type=OptionValue(
+                [
+                    'afrikaans',
+                    'arabic',
+                    'chinese',
+                    'dutch',
+                    'english',
+                    'french',
+                    'german',
+                    'hebrew',
+                    'hindi',
+                    'italian',
+                    'japanese',
+                    'nepali',
+                    'portuguese',
+                    'russian',
+                    'spanish',
+                ]
+            ),
+            hidden=True,
+            help='Here, select a specific language for guidance instruction.\n'
+            'list available:\n'
+            '- afrikaans = af\n'
+            '- arabic = ar-sa\n'
+            '- chinese = zh-cn\n'
+            '- dutch = nl-nl\n'
+            '- english = en-gb\n'
+            '- french = fr-fr\n'
+            '- german = de-de\n'
+            '- hebrew = he\n'
+            '- hindi = hi\n'
+            '- italian = it-it\n'
+            '- japanese = ja-jp\n'
+            '- nepali = ne-np\n'
+            '- portuguese = pt-pt\n'
+            '- russian = ru-ru\n'
+            '- spanish = es-es\n',
+        )
+        parser_get.add_argument(
             "_here_matrix_type",
             type=six.text_type,
             hidden=True,
@@ -419,11 +460,24 @@ class Journeys(JourneyCommon):
             help="Here, Max number of matrix points for the street network computation (limited to 100)",
         )
         parser_get.add_argument(
+            '_here_exclusion_area[]',
+            type=six.text_type,
+            case_sensitive=False,
+            hidden=True,
+            action='append',
+            dest='_here_exclusion_area[]',
+            help='Give 2 coords for an exclusion box. The format is like that:\n'
+            'Coord_1!Coord_2 with Coord=lat;lon\n'
+            ' - exemple : _here_exclusion_area[]=2.40553;48.84866!2.41453;48.85677\n'
+            ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
+        )
+        parser_get.add_argument(
             "equipment_details",
             default=True,
             type=BooleanType(),
             help="enhance response with accessibility equipement details",
         )
+
         for mode in FallbackModes.modes_str():
             parser_get.add_argument(
                 "max_{}_direct_path_duration".format(mode),
@@ -480,7 +534,7 @@ class Journeys(JourneyCommon):
             # we have custom default values for isochrone because they are very resource expensive
             if args.get('max_duration') is None:
                 args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
-            if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
+            if 'ridesharing' in (args['origin_mode'] or []) or 'ridesharing' in (args['destination_mode'] or []):
                 abort(400, message='ridesharing isn\'t available on isochrone')
 
         def _set_specific_params(mod):
@@ -510,6 +564,9 @@ class Journeys(JourneyCommon):
                 args['additional_time_after_first_section_taxi'] = mod.additional_time_after_first_section_taxi
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
+
+            if args.get('_stop_points_nearby_duration') is None:
+                args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration
 
             # we create a new arg for internal usage, only used by distributed scenario
             args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode  # it's a dict of str vs int
@@ -584,16 +641,19 @@ class Journeys(JourneyCommon):
         responses = {}
         for r in possible_regions:
             self.region = r
+            if args.get('traveler_type'):
+                traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
+                traveler_profile.override_params(args)
+
+            # We set default modes for fallback modes.
+            # The reason why we cannot put default values in parser_get.add_argument() is that, if we do so,
+            # fallback modes will always have a value, and traveler_type will never override fallback modes.
+            args['origin_mode'] = args.get('origin_mode') or ['walking']
+            args['destination_mode'] = args['destination_mode'] or ['walking']
+
             _set_specific_params(i_manager.instances[r])
             set_request_timezone(self.region)
             logging.getLogger(__name__).debug("Querying region : {}".format(r))
-
-            # Store the region in the 'g' object, which is local to a request
-            if args['debug']:
-                # In debug we store all queried region
-                if not hasattr(g, 'regions_called'):
-                    g.regions_called = []
-                g.regions_called.append(r)
 
             # Save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
@@ -609,6 +669,15 @@ class Journeys(JourneyCommon):
                 abort(400, message="taxi is not available with new_default scenario")
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
+
+            # Store the region in the 'g' object, which is local to a request
+            if args['debug']:
+                instance = i_manager.instances.get(self.region)
+                # In debug we store all queried region
+                if not hasattr(g, 'regions_called'):
+                    g.regions_called = []
+                region = {"name": instance.name, "scenario": instance._scenario_name}
+                g.regions_called.append(region)
 
             # If journeys list is empty and error field not exist, we create
             # the error message field

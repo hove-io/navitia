@@ -63,7 +63,7 @@ class LineReports(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.utcnow(),
+            default=datetime.now(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -106,6 +106,9 @@ class LineReports(ResourceUri, ResourceUtc):
             g.disable_geojson = True
 
         args["filter"] = self.get_filter(split_uri(uri), args)
+
+        # change dt to utc
+        args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
