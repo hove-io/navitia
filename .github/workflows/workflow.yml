@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - auto/clang-tidy
   pull_request:
   release:
     types:
