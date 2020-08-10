@@ -21,7 +21,7 @@ set(CLANG_TIDY_BINARY_NAME
 find_program(CLANG_TIDY_BIN ${CLANG_TIDY_BINARY_NAME})
 
 set(RUN_CLANG_TIDY_BINARY_NAME
-    NAMES run-clang-tidy.py run-clang-tidy-6.0.py)
+    NAMES run-clang-tidy run-clang-tidy.py run-clang-tidy-6.0.py)
 find_program(RUN_CLANG_TIDY_BIN ${RUN_CLANG_TIDY_BINARY_NAME})
 
 if( NOT CLANG_TIDY_BIN STREQUAL "CLANG_TIDY_BIN-NOTFOUND"
