@@ -26,11 +26,12 @@ jobs:
       run: sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3 xmlto
     - name : Clang-tidy Info
       run: clang-tidy --version
-    - name: Cmake & Clang-tidy
+    - name: Cmake
       working-directory: ${{ runner.temp }}
-      run: |
-        cmake $GITHUB_WORKSPACE/source
-        make tidy_fix
+      run: cmake $GITHUB_WORKSPACE/source
+    - name: Clang-tidy
+      working-directory: ${{ runner.temp }}
+      run: make tidy_fix || echo "Files have been tidied ! Let's commit them"
     - name: Commit and push changes
       uses: peter-evans/create-pull-request@v2
       with:
