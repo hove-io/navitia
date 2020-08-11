@@ -35,7 +35,7 @@ www.navitia.io
 
 #include "ed/build_helper.h"
 
-#include <time.h>
+#include <ctime>
 #include <cstdlib>
 
 using namespace navitia::timetables;
