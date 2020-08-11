@@ -64,3 +64,20 @@ Example:
 ```
 http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50&_here_language=french
 ```
+
+### exclusion areas
+
+An option is available in order to exclude areas. With it, a journeys is forbidden to cross this area. You can create a maximum of 20 areas. The exclusion area is composed of 2 coords so as to draw a square box.
+
+Option:
+
+* _here_exclusion_area[]: coord1;coord2 with coord=latitude;longitude
+
+Example:
+
+```
+http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_exclusion_area[]=2.36753;48.89632!2.32119;48.90422&_here_exclusion_area[]=2.35563;48.99777!2.40112;48.10666
+```
+
+
+
