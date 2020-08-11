@@ -42,7 +42,7 @@ if( NOT CLANG_TIDY_BIN STREQUAL "CLANG_TIDY_BIN-NOTFOUND"
 
     add_custom_target(
         tidy_fix
-        COMMAND ${RUN_CLANG_TIDY_BIN} -fix ${RUN_CLANG_TIDY_BIN_ARGS}
+        COMMAND ${RUN_CLANG_TIDY_BIN} -format -fix ${RUN_CLANG_TIDY_BIN_ARGS}
         COMMENT "running clang tidy -fix -- ${CMAKE_SOURCE_DIR}"
         DEPENDS protobuf_files ${COMPILE_COMMANDS_LINK}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
