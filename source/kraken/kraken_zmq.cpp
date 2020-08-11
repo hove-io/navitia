@@ -142,8 +142,9 @@ int main(int argn, char** argv) {
     // Launch pool of worker threads
     LOG4CPLUS_INFO(logger, "starting workers threads");
     for (int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-        threads.create_thread(
-            [&context, &data_manager, conf, &metrics, thread_nbr] { return doWork(context, data_manager, conf, metrics, thread_nbr); });
+        threads.create_thread([&context, &data_manager, conf, &metrics, thread_nbr] {
+            return doWork(context, data_manager, conf, metrics, thread_nbr);
+        });
     }
 
     // Connect worker threads to client threads via a queue
