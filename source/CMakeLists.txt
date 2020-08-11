@@ -51,6 +51,9 @@ include(ThirdParty)
 # Tests environment
 include(TestsEnv)
 
+# Clang-tidy
+include(EnableClangTidy)
+
 # Add current compilation dir to include path to handle config.h
 include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}")

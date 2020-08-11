@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - auto/clang-tidy
   pull_request:
   release:
     types:
@@ -11,7 +12,15 @@ on:
 
 
 jobs:
-  check_submodules:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump GitHub context
+      env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+  checks:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -41,11 +50,10 @@ jobs:
           - 5672:5672
 
     steps:
-    - uses: actions/checkout@v1
-    - name: get submodule
-      run: |
-        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
+    - uses: actions/checkout@v2
+      with:
+          ref: ${{ github.head_ref }}
+          submodules: 'recursive'
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
