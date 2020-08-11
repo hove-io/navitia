@@ -41,25 +41,30 @@ class DummyProvider(CommonBssProvider):
     Dummy BSS Provider that is used for testing purpose
 
     WARNING:
-        This provider ACCEPTS ALL bss stations that have a non empty ref in properties and should only be used ALONE and
-        for testing purpose
+        This provider ACCEPTS ALL bss stations that have a non empty ref in properties. In order not to override other
+        bss providers that are already existent, you should put this class at the end of bss provider list.
 
     """
 
-    def __init__(self):
+    def __init__(self, network, operators):
         super(DummyProvider, self).__init__()
         self.url = 'Dummy Url'
-        self.network = ('dummy network',)
+        self.network = network.lower() if network else None
         self.service_id = "Dummy Service"
         self.organization_id = "Dummy Organization"
-        self.operators = ['Dummy Operator']
+        self.operators = [o.lower() for o in operators or []]
         self._feed_publisher = FeedPublisher(**DUMMY_FEED_PUBLISHER)
 
     def service_caller(self, method, url, headers, data=None, params=None):
         pass
 
     def support_poi(self, poi):
-        return True
+        if all([self.network is None, poi.get('properties', {}).get('ref') is None, not self.operators]):
+            return True
+
+        network = poi.get('properties', {}).get('network', '').lower()
+        operator = poi.get('properties', {}).get('operator', '').lower()
+        return network == self.network and operator in self.operators
 
     def status(self):
         return {'network': self.network, 'operators': self.operators}
