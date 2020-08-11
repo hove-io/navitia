@@ -1,5 +1,5 @@
 
-message(STATUS "cland-tools")
+message(STATUS "clang-tools")
 
 # Generates a compile_commands.json file containing the exact compiler calls for all translation units
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
