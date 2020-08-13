@@ -220,26 +220,27 @@ a journey can be faster than an other but requires more changes or more walking.
 
 This API has more options explained in the reference as:
 
+>[Try it on Navitia playground with your token and changing the "datetime" parameter)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.47787733594924%3B37.71696489300146%26to%3D-122.41539259473815%3B37.78564348914185%26datetime%3D20170407T120000)
+
 * The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
-  For example, if you want to compute a journey on friday, April 07 ``datetime=20170407T120000``
-  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20170407T120000>
+  For example, if you want to compute a journey on friday, April 07 use ``datetime=20170407T120000``
 
+>[Try it on Navitia playground with your token and changing the "datetime" parameter)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.47787733594924%3B37.71696489300146%26to%3D-122.41539259473815%3B37.78564348914185%26datetime%3D20170407T120000%26datetime_represents%3Darrival)
 
-* Latest departure
-  To get the latest departure, you can query for some journeys arriving before the end of the service
-  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20170407T120000&datetime_represents=arrival>
+* To get the latest departure, you can query for some journeys arriving before the end of the service
 
-* You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys):
-  <https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&traveler_type=slow_walker>
+>[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.4752%3B37.80826%26to%3D-122.402770%3B37.794682%26traveler_type%3Dslow_walker)
 
-* Forbid certain lines, routes or modes
-  For example you can forbid the line 1 and the cable car mode with the url:
-  <https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&forbidden_uris[]=line:OSF:10867&forbidden_uris[]=commercial_mode:cablecar>
+* You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys)
 
-* Enable biking, driving or use of bike sharing system on Paris area
-  For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure:
-  <https://api.navitia.io/v1/journeys?from=2.3865494;48.8499182&to=2.3643739;48.854&first_section_mode[]=bss&first_section_mode[]=walking&first_section_mode[]=bike>
+>[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.4752%3B37.80826%26to%3D-122.402770%3B37.794682%26forbidden_uris%5B%5D%3Dline%3AOSF%3A10867%26forbidden_uris%5B%5D%3Dcommercial_mode%3Acablecar)
 
+* Forbid certain lines, routes or modes :
+  for example you can forbid the line 1 and all lines using cable car mode. See [/journeys](#journeys) section.
+
+>[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.3865494%3B48.8499182%26to%3D2.3643739%3B48.854%26first_section_mode%5B%5D%3Dbss%26first_section_mode%5B%5D%3Dwalking%26first_section_mode%5B%5D%3Dbike)
+
+* Enable biking, driving or use of bike sharing system on your area. For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure on Paris area
 
 ### What stations can be reached in the next 20 minutes
 
