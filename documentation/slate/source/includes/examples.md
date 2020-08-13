@@ -220,27 +220,23 @@ a journey can be faster than an other but requires more changes or more walking.
 
 This API has more options explained in the reference as:
 
->[Try it on Navitia playground with your token and changing the "datetime" parameter)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.47787733594924%3B37.71696489300146%26to%3D-122.41539259473815%3B37.78564348914185%26datetime%3D20170407T120000)
+>[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20200901T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 * The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
   For example, if you want to compute a journey on friday, April 07 use ``datetime=20170407T120000``
 
->[Try it on Navitia playground with your token and changing the "datetime" parameter)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.47787733594924%3B37.71696489300146%26to%3D-122.41539259473815%3B37.78564348914185%26datetime%3D20170407T120000%26datetime_represents%3Darrival)
+* To get the latest departure, you can query for some journeys arriving before the end of the service using the ``datetime_represents`` parameter
 
-* To get the latest departure, you can query for some journeys arriving before the end of the service
-
->[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.4752%3B37.80826%26to%3D-122.402770%3B37.794682%26traveler_type%3Dslow_walker)
+>[Try personalization capacities on Navitia playground)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys)
 
->[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.4752%3B37.80826%26to%3D-122.402770%3B37.794682%26forbidden_uris%5B%5D%3Dline%3AOSF%3A10867%26forbidden_uris%5B%5D%3Dcommercial_mode%3Acablecar)
-
 * Forbid certain lines, routes or modes :
-  for example you can forbid the line 1 and all lines using cable car mode. See [/journeys](#journeys) section.
+  for example you can forbid the line 5 and all lines using cable car mode. See [/journeys](#journeys) section.
 
->[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.3865494%3B48.8499182%26to%3D2.3643739%3B48.854%26first_section_mode%5B%5D%3Dbss%26first_section_mode%5B%5D%3Dwalking%26first_section_mode%5B%5D%3Dbike)
+>[Using your token ! You can try "real life" personalizations on Paris area)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
 
-* Enable biking, driving or use of bike sharing system on your area. For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure on Paris area
+* You can override traveler_type parameters by enabling biking, driving or the use of bike sharing system on your area. For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure on Paris area
 
 ### What stations can be reached in the next 20 minutes
 
