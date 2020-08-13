@@ -235,7 +235,7 @@ This API has more options explained in the reference as:
 
 >[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D-122.4752%3B37.80826%26to%3D-122.402770%3B37.794682%26forbidden_uris%5B%5D%3Dline%3AOSF%3A10867%26forbidden_uris%5B%5D%3Dcommercial_mode%3Acablecar)
 
-* Forbid certain lines, routes or modes : 
+* Forbid certain lines, routes or modes :
   for example you can forbid the line 1 and all lines using cable car mode. See [/journeys](#journeys) section.
 
 >[Try it on Navitia playground with your token)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.3865494%3B48.8499182%26to%3D2.3643739%3B48.854%26first_section_mode%5B%5D%3Dbss%26first_section_mode%5B%5D%3Dwalking%26first_section_mode%5B%5D%3Dbike)
