@@ -225,7 +225,7 @@ This API has more options explained in the reference as:
 * The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
   For example, if you want to compute a journey on friday, April 07 use ``datetime=20170407T120000``
 
-* To get the latest departure, you can query for some journeys arriving before the end of the service using the ``datetime_represents`` parameter
+* To get the latest departure, you can query for journeys arriving before the end of the service using the ``datetime_represents`` parameter
 
 >[Try personalization capacities on Navitia playground)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -247,5 +247,4 @@ All the stop points that can be reached from the Transamerica Pyramid can be fet
 <https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200>
 
 It returns for each destination stop point the earliest arrival and a link to the journey detail.
-
 
