@@ -12,6 +12,7 @@ source/CMakeLists.txt.user
 tags
 *.py[co]
 *_pb2.py
+*_pb2.py.bak
 *.idea*
 .ycm_extra_conf.py
 DEBIAN/
@@ -28,6 +29,7 @@ debian/tmp
 debian/*.substvars
 debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
+source/compile_commands.json
 .cache
 *.gcov
 .mypy_cache
