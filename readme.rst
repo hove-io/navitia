@@ -2,9 +2,9 @@
     :alt: navitia
     :align: center
 
-=========
+=======
  Navitia
-=========
+=======
 ``(pronounce [navi-sia])``
 
 .. class:: no-web no-pdf
