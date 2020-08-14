@@ -236,7 +236,7 @@ This API has more options explained in the reference as:
 
 >[Using your token ! You can try "real life" personalizations on Paris area)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
 
-* You can override traveler_type parameters by enabling biking, driving or the use of bike sharing system on your area. For example you can allow bss (and walking since it's implicitly allowed with bss) at the departure on Paris area
+* You can override traveler_type parameters by enabling biking, driving or bike sharing system (bss) in your area. For instance, you can allow bss (and walking since it's implicit with it) at the departure from Paris area
 
 ### What stations can be reached in the next 20 minutes
 
@@ -247,4 +247,3 @@ All the stop points that can be reached from the Transamerica Pyramid can be fet
 <https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200>
 
 It returns for each destination stop point the earliest arrival and a link to the journey detail.
-
