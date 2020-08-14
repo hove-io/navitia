@@ -1,3 +1,13 @@
+navitia2 (6.0.0) unstable; urgency=low
+
+  * [Doc] Enhance some examples  <https://github.com/CanalTP/navitia/pull/3260>
+  * [CI] Clang tidy - Automatic PR   <https://github.com/CanalTP/navitia/pull/3258>
+  * [Jormun] Here, add extra doc for exclusion areas  <https://github.com/CanalTP/navitia/pull/3253>
+  * [Ed] Fix prolongation trip that goes back in time  <https://github.com/CanalTP/navitia/pull/3254>
+  * [Jormun] fix traveler_type for several regions  <https://github.com/CanalTP/navitia/pull/3247>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 14 Aug 2020 18:08:58 +0100
+
 navitia2 (5.3.0) unstable; urgency=low
 
   * [jormun] Here, add exclusion areas option  <https://github.com/CanalTP/navitia/pull/3250>
