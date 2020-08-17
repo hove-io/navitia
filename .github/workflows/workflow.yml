@@ -24,11 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: checkout submodules
-      shell: bash
-      run: |
-        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
+      with:
+          submodules: 'recursive'
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
@@ -52,7 +49,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-          ref: ${{ github.head_ref }}
           submodules: 'recursive'
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
@@ -116,15 +112,13 @@ jobs:
       # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
       # resolved
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recurvise'
     - name: install dependencies
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
-    - name: get submodule
-      run: |
-        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
-        git submodule update --init --recursive
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
     - name: Pre-commit Run
