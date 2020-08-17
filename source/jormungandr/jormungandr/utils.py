@@ -644,9 +644,7 @@ def mps_to_kmph(speed):
 
 def get_poi_params(codes):
     poi_params = set()
-    if codes is not None:
-        for code in codes:
-            split_code = code.split(':')
-            if len(split_code) > 0 and split_code[0] == 'poi':
-                poi_params.add(code)
+    for code in codes or []:
+        if code.startswith('poi:'):
+            poi_params.add(code)
     return poi_params

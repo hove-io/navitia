@@ -83,8 +83,8 @@ class Kraken(object):
         filter=None,
         stop_points_nearby_duration=300,
         request_id=None,
-        forbidden_uris=None,
-        allowed_id=None,
+        forbidden_uris=[],
+        allowed_id=[],
         **kwargs
     ):
 
@@ -105,15 +105,11 @@ class Kraken(object):
         if allowed_id is not None:
             allowed_id_count = len(allowed_id)
             if allowed_id_count > 0:
-                # Retrieve first element(uri) of the set
-                allowed_id_items = 'poi.id={}'.format(allowed_id.pop())
-                # For the rest of elements use 'or' in between two elements(uris)
-                for uri in allowed_id:
-                    allowed_id_items = allowed_id_items + ' or poi.id={}'.format(uri)
+                poi_ids = ('poi.id={}'.format(uri) for uri in allowed_id)
+                allowed_id_items = '  or  '.join(poi_ids)
+
                 # Format the filter for all allowed_ids uris
-                if allowed_id_count == 1:
-                    allowed_id_filter = ' and {}'.format(allowed_id_items)
-                elif allowed_id_count > 1:
+                if allowed_id_count >= 1:
                     allowed_id_filter = ' and ({})'.format(allowed_id_items)
 
         # We implement filter only for poi with poi_type.uri=poi_type:amenity:parking
