@@ -448,14 +448,14 @@ def similar_pt_section_line(section):
     return "pt:{}".format(section.pt_display_informations.uris.line)
 
 
-def similar_journeys_generator(journey, pt_functor, sn_functor=None):
+def similar_journeys_generator(journey, pt_functor, sn_functor=lambda mode: mode):
     for idx, s in enumerate(journey.sections):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield pt_functor(s)
         elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
             continue
         elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
-            yield ('sn:%s' % s.street_network.mode if sn_functor is None else sn_functor(s.street_network.mode))
+            yield 'sn:%s' % sn_functor(s.street_network.mode)
 
 
 def detailed_pt_section_vj(section):
