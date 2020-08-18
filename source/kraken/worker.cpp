@@ -494,6 +494,11 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
 
 void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest& request) {
     const auto* data = this->pb_creator.data;
+    std::vector<std::string> forbidden_uris;
+    forbidden_uris.reserve(request.forbidden_uris_size());
+    for (int i = 0; i < request.forbidden_uris_size(); ++i) {
+        forbidden_uris.push_back(request.forbidden_uris(i));
+    }
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
     type::GeographicalCoord coord;
     try {
@@ -506,8 +511,9 @@ void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest& request) {
     if (request.has_stop_points_nearby_radius() && request.stop_points_nearby_radius() > 0) {
         stop_points_nearby_radius = request.stop_points_nearby_radius();
     }
-    proximitylist::find(this->pb_creator, coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                        request.depth(), request.count(), request.start_page(), *data, stop_points_nearby_radius);
+    proximitylist::find(this->pb_creator, coord, request.distance(), vector_of_pb_types(request), forbidden_uris,
+                        request.filter(), request.depth(), request.count(), request.start_page(), *data,
+                        stop_points_nearby_radius);
 }
 
 static type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& request,

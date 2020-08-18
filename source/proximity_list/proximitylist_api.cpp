@@ -97,6 +97,7 @@ void find(navitia::PbCreator& pb_creator,
           const type::GeographicalCoord& coord,
           const double limit,
           const std::vector<nt::Type_e>& types,
+          const std::vector<std::string>& forbidden_uris,
           const std::string& filter,
           const uint32_t depth,
           const uint32_t count,
@@ -124,7 +125,7 @@ void find(navitia::PbCreator& pb_creator,
         type::Indexes indexes;
         if (!filter.empty()) {
             try {
-                indexes = ptref::make_query(type, filter, *pb_creator.data);
+                indexes = ptref::make_query(type, filter, forbidden_uris, *pb_creator.data);
             } catch (const ptref::parsing_error& parse_error) {
                 pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                          "Problem while parsing the query:" + parse_error.more);
