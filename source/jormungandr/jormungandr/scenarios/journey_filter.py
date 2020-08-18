@@ -466,12 +466,12 @@ def detailed_pt_section_vj(section):
     )
 
 
+def bss_walking_sn_functor(mode):
+    return None if mode in (FallbackModes.walking.value, FallbackModes.bss.value) else mode
+
+
 def similar_bss_walking_vj_generator(journey):
-    for v in similar_journeys_generator(
-        journey,
-        detailed_pt_section_vj,
-        lambda mode: mode if mode not in (FallbackModes['walking'].value, FallbackModes['bss'].value) else None,
-    ):
+    for v in similar_journeys_generator(journey, detailed_pt_section_vj, bss_walking_sn_functor):
         yield v
 
 
