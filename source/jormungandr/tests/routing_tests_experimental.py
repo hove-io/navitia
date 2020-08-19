@@ -305,8 +305,21 @@ class TestJourneysDistributed(
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
 
         r = self.query(query + "&debug=true")
-        # only one pt in the response
-        assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 2
+        # find all pt_journeys
+        pt_journeys = [j for j in r['journeys'] if 'non_pt' not in j['tags']]
+
+        # should be two pt in the response
+        assert len(pt_journeys) == 2
+
+        pt_1 = pt_journeys[0]
+        pt_2 = pt_journeys[1]
+
+        for s1, s2 in zip(pt_1['sections'], pt_2['sections']):
+            assert s1['type'] == s2['type']
+            if s1['type'] == 'public_transport':
+                s1_vj = next(l['id'] for l in s1['links'] if l['type'] == 'vehicle_journey')
+                s2_vj = next(l['id'] for l in s2['links'] if l['type'] == 'vehicle_journey')
+                assert s1_vj == s2_vj
 
         # there should be one journey deleted because of duplicate journey
         assert sum(int('deleted_because_duplicate_journey' in j['tags']) for j in r['journeys']) == 1
