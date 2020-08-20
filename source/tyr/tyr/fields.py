@@ -104,6 +104,23 @@ class FieldUrlStreetNetworkBackend(fields.Raw):
         return url_for('streetnetwork_backends', backend_id=value, _external=True)
 
 
+traveler_profile = {
+    'traveler_type': fields.String,
+    'walking_speed': fields.Raw,
+    'bike_speed': fields.Raw,
+    'bss_speed': fields.Raw,
+    'car_speed': fields.Raw,
+    'wheelchair': fields.Boolean,
+    'max_walking_duration_to_pt': fields.Raw,
+    'max_bike_duration_to_pt': fields.Raw,
+    'max_bss_duration_to_pt': fields.Raw,
+    'max_car_duration_to_pt': fields.Raw,
+    'first_section_mode': fields.List(fields.String),
+    'last_section_mode': fields.List(fields.String),
+    'error': fields.String,
+}
+
+
 instance_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
@@ -176,6 +193,7 @@ instance_fields = {
     'max_car_no_park_direct_path_duration': fields.Raw,
     'ridesharing_speed': fields.Raw,
     'max_ridesharing_duration_to_pt': fields.Raw,
+    'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -243,22 +261,6 @@ jobs_fields = {'jobs': fields.List(fields.Nested(job_fields))}
 one_job_fields = {'job': fields.Nested(job_fields)}
 
 poi_types_fields = {'poi_types': fields.List(fields.Nested({'uri': fields.Raw, 'name': fields.Raw}))}
-
-traveler_profile = {
-    'traveler_type': fields.String,
-    'walking_speed': fields.Raw,
-    'bike_speed': fields.Raw,
-    'bss_speed': fields.Raw,
-    'car_speed': fields.Raw,
-    'wheelchair': fields.Boolean,
-    'max_walking_duration_to_pt': fields.Raw,
-    'max_bike_duration_to_pt': fields.Raw,
-    'max_bss_duration_to_pt': fields.Raw,
-    'max_car_duration_to_pt': fields.Raw,
-    'first_section_mode': fields.List(fields.String),
-    'last_section_mode': fields.List(fields.String),
-    'error': fields.String,
-}
 
 autocomplete_parameter_fields = {
     'id': fields.Raw,
