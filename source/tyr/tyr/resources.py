@@ -1441,7 +1441,7 @@ class TravelerProfile(flask_restful.Resource):
         @wraps(f)
         def wrapper(*args, **kwds):
             tp = kwds.get('traveler_type')
-            if tp in acceptable_traveler_types:
+            if tp in acceptable_traveler_types or tp is None:
                 return f(*args, **kwds)
             return (
                 {'error': 'traveler profile: {0} is not one of in {1}'.format(tp, acceptable_traveler_types)},
