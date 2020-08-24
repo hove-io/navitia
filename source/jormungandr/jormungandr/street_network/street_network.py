@@ -88,7 +88,6 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
             request_id,
         )
 
-        self._add_feed_publisher(resp)
         return resp
 
     @abc.abstractmethod

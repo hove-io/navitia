@@ -325,12 +325,6 @@ def direct_path_geovelo_zero_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].length == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].duration == 0
 
-        assert len(geovelo_resp.feed_publishers) == 1
-        assert geovelo_resp.feed_publishers[0].id == 'geovelo'
-        assert geovelo_resp.feed_publishers[0].name == 'geovelo'
-        assert geovelo_resp.feed_publishers[0].license == 'Private'
-        assert geovelo_resp.feed_publishers[0].url == 'http://about.geovelo.fr/cgu/'
-
 
 def isochrone_geovelo_test():
     instance = MagicMock()
