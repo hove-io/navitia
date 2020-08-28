@@ -1294,11 +1294,56 @@ class DirectPath(object):
         # TODO: to be fixed in a new PR
         car_journey = find_with_tag(response['journeys'], 'car')
         assert car_journey
-
         assert len(car_journey['sections']) == 3
+        # without filter we use the parking poi:parking_2
+        car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
+
         walking_journey = find_with_tag(response['journeys'], 'walking')
         assert walking_journey
         assert len(walking_journey['sections']) == 1
+
+        # Test car_journey with filter to forbid the parking used by car_journey above
+        query_with_fu = query + '&forbidden_uris[]=poi:parking_2'
+        response = self.query_region(query_with_fu)
+        check_best(response)
+        self.is_valid_journey_response(response, query_with_fu)
+        car_journey = find_with_tag(response['journeys'], 'car')
+        assert car_journey
+        assert len(car_journey['sections']) == 3
+        # when the parking 'poi:parking_2' is forbidden we use the parking poi:parking_1
+        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
+
+        # Test car_journey with filter to force the parking 'poi:parking_1', not used without any filter on parking
+        query_with_ai = query + '&allowed_id[]=poi:parking_1'
+        response = self.query_region(query_with_ai)
+        check_best(response)
+        self.is_valid_journey_response(response, query_with_ai)
+        car_journey = find_with_tag(response['journeys'], 'car')
+        assert car_journey
+        assert len(car_journey['sections']) == 3
+        # when the parking 'poi:parking_1' is forced in parameter, we use it
+        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
+
+        # Test car_journey with more than one allowed_id, uses only one of the parking
+        # as itinerary using another parking is deleted by the raptor
+        query_with_mai = query + '&allowed_id[]=poi:parking_1&allowed_id[]=poi:parking_2'
+        response = self.query_region(query_with_mai)
+        check_best(response)
+        self.is_valid_journey_response(response, query_with_mai)
+        car_journey = find_with_tag(response['journeys'], 'car')
+        assert car_journey
+        assert len(car_journey['sections']) == 3
+        car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
+
+        # Test car_journey with a forbidden_uris[] and an allowed_id[]
+        query_with_both = query + '&allowed[]=poi:parking_1&forbidden_uris[]=poi:parking_2'
+        response = self.query_region(query_with_both)
+        check_best(response)
+        self.is_valid_journey_response(response, query_with_both)
+        car_journey = find_with_tag(response['journeys'], 'car')
+        assert car_journey
+        assert len(car_journey['sections']) == 3
+        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
 
     def test_journey_direct_path_only(self):
         query = journey_basic_query + "&first_section_mode[]=walking" + "&direct_path=only"

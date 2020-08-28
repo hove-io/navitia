@@ -376,6 +376,38 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert path[1].get('coordinate').get('lat') == "60.8765432"
         assert path[1].get('coordinate').get('lon') == "3.2798654"
 
+    def test_feed_publishers(self):
+
+        # With direct path
+        q = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car_no_park"
+            "&last_section_mode[]=car_no_park&debug=true&min_nb_journeys=0".format(
+                from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR
+            )
+        )
+        response = self.query_region(q)
+
+        feeds = get_not_null(response, 'feed_publishers')
+        assert len(feeds) == 2
+        assert feeds[0].get('id') == 'here'
+        assert feeds[0].get('name') == 'here'
+        assert feeds[0].get('license') == 'Private'
+        assert feeds[0].get('url') == 'https://developer.here.com/terms-and-conditions'
+
+        assert feeds[1].get('id') == 'builder'
+        assert feeds[1].get('name') == 'routing api data'
+        assert feeds[1].get('license') == 'ODBL'
+        assert feeds[1].get('url') == 'www.canaltp.fr'
+
+        # Without direct path
+        q = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car_no_park"
+            "&last_section_mode[]=car_no_park&debug=true&min_nb_journeys=0&direct_path=none".format(
+                from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR
+            )
+        )
+        response = self.query_region(q)
+
         feeds = get_not_null(response, 'feed_publishers')
         assert len(feeds) == 2
         assert feeds[0].get('id') == 'here'

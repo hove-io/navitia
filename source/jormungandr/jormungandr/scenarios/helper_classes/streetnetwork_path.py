@@ -204,3 +204,22 @@ class StreetNetworkPathPool:
         )
         dp_future = self._value.get(key)
         return dp_future.wait_and_get() if dp_future else None
+
+    def add_feed_publishers(self, request, requested_direct_path_modes, responses):
+        def _feed_publisher_not_present(feed_publishers, id):
+            for fp in feed_publishers:
+                if id == fp.id:
+                    return False
+            return True
+
+        for mode in requested_direct_path_modes:
+            streetnetwork_service = self._instance.get_street_network(mode, request)
+            fp = streetnetwork_service.feed_publisher()
+            if fp != None:
+                for resp in responses:
+                    if _feed_publisher_not_present(resp.feed_publishers, fp.id):
+                        feed = resp.feed_publishers.add()
+                        feed.id = fp.id
+                        feed.name = fp.name
+                        feed.license = fp.license
+                        feed.url = fp.url

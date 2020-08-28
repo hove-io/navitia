@@ -448,14 +448,33 @@ def similar_pt_section_line(section):
     return "pt:{}".format(section.pt_display_informations.uris.line)
 
 
-def similar_journeys_generator(journey, pt_functor):
+def similar_journeys_generator(journey, pt_functor, sn_functor=lambda mode: 'sn:{}'.format(mode)):
     for idx, s in enumerate(journey.sections):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield pt_functor(s)
         elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
             continue
         elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
-            yield 'sn:%s' % s.street_network.mode
+            yield sn_functor(s.street_network.mode)
+
+
+def detailed_pt_section_vj(section):
+    return 'pt:{vj} dep:{dep} arr:{arr}'.format(
+        vj=section.pt_display_informations.uris.vehicle_journey,
+        dep=section.begin_date_time,
+        arr=section.end_date_time,
+    )
+
+
+def bss_walking_sn_functor(mode):
+    return (
+        FallbackModes.walking.value if mode in (FallbackModes.walking.value, FallbackModes.bss.value) else mode
+    )
+
+
+def similar_bss_walking_vj_generator(journey):
+    for v in similar_journeys_generator(journey, detailed_pt_section_vj, bss_walking_sn_functor):
+        yield v
 
 
 def similar_journeys_vj_generator(journey):
@@ -649,7 +668,7 @@ def _get_worst_similar(j1, j2, request):
         return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
 
     def get_mode_rank(section):
-        mode_rank = {response_pb2.Car: 0, response_pb2.Bike: 1, response_pb2.Walking: 2}
+        mode_rank = {response_pb2.Car: 0, response_pb2.Bike: 1, response_pb2.Walking: 3, response_pb2.Bss: 4}
         return mode_rank.get(section.street_network.mode)
 
     def is_fallback(section):
@@ -669,7 +688,9 @@ def _get_worst_similar(j1, j2, request):
 
 
 def filter_similar_vj_journeys(journey_pairs_pool, request):
-    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_vj_generator)
+    _filter_similar_journeys(
+        journey_pairs_pool, request, similar_journeys_vj_generator, similar_bss_walking_vj_generator
+    )
 
 
 def _filter_similar_line_journeys(journey_pairs_pool, request):
@@ -680,7 +701,7 @@ def filter_shared_sections_journeys(journey_pairs_pool, request):
     _filter_similar_journeys(journey_pairs_pool, request, shared_section_generator)
 
 
-def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_generator):
+def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_generators):
     """
     Compare journeys 2 by 2.
     The given generator tells which part of journeys are compared.
@@ -692,7 +713,7 @@ def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_genera
     for j1, j2 in journey_pairs_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
-        if compare(j1, j2, similar_journey_generator):
+        if any(compare(j1, j2, generator) for generator in similar_journey_generators):
             # After comparison, if the 2 journeys are similar, the worst one must be eliminated
             worst = _get_worst_similar(j1, j2, request)
             logger.debug(

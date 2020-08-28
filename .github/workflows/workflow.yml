@@ -52,7 +52,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-          ref: ${{ github.head_ref }}
           submodules: 'recursive'
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt

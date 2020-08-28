@@ -29,9 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
 
 from jormungandr import utils, new_relic
+
 import abc
 from enum import Enum
 import six
@@ -88,7 +88,6 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
             request_id,
         )
 
-        self._add_feed_publisher(resp)
         return resp
 
     @abc.abstractmethod

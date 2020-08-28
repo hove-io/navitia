@@ -29,8 +29,8 @@
 
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType
 from jormungandr.fallback_modes import FallbackModes
-from jormungandr.street_network import utils, with_parking
-from jormungandr.utils import PeriodExtremity
+from jormungandr.street_network import utils
+from jormungandr.utils import PeriodExtremity, get_poi_params
 from navitiacommon import type_pb2, response_pb2
 import logging
 
@@ -72,6 +72,8 @@ class CarWithPark(AbstractStreetNetworkService):
             filter,
             0,
             request_id,
+            get_poi_params(request['forbidden_uris[]']),
+            get_poi_params(request['allowed_id[]']),
             **speed_switcher
         )
 

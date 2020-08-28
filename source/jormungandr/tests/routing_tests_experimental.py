@@ -290,6 +290,40 @@ class TestJourneysDistributed(
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
         assert r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from']
 
+    def test_walking_bss_duplicate_journey(self):
+        query = (
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
+            'datetime=20120614T080000&'
+            'first_section_mode[]=walking&first_section_mode[]=bss&'
+            'last_section_mode[]=walking&last_section_mode[]=bss&'
+            'bss_speed=1&walking_speed=0.1'
+        )
+
+        r = self.query(query)
+        # only one pt in the response
+        assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
+
+        r = self.query(query + "&debug=true")
+        # find all pt_journeys
+        pt_journeys = [j for j in r['journeys'] if 'non_pt' not in j['tags']]
+
+        # should be two pt in the response
+        assert len(pt_journeys) == 2
+
+        pt_1 = pt_journeys[0]
+        pt_2 = pt_journeys[1]
+
+        for s1, s2 in zip(pt_1['sections'], pt_2['sections']):
+            assert s1['type'] == s2['type']
+            if s1['type'] == 'public_transport':
+                s1_vj = next(l['id'] for l in s1['links'] if l['type'] == 'vehicle_journey')
+                s2_vj = next(l['id'] for l in s2['links'] if l['type'] == 'vehicle_journey')
+                assert s1_vj == s2_vj
+
+        # there should be one journey deleted because of duplicate journey
+        assert sum(int('deleted_because_duplicate_journey' in j['tags']) for j in r['journeys']) == 1
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):

@@ -67,6 +67,8 @@ class ProximitiesByCrowfly:
         self._value = None
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._forbidden_uris = utils.get_poi_params(request['forbidden_uris[]'])
+        self._allowed_id = utils.get_poi_params(request['allowed_id[]'])
         self._async_request()
 
     @new_relic.distributedEvent("get_crowfly", "street_network")
@@ -81,6 +83,8 @@ class ProximitiesByCrowfly:
                 self._filter,
                 self._stop_points_nearby_duration,
                 self._request_id,
+                self._forbidden_uris,
+                self._allowed_id,
                 **self._speed_switcher
             )
 
