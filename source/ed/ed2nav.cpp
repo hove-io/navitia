@@ -47,6 +47,7 @@ www.navitia.io
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/range/adaptor/filtered.hpp>
+#include <boost/geometry.hpp>
 #include <pqxx/pqxx>
 
 #include <fstream>

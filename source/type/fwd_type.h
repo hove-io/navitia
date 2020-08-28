@@ -36,6 +36,7 @@ class RTree;
 namespace navitia {
 template <typename T>
 struct Rank;
+
 namespace georef {
 struct GeoRef;
 struct POI;
@@ -52,33 +53,34 @@ struct JourneyPattern;
 struct JourneyPatternPoint;
 }  // namespace routing
 namespace type {
-struct MetaData;
-
+class PT_Data;
+struct AssociatedCalendar;
+struct Calendar;
+struct CommercialMode;
+struct Company;
+struct Contributor;
+struct Dataset;
+struct DiscreteVehicleJourney;
+struct EntryPoint;
+struct ExceptionDate;
+struct FrequencyVehicleJourney;
 struct GeographicalCoord;
 struct Line;
-struct StopArea;
-struct Network;
-struct StopPointConnection;
-struct ValidityPattern;
-struct Route;
-struct VehicleJourney;
-struct StopTime;
-using RankStopTime = Rank<StopTime>;
-struct Dataset;
-struct StopPoint;
-struct ExceptionDate;
-struct Contributor;
-struct Company;
-struct CommercialMode;
-struct PhysicalMode;
 struct LineGroup;
+struct MetaData;
 struct MetaVehicleJourney;
-struct DiscreteVehicleJourney;
-struct FrequencyVehicleJourney;
-struct Calendar;
-struct AssociatedCalendar;
-struct PT_Data;
-struct EntryPoint;
+struct Network;
+struct PhysicalMode;
+struct Route;
+struct StopArea;
+struct StopPoint;
+struct StopPointConnection;
+struct StopTime;
+struct ValidityPattern;
+struct VehicleJourney;
+using RankStopTime = Rank<StopTime>;
+template <class T>
+struct MultiPolygonMap;
 namespace disruption {
 struct Impact;
 struct Message;

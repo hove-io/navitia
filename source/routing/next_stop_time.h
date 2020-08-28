@@ -48,7 +48,7 @@ www.navitia.io
 namespace navitia {
 
 namespace type {
-struct PT_Data;
+class PT_Data;
 class Data;
 struct FrequencyVehicleJourney;
 typedef std::bitset<8> VehicleProperties;

@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #pragma once
-#include "multi_polygon_map.h"
 #include "type/fwd_type.h"
 #include "georef/georef.h"
 #include "type/message.h"
@@ -43,6 +42,7 @@ www.navitia.io
 #include "code_container.h"
 #include "headsign_handler.h"
 #include "type/timezone_manager.h"
+#include <memory>
 
 namespace navitia {
 template <>
@@ -53,7 +53,12 @@ namespace type {
 
 typedef std::map<std::string, std::string> code_value_map_type;
 typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
-struct PT_Data : boost::noncopyable {
+class PT_Data : boost::noncopyable {
+public:
+    PT_Data();
+
+    using StopPointPolygonMap = MultiPolygonMap<const StopPoint*>;
+
     template <typename T>
     const std::vector<T*>& collection() const {
         static_assert(!std::is_same<T, T>::value, "PT_Data::collection() not implemented");
@@ -94,8 +99,8 @@ struct PT_Data : boost::noncopyable {
     // Message
     disruption::DisruptionHolder disruption_holder;
 
-    // rtree for zonal stop_points
-    MultiPolygonMap<const StopPoint*> stop_points_by_area;
+    std::vector<const StopPoint*> get_stop_points_by_area(const GeographicalCoord& coord);
+    void add_stop_point_area(const MultiPolygon& area, StopPoint* sp);
 
     // Comments container
     Comments comments;
@@ -157,6 +162,10 @@ struct PT_Data : boost::noncopyable {
     const StopPointConnection* get_stop_point_connection(const StopPoint& from, const StopPoint& to) const;
 
     ~PT_Data();
+
+private:
+    // rtree for zonal stop_points
+    std::unique_ptr<StopPointPolygonMap> stop_points_by_area;
 };
 
 #define GENERIC_PT_DATA_COLLECTION_SPECIALIZATION(type_name, collection_name) \

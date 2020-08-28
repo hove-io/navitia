@@ -38,7 +38,7 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-struct PT_Data;
+class PT_Data;
 struct DiscreteVehicleJourney;
 struct FrequencyVehicleJourney;
 struct StopTime;

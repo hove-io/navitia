@@ -39,6 +39,7 @@ www.navitia.io
 #include "type/network.h"
 #include "type/base_pt_objects.h"
 #include "type/meta_vehicle_journey.h"
+#include "type/multi_polygon_map.h"
 #include "type/commercial_mode.h"
 #include "type/physical_mode.h"
 #include "utils/functions.h"
@@ -410,6 +411,16 @@ const StopPointConnection* PT_Data::get_stop_point_connection(const StopPoint& f
     }
     return *search;
 }
+
+std::vector<const StopPoint*> PT_Data::get_stop_points_by_area(const GeographicalCoord& coord) {
+    return stop_points_by_area->find(coord);
+}
+
+void PT_Data::add_stop_point_area(const MultiPolygon& area, StopPoint* sp) {
+    stop_points_by_area->insert(area, sp);
+}
+
+PT_Data::PT_Data() : stop_points_by_area(std::make_unique<StopPointPolygonMap>()) {}
 
 PT_Data::~PT_Data() {
     // big uggly hack :(
