@@ -1,3 +1,12 @@
+navitia2 (6.1.0) unstable; urgency=low
+
+  * [Jornungandr] feed publishers are added even without direct path  <https://github.com/CanalTP/navitia/pull/3252>
+  * [Jormungandr] fix bss walking overlapping problem  <https://github.com/CanalTP/navitia/pull/3269>
+  * [Jormungandr] a dummy bss provider  <https://github.com/CanalTP/navitia/pull/3259>
+  * [Jornungandr] Filter parking for origin fallback with allowed_id[] and forbidden_uris[]  <https://github.com/CanalTP/navitia/pull/3249>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 28 Aug 2020 15:08:13 +0100
+
 navitia2 (6.0.0) unstable; urgency=low
 
   * [Doc] Enhance some examples  <https://github.com/CanalTP/navitia/pull/3260>
