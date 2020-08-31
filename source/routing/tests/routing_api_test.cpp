@@ -49,7 +49,7 @@ struct logger_initialized {
         auto raptor_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
         raptor_logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
         auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        logger.setLogLevel(log4cplus::DEBUG_LOG_LEVEL);
+        logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
         auto fare_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("fare"));
         fare_logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
     }
@@ -2191,47 +2191,12 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     dump_response(resp, "direct_path_car");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);  // 1 direct car + 1 car->bus->walk
-
-    // the car->bus->walk journey
-    auto journey = resp.journeys(0);
-    BOOST_REQUIRE_EQUAL(journey.sections_size(), 5);
-    auto sections = journey.sections();
-
-    // section 0: goto to the station
-    BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(0).origin().address().label(), "rue bs (Condom)");
-    BOOST_CHECK_EQUAL(sections.Get(0).destination().poi().label(), "first parking (Condom)");
-    BOOST_CHECK_EQUAL(sections.Get(0).street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_CHECK_EQUAL(sections.Get(0).street_network().duration(), 6);
-
-    // section 1: parking
-    BOOST_CHECK_EQUAL(sections.Get(1).type(), pbnavitia::SectionType::PARK);
-    BOOST_CHECK_EQUAL(sections.Get(1).street_network().duration(), 1);
-
-    // section 2: we walk to the stop point
-    BOOST_CHECK_EQUAL(sections.Get(2).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(2).origin().address().label(), "1 rue bd (Condom)");
-    BOOST_CHECK_EQUAL(sections.Get(2).destination().stop_point().name(), "stop_point:stopB");
-    BOOST_CHECK_EQUAL(sections.Get(2).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
-    BOOST_CHECK_EQUAL(sections.Get(2).street_network().duration(), 10);
-
-    // section 3: PT A->B
-    BOOST_CHECK_EQUAL(sections.Get(3).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
-    BOOST_CHECK_EQUAL(sections.Get(3).origin().stop_point().name(), "stop_point:stopB");
-    BOOST_CHECK_EQUAL(sections.Get(3).destination().stop_point().name(), "stop_point:stopA");
-
-    // section 2: go to the destination
-    BOOST_CHECK_EQUAL(sections.Get(4).type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_CHECK_EQUAL(sections.Get(4).origin().stop_point().name(), "stop_point:stopA");
-    BOOST_CHECK_EQUAL(sections.Get(4).destination().address().label(), "1 rue ag (Condom)");
-    BOOST_CHECK_EQUAL(sections.Get(4).street_network().mode(), pbnavitia::StreetNetworkMode::Walking);
-    BOOST_CHECK_EQUAL(sections.Get(4).street_network().duration(), 90);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);  // 1 direct car
 
     // second journey, direct path with a car
-    journey = resp.journeys(1);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
-    sections = journey.sections();
+    auto sections = journey.sections();
 
     // car to the parking
     BOOST_CHECK_EQUAL(sections.Get(0).type(), pbnavitia::SectionType::STREET_NETWORK);
