@@ -2016,9 +2016,9 @@ BOOST_AUTO_TEST_CASE(accessible_on_first_sp) {
 // The pt journey has one more transfer than the direct path
 
 // so the pt_journey will be better than the direct path if it allows
-// to reduce the walk duration by at least walking_transfer_duration = 1m30s
-// So with a direct path of 110s = 1m50s <= 1m30s + 20s the direct path dominates the pt journey
-// With a direct path of 111s = 1m51s > 1m30s + 20s the pt journey is kept
+// to reduce the walk duration by at least walking_transfer_duration = 2mn
+// So with a direct path of 110s = 1mn50s <= 2mn + 20s the direct path dominates the pt journey
+// With a direct path of 141s = 2mn21s > 2mn + 20s the pt journey is kept
 // We ask with a 15s
 // direct path, thus we must not have any solution. With a 25s direct
 // path, we have the journey.
@@ -2040,23 +2040,23 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
 
     auto res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:00"_t), type::RTLevel::Base, 2_min,
                                   DateTimeUtils::inf, 10, {}, {}, {}, true,
-                                  110_s);  // 1s direct path
+                                  110_s);  // 110s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:00"_t), type::RTLevel::Base, 2_min,
                              DateTimeUtils::inf, 10, {}, {}, {}, true,
-                             111_s);  // 145s direct path
+                             141_s);  // 145s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 
     // reverse clockwise
     res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:05"_t), type::RTLevel::Base, 2_min, 0, 10,
                              {}, {}, {}, false,
-                             110_s);  // 135s direct path
+                             110_s);  // 110s direct path
     BOOST_CHECK_EQUAL(res.size(), 0);
 
     res = raptor.compute_all(departures, arrivals, DateTimeUtils::set(2, "08:05"_t), type::RTLevel::Base, 2_min, 0, 10,
                              {}, {}, {}, false,
-                             111_s);  // 145s direct path
+                             141_s);  // 145s direct path
     BOOST_CHECK_EQUAL(res.size(), 1);
 }
 

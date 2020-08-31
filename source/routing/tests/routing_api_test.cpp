@@ -44,7 +44,15 @@ www.navitia.io
 #include "type/pb_converter.h"
 
 struct logger_initialized {
-    logger_initialized() { navitia::init_logger(); }
+    logger_initialized() {
+        navitia::init_logger();
+        auto raptor_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+        raptor_logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
+        auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
+        auto fare_logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("fare"));
+        fare_logger.setLogLevel(log4cplus::FATAL_LOG_LEVEL);
+    }
 };
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
@@ -960,8 +968,8 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     dump_response(resp, "biking");
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
-    auto journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    auto journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     auto section = journey.sections(0);
 
@@ -994,38 +1002,15 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
 
-    // co2_emission Tests
-    // First Journey
     // Bike mode
-    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().value(), 0.);
     BOOST_CHECK_EQUAL(resp.journeys(0).sections(0).co2_emission().unit(), "gEC");
-    // Tram mode
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).pt_display_informations().physical_mode(), "Tramway");
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().value(), 0.58);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(1).co2_emission().unit(), "gEC");
-
-    // Walk mode
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).co2_emission().value(), 0.);
-    BOOST_CHECK_EQUAL(resp.journeys(0).sections(2).street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
     // Aggregator co2_emission
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.58);
+    BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 0.);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
-
-    // Second Journey
-    // Bike mode
-    BOOST_REQUIRE_EQUAL(resp.journeys(1).sections_size(), 1);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().value(), 0.);
-    BOOST_CHECK_EQUAL(resp.journeys(1).sections(0).co2_emission().unit(), "gEC");
-    // Aggregator co2_emission
-    BOOST_CHECK_EQUAL(resp.journeys(1).has_co2_emission(), true);
-    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().value(), 0.);
-    BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().unit(), "gEC");
 }
 
 // biking
