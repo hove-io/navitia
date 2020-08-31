@@ -34,7 +34,6 @@ www.navitia.io
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
 #include "type/fwd_type.h"
-#include "fare/fare.h"
 
 #include <boost/serialization/split_member.hpp>
 #include <boost/utility.hpp>

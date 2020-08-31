@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/dataset.h"
 #include "type/physical_mode.h"
 #include "type/pt_data.h"
+#include "type/static_data.h"
 #include "vptranslator/vptranslator.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/logger.h"

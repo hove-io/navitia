@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/message.h"
 #include "type/meta_data.h"
 #include "type/pt_data.h"
+#include "type/static_data.h"
 
 #include <boost/range/algorithm/find.hpp>
 

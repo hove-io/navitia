@@ -55,6 +55,7 @@ struct JourneyPatternPoint;
 namespace type {
 class PT_Data;
 struct AssociatedCalendar;
+struct AccessibiliteParams;
 struct Calendar;
 struct CommercialMode;
 struct Company;
