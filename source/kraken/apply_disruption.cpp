@@ -34,7 +34,10 @@ www.navitia.io
 #include "type/base_pt_objects.h"
 #include "type/network.h"
 #include "type/physical_mode.h"
+#include "type/message.h"
+#include "type/meta_data.h"
 #include "type/meta_vehicle_journey.h"
+#include "type/pt_data.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
 

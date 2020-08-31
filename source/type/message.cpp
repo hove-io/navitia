@@ -44,6 +44,9 @@ www.navitia.io
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/format.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/serialization/set.hpp>
+
+namespace nt = navitia::type;
 
 namespace navitia {
 namespace type {

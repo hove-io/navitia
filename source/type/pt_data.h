@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "type/fwd_type.h"
-#include "georef/georef.h"
+#include "georef/fwd_georef.h"
 #include "type/message.h"
 #include "type/request.pb.h"
 #include "autocomplete/autocomplete.h"

@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "georef/georef.h"
 #include "ptreferential_utils.h"
 #include "ptref_graph.h"
 #include "ptreferential.h"
@@ -48,6 +49,7 @@ using navitia::type::make_indexes;
 using navitia::type::Type_e;
 
 namespace bt = boost::posix_time;
+namespace nt = navitia::type;
 
 namespace navitia {
 namespace ptref {

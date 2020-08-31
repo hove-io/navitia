@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -27,35 +27,21 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
+
 #pragma once
 
-#include "type/pt_data.h"
-#include "type/message.h"
-#include "type/chaos.pb.h"
-#include "type/meta_data.h"
-
-#include <memory>
-
 namespace navitia {
+namespace georef {
 
-/*
- * Create a disruption from the chaos protobuf
- *
- * The disruption is registered in pt_data
- */
-const type::disruption::Disruption& make_disruption(const chaos::Disruption& chaos_disruption, type::PT_Data& pt_data);
+struct GeoRef;
+struct HouseNumber;
+struct POI;
+struct POIType;
+struct Path;
+struct PathItem;
+struct ProjectionData;
+struct Vertex;
+struct Way;
 
-/*
- * Create a disruption from the chaos protobuf and apply it on the pt_data
- */
-void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
-                               type::PT_Data& pt_data,
-                               const type::MetaData& meta);
-
-boost::optional<type::disruption::LineSection> make_line_section(const chaos::PtObject& chaos_section,
-                                                                 type::PT_Data& pt_data);
-
-bool is_publishable(const transit_realtime::TimeRange& publication_period,
-                    boost::posix_time::time_period production_period);
-
+}  // namespace georef
 }  // namespace navitia

@@ -30,6 +30,8 @@ www.navitia.io
 
 #include "pt_data.h"
 
+#include "georef/adminref.h"
+#include "georef/georef.h"
 #include "type/serialization.h"
 #include "type/connection.h"
 #include "type/calendar.h"
@@ -45,6 +47,8 @@ www.navitia.io
 #include "utils/functions.h"
 
 #include <boost/range/algorithm/find_if.hpp>
+
+namespace nt = navitia::type;
 
 namespace navitia {
 namespace type {

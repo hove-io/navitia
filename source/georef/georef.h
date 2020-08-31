@@ -36,6 +36,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "utils/serialization_vector.h"
 #include "type/time_duration.h"
+#include "georef/fwd_georef.h"
 #include "georef/georef_types.h"
 #include "georef/projection_data.h"
 
@@ -159,11 +160,6 @@ struct Path {
     navitia::time_duration duration = {};  //< Total length of the path
     std::deque<PathItem> path_items = {};  //< List of street used
 };
-
-struct ProjectionData;
-
-struct POI;
-struct POIType;
 
 std::vector<Admin*> search_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree);
 

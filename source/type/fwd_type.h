@@ -83,6 +83,7 @@ using RankStopTime = Rank<StopTime>;
 template <class T>
 struct MultiPolygonMap;
 namespace disruption {
+struct Disruption;
 struct Impact;
 struct Message;
 }  // namespace disruption
