@@ -39,14 +39,13 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
-from jormungandr.resources_utils import ResourceUtc
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
 from flask.globals import g
 from datetime import datetime
 import six
 
 
-class TrafficReport(ResourceUri, ResourceUtc):
+class TrafficReport(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.TrafficReportsSerializer)
         parser_get = self.parsers["get"]
@@ -60,7 +59,7 @@ class TrafficReport(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.now(),
+            default=datetime.utcnow(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -111,8 +110,6 @@ class TrafficReport(ResourceUri, ResourceUtc):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
-        # change dt to utc
-        args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
 
         if args['disable_geojson']:
             g.disable_geojson = True
