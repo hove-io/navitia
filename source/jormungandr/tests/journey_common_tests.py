@@ -666,7 +666,7 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 2
+        assert len(response['journeys']) == 1
 
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
@@ -690,7 +690,7 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 2
+        assert len(response['journeys']) == 1
 
         query += "&max_duration_to_pt=0"
         if self.data_sets.get('main_routing_test', {}).get('scenario') == 'distributed':
@@ -773,8 +773,7 @@ class JourneyCommon(object):
         check_best(response)
         self.is_valid_journey_response(response, query)
         jrnys = response['journeys']
-
-        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
+        j = jrnys[0]
         assert j
         assert j['sections'][0]['from']['id'] == 'stopA'
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
@@ -796,14 +795,14 @@ class JourneyCommon(object):
         """
         When the departure is a stop_area...
         """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}".format(
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_walking_direct_path_duration=1".format(
             from_sa='stopA', to_sa='stopB', datetime="20120614T080000"
         )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
         jrnys = response['journeys']
-        assert len(jrnys) == 2
+        assert len(jrnys) == 1
         section_0 = jrnys[0]['sections'][0]
         assert section_0['type'] == 'crow_fly'
         assert section_0['mode'] == 'walking'
@@ -934,23 +933,19 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 4
+        assert len(response['journeys']) == 3
         assert len(response['journeys'][0]['sections']) == 3
-        assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
-        assert response['journeys'][0]['durations']['total'] == 95
-        assert response['journeys'][0]['durations']['bike'] == 13
-        assert len(response['journeys'][1]['sections']) == 3
-        assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
-        assert response['journeys'][1]['durations']['walking'] == 97
-        assert response['journeys'][1]['durations']['total'] == 99
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['durations']['walking'] == 97
+        assert response['journeys'][0]['durations']['total'] == 99
+        assert len(response['journeys'][1]['sections']) == 1
+        assert response['journeys'][1]['sections'][0]['mode'] == 'bike'
+        assert response['journeys'][1]['durations']['total'] == 171
+        assert response['journeys'][1]['durations']['bike'] == 171
         assert len(response['journeys'][2]['sections']) == 1
-        assert response['journeys'][2]['sections'][0]['mode'] == 'bike'
-        assert response['journeys'][2]['durations']['total'] == 171
-        assert response['journeys'][2]['durations']['bike'] == 171
-        assert len(response['journeys'][3]['sections']) == 1
-        assert response['journeys'][3]['sections'][0]['mode'] == 'walking'
-        assert response['journeys'][3]['durations']['walking'] == 276
-        assert response['journeys'][3]['durations']['total'] == 276
+        assert response['journeys'][2]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][2]['durations']['total'] == 276
+        assert response['journeys'][2]['durations']['walking'] == 276
 
     def test_call_kraken_boarding_alighting(self):
         """
@@ -1111,7 +1106,7 @@ class JourneyCommon(object):
 
     def test_shared_section(self):
         # Query a journey from stopB to stopA
-        r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
+        r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100')
         assert r['journeys'][0]['type'] == 'best'
         assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
         # Here the heassign is modified by the headsign at stop.
