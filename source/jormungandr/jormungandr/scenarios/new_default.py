@@ -277,14 +277,22 @@ def tag_ecologic(resp):
 
 
 def _tag_direct_path(responses):
-    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking'], response_pb2.Bike: ['non_pt_bike']}
+    street_network_mode_tag_map = {
+        response_pb2.Walking: ['non_pt_walking'],
+        response_pb2.Bike: ['non_pt_bike'],
+        response_pb2.Taxi: ['non_pt_taxi'],
+        response_pb2.Car: ['non_pt_car'],
+        response_pb2.CarNoPark: ['non_pt_car_no_park'],
+        response_pb2.Ridesharing: ['non_pt_ridesharing'],
+    }
+
     for j in itertools.chain.from_iterable(r.journeys for r in responses):
         if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
             j.tags.extend(['non_pt'])
 
         # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
         # if there is only one section
-        if len(j.sections) == 1:
+        if 'non_pt' in j.tags:
             if j.sections[0].type == response_pb2.STREET_NETWORK and hasattr(j.sections[0], 'street_network'):
                 tag = street_network_mode_tag_map.get(j.sections[0].street_network.mode)
                 if tag:
@@ -670,8 +678,11 @@ def _tag_journey_by_mode(journey):
             cur_mode = fm.FallbackModes.bike
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
-        ) and section.street_network.mode == response_pb2.Car:
-            cur_mode = fm.FallbackModes.car
+        ) and section.street_network.mode in (response_pb2.Car, response_pb2.CarNoPark):
+            if section.street_network.mode == response_pb2.Car:
+                cur_mode = fm.FallbackModes.car
+            else:
+                cur_mode = fm.FallbackModes.car_no_park
         elif (
             section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
         ) and section.street_network.mode == response_pb2.Ridesharing:

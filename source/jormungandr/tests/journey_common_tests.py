@@ -1287,18 +1287,17 @@ class DirectPath(object):
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 4
 
-        bike_journey = find_with_tag(response['journeys'], 'bike')
+        bike_journey = find_with_tag(response['journeys'], 'non_pt_bike')
         assert bike_journey
         assert len(bike_journey['sections']) == 1
 
-        # TODO: to be fixed in a new PR
-        car_journey = find_with_tag(response['journeys'], 'car')
+        car_journey = find_with_tag(response['journeys'], 'non_pt_car')
         assert car_journey
         assert len(car_journey['sections']) == 3
         # without filter we use the parking poi:parking_2
         car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
 
-        walking_journey = find_with_tag(response['journeys'], 'walking')
+        walking_journey = find_with_tag(response['journeys'], 'non_pt_walking')
         assert walking_journey
         assert len(walking_journey['sections']) == 1
 
