@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/stop_area.h"
 #include "type/stop_point.h"
+#include "georef/georef.h"
 
 namespace navitia {
 namespace autocomplete {

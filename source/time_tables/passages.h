@@ -29,7 +29,10 @@ www.navitia.io
 */
 
 #pragma once
+
+#include "type/fwd_type.h"
 #include "type/pb_converter.h"
+
 namespace navitia {
 namespace timetables {
 

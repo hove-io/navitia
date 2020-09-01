@@ -27,6 +27,8 @@ channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
+
+#include "georef/georef.h"
 #include "type/data.h"
 #include "type/pb_converter.h"
 #include "utils/init.h"  // init_app()

@@ -105,7 +105,7 @@ struct Nameable {
     Nameable(const std::string& name) : name(name) {}
 };
 
-struct PT_Data;
+class PT_Data;
 
 using Indexes = boost::container::flat_set<idx_t>;
 

@@ -30,17 +30,14 @@ www.navitia.io
 
 #pragma once
 
-#include "type/pt_data.h"
-#include "type/message.h"
-#include "type/chaos.pb.h"
-#include "type/gtfs-realtime.pb.h"
-#include "type/meta_data.h"
+#include "type/fwd_type.h"
 
-#include <memory>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace navitia {
 
-boost::posix_time::time_period execution_period(const boost::gregorian::date& date, const nt::VehicleJourney& vj);
+boost::posix_time::time_period execution_period(const boost::gregorian::date& date, const type::VehicleJourney& vj);
 
 /**
  * WARNING: this method can add, remove or transform PT-Ref objects in PT_Data
@@ -48,7 +45,7 @@ boost::posix_time::time_period execution_period(const boost::gregorian::date& da
  * - RAPTOR (probably through Data.build_raptor)
  * - AUTOCOMPLETE on PT-Ref (probably through PT_Data.build_autocomplete)
  */
-void apply_disruption(const type::disruption::Disruption&, navitia::type::PT_Data&, const navitia::type::MetaData&);
+void apply_disruption(const type::disruption::Disruption&, navitia::type::PT_Data&, const type::MetaData&);
 
-void delete_disruption(const std::string& disruption_id, nt::PT_Data& pt_data, const nt::MetaData& meta);
+void delete_disruption(const std::string& disruption_id, type::PT_Data& pt_data, const type::MetaData& meta);
 }  // namespace navitia

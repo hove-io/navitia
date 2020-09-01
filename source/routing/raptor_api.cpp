@@ -1112,7 +1112,7 @@ boost::optional<routing::map_stop_point_duration> get_stop_points(const type::En
     }
 
     // checking for zonal stop points
-    const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+    const auto& zonal_sps = data.pt_data->get_stop_points_by_area(ep.coordinates);
     for (const auto* stop_point : zonal_sps) {
         add_free_stop_point(stop_point, concerned_path_finder, result);
     }

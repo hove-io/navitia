@@ -36,6 +36,7 @@ www.navitia.io
 #include <boost/make_shared.hpp>
 
 namespace bt = boost::posix_time;
+namespace nt = navitia::type;
 
 namespace navitia {
 

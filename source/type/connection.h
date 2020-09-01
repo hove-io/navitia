@@ -38,7 +38,6 @@ namespace navitia {
 namespace type {
 
 struct StopPoint;
-struct PT_Data;
 
 enum class ConnectionType { StopPoint = 0, StopArea, Walking, VJ, Default, stay_in, undefined };
 

@@ -42,6 +42,9 @@ www.navitia.io
 #include "type/stop_point.h"
 #include "type/physical_mode.h"
 #include "type/meta_vehicle_journey.h"
+#include "georef/adminref.h"
+
+namespace nt = navitia::type;
 
 namespace navitia {
 namespace type {

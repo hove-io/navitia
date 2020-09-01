@@ -28,12 +28,14 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/network.h"
 #include "type/dataset.h"
+#include "type/network.h"
 #include "type/indexes.h"
 #include "type/line.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
+
+#include <boost/serialization/set.hpp>
 
 namespace navitia {
 namespace type {
