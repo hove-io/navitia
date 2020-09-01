@@ -90,6 +90,13 @@ def test_get_instance(create_instance):
     assert resp[0]['id'] == create_instance
 
 
+def test_get_instance_with_traveler_profile(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert len(resp) == 1
+    assert 'traveler_profiles' in resp[0]
+    assert len(resp[0]['traveler_profiles']) == 0, "By default, traveler profiles are empty"
+
+
 def test_update_instances(create_instance):
     params = {
         "journey_order": "arrival_time",
@@ -265,6 +272,19 @@ def test_get_non_existant_profile(create_instance):
     assert status == 404
 
 
+def test_create_default_instance(create_instance):
+    _, status = api_post('/v0/instances/new_instance', check=False)
+    assert status == 201, "New instance should be created"
+
+    _, status = api_get('/v0/instances/new_instance', check=False)
+    assert status == 200, "New instance should now be available"
+
+
+def test_create_instance_already_existing_should_fail(create_instance):
+    _, status = api_post('/v0/instances/fr', check=False)
+    assert status >= 400, "Instance 'fr' already exists and cannot be created again"
+
+
 def test_create_empty_traveler_profile(create_instance):
     """
     we have created a profile with all default value, totally useless...
@@ -295,6 +315,8 @@ def test_update_traveler_profile(create_instance, traveler_profile_params):
         content_type='application/json',
     )
     check_traveler_profile(resp, traveler_profile_params)
+
+    api_get('/v0/instances/fr/traveler_profiles')
 
     resp = api_get('/v0/instances/fr/traveler_profiles/standard')
     check_traveler_profile(resp[0], traveler_profile_params)
