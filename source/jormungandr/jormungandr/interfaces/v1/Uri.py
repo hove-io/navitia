@@ -108,7 +108,7 @@ class Uri(ResourceUri, ResourceUtc):
             type=DateTimeFormat(),
             schema_metadata={'default': 'now'},
             hidden=True,
-            default=datetime.now(),
+            default=datetime.utcnow(),
             help='The datetime considered as "now". Used for debug, default is '
             'the moment of the request. It will mainly change the output '
             'of the disruptions.',
@@ -189,7 +189,6 @@ class Uri(ResourceUri, ResourceUtc):
         set_request_timezone(self.region)
 
         # change dt to utc
-        args['_current_datetime'] = self.convert_to_utc(args['_current_datetime'])
         if args['since']:
             args['_original_since'] = args['since']
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))

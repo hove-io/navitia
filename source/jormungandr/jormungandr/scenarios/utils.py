@@ -65,6 +65,7 @@ mode_weight = {
     FallbackModes.taxi: 6,
     FallbackModes.ridesharing: 5,
     FallbackModes.car: 4,
+    FallbackModes.car_no_park: 4,
     FallbackModes.bike: 3,
     FallbackModes.bss: 2,
     FallbackModes.walking: 1,
