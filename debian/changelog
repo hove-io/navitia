@@ -1,3 +1,10 @@
+navitia2 (6.2.0) unstable; urgency=low
+
+  * [Jormun] Revert correction of datetime tranformation for current_datetime"  <https://github.com/CanalTP/navitia/pull/3272>
+  * [Jormun] Add more accurate tags in direct path  <https://github.com/CanalTP/navitia/pull/3245>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Tue, 01 Sep 2020 10:09:03 +0100
+
 navitia2 (6.1.0) unstable; urgency=low
 
   * [Jornungandr] feed publishers are added even without direct path  <https://github.com/CanalTP/navitia/pull/3252>
