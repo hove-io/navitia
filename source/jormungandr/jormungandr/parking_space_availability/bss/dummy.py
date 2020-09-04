@@ -76,6 +76,11 @@ class DummyProvider(CommonBssProvider):
         ref = poi.get('properties', {}).get('ref')
         if not ref:
             return
-        # calculate dummy available stands number
-        s = int(bytearray(str(ref))[0])
-        return Stands(int(s / 2), s, StandsStatus.closed if s % 2 else StandsStatus.open)
+        # generate dummy available stands number using a hash algo
+        import hashlib
+
+        m = hashlib.md5()
+        for k, v in poi.get('properties', {}).items():
+            m.update(v.encode('utf-8', errors='ignore'))
+        s = int(bytearray(str(m.hexdigest()))[0])
+        return Stands(int(s / 2), s, StandsStatus.closed if int(ref) % 2 else StandsStatus.open)
