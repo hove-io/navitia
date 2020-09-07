@@ -176,7 +176,7 @@ class Instance(object):
         if app.config[str('DISABLE_DATABASE')]:
             self.asynchronous_ridesharing = app.config[str('ASYNCHRONOUS_RIDESHARING')]
         else:
-            self.asynchronous_ridesharing = self.get_asynchronous_ridesharing_from_db
+            self.asynchronous_ridesharing = self.get_asynchronous_ridesharing_from_db  # type: ignore
 
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
@@ -187,7 +187,6 @@ class Instance(object):
         """
         return self._get_models().equipment_details_providers
 
-    @property
     def get_asynchronous_ridesharing_from_db(self):
         # type: () -> bool
         instance_db = self.get_models()
