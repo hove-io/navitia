@@ -193,11 +193,8 @@ instance_fields = {
     'max_car_no_park_direct_path_duration': fields.Raw,
     'ridesharing_speed': fields.Raw,
     'max_ridesharing_duration_to_pt': fields.Raw,
-<<<<<<< Updated upstream
     'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
-=======
     'asynchronous_ridesharing': fields.Boolean,
->>>>>>> Stashed changes
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
