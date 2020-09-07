@@ -325,8 +325,20 @@ class Scenario(object):
         raise NotImplementedError()
 
     def _add_ridesharing_link(self, resp, params):
-        params['_asynchronous_ridesharing'] = 'False'
-        add_link(resp, rel='ridesharing', **params)
+        # TODO : Add a link to call ridesharing API
+        # For the moment, the endpoint API doesn't exit.
+        # This is a fake link that have to be replaced/completed.
+        # ressource_name = ridesharing, after the ridesharing API integration
+        link = resp.links.add(rel='ridesharing', is_templated=False, description='call ridesharing services', ressource_name='journeys')
+        # from
+        args = link.kwargs.add(key='from')
+        args.values.extend(['2.23719;48.89499'])
+        # to
+        args = link.kwargs.add(key='to')
+        args.values.extend(['2.38693;48.85066'])
+        # datetime
+        args = link.kwargs.add(key='datetime')
+        args.values.extend(['20200904T000605'])
 
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
