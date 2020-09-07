@@ -15,7 +15,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('asynchronous_ridesharing', sa.Boolean(), nullable=False, server_default=sa.false()))
+    op.add_column(
+        'instance',
+        sa.Column('asynchronous_ridesharing', sa.Boolean(), nullable=False, server_default=sa.false()),
+    )
 
 
 def downgrade():

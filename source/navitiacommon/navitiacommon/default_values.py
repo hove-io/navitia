@@ -174,6 +174,7 @@ stop_points_nearby_duration = 5 * 60  # In secs
 
 asynchronous_ridesharing = False
 
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         value = getattr(sys.modules[__name__], attr)

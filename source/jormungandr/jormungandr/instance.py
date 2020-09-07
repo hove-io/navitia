@@ -187,7 +187,9 @@ class Instance(object):
         """
         return self._get_models().equipment_details_providers
 
+    @property
     def get_asynchronous_ridesharing_from_db(self):
+        # type: () -> bool
         instance_db = self.get_models()
         return get_value_or_default('asynchronous_ridesharing', instance_db, self.name)
 

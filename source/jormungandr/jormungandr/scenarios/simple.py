@@ -329,7 +329,12 @@ class Scenario(object):
         # For the moment, the endpoint API doesn't exit.
         # This is a fake link that have to be replaced/completed.
         # ressource_name = ridesharing, after the ridesharing API integration
-        link = resp.links.add(rel='ridesharing', is_templated=False, description='call ridesharing services', ressource_name='journeys')
+        link = resp.links.add(
+            rel='ridesharing',
+            is_templated=False,
+            description='call ridesharing services',
+            ressource_name='journeys',
+        )
         # from
         args = link.kwargs.add(key='from')
         args.values.extend(['2.23719;48.89499'])

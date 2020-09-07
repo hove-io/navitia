@@ -1184,7 +1184,6 @@ class Scenario(simple.Scenario):
         return resp
 
     def handle_ridesharing_services(self, logger, instance, request, pb_response):
-
         def active_asynchronous_ridesharing(request, instance):
             if request.get("_asynchronous_ridesharing", False):
                 return True
@@ -1194,8 +1193,7 @@ class Scenario(simple.Scenario):
 
         if not active_asynchronous_ridesharing(request, instance):
             if instance.ridesharing_services and (
-                'ridesharing' in request['origin_mode']
-                or 'ridesharing' in request['destination_mode']
+                'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
             ):
                 logger.debug('trying to add ridesharing journeys')
                 try:
