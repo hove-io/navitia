@@ -139,8 +139,21 @@ class Kraken(AbstractStreetNetworkService):
         response = instance.send_and_receive(req, request_id=request_id)
         if should_invert_journey:
             return self._reverse_journeys(response)
+
+        def has_bss_section(journey):
+            # Here is a little trick with python's generator
+            # the next 3 lines check not only the existences of BSS_RENT and BSS_PUT_BACK, but also check the fact that
+            # BSS_RENT must be located Before BSS_PUT_BACK
+            sections = (s for s in journey.sections)
+            bss_rent = next((True for s in sections if s.type == response_pb2.BSS_RENT), False)
+            bss_put_back = next((True for s in sections if s.type == response_pb2.BSS_PUT_BACK), False)
+            return bss_rent and bss_put_back
+
         if response.journeys:
-            response.journeys[0].sections[0].street_network.mode = FallbackModes[mode].value
+            if mode == FallbackModes.bss.name and (not has_bss_section(response.journeys[0])):
+                response.journeys[0].sections[0].street_network.mode = FallbackModes.walking.value
+            else:
+                response.journeys[0].sections[0].street_network.mode = FallbackModes[mode].value
         return response
 
     def _hanlde_car_no_park_modes(self, mode):
