@@ -1185,11 +1185,11 @@ class Scenario(simple.Scenario):
 
     def handle_ridesharing_services(self, logger, instance, request, pb_response):
         def active_asynchronous_ridesharing(request, instance):
-            if request.get("_asynchronous_ridesharing", False):
-                return True
-            if instance.asynchronous_ridesharing:
-                return True
-            return False
+            if request.get("_asynchronous_ridesharing", None) is None:
+                # when the param is not set in the request, use the instance config
+                return instance.asynchronous_ridesharing
+            else:
+                return request.get("_asynchronous_ridesharing")
 
         if not active_asynchronous_ridesharing(request, instance):
             if instance.ridesharing_services and (
