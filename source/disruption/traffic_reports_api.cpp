@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "ptreferential/ptreferential.h"
 #include "type/pb_converter.h"
+#include "type/message.h"
 #include "utils/logger.h"
 #include "utils/paginate.h"
 

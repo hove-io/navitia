@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include <boost/geometry.hpp>
 #include "utils/init.h"
 #include "routing/tests/routing_api_test_data.h"
 #include "mock_kraken.h"
@@ -145,10 +146,10 @@ int main(int argc, const char* const argv[]) {
 
     auto* sp = b.sps.at("P");
     sp->is_zonal = true;
-    b.data->pt_data->stop_points_by_area.insert(area_1, sp);
+    b.data->pt_data->add_stop_point_area(area_1, sp);
     sp = b.sps.at("Q");
     sp->is_zonal = true;
-    b.data->pt_data->stop_points_by_area.insert(area_2, sp);
+    b.data->pt_data->add_stop_point_area(area_2, sp);
 
     auto drancy = new navitia::georef::Admin(0, "admin:93700", "Drancy", 8, "93700", "Drancy", {12, 12}, {"93700"});
     auto paris = new navitia::georef::Admin(1, "admin:75000", "Paris", 8, "75000", "Paris", {22, 22}, {"75000"});

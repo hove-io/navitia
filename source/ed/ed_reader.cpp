@@ -612,7 +612,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
         if (!const_it["area"].is_null() && sp->is_zonal) {
             nt::MultiPolygon area;
             boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
-            data.pt_data->stop_points_by_area.insert(area, sp);
+            data.pt_data->add_stop_point_area(area, sp);
         }
 
         data.pt_data->stop_points.push_back(sp);

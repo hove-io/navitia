@@ -290,6 +290,8 @@ class Instance(db.Model):  # type: ignore
         cascade='save-update, merge, delete, delete-orphan',
     )
 
+    traveler_profiles = db.relationship('TravelerProfile', backref='instance')
+
     import_stops_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
     import_ntfs_in_mimir = db.Column(db.Boolean, default=False, nullable=False)

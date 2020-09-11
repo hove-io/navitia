@@ -48,6 +48,7 @@ www.navitia.io
 namespace navitia {
 
 namespace nd = type::disruption;
+namespace nt = navitia::type;
 
 static bool base_vj_exists_the_same_day(const type::Data& data, const transit_realtime::TripUpdate& trip_update) {
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),

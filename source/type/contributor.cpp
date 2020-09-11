@@ -29,11 +29,12 @@ www.navitia.io
 */
 
 #include "type/contributor.h"
-
 #include "type/dataset.h"
 #include "type/indexes.h"
 #include "type/pt_data.h"
 #include "type/serialization.h"
+
+#include <boost/serialization/set.hpp>
 
 namespace navitia {
 namespace type {

@@ -211,8 +211,6 @@ typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSectio
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 
-struct Disruption;
-
 struct Message {
     std::string text;
     std::string channel_id;

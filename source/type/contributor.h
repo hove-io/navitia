@@ -29,8 +29,8 @@ www.navitia.io
 */
 
 #pragma once
-#include "type/type_interfaces.h"
 #include "type/fwd_type.h"
+#include "type/type_interfaces.h"
 
 #include <set>
 

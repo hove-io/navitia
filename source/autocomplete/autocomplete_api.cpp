@@ -34,6 +34,7 @@ www.navitia.io
 #include "autocomplete/utils.h"
 #include "type/pb_converter.h"
 #include "utils/functions.h"
+#include "georef/georef.h"
 
 #include <algorithm>
 #include <utility>

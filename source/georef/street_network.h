@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-#include "georef.h"
+#include "georef/fwd_georef.h"
 #include "dijkstra_path_finder.h"
 #include "astar_path_finder.h"
 #include "routing/raptor_utils.h"

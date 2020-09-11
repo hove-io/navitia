@@ -31,6 +31,7 @@ www.navitia.io
 #include "proximitylist_api.h"
 
 #include "type/pb_converter.h"
+#include "georef/georef.h"
 #include "utils/paginate.h"
 
 namespace navitia {

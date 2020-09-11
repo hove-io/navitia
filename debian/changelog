@@ -1,3 +1,12 @@
+navitia2 (7.0.0) unstable; urgency=low
+
+  * [Jorumun] Revert e3b8dae321  <https://github.com/CanalTP/navitia/pull/3278>
+  * [Distributed] fix_bss_journeys_without_bss_sections  <https://github.com/CanalTP/navitia/pull/3276>
+  * [Tyr] Traveller profile  <https://github.com/CanalTP/navitia/pull/3270>
+  * [Kraken] Improve build time by moving multi-polygon-map out of pt-data  <https://github.com/CanalTP/navitia/pull/3271>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 11 Sep 2020 11:09:03 +0100
+
 navitia2 (6.2.0) unstable; urgency=low
 
   * [Jormun] Revert correction of datetime tranformation for current_datetime"  <https://github.com/CanalTP/navitia/pull/3272>

@@ -41,6 +41,7 @@ struct RAPTOR;
 #include "type/type.pb.h"
 #include "type/response.pb.h"
 #include "type/request.pb.h"
+#include "type/accessibility_params.h"
 #include "kraken/data_manager.h"
 #include "utils/logger.h"
 #include "kraken/configuration.h"

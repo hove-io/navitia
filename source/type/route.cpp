@@ -28,9 +28,8 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/route.h"
-
 #include "type/dataset.h"
+#include "type/route.h"
 #include "type/indexes.h"
 #include "type/line.h"
 #include "type/pt_data.h"
@@ -38,6 +37,8 @@ www.navitia.io
 #include "type/stop_area.h"
 #include "type/stop_point.h"
 #include "type/vehicle_journey.h"
+
+#include <boost/serialization/set.hpp>
 
 namespace navitia {
 namespace type {

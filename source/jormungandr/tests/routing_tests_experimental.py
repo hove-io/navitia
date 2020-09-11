@@ -303,6 +303,10 @@ class TestJourneysDistributed(
         r = self.query(query)
         # only one pt in the response
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
+        # The pt_journey is computed by the BSS mode, since there is no bss section, the travel mode should be walking
+        pt_journey = next((j for j in r['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey['sections'][0]['mode'] == 'walking'
+        assert pt_journey['sections'][-1]['mode'] == 'walking'
 
         r = self.query(query + "&debug=true")
         # find all pt_journeys

@@ -223,15 +223,9 @@ struct Impacter {
     Impacter(builder&, nt::disruption::Disruption&);
     builder& b;
     boost::shared_ptr<nt::disruption::Impact> impact;
-    const nt::disruption::Disruption& get_disruption() const { return *impact->disruption; }
-    Impacter& uri(const std::string& u) {
-        impact->uri = u;
-        return *this;
-    }
-    Impacter& application_periods(const boost::posix_time::time_period& p) {
-        impact->application_periods.push_back(p);
-        return *this;
-    }
+    const nt::disruption::Disruption& get_disruption() const;
+    Impacter& uri(const std::string& u);
+    Impacter& application_periods(const boost::posix_time::time_period& p);
     Impacter& severity(nt::disruption::Effect,
                        std::string uri = "",
                        const std::string& wording = "",
@@ -246,11 +240,7 @@ struct Impacter {
                               const std::vector<std::string>& route_uris);  // add section in informed_entities
     Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
-    Impacter& publish(const boost::posix_time::time_period& p) {
-        // to ease use without a DisruptionCreator
-        impact->disruption->publication_period = p;
-        return *this;
-    }
+    Impacter& publish(const boost::posix_time::time_period& p);
 };
 
 struct DisruptionCreator {

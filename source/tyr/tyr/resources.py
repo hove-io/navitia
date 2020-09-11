@@ -335,6 +335,22 @@ class Instance(flask_restful.Resource):
 
         return marshal(instance, instance_fields)
 
+    def post(self, name, version=0):
+        '''
+        Create a default instance with a specific name.
+        '''
+        query = models.Instance.query_all().filter(models.Instance.name == name)
+        if query.count() > 0:
+            return {'instance': name, 'created': 'failed', 'error': 'already created'}, 400
+
+        try:
+            new_instance = models.Instance(name=name)
+            db.session.add(new_instance)
+            db.session.commit()
+            return {'instance': name, 'created': 'ok'}, 201
+        except Exception as e:
+            return {'instance': name, 'created': 'failed', 'error': e.message()}, 500
+
     def put(self, version=0, id=None, name=None):
         instance = models.Instance.get_from_id_or_name(id, name)
 
@@ -1441,7 +1457,7 @@ class TravelerProfile(flask_restful.Resource):
         @wraps(f)
         def wrapper(*args, **kwds):
             tp = kwds.get('traveler_type')
-            if tp in acceptable_traveler_types:
+            if tp in acceptable_traveler_types or tp is None:
                 return f(*args, **kwds)
             return (
                 {'error': 'traveler profile: {0} is not one of in {1}'.format(tp, acceptable_traveler_types)},

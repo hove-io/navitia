@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/route.h"
 #include "type/serialization.h"
 #include "type/stop_area.h"
+#include "georef/georef.h"
 
 #include <boost/serialization/weak_ptr.hpp>
 

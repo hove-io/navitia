@@ -395,6 +395,26 @@ Impacter::Impacter(builder& bu, dis::Disruption& disrup) : b(bu) {
     disrup.add_impact(impact, b.data->pt_data->disruption_holder);
 }
 
+const dis::Disruption& Impacter::get_disruption() const {
+    return *impact->disruption;
+}
+
+Impacter& Impacter::uri(const std::string& u) {
+    impact->uri = u;
+    return *this;
+}
+
+Impacter& Impacter::application_periods(const boost::posix_time::time_period& p) {
+    impact->application_periods.push_back(p);
+    return *this;
+}
+
+Impacter& Impacter::publish(const boost::posix_time::time_period& p) {
+    // to ease use without a DisruptionCreator
+    impact->disruption->publication_period = p;
+    return *this;
+}
+
 DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
     auto tag = boost::make_shared<dis::Tag>();
     tag->uri = t;

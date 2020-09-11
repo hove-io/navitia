@@ -1177,7 +1177,7 @@ void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
     coord.set_lon(request.lon());
     coord.set_lat(request.lat());
     const auto* data = this->pb_creator.data;
-    const auto& zonal_sps = data->pt_data->stop_points_by_area.find(coord);
+    const auto& zonal_sps = data->pt_data->get_stop_points_by_area(coord);
     this->pb_creator.pb_fill(zonal_sps, 0);
 }
 
