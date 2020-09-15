@@ -728,13 +728,6 @@ class Instance(flask_restful.Resource):
             location=('json', 'values'),
             default=instance.max_ridesharing_duration_to_pt,
         )
-        parser.add_argument(
-            'asynchronous_ridesharing',
-            type=inputs.boolean,
-            help='Active the asynchronous mode for ridesharing',
-            location=('json', 'values'),
-            default=instance.asynchronous_ridesharing,
-        )
 
         args = parser.parse_args()
 
@@ -807,7 +800,6 @@ class Instance(flask_restful.Resource):
                         'max_car_no_park_direct_path_duration',
                         'ridesharing_speed',
                         'max_ridesharing_duration_to_pt',
-                        'asynchronous_ridesharing',
                     ],
                 ),
                 maxlen=0,

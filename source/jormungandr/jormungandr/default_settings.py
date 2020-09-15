@@ -24,9 +24,6 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 
 DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
 
-# Active the asynchronous ridesharing mode
-ASYNCHRONOUS_RIDESHARING = boolean(os.getenv('JORMUNGANDR_ASYNCHRONOUS_RIDESHARING', False))
-
 # disable authentication
 PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 

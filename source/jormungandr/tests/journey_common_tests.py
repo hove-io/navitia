@@ -2306,31 +2306,6 @@ class JourneysRidesharing:
             float(rs_section["to"]["address"]["coord"]["lat"])
         )
 
-    def test_asynchronous_ridesharing_mode(self):
-        query = (
-            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"
-            "first_section_mode[]={first}&last_section_mode[]={last}&debug=true&_asynchronous_ridesharing=True".format(
-                first='ridesharing', last='walking'
-            )
-        )
-        response = self.query_region(query)
-        check_best(response)
-        assert len(response["journeys"]) == 1
-        assert response["journeys"][0]["type"] == "best"
-        rs_journey = response["journeys"][0]
-        assert "ridesharing" in rs_journey["tags"]
-        rs_section = rs_journey["sections"][0]
-        assert rs_section["mode"] == "ridesharing"
-        assert rs_section["type"] == "street_network"
-        # A link is added to call the new ridesharing API
-        links = response["links"]
-        link_is_present = False
-        for link in links:
-            if "ridesharing" in link["rel"]:
-                link_is_present = True
-                break
-        assert link_is_present
-
     def test_first_ridesharing_section_mode_forbidden(self):
         def exec_and_check(query):
             response, status = self.query_region(query, check=False)

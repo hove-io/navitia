@@ -543,9 +543,6 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.stop_points_nearby_duration),
     )
 
-    # Active the asynchronous_ridesharing mode
-    asynchronous_ridesharing = db.Column(db.Boolean, default=False, nullable=False)
-
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

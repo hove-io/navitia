@@ -455,13 +455,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="define the duration to reach stop points by crow fly",
         )
-        parser_get.add_argument(
-            "_asynchronous_ridesharing",
-            type=BooleanType(),
-            hidden=True,
-            default=False,
-            help="active the asynchronous mode for the ridesharing services",
-        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
