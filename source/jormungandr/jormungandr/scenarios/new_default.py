@@ -1097,19 +1097,8 @@ class Scenario(simple.Scenario):
         compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
         tag_journeys(pb_resp)
 
-        if instance.ridesharing_services and (
-            'ridesharing' in ridesharing_req['origin_mode']
-            or 'ridesharing' in ridesharing_req['destination_mode']
-        ):
-            logger.debug('trying to add ridesharing journeys')
-            try:
-                decorate_journeys(pb_resp, instance, api_request)
-            except Exception:
-                logger.exception('Error while retrieving ridesharing ads')
-        else:
-            for j in pb_resp.journeys:
-                if 'ridesharing' in j.tags:
-                    journey_filter.mark_as_dead(j, api_request.get('debug'), 'no_matching_ridesharing_found')
+        # Handle ridesharing service
+        self.handle_ridesharing_services(logger, instance, ridesharing_req, pb_resp)
 
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
@@ -1193,6 +1182,30 @@ class Scenario(simple.Scenario):
                 del resp.journeys[request["max_nb_journeys"] :]
 
         return resp
+
+    def handle_ridesharing_services(self, logger, instance, request, pb_response):
+        def active_asynchronous_ridesharing(request, instance):
+            if request.get("_asynchronous_ridesharing", None) is None:
+                # when the param is not set in the request, use the instance config
+                return instance.asynchronous_ridesharing
+            else:
+                return request.get("_asynchronous_ridesharing")
+
+        if not active_asynchronous_ridesharing(request, instance):
+            if instance.ridesharing_services and (
+                'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
+            ):
+                logger.debug('trying to add ridesharing journeys')
+                try:
+                    decorate_journeys(pb_response, instance, request)
+                except Exception:
+                    logger.exception('Error while retrieving ridesharing ads')
+            else:
+                for j in pb_response.journeys:
+                    if 'ridesharing' in j.tags:
+                        journey_filter.mark_as_dead(j, request.get('debug'), 'no_matching_ridesharing_found')
+        else:
+            self._add_ridesharing_link(pb_response, request)
 
     def create_next_kraken_request(self, request, responses):
         """
