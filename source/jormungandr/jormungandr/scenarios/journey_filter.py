@@ -448,14 +448,14 @@ def similar_pt_section_line(section):
     return "pt:{}".format(section.pt_display_informations.uris.line)
 
 
-def similar_journeys_generator(journey, pt_functor, sn_functor=lambda mode: 'sn:{}'.format(mode)):
+def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'.format(s.street_network.mode)):
     for idx, s in enumerate(journey.sections):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield pt_functor(s)
         elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
             continue
         elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
-            yield sn_functor(s.street_network.mode)
+            yield sn_functor(s)
 
 
 def detailed_pt_section_vj(section):
@@ -466,9 +466,11 @@ def detailed_pt_section_vj(section):
     )
 
 
-def bss_walking_sn_functor(mode):
-    return (
-        FallbackModes.walking.value if mode in (FallbackModes.walking.value, FallbackModes.bss.value) else mode
+def bss_walking_sn_functor(s):
+    mode = s.street_network.mode
+    return "d: {} m: {}".format(
+        s.duration,
+        FallbackModes.walking.value if mode in (FallbackModes.walking.value, FallbackModes.bss.value) else mode,
     )
 
 
@@ -713,6 +715,16 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
     for j1, j2 in journey_pairs_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
+
+        if (
+            len(j1.sections) > 2
+            and j1.sections[1].pt_display_informations.uris.vehicle_journey
+            == "vehicle_journey:tcl:301A-022CN-006-151018_dst_2"
+            and j2.sections[1].pt_display_informations.uris.vehicle_journey
+            == "vehicle_journey:tcl:301A-022CN-006-151018_dst_2"
+        ):
+            pass
+
         if any(compare(j1, j2, generator) for generator in similar_journey_generators):
             # After comparison, if the 2 journeys are similar, the worst one must be eliminated
             worst = _get_worst_similar(j1, j2, request)

@@ -297,7 +297,7 @@ class TestJourneysDistributed(
             'datetime=20120614T080000&'
             'first_section_mode[]=walking&first_section_mode[]=bss&'
             'last_section_mode[]=walking&last_section_mode[]=bss&'
-            'bss_speed=1&walking_speed=0.1'
+            'bss_speed=1&walking_speed=0.2735'
         )
 
         r = self.query(query)
