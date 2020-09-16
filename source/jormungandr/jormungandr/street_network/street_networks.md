@@ -23,6 +23,8 @@ Insert into **Jormun** configuration:
             "language": 'english',              # optional
             "matrix_type": "simple_matrix",     # optional
             "max_matrix_points": 100,           # optional
+            "engine_type": "diesel",            # optional
+            "engine_average_consumption": 7,    # optional
         }
     }
  ]
@@ -49,6 +51,8 @@ Available optional parameters list:
     * spanish
 * matrix_type: the matrix method - simple_matrix/multi_direct_path. By default simple_matrix
 * max_matrix_points: the max number of allowed matrix points. By default 100 (the maximum)
+* engine_type: Vehicle engine type, usefull for co2 emission calculation - diesel/gasoline/electric. By default diesel
+* engine_average_consumption: The average fuel consumption, measured in liters per 100km. usefull for co2 emission calculation. By default 7
 
 ### How to debug
 

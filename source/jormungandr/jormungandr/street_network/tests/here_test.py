@@ -195,7 +195,7 @@ def status_test():
         timeout=89,
     )
     status = here.status()
-    assert len(status) == 9
+    assert len(status) == 11
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
     assert status['class'] == "Here"
     assert status['modes'] == ["walking", "bike", "car"]
@@ -204,6 +204,8 @@ def status_test():
     assert status['max_matrix_points'] == 100
     assert status['realtime_traffic'] == "enabled"
     assert status['language'] == "en-gb"
+    assert status['engine_type'] == "diesel"
+    assert status['engine_average_consumption'] == 7
     assert len(status['circuit_breaker']) == 3
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0
