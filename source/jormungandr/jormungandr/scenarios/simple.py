@@ -324,6 +324,12 @@ class Scenario(object):
     def isochrone(self, request, instance):
         raise NotImplementedError()
 
+    def _add_ridesharing_link(self, resp, params):
+        req = request.args.to_dict(flat=False)
+        req['only_ridesharing'] = 'True'
+        req['datetime'] = dt_to_str(params.original_datetime)
+        add_link(resp, rel='ridesharing_journeys', **req)
+
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:

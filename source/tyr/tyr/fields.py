@@ -194,6 +194,7 @@ instance_fields = {
     'ridesharing_speed': fields.Raw,
     'max_ridesharing_duration_to_pt': fields.Raw,
     'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
+    'asynchronous_ridesharing': fields.Boolean,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
