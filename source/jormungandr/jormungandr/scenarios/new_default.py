@@ -35,7 +35,7 @@ import logging
 from flask_restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
-from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
+from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys_with_ridesharing_offers
 from jormungandr.scenarios.utils import (
     journey_sorter,
     change_ids,
@@ -1188,10 +1188,18 @@ class Scenario(simple.Scenario):
         if instance.ridesharing_services and (
             'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
         ):
-            if not instance.asynchronous_ridesharing or request.get('only_ridesharing', False):
+
+            def active_asynchronous_ridesharing(request, instance):
+                if request.get("_asynchronous_ridesharing", None) is None:
+                    # when the param is not set in the request, use the instance config
+                    return instance.asynchronous_ridesharing
+                else:
+                    return request.get("_asynchronous_ridesharing")
+
+            if not active_asynchronous_ridesharing(request, instance) or request.get('only_ridesharing', False):
                 logger.debug('trying to add ridesharing journeys')
                 try:
-                    decorate_journeys(pb_response, instance, request)
+                    decorate_journeys_with_ridesharing_offers(pb_response, instance, request)
                 except Exception:
                     logger.exception('Error while retrieving ridesharing ads')
                 if request.get('only_ridesharing', False):
@@ -1201,7 +1209,7 @@ class Scenario(simple.Scenario):
             else:
                 for j in pb_response.journeys:
                     if 'ridesharing' in j.tags:
-                        journey_filter.mark_as_dead(j, request.get('debug'), 'asynchrnous_ridesharing_mode')
+                        journey_filter.mark_as_dead(j, request.get('debug'), 'asynchronous_ridesharing_mode')
             self._add_ridesharing_link(pb_response, request)
         else:
             for j in pb_response.journeys:

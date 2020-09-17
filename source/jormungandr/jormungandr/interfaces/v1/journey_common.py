@@ -462,6 +462,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             default=False,
             help="active the asynchronous mode for the ridesharing services",
         )
+        parser_get.add_argument(
+            "_asynchronous_ridesharing",
+            type=BooleanType(),
+            hidden=True,
+            help="active the asynchronous mode for the ridesharing services",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

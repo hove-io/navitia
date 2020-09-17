@@ -1,4 +1,4 @@
-"""add synchronous ridesharing option
+"""add asynchronous ridesharing option
 
 Revision ID: 5127fcffb248
 Revises: b413ec1e3bbc
