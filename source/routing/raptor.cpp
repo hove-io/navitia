@@ -140,9 +140,6 @@ bool RAPTOR::foot_path(const Visitor& v) {
             if (v.comp(end_connection_date, best_labels_transfers[destination_sp_idx])
                 || (end_connection_date == best_labels_transfers[destination_sp_idx]
                     && candidate_walking_duration < best_labels_transfers_walking[destination_sp_idx])) {
-                // TODO ? : continue if end_connection_date == best_labels_transfers[destination_sp_idx]
-                // and candidate_fallback_duration > working_labels.mut_fallback_duration_transfer(destination_sp_idx)
-
                 LOG4CPLUS_TRACE(raptor_logger,
                                 "Updating label transfer count : "
                                     << count << " sp " << data.pt_data->stop_points[destination_sp_idx.val]->uri
@@ -400,9 +397,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                               bool clockwise,
                                               const boost::optional<navitia::time_duration>& direct_path_dur,
                                               const size_t max_extra_second_pass) {
-    LOG4CPLUS_DEBUG(raptor_logger, "departure_datetime : " << iso_string(departure_datetime, data)
-                                                           << " bound : " << iso_string(bound, data));
-
     auto start_raptor = std::chrono::system_clock::now();
 
     // auto solutions = ParetoFront<Journey, Dominates /*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
@@ -420,7 +414,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
             j.departure_dt = j.arrival_dt - j.sn_dur;
         }
         solutions.add(j);
-        LOG4CPLUS_DEBUG(raptor_logger, "adding direct path to solutions : " << std::endl << j);
     }
 
     const auto& calc_dep = clockwise ? departures : destinations;
@@ -454,16 +447,14 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto best_labels_transfers_for_snd_pass = snd_pass_best_labels(clockwise, best_labels_pts);
     IdxMap<type::StopPoint, DateTime> best_labels_transfers_walking_for_snd_pass = best_labels_pts_walking;
 
-    LOG4CPLUS_DEBUG(raptor_logger, "starting points 2nd phase " << std::endl
+    LOG4CPLUS_TRACE(raptor_logger, "starting points 2nd phase " << std::endl
                                                                 << print_starting_points_snd_phase(starting_points));
-
-    LOG4CPLUS_DEBUG(raptor_logger, "Before second pass, nb of solutions : " << solutions.size());
 
     size_t nb_snd_pass = 0, nb_useless = 0, last_usefull_2nd_pass = 0, supplementary_2nd_pass = 0;
     for (const auto& start : starting_points) {
         navitia::type::StopPoint* start_stop_point = data.pt_data->stop_points[start.sp_idx.val];
 
-        LOG4CPLUS_DEBUG(raptor_logger, std::endl
+        LOG4CPLUS_TRACE(raptor_logger, std::endl
                                            << "Second pass from " << start_stop_point->uri
                                            << "   count : " << start.count);
 
@@ -471,7 +462,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
             Journey fake_journey = convert_to_bound(start, clockwise);
 
             if (solutions.contains_better_than(fake_journey)) {
-                LOG4CPLUS_DEBUG(raptor_logger,
+                LOG4CPLUS_TRACE(raptor_logger,
                                 "already found a better solution than the fake journey from " << start_stop_point->uri);
                 continue;
             }
@@ -514,14 +505,6 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                         << ", 2nd pass = "
                         << std::chrono::duration_cast<std::chrono::milliseconds>(end_raptor - end_first_pass).count());
 
-    // LOG4CPLUS_DEBUG(raptor_logger,
-    //                 "Solutions : ");
-    // for (auto it = solutions.begin(); it != solutions.end(); ++it) {
-    //         LOG4CPLUS_DEBUG(raptor_logger,
-    //                 "" << *it );
-    // }
-
-    // return raw results
     return solutions.get_pool();
 }
 
