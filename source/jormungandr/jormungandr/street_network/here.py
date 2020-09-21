@@ -252,8 +252,8 @@ class Here(AbstractStreetNetworkService):
 
         journey = resp.journeys.add()
 
-        # co2 emission
-        co2_emission = float(route.get('summary', {}).get('co2Emission', 0))
+        # co2 emission "kEC"
+        co2_emission = float(route.get('summary', {}).get('co2Emission', 0)) * 1000
         journey.co2_emission.unit = 'gEC'
         journey.co2_emission.value = co2_emission
 
