@@ -55,7 +55,7 @@ struct Dominates {
     }
 };
 
-#define LOG_PARETO_FRONT
+// #define LOG_PARETO_FRONT
 // to activate logs of the updates of the pareto front of journeys
 // inside raptor
 #ifdef LOG_PARETO_FRONT
