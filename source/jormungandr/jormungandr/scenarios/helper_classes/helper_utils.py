@@ -30,10 +30,15 @@
 from __future__ import absolute_import
 
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord, generate_id
+from jormungandr.utils import (
+    PeriodExtremity,
+    SectionSorter,
+    get_pt_object_coord,
+    generate_id,
+    get_overriding_mode,
+)
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
-from navitiacommon import type_pb2
 from .helper_exceptions import *
 import copy
 import logging
@@ -370,7 +375,7 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
 
     section_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
     pt_datetime = fallback_logic.get_journey_bound_datetime(pt_journey)
-    fallback_duration = fallback_durations[pt_obj.uri].duration
+    fallback_duration = fallback_durations[pt_obj.uri]
 
     crowfly_dt = fallback_logic.get_fallback_datetime(pt_datetime, fallback_duration)
 
@@ -411,8 +416,9 @@ def _build_fallback(
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
             orig, dest = fallback_logic.route_params(requested_obj, car_park or pt_obj)
 
+            real_mode = fallback_durations_pool.get_overriding_mode(pt_obj.uri, mode)
             fallback_dp = streetnetwork_path_pool.wait_and_get(
-                orig, dest, mode, fallback_period_extremity, fallback_type, request=request
+                orig, dest, real_mode, fallback_period_extremity, fallback_type, request=request
             )
 
             if not _is_crowfly_needed(

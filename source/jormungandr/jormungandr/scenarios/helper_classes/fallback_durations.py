@@ -287,6 +287,25 @@ class FallbackDurationsPool(dict):
         self._request_id = request_id
         self._async_request()
 
+    @property
+    def _overriding_mode_map(self):
+        """
+        This map is used to storing the overriding modes of a give mode.
+        the function get_overriding_mode may be modified later to implement more complex business logic
+        :return:
+        """
+        res = {}
+        if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            fallback_modes = self._request['origin_mode']
+        else:
+            fallback_modes = self._request['destination_mode']
+
+        for mode in self._modes:
+            overriding_modes = jormungandr.utils.get_overriding_mode(mode, fallback_modes)
+            if overriding_modes:
+                res[mode] = overriding_modes
+        return res
+
     def _async_request(self):
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(
@@ -313,3 +332,36 @@ class FallbackDurationsPool(dict):
 
     def is_empty(self):
         return next((False for _, v in self._value.items() if v.wait_and_get()), True)
+
+    def get_best_fallback_durations(self, main_mode):
+        main_fb = self.wait_and_get(main_mode)
+        res = {k: v.duration for k, v in main_fb.items()}
+        overriding_modes = self._overriding_mode_map.get(main_mode, [])
+        for mode in overriding_modes:
+            overriding_fb = self.wait_and_get(mode)
+            if not overriding_fb:
+                continue
+            for stop_point_uri in main_fb:
+                res[stop_point_uri] = min(
+                    res[stop_point_uri],
+                    overriding_fb.get(stop_point_uri, DurationElement(float('inf'), None, None, 0)).duration,
+                )
+        return res
+
+    def get_overriding_mode(self, stop_point_uri, main_mode):
+        main_fb = self.wait_and_get(main_mode)
+        best_mode = main_mode
+        best_duration = main_fb[stop_point_uri].duration
+
+        overriding_modes = self._overriding_mode_map.get(main_mode, [])
+        for mode in overriding_modes:
+            overriding_fb = self.wait_and_get(mode)
+            if not overriding_fb:
+                continue
+            duration_tmp = overriding_fb.get(
+                stop_point_uri, DurationElement(float('inf'), None, None, 0)
+            ).duration
+            if duration_tmp < best_duration:
+                best_mode = mode
+                best_duration = duration_tmp
+        return best_mode

@@ -639,3 +639,9 @@ def get_poi_params(codes):
         if code.startswith('poi:'):
             poi_params.add(code)
     return poi_params
+
+
+def get_overriding_mode(main_mode, modes):
+    if main_mode == 'bss' and 'walking' in modes:
+        return ['walking']
+    return []
