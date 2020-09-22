@@ -341,11 +341,11 @@ class FallbackDurationsPool(dict):
             overriding_fb = self.wait_and_get(mode)
             if not overriding_fb:
                 continue
-            for stop_point_uri in main_fb:
-                res[stop_point_uri] = min(
-                    res[stop_point_uri],
-                    overriding_fb.get(stop_point_uri, DurationElement(float('inf'), None, None, 0)).duration,
-                )
+            for stop_point_uri in res:
+                duration_item = overriding_fb.get(stop_point_uri)
+                if duration_item is None:
+                    continue
+                res[stop_point_uri] = min(res[stop_point_uri], duration_item.duration)
         return res
 
     def get_overriding_mode(self, stop_point_uri, main_mode):
@@ -358,10 +358,10 @@ class FallbackDurationsPool(dict):
             overriding_fb = self.wait_and_get(mode)
             if not overriding_fb:
                 continue
-            duration_tmp = overriding_fb.get(
-                stop_point_uri, DurationElement(float('inf'), None, None, 0)
-            ).duration
-            if duration_tmp < best_duration:
+            duration_item = overriding_fb.get(stop_point_uri)
+            if duration_item is None:
+                continue
+            if duration_item.duration < best_duration:
                 best_mode = mode
-                best_duration = duration_tmp
+                best_duration = duration_item.duration
         return best_mode
