@@ -716,15 +716,6 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
 
-        if (
-            len(j1.sections) > 2
-            and j1.sections[1].pt_display_informations.uris.vehicle_journey
-            == "vehicle_journey:tcl:301A-022CN-006-151018_dst_2"
-            and j2.sections[1].pt_display_informations.uris.vehicle_journey
-            == "vehicle_journey:tcl:301A-022CN-006-151018_dst_2"
-        ):
-            pass
-
         if any(compare(j1, j2, generator) for generator in similar_journey_generators):
             # After comparison, if the 2 journeys are similar, the worst one must be eliminated
             worst = _get_worst_similar(j1, j2, request)
