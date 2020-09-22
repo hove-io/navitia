@@ -1189,14 +1189,14 @@ class Scenario(simple.Scenario):
             'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
         ):
 
-            def active_asynchronous_ridesharing(request, instance):
+            def is_asynchronous_ridesharing(request, instance):
                 if request.get("_asynchronous_ridesharing", None) is None:
                     # when the param is not set in the request, use the instance config
                     return instance.asynchronous_ridesharing
                 else:
                     return request.get("_asynchronous_ridesharing")
 
-            if not active_asynchronous_ridesharing(request, instance) or request.get('only_ridesharing', False):
+            if not is_asynchronous_ridesharing(request, instance) or request.get('only_ridesharing', False):
                 logger.debug('trying to add ridesharing journeys')
                 try:
                     decorate_journeys_with_ridesharing_offers(pb_response, instance, request)

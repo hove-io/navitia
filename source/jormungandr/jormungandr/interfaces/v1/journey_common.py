@@ -458,9 +458,8 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "only_ridesharing",
             type=BooleanType(),
-            hidden=True,
             default=False,
-            help="active the asynchronous mode for the ridesharing services",
+            help="active ridesharing filter. We expose only ridesharing responses",
         )
         parser_get.add_argument(
             "_asynchronous_ridesharing",

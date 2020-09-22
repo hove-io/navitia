@@ -134,7 +134,6 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
-        self.asynchronous_ridesharing = False
 
         if app.config[str('DISABLE_DATABASE')]:
             self._streetnetwork_backend_manager.init_streetnetwork_backends_legacy(
@@ -172,12 +171,6 @@ class Instance(object):
                 app.config[str('EQUIPMENT_DETAILS_PROVIDERS')], self.get_providers_from_db
             )
 
-        # New ridesharing type
-        if app.config[str('DISABLE_DATABASE')]:
-            self.asynchronous_ridesharing = app.config[str('ASYNCHRONOUS_RIDESHARING')]
-        else:
-            self.asynchronous_ridesharing = self.get_asynchronous_ridesharing_from_db  # type: ignore
-
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
 
@@ -186,11 +179,6 @@ class Instance(object):
         :return: a callable query of equipment providers associated to the current instance in db
         """
         return self._get_models().equipment_details_providers
-
-    def get_asynchronous_ridesharing_from_db(self):
-        # type: () -> bool
-        instance_db = self.get_models()
-        return get_value_or_default('asynchronous_ridesharing', instance_db, self.name)
 
     @property
     def autocomplete(self):
@@ -501,6 +489,12 @@ class Instance(object):
         # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_extra_second_pass', instance_db, self.name)
+
+    @property
+    def asynchronous_ridesharing(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('asynchronous_ridesharing', instance_db, self.name)
 
     @property
     def max_nb_crowfly_by_mode(self):
