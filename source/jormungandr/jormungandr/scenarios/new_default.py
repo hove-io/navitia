@@ -1196,13 +1196,17 @@ class Scenario(simple.Scenario):
                 else:
                     return request.get("_asynchronous_ridesharing")
 
-            if not is_asynchronous_ridesharing(request, instance) or request.get('only_ridesharing', False):
+            def is_ridesharing_partner_service(request):
+                partner_services = request.get('partner_services', None)
+                return partner_services is not None and 'ridesharing' in partner_services
+
+            if not is_asynchronous_ridesharing(request, instance) or is_ridesharing_partner_service(request):
                 logger.debug('trying to add ridesharing journeys')
                 try:
                     decorate_journeys_with_ridesharing_offers(pb_response, instance, request)
                 except Exception:
                     logger.exception('Error while retrieving ridesharing ads')
-                if request.get('only_ridesharing', False):
+                if is_ridesharing_partner_service(request):
                     for j in pb_response.journeys:
                         if not 'ridesharing' in j.tags:
                             journey_filter.mark_as_dead(j, request.get('debug'), 'only_ridesharing_option')

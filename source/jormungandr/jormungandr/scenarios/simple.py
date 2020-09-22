@@ -326,7 +326,7 @@ class Scenario(object):
 
     def _add_ridesharing_link(self, resp, params):
         req = request.args.to_dict(flat=False)
-        req['only_ridesharing'] = 'True'
+        req['partner_services[]'] = 'ridesharing'
         req['datetime'] = dt_to_str(params.original_datetime)
         add_link(resp, rel='ridesharing_journeys', **req)
 
