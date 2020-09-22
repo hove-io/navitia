@@ -373,6 +373,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             const auto* vj = impacted_vj.vj;
             auto& new_vp = impacted_vj.new_vp;
 
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj->uri);
             for (const auto& st : vj->stop_time_list) {
                 // We need to get the associated base stop_time to compare its rank
                 const auto base_st = st.get_base_stop_time();
@@ -405,6 +406,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
+            LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
+                                              << " to be deleted \n new_vj_uri " << new_vj_uri);
             auto* new_vj =
                 create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
