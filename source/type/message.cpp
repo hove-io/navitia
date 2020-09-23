@@ -154,7 +154,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
             // it's not passing by both stops and should not be impacted
             if (!section.empty()) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
-                // LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
                 for (const auto& period : impact.application_periods) {
                     // get the vp of the section
