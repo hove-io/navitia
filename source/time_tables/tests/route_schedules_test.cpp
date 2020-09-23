@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     using btp = boost::posix_time::time_period;
     b.impact(nt::RTLevel::Adapted, "Disruption 1")
         .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
-        .on(nt::Type_e::StopPoint, "st1")
+        .on(nt::Type_e::StopPoint, "st1", *b.data->pt_data)
         .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
         .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
         .msg("Disruption on stop_point st1");
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     using btp = boost::posix_time::time_period;
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::Line, "L")
+                                  .on(nt::Type_e::Line, "L", *b.data->pt_data)
                                   .application_periods(btp("20120614T010000"_dt, "20150625T235900"_dt))
                                   .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
                                   .msg("Disruption on line")

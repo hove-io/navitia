@@ -370,10 +370,16 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         // Loop on each affected vj
         for (auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
-            const auto* vj = impacted_vj.vj;
+            std::string& vj_uri = impacted_vj.vj_uri;
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
+            auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
+            if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
+                continue;
+            }
+            nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
-            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj->uri);
             for (const auto& st : vj->stop_time_list) {
                 // We need to get the associated base stop_time to compare its rank
                 const auto base_st = st.get_base_stop_time();

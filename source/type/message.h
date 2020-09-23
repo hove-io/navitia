@@ -302,7 +302,8 @@ struct Impact {
     static void link_informed_entity(PtObj ptobj,
                                      SharedImpact& impact,
                                      const boost::gregorian::date_period&,
-                                     type::RTLevel);
+                                     type::RTLevel,
+                                     type::PT_Data& pt_data);
 
     bool is_valid(const boost::posix_time::ptime& publication_date,
                   const boost::posix_time::time_period& active_period) const;
@@ -407,11 +408,11 @@ public:
 };
 
 struct ImpactedVJ {
-    const VehicleJourney* vj;  // vj before impact
+    std::string vj_uri;  // uri of the impacted vj
     ValidityPattern new_vp;
     std::set<RankStopTime> impacted_ranks;
-    ImpactedVJ(const VehicleJourney* vj, ValidityPattern vp, std::set<RankStopTime> r)
-        : vj(vj), new_vp(vp), impacted_ranks(std::move(r)) {}
+    ImpactedVJ(std::string vj_uri, ValidityPattern vp, std::set<RankStopTime> r)
+        : vj_uri(vj_uri), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*
  * return the list of vehicle journey that are impacted by the linesection

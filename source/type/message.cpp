@@ -164,7 +164,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
                 if (!new_vp.days.none()) {
                     LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                     new_vp.days >>= vj.shift;
-                    vj_vp_pairs.emplace_back(&vj, new_vp, std::move(section));
+                    vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
                 }
             }
             return true;
@@ -177,10 +177,14 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
     const boost::shared_ptr<Impact>& impact;
     const boost::gregorian::date_period& production_period;
     type::RTLevel rt_level;
+    nt::PT_Data& pt_data;
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
+
     InformedEntitiesLinker(const boost::shared_ptr<Impact>& impact,
                            const boost::gregorian::date_period& production_period,
-                           RTLevel rt_level)
-        : impact(impact), production_period(production_period), rt_level(rt_level) {}
+                           RTLevel rt_level,
+                           nt::PT_Data& pt_data)
+        : impact(impact), production_period(production_period), rt_level(rt_level), pt_data(pt_data) {}
 
     template <typename NavitiaPTObject>
     void operator()(NavitiaPTObject* bo) const {
@@ -194,12 +198,19 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
         if (impacted_vjs.empty()) {
-            LOG4CPLUS_INFO(
-                log4cplus::Logger::getInstance("log"),
-                "line section impact " << impact->uri << " does not impact any vj, it will not be linked to anything");
+            LOG4CPLUS_INFO(log, "line section impact " << impact->uri
+                                                       << " does not impact any vj, it will not be linked to anything");
         }
         for (auto& impacted_vj : impacted_vjs) {
-            const auto* vj = impacted_vj.vj;
+            std::string& vj_uri = impacted_vj.vj_uri;
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
+            auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
+            if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
+                continue;
+            }
+            nt::VehicleJourney* vj = vj_iterator->second;
+
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);
@@ -221,8 +232,9 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
 void Impact::link_informed_entity(PtObj ptobj,
                                   boost::shared_ptr<Impact>& impact,
                                   const boost::gregorian::date_period& production_period,
-                                  type::RTLevel rt_level) {
-    InformedEntitiesLinker v(impact, production_period, rt_level);
+                                  type::RTLevel rt_level,
+                                  nt::PT_Data& pt_data) {
+    InformedEntitiesLinker v(impact, production_period, rt_level, pt_data);
     boost::apply_visitor(v, ptobj);
 
     impact->_informed_entities.push_back(std::move(ptobj));
