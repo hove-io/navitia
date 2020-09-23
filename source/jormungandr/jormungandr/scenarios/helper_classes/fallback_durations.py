@@ -40,6 +40,7 @@ from jormungandr import new_relic
 from jormungandr.fallback_modes import FallbackModes
 import logging
 from .helper_utils import timed_logger
+import six
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
@@ -335,33 +336,19 @@ class FallbackDurationsPool(dict):
 
     def get_best_fallback_durations(self, main_mode):
         main_fb = self.wait_and_get(main_mode)
-        res = {k: v.duration for k, v in main_fb.items()}
+        res = {}
         overriding_modes = self._overriding_mode_map.get(main_mode, [])
-        for mode in overriding_modes:
-            overriding_fb = self.wait_and_get(mode)
-            if not overriding_fb:
-                continue
-            for stop_point_uri in res:
-                duration_item = overriding_fb.get(stop_point_uri)
-                if duration_item is None:
-                    continue
-                res[stop_point_uri] = min(res[stop_point_uri], duration_item.duration)
+        overriding_fbs = [self.wait_and_get(mode) for mode in overriding_modes if self.wait_and_get(mode)]
+
+        for uri, duration_item in six.iteritems(main_fb):
+            duration = duration_item.duration
+            # if the duration of the main_mode is smaller than all other mode, we keep the uri in the final res
+            # else the uri is removed because the fallback duration is worse than one of the overriding mode
+            # Note that:
+            #            all([]) == True
+            # So when
+            # 1. overriding_fbs is empty, we fill in the result with main_fb's content
+            # 2. uri can't be found in any of overriding_fbs, we fill in the result with main_fb's content
+            if all(duration <= fb.get(uri).duration for fb in overriding_fbs if fb.get(uri)):
+                res[uri] = duration
         return res
-
-    def get_overriding_mode(self, stop_point_uri, main_mode):
-        main_fb = self.wait_and_get(main_mode)
-        best_mode = main_mode
-        best_duration = main_fb[stop_point_uri].duration
-
-        overriding_modes = self._overriding_mode_map.get(main_mode, [])
-        for mode in overriding_modes:
-            overriding_fb = self.wait_and_get(mode)
-            if not overriding_fb:
-                continue
-            duration_item = overriding_fb.get(stop_point_uri)
-            if duration_item is None:
-                continue
-            if duration_item.duration < best_duration:
-                best_mode = mode
-                best_duration = duration_item.duration
-        return best_mode
