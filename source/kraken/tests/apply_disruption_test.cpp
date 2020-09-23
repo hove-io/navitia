@@ -80,7 +80,7 @@ static void test_vjs_indexes(const std::vector<navitia::type::VehicleJourney*>& 
 BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     const auto& disrup = b.impact(nt::RTLevel::RealTime)
                              .severity(nt::disruption::Effect::NO_SERVICE)
-                             .on(nt::Type_e::MetaVehicleJourney, "vj:A-1")
+                             .on(nt::Type_e::MetaVehicleJourney, "vj:A-1", *b.data->pt_data)
                              .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                              .get_disruption();
 
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "S2_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "S2")
+                                  .on(nt::Type_e::StopPoint, "S2", *b.data->pt_data)
                                   .application_periods(btp("20160101T100000"_dt, "20160101T1120001"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "S3_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "S3")
+                                  .on(nt::Type_e::StopPoint, "S3", *b.data->pt_data)
                                   .application_periods(btp("20160101T110000"_dt, "20160101T1400001"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area:stop1_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area:stop1")
+                                  .on(nt::Type_e::StopArea, "stop_area:stop1", *b.data->pt_data)
                                   .application_periods(btp("20120614T173200"_dt, "20120618T123200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area")
+                                  .on(nt::Type_e::StopArea, "stop_area", *b.data->pt_data)
                                   .application_periods(btp("20120614T173200"_dt, "20120618T123200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area")
+                                  .on(nt::Type_e::StopArea, "stop_area", *b.data->pt_data)
                                   .application_periods(btp("20120615T000000"_dt, "20120618T000000"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
     // Close stop_point:20 from the 4h at 9am to the 6h at 8:59am
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point:20_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop_point:20")
+                                  .on(nt::Type_e::StopPoint, "stop_point:20", *b.data->pt_data)
                                   .application_periods(btp("20160404T090000"_dt, "20160406T085900"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop3")
+                                  .on(nt::Type_e::StopPoint, "stop3", *b.data->pt_data)
                                   // 2012/6/14 7h -> 2012/6/17 6h
                                   .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
                                   // 2012/6/17 23h -> 2012/6/18 6h
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
 
     const auto& disruption = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                 .on(nt::Type_e::StopPoint, "stop3")
+                                 .on(nt::Type_e::StopPoint, "stop3", *b.data->pt_data)
                                  // 2012/6/14 7h -> 2012/6/17 6h
                                  .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
                                  // 2012/6/17 23h -> 2012/6/18 6h
@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop1")
+                                  .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                   // 2012/6/14 8h00 -> 2012/6/19 8h05
                                   .application_periods(btp("20120614T080000"_dt, "20120619T080500"_dt))
                                   .get_disruption(),
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop2_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop2")
+                                  .on(nt::Type_e::StopPoint, "stop2", *b.data->pt_data)
                                   // 2012/6/14 8h15 -> 2012/6/19 8h17
                                   .application_periods(btp("20120614T081500"_dt, "20120619T081700"_dt))
                                   .get_disruption(),
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop3")
+                                  .on(nt::Type_e::StopPoint, "stop3", *b.data->pt_data)
                                   // 2012/6/14 8h45 -> 2012/6/19 8h47
                                   .application_periods(btp("20120614T084500"_dt, "20120619T084700"_dt))
                                   .get_disruption(),
@@ -703,7 +703,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "stop2_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop2")
+                                  .on(nt::Type_e::StopPoint, "stop2", *b.data->pt_data)
                                   .application_periods(btp("20120617T000000"_dt, "20120617T080500"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "stop1_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop1")
+                                  .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                   .application_periods(btp("20120617T2200"_dt, "20120618T0000"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     // Stop1 is closed between 2012/06/16 22:00 and 2012/06/16 23:30
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "stop1_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop1")
+                                  .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                   .application_periods(btp("20120616T2200"_dt, "20120616T2330"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop1")
+                                  .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                   .application_periods(btp("20120615T100000"_dt, "20120617T100000"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -1030,35 +1030,35 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point_B2_closed_3")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "B2")
+                                  .on(nt::Type_e::StopPoint, "B2", *b.data->pt_data)
                                   .application_periods(btp("20120616T080000"_dt, "20120616T203200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point_B3_closed_3")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "B3")
+                                  .on(nt::Type_e::StopPoint, "B3", *b.data->pt_data)
                                   .application_periods(btp("20120616T080000"_dt, "20120616T203200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_1")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area")
+                                  .on(nt::Type_e::StopArea, "stop_area", *b.data->pt_data)
                                   .application_periods(btp("20120618T080000"_dt, "20120618T173200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_2")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area")
+                                  .on(nt::Type_e::StopArea, "stop_area", *b.data->pt_data)
                                   .application_periods(btp("20120615T080000"_dt, "20120615T173200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_area_closed_3")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopArea, "stop_area")
+                                  .on(nt::Type_e::StopArea, "stop_area", *b.data->pt_data)
                                   .application_periods(btp("20120614T080000"_dt, "20120614T173200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -1109,12 +1109,13 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20160404T120000"_dt, "20160406T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20160404T120000"_dt, "20160406T090000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1216,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
                                   .severity(nt::disruption::Effect::NO_SERVICE)
                                   .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
                                   .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
-                                  .on_line_section("line:1", "B", "C", {"line:1:0"})
+                                  .on_line_section("line:1", "B", "C", {"line:1:0"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
@@ -1258,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
                                   .severity(nt::disruption::Effect::NO_SERVICE)
                                   .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
                                   .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
-                                  .on_line_section("line:1", "E", "F", {"line:1:0"})
+                                  .on_line_section("line:1", "E", "F", {"line:1:0"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
@@ -1298,7 +1299,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
                                   .severity(nt::disruption::Effect::NO_SERVICE)
                                   .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
                                   .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
-                                  .on_line_section("line:1", "B", "G", {"line:1:0"})
+                                  .on_line_section("line:1", "B", "G", {"line:1:0"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
@@ -1347,12 +1348,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20160405T003000"_dt, "20160406T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20160405T003000"_dt, "20160406T090000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1405,12 +1407,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on_line_section("line:A", "stop_area:1", "stop_area:4", {"line:A:0"})
-                                  .application_periods(btp("20160404T000000"_dt, "20160406T230000"_dt))
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .on_line_section("line:A", "stop_area:1", "stop_area:4", {"line:A:0"}, *b.data->pt_data)
+            .application_periods(btp("20160404T000000"_dt, "20160406T230000"_dt))
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1504,13 +1507,13 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
-    navitia::apply_disruption(
-        b.impact(nt::RTLevel::Adapted, "line_section_sa1_sa5_routesA1-2-3")
-            .severity(nt::disruption::Effect::NO_SERVICE)
-            .application_periods(btp("20160404T000000"_dt, "20160409T240000"_dt))
-            .on_line_section("line:A", "stop_area:2", "stop_area:5", {"route:A1", "route:A2", "route:A3"})
-            .get_disruption(),
-        *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_sa1_sa5_routesA1-2-3")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20160404T000000"_dt, "20160409T240000"_dt))
+                                  .on_line_section("line:A", "stop_area:2", "stop_area:5",
+                                                   {"route:A1", "route:A2", "route:A3"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 4);
     // Only 6 vj, vj:3 shouldn't be affected by the section, vj:4 shouldn't be affected since the route isn't
@@ -1696,24 +1699,26 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_stop:area4-5")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on_line_section("line:A", "stop_area:4", "stop_area:5", {"line:A:0"})
-                                  .application_periods(btp("20160404T000000"_dt, "20160406T103500"_dt))
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_stop:area4-5")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .on_line_section("line:A", "stop_area:4", "stop_area:5", {"line:A:0"}, *b.data->pt_data)
+            .application_periods(btp("20160404T000000"_dt, "20160406T103500"_dt))
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
     // Only the first 2 vj should be impacted since vj:3 starts on the 6th but pass at stop_area:4 at 10:40am
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 5);
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_stop:area3-4")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on_line_section("line:A", "stop_area:3", "stop_area:4", {"line:A:0"})
-                                  .application_periods(btp("20160405T090000"_dt, "20160407T083500"_dt))
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_stop:area3-4")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .on_line_section("line:A", "stop_area:3", "stop_area:4", {"line:A:0"}, *b.data->pt_data)
+            .application_periods(btp("20160405T090000"_dt, "20160407T083500"_dt))
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 8);
 
@@ -1789,7 +1794,7 @@ BOOST_AUTO_TEST_CASE(update_impact) {
     const auto& disruption_1 = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                    .severity(nt::disruption::Effect::NO_SERVICE)
                                    .msg(disruption_message_1)
-                                   .on(nt::Type_e::StopPoint, "stop3")
+                                   .on(nt::Type_e::StopPoint, "stop3", *b.data->pt_data)
                                    // 2012/6/14 7h -> 2012/6/17 6h
                                    .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
                                    // 2012/6/17 23h -> 2012/6/18 6h
@@ -1800,7 +1805,7 @@ BOOST_AUTO_TEST_CASE(update_impact) {
 
     const auto& disruption_2 = b.impact(nt::RTLevel::Adapted, "stop2_closed")
                                    .severity(nt::disruption::Effect::NO_SERVICE)
-                                   .on(nt::Type_e::StopPoint, "stop2")
+                                   .on(nt::Type_e::StopPoint, "stop2", *b.data->pt_data)
                                    // 2012/6/14 7h -> 2012/6/17 6h
                                    .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
                                    // 2012/6/17 23h -> 2012/6/18 6h
@@ -1847,12 +1852,13 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .application_periods(btp("20170101T120000"_dt, "20170131T000000"_dt))
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .application_periods(btp("20170101T120000"_dt, "20170131T000000"_dt))
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1905,12 +1911,13 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on_line_section("line:A", "stop_area:3", "stop_area:3", {"line:A:0"})
-                                  .application_periods(btp("20170101T120000"_dt, "20170131T000000"_dt))
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .on_line_section("line:A", "stop_area:3", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .application_periods(btp("20170101T120000"_dt, "20170131T000000"_dt))
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1965,7 +1972,7 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "lineA_delayed")
                                   .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-                                  .on(nt::Type_e::Line, "A")
+                                  .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                   .application_periods(btp("20120617T2200"_dt, "20120618T0000"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2003,7 +2010,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     // Only appliable on vj:2
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_C")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "C")
+                                  .on(nt::Type_e::StopPoint, "C", *b.data->pt_data)
                                   .application_periods(btp("20170101T100000"_dt, "20170101T110000"_dt))
                                   .publish(btp("20170101T100000"_dt, "20170101T110000"_dt))
                                   .msg("Disruption on stop_point C")
@@ -2015,7 +2022,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     // Only appliable on vj:3
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_C1")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "C")
+                                  .on(nt::Type_e::StopPoint, "C", *b.data->pt_data)
                                   .application_periods(btp("20170101T110000"_dt, "20170101T235900"_dt))
                                   .publish(btp("20170101T110000"_dt, "20170101T235900"_dt))
                                   .msg("Disruption on stop_point C")
@@ -2027,7 +2034,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     // Only appliable on vj:2, and will trigger the cleaning up of vj and the re-indexing of vj
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_D")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "D")
+                                  .on(nt::Type_e::StopPoint, "D", *b.data->pt_data)
                                   .application_periods(btp("20170101T100000"_dt, "20170101T110000"_dt))
                                   .publish(btp("20170101T100000"_dt, "20170101T110000"_dt))
                                   .msg("Disruption on stop_point D")
@@ -2063,7 +2070,7 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "B_delayed")
                                   .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-                                  .on(nt::Type_e::StopPoint, "B")
+                                  .on(nt::Type_e::StopPoint, "B", *b.data->pt_data)
                                   .application_periods(btp("20170101T000000"_dt, "20170120T1120000"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2091,14 +2098,14 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
      */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Line A : penguins on the line")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::Line, "A")
+                                  .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                   .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stopA2")
+                                  .on(nt::Type_e::StopPoint, "stopA2", *b.data->pt_data)
                                   .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2115,8 +2122,8 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
      */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::Line, "B")
-                                  .on(nt::Type_e::StopPoint, "stopB2")
+                                  .on(nt::Type_e::Line, "B", *b.data->pt_data)
+                                  .on(nt::Type_e::StopPoint, "stopB2", *b.data->pt_data)
                                   .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2134,7 +2141,7 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Penguins on fire at Montparnasse")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stopA2")
+                                  .on(nt::Type_e::StopPoint, "stopA2", *b.data->pt_data)
                                   .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2158,7 +2165,7 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "coffee spilled on the line")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::Line, "A")
+                                  .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                   .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2195,12 +2202,12 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     dis_builder.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"}, *b.data->pt_data);
 
     dis_builder.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"}, *b.data->pt_data);
 
     navitia::apply_disruption(dis_builder.disruption, *b.data->pt_data, *b.data->meta);
 
@@ -2226,12 +2233,12 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
     dis_builder_update.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:2", "stop_area:2", {"line:A:0"}, *b.data->pt_data);
 
     dis_builder_update.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:4", "stop_area:4", {"line:A:0"}, *b.data->pt_data);
 
     navitia::apply_disruption(dis_builder_update.disruption, *b.data->pt_data, *b.data->meta);
 
@@ -2279,12 +2286,12 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     dis_builder.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"}, *b.data->pt_data);
 
     dis_builder.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"});
+        .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"}, *b.data->pt_data);
 
     navitia::apply_disruption(dis_builder.disruption, *b.data->pt_data, *b.data->meta);
 
@@ -2308,12 +2315,12 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
     dis_builder_update.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"});
+        .on_line_section("line:A", "stop_area:2", "stop_area:4", {"line:A:0"}, *b.data->pt_data);
 
     dis_builder_update.impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .application_periods(btp("20190301T000000"_dt, "20190305T000000"_dt))
-        .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"});
+        .on_line_section("line:A", "stop_area:4", "stop_area:2", {"line:A:1"}, *b.data->pt_data);
 
     navitia::apply_disruption(dis_builder_update.disruption, *b.data->pt_data, *b.data->meta);
 
@@ -2362,12 +2369,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_successive_stop_in_same_are
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:3", "stop_area:5", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+            .on_line_section("line:A", "stop_area:3", "stop_area:5", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -2422,12 +2430,13 @@ BOOST_AUTO_TEST_CASE(add_impact_lollipop_vj_impact_stop_only_once) {
     b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -2475,12 +2484,13 @@ BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
     // Impact from 2 to 3 once
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -2506,12 +2516,13 @@ BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
 
     // And a second time on a slightly different calendar
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted_twice")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20190901T000000"_dt, "20190910T090000"_dt))
-                                  .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"})
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line:A_diverted_twice")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20190901T000000"_dt, "20190910T090000"_dt))
+            .on_line_section("line:A", "stop_area:2", "stop_area:3", {"line:A:0"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
