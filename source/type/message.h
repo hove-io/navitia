@@ -411,7 +411,7 @@ struct ImpactedVJ {
     std::string vj_uri;  // uri of the impacted vj
     ValidityPattern new_vp;
     std::set<RankStopTime> impacted_ranks;
-    ImpactedVJ(std::string vj_uri, ValidityPattern vp, std::set<RankStopTime> r)
+    ImpactedVJ(const std::string& vj_uri, ValidityPattern vp, std::set<RankStopTime> r)
         : vj_uri(vj_uri), new_vp(vp), impacted_ranks(std::move(r)) {}
 };
 /*

@@ -370,7 +370,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         // Loop on each affected vj
         for (auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
-            std::string& vj_uri = impacted_vj.vj_uri;
+            const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
             auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
             if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
