@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         using btp = boost::posix_time::time_period;
         b.impact(nt::RTLevel::Adapted, "Disruption 1")
             .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
-            .on(nt::Type_e::StopPoint, "stop1")
+            .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
             .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
             .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
             .msg("Disruption on stop_point stop1");
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
 
         navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
                                       .severity(nt::disruption::Effect::NO_SERVICE)
-                                      .on(nt::Type_e::StopPoint, "stop1")
+                                      .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                       .application_periods(btp("20150615T010000"_dt, "20150625T235900"_dt))
                                       .publish(btp("20150615T010000"_dt, "20150625T235900"_dt))
                                       .msg("Disruption on stop_point stop1")
@@ -998,7 +998,7 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
     using btp = boost::posix_time::time_period;
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption StopR1")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "StopR1")
+                                  .on(nt::Type_e::StopPoint, "StopR1", *b.data->pt_data)
                                   .application_periods(btp("20120612T010000"_dt, "20120625T235900"_dt))
                                   .publish(btp("20120612T010000"_dt, "20120625T235900"_dt))
                                   .msg("Disruption on stop_point StopR1")
@@ -1135,7 +1135,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption stop2")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .on(nt::Type_e::StopPoint, "stop2")
+                                  .on(nt::Type_e::StopPoint, "stop2", *b.data->pt_data)
                                   .application_periods(btp("20120612T010000"_dt, "20120625T235900"_dt))
                                   .publish(btp("20120612T010000"_dt, "20120625T235900"_dt))
                                   .msg("Disruption on stop_point stop2")

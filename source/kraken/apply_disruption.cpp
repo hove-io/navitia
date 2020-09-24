@@ -370,7 +370,14 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         // Loop on each affected vj
         for (auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
-            const auto* vj = impacted_vj.vj;
+            const std::string& vj_uri = impacted_vj.vj_uri;
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
+            auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
+            if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
+                continue;
+            }
+            nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
             for (const auto& st : vj->stop_time_list) {
@@ -405,6 +412,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
+            LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
+                                              << " to be deleted \n new_vj_uri " << new_vj_uri);
             auto* new_vj =
                 create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(

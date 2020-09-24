@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     using btp = boost::posix_time::time_period;
     const auto& disrup = b.impact(nt::RTLevel::RealTime)
                              .severity(nt::disruption::Effect::NO_SERVICE)
-                             .on(nt::Type_e::MetaVehicleJourney, "vj:1")
+                             .on(nt::Type_e::MetaVehicleJourney, "vj:1", *b.data->pt_data)
                              .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                              .get_disruption();
 

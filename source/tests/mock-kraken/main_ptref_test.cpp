@@ -166,7 +166,7 @@ struct data_set {
         b.impact(nt::RTLevel::RealTime, "Disruption 1")
             .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
             .msg("Disruption on StopArea stop_area:stop1", nt::disruption::ChannelType::email)
-            .on(nt::Type_e::StopArea, "stop_area:stop1")
+            .on(nt::Type_e::StopArea, "stop_area:stop1", *b.data->pt_data)
             .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
             .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
         // LineGroup added
@@ -182,7 +182,7 @@ struct data_set {
         b.impact(nt::RTLevel::RealTime, "Disruption On line:A")
             .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
             .msg("Disruption on Line line:A", nt::disruption::ChannelType::email)
-            .on(nt::Type_e::Line, "line:A")
+            .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
             .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
             .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
 

@@ -595,7 +595,7 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
         impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
         nd::Impact::link_informed_entity(
             nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data), impact,
-            data.meta->production_date, nt::RTLevel::RealTime);
+            data.meta->production_date, nt::RTLevel::RealTime, *data.pt_data);
         // messages
         disruption.add_impact(impact, holder);
     }

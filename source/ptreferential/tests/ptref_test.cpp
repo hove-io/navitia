@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line) {
     using btp = boost::posix_time::time_period;
     const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
                                .severity(nt::disruption::Effect::NO_SERVICE)
-                               .on(nt::Type_e::Line, "A")
+                               .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line) {
 
     const auto& disrup_2 = b.impact(nt::RTLevel::RealTime, "Disruption 2")
                                .severity(nt::disruption::Effect::NO_SERVICE)
-                               .on(nt::Type_e::Line, "A")
+                               .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line) {
 
     const auto& disrup_3 = b.impact(nt::RTLevel::RealTime, "Disruption 3")
                                .severity(nt::disruption::Effect::NO_SERVICE)
-                               .on(nt::Type_e::Line, "A")
+                               .on(nt::Type_e::Line, "A", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point) {
     using btp = boost::posix_time::time_period;
     const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
                                .severity(nt::disruption::Effect::NO_SERVICE)
-                               .on(nt::Type_e::StopPoint, "stop1")
+                               .on(nt::Type_e::StopPoint, "stop1", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted) {
     using btp = boost::posix_time::time_period;
     const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
                                .severity(nt::disruption::Effect::OTHER_EFFECT)
-                               .on(nt::Type_e::MetaVehicleJourney, "vj:A-1")
+                               .on(nt::Type_e::MetaVehicleJourney, "vj:A-1", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
     navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted) {
     // disruption with Effect NO_SERVICE on vj:A-2
     const auto& disrup_2 = b.impact(nt::RTLevel::RealTime, "Disruption 2")
                                .severity(nt::disruption::Effect::NO_SERVICE)
-                               .on(nt::Type_e::MetaVehicleJourney, "vj:A-2")
+                               .on(nt::Type_e::MetaVehicleJourney, "vj:A-2", *b.data->pt_data)
                                .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                                .get_disruption();
     navitia::apply_disruption(disrup_2, *b.data->pt_data, *b.data->meta);
