@@ -154,6 +154,9 @@ class Kraken(AbstractStreetNetworkService):
             # contains only one section. But for bss, there may be one or three sections.
             # For bss,we only need attribute the mode to the first section. The most significant mode will be chosen
             # later
+            if has_bss_rent_before_put_back_section(response.journeys[0]):
+                return response
+
             if mode == FallbackModes.bss.name and (
                 not has_bss_rent_before_put_back_section(response.journeys[0])
             ):

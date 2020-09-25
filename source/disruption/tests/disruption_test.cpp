@@ -95,7 +95,7 @@ void disrupt(ed::builder& b,
                            .tag_if_not_empty(pertub_tag)
                            .impact()
                            .severity(effect)
-                           .on(pt_obj_type, pt_obj_name)
+                           .on(pt_obj_type, pt_obj_name, *b.data->pt_data)
                            .application_periods(period)
                            .publish(period)
                            .get_disruption();
@@ -145,21 +145,21 @@ public:
             .publish(btp("20131219T123200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131220T123200"_dt, "20131221T123201"_dt))
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-            .on(nt::Type_e::Line, "line:A");
+            .on(nt::Type_e::Line, "line:A", *b.data->pt_data);
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess0")
             .publish(btp("20131221T083200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131221T083200"_dt, "20131221T123201"_dt))
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-            .on(nt::Type_e::Line, "line:S");
+            .on(nt::Type_e::Line, "line:S", *b.data->pt_data);
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess2")
             .application_periods(btp("20131223T123200"_dt, "20131225T123201"_dt))
             .publish(btp("20131224T123200"_dt, "20131226T123201"_dt))
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-            .on(nt::Type_e::Network, "network:K");
+            .on(nt::Type_e::Network, "network:K", *b.data->pt_data);
     }
 };
 
@@ -333,7 +333,7 @@ struct DisruptedNetwork {
                                       .severity(nt::disruption::Effect::NO_SERVICE)
                                       .application_periods(period)
                                       .publish(period)
-                                      .on_line_section("line_3", "sp3_2", "sp3_3", {"route_3"})
+                                      .on_line_section("line_3", "sp3_2", "sp3_3", {"route_3"}, *b.data->pt_data)
                                       .get_disruption(),
                                   *b.data->pt_data, *b.data->meta);
 

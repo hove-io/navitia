@@ -232,12 +232,13 @@ struct Impacter {
                        const std::string& color = "#FFFF00",
                        int priority = 0);
 
-    Impacter& severity(const std::string& uri);             // link to existing severity
-    Impacter& on(nt::Type_e type, const std::string& uri);  // add elt in informed_entities
+    Impacter& severity(const std::string& uri);                                   // link to existing severity
+    Impacter& on(nt::Type_e type, const std::string& uri, nt::PT_Data& pt_data);  // add elt in informed_entities
     Impacter& on_line_section(const std::string& line_uri,
                               const std::string& start_stop_uri,
                               const std::string& end_stop_uri,
-                              const std::vector<std::string>& route_uris);  // add section in informed_entities
+                              const std::vector<std::string>& route_uris,
+                              nt::PT_Data& pt_data);  // add section in informed_entities
     Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p);

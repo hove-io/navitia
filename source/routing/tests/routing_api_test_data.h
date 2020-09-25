@@ -658,7 +658,7 @@ struct routing_api_data {
             .uri("too_bad")
             .application_periods(default_period)
             .severity("info")
-            .on(nt::Type_e::StopArea, "stopA")
+            .on(nt::Type_e::StopArea, "stopA", *b.data->pt_data)
             .msg("no luck", nt::disruption::ChannelType::sms)
             .msg("try again", nt::disruption::ChannelType::sms)
             .publish(default_period);
@@ -671,8 +671,8 @@ struct routing_api_data {
             .uri("too_bad_again")
             .application_periods(default_period)
             .severity("disruption")
-            .on(nt::Type_e::Line, "A")
-            .on(nt::Type_e::Network, "base_network")
+            .on(nt::Type_e::Line, "A", *b.data->pt_data)
+            .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
             .msg("sad message", nt::disruption::ChannelType::sms)
             .msg("too sad message", nt::disruption::ChannelType::sms);
 
@@ -685,8 +685,8 @@ struct routing_api_data {
             .application_periods(btp("20121001T000000"_dt, "20121015T120000"_dt))
             .application_periods(btp("20121201T000000"_dt, "20121215T120000"_dt))
             .severity("info")
-            .on(nt::Type_e::Line, "A")
-            .on(nt::Type_e::Network, "base_network")
+            .on(nt::Type_e::Line, "A", *b.data->pt_data)
+            .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
             .msg("sad message", nt::disruption::ChannelType::sms)
             .msg("too sad message", nt::disruption::ChannelType::sms);
 
@@ -698,9 +698,9 @@ struct routing_api_data {
             .uri("impact_published_later")
             .application_periods(default_period)
             .severity("info")
-            .on(nt::Type_e::Line, "A")
+            .on(nt::Type_e::Line, "A", *b.data->pt_data)
             // add another pt impacted object just to test with several
-            .on(nt::Type_e::Network, "base_network")
+            .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
             .msg("sad message", nt::disruption::ChannelType::sms)
             .msg("too sad message", nt::disruption::ChannelType::sms);
 
@@ -711,9 +711,9 @@ struct routing_api_data {
             .uri("too_bad_all_lines")
             .application_periods(dis_proper_period)
             .severity("info")
-            .on(nt::Type_e::Line, "A")
-            .on(nt::Type_e::Line, "B")
-            .on(nt::Type_e::Line, "C")
+            .on(nt::Type_e::Line, "A", *b.data->pt_data)
+            .on(nt::Type_e::Line, "B", *b.data->pt_data)
+            .on(nt::Type_e::Line, "C", *b.data->pt_data)
             .msg("no luck", nt::disruption::ChannelType::sms)
             .msg("try again", nt::disruption::ChannelType::sms);
 
@@ -725,7 +725,7 @@ struct routing_api_data {
             .uri("too_bad_route_A:0")
             .application_periods(route_period)
             .severity("info")
-            .on(nt::Type_e::Route, "A:0")
+            .on(nt::Type_e::Route, "A:0", *b.data->pt_data)
             .msg({"no luck",
                   "sms",
                   "sms",
@@ -750,8 +750,8 @@ struct routing_api_data {
             .uri("too_bad_route_A:0_and_line")
             .application_periods(dis_maker_period)
             .severity("info")
-            .on(nt::Type_e::Route, "A:0")
-            .on(nt::Type_e::Line, "A")
+            .on(nt::Type_e::Route, "A:0", *b.data->pt_data)
+            .on(nt::Type_e::Line, "A", *b.data->pt_data)
             .msg("no luck", nt::disruption::ChannelType::sms)
             .msg("try again", nt::disruption::ChannelType::sms)
             .msg({"beacon in channel",
@@ -766,21 +766,21 @@ struct routing_api_data {
             .uri("too_bad_line_B")
             .application_periods(dis_maker_period)
             .severity("disruption")
-            .on(nt::Type_e::Line, "B")
+            .on(nt::Type_e::Line, "B", *b.data->pt_data)
             .msg("try again", nt::disruption::ChannelType::sms);
 
         disruption_maker.impact()
             .uri("too_bad_line_C")
             .application_periods(dis_maker_period)
             .severity("foo")
-            .on(nt::Type_e::Line, "C")
+            .on(nt::Type_e::Line, "C", *b.data->pt_data)
             .msg("try again", nt::disruption::ChannelType::sms);
 
         disruption_maker.impact()
             .uri("too_bad_line_section_B_stop_B_route_B3")
             .application_periods(boost::posix_time::time_period("20120826T060000"_dt, "20120830T120000"_dt))
             .severity("disruption")
-            .on_line_section("B", "stopB", "stopB", {"B:3"})
+            .on_line_section("B", "stopB", "stopB", {"B:3"}, *b.data->pt_data)
             .msg("try again", nt::disruption::ChannelType::sms);
 
         // We create one disruption on stop 'stop_point:uselessA' with application period which doesn't intersect
@@ -797,7 +797,7 @@ struct routing_api_data {
             .uri("too_bad_future")
             .application_periods(future_application_period)
             .severity("info")
-            .on(nt::Type_e::StopArea, "stopA")
+            .on(nt::Type_e::StopArea, "stopA", *b.data->pt_data)
             .msg("no luck", nt::disruption::ChannelType::sms)
             .msg("try again", nt::disruption::ChannelType::sms)
             .publish(large_publication_period);

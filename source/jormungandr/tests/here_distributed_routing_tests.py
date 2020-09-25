@@ -42,6 +42,8 @@ MOCKED_INSTANCE_CONF = {
                     "apiKey": "bob_id",
                     "service_base_url": "route.bob.here.com/routing/7.2/",
                     "language": "french",
+                    "engine_type": "diesel",
+                    "engine_average_consumption": 7,
                     "timeout": 20,
                 },
                 "modes": ["car", "car_no_park"],

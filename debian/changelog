@@ -1,3 +1,14 @@
+navitia2 (7.1.0) unstable; urgency=low
+
+  * [Jormuangandr] Overriding fallback streetnetwork mode  <https://github.com/CanalTP/navitia/pull/3282>
+  * [Kraken] prevent use-after-free caused by a disruption  <https://github.com/CanalTP/navitia/pull/3283>
+  * [Jormungandr] fix co2 emission unit for Here  <https://github.com/CanalTP/navitia/pull/3281>
+  * [Jormungandr] Here, co2 emission  <https://github.com/CanalTP/navitia/pull/3277>
+  * Revert "[Jormun+Tyr] Asynchronous ridesharing"  <https://github.com/CanalTP/navitia/pull/3279>
+  * [Jormun+Tyr] Asynchronous ridesharing  <https://github.com/CanalTP/navitia/pull/3275>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 25 Sep 2020 14:09:37 +0100
+
 navitia2 (7.0.0) unstable; urgency=low
 
   * [Jorumun] Revert e3b8dae321  <https://github.com/CanalTP/navitia/pull/3278>

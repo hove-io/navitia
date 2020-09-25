@@ -70,6 +70,15 @@ class Languages(Enum):
     spanish = "es-es"
 
 
+# Possible engine type
+# https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-vehicle-type.html
+class EngineType(Enum):
+    diesel = "diesel"
+    gasoline = "gasoline"
+    electric = "electric"
+    unknown = "unknown"
+
+
 # Possible values to active/deactivate realtime traffic
 class RealTimeTraffic(Enum):
     enabled = "enabled"
@@ -150,6 +159,8 @@ class Here(AbstractStreetNetworkService):
         max_matrix_points=default_values.here_max_matrix_points,
         realtime_traffic=True,
         language="english",
+        engine_type="diesel",
+        engine_average_consumption=7,
         feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
         **kwargs
     ):
@@ -170,14 +181,21 @@ class Here(AbstractStreetNetworkService):
         self.max_matrix_points = self._get_max_matrix_points(max_matrix_points)
         self.realtime_traffic = self._get_realtime_traffic(realtime_traffic)
         self.language = self._get_language(language.lower())
+        self.engine_type = self._get_engine_type(engine_type.lower())
+        self.engine_average_consumption = engine_average_consumption
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
         )
 
         self.log.debug(
-            'Here, load configuration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={}'.format(
-                self.max_matrix_points, self.matrix_type.value, self.realtime_traffic.value, self.language.value
+            'Here, load configuration max_matrix_points={} - matrix_type={} - realtime_traffic={} - language={} - engine_type={} - engine_average_consumption={}'.format(
+                self.max_matrix_points,
+                self.matrix_type.value,
+                self.realtime_traffic.value,
+                self.language.value,
+                self.engine_type,
+                self.engine_average_consumption,
             )
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
@@ -192,6 +210,8 @@ class Here(AbstractStreetNetworkService):
             'max_matrix_points': self.max_matrix_points,
             'realtime_traffic': self.realtime_traffic.value,
             'language': self.language.value,
+            'engine_type': self.engine_type.value,
+            'engine_average_consumption': self.engine_average_consumption,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
@@ -231,7 +251,24 @@ class Here(AbstractStreetNetworkService):
         route = routes[0]
 
         journey = resp.journeys.add()
-        journey.duration = route.get('summary', {}).get('travelTime')
+
+        # co2 emission "kEC"
+        co2_emission = float(route.get('summary', {}).get('co2Emission', 0)) * 1000
+        journey.co2_emission.unit = 'gEC'
+        journey.co2_emission.value = co2_emission
+
+        # durations
+        travel_time = route.get('summary', {}).get('travelTime', 0)
+        journey.duration = travel_time
+        journey.durations.total = travel_time
+        if mode == 'walking':
+            journey.durations.walking = travel_time
+        elif mode == 'bike':
+            journey.durations.bike = travel_time
+        elif mode == 'car' or mode == 'car_no_park':
+            journey.durations.car = travel_time
+        else:
+            journey.durations.taxi = travel_time
 
         datetime, represents_start_fallback = fallback_extremity
         if represents_start_fallback:
@@ -242,16 +279,23 @@ class Here(AbstractStreetNetworkService):
             journey.arrival_date_time = datetime
 
         journey.requested_date_time = request['datetime']
-        journey.durations.total = journey.duration
-
-        if mode == 'walking':
-            journey.durations.walking = journey.duration
 
         legs = route.get('leg')
         if not legs:
             return journey
 
         leg = legs[0]
+
+        # distances
+        length = int(leg.get('length', 0))
+        if mode == 'walking':
+            journey.distances.walking = length
+        elif mode == 'bike':
+            journey.distances.bike = length
+        elif mode == 'car' or mode == 'car_no_park':
+            journey.distances.car = length
+        else:
+            journey.distances.taxi = length
 
         section = journey.sections.add()
         section.type = response_pb2.STREET_NETWORK
@@ -266,7 +310,10 @@ class Here(AbstractStreetNetworkService):
         section.base_end_date_time = section.base_begin_date_time + leg.get('baseTime', section.duration)
 
         section.id = 'section_0'
-        section.length = int(leg.get('length', 0))
+        section.length = length
+
+        section.co2_emission.unit = 'gEC'
+        section.co2_emission.value = co2_emission
 
         section.origin.CopyFrom(origin)
         section.destination.CopyFrom(destination)
@@ -361,6 +408,13 @@ class Here(AbstractStreetNetworkService):
             self.log.error('Here parameters language={} not exist - force to english'.format(language))
             return Languages.english
 
+    def _get_engine_type(self, engine_type):
+        try:
+            return EngineType[engine_type]
+        except KeyError:
+            self.log.error('Here parameters engine_type={} not exist - force to diesel'.format(engine_type))
+            return EngineType.diesel
+
     def get_language_parameter(self, request):
         _language = request.get('_here_language', None)
         if _language == None:
@@ -422,7 +476,16 @@ class Here(AbstractStreetNetworkService):
         return max_matrix_points, matrix_type
 
     def get_direct_path_params(
-        self, origin, destination, mode, fallback_extremity, request, realtime_traffic, language
+        self,
+        origin,
+        destination,
+        mode,
+        fallback_extremity,
+        request,
+        realtime_traffic,
+        language,
+        engine_type,
+        engine_average_consumption,
     ):
         datetime, clockwise = fallback_extremity
         params = {
@@ -436,6 +499,9 @@ class Here(AbstractStreetNetworkService):
             'legAttributes': 'bt,tt,mn',
             'maneuverAttributes': 'di,rn,le,tt,po',
             'language': '{language}'.format(language=language.value),
+            'vehicletype': '{engine_type},{engine_average_consumption}'.format(
+                engine_type=engine_type.value, engine_average_consumption=engine_average_consumption
+            ),
             # street network mode + realtime activation
             'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
                 mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
@@ -471,6 +537,8 @@ class Here(AbstractStreetNetworkService):
             request,
             realtime_traffic,
             language,
+            self.engine_type,
+            self.engine_average_consumption,
         )
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:

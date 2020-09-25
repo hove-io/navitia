@@ -82,7 +82,7 @@ def wait_and_build_crowflies(
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
 
         if pt_journeys and pt_journeys.journeys:
-            orig_fallback_durations = orig_fallback_durations_pool.wait_and_get(dep_mode)
+            orig_fallback_durations = orig_fallback_durations_pool.get_best_fallback_durations(dep_mode)
             origin_crowfly = {
                 "entry_point": requested_orig_obj,
                 "mode": dep_mode,
@@ -91,7 +91,7 @@ def wait_and_build_crowflies(
                 "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
             }
 
-            dest_fallback_durations = dest_fallback_durations_pool.wait_and_get(arr_mode)
+            dest_fallback_durations = dest_fallback_durations_pool.get_best_fallback_durations(arr_mode)
             dest_crowfly = {
                 "entry_point": requested_dest_obj,
                 "mode": arr_mode,

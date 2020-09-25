@@ -2016,7 +2016,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
         .publish(default_period)
         .application_periods(default_period)
         .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-        .on(nt::Type_e::StopArea, "A")
+        .on(nt::Type_e::StopArea, "A", *b.data->pt_data)
         .msg("no luck");
 
     b.impact(nt::RTLevel::Adapted)
@@ -2024,7 +2024,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
         .publish(default_period)
         .application_periods(default_period)
         .severity(nt::disruption::Effect::DETOUR)
-        .on(nt::Type_e::Line, "l")
+        .on(nt::Type_e::Line, "l", *b.data->pt_data)
         .msg("no luck");
 
     nr::RAPTOR raptor(*b.data);
@@ -2071,7 +2071,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
         .publish(default_period)
         .application_periods(default_period)
         .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-        .on(nt::Type_e::StopArea, "A")
+        .on(nt::Type_e::StopArea, "A", *b.data->pt_data)
         .msg("no luck");
 
     b.impact(nt::RTLevel::Adapted)
@@ -2079,7 +2079,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
         .publish(default_period)
         .application_periods(default_period)
         .severity(nt::disruption::Effect::DETOUR)
-        .on(nt::Type_e::Network, "base_network");
+        .on(nt::Type_e::Network, "base_network", *b.data->pt_data);
 
     nr::RAPTOR raptor(*b.data);
 

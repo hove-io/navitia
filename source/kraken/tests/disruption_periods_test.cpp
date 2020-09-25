@@ -74,7 +74,7 @@ struct disruption_periods_fixture {
                                       .severity(nt::disruption::Effect::UNKNOWN_EFFECT)  // just an information
                                       .application_periods(btp("20170301T100000"_dt, "20170401T100000"_dt))
                                       .publish(btp("20170201T100000"_dt, "20170601T100000"_dt))
-                                      .on(nt::Type_e::Line, "1")
+                                      .on(nt::Type_e::Line, "1", *b.data->pt_data)
                                       .get_disruption(),
                                   *b.data->pt_data, *b.data->meta);
     }

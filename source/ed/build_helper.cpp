@@ -484,16 +484,17 @@ Impacter& Impacter::severity(const std::string& uri) {
     return *this;
 }
 
-Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
+Impacter& Impacter::on(nt::Type_e type, const std::string& uri, nt::PT_Data& pt_data) {
     dis::Impact::link_informed_entity(dis::make_pt_obj(type, uri, *b.data->pt_data), impact,
-                                      b.data->meta->production_date, get_disruption().rt_level);
+                                      b.data->meta->production_date, get_disruption().rt_level, pt_data);
     return *this;
 }
 
 Impacter& Impacter::on_line_section(const std::string& line_uri,
                                     const std::string& start_stop_uri,
                                     const std::string& end_stop_uri,
-                                    const std::vector<std::string>& route_uris) {
+                                    const std::vector<std::string>& route_uris,
+                                    nt::PT_Data& pt_data) {
     // Note: don't forget to set the application period before calling this method for the correct
     // vehicle_journeys to be impacted
 
@@ -509,7 +510,7 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
     }
 
     dis::Impact::link_informed_entity(std::move(line_section), impact, b.data->meta->production_date,
-                                      get_disruption().rt_level);
+                                      get_disruption().rt_level, pt_data);
     return *this;
 }
 
