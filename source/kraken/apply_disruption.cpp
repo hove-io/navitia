@@ -114,7 +114,6 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
 
     virtual ~apply_impacts_visitor() = default;
     apply_impacts_visitor(const apply_impacts_visitor&) = default;
-    apply_impacts_visitor(apply_impacts_visitor&&) = default;
     apply_impacts_visitor& operator=(const apply_impacts_visitor& other) = delete;
     apply_impacts_visitor& operator=(apply_impacts_visitor&& other) noexcept = delete;
 

@@ -115,7 +115,7 @@ void find(navitia::PbCreator& pb_creator,
                 auto nb_w = pb_creator.data->geo_ref->nearest_addr(coord);
                 // we'll regenerate the good number in make_pb
                 result.emplace_back(nb_w.second->idx, std::move(coord), 0, type,
-                                    std::move(std::vector<std::tuple<nt::idx_t, float>>()));
+                                    std::vector<std::tuple<nt::idx_t, float>>());
                 ++total_result;
             } catch (const proximitylist::NotFound&) {
             }

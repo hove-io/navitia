@@ -67,7 +67,6 @@ struct coord_conversion_exception : public recoverable_exception {
     coord_conversion_exception& operator=(const coord_conversion_exception&) = default;
 
     coord_conversion_exception(coord_conversion_exception&&) = default;
-    coord_conversion_exception& operator=(coord_conversion_exception&&) = default;
 
     ~coord_conversion_exception() noexcept override = default;
 };
