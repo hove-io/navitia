@@ -162,7 +162,7 @@ void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envel
     }
 }
 
-bool autocomplete_rebuilding_needed(const transit_realtime::FeedEntity& entity) {
+static bool autocomplete_rebuilding_needed(const transit_realtime::FeedEntity& entity) {
     return ((entity.trip_update().GetExtension(kirin::effect)
              == transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE)
             || (entity.trip_update().GetExtension(kirin::effect) == transit_realtime::Alert_Effect::Alert_Effect_DETOUR)

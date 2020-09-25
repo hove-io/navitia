@@ -38,7 +38,7 @@ www.navitia.io
 
 namespace navitia {
 namespace type {
-struct Data;
+class Data;
 }  // namespace type
 }  // namespace navitia
 

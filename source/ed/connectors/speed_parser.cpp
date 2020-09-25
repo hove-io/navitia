@@ -41,7 +41,7 @@ namespace ed {
 namespace connectors {
 
 constexpr float kmh_to_ms(long double val) {
-    return val / 3.6;
+    return val / 3.6L;
 }
 
 constexpr float operator"" _kmh(long double val) {
@@ -148,7 +148,7 @@ boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
             try {
                 // todo handle value not in km/h.
                 // if there is no unit the value is in km/h else cast will fail
-                speed = kmh_to_ms(boost::lexical_cast<float>(s));
+                speed = kmh_to_ms(boost::lexical_cast<long double>(s));
             } catch (const std::exception&) {
                 std::cerr << "impossible to convert \"" << max_speed << "\" in speed" << std::endl;
             }

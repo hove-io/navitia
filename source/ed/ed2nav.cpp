@@ -255,7 +255,7 @@ struct FindAdminWithCities {
     }
 };
 
-bool rename_file(const std::string& source_name, const std::string& dest_name) {
+static bool rename_file(const std::string& source_name, const std::string& dest_name) {
     auto logger = log4cplus::Logger::getInstance("ed2nav::rename_file");
     LOG4CPLUS_INFO(logger, "Trying to rename " << source_name << " to " << dest_name);
     if (boost::filesystem::exists(source_name)) {
@@ -268,7 +268,7 @@ bool rename_file(const std::string& source_name, const std::string& dest_name) {
     return true;
 }
 
-bool remove_file(const std::string& filename) {
+static bool remove_file(const std::string& filename) {
     if(!boost::filesystem::exists(filename))
         return true;
 
