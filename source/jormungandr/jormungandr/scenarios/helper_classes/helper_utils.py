@@ -416,8 +416,9 @@ def _build_fallback(
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
             orig, dest = fallback_logic.route_params(requested_obj, car_park or pt_obj)
 
+            real_mode = fallback_durations_pool.get_real_mode(mode, pt_obj.uri)
             fallback_dp = streetnetwork_path_pool.wait_and_get(
-                orig, dest, mode, fallback_period_extremity, fallback_type, request=request
+                orig, dest, real_mode, fallback_period_extremity, fallback_type, request=request
             )
 
             if not _is_crowfly_needed(
