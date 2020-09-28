@@ -286,6 +286,9 @@ class FallbackDurationsPool(dict):
 
         self._value = {}
         self._request_id = request_id
+        import collections
+
+        self._overrided_uri_map = collections.defaultdict(dict)
         self._async_request()
 
     @property
@@ -338,7 +341,9 @@ class FallbackDurationsPool(dict):
         main_fb = self.wait_and_get(main_mode)
         res = {}
         overriding_modes = self._overriding_mode_map.get(main_mode, [])
-        overriding_fbs = [self.wait_and_get(mode) for mode in overriding_modes if self.wait_and_get(mode)]
+        overriding_fbs = [
+            (mode, self.wait_and_get(mode)) for mode in overriding_modes if self.wait_and_get(mode)
+        ]
 
         for uri, duration_item in six.iteritems(main_fb):
             duration = duration_item.duration
@@ -349,6 +354,14 @@ class FallbackDurationsPool(dict):
             # So when
             # 1. overriding_fbs is empty, we fill in the result with main_fb's content
             # 2. uri can't be found in any of overriding_fbs, we fill in the result with main_fb's content
-            if all(duration <= fb.get(uri).duration for fb in overriding_fbs if fb.get(uri)):
-                res[uri] = duration
+            mode_durations = [(main_mode, duration)] + [
+                (mode, fb.get(uri).duration) for mode, fb in overriding_fbs if fb.get(uri)
+            ]
+            best_mode, best_duration = min(mode_durations, key=lambda o: o[1])
+            if best_mode != main_mode:
+                self._overrided_uri_map[main_mode][uri] = best_mode
+            res[uri] = best_duration
         return res
+
+    def get_real_mode(self, main_mode, uri):
+        return self._overrided_uri_map.get(main_mode, {}).get(uri, None) or main_mode
