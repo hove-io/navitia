@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes
+from jormungandr import i_manager, fallback_modes, partner_services
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -454,6 +454,19 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=int,
             hidden=True,
             help="define the duration to reach stop points by crow fly",
+        )
+        parser_get.add_argument(
+            "partner_services[]",
+            type=OptionValue(partner_services.all_partner_services),
+            dest="partner_services",
+            action="append",
+            help='Expose only the partner type into the response.',
+        )
+        parser_get.add_argument(
+            "_asynchronous_ridesharing",
+            type=BooleanType(),
+            hidden=True,
+            help="active the asynchronous mode for the ridesharing services",
         )
 
     def parse_args(self, region=None, uri=None):

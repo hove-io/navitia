@@ -49,7 +49,7 @@ def _make_pb_fp(fp):
     return pb_fp
 
 
-def decorate_journeys(response, instance, request):
+def decorate_journeys_with_ridesharing_offers(response, instance, request):
     # TODO: disable same journey schedule link for ridesharing journey?
     for journey in response.journeys:
         if 'ridesharing' not in journey.tags or to_be_deleted(journey):
