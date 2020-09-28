@@ -347,7 +347,7 @@ class TestJourneysDistributed(
             'datetime=20120614T080000&'
             'first_section_mode[]=walking&first_section_mode[]=bss&'
             'last_section_mode[]=walking&last_section_mode[]=bss&'
-            'bss_speed=1&walking_speed=2&debug=true'
+            'bss_speed=1&walking_speed=1&debug=true'
         )
         # for the first request, the walking duration to the stop_point is equal to the bss duration
         r = self.query(query)
