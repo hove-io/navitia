@@ -47,7 +47,8 @@ struct dataRAPTOR {
     // cache friendly access to the connections
     struct Connections {
         struct Connection {
-            DateTime duration;
+            DateTime duration;          // walking_duration + margin duration to be able to catch the next vehicle
+            DateTime walking_duration;  // walking_duration, filled with StopPointConnection.display_duration
             SpIdx sp_idx;
         };
         void load(const navitia::type::PT_Data&);

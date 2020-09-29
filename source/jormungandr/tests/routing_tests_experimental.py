@@ -80,8 +80,8 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         # journey count = 18 / direct_path_call_count = 26 / routing_matrix_call_count = 20
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
-        assert len(response["journeys"]) == 13
-        assert sn_service.direct_path_call_count == 6
+        assert len(response["journeys"]) == 8
+        assert sn_service.direct_path_call_count == 4
         assert sn_service.routing_matrix_call_count == 4
         assert get_directpath_count_by_mode(response, 'walking') == 1
         assert get_directpath_count_by_mode(response, 'bike') == 1
@@ -113,7 +113,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
         assert len(response["journeys"]) == 5
-        assert sn_service.direct_path_call_count == 6
+        assert sn_service.direct_path_call_count == 4
         assert sn_service.routing_matrix_call_count == 4
         assert get_directpath_count_by_mode(response, 'walking') == 1
         assert get_directpath_count_by_mode(response, 'bike') == 0
@@ -347,7 +347,7 @@ class TestJourneysDistributed(
             'datetime=20120614T080000&'
             'first_section_mode[]=walking&first_section_mode[]=bss&'
             'last_section_mode[]=walking&last_section_mode[]=bss&'
-            'bss_speed=1&walking_speed=2&debug=true'
+            'bss_speed=1&walking_speed=1&debug=true'
         )
         # for the first request, the walking duration to the stop_point is equal to the bss duration
         r = self.query(query)

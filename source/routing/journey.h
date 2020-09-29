@@ -58,20 +58,21 @@ struct Journey {
 
     bool is_pt() const;
 
-    bool better_on_dt(const Journey& that, bool request_clockwise) const;
+    bool better_on_dt(const Journey& that, bool request_clockwise, const navitia::time_duration transfer_penalty) const;
     bool better_on_transfer(const Journey& that) const;
-    bool better_on_sn(const Journey& that) const;
+    bool better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const;
     bool operator==(const Journey& rhs) const;
     bool operator!=(const Journey& rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);
 
-    std::vector<Section> sections;                 // the pt sections, with transfer between them
-    navitia::time_duration sn_dur = 0_s;           // street network duration
-    navitia::time_duration transfer_dur = 0_s;     // walking duration during transfer
-    navitia::time_duration min_waiting_dur = 0_s;  // minimal waiting duration on every transfers
-    DateTime departure_dt = 0;                     // the departure dt of the journey, including sn
-    DateTime arrival_dt = 0;                       // the arrival dt of the journey, including sn
-    uint8_t nb_vj_extentions = 0;                  // number of vehicle journey extentions (I love useless comments!)
+    std::vector<Section> sections;                   // the pt sections, with transfer between them
+    navitia::time_duration sn_dur = 0_s;             // street network duration
+    navitia::time_duration transfer_dur = 0_s;       // walking duration during transfer
+    navitia::time_duration min_waiting_dur = 0_s;    // minimal waiting duration on every transfers
+    navitia::time_duration total_waiting_dur = 0_s;  // sum of waiting duration over all transfers
+    DateTime departure_dt = 0;                       // the departure dt of the journey, including sn
+    DateTime arrival_dt = 0;                         // the arrival dt of the journey, including sn
+    uint8_t nb_vj_extentions = 0;                    // number of vehicle journey extentions (I love useless comments!)
 };
 
 struct JourneyHash {

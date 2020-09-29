@@ -50,29 +50,36 @@ bool Journey::is_pt() const {
     return !sections.empty();
 }
 
-bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
+bool Journey::better_on_dt(const Journey& that,
+                           bool request_clockwise,
+                           const navitia::time_duration transfer_penalty) const {
+    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it reduces the arrival time by at least transfer_penalty
+    DateTime penalized_arrival = arrival_dt + transfer_penalty * sections.size();
+    DateTime that_penalized_arrival = that.arrival_dt + transfer_penalty * that.sections.size();
+    // Similary, we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it increases the departure time by at least transfer_penalty
+    DateTime penalized_departure = departure_dt - transfer_penalty * sections.size();
+    DateTime that_penalized_departure = that.departure_dt - transfer_penalty * that.sections.size();
+
     if (request_clockwise) {
+        // if the (non-penalized) arrival times are the same, we compare the penalized departure times
         if (arrival_dt != that.arrival_dt) {
-            return arrival_dt <= that.arrival_dt;
+            return penalized_arrival <= that_penalized_arrival;
         }
-        if (departure_dt != that.departure_dt) {
-            return departure_dt >= that.departure_dt;
+
+        if (penalized_departure != that_penalized_departure) {
+            return penalized_departure >= that_penalized_departure;
         }
     } else {
         if (departure_dt != that.departure_dt) {
-            return departure_dt >= that.departure_dt;
+            return penalized_departure >= that_penalized_departure;
         }
-        if (arrival_dt != that.arrival_dt) {
-            return arrival_dt <= that.arrival_dt;
+        if (penalized_arrival != that_penalized_arrival) {
+            return penalized_arrival <= that_penalized_arrival;
         }
     }
-    // FIXME: I don't like this objective, for me, this is a
-    // transfer objective, but then you can return some solutions
-    // that we didn't return before.
-    if (!(better_on_transfer(that) && that.better_on_transfer(*this))) {
-        // if they are not equal on transfer, we don't check min_waiting_dur
-        return true;
-    }
+
     return min_waiting_dur >= that.min_waiting_dur;
 }
 
@@ -80,12 +87,20 @@ bool Journey::better_on_transfer(const Journey& that) const {
     if (sections.size() != that.sections.size()) {
         return sections.size() <= that.sections.size();
     }
-    return nb_vj_extentions <= that.nb_vj_extentions;
-}
+    if (nb_vj_extentions != that.nb_vj_extentions) {
+        return nb_vj_extentions <= that.nb_vj_extentions;
+    }
 
-bool Journey::better_on_sn(const Journey& that) const {
-    // we consider the transfer sections also as walking sections
-    return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
+    return true;
+}
+bool Journey::better_on_sn(const Journey& that, const navitia::time_duration transfer_penalty) const {
+    // we consider that the transfer duration as well as the street network duration are
+    // walking duration
+    // we consider that an extra transfer (hence a bigger sections.size() ) is worthwhile
+    // only if it reduces the walking duration by at least transfer_penalty
+    return sn_dur + transfer_dur + transfer_penalty * sections.size()
+           <= that.sn_dur + that.transfer_dur + transfer_penalty * that.sections.size();
+    ;
 }
 
 bool Journey::operator==(const Journey& rhs) const {
