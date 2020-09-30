@@ -52,7 +52,6 @@ struct PathElt {
                      const DateTime e_dt,
                      const PathElt* p = nullptr)
         : begin_st(b), begin_dt(b_dt), end_st(e), end_dt(e_dt), prev(p) {}
-    ~PathElt() = default;
     PathElt(const PathElt&) = delete;
     PathElt& operator=(const PathElt&) = delete;
     PathElt(const PathElt&&) = delete;

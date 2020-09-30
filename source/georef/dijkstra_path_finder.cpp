@@ -185,7 +185,7 @@ struct ProjectionGetterOnCoords {
         try {
             const auto& projection = georef.projected_coords.at(coord);
             return projection[mode];
-        } catch (std::out_of_range& e) {
+        } catch (std::out_of_range&) {
             return georef::ProjectionData{coord, georef, mode};
         }
     }

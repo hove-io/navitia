@@ -7,9 +7,9 @@
 namespace navitia {
 namespace georef {
 
-class Vertex;
+struct Vertex;
 
-// Plein de typedefs pour nous simpfilier un peu la vie
+// Plein de typedefs pour nous simplifier un peu la vie
 
 /** Définit le type de graph que l'on va utiliser
  *
