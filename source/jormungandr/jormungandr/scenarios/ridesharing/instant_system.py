@@ -170,6 +170,7 @@ class InstantSystem(AbstractRidesharingService):
                 res.metadata = self.journey_metadata
 
                 res.distance = j.get('distance')
+                res.duration = None
 
                 res.ridesharing_ad = j.get('url')
 

@@ -75,6 +75,7 @@ class RidesharingJourney(object):
     __slots__ = (
         'metadata',
         'distance',
+        'duration',
         'shape',  # a list of type_pb2.GeographicalCoord()
         'ridesharing_ad',
         'pickup_place',
