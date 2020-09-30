@@ -392,7 +392,11 @@ namespace eos {
 			switch (fp::fpclassify(t))
 			{
 			//case FP_ZERO: bits = 0; break;
+			#if BOOST_VERSION < 106900
+			case FP_NAN: bits = traits::exponent | traits::mantissa; break;
+			#else
 			case FP_NAN: bits = traits::exponent | traits::significand; break;
+			#endif
 			case FP_INFINITE: bits = traits::exponent | (t<0) * traits::sign; break;
 			case FP_SUBNORMAL: assert(std::numeric_limits<T>::has_denorm); // pass
 			case FP_ZERO: // note that floats can be ±0.0
