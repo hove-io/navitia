@@ -359,6 +359,19 @@ def update_durations(pb_resp):
         j.duration = total_duration
 
 
+def update_total_co2_emission(pb_resp):
+    """
+    update journey.co2_emission.value
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        total_co2_emission = 0
+        for s in j.sections:
+            total_co2_emission += s.co2_emission.value
+        j.co2_emission.value = total_co2_emission
+
+
 def _get_section_id(section):
     street_network_mode = None
     if section.type in SECTION_TYPES_TO_RETAIN:
@@ -1120,6 +1133,8 @@ class Scenario(simple.Scenario):
 
         # We have to update total duration as some sections could be updated in distributed.
         update_durations(pb_resp)
+        # We have to update total co2_emission as some sections could be updated in distributed.
+        update_total_co2_emission(pb_resp)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)
