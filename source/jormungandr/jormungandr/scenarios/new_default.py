@@ -345,6 +345,20 @@ def tag_journeys(resp):
     tag_ecologic(resp)
 
 
+def update_durations(pb_resp):
+    """
+    update journey.duration and journey.durations.total
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        total_duration = 0
+        for s in j.sections:
+            total_duration += s.duration
+        j.durations.total = total_duration
+        j.duration = total_duration
+
+
 def _get_section_id(section):
     street_network_mode = None
     if section.type in SECTION_TYPES_TO_RETAIN:
@@ -1103,6 +1117,10 @@ class Scenario(simple.Scenario):
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+
+        # We have to update total duration as some sections could be updated in distributed.
+        update_durations(pb_resp)
+
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)
 
