@@ -81,14 +81,14 @@ BOOST_FIXTURE_TEST_CASE(construct_with_copy, CoordParams) {
 
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == conv_coord.origin.definition, true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == conv_coord.destination.definition, true);
-    #ifdef PROJ_API_VERSION_MAJOR_6
+#ifdef PROJ_API_VERSION_MAJOR_6
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "EPSG:27572", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "EPSG:4326", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.p_for_gis != conv_coord.p_for_gis, true);
-    #else
+#else
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "+init=epsg:27572", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "+init=epsg:4326", true);
-    #endif
+#endif
 }
 
 BOOST_FIXTURE_TEST_CASE(operator_equal, CoordParams) {
@@ -97,12 +97,12 @@ BOOST_FIXTURE_TEST_CASE(operator_equal, CoordParams) {
 
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == conv_coord.origin.definition, true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == conv_coord.destination.definition, true);
-    #ifdef PROJ_API_VERSION_MAJOR_6
+#ifdef PROJ_API_VERSION_MAJOR_6
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "EPSG:27572", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "EPSG:4326", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.p_for_gis != conv_coord.p_for_gis, true);
-    #else
+#else
     BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "+init=epsg:27572", true);
     BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "+init=epsg:4326", true);
-    #endif
+#endif
 }
