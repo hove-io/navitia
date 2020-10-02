@@ -30,13 +30,11 @@ www.navitia.io
 
 #pragma once
 #ifdef PROJ_API_VERSION_MAJOR_6
-#include<proj.h>
+#include <proj.h>
 #else
 #include <proj_api.h>
 #endif
 #include "type/geographical_coord.h"
-#include "ed/connectors/projection.h"
-
 
 namespace ed {
 namespace connectors {
@@ -45,9 +43,9 @@ struct Projection {
     std::string name;
     std::string definition;
     bool is_degree;
-    #ifdef PROJ_API_VERSION_MAJOR_4
+#ifdef PROJ_API_VERSION_MAJOR_4
     projPJ proj_pj = nullptr;
-    #endif
+#endif
 
     Projection(const std::string& name, const std::string& num_epsg, bool is_degree);
     Projection() : Projection("wgs84", "4326", true) {}
@@ -63,20 +61,20 @@ struct Projection {
 struct ConvCoord {
     Projection origin;
     Projection destination;
-    #ifdef PROJ_API_VERSION_MAJOR_6
+#ifdef PROJ_API_VERSION_MAJOR_6
     PJ* p_for_gis = nullptr;
-    #endif
+#endif
     void init_proj_for_gis();
     ConvCoord(Projection origin, Projection destination = Projection());
     ConvCoord& operator=(const ConvCoord&);
     ConvCoord(const ConvCoord&);
     navitia::type::GeographicalCoord convert_to(navitia::type::GeographicalCoord coord) const;
-    #ifdef PROJ_API_VERSION_MAJOR_4
+#ifdef PROJ_API_VERSION_MAJOR_4
     navitia::type::GeographicalCoord proj_lib4_convert_to(navitia::type::GeographicalCoord coord) const;
-    #endif
-    #ifdef PROJ_API_VERSION_MAJOR_6
+#endif
+#ifdef PROJ_API_VERSION_MAJOR_6
     navitia::type::GeographicalCoord proj_lib6_convert_to(navitia::type::GeographicalCoord coord) const;
-    #endif
+#endif
     ~ConvCoord();
 };
 

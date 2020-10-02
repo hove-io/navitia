@@ -118,7 +118,6 @@
 #include <boost/spirit/home/support/detail/endian/endian.hpp>
 #include <boost/spirit/home/support/detail/math/fpclassify.hpp>
 #else
-#define BOOST_MATH_DISABLE_STD_FPCLASSIFY
 #include <boost/spirit/home/support/detail/endian/endian.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #endif
