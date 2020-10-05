@@ -32,10 +32,20 @@ sudo apt-get install -y \
     libssl-dev \
     liblog4cplus-dev \
     libgeos-dev \
-    python \
-    python-pip \
     rabbitmq-server \
-    2to3 \
+    2to3
+
+OS_VERSION="$(lsb_release -rs| cut -d '.' -f 1)"
+echo "-- OS found: $(lsb_release -ds)"
+if [ ${OS_VERSION} -eq 20 ]; then
+    sudo apt-get install -y python2-dev
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    sudo python2 get-pip.py
+    rm get-pip.py
+else
+    sudo apt-get install -y python python-pip
+fi
+
 # Install docker.io for Tyr tests and eitri
 echo "** install docker.io"
 if [ -x "$(command -v docker)" ]; then
@@ -87,7 +97,11 @@ echo "** create temporary virtenv to migrate bdd"
 if [ -d /tmp/venv_navitia_sql ]; then
     rm -rf /tmp/venv_navitia_sql
 fi
-virtualenv /tmp/venv_navitia_sql
+if [ ${OS_VERSION} -eq 20 ]; then
+    virtualenv /tmp/venv_navitia_sql -p python2
+else
+    virtualenv /tmp/venv_navitia_sql -p python
+fi
 . /tmp/venv_navitia_sql/bin/activate
 pip install -r "$navitia_dir"/source/sql/requirements.txt
 
@@ -109,7 +123,11 @@ echo "** create temporary virtenv to upgrade jormun bdd"
 if [ -d /tmp/venv_tyr ]; then
     rm -rf /tmp/venvtyr
 fi
-virtualenv /tmp/venv_tyr
+if [ ${OS_VERSION} -eq 20 ]; then
+    virtualenv /tmp/venv_tyr -p python2
+else
+    virtualenv /tmp/venv_tyr -p python
+fi
 . /tmp/venv_tyr/bin/activate
 pip install -r "$navitia_dir"/source/tyr/requirements_dev.txt
 
