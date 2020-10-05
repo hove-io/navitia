@@ -42,6 +42,7 @@ Projection::Projection(const std::string& name, const std::string& num_epsg, boo
 #endif
     this->name = name;
     this->is_degree = is_degree;
+    this->custom_pj_init_plus();
 }
 void Projection::custom_pj_init_plus() {
 #ifdef PROJ_API_VERSION_MAJOR_4
@@ -84,12 +85,13 @@ Projection& Projection::operator=(Projection&& other) {
 #endif
     return *this;
 }
+
 Projection::Projection(Projection&& other)
     : name(other.name), definition(other.definition), is_degree(other.is_degree) {
 // we got the proj4 ptr, no need for another allocation
 #ifdef PROJ_API_VERSION_MAJOR_4
+    proj_pj = other.proj_pj;
     other.proj_pj = nullptr;
-    other.proj_pj = other.proj_pj;
 #endif
 }
 Projection::~Projection() {
