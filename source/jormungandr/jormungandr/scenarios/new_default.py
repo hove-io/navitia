@@ -352,11 +352,8 @@ def update_durations(pb_resp):
     if not pb_resp.journeys:
         return
     for j in pb_resp.journeys:
-        total_duration = 0
-        for s in j.sections:
-            total_duration += s.duration
-        j.durations.total = total_duration
-        j.duration = total_duration
+        j.duration = sum(s.duration for s in j.sections)
+        j.durations.total = j.duration
 
 
 def update_total_co2_emission(pb_resp):
@@ -366,10 +363,7 @@ def update_total_co2_emission(pb_resp):
     if not pb_resp.journeys:
         return
     for j in pb_resp.journeys:
-        total_co2_emission = 0
-        for s in j.sections:
-            total_co2_emission += s.co2_emission.value
-        j.co2_emission.value = total_co2_emission
+        j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
 
 
 def _get_section_id(section):
