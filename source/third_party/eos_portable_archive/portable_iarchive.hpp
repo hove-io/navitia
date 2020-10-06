@@ -114,13 +114,15 @@
 #elif BOOST_VERSION < 104800
 #include <boost/spirit/home/support/detail/integer/endian.hpp>
 #include <boost/spirit/home/support/detail/math/fpclassify.hpp>
-#else
+#elif BOOST_VERSION < 106900
 #include <boost/spirit/home/support/detail/endian/endian.hpp>
 #include <boost/spirit/home/support/detail/math/fpclassify.hpp>
+#else
+#include <boost/spirit/home/support/detail/endian/endian.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #endif
-
 // namespace alias
-#if BOOST_VERSION < 103800
+#if BOOST_VERSION < 103800 || BOOST_VERSION >= 106900
 namespace fp = boost::math;
 #else
 namespace fp = boost::spirit::math;

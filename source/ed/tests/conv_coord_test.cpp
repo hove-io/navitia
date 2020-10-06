@@ -74,3 +74,35 @@ BOOST_FIXTURE_TEST_CASE(default_constructor_test, CoordParams) {
 
     BOOST_REQUIRE_EQUAL(coord_wgs84 == navitia::type::GeographicalCoord(1.491911486572199, 48.431961616400599), true);
 }
+
+BOOST_FIXTURE_TEST_CASE(construct_with_copy, CoordParams) {
+    ed::connectors::ConvCoord conv_coord(lambert2);
+    ed::connectors::ConvCoord new_conv_coord = ed::connectors::ConvCoord(conv_coord);
+
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == conv_coord.origin.definition, true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == conv_coord.destination.definition, true);
+#ifdef PROJ_API_VERSION_MAJOR_6
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "EPSG:27572", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "EPSG:4326", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.p_for_gis != conv_coord.p_for_gis, true);
+#else
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "+init=epsg:27572", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "+init=epsg:4326", true);
+#endif
+}
+
+BOOST_FIXTURE_TEST_CASE(operator_equal, CoordParams) {
+    ed::connectors::ConvCoord conv_coord(lambert2);
+    ed::connectors::ConvCoord new_conv_coord = conv_coord;
+
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == conv_coord.origin.definition, true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == conv_coord.destination.definition, true);
+#ifdef PROJ_API_VERSION_MAJOR_6
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "EPSG:27572", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "EPSG:4326", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.p_for_gis != conv_coord.p_for_gis, true);
+#else
+    BOOST_REQUIRE_EQUAL(new_conv_coord.origin.definition == "+init=epsg:27572", true);
+    BOOST_REQUIRE_EQUAL(new_conv_coord.destination.definition == "+init=epsg:4326", true);
+#endif
+}
