@@ -43,6 +43,9 @@ import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
 import json
+import re  # https://stackoverflow.com/a/9312242/1614576
+import requests_mock
+import pytest
 
 
 fake_response = """
@@ -86,9 +89,6 @@ fake_response = """
     ]
 
 """
-
-# https://stackoverflow.com/a/9312242/1614576
-import re
 
 regex = re.compile(r'\\(?![/u"])')
 fixed = regex.sub(r"\\\\", fake_response)
@@ -202,10 +202,6 @@ def blablacar_test():
         assert ridesharing_journeys[1].available_seats == 2
 
         assert feed_publisher == RsFeedPublisher(**DUMMY_BLABLACAR_FEED_PUBLISHER)
-
-
-import requests_mock
-import pytest
 
 
 def test_request_journeys_should_raise_on_non_200():

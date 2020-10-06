@@ -157,22 +157,16 @@ class Blablacar(AbstractRidesharingService):
                 coord.lon = res.pickup_place.lon
                 coord.lat = res.pickup_place.lat
                 res.shape.append(coord)
-            for c in shape:
-                coord = type_pb2.GeographicalCoord()
-                coord.lon = c[0]
-                coord.lat = c[1]
-                res.shape.append(coord)
+            res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
             if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
                 coord = type_pb2.GeographicalCoord()
                 coord.lon = res.dropoff_place.lon
                 coord.lat = res.dropoff_place.lat
                 res.shape.append(coord)
 
-            res.price = offer.get('price').get('amount')
-            if offer.get('price').get('currency') == "EUR":
-                res.currency = "centime"
-            else:
-                res.currency = offer.get('price').get('currency')
+            res.price = offer.get('price', {}).get('amount')
+            currency = offer.get('price', {}).get('currency')
+            res.currency = "centime" if currency == "EUR" else currency
 
             res.available_seats = offer.get('available_seats')
             res.total_seats = None
@@ -243,7 +237,6 @@ class Blablacar(AbstractRidesharingService):
 
         if resp:
             r = self._make_response(resp.json())
-            print("QAQA ", r)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.blablacar').info(
                 'Received ridesharing offers : %s',
