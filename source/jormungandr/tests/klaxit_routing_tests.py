@@ -148,7 +148,7 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
         # ridesharing duration comes from the offer
-        rsj_sections[1].get('duration') == 1301
+        assert rsj_sections[1].get('duration') == 1301
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
         assert rsj_info.get('operator') == 'Klaxit VIA API'
@@ -167,7 +167,7 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
         # crowfly duration in ridesharing is always 0
-        assert rsj_sections[0].get('duration') == 0
+        assert rsj_sections[2].get('duration') == 0
 
         fps = response['feed_publishers']
         assert len(fps) == 2
