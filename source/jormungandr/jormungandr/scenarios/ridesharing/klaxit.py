@@ -132,6 +132,7 @@ class Klaxit(AbstractRidesharingService):
             res.metadata = self.journey_metadata
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
+            res.duration = offer.get('duration')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
