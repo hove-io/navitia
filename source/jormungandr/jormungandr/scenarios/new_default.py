@@ -345,6 +345,27 @@ def tag_journeys(resp):
     tag_ecologic(resp)
 
 
+def update_durations(pb_resp):
+    """
+    update journey.duration and journey.durations.total
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        j.duration = sum(s.duration for s in j.sections)
+        j.durations.total = j.duration
+
+
+def update_total_co2_emission(pb_resp):
+    """
+    update journey.co2_emission.value
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
+
+
 def _get_section_id(section):
     street_network_mode = None
     if section.type in SECTION_TYPES_TO_RETAIN:
@@ -1103,6 +1124,12 @@ class Scenario(simple.Scenario):
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
+
+        # We have to update total duration as some sections could be updated in distributed.
+        update_durations(pb_resp)
+        # We have to update total co2_emission as some sections could be updated in distributed.
+        update_total_co2_emission(pb_resp)
+
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)
 

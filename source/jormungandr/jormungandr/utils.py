@@ -139,7 +139,7 @@ def str_to_dt(str):
 
 def date_to_timestamp(date):
     """
-    convert a datetime objet to a posix timestamp (number of seconds from 1070/1/1)
+    convert a datetime objet to a posix timestamp (number of seconds from 1970/1/1)
     """
     return int(calendar.timegm(date.utctimetuple()))
 
