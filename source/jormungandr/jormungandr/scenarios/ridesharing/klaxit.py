@@ -154,9 +154,6 @@ class Klaxit(AbstractRidesharingService):
             res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
 
             if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
-                coord = type_pb2.GeographicalCoord()
-                coord.lon = res.dropoff_place.lon
-                coord.lat = res.dropoff_place.lat
                 res.shape.append(
                     type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                 )

@@ -121,7 +121,7 @@ class DummyInstance:
     name = ''
 
 
-def get_ridesharing_service_test():
+def klaxit_service_config_test():
     configs = [
         {
             "class": "jormungandr.scenarios.ridesharing.klaxit.Klaxit",
@@ -154,7 +154,7 @@ def get_ridesharing_service_test():
     assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_KLAXIT_FEED_PUBLISHER)
 
 
-def instant_system_test():
+def klaxit_service_test():
     with mock.patch('requests.get', mock_get):
 
         klaxit = Klaxit(
