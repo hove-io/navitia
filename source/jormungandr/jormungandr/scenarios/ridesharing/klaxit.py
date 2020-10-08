@@ -61,6 +61,8 @@ class Klaxit(AbstractRidesharingService):
         feed_publisher=DEFAULT_KLAXIT_FEED_PUBLISHER,
         timedelta=3600,
         timeout=2,
+        departure_radius=2,
+        arrival_radius=2,
     ):
         self.instance = instance
         self.service_url = service_url
@@ -69,6 +71,8 @@ class Klaxit(AbstractRidesharingService):
         self.system_id = 'Klaxit VIA API'
         self.timeout = timeout
         self.timedelta = timedelta
+        self.departure_radius = departure_radius
+        self.arrival_radius = arrival_radius
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(
@@ -192,14 +196,15 @@ class Klaxit(AbstractRidesharingService):
         dep_lat, dep_lon = from_coord.split(',')
         arr_lat, arr_lon = to_coord.split(',')
 
-        # Parameters documenation : https://dev.klaxit.com/swagger-ui?url=https://via.klaxit.com/v1/swagger.json#/carpoolJourneys/get_carpoolJourneys
+        # Parameters documenation : https://dev.klaxit.com/swagger-ui?url=https://via.klaxit.com/v1/swagger.json
+        # #/carpoolJourneys/get_carpoolJourneys
         params = {
             'apiKey': self.api_key,
             'departureLat': dep_lat,
             'departureLng': dep_lon,
             'arrivalLat': arr_lat,
             'arrivalLng': arr_lon,
-            #'date': period_extremity.datetime,
+            'date': period_extremity.datetime,
             'timeDelta': self.timedelta,
             'departureRadius': 2,
             'arrivalRadius': 2,
