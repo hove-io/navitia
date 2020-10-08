@@ -149,10 +149,7 @@ class Klaxit(AbstractRidesharingService):
             res.shape = []
             shape = decode_polyline(offer.get('journeyPolyline'), precision=5)
             if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                coord = type_pb2.GeographicalCoord()
-                coord.lon = res.pickup_place.lon
-                coord.lat = res.pickup_place.lat
-                res.shape.append(coord)
+                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
 
             res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
 
@@ -160,7 +157,9 @@ class Klaxit(AbstractRidesharingService):
                 coord = type_pb2.GeographicalCoord()
                 coord.lon = res.dropoff_place.lon
                 coord.lat = res.dropoff_place.lat
-                res.shape.append(coord)
+                res.shape.append(
+                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
+                )
 
             res.price = offer.get('price', {}).get('amount')
             res.currency = "centime"
