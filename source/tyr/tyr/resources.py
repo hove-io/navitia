@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division, unicode_literals
-from flask import current_app, url_for, request
+from flask import current_app, request
 import flask_restful
 from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 
@@ -59,7 +59,7 @@ from navitiacommon import models, utils
 from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
-from tyr.validations import datetime_format
+from tyr.validations import datetime_format, InputJsonValidator
 from tyr.tasks import (
     create_autocomplete_depot,
     remove_autocomplete_depot,
@@ -683,6 +683,15 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
+        parser.add_argument(
+            'ridesharing_services',
+            type=str,
+            action="append",
+            help='list of ids of ridesharing services available for the instance',
+            location=('json', 'values'),
+            default=[],
+        )
+
         list_modes = ["car", "car_no_park", "walking", "bike", "bss", "ridesharing", "taxi"]
         for mode in list_modes:
             parser.add_argument(
@@ -825,14 +834,22 @@ class Instance(flask_restful.Resource):
                 if equipment_provider:
                     instance.equipment_details_providers.append(equipment_provider)
                 else:
-                    return (
-                        {
-                            "message": "Couldn't set equipment providers - Provider '{}' isn't present in db".format(
-                                provider_id
-                            )
-                        },
-                        400,
+                    msg = "Couldn't set equipment providers - Provider '{}' isn't present in db".format(
+                        provider_id
                     )
+                    return {"message": msg}, 400
+
+            instance.ridesharing_services = []
+            for ridesharing_service_id in args.ridesharing_services:
+                ridesharing_service = models.RidesharingService.query.get(ridesharing_service_id)
+                if ridesharing_service:
+                    instance.ridesharing_services.append(ridesharing_service)
+                else:
+                    msg = "Couldn't set ridesharing services - '{}' isn't present in db".format(
+                        ridesharing_service_id
+                    )
+                    return {"message": msg}, 400
+
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -2144,31 +2161,12 @@ class EquipmentsProvider(flask_restful.Resource):
         else:
             return {'equipments_providers': models.EquipmentsProvider.all()}
 
+    @InputJsonValidator(equipments_provider_format)
     def put(self, id=None):
         """
         Create or update an equipment provider in db
         """
-
-        def _validate_input(json_data):
-            """
-            Check that the data received contains all required info
-            :param json_data: data received in request
-            """
-            try:
-                validate(json_data, equipments_provider_format)
-            except ValidationError as e:
-                abort(400, status="invalid data", message='{}'.format(parse_error(e)))
-
-        if not id:
-            abort(400, status="error", message='id is required')
-
-        try:
-            input_json = request.get_json(force=True, silent=False)
-        except BadRequest:
-            abort(400, status="error", message='Incorrect json provided')
-
-        _validate_input(input_json)
-        message = {"message": ""}
+        input_json = request.get_json(force=True, silent=False)
         try:
             provider = models.EquipmentsProvider.find_by_id(id)
             status = 200

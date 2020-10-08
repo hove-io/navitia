@@ -91,3 +91,35 @@ streetnetwork_backend_format = {
     'properties': {'klass': {'type': 'string'}},
     'required': ['klass'],
 }
+
+feed_publisher_format = {
+    'type': 'object',
+    'properties': {
+        'url': {'type': 'string'},
+        'id': {'type': 'string'},
+        'licence': {'type': 'string'},
+        'name': {'type': 'string'},
+    },
+}
+
+ridesharing_service_format = {
+    'type': 'object',
+    'properties': {
+        'klass': {'type': 'string'},
+        'args': {
+            'type': 'object',
+            'properties': {
+                'service_url': {'type': 'string'},
+                'api_key': {'type': 'string'},
+                'rating_scale_max': {'type': 'number'},
+                'rating_scale_min': {'type': 'number'},
+                'crowfly_radius': {'type': 'number'},
+                'network': {'type': 'string'},
+                "feed_publisher": feed_publisher_format,
+            },
+            'required': ['service_url', "api_key"],
+        },
+        'discarded': {'type': 'boolean'},
+    },
+    'required': ['klass', 'args'],
+}

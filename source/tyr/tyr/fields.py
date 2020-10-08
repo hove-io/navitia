@@ -30,6 +30,7 @@
 from flask_restful import fields, url_for
 from flask.globals import g
 import ujson
+from copy import deepcopy
 
 
 class FieldDate(fields.Raw):
@@ -76,7 +77,7 @@ end_point_fields = {
 
 key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
-equipment_provider_fields = {
+generic_field = {
     'id': fields.Raw,
     'klass': fields.Raw,
     'args': fields.Raw,
@@ -84,19 +85,20 @@ equipment_provider_fields = {
     'updated_at': FieldDate,
     'discarded': fields.Raw,
 }
+
+equipment_provider_fields = deepcopy(generic_field)
 equipment_provider_list_fields = {'equipments_providers': fields.List(fields.Nested(equipment_provider_fields))}
 
-streetnetwork_backend_fields = {
-    'id': fields.Raw,
-    'klass': fields.Raw,
-    'args': fields.Raw,
-    'created_at': FieldDate,
-    'updated_at': FieldDate,
-    'discarded': fields.Raw,
+ridesharing_service_fields = deepcopy(generic_field)
+ridesharing_service_list_fields = {
+    'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields))
 }
+
+streetnetwork_backend_fields = deepcopy(generic_field)
 streetnetwork_backend_list_fields = {
     'streetnetwork_backends': fields.List(fields.Nested(streetnetwork_backend_fields))
 }
+
 
 # Create a url to streetnetwork_backends to access the conf directly
 class FieldUrlStreetNetworkBackend(fields.Raw):
@@ -195,6 +197,7 @@ instance_fields = {
     'max_ridesharing_duration_to_pt': fields.Raw,
     'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
     'asynchronous_ridesharing': fields.Boolean,
+    'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields)),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -277,15 +280,7 @@ autocomplete_parameter_fields = {
 
 error_fields = {'error': fields.Nested({'message': fields.String})}
 
-
-bss_provider_fields = {
-    'id': fields.Raw,
-    'network': fields.Raw,
-    'klass': fields.Raw,
-    'args': fields.Raw,
-    'timeout': FieldTimedelta,
-    'created_at': FieldDate,
-    'updated_at': FieldDate,
-    'discarded': fields.Raw,
-}
+bss_provider_fields = deepcopy(generic_field)
+bss_provider_fields["network"] = fields.Raw
+bss_provider_fields["timeout"] = FieldTimedelta
 bss_provider_list_fields = {'bss_providers': fields.List(fields.Nested(bss_provider_fields))}
