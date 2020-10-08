@@ -33,7 +33,6 @@ import datetime
 import logging
 import pybreaker
 import pytz
-import requests as requests
 
 from jormungandr import utils
 from jormungandr import app
@@ -109,32 +108,6 @@ class InstantSystem(AbstractRidesharingService):
             'crowfly_radius': self.crowfly_radius,
             'network': self.network,
         }
-
-    def _call_service(self, params):
-        self.logger.debug("requesting instant system")
-
-        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
-        try:
-            return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
-            )
-        except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error(
-                'Instant System service dead (error: %s)', e, extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError('circuit breaker open')
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error(
-                'Instant System service timeout (error: %s)',
-                t,
-                extra={'ridesharing_service_id': self._get_rs_id()},
-            )
-            raise RidesharingServiceError('timeout')
-        except Exception as e:
-            logging.getLogger(__name__).exception(
-                'Instant System service error', extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError(str(e))
 
     @staticmethod
     def _get_ridesharing_journeys(raw_journeys):
@@ -270,7 +243,8 @@ class InstantSystem(AbstractRidesharingService):
         for key, value in params.items():
             self.call_params += '{}={}&'.format(key, value)
 
-        resp = self._call_service(params=params)
+        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
+        resp = self._call_service(params=params, headers=headers)
 
         if not resp or resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error

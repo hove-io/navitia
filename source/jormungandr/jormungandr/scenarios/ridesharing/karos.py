@@ -14,7 +14,7 @@
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warr60anty of
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Affero General Public License for more details.
 #
@@ -29,8 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import datetime
-import calendar
 import logging
 import pybreaker
 
@@ -44,50 +42,49 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 
-DEFAULT_BLABLACAR_FEED_PUBLISHER = {
-    'id': 'blablacar',
-    'name': 'Blablacar',
+DEFAULT_KAROS_FEED_PUBLISHER = {
+    'id': 'KAROS',
+    'name': 'KAROS',
     'license': 'Private',
-    'url': 'https://www.blablalines.com/terms',
+    'url': 'https://www.karos.fr/',
 }
 
-# Departure time should be between now to 1 week from now
-# Paramaeters documenation : https://www.blablalines.com/public-api-v2
-MIN_BLABLACAR_MARGIN_DEPARTURE_TIME = 15 * 60  # 15 min
-MAX_BLABLACAR_MARGIN_DEPARTURE_TIME = 60 * 60 * 168  # 168 hours
 
-
-class Blablacar(AbstractRidesharingService):
+class Karos(AbstractRidesharingService):
     def __init__(
         self,
         instance,
         service_url,
         api_key,
         network,
-        feed_publisher=DEFAULT_BLABLACAR_FEED_PUBLISHER,
+        feed_publisher=DEFAULT_KAROS_FEED_PUBLISHER,
         timedelta=3600,
         timeout=2,
+        departure_radius=2,
+        arrival_radius=2,
     ):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-        self.system_id = 'Blablacar'
+        self.system_id = 'Karos'
         self.timeout = timeout
         self.timedelta = timedelta
+        self.departure_radius = departure_radius
+        self.arrival_radius = arrival_radius
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
-
-        self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
-
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_BLABLACAR_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_BLABLACAR_TIMEOUT_S'],
-        )
-        self.call_params = None
 
         self.journey_metadata = rsj.MetaData(
             system_id=self.system_id, network=self.network, rating_scale_min=None, rating_scale_max=None
         )
+
+        self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
+
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_KAROS_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_KAROS_TIMEOUT_S'],
+        )
+        self.call_params = None
 
     def status(self):
         return {
@@ -102,54 +99,54 @@ class Blablacar(AbstractRidesharingService):
         }
 
     def _make_response(self, raw_json):
-
         if not raw_json:
             return []
 
         ridesharing_journeys = []
 
         for offer in raw_json:
-
             res = rsj.RidesharingJourney()
-
             res.metadata = self.journey_metadata
             res.distance = offer.get('distance')
+            res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
-            res.ridesharing_ad = offer.get('web_url')
 
             res.pickup_place = rsj.Place(
-                addr='', lat=offer.get('pickup_latitude'), lon=offer.get('pickup_longitude')
+                addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
             )
             res.dropoff_place = rsj.Place(
-                addr='', lat=offer.get('dropoff_latitude'), lon=offer.get('dropoff_longitude')
+                addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
             )
 
             # shape is a list of type_pb2.GeographicalCoord()
             res.shape = []
-            shape = decode_polyline(offer.get('journey_polyline'), precision=5)
+            shape = decode_polyline(offer.get('journeyPolyline'), precision=5)
             if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
                 res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
 
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
+            res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
 
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
+            if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
                 res.shape.append(
                     type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                 )
 
             res.price = offer.get('price', {}).get('amount')
-            currency = offer.get('price', {}).get('currency')
-            res.currency = "centime" if currency == "EUR" else currency
+            res.currency = "centime"
 
-            res.available_seats = offer.get('available_seats')
+            res.available_seats = offer.get('availableSeats')
             res.total_seats = None
 
-            # not specified
-            res.pickup_date_time = None
-            res.dropoff_date_time = None
+            res.pickup_date_time = offer.get('driverDepartureDate')
+            res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
 
-            res.driver = rsj.Individual(alias=None, gender=None, image=None, rate=None, rate_count=None)
+            driver_alias = offer.get('driver', {}).get('alias', None)
+            driver_grade = offer.get('driver', {}).get('grade')
+            driver_image = offer.get('driver', {}).get('picture')
+
+            res.driver = rsj.Individual(
+                alias=driver_alias, gender=None, image=driver_image, rate=driver_grade, rate_count=None
+            )
 
             ridesharing_journeys.append(res)
 
@@ -164,46 +161,33 @@ class Blablacar(AbstractRidesharingService):
         :param limit: optional
         :return:
         """
+        dep_lat, dep_lon = from_coord.split(',')
+        arr_lat, arr_lon = to_coord.split(',')
 
-        from_coords = from_coord.split(',')
-        to_coords = to_coord.split(',')
-
-        dt = datetime.datetime.now()
-        now = calendar.timegm(dt.utctimetuple())
-
-        if period_extremity.datetime < now + MIN_BLABLACAR_MARGIN_DEPARTURE_TIME:
-            logging.getLogger(__name__).info(
-                'blablacar ridesharing request departure time < now + 15 min. Force to now + 15 min'
-            )
-            departure_epoch = now + MIN_BLABLACAR_MARGIN_DEPARTURE_TIME
-        elif period_extremity.datetime > now + MAX_BLABLACAR_MARGIN_DEPARTURE_TIME:
-            logging.getLogger(__name__).error(
-                'Blablacar error, request departure time should be between now to 1 week from now. departure is greater than now + 1 week'
-            )
-            return []
-        else:
-            departure_epoch = period_extremity.datetime
-
-        # Paramaeters documenation : https://www.blablalines.com/public-api-v2
         params = {
-            'access_token': self.api_key,
-            'departure_latitude': from_coords[0],
-            'departure_longitude': from_coords[1],
-            'arrival_latitude': to_coords[0],
-            'arrival_longitude': to_coords[1],
-            'departure_epoch': departure_epoch,
-            'departure_timedelta': self.timedelta,
+            'api_key': self.api_key,
+            'departureLat': dep_lat,
+            'departureLng': dep_lon,
+            'arrivalLat': arr_lat,
+            'arrivalLng': arr_lon,
+            'date': period_extremity.datetime,
+            'timeDelta': self.timedelta,
+            'departureRadius': self.departure_radius,
+            'arrivalRadius': self.arrival_radius,
         }
 
+        headers = {'Authentication': 'key={}'.format(self.api_key)}
+
+        # Format call_params from parameters
         self.call_params = ''
         for key, value in params.items():
             self.call_params += '{}={}&'.format(key, value)
 
-        resp = self._call_service(params=params)
+        resp = self._call_service(params=params, headers=headers)
 
-        if not resp or resp.status_code != 200:
+        if resp.status_code != 200:
             logging.getLogger(__name__).error(
-                'Blablacar service unavailable, impossible to query : %s',
+                'Karos API service unavailable, impossible to query : %s',
                 resp.url,
                 extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code},
             )
@@ -212,14 +196,14 @@ class Blablacar(AbstractRidesharingService):
         if resp:
             r = self._make_response(resp.json())
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
-            logging.getLogger('stat.ridesharing.blablacar').info(
+            logging.getLogger('stat.ridesharing.instant-system').info(
                 'Received ridesharing offers : %s',
                 len(r),
                 extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': len(r)},
             )
             return r
         self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
-        logging.getLogger('stat.ridesharing.blablacar').info(
+        logging.getLogger('stat.ridesharing.instant-system').info(
             'Received ridesharing offers : 0',
             extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': 0},
         )

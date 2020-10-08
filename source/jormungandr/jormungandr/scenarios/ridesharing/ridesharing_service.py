@@ -34,6 +34,8 @@ import six
 import logging
 from jormungandr import utils, new_relic
 from collections import namedtuple
+import pybreaker
+import requests as requests
 
 
 class RidesharingServiceError(RuntimeError):
@@ -63,6 +65,39 @@ class AbstractRidesharingService(object):
         :return: a dict contains the status of the service
         """
         pass
+
+    def _call_service(self, params, headers={}):
+        """
+        :param params: call parameters list
+        :return: response from external service
+        """
+        self.logger.debug('requesting %s', self.network)
+
+        try:
+            return self.breaker.call(
+                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
+            )
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error(
+                '%s service dead (error: %s)',
+                self.network,
+                e,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('circuit breaker open')
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error(
+                '%s service timeout (error: %s)',
+                self.network,
+                t,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception(
+                '%s service error', self.network, extra={'ridesharing_service_id': self._get_rs_id()}
+            )
+            raise RidesharingServiceError(str(e))
 
     def request_journeys_with_feed_publisher(self, from_coord, to_coord, period_extremity, limit=None):
         """
