@@ -153,16 +153,15 @@ class Blablacar(AbstractRidesharingService):
             res.shape = []
             shape = decode_polyline(offer.get('journey_polyline'), precision=5)
             if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                coord = type_pb2.GeographicalCoord()
-                coord.lon = res.pickup_place.lon
-                coord.lat = res.pickup_place.lat
-                res.shape.append(coord)
-            res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-            if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
-                coord = type_pb2.GeographicalCoord()
-                coord.lon = res.dropoff_place.lon
-                coord.lat = res.dropoff_place.lat
-                res.shape.append(coord)
+                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
+
+            if shape:
+                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
+
+            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
+                res.shape.append(
+                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
+                )
 
             res.price = offer.get('price', {}).get('amount')
             currency = offer.get('price', {}).get('currency')
@@ -227,7 +226,7 @@ class Blablacar(AbstractRidesharingService):
 
         resp = self._call_service(params=params)
 
-        if resp.status_code != 200:
+        if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(
                 'Blablacar service unavailable, impossible to query : %s',
                 resp.url,

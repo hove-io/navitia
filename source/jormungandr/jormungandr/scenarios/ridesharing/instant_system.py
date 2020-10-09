@@ -191,20 +191,17 @@ class InstantSystem(AbstractRidesharingService):
                 res.shape = []
                 shape = decode_polyline(p.get('shape'), precision=5)
                 if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = res.pickup_place.lon
-                    coord.lat = res.pickup_place.lat
-                    res.shape.append(coord)
-                for c in shape:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = c[0]
-                    coord.lat = c[1]
-                    res.shape.append(coord)
-                if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = res.dropoff_place.lon
-                    coord.lat = res.dropoff_place.lat
-                    res.shape.append(coord)
+                    res.shape.append(
+                        type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat)
+                    )
+
+                if shape:
+                    res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
+
+                if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
+                    res.shape.append(
+                        type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
+                    )
 
                 res.pickup_date_time = utils.make_timestamp_from_str(p['departureDate'])
                 res.dropoff_date_time = utils.make_timestamp_from_str(p['arrivalDate'])
@@ -275,7 +272,7 @@ class InstantSystem(AbstractRidesharingService):
 
         resp = self._call_service(params=params)
 
-        if resp.status_code != 200:
+        if not resp or resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error(
                 'Instant System service unavailable, impossible to query : %s',
