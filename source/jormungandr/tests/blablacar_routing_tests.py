@@ -92,7 +92,7 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
 
     def test_basic_ride_sharing(self):
         """
-        test ridesharing_jouneys details
+        test ridesharing_journeys details
         """
         q = (
             "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"

@@ -124,9 +124,10 @@ class Karos(AbstractRidesharingService):
             if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
                 res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
 
-            res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
+            if shape:
+                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
 
-            if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
+            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
                 res.shape.append(
                     type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                 )
@@ -138,7 +139,8 @@ class Karos(AbstractRidesharingService):
             res.total_seats = None
 
             res.pickup_date_time = offer.get('driverDepartureDate')
-            res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
+            if res.pickup_date_time is not None:
+                res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
 
             driver_alias = offer.get('driver', {}).get('alias', None)
             driver_grade = offer.get('driver', {}).get('grade')
@@ -185,7 +187,7 @@ class Karos(AbstractRidesharingService):
 
         resp = self._call_service(params=params, headers=headers)
 
-        if resp.status_code != 200:
+        if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(
                 'Karos API service unavailable, impossible to query : %s',
                 resp.url,
