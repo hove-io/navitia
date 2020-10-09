@@ -215,7 +215,7 @@ def test_ridesharing_service_schema():
         assert resp['status'] == "invalid data"
 
     # 'klass' is missing
-    corrupted_provider = {'args': {'service_url': 'service.url'}}
+    corrupted_provider = {'args': {'service_url': 'service.url', "api_key": "1235"}}
     send_and_check('Service0', corrupted_provider, 'klass')
 
     # args['service_url'] is missing
