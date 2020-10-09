@@ -177,6 +177,10 @@ CIRCUIT_BREAKER_BRAGI_TIMEOUT_S = 60  # the circuit breaker retries after this t
 CIRCUIT_BREAKER_MAX_ASGARD_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_ASGARD_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
+CIRCUIT_BREAKER_MAX_KLAXIT_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+
 # Default region instance
 # DEFAULT_REGION = 'default'
 
