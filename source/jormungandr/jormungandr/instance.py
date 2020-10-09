@@ -491,6 +491,12 @@ class Instance(object):
         return get_value_or_default('max_extra_second_pass', instance_db, self.name)
 
     @property
+    def asynchronous_ridesharing(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('asynchronous_ridesharing', instance_db, self.name)
+
+    @property
     def max_nb_crowfly_by_mode(self):
         # type: () -> Dict[Text, int]
         instance_db = self.get_models()

@@ -80,6 +80,9 @@ struct Labels {
     inline void clear(const Labels& clean) {
         dt_pts = clean.dt_pts;
         dt_transfers = clean.dt_transfers;
+
+        walking_duration_pts = clean.walking_duration_pts;
+        walking_duration_transfers = clean.walking_duration_transfers;
     }
     inline const DateTime& dt_transfer(SpIdx sp_idx) const { return dt_transfers[sp_idx]; }
     inline const DateTime& dt_pt(SpIdx sp_idx) const { return dt_pts[sp_idx]; }
@@ -89,18 +92,40 @@ struct Labels {
     inline bool pt_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_pt(sp_idx)); }
     inline bool transfer_is_initialized(SpIdx sp_idx) const { return is_dt_initialized(dt_transfer(sp_idx)); }
 
+    inline const DateTime& walking_duration_pt(SpIdx sp_idx) const { return walking_duration_pts[sp_idx]; }
+    inline const DateTime& walking_duration_transfer(SpIdx sp_idx) const { return walking_duration_transfers[sp_idx]; }
+
+    inline DateTime& mut_walking_duration_pt(SpIdx sp_idx) { return walking_duration_pts[sp_idx]; }
+    inline DateTime& mut_walking_duration_transfer(SpIdx sp_idx) { return walking_duration_transfers[sp_idx]; }
+
+    const IdxMap<type::StopPoint, DateTime>& get_dt_pts() { return dt_pts; }
+
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
         dt_pts.assign(stops, val);
         dt_transfers.assign(stops, val);
+
+        walking_duration_pts.assign(stops, DateTimeUtils::not_valid);
+        walking_duration_transfers.assign(stops, DateTimeUtils::not_valid);
     }
 
     // All these vectors are indexed by sp_idx
     //
-    // At what time can we reach this label with public transport
+    // dt_pts[stop_point] stores the earliest arrival time to stop_point.
+    // More precisely, at time dt_pts[stop_point], we just alighted from
+    // a vehicle going through stop_point, but we need to do a transfer
+    // before being able to board a new vehicle.
     IdxMap<type::StopPoint, DateTime> dt_pts;
-    // At what time wan we reach this label with a transfer
+    // dt_transfers[stop_point] stores the earliest time at which we are able
+    // to board a vehicle leaving from stop_point (i.e. a transfer to stop_point has been done).
     IdxMap<type::StopPoint, DateTime> dt_transfers;
+
+    // walking_duration_pts[stop_point] stores the total walking duration (fallback + transfers)  of a
+    // journey that alight to stop_point at DateTime dt_pts[stop_point]
+    IdxMap<type::StopPoint, DateTime> walking_duration_pts;
+    // waling_duration_transfers[stop_point] stores the total walking duration (fallback + transfers) of a
+    // journey that allows to board a vehicle at stop_point at DateTime transfers_pts[stop_point]
+    IdxMap<type::StopPoint, DateTime> walking_duration_transfers;
 };
 
 }  // namespace routing

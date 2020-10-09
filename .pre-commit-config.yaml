@@ -28,5 +28,5 @@ repos:
     -   id: mypy
         args: [--ignore-missing-imports, --py2]
         files: source
-        language_version: python3
+        language_version: python3.6
         exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py$

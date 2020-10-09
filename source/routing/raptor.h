@@ -62,7 +62,7 @@ struct StartingPointSndPhase {
     SpIdx sp_idx;
     unsigned count;
     DateTime end_dt;
-    unsigned fallback_dur;
+    unsigned walking_dur;
     bool has_priority;
 };
 
@@ -82,6 +82,9 @@ struct RAPTOR {
     IdxMap<type::StopPoint, DateTime> best_labels_pts;
     IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
+    IdxMap<type::StopPoint, DateTime> best_labels_pts_walking;
+    IdxMap<type::StopPoint, DateTime> best_labels_transfers_walking;
+
     /// Number of transfers done for the moment
     unsigned int count;
     /// Are the journey pattern valid
@@ -93,14 +96,19 @@ struct RAPTOR {
     // set to store if the stop_point is valid
     boost::dynamic_bitset<> valid_stop_points;
 
+    log4cplus::Logger raptor_logger;
+
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
           best_labels_pts(data.pt_data->stop_points),
           best_labels_transfers(data.pt_data->stop_points),
+          best_labels_pts_walking(data.pt_data->stop_points),
+          best_labels_transfers_walking(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
-          valid_stop_points(data.pt_data->stop_points.size()) {
+          valid_stop_points(data.pt_data->stop_points.size()),
+          raptor_logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"))) {
         labels.assign(10, data.dataRaptor->labels_const);
         first_pass_labels.assign(10, data.dataRaptor->labels_const);
     }
@@ -208,7 +216,9 @@ struct RAPTOR {
                             const nt::RTLevel rt_level,
                             const type::VehicleJourney* vj,
                             const uint16_t l_zone,
-                            DateTime base_dt);
+                            DateTime workingDate,
+                            DateTime working_walking_duration,
+                            SpIdx boarding_stop_point);
 
     /// Main loop
     template <typename Visitor>
@@ -231,6 +241,9 @@ struct RAPTOR {
                            const bool clockwise);
 
     ~RAPTOR() = default;
+
+    std::string print_all_labels();
+    std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
 };
 
 }  // namespace routing

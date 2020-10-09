@@ -1308,17 +1308,17 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert len(disrupts['disruptions']) == 11
 
         C_to_R_query = "journeys?from={from_coord}&to={to_coord}".format(
-            from_coord='stop_point:stopC', to_coord='0.00188646;0.00071865'
+            from_coord='stop_point:stopC', to_coord='stop_point:stopA'
         )
 
         # Query from C to R: the journey doesn't have any public_transport
-        base_journey_query = C_to_R_query + "&data_freshness=realtime&datetime=20120614T080000"
+        base_journey_query = C_to_R_query + "&data_freshness=realtime&datetime=20120614T080000&walking_speed=0.7"
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]
-        assert response['journeys'][0]['durations']['walking'] == 159
+        assert response['journeys'][0]['durations']['walking'] == 127
 
         # New disruption with two stop_times same as base schedule and
         # a new stop_time on stop_point:stopC added at the beginning
@@ -1332,23 +1332,23 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
                     arrival_delay=0,
                     departure_delay=0,
                     is_added=True,
-                    arrival=tstamp("20120614T080055"),
-                    departure=tstamp("20120614T080055"),
+                    arrival=tstamp("20120614T080000"),
+                    departure=tstamp("20120614T080000"),
                 ),
                 UpdatedStopTime(
                     "stop_point:stopB",
                     arrival_delay=0,
                     departure_delay=0,
-                    arrival=tstamp("20120614T080100"),
-                    departure=tstamp("20120614T080100"),
+                    arrival=tstamp("20120614T080001"),
+                    departure=tstamp("20120614T080001"),
                     message='on time',
                 ),
                 UpdatedStopTime(
                     "stop_point:stopA",
                     arrival_delay=0,
                     departure_delay=0,
-                    arrival=tstamp("20120614T080102"),
-                    departure=tstamp("20120614T080102"),
+                    arrival=tstamp("20120614T080002"),
+                    departure=tstamp("20120614T080002"),
                 ),
             ],
             disruption_id='new_stop_time',
@@ -1368,11 +1368,11 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         # Query from C to R: the journey should have a public_transport from C to A
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 2
-        assert len(response['journeys'][0]['sections']) == 2
+        assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
-        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120614T080055'
-        assert response['journeys'][0]['sections'][1]['arrival_date_time'] == '20120614T080222'
+        assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120614T080000'
+        assert response['journeys'][0]['sections'][0]['arrival_date_time'] == '20120614T080002'
         assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
 
         # New disruption with a deleted stop_time recently added at stop_point:stopC
@@ -1385,8 +1385,8 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
                     "stop_point:stopC",
                     arrival_delay=0,
                     departure_delay=0,
-                    arrival=tstamp("20120614T080104"),
-                    departure=tstamp("20120614T080104"),
+                    arrival=tstamp("20120614T080000"),
+                    departure=tstamp("20120614T080000"),
                     message='stop_time deleted',
                     arrival_skipped=True,
                 )
@@ -1411,7 +1411,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
         assert 'data_freshness' not in response['journeys'][0]['sections'][0]
-        assert response['journeys'][0]['durations']['walking'] == 159
+        assert response['journeys'][0]['durations']['walking'] == 127
 
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T080000')
         assert len(pt_response['disruptions']) == 2

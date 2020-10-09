@@ -135,6 +135,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                      const int32_t night_bus_filter_base_factor,
                                      const boost::optional<uint32_t>& timeframe_duration) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
     std::vector<Path> pathes;
 
     // We loop on datetimes, but in practice there's always only one
@@ -1189,18 +1190,37 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
 }
 
 DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise) {
-    DateTime lastest_arrival = DateTimeUtils::min;
-    DateTime earliest_departure = DateTimeUtils::inf;  // clockwise
+    if (clockwise) {
+        // among the journeys with the earliest arrival time, we compute the latest departure time
+        DateTime earliest_arrival = DateTimeUtils::inf;
+        DateTime latest_departure = DateTimeUtils::min;
+        for (const auto& journey : journeys) {
+            if (journey.arrival_dt < earliest_arrival) {
+                earliest_arrival = journey.arrival_dt;
+                latest_departure = journey.departure_dt;
+            } else if (journey.arrival_dt == earliest_arrival && journey.departure_dt > latest_departure) {
+                latest_departure = journey.departure_dt;
+            }
+        }
 
-    for (const auto& journey : journeys) {
-        earliest_departure = std::min(earliest_departure, journey.departure_dt);
-        lastest_arrival = std::max(lastest_arrival, journey.arrival_dt);
+        return latest_departure + 1;
     }
 
-    earliest_departure += 1;
-    lastest_arrival -= 1;
+    else {
+        // among the journeys with the latest departure time, we compute the earliest arrival time
+        DateTime earliest_arrival = DateTimeUtils::inf;
+        DateTime latest_departure = DateTimeUtils::min;
+        for (const auto& journey : journeys) {
+            if (journey.departure_dt > latest_departure) {
+                latest_departure = journey.departure_dt;
+                earliest_arrival = journey.arrival_dt;
+            } else if (journey.departure_dt == latest_departure && journey.arrival_dt < earliest_arrival) {
+                earliest_arrival = journey.arrival_dt;
+            }
+        }
 
-    return clockwise ? earliest_departure : lastest_arrival;
+        return earliest_arrival - 1;
+    }
 }
 
 static std::vector<bt::ptime> parse_datetimes(const RAPTOR& raptor,
@@ -1359,8 +1379,6 @@ void make_response(navitia::PbCreator& pb_creator,
                    const int32_t night_bus_filter_base_factor,
                    const boost::optional<uint32_t>& timeframe_duration,
                    const uint32_t depth) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-
     // Create datetime
     auto datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
     if (pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {

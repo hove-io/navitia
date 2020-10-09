@@ -1,3 +1,16 @@
+navitia2 (7.2.0) unstable; urgency=low
+
+  * [tools] Install script - migration to support ubuntu 20.04  <https://github.com/CanalTP/navitia/pull/3289>
+  * [jormun] Update journey total duration at the end  <https://github.com/CanalTP/navitia/pull/3292>
+  * [jormun] Blablacar connector  <https://github.com/CanalTP/navitia/pull/3290>
+  * [Jormun] Update the way to choose between two similar journeys  <https://github.com/CanalTP/navitia/pull/3288>
+  * [Jormun] Asynchronous ridesharing mode  <https://github.com/CanalTP/navitia/pull/3280>
+  * [kraken + ed] Remove clang warnings  <https://github.com/CanalTP/navitia/pull/3285>
+  * [Raptor] Ignore the max_extra_second_pass parameter and set it to zero  <https://github.com/CanalTP/navitia/pull/3291>
+  * [Raptor] Lex walking duration  <https://github.com/CanalTP/navitia/pull/2937>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 09 Oct 2020 10:10:17 +0100
+
 navitia2 (7.1.0) unstable; urgency=low
 
   * [Jormuangandr] Overriding fallback streetnetwork mode  <https://github.com/CanalTP/navitia/pull/3282>

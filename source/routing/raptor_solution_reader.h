@@ -46,13 +46,44 @@ struct StartingPointSndPhase;
 // by the pool).
 struct Dominates {
     bool request_clockwise;
-    Dominates(bool rc) : request_clockwise(rc) {}
+    navitia::time_duration transfer_penalty;
+    Dominates(bool rc, navitia::time_duration transfer_penalty)
+        : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise) && lhs.better_on_transfer(rhs) && lhs.better_on_sn(rhs);
+        return lhs.better_on_dt(rhs, request_clockwise, transfer_penalty) && lhs.better_on_transfer(rhs)
+               && lhs.better_on_sn(rhs, navitia::time_duration(0, 0, 120, 0));
     }
 };
 
+// #define LOG_PARETO_FRONT
+// to activate logs of the updates of the pareto front of journeys
+// inside raptor
+#ifdef LOG_PARETO_FRONT
+
+struct ParetoFrontLogger {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("raptor"));
+
+    void at_dominated(const Journey& to_insert, const Journey& in_pool) {
+        LOG4CPLUS_DEBUG(logger, "Journey dominated ! " << std::endl
+                                                       << to_insert << "\n  dominated by : \n"
+                                                       << std::endl
+                                                       << in_pool);
+    }
+    void at_dominates(const Journey& /*to_insert*/, const Journey& in_pool) {
+        LOG4CPLUS_DEBUG(logger, "Journey removed from solution pool " << std::endl << in_pool);
+    }
+    void at_inserted(const Journey& j) {
+        LOG4CPLUS_DEBUG(logger, "Adding  journey to solution pool" << std::endl << j);
+    }
+};
+
+typedef ParetoFront<Journey, Dominates, ParetoFrontLogger> Solutions;
+
+#else
+
 typedef ParetoFront<Journey, Dominates> Solutions;
+
+#endif
 
 // deps (resp. arrs) are departure (resp. arrival) stop points and
 // durations (not clockwise dependent).
