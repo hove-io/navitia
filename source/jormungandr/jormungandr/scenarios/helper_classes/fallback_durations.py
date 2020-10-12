@@ -31,7 +31,7 @@ from __future__ import absolute_import
 
 import jormungandr.street_network.utils
 from navitiacommon import response_pb2
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -286,9 +286,8 @@ class FallbackDurationsPool(dict):
 
         self._value = {}
         self._request_id = request_id
-        import collections
 
-        self._overrided_uri_map = collections.defaultdict(dict)
+        self._overrided_uri_map = defaultdict(dict)
         self._async_request()
 
     @property
