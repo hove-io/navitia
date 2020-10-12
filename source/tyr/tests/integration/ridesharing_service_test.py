@@ -120,9 +120,9 @@ def test_ridesharing_service_put(default_ridesharing_service_config):
         'klass': 'jormungandr.scenarios.ridesharing.instant_system.InstantSystem',
         'args': {
             'service_url': 'https://new_url.io',
-            "rating_scale_min": 0,
-            "crowfly_radius": 600,
-            "api_key": "1235",
+            "rating_scale_min": 5,
+            "crowfly_radius": 60,
+            "api_key": "abcd",
         },
     }
     resp, status = api_put(
