@@ -62,7 +62,9 @@ instant_system_ridesharing_config = [
         "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
     }
 ]
-expected_ridesharing_status = [
+
+
+expected_instant_system_ridesharing_status = [
     {
         "circuit_breaker": {"current_state": "closed", "fail_counter": 0, "reset_timeout": 60},
         "class": "InstantSystem",
@@ -71,6 +73,36 @@ expected_ridesharing_status = [
         "network": "Network 1",
         "rating_scale_max": 5,
         "rating_scale_min": 0,
+    }
+]
+
+karos_system_ridesharing_config = [
+    {
+        "class": "jormungandr.scenarios.ridesharing.karos.Karos",
+        "args": {
+            "service_url": "https://ext.karos.fr:443/carpoolJourneys",
+            "api_key": "eby3z7atjenb36k4mf8pwyjpe9h2ms7vkdzjzqrw68ug6hkusu4kxzdrr7n8ah5u",
+            "network": "Karos",
+            "feed_publisher": {
+                "url": "https://url_for_publisher",
+                "id": "publisher id",
+                "license": "Private",
+                "name": "PF Karos",
+            },
+            "timeout": 15,
+            "timedelta": 7200,
+            "departure_radius": 10,
+            "arrival_radius": 10,
+        },
+    }
+]
+
+expected_karos_ridesharing_status = [
+    {
+        "network": "Karos",
+        "circuit_breaker": {"fail_counter": 0, "current_state": "closed", "reset_timeout": 60},
+        "id": "Karos",
+        "class": "Karos",
     }
 ]
 
@@ -150,6 +182,9 @@ def add_common_status_test():
     # get_all_street_networks_json or get_all_street_networks_db
     assert response1 == response2
 
+    # Call again to test another ridesharing to test it's status
+    assert call_add_common_status_with_Karos(True)
+
 
 def call_add_common_status(disable_database):
     instance = FakeInstance(
@@ -158,12 +193,11 @@ def call_add_common_status(disable_database):
         equipment_details_config=sytral_equipment_details_config,
         instance_equipment_providers=["sytral"],
     )
-    response = {}
-    response['status'] = {}
+    response = {'status': {}}
     add_common_status(response, instance)
 
-    assert response['status']["is_open_data"] == False
-    assert response['status']["is_open_service"] == False
+    assert response['status']["is_open_data"] is False
+    assert response['status']["is_open_service"] is False
     assert response['status']['realtime_proxies'] == []
 
     # We sort this list because the order is not important
@@ -173,7 +207,7 @@ def call_add_common_status(disable_database):
 
     ridesharing_status = response['status']["ridesharing_services"]
     ridesharing_status.sort()
-    assert ridesharing_status == expected_ridesharing_status
+    assert ridesharing_status == expected_instant_system_ridesharing_status
 
     equipment_providers_keys = response['status']["equipment_providers_services"]['equipment_providers_keys']
     assert equipment_providers_keys == expected_equipment_providers_keys
@@ -185,4 +219,23 @@ def call_add_common_status(disable_database):
 
     # We sort the response because the order is not important
     # And it is easier to compare
+    return OrderedDict(response)
+
+
+def call_add_common_status_with_Karos(disable_database):
+    instance = FakeInstance(
+        disable_database,
+        ridesharing_configurations=karos_system_ridesharing_config,
+        equipment_details_config=sytral_equipment_details_config,
+        instance_equipment_providers=["sytral"],
+    )
+    response = {'status': {}}
+    add_common_status(response, instance)
+
+    # We sort this list because the order is not important
+    # And it is easier to compare
+    ridesharing_status = response['status']["ridesharing_services"]
+    ridesharing_status.sort()
+    assert ridesharing_status == expected_karos_ridesharing_status
+
     return OrderedDict(response)

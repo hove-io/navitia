@@ -237,6 +237,16 @@ def karos_service_test():
             network='dummyNetwork',
             feed_publisher=DUMMY_KAROS_FEED_PUBLISHER,
         )
+
+        # Check status information
+        status = karos.status()
+        assert status['id'] == 'Karos'
+        assert status['class'] == 'Karos'
+        assert status['network'] == 'dummyNetwork'
+        assert status['circuit_breaker']['fail_counter'] == 0
+        assert status['circuit_breaker']['current_state'] == 'closed'
+        assert status['circuit_breaker']['reset_timeout'] == 60
+
         from_coord = '47.28696,0.78981'
         to_coord = '47.38642,0.69039'
 
@@ -274,8 +284,6 @@ def karos_service_test():
 
         assert ridesharing_journeys[0].price == 2
         assert ridesharing_journeys[0].currency == 'centime'
-
-        # Karos doesn't have any information on seats
         assert ridesharing_journeys[0].total_seats is None
         assert ridesharing_journeys[0].available_seats == 3
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
@@ -296,8 +304,6 @@ def karos_service_test():
 
         assert ridesharing_journeys[1].price == 2
         assert ridesharing_journeys[1].currency == 'centime'
-
-        # Karos doesn't have any information on seats
         assert ridesharing_journeys[1].total_seats is None
         assert ridesharing_journeys[1].available_seats == 3
         assert feed_publisher == RsFeedPublisher(**DUMMY_KAROS_FEED_PUBLISHER)

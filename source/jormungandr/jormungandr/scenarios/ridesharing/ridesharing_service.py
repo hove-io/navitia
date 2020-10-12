@@ -59,12 +59,17 @@ RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url']
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
-    @abc.abstractmethod
     def status(self):
-        """
-        :return: a dict contains the status of the service
-        """
-        pass
+        return {
+            'id': self.system_id,
+            'class': self.__class__.__name__,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+            'network': self.network,
+        }
 
     def _call_service(self, params, headers={}):
         """
