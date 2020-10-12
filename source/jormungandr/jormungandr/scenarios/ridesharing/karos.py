@@ -130,12 +130,17 @@ class Karos(AbstractRidesharingService):
             if res.pickup_date_time is not None:
                 res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
 
-            driver_alias = offer.get('driver', {}).get('alias', None)
+            gender_map = {'M': rsj.Gender.MALE, 'F': rsj.Gender.FEMALE}
+            driver_gender = offer.get('driver', {}).get('gender', None)
+            driver_alias = offer.get('driver', {}).get('firstName', None)
             driver_grade = offer.get('driver', {}).get('grade')
             driver_image = offer.get('driver', {}).get('picture')
-
             res.driver = rsj.Individual(
-                alias=driver_alias, gender=None, image=driver_image, rate=driver_grade, rate_count=None
+                alias=driver_alias,
+                gender=gender_map.get(driver_gender, rsj.Gender.UNKNOWN),
+                image=driver_image,
+                rate=driver_grade,
+                rate_count=None,
             )
 
             ridesharing_journeys.append(res)

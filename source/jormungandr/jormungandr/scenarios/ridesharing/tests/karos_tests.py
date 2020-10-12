@@ -30,9 +30,8 @@
 
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
-from jormungandr.scenarios.ridesharing.karos import Karos, DEFAULT_KAROS_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
+from jormungandr.scenarios.ridesharing.karos import Karos, DEFAULT_KAROS_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
     Ridesharing,
     RsFeedPublisher,
@@ -75,7 +74,7 @@ fake_response = """
       "grade": 5,
       "id": "f72fe5cd-d287-45b3-b35b-7d2af56f9a66",
       "lastName": "M",
-      "picture": "https://storage-download.googleapis.com/karos-de.appspot.com/p/20609877-29db-4ce5-bb03-76840c4868fa.jpg"
+      "picture": "https://dummyimage.com/128x128/C8E6C9/000.png&text=JP"
     },
     "driverArrivalAddress": "",
     "driverArrivalLat": 48.7849,
@@ -174,6 +173,7 @@ fixed = regex.sub(r"\\\\", fake_response)
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
 DUMMY_KAROS_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
+
 
 # A hack class
 class DummyInstance:
@@ -281,6 +281,12 @@ def karos_service_test():
         assert ridesharing_journeys[0].shape[1].lon == 2.2897
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
+
+        assert ridesharing_journeys[0].driver.alias == 'Antonello'
+        assert ridesharing_journeys[0].driver.gender == Gender.MALE
+        assert ridesharing_journeys[0].driver.image == 'https://dummyimage.com/128x128/C8E6C9/000.png&text=JP'
+        assert ridesharing_journeys[0].driver.rate == 5
+        assert ridesharing_journeys[0].driver.rate_count is None
 
         assert ridesharing_journeys[0].price == 2
         assert ridesharing_journeys[0].currency == 'centime'

@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import logging
 import pybreaker
-import requests as requests
 
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
@@ -86,44 +85,6 @@ class Klaxit(AbstractRidesharingService):
             reset_timeout=app.config['CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S'],
         )
         self.call_params = None
-
-    def status(self):
-        return {
-            'id': self.system_id,
-            'class': self.__class__.__name__,
-            'circuit_breaker': {
-                'current_state': self.breaker.current_state,
-                'fail_counter': self.breaker.fail_counter,
-                'reset_timeout': self.breaker.reset_timeout,
-            },
-            'network': self.network,
-        }
-
-    def _call_service(self, params):
-        self.logger.debug("requesting Klaxit VIA API")
-
-        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
-        try:
-            return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
-            )
-        except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error(
-                'Klaxit VIA API service dead (error: %s)', e, extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError('circuit breaker open')
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error(
-                'Klaxit VIA API service timeout (error: %s)',
-                t,
-                extra={'ridesharing_service_id': self._get_rs_id()},
-            )
-            raise RidesharingServiceError('timeout')
-        except Exception as e:
-            logging.getLogger(__name__).exception(
-                'Klaxit VIA API service error', extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError(str(e))
 
     def _make_response(self, raw_json):
         if not raw_json:

@@ -116,6 +116,7 @@ mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed)
 
 DUMMY_KLAXIT_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
+
 # A hack class
 class DummyInstance:
     name = ''
