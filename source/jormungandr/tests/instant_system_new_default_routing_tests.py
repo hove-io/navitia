@@ -97,7 +97,7 @@ INSTANT_SYSTEM_RESPONSE = {
 }
 
 
-def mock_instant_system(_, params):
+def mock_instant_system(_, params, headers):
     return MockResponse(INSTANT_SYSTEM_RESPONSE, 200)
 
 

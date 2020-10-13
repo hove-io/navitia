@@ -34,7 +34,7 @@ from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
-DUMMY_BLABLACAR_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
+DUMMY_KAROS_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
     'scenario': 'new_default',
@@ -45,48 +45,59 @@ MOCKED_INSTANCE_CONF = {
                     "service_url": "http://wtf",
                     "api_key": "key",
                     "network": "Super Covoit",
-                    "timedelta": 3600,
-                    "feed_publisher": DUMMY_BLABLACAR_FEED_PUBLISHER,
+                    "feed_publisher": DUMMY_KAROS_FEED_PUBLISHER,
                 },
-                "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+                "class": "jormungandr.scenarios.ridesharing.karos.Karos",
             }
         ]
     },
 }
 
-
-BLABLACAR_RESPONSE = [
+KAROS_RESPONSE = [
     {
-        "id": "53e0ac4f-e693-4e29-8f69-eb1142d5b99e_2020-09-28",
-        "journey_polyline": "svr_H}fyC{@g@[[o@u@Qc@[sBMm@Qe@[g@e@k@aBuAIKOI?AACCEEAIDAN@DMf@GZ@d@QbBOzAy@xFAJ]r@IPOQm@a@wDoB?C?ECIGAGD?@m@c@uCiCcCgBEKsB}AK?IGs@i@m@y@Wm@oAoDaB_EYk@y@kAyDmG_A}Ao@}AQeAIcAOiBUw@Yc@WWUKiAe@USSQKOACAIEQMOOGO@MHKPGd@CZK^INq@`A}@lAmEhGcIdLcPlUqGdJ[XE?K@KFK\AH?DQl@aFjH{IlMoCdEgBrCkG~JqDtFcLpPyb@pn@aHdKoHjKcAtAQLSLC?G@KFMZAVI`@eCvDoAnBs@rAe@~@{@pBg@tAk@fBcEpO{FpTeL~a@wBfIoAjEy@fBK?KDOPIXCd@F`@UxAY`AQn@o@zCwAxFiAbEMd@cCdJ_BxF[t@GAE?KDILAP@RHLBB]`Bw@fDYbAQn@gBrGqAnFq@rCyIj\qH|XMNe@vAq@dCcFpRaF|QuFbT}CdL{CbLgE`PiCjJcApDYWoB{@gBw@_EiBiAi@[KwBmAiF}CuAm@Q@}A{@sFeDkDqBsIwEkYmOyJ_FgEmBiEeB_EuAkCw@aCm@{AWaCa@aCYcF[yCG_D@iEPaDXeANmBZsCl@wDdA_DhAcEfBiHjDoLzF}h@fWoKbFcAh@]E_Cl@s@L_AJqA?}@IkAOcAUaA[y@e@{@i@SISA_@Fa@T]XYd@Gn@R|@X~@p@dAn@|@h@z@?B?D@HJNB?@?|@~ArE`IPl@t@tAt@hBdAvCzBxFj@tHn@|Iz@zL~@nMf@hGLb@F`@TzCJpB^@VERSN]@a@Ae@|By@bA[dCw@NKpDiAxAc@|@U",
-        "dropoff_longitude": 0.00188646,
-        "pickup_latitude": 0.0000898312,
-        "web_url": "https://blablalines.com",
-        "departure_to_pickup_walking_time": 174,
-        "duration": 1301,
-        "pickup_longitude": 0.0000898312,
-        "available_seats": 3,
-        "dropoff_latitude": 0.00071865,
-        "price": {"currency": "EUR", "amount": 1},
-        "dropoff_to_arrival_walking_time": 76,
+        "availableSeats": 3,
+        "driver": {
+            "firstName": "caroline",
+            "gender": "F",
+            "grade": 5,
+            "id": "19071ee5-f76a-4130-90ff-33551f91ed0f",
+            "lastName": "t",
+        },
+        "departureToPickupWalkingDistance": 475,
+        "departureToPickupWalkingPolyline": "keliHiyoMqAxCjFvHIRdA~BjE`G",
+        "departureToPickupWalkingTime": 174,
         "distance": 18869,
+        "driverArrivalLat": 0.00071865,
+        "driverArrivalLng": 0.00188646,
+        "driverDepartureDate": 1601988149,
+        "driverDepartureLat": 0.0000898312,
+        "driverDepartureLng": 0.0000898312,
+        "dropoffToArrivalWalkingDistance": 1237,
+        "dropoffToArrivalWalkingPolyline": "{deiHq~nMh@hBrNaK?u@jKdFrBnAvMw@fEjCXu@[]`CkG",
+        "dropoffToArrivalWalkingTime": 76,
+        "duration": 1301,
+        "id": "fe08fceb-03a2-4dc6-8ba4-b422c1256227",
+        "journeyPolyline": "svr_H}fyC{@g@[[o@u@Qc@[sBMm@Qe@[g@e@k@aBuAIKOI?AACCEEAIDAN@DMf@GZ@d@QbBOzAy@xFAJ]r@IPOQm@a@wDoB?C?ECIGAGD?@m@c@uCiCcCgBEKsB}AK?IGs@i@m@y@Wm@oAoDaB_EYk@y@kAyDmG_A}Ao@}AQeAIcAOiBUw@Yc@WWUKiAe@USSQKOACAIEQMOOGO@MHKPGd@CZK^INq@`A}@lAmEhGcIdLcPlUqGdJ[XE?K@KFK\AH?DQl@aFjH{IlMoCdEgBrCkG~JqDtFcLpPyb@pn@aHdKoHjKcAtAQLSLC?G@KFMZAVI`@eCvDoAnBs@rAe@~@{@pBg@tAk@fBcEpO{FpTeL~a@wBfIoAjEy@fBK?KDOPIXCd@F`@UxAY`AQn@o@zCwAxFiAbEMd@cCdJ_BxF[t@GAE?KDILAP@RHLBB]`Bw@fDYbAQn@gBrGqAnFq@rCyIj\qH|XMNe@vAq@dCcFpRaF|QuFbT}CdL{CbLgE`PiCjJcApDYWoB{@gBw@_EiBiAi@[KwBmAiF}CuAm@Q@}A{@sFeDkDqBsIwEkYmOyJ_FgEmBiEeB_EuAkCw@aCm@{AWaCa@aCYcF[yCG_D@iEPaDXeANmBZsCl@wDdA_DhAcEfBiHjDoLzF}h@fWoKbFcAh@]E_Cl@s@L_AJqA?}@IkAOcAUaA[y@e@{@i@SISA_@Fa@T]XYd@Gn@R|@X~@p@dAn@|@h@z@?B?D@HJNB?@?|@~ArE`IPl@t@tAt@hBdAvCzBxFj@tHn@|Iz@zL~@nMf@hGLb@F`@TzCJpB^@VERSN]@a@Ae@|By@bA[dCw@NKpDiAxAc@|@U",
+        "price": {"amount": 1.0, "type": "PAYING"},
+        "type": "PLANNED",
+        "webUrl": "https://koroslines.com",
     }
 ]
 
 
-def mock_blablacar(_, params):
-    return MockResponse(BLABLACAR_RESPONSE, 200)
+def mock_karos(_, params, headers):
+    return MockResponse(KAROS_RESPONSE, 200)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_http_blablacar(monkeypatch):
-    monkeypatch.setattr('jormungandr.scenarios.ridesharing.blablacar.Blablacar._call_service', mock_blablacar)
+def mock_http_karos(monkeypatch):
+    monkeypatch.setattr('jormungandr.scenarios.ridesharing.karos.Karos._call_service', mock_karos)
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
+class TestKaros(NewDefaultScenarioAbstractTestFixture):
     """
-    Integration test with Blablacar
+    Integration test with Karos VIA API
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
     """
 
@@ -137,16 +148,17 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
+        # crowfly duration in ridesharing is always 0
+        assert rsj_sections[0].get('duration') == 0
 
         assert rsj_sections[1].get('type') == 'ridesharing'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
+        # ridesharing duration comes from the offer
+        assert rsj_sections[1].get('duration') == 1301
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
-        assert rsj_info.get('operator') == 'Blablacar'
-        assert rsj_info.get('seats').get('available') == 3
-
-        assert 'total' not in rsj_info.get('seats')
+        assert rsj_info.get('operator') == 'Karos'
 
         rsj_links = rsj_sections[1].get('links')
         assert len(rsj_links) == 2
@@ -161,11 +173,13 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
+        # crowfly duration in ridesharing is always 0
+        assert rsj_sections[2].get('duration') == 0
 
         fps = response['feed_publishers']
         assert len(fps) == 2
 
         def equals_to_dummy_fp(fp):
-            return fp == DUMMY_BLABLACAR_FEED_PUBLISHER
+            return fp == DUMMY_KAROS_FEED_PUBLISHER
 
         assert any(equals_to_dummy_fp(fp) for fp in fps)

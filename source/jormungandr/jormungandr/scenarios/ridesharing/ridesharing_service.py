@@ -34,6 +34,8 @@ import six
 import logging
 from jormungandr import utils, new_relic
 from collections import namedtuple
+import pybreaker
+import requests as requests
 
 
 class RidesharingServiceError(RuntimeError):
@@ -57,12 +59,55 @@ RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url']
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
-    @abc.abstractmethod
     def status(self):
+        return {
+            'id': self.system_id,
+            'class': self.__class__.__name__,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+            'network': self.network,
+        }
+
+    def _call_service(self, params, headers={}):
         """
-        :return: a dict contains the status of the service
+        :param params: call parameters list
+        :return: response from external service
         """
-        pass
+        self.logger.debug('requesting %s', self.network)
+
+        # Format call_params from parameters
+        self.call_params = ''
+        for key, value in params.items():
+            self.call_params += '{}={}&'.format(key, value)
+
+        try:
+            return self.breaker.call(
+                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
+            )
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error(
+                '%s service dead (error: %s)',
+                self.network,
+                e,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('circuit breaker open')
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error(
+                '%s service timeout (error: %s)',
+                self.network,
+                t,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception(
+                '%s service error', self.network, extra={'ridesharing_service_id': self._get_rs_id()}
+            )
+            raise RidesharingServiceError(str(e))
 
     def request_journeys_with_feed_publisher(self, from_coord, to_coord, period_extremity, limit=None):
         """

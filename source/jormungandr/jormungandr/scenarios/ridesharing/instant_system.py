@@ -33,7 +33,6 @@ import datetime
 import logging
 import pybreaker
 import pytz
-import requests as requests
 
 from jormungandr import utils
 from jormungandr import app
@@ -90,10 +89,10 @@ class InstantSystem(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
     def status(self):
         return {
@@ -109,32 +108,6 @@ class InstantSystem(AbstractRidesharingService):
             'crowfly_radius': self.crowfly_radius,
             'network': self.network,
         }
-
-    def _call_service(self, params):
-        self.logger.debug("requesting instant system")
-
-        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
-        try:
-            return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
-            )
-        except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error(
-                'Instant System service dead (error: %s)', e, extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError('circuit breaker open')
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error(
-                'Instant System service timeout (error: %s)',
-                t,
-                extra={'ridesharing_service_id': self._get_rs_id()},
-            )
-            raise RidesharingServiceError('timeout')
-        except Exception as e:
-            logging.getLogger(__name__).exception(
-                'Instant System service error', extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError(str(e))
 
     @staticmethod
     def _get_ridesharing_journeys(raw_journeys):
@@ -265,12 +238,8 @@ class InstantSystem(AbstractRidesharingService):
         if limit is not None:
             params.update({'limit', limit})
 
-        # Format call_params from parameters
-        self.call_params = ''
-        for key, value in params.items():
-            self.call_params += '{}={}&'.format(key, value)
-
-        resp = self._call_service(params=params)
+        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
+        resp = self._call_service(params=params, headers=headers)
 
         if not resp or resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error

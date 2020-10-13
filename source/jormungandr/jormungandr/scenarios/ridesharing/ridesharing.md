@@ -48,13 +48,38 @@ Insert into **Jormun** configuration:
             "service_url": "https://via.klaxit.com/v1/carpoolJourneys",
             "api_key": "Token",
             "network": "Klaxit",
-            "timeout": 10,            # optional
-            "timedelta": 3600,        # optional
+            "timeout": 10,              # optional (defaults to 2 in secs)
+            "timedelta": 3600,          # optional (defaults to 3600 in secs)
+            "departure_radius": 3,      # optional (defaults to 2 in km)
+		    "arrival_radius": 3         # optional (defaults to 2 in km)
         }
     }
  ]
 ```
 
-Available optional parameters list:
-* timeout: circuit breaker timeout. By default 10 secs
-* timedelta: The timedelta around passenger departure’s time (in seconds, defaults to 3600)
+## Karos
+
+Also provides an external API that delivers ridesharing offers.<br>
+As with other connectors Navitia exposes the offers inside **ridesharing_journeys** json output field.<br>
+Karos documentation : https://app.swaggerhub.com/apis/Karos/karos-api/1.1.0-oas3
+
+### How to connect Karos with Navitia.
+
+Insert into **Jormun** configuration:
+
+```
+ "ridesharing": [
+    {
+        "class": "jormungandr.scenarios.ridesharing.karos.Karos",
+        "args": {
+            "service_url": "https://ext.karos.fr:443/carpoolJourneys",
+            "api_key": "Token",
+            "network": "Karos",
+            "timeout": 10,              # optional (defaults to 2 in secs)
+            "timedelta": 3600,          # optional (defaults to 3600 in secs)
+            "departure_radius": 3,      # optional (defaults to 2 in km)
+		    "arrival_radius": 3         # optional (defaults to 2 in km)
+        }
+    }
+ ]
+```
