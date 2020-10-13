@@ -89,8 +89,8 @@ class InstantSystem(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'), 60),
         )
         self.call_params = None
 
@@ -238,11 +238,7 @@ class InstantSystem(AbstractRidesharingService):
         if limit is not None:
             params.update({'limit', limit})
 
-        # Format call_params from parameters
         self.call_params = ''
-        for key, value in params.items():
-            self.call_params += '{}={}&'.format(key, value)
-
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         resp = self._call_service(params=params, headers=headers)
 

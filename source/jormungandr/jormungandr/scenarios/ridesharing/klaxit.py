@@ -81,8 +81,8 @@ class Klaxit(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_KLAXIT_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_KLAXIT_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S'), 60),
         )
         self.call_params = None
 
@@ -170,9 +170,6 @@ class Klaxit(AbstractRidesharingService):
 
         # Format call_params from parameters
         self.call_params = ''
-        for key, value in params.items():
-            self.call_params += '{}={}&'.format(key, value)
-
         resp = self._call_service(params=params)
 
         if not resp or resp.status_code != 200:

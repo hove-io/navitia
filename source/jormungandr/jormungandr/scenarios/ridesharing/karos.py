@@ -81,8 +81,8 @@ class Karos(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_KAROS_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_KAROS_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_KAROS_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_KAROS_TIMEOUT_S'), 60),
         )
         self.call_params = None
 
@@ -131,8 +131,8 @@ class Karos(AbstractRidesharingService):
                 res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
 
             gender_map = {'M': rsj.Gender.MALE, 'F': rsj.Gender.FEMALE}
-            driver_gender = offer.get('driver', {}).get('gender', None)
-            driver_alias = offer.get('driver', {}).get('firstName', None)
+            driver_gender = offer.get('driver', {}).get('gender')
+            driver_alias = offer.get('driver', {}).get('firstName')
             driver_grade = offer.get('driver', {}).get('grade')
             driver_image = offer.get('driver', {}).get('picture')
             res.driver = rsj.Individual(
@@ -173,11 +173,7 @@ class Karos(AbstractRidesharingService):
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}
 
-        # Format call_params from parameters
         self.call_params = ''
-        for key, value in params.items():
-            self.call_params += '{}={}&'.format(key, value)
-
         resp = self._call_service(params=params, headers=headers)
 
         if not resp or resp.status_code != 200:

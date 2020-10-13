@@ -78,6 +78,10 @@ class AbstractRidesharingService(object):
         """
         self.logger.debug('requesting %s', self.network)
 
+        # Format call_params from parameters
+        for key, value in params.items():
+            self.call_params += '{}={}&'.format(key, value)
+
         try:
             return self.breaker.call(
                 requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
