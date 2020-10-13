@@ -79,6 +79,7 @@ class AbstractRidesharingService(object):
         self.logger.debug('requesting %s', self.network)
 
         # Format call_params from parameters
+        self.call_params = ''
         for key, value in params.items():
             self.call_params += '{}={}&'.format(key, value)
 

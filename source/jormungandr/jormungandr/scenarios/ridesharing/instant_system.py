@@ -92,7 +92,7 @@ class InstantSystem(AbstractRidesharingService):
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'), 4),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
     def status(self):
         return {
@@ -238,7 +238,6 @@ class InstantSystem(AbstractRidesharingService):
         if limit is not None:
             params.update({'limit', limit})
 
-        self.call_params = ''
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         resp = self._call_service(params=params, headers=headers)
 

@@ -84,7 +84,7 @@ class Karos(AbstractRidesharingService):
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_KAROS_FAIL'), 4),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_KAROS_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
     def _make_response(self, raw_json):
         if not raw_json:
@@ -173,7 +173,6 @@ class Karos(AbstractRidesharingService):
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}
 
-        self.call_params = ''
         resp = self._call_service(params=params, headers=headers)
 
         if not resp or resp.status_code != 200:

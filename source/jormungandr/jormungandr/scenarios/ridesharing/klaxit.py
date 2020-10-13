@@ -84,7 +84,7 @@ class Klaxit(AbstractRidesharingService):
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_KLAXIT_FAIL'), 4),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
     def _make_response(self, raw_json):
         if not raw_json:
@@ -168,8 +168,6 @@ class Klaxit(AbstractRidesharingService):
             'arrivalRadius': 2,
         }
 
-        # Format call_params from parameters
-        self.call_params = ''
         resp = self._call_service(params=params)
 
         if not resp or resp.status_code != 200:

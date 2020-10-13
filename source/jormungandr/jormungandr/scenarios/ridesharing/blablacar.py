@@ -83,7 +83,7 @@ class Blablacar(AbstractRidesharingService):
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_BLABLACAR_FAIL'), 4),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_BLABLACAR_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
         self.journey_metadata = rsj.MetaData(
             system_id=self.system_id, network=self.network, rating_scale_min=None, rating_scale_max=None
@@ -183,7 +183,6 @@ class Blablacar(AbstractRidesharingService):
             'departure_timedelta': self.timedelta,
         }
 
-        self.call_params = ''
         resp = self._call_service(params=params)
 
         if not resp or resp.status_code != 200:
