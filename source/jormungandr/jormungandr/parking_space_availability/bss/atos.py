@@ -38,6 +38,7 @@ from jormungandr import cache, app
 from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
+import requests as requests
 
 DEFAULT_ATOS_FEED_PUBLISHER = None
 
@@ -89,8 +90,15 @@ class AtosProvider(CommonBssProvider):
                     stands.total_stands = 0
 
                 return stands
-        except:
-            logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('atos service dead (error: {})'.format(e))
+            raise BssProxyError('circuit breaker open')
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('atos service timeout (error: {})'.format(t))
+            raise BssProxyError('timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
+            raise BssProxyError(str(e))
 
         return Stands(0, 0, StandsStatus.unavailable)
 
