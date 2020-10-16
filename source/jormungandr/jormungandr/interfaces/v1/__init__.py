@@ -53,8 +53,8 @@ def add_common_status(response, instance):
         response['status']['street_networks'].append(sn.status())
 
     response['status']['ridesharing_services'] = []
-    for rs in instance.ridesharing_services:
-        response['status']['ridesharing_services'].append(rs.status())
+    for rss in instance.get_all_ridesharing_services():
+        response['status']['ridesharing_services'].append(rss.status())
 
     response['status']['equipment_providers_services'] = {}
     response['status']['equipment_providers_services'][

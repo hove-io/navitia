@@ -31,8 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import abc
 import six
-import logging
-from jormungandr import utils, new_relic
+from jormungandr import new_relic
 from collections import namedtuple
 import pybreaker
 import requests as requests
@@ -171,32 +170,13 @@ class AbstractRidesharingService(object):
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
 
-
-# read the configurations and return the wanted service instance
-class Ridesharing(object):
-    @staticmethod
-    def get_ridesharing_services(instance, ridesharing_configurations):
-        logger = logging.getLogger(__name__)
-        ridesharing_services = []
-        for config in ridesharing_configurations:
-            # Set default arguments
-            if 'args' not in config:
-                config['args'] = {}
-            if 'service_url' not in config['args']:
-                config['args'].update({'service_url': None})
-            if 'instance' not in config['args']:
-                config['args'].update({'instance': instance})
-
-            try:
-                service = utils.create_object(config)
-            except KeyError as e:
-                raise KeyError(
-                    'impossible to build a ridesharing service for {}, '
-                    'missing mandatory field in configuration: {}'.format(instance.name, e.message)
-                )
-
-            ridesharing_services.append(service)
-            logger.info(
-                '** Ridesharing: {} used for instance: {} **'.format(type(service).__name__, instance.name)
-            )
-        return ridesharing_services
+    def __eq__(self, other):
+        return all(
+            [
+                self.system_id == other.system_id,
+                self.service_url == other.service_url,
+                self.api_key == other.api_key,
+                self.network == other.network,
+                type(self).__name__ == type(other).__name__,
+            ]
+        )

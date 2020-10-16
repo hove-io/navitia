@@ -56,7 +56,6 @@ DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
 class InstantSystem(AbstractRidesharingService):
     def __init__(
         self,
-        instance,
         service_url,
         api_key,
         network,
@@ -67,7 +66,6 @@ class InstantSystem(AbstractRidesharingService):
         crowfly_radius=200,
         timeframe_duration=1800,
     ):
-        self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network

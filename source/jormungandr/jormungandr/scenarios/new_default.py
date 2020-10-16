@@ -35,7 +35,6 @@ import logging
 from flask_restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
-from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys_with_ridesharing_offers
 from jormungandr.scenarios.utils import (
     journey_sorter,
     change_ids,
@@ -76,7 +75,6 @@ import collections
 from jormungandr.utils import date_to_timestamp, copy_flask_request_context, copy_context_in_greenlet_stack
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
-import flask
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
@@ -1212,7 +1210,7 @@ class Scenario(simple.Scenario):
 
     def handle_ridesharing_services(self, logger, instance, request, pb_response):
 
-        if instance.ridesharing_services and (
+        if instance.ridesharing_services_manager.ridesharing_services_activate() and (
             'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
         ):
 
@@ -1230,7 +1228,9 @@ class Scenario(simple.Scenario):
             if not is_asynchronous_ridesharing(request, instance) or is_ridesharing_partner_service(request):
                 logger.debug('trying to add ridesharing journeys')
                 try:
-                    decorate_journeys_with_ridesharing_offers(pb_response, instance, request)
+                    instance.ridesharing_services_manager.decorate_journeys_with_ridesharing_offers(
+                        pb_response, request
+                    )
                 except Exception:
                     logger.exception('Error while retrieving ridesharing ads')
                 if is_ridesharing_partner_service(request):
