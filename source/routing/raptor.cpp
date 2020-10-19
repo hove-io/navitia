@@ -743,7 +743,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
 
                             working_labels.mut_dt_pt(jpp.sp_idx) = workingDt;
                             working_labels.mut_walking_duration_pt(jpp.sp_idx) = working_walking_duration;
-                            BOOST_ASSERT(working_fallback_duration != DateTimeUtils::not_valid);
+                            BOOST_ASSERT(working_walking_duration != DateTimeUtils::not_valid);
                             best_labels_pts[jpp.sp_idx] = workingDt;
                             best_labels_pts_walking[jpp.sp_idx] = working_walking_duration;
                             continue_algorithm = true;
