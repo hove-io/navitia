@@ -86,6 +86,20 @@ class Karos(AbstractRidesharingService):
         )
         self.call_params = ''
 
+    def status(self):
+        return {
+            'id': self.system_id,
+            'class': self.__class__.__name__,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+            'network': self.network,
+            'departure_radius': self.departure_radius,
+            'arrival_radius': self.arrival_radius,
+        }
+
     def _make_response(self, raw_json):
         if not raw_json:
             return []
