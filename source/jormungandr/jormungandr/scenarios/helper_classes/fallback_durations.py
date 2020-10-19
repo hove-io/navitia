@@ -346,13 +346,8 @@ class FallbackDurationsPool(dict):
 
         for uri, duration_item in six.iteritems(main_fb):
             duration = duration_item.duration
-            # if the duration of the main_mode is smaller than all other mode, we keep the uri in the final res
-            # else the uri is removed because the fallback duration is worse than one of the overriding mode
-            # Note that:
-            #            all([]) == True
-            # So when
-            # 1. overriding_fbs is empty, we fill in the result with main_fb's content
-            # 2. uri can't be found in any of overriding_fbs, we fill in the result with main_fb's content
+            # if the duration of the main_mode is strictly smaller than all other mode, we keep the uri in the final res
+            # else the fallback duration is replaced by the smallest duration among all modes.
             mode_durations = [(main_mode, duration)] + [
                 (mode, fb.get(uri).duration) for mode, fb in overriding_fbs if fb.get(uri)
             ]
