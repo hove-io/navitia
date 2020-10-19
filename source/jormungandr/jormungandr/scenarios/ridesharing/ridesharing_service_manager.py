@@ -104,7 +104,7 @@ class RidesharingServiceManager(object):
             self.logger.exception('impossible to initialize ridesharing service')
 
         # If the provider added in db is also defined in legacy, delete it.
-        services_from_db = self._ridesharing_services.values()
+        services_from_db = list(self._ridesharing_services.values())
         services_legacy = self._ridesharing_services_legacy
         if services_legacy and services_from_db:
             new_services_legacy = []
@@ -152,7 +152,7 @@ class RidesharingServiceManager(object):
         return any((self._ridesharing_services, self._ridesharing_services_legacy))
 
     def get_all_ridesharing_services(self):
-        return self._ridesharing_services_legacy + self._ridesharing_services.values()
+        return self._ridesharing_services_legacy + list(self._ridesharing_services.values())
 
     def decorate_journeys_with_ridesharing_offers(self, response, request):
         # TODO: disable same journey schedule link for ridesharing journey?
