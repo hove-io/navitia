@@ -103,6 +103,8 @@ expected_karos_ridesharing_status = [
         "circuit_breaker": {"fail_counter": 0, "current_state": "closed", "reset_timeout": 60},
         "id": "Karos",
         "class": "Karos",
+        "departure_radius": 10,
+        "arrival_radius": 10,
     }
 ]
 
