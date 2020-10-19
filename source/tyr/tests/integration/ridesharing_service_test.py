@@ -78,9 +78,16 @@ def default_ridesharing_service_config():
         models.db.session.refresh(ridesharing1)
         models.db.session.expunge(ridesharing0)
         models.db.session.expunge(ridesharing1)
+        # Create instance
+        instance = models.Instance('default')
+        models.db.session.add(instance)
+        models.db.session.commit()
+        models.db.session.refresh(instance)
+        models.db.session.expunge(instance)
 
-        yield ridesharing0, ridesharing1
+        yield instance, ridesharing0, ridesharing1
 
+        models.db.session.delete(instance)
         models.db.session.delete(ridesharing0)
         models.db.session.delete(ridesharing1)
         models.db.session.commit()
@@ -97,7 +104,7 @@ def test_ridesharing_service_get(default_ridesharing_service_config):
     """
     Test that the list of services with their info is correctly returned when queried
     """
-    ridesharing0, ridesharing1 = default_ridesharing_service_config
+    _, ridesharing0, ridesharing1 = default_ridesharing_service_config
     resp = api_get('/v0/ridesharing_services')
     assert 'ridesharing_services' in resp
     assert len(resp['ridesharing_services']) == 2
@@ -194,6 +201,28 @@ def test_equipments_provider_delete(default_ridesharing_service_config):
     assert 'ridesharing_services' in resp
     assert len(resp['ridesharing_services']) == 1
     assert resp['ridesharing_services'][0]['discarded']
+
+
+def test_associate_instance_ridesharing_service(default_ridesharing_service_config):
+    instance, ridesharing0, ridesharing1 = default_ridesharing_service_config
+
+    # Associate one ridesharing service
+    resp = api_put('/v1/instances/{}?ridesharing_services={}'.format(instance.name, ridesharing0.id))
+    assert len(resp["ridesharing_services"]) == 1
+    assert resp["ridesharing_services"][0]["id"] == ridesharing0.id
+
+    # Update associate ridesharing service
+    resp = api_put('/v1/instances/{}?ridesharing_services={}'.format(instance.name, ridesharing1.id))
+    assert len(resp["ridesharing_services"]) == 1
+    assert resp["ridesharing_services"][0]["id"] == ridesharing1.id
+
+    # Update associate ridesharing service Two services
+    resp = api_put(
+        '/v1/instances/{}?ridesharing_services={}&ridesharing_services={}'.format(
+            instance.name, ridesharing0.id, ridesharing1.id
+        )
+    )
+    assert len(resp["ridesharing_services"]) == 2
 
 
 def test_ridesharing_service_schema():

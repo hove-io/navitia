@@ -29,6 +29,7 @@
 # www.navitia.io
 
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
+from navitiacommon.models.ridesharing_service import RidesharingService
 
 
 class MockInstance:
@@ -48,11 +49,15 @@ config_instant_system = {
         "timeframe_duration": 1800,
     },
 }
+config_blablacar = {
+    "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+    "args": {"service_url": "tata", "api_key": "tata key", "network": "MM"},
+}
 
 
 def instant_system_ridesharing_service_manager_config_from_file_test():
     """
-    test for 1 instance
+    test for 1 ridesharing: InstantSystem
     """
     instance = MockInstance()
     ridesharing_services_config = [config_instant_system]
@@ -63,3 +68,82 @@ def instant_system_ridesharing_service_manager_config_from_file_test():
     assert not ridesharing_manager._rs_services_getter
     assert ridesharing_manager._update_interval == 60
     assert len(ridesharing_manager._ridesharing_services_legacy) == 1
+
+
+def blablacar_ridesharing_service_manager_config_from_file_test():
+    """
+    test for 1 ridesharing: Blablacar
+    """
+    instance = MockInstance()
+    ridesharing_services_config = [config_blablacar]
+    ridesharing_manager = RidesharingServiceManager(instance, ridesharing_services_config)
+    ridesharing_manager.init_ridesharing_services()
+    assert len(ridesharing_manager.ridesharing_services_configuration) == 1
+    assert not ridesharing_manager._ridesharing_services
+    assert not ridesharing_manager._rs_services_getter
+    assert ridesharing_manager._update_interval == 60
+    assert len(ridesharing_manager._ridesharing_services_legacy) == 1
+
+
+def two_ridesharing_service_manager_config_from_file_test():
+    """
+    test for 2 ridesharing: Blablacar et InstantSystym
+    """
+    instance = MockInstance()
+    ridesharing_services_config = [config_blablacar, config_instant_system]
+    ridesharing_manager = RidesharingServiceManager(instance, ridesharing_services_config)
+    ridesharing_manager.init_ridesharing_services()
+    assert len(ridesharing_manager.ridesharing_services_configuration) == 2
+    assert not ridesharing_manager._ridesharing_services
+    assert not ridesharing_manager._rs_services_getter
+    assert ridesharing_manager._update_interval == 60
+    assert len(ridesharing_manager._ridesharing_services_legacy) == 2
+
+
+def mock_get_attr():
+    json = {"klass": config_instant_system["class"], "args": config_instant_system["args"]}
+    service = RidesharingService(id="InstantSystem", json=json)
+    return [service]
+
+
+def two_ridesharing_service_manager_config_from_file_and_db_test():
+    """
+    test for 2 ridesharing: Blablacar and InstantSystym
+    """
+    instance = MockInstance()
+    ridesharing_services_config = [config_blablacar]
+    ridesharing_manager = RidesharingServiceManager(
+        instance, ridesharing_services_config, rs_services_getter=mock_get_attr
+    )
+    ridesharing_manager.init_ridesharing_services()
+    ridesharing_manager.update_config()
+    assert len(ridesharing_manager.ridesharing_services_configuration) == 1
+    assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
+    assert ridesharing_manager._rs_services_getter
+    assert ridesharing_manager._update_interval == 60
+    assert len(ridesharing_manager._ridesharing_services_legacy) == 1
+    services = ridesharing_manager.get_all_ridesharing_services()
+    assert len(services) == 2
+
+
+def two_same_ridesharing_service_manager_config_from_file_and_db_test():
+    """
+    test for 2 ridesharing: InstantSystym and InstantSystym
+    """
+    instance = MockInstance()
+    ridesharing_services_config = [config_instant_system]
+    ridesharing_manager = RidesharingServiceManager(
+        instance, ridesharing_services_config, rs_services_getter=mock_get_attr
+    )
+    ridesharing_manager.init_ridesharing_services()
+    ridesharing_manager.update_config()
+    assert len(ridesharing_manager.ridesharing_services_configuration) == 1
+    assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
+    assert ridesharing_manager._rs_services_getter
+    assert ridesharing_manager._update_interval == 60
+    assert ridesharing_manager._update_interval == 60
+    assert len(ridesharing_manager._ridesharing_services_legacy) == 0
+    services = ridesharing_manager.get_all_ridesharing_services()
+    assert len(services) == 1

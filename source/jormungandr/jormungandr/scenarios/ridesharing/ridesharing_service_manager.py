@@ -111,8 +111,7 @@ class RidesharingServiceManager(object):
             for srv in services_legacy:
                 if srv not in services_from_db:
                     new_services_legacy.append(srv)
-            if new_services_legacy:
-                self._ridesharing_services_legacy = new_services_legacy
+            self._ridesharing_services_legacy = new_services_legacy
 
     def update_config(self):
         """
