@@ -564,3 +564,59 @@ BOOST_AUTO_TEST_CASE(gtfs_stop_code_tests) {
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("E", "external_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("A", "external_code"), true);
 }
+
+BOOST_AUTO_TEST_CASE(gtfs_hlp_pickup_and_drop_off_from_data) {
+    ed::connectors::FusioParser parser(ntfs_path + "_hlp");
+    ed::Data data;
+    parser.fill(data);
+    data.complete();
+
+    {
+        /*
+         * When nothing is stated for 'pickup_type' and 'drop_off_type' in the data (stop_times.txt)
+         * we allow :
+         *      * pickup at the last stop for the starting vehicle of a stay-in  (A)
+         *      * drop-off at the first stop for the ending vehicle of a stay-in  (B)
+         */
+        auto start_stay_in_vehicle = data.vehicle_journeys[0];
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, true);  // (A)
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = data.vehicle_journeys[1];
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, true);  // (B)
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
+
+    {
+        /*
+         * If 'pickup_type' and 'drop_off_type' are stated in the data, we want to honour it.
+         */
+        auto start_stay_in_vehicle = data.vehicle_journeys[2];
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, false);  // forbidden in the data
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = data.vehicle_journeys[3];
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, false);  // forbidden in the data
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
+}

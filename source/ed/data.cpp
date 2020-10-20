@@ -600,9 +600,6 @@ void Data::pick_up_drop_of_on_borders() {
         auto* first_st = vj->stop_time_list.front();
         auto* last_st = vj->stop_time_list.back();
 
-        first_st->drop_off_allowed = false;
-        last_st->pick_up_allowed = false;
-
         /*
          * In the example below we are assuming that VJ:1 and VJ:2 are sharing the same block_id.
          *
@@ -610,35 +607,41 @@ void Data::pick_up_drop_of_on_borders() {
          *  - when two VJ share the same stop point with similar stop times (example 1)
          *  - when two VJ are joined on 2 different stop points with consecutive stop times (example 2)
          *
-         *   Example 1:
-         *   ----------
-         *         out          in   out         in
-         *          X    SP1    |    ▲    SP2    X
-         *          X           ▼    |           X
-         *    VJ:1   08:00-09:00      10:00-11:00
-         *    VJ:2                    10:00-11:00      14:00-15:00
-         *                           X           ▲    |           X
-         *                           X           |    ▼   SP3     X
-         *                           out         in   out         in
-         *                           |- Stay-In -|
+         *      Example 1:
+         *      ----------
+         *                                            (1)  (2)
+         *              out          in   out         in   out         in   out         in
+         *               X    SP1    |    ▲    SP2    |    ▲    SP3    |    ▲   SP4     X
+         *               X           ▼    |           ▼    |           |    |           X
+         *  (prev) VJ:1   08:00-09:00      10:00-11:00     |           ▼    |           X
+         *  (next) VJ:2                                     12:00-13:00      14:00-15:00
+         *                                |---------- Stay In ---------|
          *
-         *   Example 2:
-         *   ----------
-         *                                       (1)  (2)
-         *         out          in   out         in   out         in   out         in
-         *          X    SP1    |    ▲    SP2    |    ▲    SP3    |    ▲   SP4     X
-         *          X           ▼    |           ▼    |           |    |           X
-         *    VJ:1   08:00-09:00      10:00-11:00     |           ▼    |           X
-         *    VJ:2                                     12:00-13:00      14:00-15:00
-         *                           |---------- Stay In ---------|
+         *       Example 1 is the only case were we allow specific pick-up and drop-off
          *
-         *  Example 2 is the only case were we allow specific pick-up and drop-off
+         *
+         *      Example 2:
+         *      ----------
+         *              out          in   out         in
+         *               X    SP1    |    ▲    SP2    X
+         *               X           ▼    |           X
+         *  (prev) VJ:1   08:00-09:00      10:00-11:00
+         *  (next) VJ:2                    10:00-11:00      14:00-15:00
+         *                                X           ▲    |           X
+         *                                X           |    ▼   SP3     X
+         *                                out         in   out         in
+         *                                |- Stay-In -|
          */
-        if (vj->prev_vj) {
-            if (vj->joins_on_different_stop_points(*vj->prev_vj)) {
-                vj->prev_vj->stop_time_list.back()->pick_up_allowed = true;  // (1) in example 2
-                first_st->drop_off_allowed = true;                           // (2) in example 2
-            }
+
+        if (vj->next_vj and vj->joins_on_different_stop_points(*vj->next_vj)) {
+            // example 1 VJ:1
+            first_st->drop_off_allowed = false;
+        } else if (vj->prev_vj and vj->joins_on_different_stop_points(*vj->prev_vj)) {
+            // example 1 VJ:2
+            last_st->pick_up_allowed = false;
+        } else {  // no stay-in or example 2
+            first_st->drop_off_allowed = false;
+            last_st->pick_up_allowed = false;
         }
     }
 }

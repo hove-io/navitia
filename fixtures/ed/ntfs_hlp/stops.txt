@@ -1,0 +1,35 @@
+stop_id,visible,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,stop_timezone,equipment_id,contributor_id,geometry_id,fare_zone_id
+SAR:SA:1447,1,"Henri Fréville",48.08721,-1.675075,,1,,Europe/Paris,,SAR,,
+SAR:SA:4708,1,"Gingouillère",47.980092,-1.730909,,1,,Europe/Paris,,SAR,,
+SAR:SP:1534,1,"Henri Fréville",48.088549,-1.67439,0,0,SAR:SA:1447,Europe/Paris,2,SAR,,0
+SAR:SP:2368,1,"DGA-MI",47.987325,-1.742382,0,0,SAR:SA:2368,Europe/Paris,0,SAR,,0
+SAR:SP:4701,1,"Point du Jour",47.978606,-1.712988,0,0,SAR:SA:4700,Europe/Paris,2,SAR,,0
+SAR:SP:4703,1,"Orée du Bois",47.975507,-1.717175,0,0,SAR:SA:4702,Europe/Paris,2,SAR,,0
+SAR:SP:4705,1,"Laillé Eglise",47.977983,-1.719683,0,0,SAR:SA:4704,Europe/Paris,2,SAR,,0
+SAR:SP:4707,1,"Châtaigneraie",47.979287,-1.724331,0,0,SAR:SA:4706,Europe/Paris,2,SAR,,0
+SAR:SP:4722,1,"Château d'Eau",47.974626,-1.698507,0,0,SAR:SA:4721,Europe/Paris,0,SAR,,0
+SAR:SP:4760,1,"Gingouillère",47.980213,-1.730942,0,0,SAR:SA:4708,Europe/Paris,0,SAR,,0
+SAR:SA:3901,1,"Bois Esnault",47.999909,-1.696968,,1,,Europe/Paris,,SAR,,
+SAR:SP:1270,1,"Félix Eboué",48.085811,-1.694039,0,0,SAR:SA:1267,Europe/Paris,2,SAR,,0
+SAR:SP:1534,1,"Henri Fréville",48.088549,-1.67439,0,0,SAR:SA:1447,Europe/Paris,2,SAR,,0
+SAR:SP:2262,1,"Vallon",48.068729,-1.697896,0,0,SAR:SA:2262,Europe/Paris,0,SAR,,0
+SAR:SP:2704,1,"Janais",48.059279,-1.7013,0,0,SAR:SA:2701,Europe/Paris,0,SAR,,0
+SAR:SP:2907,1,"Croix aux Potiers",48.045659,-1.710498,0,0,SAR:SA:2901,Europe/Paris,2,SAR,,0
+SAR:SP:2918,1,"Callouët",48.041976,-1.711045,0,0,SAR:SA:2905,Europe/Paris,2,SAR,,0
+SAR:SP:2919,1,"Chartres Centre",48.042237,-1.707374,0,0,SAR:SA:2917,Europe/Paris,2,SAR,,0
+SAR:SP:2920,1,"Auditoire",48.041536,-1.702871,0,0,SAR:SA:2916,Europe/Paris,2,SAR,,0
+SAR:SP:2921,1,"Collège Pôle Sud",48.041222,-1.69777,0,0,SAR:SA:2915,Europe/Paris,0,SAR,,0
+SAR:SP:2922,1,"Vieux Bourg",48.037057,-1.697209,0,0,SAR:SA:2914,Europe/Paris,2,SAR,,0
+SAR:SP:2923,1,"Cornouaille",48.034735,-1.699894,0,0,SAR:SA:2913,Europe/Paris,2,SAR,,0
+SAR:SP:2924,1,"Argoat",48.035534,-1.706095,0,0,SAR:SA:2912,Europe/Paris,2,SAR,,0
+SAR:SP:2927,1,"Parc de Loisirs",48.033169,-1.707484,0,0,SAR:SA:2911,Europe/Paris,2,SAR,,0
+SAR:SP:2930,1,"Constant Mérel",48.031247,-1.709248,0,0,SAR:SA:2928,Europe/Paris,2,SAR,,0
+SAR:SP:2945,1,"Ferme des Peupliers",48.028976,-1.707942,0,0,SAR:SA:2944,Europe/Paris,0,SAR,,0
+SAR:SP:3901,1,"Bois Esnault",47.999909,-1.696968,0,0,SAR:SA:3901,Europe/Paris,2,SAR,,0
+SAR:SP:3904,1,"Chemin Vert",48.012935,-1.702976,0,0,SAR:SA:3904,Europe/Paris,2,SAR,,0
+SAR:SP:3909,1,"Renaissance",48.01986,-1.707123,0,0,SAR:SA:3908,Europe/Paris,2,SAR,,0
+SAR:SP:3910,1,"Fontaine Blanche",48.016959,-1.705245,0,0,SAR:SA:3907,Europe/Paris,2,SAR,,0
+SAR:SP:3911,1,"Rivaudière",48.01369,-1.707704,0,0,SAR:SA:3906,Europe/Paris,2,SAR,,0
+SAR:SP:3912,1,"Pont-Péan Mairie",48.010772,-1.706394,0,0,SAR:SA:3905,Europe/Paris,2,SAR,,0
+SAR:SP:3914,1,"Mouton Blanc",48.010354,-1.701141,0,0,SAR:SA:3903,Europe/Paris,2,SAR,,0
+SAR:SP:3915,1,"Caliorne",48.006145,-1.698543,0,0,SAR:SA:3902,Europe/Paris,2,SAR,,0

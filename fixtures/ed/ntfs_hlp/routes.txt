@@ -1,0 +1,3 @@
+route_id,route_name,direction_type,line_id,contributor_id,destination_id,geometry_id
+SAR:0080,Laillé (Gingouillère) <> Bruz (DGA-MI),forward,SAR:0080,SAR,SAR:SA:4708,
+SAR:0072,Chartres-de-Bretagne - Pont-Péan - Laillé,forward,SAR:0072,SAR,SAR:SA:3901,
