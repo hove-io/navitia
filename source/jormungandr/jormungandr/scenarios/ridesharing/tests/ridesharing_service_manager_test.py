@@ -105,10 +105,16 @@ def two_ridesharing_service_manager_config_from_file_test():
     assert len(ridesharing_manager._ridesharing_services_legacy) == 2
 
 
-def mock_get_attr():
+def mock_get_attr_instant_system():
     json = {"klass": config_instant_system["class"], "args": config_instant_system["args"]}
     service = RidesharingService(id="InstantSystem", json=json)
     return [service]
+
+
+def mock_get_attr_instant_system_and_blablacar():
+    json = {"klass": config_blablacar["class"], "args": config_blablacar["args"]}
+    Blablacar = RidesharingService(id="Blablacar", json=json)
+    return [Blablacar] + mock_get_attr_instant_system()
 
 
 def two_ridesharing_service_manager_config_from_file_and_db_test():
@@ -120,7 +126,7 @@ def two_ridesharing_service_manager_config_from_file_and_db_test():
     instance = MockInstance()
     ridesharing_services_config = [config_blablacar]
     ridesharing_manager = RidesharingServiceManager(
-        instance, ridesharing_services_config, rs_services_getter=mock_get_attr
+        instance, ridesharing_services_config, rs_services_getter=mock_get_attr_instant_system
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
@@ -143,7 +149,7 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     instance = MockInstance()
     ridesharing_services_config = [config_instant_system]
     ridesharing_manager = RidesharingServiceManager(
-        instance, ridesharing_services_config, rs_services_getter=mock_get_attr
+        instance, ridesharing_services_config, rs_services_getter=mock_get_attr_instant_system
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
@@ -156,6 +162,30 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     assert len(ridesharing_manager._ridesharing_services_legacy) == 0
     services = ridesharing_manager.get_all_ridesharing_services()
     assert len(services) == 1
+
+
+def ridesharing_service_manager_config_from_file_and_db_test():
+    """
+    creation of a ridesharing service from database: InstantSystem
+    creation of a ridesharing service from database : Blablacar
+    >> We have to find both services Blablacar and InstantSystem
+    """
+    instance = MockInstance()
+    ridesharing_manager = RidesharingServiceManager(
+        instance, [], rs_services_getter=mock_get_attr_instant_system_and_blablacar
+    )
+    ridesharing_manager.init_ridesharing_services()
+    ridesharing_manager.update_config()
+    assert len(ridesharing_manager.ridesharing_services_configuration) == 0
+    assert len(list(ridesharing_manager._ridesharing_services.values())) == 2
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
+    assert ridesharing_manager._ridesharing_services["Blablacar"].system_id == "Blablacar"
+    assert ridesharing_manager._rs_services_getter
+    assert ridesharing_manager._update_interval == 60
+    assert ridesharing_manager._update_interval == 60
+    assert len(ridesharing_manager._ridesharing_services_legacy) == 0
+    services = ridesharing_manager.get_all_ridesharing_services()
+    assert len(services) == 2
 
 
 def blablacar_init_class_test():
