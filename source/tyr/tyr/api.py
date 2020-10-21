@@ -120,10 +120,8 @@ api.add_resource(
 
 api.add_resource(
     ridesharing_service.RidesharingService,
-    '/v0/ridesharing_services',
-    '/v0/ridesharing_services/<string:id>',
-    '/v1/ridesharing_services',
-    '/v1/ridesharing_services/<string:id>',
+    '/v<int:version>/ridesharing_services',
+    '/v<int:version>/ridesharing_services/<string:id>',
 )
 
 api.add_resource(

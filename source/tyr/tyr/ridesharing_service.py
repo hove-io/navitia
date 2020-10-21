@@ -44,7 +44,7 @@ from tyr.validations import InputJsonValidator
 
 class RidesharingService(flask_restful.Resource):
     @marshal_with(ridesharing_service_list_fields)
-    def get(self, id=None):
+    def get(self, id=None, version=0):
         if id:
             try:
                 return {'ridesharing_services': [models.RidesharingService.find_by_id(id)]}
@@ -54,7 +54,7 @@ class RidesharingService(flask_restful.Resource):
             return {'ridesharing_services': models.RidesharingService.all()}
 
     @InputJsonValidator(ridesharing_service_format)
-    def put(self, id=None):
+    def put(self, id=None, version=0):
         """
         Create or update an equipment provider in db
         """
@@ -74,7 +74,7 @@ class RidesharingService(flask_restful.Resource):
             abort(400, status="error", message=str(ex))
         return {'ridesharing_services': [marshal(service, ridesharing_service_fields)]}, status
 
-    def delete(self, id=None):
+    def delete(self, id=None, version=0):
         """
         Delete an equipment service in db, i.e. set parameter DISCARDED to TRUE
         """

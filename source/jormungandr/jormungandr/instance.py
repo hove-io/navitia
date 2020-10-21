@@ -146,7 +146,7 @@ class Instance(object):
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
 
-        # Init Ridesharing services from cong file
+        # Init Ridesharing services from config file
         self.ridesharing_services_manager.init_ridesharing_services()
 
         self.ptref = ptref.PtRef(self)
