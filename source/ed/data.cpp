@@ -604,8 +604,8 @@ void Data::pick_up_drop_of_on_borders() {
          * In the example below we are assuming that VJ:1 and VJ:2 are sharing the same block_id.
          *
          * The stay-in section is allowed with 2 configurations:
-         *  - when two VJ share the same stop point with similar stop times (example 1)
-         *  - when two VJ are joined on 2 different stop points with consecutive stop times (example 2)
+         *  - when two VJ are joined on 2 different stop points with consecutive stop times (example 1)
+         *  - when two VJ share the same stop point with similar stop times (example 2)
          *
          *      Example 1:
          *      ----------
