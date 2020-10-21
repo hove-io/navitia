@@ -77,23 +77,23 @@ class RidesharingServiceManager(object):
             )
             self._ridesharing_services_legacy.append(service)
 
-    def _init_class(self, cls, arguments):
+    def _init_class(self, klass, arguments):
         """
         Create an instance of a provider according to config
-        :param cls: provider class in Jormungandr found in config file
-        :param arguments: parameters to set in the provider class
-        :return: instance of provider
+        :param klass: name of the class configured in the database (Kros, Klaxit, Blablacar, ...)
+        :param arguments: parameters from the database required to create the Ridesharing class
+        :return: instance of Ridesharing service
         """
         try:
-            if '.' not in cls:
-                self.logger.warning('impossible to build, wrongly formated class: {}'.format(cls))
+            if '.' not in klass:
+                self.logger.warning('impossible to build, wrongly formated class: {}'.format(klass))
 
-            module_path, name = cls.rsplit('.', 1)
+            module_path, name = klass.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
             return attr(**arguments)
         except ImportError:
-            self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
+            self.logger.warning('impossible to build, cannot find class: {}'.format(klass))
 
     def _update_ridesharing_service(self, service):
         self.logger.info('updating/adding {} ridesharing service'.format(service.id))
@@ -132,7 +132,7 @@ class RidesharingServiceManager(object):
         except Exception:
             self.logger.exception('Failure to retrieve ridesharing services configuration')
         if not services:
-            self.logger.debug('No ridesharing services disabled in db')
+            self.logger.debug('No ridesharing services available in db')
             self._ridesharing_services = {}
             self._ridesharing_services_last_update = {}
 
@@ -145,12 +145,14 @@ class RidesharingServiceManager(object):
             ):
                 self._update_ridesharing_service(service)
 
-    def ridesharing_services_activate(self):
+    def ridesharing_services_activated(self):
         # Make sure we update the ridesharing services list from the database before returning them
         self.update_config()
         return any((self._ridesharing_services, self._ridesharing_services_legacy))
 
     def get_all_ridesharing_services(self):
+        # Make sure we update the ridesharing services list from the database before returning them
+        self.update_config()
         return self._ridesharing_services_legacy + list(self._ridesharing_services.values())
 
     def decorate_journeys_with_ridesharing_offers(self, response, request):

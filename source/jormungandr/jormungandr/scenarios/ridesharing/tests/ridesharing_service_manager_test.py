@@ -29,6 +29,8 @@
 # www.navitia.io
 
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
+from jormungandr.scenarios.ridesharing.blablacar import Blablacar
+from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
 from navitiacommon.models.ridesharing_service import RidesharingService
 
 
@@ -57,7 +59,8 @@ config_blablacar = {
 
 def instant_system_ridesharing_service_manager_config_from_file_test():
     """
-    test for 1 ridesharing: InstantSystem
+    creation of a ridesharing service from the configuration file: InstantSystem
+    >> We must find the service InstantSystem
     """
     instance = MockInstance()
     ridesharing_services_config = [config_instant_system]
@@ -72,7 +75,8 @@ def instant_system_ridesharing_service_manager_config_from_file_test():
 
 def blablacar_ridesharing_service_manager_config_from_file_test():
     """
-    test for 1 ridesharing: Blablacar
+    creation of a ridesharing service from the configuration file: Blablacar
+    >> We must find the service Blablacar
     """
     instance = MockInstance()
     ridesharing_services_config = [config_blablacar]
@@ -87,7 +91,8 @@ def blablacar_ridesharing_service_manager_config_from_file_test():
 
 def two_ridesharing_service_manager_config_from_file_test():
     """
-    test for 2 ridesharing: Blablacar et InstantSystym
+    creation of a ride sharing services from the configuration file: Blablacar and InstantSystym
+    >> We have to find both services Blablacar and InstantSystem
     """
     instance = MockInstance()
     ridesharing_services_config = [config_blablacar, config_instant_system]
@@ -108,7 +113,9 @@ def mock_get_attr():
 
 def two_ridesharing_service_manager_config_from_file_and_db_test():
     """
-    test for 2 ridesharing: Blablacar and InstantSystym
+    creation of a ridesharing service from the configuration file: Blablacar
+    creation of a ridesharing service from database : InstantSystem
+    >> We have to find both services Blablacar and InstantSystem
     """
     instance = MockInstance()
     ridesharing_services_config = [config_blablacar]
@@ -129,7 +136,9 @@ def two_ridesharing_service_manager_config_from_file_and_db_test():
 
 def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     """
-    test for 2 ridesharing: InstantSystym and InstantSystym
+    creation of a ridesharing service from the configuration file: InstantSystem
+    creation of a ridesharing service from database : InstantSystem
+    >> We must find the service InstantSystem
     """
     instance = MockInstance()
     ridesharing_services_config = [config_instant_system]
@@ -147,3 +156,19 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     assert len(ridesharing_manager._ridesharing_services_legacy) == 0
     services = ridesharing_manager.get_all_ridesharing_services()
     assert len(services) == 1
+
+
+def blablacar_init_class_test():
+    instance = MockInstance()
+    ridesharing_manager = RidesharingServiceManager(instance, [])
+    service = ridesharing_manager._init_class(config_blablacar["class"], config_blablacar["args"])
+    assert isinstance(service, Blablacar)
+    assert service.system_id == "Blablacar"
+
+
+def instant_system_init_class_test():
+    instance = MockInstance()
+    ridesharing_manager = RidesharingServiceManager(instance, [])
+    service = ridesharing_manager._init_class(config_instant_system["class"], config_instant_system["args"])
+    assert isinstance(service, InstantSystem)
+    assert service.system_id == 'Instant System'

@@ -140,13 +140,13 @@ class Instance(object):
             self._streetnetwork_backend_manager.init_streetnetwork_backends_legacy(
                 self, street_network_configurations
             )
-
-        if disable_database:
             self.ridesharing_services_manager = RidesharingServiceManager(self, ridesharing_configurations)
         else:
             self.ridesharing_services_manager = RidesharingServiceManager(
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
+
+        # Init Ridesharing services from cong file
         self.ridesharing_services_manager.init_ridesharing_services()
 
         self.ptref = ptref.PtRef(self)

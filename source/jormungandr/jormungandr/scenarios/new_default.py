@@ -1210,7 +1210,7 @@ class Scenario(simple.Scenario):
 
     def handle_ridesharing_services(self, logger, instance, request, pb_response):
 
-        if instance.ridesharing_services_manager.ridesharing_services_activate() and (
+        if instance.ridesharing_services_manager.ridesharing_services_activated() and (
             'ridesharing' in request['origin_mode'] or 'ridesharing' in request['destination_mode']
         ):
 
