@@ -1241,7 +1241,7 @@ class Scenario(simple.Scenario):
                 for j in pb_response.journeys:
                     if 'ridesharing' in j.tags:
                         journey_filter.mark_as_dead(j, request.get('debug'), 'asynchronous_ridesharing_mode')
-            self._add_ridesharing_link(pb_response, request)
+            self._add_ridesharing_link(pb_response, request, instance)
         else:
             for j in pb_response.journeys:
                 if 'ridesharing' in j.tags:

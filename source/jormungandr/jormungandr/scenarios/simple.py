@@ -324,10 +324,11 @@ class Scenario(object):
     def isochrone(self, request, instance):
         raise NotImplementedError()
 
-    def _add_ridesharing_link(self, resp, params):
+    def _add_ridesharing_link(self, resp, params, instance):
         req = request.args.to_dict(flat=False)
         req['partner_services[]'] = 'ridesharing'
         req['datetime'] = dt_to_str(params.original_datetime)
+        req['region'] = instance.name
         add_link(resp, rel='ridesharing_journeys', **req)
 
     def _add_prev_link(self, resp, params, clockwise):
