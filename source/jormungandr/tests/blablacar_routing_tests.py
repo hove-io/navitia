@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 
 from jormungandr.tests.utils_test import MockResponse
-from tests.check_utils import get_not_null
+from tests.check_utils import get_not_null, get_links_dict
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
 DUMMY_BLABLACAR_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
@@ -103,6 +103,12 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
+        # Check links: ridesharing_journeys
+        links = get_links_dict(response)
+        link = links["ridesharing_journeys"]
+        assert link["rel"] == "ridesharing_journeys"
+        assert link["type"] == "ridesharing_journeys"
+        assert link["href"].startswith("http://localhost/v1/coverage/main_routing_test/")
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 1
         tickets = response.get('tickets')
