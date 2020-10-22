@@ -131,11 +131,14 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     return this->uri < other.uri;
 }
 
-bool VehicleJourney::joins_on_different_stop_points(const ed::types::VehicleJourney& prev_vj) const {
-    const auto* vj_first_st = stop_time_list.front();
-    const auto* prev_vj_last_st = prev_vj.stop_time_list.back();
+bool VehicleJourney::joins_on_different_stop_points(const ed::types::VehicleJourney& rhs) const {
+    const auto* lhs_first_st = stop_time_list.front()->stop_point;
+    const auto* lhs_last_st = stop_time_list.back()->stop_point;
 
-    return *vj_first_st->stop_point != *prev_vj_last_st->stop_point;
+    const auto* rhs_first_st = rhs.stop_time_list.front()->stop_point;
+    const auto* rhs_last_st = rhs.stop_time_list.back()->stop_point;
+
+    return *lhs_last_st != *rhs_first_st and *lhs_first_st != *rhs_last_st;
 }
 
 bool StopPointConnection::operator<(const StopPointConnection& other) const {

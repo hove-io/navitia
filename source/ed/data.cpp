@@ -633,15 +633,12 @@ void Data::pick_up_drop_of_on_borders() {
          *                                |- Stay-In -|
          */
 
-        if (vj->next_vj and vj->joins_on_different_stop_points(*vj->next_vj)) {
-            // example 1 VJ:1
-            first_st->drop_off_allowed = false;
-        } else if (vj->prev_vj and vj->joins_on_different_stop_points(*vj->prev_vj)) {
-            // example 1 VJ:2
+        if (!vj->next_vj or !vj->joins_on_different_stop_points(*vj->next_vj)) {
             last_st->pick_up_allowed = false;
-        } else {  // no stay-in or example 2
+        }
+
+        if (!vj->prev_vj or !vj->joins_on_different_stop_points(*vj->prev_vj)) {
             first_st->drop_off_allowed = false;
-            last_st->pick_up_allowed = false;
         }
     }
 }
