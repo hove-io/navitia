@@ -259,6 +259,14 @@ associate_instance_equipments = db.Table(
     db.PrimaryKeyConstraint('instance_id', 'equipments_id', name='instance_equipments_pk'),
 )
 
+associate_instance_ridesharing = db.Table(
+    'associate_instance_ridesharing',
+    db.metadata,
+    db.Column('instance_id', db.Integer, db.ForeignKey('instance.id')),
+    db.Column('ridesharing_id', db.Text, db.ForeignKey('ridesharing_service.id')),
+    db.PrimaryKeyConstraint('instance_id', 'ridesharing_id', name='instance_ridesharing_pk'),
+)
+
 # We need that here for the foreign keys in instance
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 
@@ -545,6 +553,10 @@ class Instance(db.Model):  # type: ignore
 
     # Active the asynchronous_ridesharing mode
     asynchronous_ridesharing = db.Column(db.Boolean, default=False, nullable=False)
+
+    ridesharing_services = db.relationship(
+        "RidesharingService", secondary=associate_instance_ridesharing, backref="instances", lazy='joined'
+    )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
@@ -917,3 +929,4 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 # import at the end to prevent circular dependencies
 from navitiacommon.models.bss_provider import BssProvider
 from navitiacommon.models.equipments_providers import EquipmentsProvider
+from navitiacommon.models.ridesharing_service import RidesharingService

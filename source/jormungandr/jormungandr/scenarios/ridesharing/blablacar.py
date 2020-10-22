@@ -60,7 +60,6 @@ MAX_BLABLACAR_MARGIN_DEPARTURE_TIME = 60 * 60 * 168  # 168 hours
 class Blablacar(AbstractRidesharingService):
     def __init__(
         self,
-        instance,
         service_url,
         api_key,
         network,
@@ -68,7 +67,6 @@ class Blablacar(AbstractRidesharingService):
         timedelta=3600,
         timeout=2,
     ):
-        self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network

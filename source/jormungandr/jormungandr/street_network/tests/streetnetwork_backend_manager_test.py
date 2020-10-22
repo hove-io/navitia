@@ -416,7 +416,7 @@ class FakeInstance(Instance):
             name="instance",
             zmq_socket=None,
             street_network_configurations=[],
-            ridesharing_configurations=None,
+            ridesharing_configurations=[],
             realtime_proxies_configuration=[],
             zmq_socket_type=None,
             autocomplete_type='kraken',

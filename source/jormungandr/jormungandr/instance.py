@@ -56,7 +56,7 @@ from flask import g
 import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network, fallback_modes
-from jormungandr.scenarios.ridesharing import ridesharing_service
+from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import six
 import time
 from collections import deque
@@ -135,16 +135,19 @@ class Instance(object):
         self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
-        if app.config[str('DISABLE_DATABASE')]:
+        disable_database = app.config[str('DISABLE_DATABASE')]
+        if disable_database:
             self._streetnetwork_backend_manager.init_streetnetwork_backends_legacy(
                 self, street_network_configurations
             )
-
-        self.ridesharing_services = []  # type: List[ridesharing_service.AbstractRidesharingService]
-        if ridesharing_configurations is not None:
-            self.ridesharing_services = ridesharing_service.Ridesharing.get_ridesharing_services(
-                self, ridesharing_configurations
+            self.ridesharing_services_manager = RidesharingServiceManager(self, ridesharing_configurations)
+        else:
+            self.ridesharing_services_manager = RidesharingServiceManager(
+                self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
+
+        # Init Ridesharing services from config file
+        self.ridesharing_services_manager.init_ridesharing_services()
 
         self.ptref = ptref.PtRef(self)
 
@@ -162,7 +165,7 @@ class Instance(object):
 
         self.zmq_socket_type = zmq_socket_type
 
-        if app.config[str('DISABLE_DATABASE')]:
+        if disable_database:
             self.equipment_provider_manager = EquipmentProviderManager(
                 app.config[str('EQUIPMENT_DETAILS_PROVIDERS')]
             )
@@ -179,6 +182,12 @@ class Instance(object):
         :return: a callable query of equipment providers associated to the current instance in db
         """
         return self._get_models().equipment_details_providers
+
+    def get_ridesharing_services_from_db(self):
+        """
+        :return: a callable query of ridesharing services associated to the current instance in db
+        """
+        return self._get_models().ridesharing_services
 
     @property
     def autocomplete(self):
@@ -754,6 +763,9 @@ class Instance(object):
         else:
             return self._streetnetwork_backend_manager.get_all_street_networks_db(self)
 
+    def get_all_ridesharing_services(self):
+        return self.ridesharing_services_manager.get_all_ridesharing_services()
+
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
             return self.autocomplete
@@ -761,14 +773,3 @@ class Instance(object):
         if not autocomplete:
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
-
-    def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
-        res = []
-        fps = set()
-        for service in self.ridesharing_services:
-            rsjs, fp = service.request_journeys_with_feed_publisher(
-                from_coord, to_coord, period_extremity, limit
-            )
-            res.extend(rsjs)
-            fps.add(fp)
-        return res, fps

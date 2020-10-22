@@ -53,7 +53,6 @@ DEFAULT_KLAXIT_FEED_PUBLISHER = {
 class Klaxit(AbstractRidesharingService):
     def __init__(
         self,
-        instance,
         service_url,
         api_key,
         network,
@@ -63,7 +62,6 @@ class Klaxit(AbstractRidesharingService):
         departure_radius=2,
         arrival_radius=2,
     ):
-        self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
