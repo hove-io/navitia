@@ -33,7 +33,6 @@ import datetime
 import logging
 import pybreaker
 import pytz
-import requests as requests
 
 from jormungandr import utils
 from jormungandr import app
@@ -57,7 +56,6 @@ DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
 class InstantSystem(AbstractRidesharingService):
     def __init__(
         self,
-        instance,
         service_url,
         api_key,
         network,
@@ -68,13 +66,12 @@ class InstantSystem(AbstractRidesharingService):
         crowfly_radius=200,
         timeframe_duration=1800,
     ):
-        self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
         self.rating_scale_min = rating_scale_min
         self.rating_scale_max = rating_scale_max
-        self.system_id = 'Instant System'
+        self.system_id = 'instant_system'
         self.timeout = timeout
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
         self.crowfly_radius = crowfly_radius
@@ -90,10 +87,10 @@ class InstantSystem(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'],
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'), 60),
         )
-        self.call_params = None
+        self.call_params = ''
 
     def status(self):
         return {
@@ -109,32 +106,6 @@ class InstantSystem(AbstractRidesharingService):
             'crowfly_radius': self.crowfly_radius,
             'network': self.network,
         }
-
-    def _call_service(self, params):
-        self.logger.debug("requesting instant system")
-
-        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
-        try:
-            return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
-            )
-        except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error(
-                'Instant System service dead (error: %s)', e, extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError('circuit breaker open')
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error(
-                'Instant System service timeout (error: %s)',
-                t,
-                extra={'ridesharing_service_id': self._get_rs_id()},
-            )
-            raise RidesharingServiceError('timeout')
-        except Exception as e:
-            logging.getLogger(__name__).exception(
-                'Instant System service error', extra={'ridesharing_service_id': self._get_rs_id()}
-            )
-            raise RidesharingServiceError(str(e))
 
     @staticmethod
     def _get_ridesharing_journeys(raw_journeys):
@@ -191,20 +162,17 @@ class InstantSystem(AbstractRidesharingService):
                 res.shape = []
                 shape = decode_polyline(p.get('shape'), precision=5)
                 if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = res.pickup_place.lon
-                    coord.lat = res.pickup_place.lat
-                    res.shape.append(coord)
-                for c in shape:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = c[0]
-                    coord.lat = c[1]
-                    res.shape.append(coord)
-                if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
-                    coord = type_pb2.GeographicalCoord()
-                    coord.lon = res.dropoff_place.lon
-                    coord.lat = res.dropoff_place.lat
-                    res.shape.append(coord)
+                    res.shape.append(
+                        type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat)
+                    )
+
+                if shape:
+                    res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
+
+                if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
+                    res.shape.append(
+                        type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
+                    )
 
                 res.pickup_date_time = utils.make_timestamp_from_str(p['departureDate'])
                 res.dropoff_date_time = utils.make_timestamp_from_str(p['arrivalDate'])
@@ -268,14 +236,10 @@ class InstantSystem(AbstractRidesharingService):
         if limit is not None:
             params.update({'limit', limit})
 
-        # Format call_params from parameters
-        self.call_params = ''
-        for key, value in params.items():
-            self.call_params += '{}={}&'.format(key, value)
+        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
+        resp = self._call_service(params=params, headers=headers)
 
-        resp = self._call_service(params=params)
-
-        if resp.status_code != 200:
+        if not resp or resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error(
                 'Instant System service unavailable, impossible to query : %s',

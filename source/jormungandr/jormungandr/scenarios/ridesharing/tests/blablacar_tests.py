@@ -32,12 +32,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.scenarios.ridesharing.blablacar import Blablacar, DEFAULT_BLABLACAR_FEED_PUBLISHER
-from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
-from jormungandr.scenarios.ridesharing.ridesharing_service import (
-    Ridesharing,
-    RsFeedPublisher,
-    RidesharingServiceError,
-)
+from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
+from jormungandr.scenarios.ridesharing.ridesharing_service import RsFeedPublisher, RidesharingServiceError
 
 import mock
 from jormungandr.tests import utils_test
@@ -118,20 +114,23 @@ def get_ridesharing_service_test():
             "args": {"service_url": "tata", "api_key": "tata key", "network": "M"},
         },
     ]
+    instance = DummyInstance()
+    ridesharing_service_manager = RidesharingServiceManager(instance, configs)
+    ridesharing_service_manager.init_ridesharing_services()
+    services = ridesharing_service_manager.get_all_ridesharing_services()
 
-    services = Ridesharing.get_ridesharing_services(DummyInstance(), configs)
     assert len(services) == 2
 
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'Blablacar'
+    assert services[0].system_id == 'blablacar'
     assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_BLABLACAR_FEED_PUBLISHER)
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'Blablacar'
+    assert services[1].system_id == 'blablacar'
     assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_BLABLACAR_FEED_PUBLISHER)
 
 
@@ -139,7 +138,6 @@ def blablacar_test():
     with mock.patch('requests.get', mock_get):
 
         blablacar = Blablacar(
-            DummyInstance(),
             service_url='dummyUrl',
             api_key='dummyApiKey',
             network='dummyNetwork',
@@ -157,7 +155,7 @@ def blablacar_test():
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'Blablacar'
+        assert ridesharing_journeys[0].metadata.system_id == 'blablacar'
         assert ridesharing_journeys[0].ridesharing_ad == 'https://blablalines.com'
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
@@ -183,7 +181,7 @@ def blablacar_test():
         assert ridesharing_journeys[0].available_seats == 3
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'Blablacar'
+        assert ridesharing_journeys[1].metadata.system_id == 'blablacar'
         assert ridesharing_journeys[1].shape
         assert ridesharing_journeys[1].ridesharing_ad == 'https://blablalines.com'
 
@@ -206,9 +204,7 @@ def blablacar_test():
 
 def test_request_journeys_should_raise_on_non_200():
     with requests_mock.Mocker() as mock:
-        blablacar = Blablacar(
-            DummyInstance(), service_url='http://blablacar', api_key='ApiKey', network='Network'
-        )
+        blablacar = Blablacar(service_url='http://blablacar', api_key='ApiKey', network='Network')
 
         mock.get('http://blablacar', status_code=401, text='{this is the http response}')
 

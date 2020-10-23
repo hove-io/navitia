@@ -97,7 +97,7 @@ INSTANT_SYSTEM_RESPONSE = {
 }
 
 
-def mock_instant_system(_, params):
+def mock_instant_system(_, params, headers):
     return MockResponse(INSTANT_SYSTEM_RESPONSE, 200)
 
 
@@ -173,7 +173,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         assert rsj_info.get('driver').get('rating').get('scale_min') == 0.0
         assert rsj_info.get('driver').get('rating').get('scale_max') == 5.0
         assert rsj_info.get('network') == 'Super Covoit'
-        assert rsj_info.get('operator') == 'Instant System'
+        assert rsj_info.get('operator') == 'instant_system'
         assert rsj_info.get('seats').get('available') == 4
 
         assert 'total' not in rsj_info.get('seats')

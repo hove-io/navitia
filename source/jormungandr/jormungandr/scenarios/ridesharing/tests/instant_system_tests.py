@@ -33,16 +33,17 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem, DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
-from jormungandr.scenarios.ridesharing.ridesharing_service import (
-    Ridesharing,
-    RsFeedPublisher,
-    RidesharingServiceError,
-)
-
+from jormungandr.scenarios.ridesharing.ridesharing_service import RsFeedPublisher, RidesharingServiceError
+from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
 import json
+import requests_mock
+import pytest
+
+# https://stackoverflow.com/a/9312242/1614576
+import re
 
 
 fake_response = """
@@ -167,9 +168,6 @@ fake_response = """
 
 """
 
-# https://stackoverflow.com/a/9312242/1614576
-import re
-
 regex = re.compile(r'\\(?![/u"])')
 fixed = regex.sub(r"\\\\", fake_response)
 
@@ -210,14 +208,16 @@ def get_ridesharing_service_test():
             },
         },
     ]
-
-    services = Ridesharing.get_ridesharing_services(DummyInstance(), configs)
+    instance = DummyInstance()
+    ridesharing_service_manager = RidesharingServiceManager(instance, configs)
+    ridesharing_service_manager.init_ridesharing_services()
+    services = ridesharing_service_manager.get_all_ridesharing_services()
     assert len(services) == 2
 
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'Instant System'
+    assert services[0].system_id == 'instant_system'
     assert services[0].rating_scale_min == 0
     assert services[0].rating_scale_max == 10
     assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
@@ -225,7 +225,7 @@ def get_ridesharing_service_test():
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'Instant System'
+    assert services[1].system_id == 'instant_system'
     assert services[1].rating_scale_min == 1
     assert services[1].rating_scale_max == 5
     assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER)
@@ -235,7 +235,6 @@ def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
         instant_system = InstantSystem(
-            DummyInstance(),
             service_url='dummyUrl',
             api_key='dummyApiKey',
             network='dummyNetwork',
@@ -255,7 +254,7 @@ def instant_system_test():
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[0].metadata.system_id == 'instant_system'
         assert ridesharing_journeys[0].metadata.rating_scale_min == 0
         assert ridesharing_journeys[0].metadata.rating_scale_max == 10
         assert (
@@ -295,7 +294,7 @@ def instant_system_test():
         assert ridesharing_journeys[0].available_seats == 4
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[1].metadata.system_id == 'instant_system'
         assert ridesharing_journeys[1].metadata.rating_scale_min == 0
         assert ridesharing_journeys[1].metadata.rating_scale_max == 10
         # the shape should not be none, but we don't test the whole string
@@ -331,15 +330,9 @@ def instant_system_test():
         assert feed_publisher == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
 
 
-import requests_mock
-import pytest
-
-
 def test_request_journeys_should_raise_on_non_200():
     with requests_mock.Mocker() as mock:
-        instant_system = InstantSystem(
-            DummyInstance(), service_url='http://instant.sys', api_key='ApiKey', network='Network'
-        )
+        instant_system = InstantSystem(service_url='http://instant.sys', api_key='ApiKey', network='Network')
 
         mock.get('http://instant.sys', status_code=401, text='{this is the http response}')
 

@@ -1,3 +1,19 @@
+navitia2 (7.3.0) unstable; urgency=low
+
+  * [Kraken] reactivate the parameter max_extra_second_pass  <https://github.com/CanalTP/navitia/pull/3306>
+  * [Jormun] Modification default value of system_id for ridesharing services  <https://github.com/CanalTP/navitia/pull/3307>
+  * [Jormun] Overrided mode  <https://github.com/CanalTP/navitia/pull/3297>
+  * [Raptor] count stay_in as a transfer in the pareto front  <https://github.com/CanalTP/navitia/pull/3303>
+  * [Jormun] Add ridesharing config in database  <https://github.com/CanalTP/navitia/pull/3295>
+  * [Jormun] fix links for ridesharing journeys  <https://github.com/CanalTP/navitia/pull/3305>
+  * [Jormun] Errors raised in atos  <https://github.com/CanalTP/navitia/pull/3301>
+  * [Kraken] Update assert that was not compiling with compiler's suggested alternative  <https://github.com/CanalTP/navitia/pull/3300>
+  * [Jormun] Fix status in ridesharing  <https://github.com/CanalTP/navitia/pull/3302>
+  * [Jormun] Add connector karos  <https://github.com/CanalTP/navitia/pull/3298>
+  * [Jormun] klaxit service added  <https://github.com/CanalTP/navitia/pull/3294>
+
+ -- Nonifier <olivier.georget@gmail.com>  Fri, 23 Oct 2020 15:10:21 +0100
+
 navitia2 (7.2.0) unstable; urgency=low
 
   * [tools] Install script - migration to support ubuntu 20.04  <https://github.com/CanalTP/navitia/pull/3289>

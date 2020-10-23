@@ -31,7 +31,6 @@
 # www.navitia.io
 
 from tyr import app, db, manager
-import sys
 from flask_migrate import Migrate, MigrateCommand
 from tyr.command import ReloadKrakenCommand, BuildDataCommand, LoadDataCommand
 

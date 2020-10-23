@@ -130,6 +130,18 @@ def test_equipments_provider_put(default_equipments_config):
     assert resp['equipments_providers'][0]['args']['url'] == 'sytral3.url.update'
 
 
+def test_equipments_provider_put_without_id():
+    new_provider = {
+        'klass': 'jormungandr.equipments.sytral.SytralProvider',
+        'args': {'url': 'sytral3.url', 'fail_max': 5, 'timeout': 1},
+    }
+    resp, status = api_put(
+        'v0/equipments_providers', data=ujson.dumps(new_provider), content_type='application/json', check=False
+    )
+    assert status == 400
+    assert resp["message"] == "id is required"
+
+
 def test_equipments_provider_delete(default_equipments_config):
     """
     Test that a 'deleted' provider isn't returned when querying all providers, and that its 'discarded' parameter is set to True

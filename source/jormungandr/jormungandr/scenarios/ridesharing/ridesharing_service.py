@@ -31,9 +31,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import abc
 import six
-import logging
-from jormungandr import utils, new_relic
+from jormungandr import new_relic
 from collections import namedtuple
+import pybreaker
+import requests as requests
 
 
 class RidesharingServiceError(RuntimeError):
@@ -60,9 +61,48 @@ class AbstractRidesharingService(object):
     @abc.abstractmethod
     def status(self):
         """
-        :return: a dict contains the status of the service
+
+        :return: Ridesharing status
         """
         pass
+
+    def _call_service(self, params, headers={}):
+        """
+        :param params: call parameters list
+        :return: response from external service
+        """
+        self.logger.debug('requesting %s', self.network)
+
+        # Format call_params from parameters
+        self.call_params = ''
+        for key, value in params.items():
+            self.call_params += '{}={}&'.format(key, value)
+
+        try:
+            return self.breaker.call(
+                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
+            )
+        except pybreaker.CircuitBreakerError as e:
+            self.logger.getLogger(__name__).error(
+                '%s service dead (error: %s)',
+                self.network,
+                e,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('circuit breaker open')
+        except requests.Timeout as t:
+            self.logger.getLogger(__name__).error(
+                '%s service timeout (error: %s)',
+                self.network,
+                t,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
+            raise RidesharingServiceError('timeout')
+        except Exception as e:
+            self.logger.getLogger(__name__).exception(
+                '%s service error', self.network, extra={'ridesharing_service_id': self._get_rs_id()}
+            )
+            raise RidesharingServiceError(str(e))
 
     def request_journeys_with_feed_publisher(self, from_coord, to_coord, period_extremity, limit=None):
         """
@@ -130,32 +170,13 @@ class AbstractRidesharingService(object):
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
 
-
-# read the configurations and return the wanted service instance
-class Ridesharing(object):
-    @staticmethod
-    def get_ridesharing_services(instance, ridesharing_configurations):
-        logger = logging.getLogger(__name__)
-        ridesharing_services = []
-        for config in ridesharing_configurations:
-            # Set default arguments
-            if 'args' not in config:
-                config['args'] = {}
-            if 'service_url' not in config['args']:
-                config['args'].update({'service_url': None})
-            if 'instance' not in config['args']:
-                config['args'].update({'instance': instance})
-
-            try:
-                service = utils.create_object(config)
-            except KeyError as e:
-                raise KeyError(
-                    'impossible to build a ridesharing service for {}, '
-                    'missing mandatory field in configuration: {}'.format(instance.name, e.message)
-                )
-
-            ridesharing_services.append(service)
-            logger.info(
-                '** Ridesharing: {} used for instance: {} **'.format(type(service).__name__, instance.name)
-            )
-        return ridesharing_services
+    def __eq__(self, other):
+        return all(
+            [
+                self.system_id == other.system_id,
+                self.service_url == other.service_url,
+                self.api_key == other.api_key,
+                self.network == other.network,
+                type(self).__name__ == type(other).__name__,
+            ]
+        )
