@@ -206,7 +206,7 @@ def get_ridesharing_service_test():
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'Karos'
+    assert services[0].system_id == 'karos'
     assert services[0].timeout == 10
     assert services[0].timedelta == 7000
     assert services[0].departure_radius == 15
@@ -216,7 +216,7 @@ def get_ridesharing_service_test():
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'Karos'
+    assert services[1].system_id == 'karos'
     # Default values
     assert services[1].timeout == 2
     assert services[1].timedelta == 3600
@@ -238,7 +238,7 @@ def karos_service_test():
 
         # Check status information
         status = karos.status()
-        assert status['id'] == 'Karos'
+        assert status['id'] == 'karos'
         assert status['class'] == 'Karos'
         assert status['network'] == 'dummyNetwork'
         assert status['circuit_breaker']['fail_counter'] == 0
@@ -258,7 +258,7 @@ def karos_service_test():
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'Karos'
+        assert ridesharing_journeys[0].metadata.system_id == 'karos'
         assert (
             ridesharing_journeys[0].ridesharing_ad
             == 'https://www.karos.fr/vianavigo?data=eyJmaXJzdE5hbWUiOiAiQW50b25lbGxvIiwgImlkIjogImY3MmZlNWNkLWQyODctNDViMy1iMzViLTdkMmFmNTZmOWE2NiIsICJncmFkZSI6IDUsICJhZ2UiOiAyMCwgImxhc3ROYW1lIjogIk0iLCAiZHVyYXRpb25fc2luY2VfbGFzdF9sb2dpbiI6IDk0LCAiZGVwYXJ0dXJlVG9QaWNrdXBXYWxraW5nUG9seWxpbmUiOiAiaWp6aEhpZ19NYVl0YEAiLCAicGljdHVyZSI6ICJodHRwczovL3N0b3JhZ2UtZG93bmxvYWQuZ29vZ2xlYXBpcy5jb20va2Fyb3MtZGUuYXBwc3BvdC5jb20vcC8yMDYwOTg3Ny0yOWRiLTRjZTUtYmIwMy03Njg0MGM0ODY4ZmEuanBnIiwgImRyb3BvZmZUb0Fycml2YWxXYWxraW5nVGltZSI6IDU3NTIsICJwaG9uZV92ZXJpZmllZCI6IHRydWUsICJkdXJhdGlvbiI6IDY5NiwgInByaWNlIjogeyJhbW91bnQiOiAyLjAsICJkaXNjb3VudCI6IDAuMH0sICJnZW5kZXIiOiAiTSIsICJyZXNwb25zZV9yYXRlIjogMC44NDg0ODQ4NDg0ODQ4NDg1LCAiZHJvcG9mZlRvQXJyaXZhbFdhbGtpbmdQb2x5bGluZSI6ICJjd3ZoSGdxZ0x+ZkJieFIiLCAiZGVwYXJ0dXJlX3RpbWUiOiAxNjAyMDY4NTM5LCAibmJfY2FycG9vbCI6IDQzLCAiZGVwYXJ0dXJlVG9QaWNrdXBXYWxraW5nVGltZSI6IDQ1NywgImpvdXJuZXlQb2x5bGluZSI6ICJrZHtoSHNlfkxSZkBSZkBiQn5DakhqTWpDbkZ6QG5BYkJyRD9SUmZAUj9SU3pFekpSZkB6QG5BakNiR3pAYkJSUnpAYkJ+SHpPfkNqSFJSbkF2QmZAYkJ2QmJCekBuQT9mQFJ2QnJEckk/ZkB+Q2ZKUlJuQWJHbkFyRFJmQG5BckRmQHZCekBqQz9SUmZAZkBiQmZAdkJiQnpFfkNmSlJ6QD9SfkNuS1JmQHpAdkJmQGpDekBqQ1JmQFJmQFJmQFJuQVJmQG5BfkNmQGJCP2ZAUmZAdkJ2Rz9SekB2QmZAdkJ6QGpDUm5BekBqQ1JSUnpAYkJuRj9SYkJuRmJCekU/ZkByRGJMbkFyRFJmQD9mQD9SbkFyRFJuQW5BckR2QmpIPz8/ZkBmQFI/Um5GalJ6QHZCUm5BP1I/ZkBSYkJmQD9Se0BTe0BnQHtAP1NnQHtAa0hjVj8/UmdAU1NTU1NSP2ZAZkBSP1JuRmpSekB2QlJuQT9SP2ZAUmJCP3pAUz8/YkdTZkpvQXJdZ0B+V29Bel53THZgRWdAZkpvQWpXZ0BiR3NEckQifQ=='
@@ -291,7 +291,7 @@ def karos_service_test():
         assert ridesharing_journeys[0].total_seats is None
         assert ridesharing_journeys[0].available_seats == 3
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'Karos'
+        assert ridesharing_journeys[1].metadata.system_id == 'karos'
         assert ridesharing_journeys[1].shape
         assert (
             ridesharing_journeys[1].ridesharing_ad

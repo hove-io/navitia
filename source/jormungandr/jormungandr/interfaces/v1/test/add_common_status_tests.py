@@ -69,7 +69,7 @@ expected_instant_system_ridesharing_status = [
         "circuit_breaker": {"current_state": "closed", "fail_counter": 0, "reset_timeout": 60},
         "class": "InstantSystem",
         "crowfly_radius": 500,
-        "id": "Instant System",
+        "id": "instant_system",
         "network": "Network 1",
         "rating_scale_max": 5,
         "rating_scale_min": 0,
@@ -101,7 +101,7 @@ expected_karos_ridesharing_status = [
     {
         "network": "Karos",
         "circuit_breaker": {"fail_counter": 0, "current_state": "closed", "reset_timeout": 60},
-        "id": "Karos",
+        "id": "karos",
         "class": "Karos",
         "departure_radius": 10,
         "arrival_radius": 10,

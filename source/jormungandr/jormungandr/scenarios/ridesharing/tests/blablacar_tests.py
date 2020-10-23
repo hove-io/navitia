@@ -124,13 +124,13 @@ def get_ridesharing_service_test():
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'Blablacar'
+    assert services[0].system_id == 'blablacar'
     assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_BLABLACAR_FEED_PUBLISHER)
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'Blablacar'
+    assert services[1].system_id == 'blablacar'
     assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_BLABLACAR_FEED_PUBLISHER)
 
 
@@ -155,7 +155,7 @@ def blablacar_test():
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'Blablacar'
+        assert ridesharing_journeys[0].metadata.system_id == 'blablacar'
         assert ridesharing_journeys[0].ridesharing_ad == 'https://blablalines.com'
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
@@ -181,7 +181,7 @@ def blablacar_test():
         assert ridesharing_journeys[0].available_seats == 3
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'Blablacar'
+        assert ridesharing_journeys[1].metadata.system_id == 'blablacar'
         assert ridesharing_journeys[1].shape
         assert ridesharing_journeys[1].ridesharing_ad == 'https://blablalines.com'
 

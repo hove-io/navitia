@@ -132,7 +132,7 @@ def two_ridesharing_service_manager_config_from_file_and_db_test():
     ridesharing_manager.update_config()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 1
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
-    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
     assert ridesharing_manager._rs_services_getter
     assert ridesharing_manager._update_interval == 60
     assert len(ridesharing_manager._ridesharing_services_legacy) == 1
@@ -155,7 +155,7 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     ridesharing_manager.update_config()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 1
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
-    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
     assert ridesharing_manager._rs_services_getter
     assert ridesharing_manager._update_interval == 60
     assert ridesharing_manager._update_interval == 60
@@ -178,8 +178,8 @@ def ridesharing_service_manager_config_from_file_and_db_test():
     ridesharing_manager.update_config()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 0
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 2
-    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "Instant System"
-    assert ridesharing_manager._ridesharing_services["Blablacar"].system_id == "Blablacar"
+    assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
+    assert ridesharing_manager._ridesharing_services["Blablacar"].system_id == "blablacar"
     assert ridesharing_manager._rs_services_getter
     assert ridesharing_manager._update_interval == 60
     assert ridesharing_manager._update_interval == 60
@@ -193,7 +193,7 @@ def blablacar_init_class_test():
     ridesharing_manager = RidesharingServiceManager(instance, [])
     service = ridesharing_manager._init_class(config_blablacar["class"], config_blablacar["args"])
     assert isinstance(service, Blablacar)
-    assert service.system_id == "Blablacar"
+    assert service.system_id == "blablacar"
 
 
 def instant_system_init_class_test():
@@ -201,4 +201,4 @@ def instant_system_init_class_test():
     ridesharing_manager = RidesharingServiceManager(instance, [])
     service = ridesharing_manager._init_class(config_instant_system["class"], config_instant_system["args"])
     assert isinstance(service, InstantSystem)
-    assert service.system_id == 'Instant System'
+    assert service.system_id == 'instant_system'

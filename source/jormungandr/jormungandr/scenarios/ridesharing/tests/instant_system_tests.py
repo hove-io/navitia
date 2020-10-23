@@ -217,7 +217,7 @@ def get_ridesharing_service_test():
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'Instant System'
+    assert services[0].system_id == 'instant_system'
     assert services[0].rating_scale_min == 0
     assert services[0].rating_scale_max == 10
     assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
@@ -225,7 +225,7 @@ def get_ridesharing_service_test():
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'Instant System'
+    assert services[1].system_id == 'instant_system'
     assert services[1].rating_scale_min == 1
     assert services[1].rating_scale_max == 5
     assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER)
@@ -254,7 +254,7 @@ def instant_system_test():
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[0].metadata.system_id == 'instant_system'
         assert ridesharing_journeys[0].metadata.rating_scale_min == 0
         assert ridesharing_journeys[0].metadata.rating_scale_max == 10
         assert (
@@ -294,7 +294,7 @@ def instant_system_test():
         assert ridesharing_journeys[0].available_seats == 4
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[1].metadata.system_id == 'instant_system'
         assert ridesharing_journeys[1].metadata.rating_scale_min == 0
         assert ridesharing_journeys[1].metadata.rating_scale_max == 10
         # the shape should not be none, but we don't test the whole string

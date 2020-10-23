@@ -158,7 +158,7 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[1].get('duration') == 1301
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
-        assert rsj_info.get('operator') == 'Klaxit VIA API'
+        assert rsj_info.get('operator') == 'klaxit'
 
         rsj_links = rsj_sections[1].get('links')
         assert len(rsj_links) == 2
