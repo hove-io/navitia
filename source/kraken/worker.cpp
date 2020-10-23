@@ -751,7 +751,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                                            "no origin point nor destination point given");
             return;
         }
-        uint32_t max_extra_second_pass = 0;  // request.max_extra_second_pass()
+        uint32_t max_extra_second_pass = request.max_extra_second_pass();
         switch (api) {
             case pbnavitia::pt_planner:
                 routing::make_pt_response(
