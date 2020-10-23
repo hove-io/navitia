@@ -70,7 +70,7 @@ class Blablacar(AbstractRidesharingService):
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-        self.system_id = 'Blablacar'
+        self.system_id = 'blablacar'
         self.timeout = timeout
         self.timedelta = timedelta
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)

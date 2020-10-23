@@ -71,7 +71,7 @@ class InstantSystem(AbstractRidesharingService):
         self.network = network
         self.rating_scale_min = rating_scale_min
         self.rating_scale_max = rating_scale_max
-        self.system_id = 'Instant System'
+        self.system_id = 'instant_system'
         self.timeout = timeout
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
         self.crowfly_radius = crowfly_radius

@@ -65,7 +65,7 @@ class Karos(AbstractRidesharingService):
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-        self.system_id = 'Karos'
+        self.system_id = 'karos'
         self.timeout = timeout
         self.timedelta = timedelta
         self.departure_radius = departure_radius

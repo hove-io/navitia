@@ -65,7 +65,7 @@ class Klaxit(AbstractRidesharingService):
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-        self.system_id = 'Klaxit VIA API'
+        self.system_id = 'klaxit'
         self.timeout = timeout
         self.timedelta = timedelta
         self.departure_radius = departure_radius

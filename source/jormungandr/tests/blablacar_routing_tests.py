@@ -149,7 +149,7 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
-        assert rsj_info.get('operator') == 'Blablacar'
+        assert rsj_info.get('operator') == 'blablacar'
         assert rsj_info.get('seats').get('available') == 3
 
         assert 'total' not in rsj_info.get('seats')
