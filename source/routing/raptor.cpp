@@ -925,8 +925,7 @@ std::string RAPTOR::print_all_labels() {
         navitia::type::StopPoint* stop_point = data.pt_data->stop_points[sp_idx.val];
 
         bool print_stop_point = false;
-        for (unsigned int count_id = 0; count_id < labels.size(); ++count_id) {
-            Labels& current_labels = labels[count_id];
+        for (auto& current_labels : labels) {
             if (current_labels.pt_is_initialized(sp_idx) || current_labels.transfer_is_initialized(sp_idx)) {
                 print_stop_point = true;
                 break;
