@@ -633,11 +633,11 @@ void Data::pick_up_drop_of_on_borders() {
          *                                |- Stay-In -|
          */
 
-        if (!vj->next_vj or !vj->joins_on_different_stop_points(*vj->next_vj)) {
+        if (!vj->next_vj or vj->ends_with_stayin_on_same_stop_point()) {
             last_st->pick_up_allowed = false;
         }
 
-        if (!vj->prev_vj or !vj->joins_on_different_stop_points(*vj->prev_vj)) {
+        if (!vj->prev_vj or vj->starts_with_stayin_on_same_stop_point()) {
             first_st->drop_off_allowed = false;
         }
     }

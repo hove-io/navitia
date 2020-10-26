@@ -148,6 +148,7 @@ struct StopArea : public Header, Nameable, hasProperties {
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
     StopArea() {}
+    StopArea(idx_t idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
     bool operator<(const StopArea& other) const;
 };
@@ -287,11 +288,16 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
 
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
 
+    VehicleJourney(int idx = 0, std::string uri = "", ValidityPattern* vp = nullptr)
+        : Header(idx, uri), Nameable(uri), validity_pattern(vp) {}
+
     // Return the smallest time within its stop_times
     int earliest_time() const;
 
     bool operator<(const VehicleJourney& other) const;
     bool joins_on_different_stop_points(const ed::types::VehicleJourney& prev_vj) const;
+    bool starts_with_stayin_on_same_stop_point() const;
+    bool ends_with_stayin_on_same_stop_point() const;
 };
 
 struct StopPoint : public Header, Nameable, hasProperties {
@@ -307,6 +313,8 @@ struct StopPoint : public Header, Nameable, hasProperties {
     Network* network;
 
     StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
+    StopPoint(int idx, std::string uri, StopArea* sa = nullptr, Network* n = nullptr)
+        : Header(idx, uri), Nameable(uri), stop_area(sa), network(n) {}
 
     bool operator<(const StopPoint& other) const;
     bool operator!=(const StopPoint& sp) const;
