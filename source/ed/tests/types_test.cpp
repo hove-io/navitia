@@ -28,8 +28,6 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include <algorithm>
-#include <boost/range/algorithm/find_if.hpp>
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
 
@@ -41,6 +39,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include <boost/range/algorithm.hpp>
 #include <string>
+#include <algorithm>
 
 using namespace ed;
 using namespace navitia::test;
@@ -121,15 +120,15 @@ struct TestEdData {
 };
 
 BOOST_FIXTURE_TEST_CASE(vjs_with_same_block_id_should_be_linked, TestEdData) {
-    BOOST_CHECK_EQUAL(vjs[0]->prev_vj, nullptr);
+    BOOST_CHECK(vjs[0]->prev_vj == nullptr);
     BOOST_CHECK_EQUAL(vjs[0]->next_vj, vjs[1]);
     BOOST_CHECK_EQUAL(vjs[1]->prev_vj, vjs[0]);
-    BOOST_CHECK_EQUAL(vjs[1]->next_vj, nullptr);
+    BOOST_CHECK(vjs[1]->next_vj == nullptr);
 
-    BOOST_CHECK_EQUAL(vjs[2]->prev_vj, nullptr);
+    BOOST_CHECK(vjs[2]->prev_vj == nullptr);
     BOOST_CHECK_EQUAL(vjs[2]->next_vj, vjs[3]);
     BOOST_CHECK_EQUAL(vjs[3]->prev_vj, vjs[2]);
-    BOOST_CHECK_EQUAL(vjs[3]->next_vj, nullptr);
+    BOOST_CHECK(vjs[3]->next_vj == nullptr);
 }
 
 BOOST_FIXTURE_TEST_CASE(vehicle_journeys_with_stayin_at_start, TestEdData) {
