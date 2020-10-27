@@ -46,6 +46,7 @@ www.navitia.io
 #include <limits.h>
 #include <bitset>
 #include <unordered_map>
+#include <utility>
 
 namespace nt = navitia::type;
 using nt::idx_t;
@@ -346,6 +347,39 @@ struct StopTime {
 
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
 
+    StopTime() {}
+    StopTime(idx_t idx,
+             int arr,
+             int dep,
+             int board,
+             int ali,
+             VehicleJourney* vj,
+             StopPoint* sp,
+             std::shared_ptr<Shape> shape,
+             uint order,
+             bool odt,
+             bool pick,
+             bool drop,
+             bool freq,
+             bool wheel,
+             bool estim,
+             std::string&& headsign)
+        : idx(idx),
+          arrival_time(arr),
+          departure_time(dep),
+          boarding_time(board),
+          alighting_time(ali),
+          vehicle_journey(vj),
+          stop_point(sp),
+          shape_from_prev(shape),
+          order(order),
+          ODT(odt),
+          pick_up_allowed(pick),
+          drop_off_allowed(drop),
+          is_frequency(freq),
+          wheelchair_boarding(wheel),
+          date_time_estimated(estim),
+          headsign(std::forward<std::string>(headsign)) {}
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {
         arrival_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
