@@ -119,7 +119,7 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         tickets = response.get('tickets')
         assert len(tickets) == 1
         assert tickets[0].get('cost').get('currency') == 'centime'
-        assert tickets[0].get('cost').get('value') == '1.0'
+        assert tickets[0].get('cost').get('value') == '100.0'
         ticket = tickets[0]
 
         ridesharing_kraken = journeys[0]
@@ -140,7 +140,7 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 18869
-        assert rs_journeys[0].get('durations').get('walking') == 0  # two crow_fly sections have 0 duration
+        assert rs_journeys[0].get('durations').get('walking') == 250
         assert rs_journeys[0].get('durations').get('ridesharing') == 1301
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -148,8 +148,8 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
-        # crowfly duration in ridesharing is always 0
-        assert rsj_sections[0].get('duration') == 0
+        # For start teleport section we take departure to pickup duration
+        assert rsj_sections[0].get('duration') == 174
 
         assert rsj_sections[1].get('type') == 'ridesharing'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
@@ -173,8 +173,8 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
-        # crowfly duration in ridesharing is always 0
-        assert rsj_sections[2].get('duration') == 0
+        # For end teleport section we take dropoff to destination duration
+        assert rsj_sections[2].get('duration') == 76
 
         fps = response['feed_publishers']
         assert len(fps) == 2
