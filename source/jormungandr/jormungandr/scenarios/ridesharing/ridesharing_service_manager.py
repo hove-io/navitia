@@ -33,6 +33,7 @@ from typing import Dict
 from jormungandr import utils
 import six
 from jormungandr import new_relic
+from jormungandr import app
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.utils import get_pt_object_coord, generate_id
@@ -40,6 +41,7 @@ from jormungandr.street_network.utils import crowfly_distance_between
 from navitiacommon import response_pb2
 from jormungandr.utils import PeriodExtremity
 from jormungandr.scenarios.journey_filter import to_be_deleted
+from jormungandr.scenarios.helper_classes.helper_future import FutureManager
 from importlib import import_module
 
 
@@ -157,39 +159,93 @@ class RidesharingServiceManager(object):
 
     def decorate_journeys_with_ridesharing_offers(self, response, request):
         # TODO: disable same journey schedule link for ridesharing journey?
-        for journey in response.journeys:
-            if 'ridesharing' not in journey.tags or to_be_deleted(journey):
-                continue
-            for i, section in enumerate(journey.sections):
-                if section.street_network.mode == response_pb2.Ridesharing:
-                    section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
-                    if len(journey.sections) == 1:  # direct path, we use the user input
-                        period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
-                    elif i == 0:  # ridesharing on first section we want to arrive before the start of the pt
-                        period_extremity = PeriodExtremity(section.end_date_time, False)
-                    else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
-                        period_extremity = PeriodExtremity(section.begin_date_time, True)
+        greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
+        if greenlet_pool_actived:
+            logging.info('ridesharing is called in async mode')
+        else:
+            logging.info('ridesharing is called in sequential mode')
 
-                    pb_rsjs, pb_tickets, pb_fps = self.build_ridesharing_journeys(
-                        section.origin, section.destination, period_extremity
-                    )
-                    if not pb_rsjs:
-                        journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
-                    else:
-                        section.ridesharing_journeys.extend(pb_rsjs)
-                        response.tickets.extend(pb_tickets)
+        with FutureManager() as future_manager:
+            futures = {}
+            for journey_idx, journey in enumerate(response.journeys):
+                if 'ridesharing' not in journey.tags or to_be_deleted(journey):
+                    continue
+                futures[journey_idx] = {}
+                for section_idx, section in enumerate(journey.sections):
+                    if section.street_network.mode == response_pb2.Ridesharing:
+                        section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
+                        period_extremity = None
+                        if len(journey.sections) == 1:  # direct path, we use the user input
+                            period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
+                        elif (
+                            section_idx == 0
+                        ):  # ridesharing on first section we want to arrive before the start of the pt
+                            period_extremity = PeriodExtremity(section.end_date_time, False)
+                        else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
+                            period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                    response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
+                        if greenlet_pool_actived:
+                            futures[journey_idx][section_idx] = future_manager.create_future(
+                                self.build_ridesharing_journeys,
+                                section.origin,
+                                section.destination,
+                                period_extremity,
+                            )
+                        else:
+                            pb_rsjs, pb_tickets, pb_fps = self.build_ridesharing_journeys(
+                                section.origin, section.destination, period_extremity
+                            )
+                            self.add_new_ridesharing_results(
+                                pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
+                            )
+
+            if greenlet_pool_actived:
+                for journey_idx in futures:
+                    for section_idx in futures[journey_idx]:
+                        pb_rsjs, pb_tickets, pb_fps = futures[journey_idx][section_idx].wait_and_get()
+                        self.add_new_ridesharing_results(
+                            pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
+                        )
+
+    def add_new_ridesharing_results(self, pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx):
+        if not pb_rsjs:
+            journey_filter.mark_as_dead(response.journeys[journey_idx], 'no_matching_ridesharing_found')
+        else:
+            response.journeys[journey_idx].sections[section_idx].ridesharing_journeys.extend(pb_rsjs)
+            response.tickets.extend(pb_tickets)
+
+        response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
     def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
         res = []
         fps = set()
-        for service in self.get_all_ridesharing_services():
-            rsjs, fp = service.request_journeys_with_feed_publisher(
-                from_coord, to_coord, period_extremity, limit
-            )
-            res.extend(rsjs)
-            fps.add(fp)
+        greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
+
+        with FutureManager() as future_manager:
+            futures = []
+            ridesharing_services = self.get_all_ridesharing_services()
+            for service in ridesharing_services:
+                if greenlet_pool_actived and (len(ridesharing_services) > 1):
+                    futures.append(
+                        future_manager.create_future(
+                            service.request_journeys_with_feed_publisher,
+                            from_coord,
+                            to_coord,
+                            period_extremity,
+                            limit,
+                        )
+                    )
+                else:
+                    rsjs, fp = service.request_journeys_with_feed_publisher(
+                        from_coord, to_coord, period_extremity, limit
+                    )
+                    res.extend(rsjs)
+                    fps.add(fp)
+            if greenlet_pool_actived and (len(ridesharing_services) > 1):
+                for future in futures:
+                    rsjs, fp = future.wait_and_get()
+                    res.extend(rsjs)
+                    fps.add(fp)
         return res, fps
 
     def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity):
