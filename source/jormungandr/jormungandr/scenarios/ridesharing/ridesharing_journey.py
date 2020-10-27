@@ -88,8 +88,6 @@ class RidesharingJourney(object):
         'currency',  # "centime" (EURO cents) is the preferred currency (price is filled accordingly)
         'total_seats',
         'available_seats',
-        'origin_pickup_distance',
         'origin_pickup_duration',
-        'dropoff_dest_distance',
         'dropoff_dest_duration',
     )

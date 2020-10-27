@@ -110,9 +110,7 @@ class Karos(AbstractRidesharingService):
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
-            res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
             res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
-            res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
             res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
 
             res.pickup_place = rsj.Place(
