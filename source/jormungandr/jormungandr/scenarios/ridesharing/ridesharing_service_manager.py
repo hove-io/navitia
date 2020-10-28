@@ -59,6 +59,7 @@ class RidesharingServiceManager(object):
         self._update_interval = update_interval
         self.instance = instance
         self.greenlet_pool_size = app.config.get('RIDESHARING_GREENLET_POOL_SIZE', 8)
+        self.greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
 
     def init_ridesharing_services(self):
         # Init legacy ridesharing from config file
@@ -160,8 +161,7 @@ class RidesharingServiceManager(object):
 
     def decorate_journeys_with_ridesharing_offers(self, response, request):
         # TODO: disable same journey schedule link for ridesharing journey?
-        greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
-        if greenlet_pool_actived:
+        if self.greenlet_pool_actived:
             logging.info('ridesharing is called in async mode')
         else:
             logging.info('ridesharing is called in sequential mode')
@@ -185,7 +185,7 @@ class RidesharingServiceManager(object):
                         else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
                             period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                        if greenlet_pool_actived:
+                        if self.greenlet_pool_actived:
                             futures[journey_idx][section_idx] = future_manager.create_future(
                                 self.build_ridesharing_journeys,
                                 section.origin,
@@ -200,7 +200,7 @@ class RidesharingServiceManager(object):
                                 pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
                             )
 
-            if greenlet_pool_actived:
+            if self.greenlet_pool_actived:
                 for journey_idx in futures:
                     for section_idx in futures[journey_idx]:
                         pb_rsjs, pb_tickets, pb_fps = futures[journey_idx][section_idx].wait_and_get()
@@ -218,35 +218,29 @@ class RidesharingServiceManager(object):
         response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
     def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
+        calls = []
         res = []
         fps = set()
-        greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
 
-        with FutureManager(self.greenlet_pool_size) as future_manager:
-            futures = []
-            ridesharing_services = self.get_all_ridesharing_services()
-            for service in ridesharing_services:
-                if greenlet_pool_actived and (len(ridesharing_services) > 1):
-                    futures.append(
-                        future_manager.create_future(
-                            service.request_journeys_with_feed_publisher,
-                            from_coord,
-                            to_coord,
-                            period_extremity,
-                            limit,
-                        )
-                    )
-                else:
-                    rsjs, fp = service.request_journeys_with_feed_publisher(
-                        from_coord, to_coord, period_extremity, limit
-                    )
-                    res.extend(rsjs)
-                    fps.add(fp)
-            if greenlet_pool_actived and (len(ridesharing_services) > 1):
-                for future in futures:
-                    rsjs, fp = future.wait_and_get()
-                    res.extend(rsjs)
-                    fps.add(fp)
+        for service in self.get_all_ridesharing_services():
+
+            def _call(s=service):
+                return s.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+
+            calls.append(_call)
+
+        call_res = []
+        if self.greenlet_pool_actived:
+            with FutureManager() as future_manager:
+                futures = [future_manager.create_future(call) for call in calls]
+            call_res = (f.wait_and_get() for f in futures)
+        else:
+            call_res = (c() for c in calls)
+
+        for rsjs, fp in call_res:
+            res.extend(rsjs)
+            fps.add(fp)
+
         return res, fps
 
     def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity):
