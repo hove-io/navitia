@@ -240,11 +240,7 @@ class RidesharingServiceManager(object):
             start_teleport_section.length = int(crowfly_distance_between(from_coord, pickup_coord))
 
             # We take departure to pickup duration
-            start_teleport_section.duration = (
-                int(rsj.origin_pickup_duration)
-                if getattr(rsj, 'origin_pickup_duration', None) is not None
-                else 0
-            )
+            start_teleport_section.duration = int(getattr(rsj, 'origin_pickup_duration', 0))
             pb_rsj.durations.walking += start_teleport_section.duration
             pb_rsj.durations.total += start_teleport_section.duration
 
@@ -317,9 +313,7 @@ class RidesharingServiceManager(object):
             end_teleport_section.length = int(crowfly_distance_between(dropoff_coord, to_coord))
 
             # We take dropoff to destination duration
-            end_teleport_section.duration = (
-                int(rsj.dropoff_dest_duration) if getattr(rsj, 'dropoff_dest_duration', None) is not None else 0
-            )
+            end_teleport_section.duration = int(getattr(rsj, 'dropoff_dest_duration', 0))
             pb_rsj.durations.walking += end_teleport_section.duration
             pb_rsj.durations.total += end_teleport_section.duration
             pb_rsj.duration += pb_rsj.durations.total
