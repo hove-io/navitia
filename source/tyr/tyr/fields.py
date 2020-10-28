@@ -198,6 +198,8 @@ instance_fields = {
     'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
     'asynchronous_ridesharing': fields.Boolean,
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields)),
+    'greenlet_pool_for_ridesharing_services': fields.Boolean,
+    'ridesharing_greenlet_pool_size': fields.Integer,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
