@@ -28,12 +28,12 @@ jobs:
     - name: create navitia_${{matrix.distribution}}_packages.zip
       run: |
         zip navitia_${{matrix.distribution}}_packages.zip ../navitia-*
-        echo "::set-env name=NAVITIA_DEBIAN_PACKAGES::navitia_${{matrix.distribution}}_packages.zip"
+        echo "NAVITIA_DEBIAN_PACKAGES=navitia_${{matrix.distribution}}_packages.zip" >> $GITHUB_ENV
     - name: upload ${{matrix.distribution}} packages
       uses: actions/upload-artifact@v1
       with:
         name: navitia-${{matrix.distribution}}-packages
-        path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
+        path: "${{NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
