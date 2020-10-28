@@ -1,19 +1,19 @@
 # Ridesharing Services
 
-## Blablacar
+## Blablalines
 
 Provides an external API that delivers ridesharing offers.<br>
 Navitia exposes the offers inside **ridesharing_journeys** json output field.<br>
-Blablacar documentation : https://www.blablalines.com/public-api-v2#search-get
+Blablalines documentation : https://www.blablalines.com/public-api-v2#search-get
 
-### How to connect Blablacar with Navitia.
+### How to connect Blablalines with Navitia.
 
 Insert into **Jormun** configuration:
 
 ```
  "ridesharing": [
     {
-        "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+        "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
         "args": {
             "service_url": "https://api.blablalines.com/2/third_party/public/search",
             "api_key": "Token",

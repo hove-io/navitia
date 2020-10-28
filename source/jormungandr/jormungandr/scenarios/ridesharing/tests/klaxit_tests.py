@@ -194,7 +194,7 @@ def klaxit_service_test():
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
 
-        assert ridesharing_journeys[0].price == 0.51
+        assert ridesharing_journeys[0].price == 51.0
         assert ridesharing_journeys[0].currency == 'centime'
 
         # Klaxit doesn't have any information on seats
@@ -214,7 +214,7 @@ def klaxit_service_test():
         assert ridesharing_journeys[1].dropoff_place.lat == 48.8559454289402
         assert ridesharing_journeys[1].dropoff_place.lon == 2.37563525508835
 
-        assert ridesharing_journeys[1].price == 0.56
+        assert ridesharing_journeys[1].price == pytest.approx(56.0, abs=0.01)
         assert ridesharing_journeys[1].currency == 'centime'
 
         # Klaxit doesn't have any information on seats

@@ -110,6 +110,8 @@ class Karos(AbstractRidesharingService):
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
+            res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
+            res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
@@ -132,7 +134,7 @@ class Karos(AbstractRidesharingService):
                     type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                 )
 
-            res.price = offer.get('price', {}).get('amount')
+            res.price = offer.get('price', {}).get('amount') * 100.0
             res.currency = "centime"
 
             res.available_seats = offer.get('availableSeats')

@@ -44,33 +44,33 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 
-DEFAULT_BLABLACAR_FEED_PUBLISHER = {
-    'id': 'blablacar',
-    'name': 'Blablacar',
+DEFAULT_BLABLALINES_FEED_PUBLISHER = {
+    'id': 'blablalines',
+    'name': 'blablalines',
     'license': 'Private',
     'url': 'https://www.blablalines.com/terms',
 }
 
 # Departure time should be between now to 1 week from now
-# Paramaeters documenation : https://www.blablalines.com/public-api-v2
-MIN_BLABLACAR_MARGIN_DEPARTURE_TIME = 15 * 60  # 15 min
-MAX_BLABLACAR_MARGIN_DEPARTURE_TIME = 60 * 60 * 168  # 168 hours
+# Parameters documentation : https://www.blablalines.com/public-api-v2
+MIN_BLABLALINES_MARGIN_DEPARTURE_TIME = 15 * 60  # 15 min
+MAX_BLABLALINES_MARGIN_DEPARTURE_TIME = 60 * 60 * 168  # 168 hours
 
 
-class Blablacar(AbstractRidesharingService):
+class Blablalines(AbstractRidesharingService):
     def __init__(
         self,
         service_url,
         api_key,
         network,
-        feed_publisher=DEFAULT_BLABLACAR_FEED_PUBLISHER,
+        feed_publisher=DEFAULT_BLABLALINES_FEED_PUBLISHER,
         timedelta=3600,
         timeout=2,
     ):
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-        self.system_id = 'blablacar'
+        self.system_id = 'blablalines'
         self.timeout = timeout
         self.timedelta = timedelta
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
@@ -78,8 +78,8 @@ class Blablacar(AbstractRidesharingService):
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
         self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_BLABLACAR_FAIL'), 4),
-            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_BLABLACAR_TIMEOUT_S'), 60),
+            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_BLABLALINES_FAIL'), 4),
+            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_BLABLALINES_TIMEOUT_S'), 60),
         )
         self.call_params = ''
 
@@ -114,6 +114,8 @@ class Blablacar(AbstractRidesharingService):
             res.distance = offer.get('distance')
             res.duration = offer.get('duration')
             res.ridesharing_ad = offer.get('web_url')
+            res.origin_pickup_duration = offer.get('departure_to_pickup_walking_time')
+            res.dropoff_dest_duration = offer.get('dropoff_to_arrival_walking_time')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('pickup_latitude'), lon=offer.get('pickup_longitude')
@@ -136,9 +138,13 @@ class Blablacar(AbstractRidesharingService):
                     type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                 )
 
-            res.price = offer.get('price', {}).get('amount')
             currency = offer.get('price', {}).get('currency')
-            res.currency = "centime" if currency == "EUR" else currency
+            if currency == "EUR":
+                res.currency = "centime"
+                res.price = offer.get('price', {}).get('amount') * 100.0
+            else:
+                res.currency = currency
+                res.price = offer.get('price', {}).get('amount')
 
             res.available_seats = offer.get('available_seats')
             res.total_seats = None
@@ -169,14 +175,14 @@ class Blablacar(AbstractRidesharingService):
         dt = datetime.datetime.now()
         now = calendar.timegm(dt.utctimetuple())
 
-        if period_extremity.datetime < now + MIN_BLABLACAR_MARGIN_DEPARTURE_TIME:
+        if period_extremity.datetime < now + MIN_BLABLALINES_MARGIN_DEPARTURE_TIME:
             logging.getLogger(__name__).info(
-                'blablacar ridesharing request departure time < now + 15 min. Force to now + 15 min'
+                'blablalines ridesharing request departure time < now + 15 min. Force to now + 15 min'
             )
-            departure_epoch = now + MIN_BLABLACAR_MARGIN_DEPARTURE_TIME
-        elif period_extremity.datetime > now + MAX_BLABLACAR_MARGIN_DEPARTURE_TIME:
+            departure_epoch = now + MIN_BLABLALINES_MARGIN_DEPARTURE_TIME
+        elif period_extremity.datetime > now + MAX_BLABLALINES_MARGIN_DEPARTURE_TIME:
             logging.getLogger(__name__).error(
-                'Blablacar error, request departure time should be between now to 1 week from now. departure is greater than now + 1 week'
+                'Blablalines error, request departure time should be between now to 1 week from now. departure is greater than now + 1 week'
             )
             return []
         else:
@@ -197,7 +203,7 @@ class Blablacar(AbstractRidesharingService):
 
         if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(
-                'Blablacar service unavailable, impossible to query : %s',
+                'Blablalines service unavailable, impossible to query : %s',
                 resp.url,
                 extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code},
             )
@@ -206,14 +212,14 @@ class Blablacar(AbstractRidesharingService):
         if resp:
             r = self._make_response(resp.json())
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
-            logging.getLogger('stat.ridesharing.blablacar').info(
+            logging.getLogger('stat.ridesharing.blablalines').info(
                 'Received ridesharing offers : %s',
                 len(r),
                 extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': len(r)},
             )
             return r
         self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
-        logging.getLogger('stat.ridesharing.blablacar').info(
+        logging.getLogger('stat.ridesharing.blablalines').info(
             'Received ridesharing offers : 0',
             extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': 0},
         )

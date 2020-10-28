@@ -29,7 +29,7 @@
 # www.navitia.io
 
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
-from jormungandr.scenarios.ridesharing.blablacar import Blablacar
+from jormungandr.scenarios.ridesharing.blablalines import Blablalines
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
 from navitiacommon.models.ridesharing_service import RidesharingService
 
@@ -51,8 +51,8 @@ config_instant_system = {
         "timeframe_duration": 1800,
     },
 }
-config_blablacar = {
-    "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+config_blablalines = {
+    "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
     "args": {"service_url": "tata", "api_key": "tata key", "network": "MM"},
 }
 
@@ -73,13 +73,13 @@ def instant_system_ridesharing_service_manager_config_from_file_test():
     assert len(ridesharing_manager._ridesharing_services_legacy) == 1
 
 
-def blablacar_ridesharing_service_manager_config_from_file_test():
+def blablalines_ridesharing_service_manager_config_from_file_test():
     """
-    creation of a ridesharing service from the configuration file: Blablacar
-    Result: We must find the service Blablacar
+    creation of a ridesharing service from the configuration file: Blablalines
+    Result: We must find the service Blablalines
     """
     instance = MockInstance()
-    ridesharing_services_config = [config_blablacar]
+    ridesharing_services_config = [config_blablalines]
     ridesharing_manager = RidesharingServiceManager(instance, ridesharing_services_config)
     ridesharing_manager.init_ridesharing_services()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 1
@@ -91,11 +91,11 @@ def blablacar_ridesharing_service_manager_config_from_file_test():
 
 def two_ridesharing_service_manager_config_from_file_test():
     """
-    creation of a ride sharing services from the configuration file: Blablacar and InstantSystym
-    Result: We have to find both services Blablacar and InstantSystem
+    creation of a ride sharing services from the configuration file: Blablalines and InstantSystym
+    Result: We have to find both services Blablalines and InstantSystem
     """
     instance = MockInstance()
-    ridesharing_services_config = [config_blablacar, config_instant_system]
+    ridesharing_services_config = [config_blablalines, config_instant_system]
     ridesharing_manager = RidesharingServiceManager(instance, ridesharing_services_config)
     ridesharing_manager.init_ridesharing_services()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 2
@@ -111,20 +111,20 @@ def mock_get_attr_instant_system():
     return [service]
 
 
-def mock_get_attr_instant_system_and_blablacar():
-    json = {"klass": config_blablacar["class"], "args": config_blablacar["args"]}
-    Blablacar = RidesharingService(id="Blablacar", json=json)
-    return [Blablacar] + mock_get_attr_instant_system()
+def mock_get_attr_instant_system_and_blablalines():
+    json = {"klass": config_blablalines["class"], "args": config_blablalines["args"]}
+    Blablalines = RidesharingService(id="Blablalines", json=json)
+    return [Blablalines] + mock_get_attr_instant_system()
 
 
 def two_ridesharing_service_manager_config_from_file_and_db_test():
     """
-    creation of a ridesharing service from the configuration file: Blablacar
+    creation of a ridesharing service from the configuration file: Blablalines
     creation of a ridesharing service from database : InstantSystem
-    Result: We have to find both services Blablacar and InstantSystem
+    Result: We have to find both services Blablalines and InstantSystem
     """
     instance = MockInstance()
-    ridesharing_services_config = [config_blablacar]
+    ridesharing_services_config = [config_blablalines]
     ridesharing_manager = RidesharingServiceManager(
         instance, ridesharing_services_config, rs_services_getter=mock_get_attr_instant_system
     )
@@ -167,19 +167,19 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
 def ridesharing_service_manager_config_from_file_and_db_test():
     """
     creation of a ridesharing service from database: InstantSystem
-    creation of a ridesharing service from database : Blablacar
-    Result: We have to find both services Blablacar and InstantSystem
+    creation of a ridesharing service from database : Blablalines
+    Result: We have to find both services Blablalines and InstantSystem
     """
     instance = MockInstance()
     ridesharing_manager = RidesharingServiceManager(
-        instance, [], rs_services_getter=mock_get_attr_instant_system_and_blablacar
+        instance, [], rs_services_getter=mock_get_attr_instant_system_and_blablalines
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
     assert len(ridesharing_manager.ridesharing_services_configuration) == 0
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 2
     assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
-    assert ridesharing_manager._ridesharing_services["Blablacar"].system_id == "blablacar"
+    assert ridesharing_manager._ridesharing_services["Blablalines"].system_id == "blablalines"
     assert ridesharing_manager._rs_services_getter
     assert ridesharing_manager._update_interval == 60
     assert ridesharing_manager._update_interval == 60
@@ -188,12 +188,12 @@ def ridesharing_service_manager_config_from_file_and_db_test():
     assert len(services) == 2
 
 
-def blablacar_init_class_test():
+def blablalines_init_class_test():
     instance = MockInstance()
     ridesharing_manager = RidesharingServiceManager(instance, [])
-    service = ridesharing_manager._init_class(config_blablacar["class"], config_blablacar["args"])
-    assert isinstance(service, Blablacar)
-    assert service.system_id == "blablacar"
+    service = ridesharing_manager._init_class(config_blablalines["class"], config_blablalines["args"])
+    assert isinstance(service, Blablalines)
+    assert service.system_id == "blablalines"
 
 
 def instant_system_init_class_test():

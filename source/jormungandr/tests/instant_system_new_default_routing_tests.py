@@ -154,7 +154,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 224
-        assert rs_journeys[0].get('durations').get('walking') == 0  # two crow_fly sections have 0 duration
+        assert rs_journeys[0].get('durations').get('walking') == 0
         assert rs_journeys[0].get('durations').get('ridesharing') == 1057
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')

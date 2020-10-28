@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.scenarios.ridesharing.blablacar import Blablacar, DEFAULT_BLABLACAR_FEED_PUBLISHER
+from jormungandr.scenarios.ridesharing.blablalines import Blablalines, DEFAULT_BLABLALINES_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 from jormungandr.scenarios.ridesharing.ridesharing_service import RsFeedPublisher, RidesharingServiceError
 
@@ -91,7 +91,7 @@ fixed = regex.sub(r"\\\\", fake_response)
 
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
-DUMMY_BLABLACAR_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
+DUMMY_BLABLALINES_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 # A hack class
 class DummyInstance:
@@ -101,16 +101,16 @@ class DummyInstance:
 def get_ridesharing_service_test():
     configs = [
         {
-            "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+            "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
             "args": {
                 "service_url": "toto",
                 "api_key": "toto key",
                 "network": "N",
-                "feed_publisher": DUMMY_BLABLACAR_FEED_PUBLISHER,
+                "feed_publisher": DUMMY_BLABLALINES_FEED_PUBLISHER,
             },
         },
         {
-            "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+            "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
             "args": {"service_url": "tata", "api_key": "tata key", "network": "M"},
         },
     ]
@@ -124,24 +124,24 @@ def get_ridesharing_service_test():
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
-    assert services[0].system_id == 'blablacar'
-    assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_BLABLACAR_FEED_PUBLISHER)
+    assert services[0].system_id == 'blablalines'
+    assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_BLABLALINES_FEED_PUBLISHER)
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
-    assert services[1].system_id == 'blablacar'
-    assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_BLABLACAR_FEED_PUBLISHER)
+    assert services[1].system_id == 'blablalines'
+    assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_BLABLALINES_FEED_PUBLISHER)
 
 
-def blablacar_test():
+def blablalines_test():
     with mock.patch('requests.get', mock_get):
 
-        blablacar = Blablacar(
+        blablalines = Blablalines(
             service_url='dummyUrl',
             api_key='dummyApiKey',
             network='dummyNetwork',
-            feed_publisher=DUMMY_BLABLACAR_FEED_PUBLISHER,
+            feed_publisher=DUMMY_BLABLALINES_FEED_PUBLISHER,
         )
         from_coord = '47.28696,0.78981'
         to_coord = '47.38642,0.69039'
@@ -149,13 +149,13 @@ def blablacar_test():
         period_extremity = utils.PeriodExtremity(
             datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
         )
-        ridesharing_journeys, feed_publisher = blablacar.request_journeys_with_feed_publisher(
+        ridesharing_journeys, feed_publisher = blablalines.request_journeys_with_feed_publisher(
             from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity
         )
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[0].metadata.system_id == 'blablacar'
+        assert ridesharing_journeys[0].metadata.system_id == 'blablalines'
         assert ridesharing_journeys[0].ridesharing_ad == 'https://blablalines.com'
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
@@ -174,14 +174,14 @@ def blablacar_test():
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
 
-        assert ridesharing_journeys[0].price == 1
+        assert ridesharing_journeys[0].price == 100.0
         assert ridesharing_journeys[0].currency == 'centime'
 
         assert ridesharing_journeys[0].total_seats is None
         assert ridesharing_journeys[0].available_seats == 3
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
-        assert ridesharing_journeys[1].metadata.system_id == 'blablacar'
+        assert ridesharing_journeys[1].metadata.system_id == 'blablalines'
         assert ridesharing_journeys[1].shape
         assert ridesharing_journeys[1].ridesharing_ad == 'https://blablalines.com'
 
@@ -193,23 +193,23 @@ def blablacar_test():
         assert ridesharing_journeys[1].dropoff_place.lat == 47.38399
         assert ridesharing_journeys[1].dropoff_place.lon == 0.69192
 
-        assert ridesharing_journeys[1].price == 3
+        assert ridesharing_journeys[1].price == 300.0
         assert ridesharing_journeys[1].currency == 'centime'
 
         assert ridesharing_journeys[1].total_seats is None
         assert ridesharing_journeys[1].available_seats == 2
 
-        assert feed_publisher == RsFeedPublisher(**DUMMY_BLABLACAR_FEED_PUBLISHER)
+        assert feed_publisher == RsFeedPublisher(**DUMMY_BLABLALINES_FEED_PUBLISHER)
 
 
 def test_request_journeys_should_raise_on_non_200():
     with requests_mock.Mocker() as mock:
-        blablacar = Blablacar(service_url='http://blablacar', api_key='ApiKey', network='Network')
+        blablalines = Blablalines(service_url='http://blablalines', api_key='ApiKey', network='Network')
 
-        mock.get('http://blablacar', status_code=401, text='{this is the http response}')
+        mock.get('http://blablalines', status_code=401, text='{this is the http response}')
 
         with pytest.raises(RidesharingServiceError) as e:
-            blablacar._request_journeys(
+            blablalines._request_journeys(
                 '1.2,3.4',
                 '5.6,7.8',
                 utils.PeriodExtremity(
