@@ -138,6 +138,28 @@ bool VehicleJourney::joins_on_different_stop_points(const ed::types::VehicleJour
     return *vj_first_st->stop_point != *prev_vj_last_st->stop_point;
 }
 
+bool VehicleJourney::starts_with_stayin_on_same_stop_point() const {
+    if (!prev_vj)
+        return false;
+    if (stop_time_list.empty() or prev_vj->stop_time_list.empty())
+        return false;
+
+    const auto* start_vj_last_sp = prev_vj->stop_time_list.back()->stop_point;
+    const auto* end_vj_first_sp = stop_time_list.front()->stop_point;
+    return start_vj_last_sp == end_vj_first_sp;
+}
+
+bool VehicleJourney::ends_with_stayin_on_same_stop_point() const {
+    if (!next_vj)
+        return false;
+    if (stop_time_list.empty() or next_vj->stop_time_list.empty())
+        return false;
+
+    const auto* start_vj_last_sp = stop_time_list.back()->stop_point;
+    const auto* end_vj_first_sp = next_vj->stop_time_list.front()->stop_point;
+    return start_vj_last_sp == end_vj_first_sp;
+}
+
 bool StopPointConnection::operator<(const StopPointConnection& other) const {
     if (this->departure == other.departure) {
         if (this->destination == other.destination) {

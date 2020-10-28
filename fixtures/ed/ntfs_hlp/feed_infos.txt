@@ -1,0 +1,10 @@
+feed_info_param,feed_info_value
+ntfs_version,0.7
+feed_start_date,20201001
+feed_end_date,20201101
+feed_creation_date,20201012
+feed_creation_time,10:10:21
+feed_publisher_name,You are a STAR
+fusio_url,http://url.fr
+fusio_version,1.10.89.224
+feed_license,Privée

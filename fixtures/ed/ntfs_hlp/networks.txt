@@ -1,0 +1,2 @@
+network_id,network_name,network_url,network_timezone,network_lang,network_phone,network_sort_order
+STAR,"Star - Rennes",http://rennes2.prod.navitia.com/,Europe/Paris,fr, ,1

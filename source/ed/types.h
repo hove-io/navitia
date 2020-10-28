@@ -46,6 +46,7 @@ www.navitia.io
 #include <limits.h>
 #include <bitset>
 #include <unordered_map>
+#include <utility>
 
 namespace nt = navitia::type;
 using nt::idx_t;
@@ -148,6 +149,7 @@ struct StopArea : public Header, Nameable, hasProperties {
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
     StopArea() {}
+    StopArea(idx_t idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
     bool operator<(const StopArea& other) const;
 };
@@ -287,11 +289,16 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
 
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
 
+    VehicleJourney(int idx = 0, std::string uri = "", ValidityPattern* vp = nullptr)
+        : Header(idx, uri), Nameable(uri), validity_pattern(vp) {}
+
     // Return the smallest time within its stop_times
     int earliest_time() const;
 
     bool operator<(const VehicleJourney& other) const;
     bool joins_on_different_stop_points(const ed::types::VehicleJourney& prev_vj) const;
+    bool starts_with_stayin_on_same_stop_point() const;
+    bool ends_with_stayin_on_same_stop_point() const;
 };
 
 struct StopPoint : public Header, Nameable, hasProperties {
@@ -307,6 +314,8 @@ struct StopPoint : public Header, Nameable, hasProperties {
     Network* network;
 
     StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
+    StopPoint(int idx, std::string uri, StopArea* sa = nullptr, Network* n = nullptr)
+        : Header(idx, uri), Nameable(uri), stop_area(sa), network(n) {}
 
     bool operator<(const StopPoint& other) const;
     bool operator!=(const StopPoint& sp) const;
@@ -338,6 +347,39 @@ struct StopTime {
 
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
 
+    StopTime() {}
+    StopTime(idx_t idx,
+             int arr,
+             int dep,
+             int board,
+             int ali,
+             VehicleJourney* vj,
+             StopPoint* sp,
+             std::shared_ptr<Shape> shape,
+             uint order,
+             bool odt,
+             bool pick,
+             bool drop,
+             bool freq,
+             bool wheel,
+             bool estim,
+             std::string&& headsign)
+        : idx(idx),
+          arrival_time(arr),
+          departure_time(dep),
+          boarding_time(board),
+          alighting_time(ali),
+          vehicle_journey(vj),
+          stop_point(sp),
+          shape_from_prev(shape),
+          order(order),
+          ODT(odt),
+          pick_up_allowed(pick),
+          drop_off_allowed(drop),
+          is_frequency(freq),
+          wheelchair_boarding(wheel),
+          date_time_estimated(estim),
+          headsign(std::forward<std::string>(headsign)) {}
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {
         arrival_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
