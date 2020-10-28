@@ -58,6 +58,7 @@ class RidesharingServiceManager(object):
         self._last_update = datetime.datetime(1970, 1, 1)
         self._update_interval = update_interval
         self.instance = instance
+        self.greenlet_pool_size = app.config.get('RIDESHARING_GREENLET_POOL_SIZE', 8)
 
     def init_ridesharing_services(self):
         # Init legacy ridesharing from config file
@@ -165,7 +166,7 @@ class RidesharingServiceManager(object):
         else:
             logging.info('ridesharing is called in sequential mode')
 
-        with FutureManager() as future_manager:
+        with FutureManager(self.greenlet_pool_size) as future_manager:
             futures = {}
             for journey_idx, journey in enumerate(response.journeys):
                 if 'ridesharing' not in journey.tags or to_be_deleted(journey):
@@ -221,7 +222,7 @@ class RidesharingServiceManager(object):
         fps = set()
         greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
 
-        with FutureManager() as future_manager:
+        with FutureManager(self.greenlet_pool_size) as future_manager:
             futures = []
             ridesharing_services = self.get_all_ridesharing_services()
             for service in ridesharing_services:

@@ -78,8 +78,11 @@ class _GeventFuture(_AbstractFuture):
 
 
 class _GeventPoolManager(_AbstractPoolManager):
-    def __init__(self):
-        self._pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
+    def __init__(self, greenlet_pool_size=None):
+        if greenlet_pool_size:
+            self._pool = gevent.pool.Pool(greenlet_pool_size)
+        else:
+            self._pool = gevent.pool.Pool(8)  # Set a pool size default value if it is not specified
         self.is_within_context = False
 
     def create_future(self, fun, *args, **kwargs):
@@ -100,8 +103,8 @@ class _GeventPoolManager(_AbstractPoolManager):
 
 
 @contextmanager
-def FutureManager():
-    m = _GeventPoolManager()
+def FutureManager(greenlet_pool_size=None):
+    m = _GeventPoolManager(greenlet_pool_size)
     m.is_within_context = True
     try:
         yield m

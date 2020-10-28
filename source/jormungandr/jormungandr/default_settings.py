@@ -28,6 +28,7 @@ DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
 ASYNCHRONOUS_RIDESHARING = boolean(os.getenv('JORMUNGANDR_ASYNCHRONOUS_RIDESHARING', False))
 # Active ridesharing service call with async greenlet
 GREENLET_POOL_FOR_RIDESHARING_SERVICES = boolean(os.getenv('JORMUNGANDR_GREENLET_POOL_FOR_RIDESHARING', False))
+RIDESHARING_GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_RIDESHARING_GREENLET_POOL_SIZE', 10))
 
 # disable authentication
 PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
