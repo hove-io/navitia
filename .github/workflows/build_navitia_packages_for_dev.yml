@@ -1,17 +1,20 @@
 name: Build Navitia Packages For Dev
 
 on:
-  push:
-    branches:
-      - dev
+  pull_request:
+
 
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+        matrix:
+            distribution: [debian8, debian9, debian10]
+
     container:
-      image: navitia/debian8_dev
+      image: navitia/${{distribution}}_dev
 
     steps:
     - uses: actions/checkout@v1
@@ -25,7 +28,7 @@ jobs:
     - name: create navitia_debian_packages.zip
       run: |
         zip navitia_debian_packages.zip ../navitia-*
-        echo "::set-env name=NAVITIA_DEBIAN_PACKAGES::navitia_debian_packages.zip"
+        echo "::set-env name=NAVITIA_DEBIAN_PACKAGES::navitia_${{distribution}}_packages.zip"
     - name: upload debian packages
       uses: actions/upload-artifact@v1
       with:
@@ -34,8 +37,9 @@ jobs:
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
+      if: ${{distribution}} == 'debian8'
       run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
     - name: slack notification (the job has failed)
       if: failure()
       run: |
-          echo '{"text":":warning: Github Actions: build_navitia_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Github Actions: build_navitia_${{distribution}}_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
