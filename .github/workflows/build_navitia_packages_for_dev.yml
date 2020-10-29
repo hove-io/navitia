@@ -33,7 +33,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: navitia-${{matrix.distribution}}-packages
-        path: "${{NAVITIA_DEBIAN_PACKAGES}}"
+        path: "$NAVITIA_DEBIAN_PACKAGES"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
