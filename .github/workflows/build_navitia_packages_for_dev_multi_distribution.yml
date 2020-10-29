@@ -38,7 +38,7 @@ jobs:
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
       if: ${{matrix.distribution}} == 'debian8'
-      run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
+      run: echo "Trigger Artemis later"
     - name: slack notification (the job has failed)
       if: failure()
       run: |
