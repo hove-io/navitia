@@ -3,18 +3,12 @@ name: Build Navitia Packages For Dev
 on:
   pull_request:
 
-
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-        matrix:
-            distribution: [debian8, debian9, debian10]
-
     container:
-      image: navitia/${{matrix.distribution}}_dev
+      image: navitia/debian8_dev
 
     steps:
     - uses: actions/checkout@v1
@@ -25,21 +19,21 @@ jobs:
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
-    - name: create navitia_${{matrix.distribution}}_packages.zip
+    - name: create navitia_debian_packages.zip
       run: |
-        zip navitia_${{matrix.distribution}}_packages.zip ../navitia-*
-        echo "NAVITIA_DEBIAN_PACKAGES=navitia_${{matrix.distribution}}_packages.zip" >> $GITHUB_ENV
-    - name: upload ${{matrix.distribution}} packages
+        zip navitia_debian_packages.zip ../navitia-*
+        echo "::set-env name=NAVITIA_DEBIAN_PACKAGES::navitia_debian_packages.zip"
+    - name: upload debian packages
       uses: actions/upload-artifact@v1
       with:
-        name: navitia-${{matrix.distribution}}-packages
-        path: "$NAVITIA_DEBIAN_PACKAGES"
+        name: navitia-debian-packages
+        path: "${{env.NAVITIA_DEBIAN_PACKAGES}}"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
     - name: trigger deploy on artemis
-      if: ${{matrix.distribution}} == 'debian8'
       run: http -v -f POST https://${{secrets.jenkins_token}}@ci.navitia.io/job/deploy_navitia_on_artemis_from_github/build
     - name: slack notification (the job has failed)
       if: failure()
       run: |
-          echo '{"text":":warning: Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Github Actions: build_navitia_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+
