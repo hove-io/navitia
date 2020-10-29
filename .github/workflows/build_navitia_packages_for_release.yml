@@ -1,8 +1,6 @@
 name: Build Navitia Packages For Release
 
 on:
-  # for test, TO BE REMOVED BEFORE MERGE
-  pull_request:
   push:
     branches:
       - release

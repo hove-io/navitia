@@ -1,8 +1,6 @@
 name: Build Navitia Packages For Dev
 
 on:
-  # for test, TO BE REMOVED BEFORE MERGE
-  pull_request:
   push:
     branches:
       - dev
