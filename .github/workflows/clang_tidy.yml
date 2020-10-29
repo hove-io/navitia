@@ -50,6 +50,7 @@ jobs:
         labels: not_in_changelog
         team-reviewers: CanalTP/coreteam
         branch: auto/clang-tidy
+        base: dev
     - name: Check outputs
       run: |
         echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
