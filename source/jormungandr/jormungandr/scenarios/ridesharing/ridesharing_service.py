@@ -83,7 +83,7 @@ class AbstractRidesharingService(object):
                 requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
             )
         except pybreaker.CircuitBreakerError as e:
-            self.logger.getLogger(__name__).error(
+            self.logger.error(
                 '%s service dead (error: %s)',
                 self.network,
                 e,
@@ -91,7 +91,7 @@ class AbstractRidesharingService(object):
             )
             raise RidesharingServiceError('circuit breaker open')
         except requests.Timeout as t:
-            self.logger.getLogger(__name__).error(
+            self.logger.error(
                 '%s service timeout (error: %s)',
                 self.network,
                 t,
@@ -99,7 +99,7 @@ class AbstractRidesharingService(object):
             )
             raise RidesharingServiceError('timeout')
         except Exception as e:
-            self.logger.getLogger(__name__).exception(
+            self.logger.exception(
                 '%s service error', self.network, extra={'ridesharing_service_id': self._get_rs_id()}
             )
             raise RidesharingServiceError(str(e))

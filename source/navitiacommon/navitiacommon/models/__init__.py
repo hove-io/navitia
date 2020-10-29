@@ -553,6 +553,12 @@ class Instance(db.Model):  # type: ignore
 
     # Active the asynchronous_ridesharing mode
     asynchronous_ridesharing = db.Column(db.Boolean, default=False, nullable=False)
+    # Active ridesharing service call with async greenlet
+    greenlet_pool_for_ridesharing_services = db.Column(db.Boolean, default=False, nullable=False)
+    # Ridesharing greenlet pool size
+    ridesharing_greenlet_pool_size = db.Column(
+        db.Integer, default=default_values.ridesharing_greenlet_pool_size, nullable=False
+    )
 
     ridesharing_services = db.relationship(
         "RidesharingService", secondary=associate_instance_ridesharing, backref="instances", lazy='joined'

@@ -744,6 +744,20 @@ class Instance(flask_restful.Resource):
             location=('json', 'values'),
             default=instance.asynchronous_ridesharing,
         )
+        parser.add_argument(
+            'greenlet_pool_for_ridesharing_services',
+            type=inputs.boolean,
+            help='Active async option for ridesharing calls',
+            location=('json', 'values'),
+            default=instance.greenlet_pool_for_ridesharing_services,
+        )
+        parser.add_argument(
+            'ridesharing_greenlet_pool_size',
+            type=int,
+            help='ridesharing greenlet pool size',
+            location=('json', 'values'),
+            default=instance.ridesharing_greenlet_pool_size,
+        )
 
         args = parser.parse_args()
 
@@ -817,6 +831,8 @@ class Instance(flask_restful.Resource):
                         'ridesharing_speed',
                         'max_ridesharing_duration_to_pt',
                         'asynchronous_ridesharing',
+                        'greenlet_pool_for_ridesharing_services',
+                        'ridesharing_greenlet_pool_size',
                     ],
                 ),
                 maxlen=0,
