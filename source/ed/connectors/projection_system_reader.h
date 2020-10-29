@@ -45,7 +45,7 @@ private:
 
 public:
     // default conv coord is WGS84->WGS84
-    ProjectionSystemReader(const std::string& file, ConvCoord default_conv = ConvCoord(Projection(), Projection()));
+    ProjectionSystemReader(std::string file, ConvCoord default_conv = ConvCoord(Projection(), Projection()));
 
     ConvCoord read_conv_coord() const;
 };

@@ -38,6 +38,7 @@ www.navitia.io
 
 #include "georef/street_network.h"
 #include <boost/test/unit_test.hpp>
+#include <utility>
 
 using namespace navitia::georef;
 
@@ -54,7 +55,7 @@ struct computation_results {
     std::vector<vertex_t> predecessor;
 
     computation_results(navitia::time_duration d, const PathFinder& worker)
-        : duration(d), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
+        : duration(std::move(d)), durations_matrix(worker.distances), predecessor(worker.predecessors) {}
 
     bool operator==(const computation_results& other) {
         BOOST_CHECK_EQUAL(other.duration, duration);

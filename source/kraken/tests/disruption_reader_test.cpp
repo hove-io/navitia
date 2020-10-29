@@ -34,12 +34,13 @@ www.navitia.io
 #include "kraken/fill_disruption_from_database.h"
 #include "type/meta_vehicle_journey.h"
 #include <map>
+#include <utility>
 
 struct Const_it {
     struct Value {
         std::string value = "";
         Value() {}
-        Value(const std::string& value) : value(value) {}
+        Value(std::string value) : value(std::move(value)) {}
 
         template <typename T>
         T as() {

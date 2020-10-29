@@ -29,6 +29,9 @@ www.navitia.io
 */
 
 #include "geopal_parser.h"
+
+#include <utility>
+
 #include "data_cleaner.h"
 #include "projection_system_reader.h"
 
@@ -37,7 +40,7 @@ namespace connectors {
 
 GeopalParserException::~GeopalParserException() noexcept {}
 
-GeopalParser::GeopalParser(const std::string& path) : path(path) {
+GeopalParser::GeopalParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
     try {
         boost::filesystem::path directory(this->path);

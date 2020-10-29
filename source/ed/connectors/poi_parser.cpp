@@ -29,6 +29,9 @@ www.navitia.io
 */
 
 #include "poi_parser.h"
+
+#include <utility>
+
 #include "type/data.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
@@ -39,7 +42,7 @@ namespace connectors {
 
 PoiParserException::~PoiParserException() noexcept {}
 
-PoiParser::PoiParser(const std::string& path) : path(path) {
+PoiParser::PoiParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
 }
 
