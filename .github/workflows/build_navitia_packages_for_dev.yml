@@ -1,7 +1,10 @@
 name: Build Navitia Packages For Dev
 
 on:
-  pull_request:
+  push:
+    branches:
+      - dev
+
 
 jobs:
   build:
