@@ -533,6 +533,11 @@ void PbCreator::Filler::fill_pb_object(const nt::StopArea* sa, pbnavitia::StopAr
 
     fill_messages(sa, stop_area);
     fill_codes(sa, stop_area);
+
+    if (depth > 2) {
+        std::vector<nt::Line*> lines = ptref_indexes<nt::Line>(sa);
+        copy(0, dump_message_options).fill(lines, stop_area->mutable_lines());
+    }
 }
 
 void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::AdministrativeRegion* admin) {
@@ -636,6 +641,11 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
 
     fill_messages(sp, stop_point);
     fill_codes(sp, stop_point);
+
+    if (depth > 2) {
+        std::vector<nt::Line*> lines = ptref_indexes<nt::Line>(sp);
+        copy(0, dump_message_options).fill(lines, stop_point->mutable_lines());
+    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Company* c, pbnavitia::Company* company) {
@@ -688,6 +698,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
     if (l->closing_time) {
         line->set_closing_time((*l->closing_time).total_seconds());
     }
+    fill(l->physical_mode_list, line->mutable_physical_modes());
+    fill(l->commercial_mode, line);
 
     if (depth > 0) {
         if (!this->pb_creator.disable_geojson) {
@@ -695,9 +707,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         }
 
         fill(l->route_list, line->mutable_routes());
-        fill(l->physical_mode_list, line->mutable_physical_modes());
-
-        fill(l->commercial_mode, line);
         fill(l->network, line);
 
         fill(l->line_group_list, line->mutable_line_groups());

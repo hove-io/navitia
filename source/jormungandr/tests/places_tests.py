@@ -127,7 +127,8 @@ class TestPlaces(AbstractTestFixture):
         assert len(places_nearby) == 3
         is_valid_places(places_nearby)
         for place in places_nearby:
-            assert place["embedded_type"] == "stop_area"
+            assert place['embedded_type'] == "stop_area"
+            assert place['stop_area'].get('line') is None
 
     def test_places_nearby_with_coords_with_type_and_pagination(self):
         """check the pagination"""
@@ -296,6 +297,68 @@ class TestPlaces(AbstractTestFixture):
         places = response['places']
         assert len(places) == 1
         assert 'distance' not in places[0]
+
+    def test_stop_area_attributes_with_different_depth(self):
+        """ verify that stop_area contains lines in all apis with depth>2 """
+        # API places without depth
+        response = self.query_region("places?type[]=stop_area&q=stopA")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        assert places[0]['stop_area'].get('lines') is None
+
+        # API places with depth = 3
+        response = self.query_region("places?type[]=stop_area&q=stopA&depth=3")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        lines = places[0]['stop_area'].get('lines')
+        assert len(lines) > 1
+        # Verify line attributes
+        for line in lines:
+            is_valid_line(line, depth_check=0)
+
+        # API places_nearby with depth = 3
+        response = self.query("/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_area&depth=3")
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 3
+        is_valid_places(places_nearby)
+        for place in places_nearby:
+            assert place['embedded_type'] == "stop_area"
+            assert len(place['stop_area'].get('lines')) > 0
+
+    def test_stop_point_attributes_with_different_depth(self):
+        """ verify that stop_area contains lines in all apis with depth>2 """
+        # API places without depth
+        response = self.query_region("places?type[]=stop_point&q=stopA")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        assert places[0]['stop_point'].get('lines') is None
+
+        # API places with depth = 3
+        response = self.query_region("places?type[]=stop_point&q=stopA&depth=3")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        lines = places[0]['stop_point'].get('lines')
+        assert len(lines) > 1
+        # Verify line attributes
+        for line in lines:
+            is_valid_line(line, depth_check=0)
+
+        # API places_nearby with depth = 3
+        response = self.query("/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&depth=3")
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 4
+        is_valid_places(places_nearby)
+        for place in places_nearby:
+            assert place['embedded_type'] == "stop_point"
+            # stop_point stop_point:uselessA doesn't have any lines
+            if place['stop_point'].get('id') != "stop_point:uselessA":
+                assert len(place['stop_point'].get('lines')) > 0
+            else:
+                assert place['stop_point'].get('lines') is None
 
 
 @dataset({"basic_routing_test": {}})

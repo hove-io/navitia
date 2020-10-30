@@ -398,6 +398,7 @@ class StopPointSerializer(PbGenericSerializer):
     address = AddressSerializer(display_none=False)
     fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
     equipment_details = EquipmentDetailsSerializer(many=True)
+    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):
@@ -410,6 +411,9 @@ class StopPointSerializer(PbGenericSerializer):
             return StopAreaSerializer(obj.stop_area, display_none=False).data
         else:
             return None
+
+    def get_lines(self, obj):
+        return LineSerializer(obj.lines, many=True, display_none=False).data
 
 
 class StopAreaSerializer(PbGenericSerializer):
@@ -430,6 +434,10 @@ class StopAreaSerializer(PbGenericSerializer):
     stop_points = StopPointSerializer(
         many=True, display_none=False, description='Stop points contained in this stop area'
     )
+    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
+
+    def get_lines(self, obj):
+        return LineSerializer(obj.lines, many=True, display_none=False).data
 
 
 class PlaceSerializer(PbGenericSerializer):
@@ -458,9 +466,6 @@ class PlaceNearbySerializer(PlaceSerializer):
 class NetworkSerializer(PbGenericSerializer):
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
-
-    def get_lines(self, obj):
-        return LineSerializer(obj.lines, many=True, display_none=False).data
 
 
 class RouteSerializer(PbGenericSerializer):
