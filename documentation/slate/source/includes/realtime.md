@@ -41,7 +41,7 @@ On the other hand, a vehicle_journey that is **created** by a realtime feed will
 
 ## <a name="OTHER_EFFECT"></a>Other effect
 
-There is no effect from this disruption. You should show the message to your traveler...
+There is no known effect related to this disruption. You only have to show the message to your traveler...
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
 
