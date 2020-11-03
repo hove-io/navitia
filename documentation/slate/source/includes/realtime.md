@@ -15,6 +15,8 @@ The effect of a disruption can be among the following:
     <li>[MODIFIED_SERVICE](#MODIFIED_SERVICE)</li>
     <li>[ADDITIONAL_SERVICE](#ADDITIONAL_SERVICE)</li>
     <li>[UNKNOWN_EFFECT](#UNKNOWN_EFFECT)</li>
+    <li>[DETOUR](#MODIFIED_SERVICE)</li>
+    <li>[OTHER_EFFECT](#OTHER_EFFECT)</li>
 </ul>
 This list follows the GTFS RT values documented at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
 
@@ -37,6 +39,9 @@ of course be **visible** if `data_freshness=base_schedule`.<br>But it **will not
 On the other hand, a vehicle_journey that is **created** by a realtime feed will only be **visible** if
 `data_freshness=realtime` on that same request.<br>And it will **not appear** if `data_freshness=base_schedule`.
 
+## <a name="OTHER_EFFECT"></a>Other effect
+
+There is no effect from this disruption. You should show the message to your traveler...
 
 ## <a name="SIGNIFICANT_DELAYS"></a>Trip delayed
 
