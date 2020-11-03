@@ -38,7 +38,11 @@ from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
+from jormungandr.interfaces.v1.make_links import (
+    create_external_link,
+    create_internal_link,
+    make_external_service_link,
+)
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
@@ -46,6 +50,9 @@ from jormungandr.utils import date_to_timestamp, dt_to_str
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
+from navitiacommon import type_pb2
+from jormungandr.protobuf_to_dict import protobuf_to_dict
+from jormungandr.utils import get_pt_object_coord
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
@@ -211,6 +218,68 @@ class add_fare_links(object):
                                 rss['links'].append(
                                     create_internal_link(_type="ticket", rel="tickets", id=rs_ticket_needed)
                                 )
+
+            return objects
+
+        return wrapper
+
+
+# Add TAD deep links in each section of type on_demand_transport if network contains app_code in codes
+class add_tad_links(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
+            if "journeys" not in objects[0]:
+                return objects
+
+            for j in objects[0]['journeys']:
+                if "sections" not in j:
+                    continue
+                for s in j['sections']:
+                    # For a section with type = on_demand_transport
+                    if s.get('type') == 'on_demand_transport':
+                        # get network uri from the link
+                        networks = [link['id'] for link in s.get('links', []) if link['type'] == "network"]
+                        if len(networks) == 0:
+                            continue
+                        network_id = networks[0]
+                        region = kwargs.get('region')
+                        if region is None:
+                            continue
+
+                        # Get the Network details and verify if it contains codes with type = "app_code"
+                        instance = i_manager.instances.get(region)
+                        network_details = instance.ptref.get_objs(
+                            type_pb2.NETWORK, 'network.uri={}'.format(network_id)
+                        )
+                        network_dict = protobuf_to_dict(next(network_details))
+                        app_value = [
+                            code['value']
+                            for code in network_dict.get('codes', [])
+                            if code.get('type') == "app_code"
+                        ]
+                        if len(app_value) == 0:
+                            continue
+
+                        # Prepare parameters for the deeplink of external service
+                        from_embedded_type = s.get('from').get('embedded_type')
+                        to_embedded_type = s.get('to').get('embedded_type')
+                        from_coord = s.get('from').get(from_embedded_type).get('coord')
+                        to_coord = s.get('to').get(to_embedded_type).get('coord')
+                        args = dict()
+                        args['departure_latitude'] = from_coord.get('lat')
+                        args['departure_longitude'] = from_coord.get('lon')
+                        args['destination_latitude'] = to_coord.get('lat')
+                        args['destination_longitude'] = to_coord.get('lon')
+                        args['requested_departure_time'] = s.get('departure_date_time')
+                        url = "{}://home?".format(app_value[0])
+                        tad_link = make_external_service_link(
+                            url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args
+                        )
+                        s['links'].append(tad_link)
 
             return objects
 
@@ -492,6 +561,7 @@ class Journeys(JourneyCommon):
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
+    @add_tad_links()
     @add_debug_info()
     @add_fare_links()
     @add_journey_href()

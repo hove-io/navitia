@@ -81,6 +81,13 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
     return d
 
 
+def make_external_service_link(url, rel, _type, templated=False, **kwargs):
+    call_params = ""
+    for key, value in kwargs.items():
+        call_params += "{}={}&".format(key, value)
+    return {"href": url + call_params, "rel": rel, "type": _type, "templated": templated}
+
+
 class generate_links(object):
     def prepare_objetcs(self, objects, hasCollections=False):
         if isinstance(objects, tuple):
