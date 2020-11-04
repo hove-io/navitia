@@ -719,10 +719,12 @@ class TestDepartureBoard(AbstractTestFixture):
 
         # verify app deep link in links
         deep_link = section['links'][-1]
-        assert (
-            deep_link['href']
-            == "ilevia://home?departure_latitude=0&departure_longitude=0&destination_latitude=0&requested_departure_time=20120615T110000&destination_longitude=0&"
-        )
+        assert "ilevia://home?" in deep_link['href']
+        assert "departure_latitude=0" in deep_link['href']
+        assert "departure_longitude=0" in deep_link['href']
+        assert "destination_latitude=0" in deep_link['href']
+        assert "destination_longitude=0" in deep_link['href']
+        assert "requested_departure_time=20120615T110000" in deep_link['href']
         assert deep_link['type'] == "tad_dynamic_link"
         assert deep_link['rel'] == "tad_dynamic_link"
         assert deep_link['templated'] is False
