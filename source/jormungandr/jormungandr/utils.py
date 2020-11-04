@@ -651,3 +651,11 @@ def get_overriding_mode(main_mode, modes):
     if main_mode == 'bss' and 'walking' in modes:
         return ['walking']
     return []
+
+
+def has_invalid_reponse_code(objects):
+    return objects[1] != 200
+
+
+def journeys_absent(objects):
+    return 'journeys' not in objects[0]

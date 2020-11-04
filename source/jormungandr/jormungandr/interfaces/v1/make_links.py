@@ -82,9 +82,7 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
 
 
 def make_external_service_link(url, rel, _type, templated=False, **kwargs):
-    call_params = ""
-    for key, value in kwargs.items():
-        call_params += "{}={}&".format(key, value)
+    call_params = "&".join(["{}={}".format(key, value) for key, value in kwargs.iteritems()])
     return {"href": url + call_params, "rel": rel, "type": _type, "templated": templated}
 
 

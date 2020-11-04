@@ -52,7 +52,6 @@ from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from navitiacommon import type_pb2
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.utils import get_pt_object_coord
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
@@ -111,6 +110,7 @@ class add_journey_href(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200 or 'journeys' not in objects[0]:
                 return objects
+
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
                 allowed_ids = {
@@ -190,10 +190,11 @@ class add_fare_links(object):
                 return objects
             if "journeys" not in objects[0]:
                 return objects
-            ticket_by_section = defaultdict(list)
+
             if 'tickets' not in objects[0]:
                 return objects
 
+            ticket_by_section = defaultdict(list)
             for t in objects[0]['tickets']:
                 if "links" in t:
                     for s in t['links']:
@@ -242,10 +243,12 @@ class add_tad_links(object):
                     # For a section with type = on_demand_transport
                     if s.get('type') == 'on_demand_transport':
                         # get network uri from the link
-                        networks = [link['id'] for link in s.get('links', []) if link['type'] == "network"]
-                        if len(networks) == 0:
+                        network_id = next(
+                            (link['id'] for link in s.get('links', []) if link['type'] == "network"), None
+                        )
+                        if not network_id:
                             continue
-                        network_id = networks[0]
+
                         region = kwargs.get('region')
                         if region is None:
                             continue
@@ -256,12 +259,15 @@ class add_tad_links(object):
                             type_pb2.NETWORK, 'network.uri={}'.format(network_id)
                         )
                         network_dict = protobuf_to_dict(next(network_details))
-                        app_value = [
-                            code['value']
-                            for code in network_dict.get('codes', [])
-                            if code.get('type') == "app_code"
-                        ]
-                        if len(app_value) == 0:
+                        app_value = next(
+                            (
+                                code['value']
+                                for code in network_dict.get('codes', [])
+                                if code.get('type') == "app_code"
+                            ),
+                            None,
+                        )
+                        if not app_value:
                             continue
 
                         # Prepare parameters for the deeplink of external service
@@ -275,7 +281,7 @@ class add_tad_links(object):
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
                         args['requested_departure_time'] = s.get('departure_date_time')
-                        url = "{}://home?".format(app_value[0])
+                        url = "{}://home?".format(app_value)
                         tad_link = make_external_service_link(
                             url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args
                         )
