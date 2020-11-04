@@ -69,10 +69,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     b.data->pt_data->routes.front()->destination = it1->second;  // Route A
     const auto it2 = b.sas.find("stop3");
     b.data->pt_data->routes.back()->destination = it2->second;  // Route B
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
@@ -303,10 +300,7 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
 
     const auto it1 = b.sas.find("stop2");
     b.data->pt_data->routes.front()->destination = it1->second;  // Route A
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
@@ -492,10 +486,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
     b.data->pt_data->routes.front()->destination = it1->second;  // Route A
     const auto it2 = b.sas.find("stop3");
     b.data->pt_data->routes.back()->destination = it2->second;  // Route B
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
@@ -594,10 +585,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     const auto it = b.sas.find("stop3");
     b.data->pt_data->routes.front()->destination = it->second;
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
@@ -658,10 +646,7 @@ BOOST_AUTO_TEST_CASE(terminus_multiple_route) {
     b.vj("bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
     b.vj("bobette")("C", "10:00"_t)("B", "11:00"_t)("A", "12:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     departure_board(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0, nt::RTLevel::Base,
@@ -694,10 +679,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
     b.vj("bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
     b.vj("bobette")("C", "10:00"_t)("B", "11:00"_t)("A", "12:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0, nt::RTLevel::Base,
@@ -712,10 +694,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
 BOOST_AUTO_TEST_CASE(departure_board_multiple_days) {
     ed::builder b("20180101");
     b.vj("A", "10000001")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:30:00"_t, "10:30:00"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     // We look for a departure on the first and try to reach the departure next sunday too
@@ -798,10 +777,7 @@ BOOST_AUTO_TEST_CASE(departure_board_multiple_days_with_freq) {
     ed::builder b("20180101");
     b.frequency_vj("A", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")("stop1", "10:00:00"_t, "10:00:00"_t)(
         "stop2", "10:30:00"_t, "10:30:00"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     // We look for a departure on the first and try to reach the departure next sunday too
@@ -1005,10 +981,7 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->complete();
-    b.data->build_raptor();
+    b.make();
     // Empty stop schedule without any date_time
     {
         navitia::PbCreator pb_creator;
@@ -1087,12 +1060,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     all_mvj->associated_calendars[nearly_cal->uri] = associated_nearly_calendar;
 
     // call all the init again
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-
-    b.data->complete();
+    b.make();
 
     boost::optional<const std::string> calendar_id{"nearly_cal"};
     auto* data_ptr = b.data.get();
@@ -1141,10 +1109,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
                                   .msg("Disruption on stop_point stop2")
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->complete();
-    b.data->build_raptor();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120614T080000"), 86400, 0, 10, 0,
@@ -1486,10 +1451,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_lines_closed) {
     b.lines["A"]->closing_time = boost::posix_time::time_duration(21, 0, 0);
     b.lines["B"]->opening_time = boost::posix_time::time_duration(23, 30, 0);
     b.lines["B"]->closing_time = boost::posix_time::time_duration(6, 0, 0);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     pbnavitia::Response resp;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1517,10 +1479,7 @@ BOOST_AUTO_TEST_CASE(departureboard_no_geojson) {
     ed::builder b("20161026");
 
     b.vj("A", "11111", "", true, "vj1", "")("stop1", "10:00"_t, "10:00"_t)("stop2", "10:30"_t, "10:30"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     pbnavitia::Response resp;
     auto* data_ptr = b.data.get();
@@ -1576,10 +1535,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     b.data->pt_data->meta_vjs.get_mut("vj:0")->associated_calendars.insert({c->uri, a1});
     b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator_cal(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1624,10 +1580,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
         "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
         "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1723,10 +1676,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_loop) {
 
     b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop1", "8:10"_t, "8:10"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1762,10 +1712,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_terminus) {
 
     b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1799,10 +1746,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_on_terminus) {
 
     b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_dep(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -1828,10 +1772,7 @@ BOOST_AUTO_TEST_CASE(stop_schedule_on_partial_terminus) {
     b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
     b.sa("real terminus");
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     // Set a different terminus on the route to have partial terminuses
     data_ptr->pt_data->routes[0]->destination = b.sas.find("real terminus")->second;
@@ -1870,10 +1811,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_on_partial_terminus) {
     b.vj("A", "01").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t)("stop3", "8:10"_t, "8:10"_t);
     b.sa("real terminus");
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     // Set a different terminus on the route to have partial terminuses
     data_ptr->pt_data->routes[0]->destination = b.sas.find("real terminus")->second;
@@ -1929,10 +1867,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_Y_shaped_routes) {
     sp_ptr = b.sps.at("D");
     sp_ptr->stop_area->admin_list.push_back(adminD.release());
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
@@ -2015,10 +1950,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
     b.vj("line:bob", "11111111", "", true, "vj4", "")
         .route("route:bobynette")("D", "11:00"_t)("C", "12:00"_t)("B", "13:00"_t)("A", "14:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
@@ -2108,10 +2040,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_terminus_with_return_vj) {
         .route("route:bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
     b.vj("line:bob", "11111111", "", true, "vj2", "")
         .route("route:boby")("C", "10:15"_t)("B", "11:15"_t)("A", "12:15"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
@@ -2176,10 +2105,7 @@ BOOST_AUTO_TEST_CASE(schedules_with_routes_with_different_intermediate_stops) {
     b.vj("line:bob", "11111111", "", true, "vj2", "")
         .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t)("G", "12:15"_t)("H",
                                                                                                              "12:45"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
@@ -2257,10 +2183,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_multi_Y_shaped_routes) {
     b.vj("bob").route("boby")("A", "10:15"_t)("B", "10:45"_t)("E", "11:15"_t)("F", "11:45"_t);
     b.vj("bob").route("bobette")("A", "10:30"_t)("B", "11:00"_t)("E", "11:30"_t)("G", "12:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
@@ -2341,10 +2264,7 @@ BOOST_AUTO_TEST_CASE(schedules_on_circular_routes) {
         .route("route:bob")("A", "10:00"_t)("B", "10:30"_t)("C", "11:00"_t);
     b.vj("line:bob", "11111111", "", true, "vj2", "")
         .route("route:boby")("A", "10:15"_t)("B", "10:45"_t)("C", "11:15"_t)("A", "11:45"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
 
     auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);

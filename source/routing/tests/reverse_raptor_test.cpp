@@ -49,10 +49,7 @@ namespace bt = boost::posix_time;
 BOOST_AUTO_TEST_CASE(direct) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 9100, 9150);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -116,10 +113,7 @@ BOOST_AUTO_TEST_CASE(change) {
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -195,10 +189,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit) {
     b.connection("stop1", "stop1", 120);
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -259,10 +250,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -323,10 +311,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
 BOOST_AUTO_TEST_CASE(passe_minuit_interne) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 23 * 3600)("stop2", 23 * 3600 + 30 * 60, 24 * 3600 + 30 * 60)("stop3", 24 * 3600 + 40 * 60);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -377,10 +362,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne) {
 BOOST_AUTO_TEST_CASE(passe_minuit4) {
     ed::builder b("20120614");
     b.vj("A", "0001000", "", true)("stop1", 23 * 3600 + 55 * 60, 24 * 3600)("stop2", 24 * 3600 + 15 * 60);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -403,10 +385,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern) {
     ed::builder b("20120614");
     b.vj("D", "00", "", true)("stop1", 8000)("stop2", 8200);
     b.vj("C", "10", "", true)("stop1", 9000)("stop2", 9200);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -421,10 +400,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu) {
     b.vj("B", "11111111", "", true)("stop3", 10000, 19050)("stop4", 19200, 19250);
     b.connection("stop2", "stop3", 10 * 60);
     b.connection("stop3", "stop2", 10 * 60);
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -469,10 +445,7 @@ BOOST_AUTO_TEST_CASE(sn_fin) {
     routing::map_stop_point_duration departs, destinations;
     departs[SpIdx(0)] = 0_s;
     destinations[SpIdx(1)] = 10_min;
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
 
     auto res1 =
@@ -486,10 +459,7 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
     ed::builder b("20120614");
     b.vj("A", "1111111", "block1", true)("stop1", 8 * 3600)("stop2", 8 * 3600 + 10 * 60);
     b.vj("B", "1111111", "block1", true)("stop4", 8 * 3600 + 15 * 60)("stop3", 8 * 3600 + 20 * 60);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -509,10 +479,7 @@ BOOST_AUTO_TEST_CASE(stay_in_and_one_earlier_with_connection) {
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -532,10 +499,7 @@ BOOST_AUTO_TEST_CASE(stay_in_3_vj) {
     b.vj("A", "1111111", "block1", true)("stop1", 8 * 3600)("stop2", 8 * 3600 + 10 * 60);
     b.vj("B", "1111111", "block1", true)("stop4", 8 * 3600 + 15 * 60)("stop5", 8 * 3600 + 20 * 60);
     b.vj("C", "1111111", "block1", true)("stop6", 8 * 3600 + 25 * 60)("stop3", 8 * 3600 + 30 * 60);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -551,10 +515,7 @@ BOOST_AUTO_TEST_CASE(stay_in_loop) {
     b.vj("B", "1111111", "block1", true)("stop4", 8 * 3600 + 15 * 60)("stop3", 8 * 3600 + 20 * 60);
     b.vj("C", "1111111", "block1", true)("stop5", 8 * 3600 + 25 * 60)("stop1", 8 * 3600 + 30 * 60);
     b.vj("D", "1111111", "block1", true)("stop4", 8 * 3600 + 35 * 60)("stop3", 8 * 3600 + 40 * 60);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -568,10 +529,7 @@ BOOST_AUTO_TEST_CASE(stay_in_invalid_vp) {
     ed::builder b("20120614");
     b.vj("A", "1111111", "block1", true)("stop1", 8 * 3600)("stop2", 8 * 3600 + 10 * 60);
     b.vj("B", "0000", "block1", true)("stop4", 8 * 3600 + 15 * 60)("stop3", 8 * 3600 + 20 * 60);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -585,10 +543,7 @@ BOOST_AUTO_TEST_CASE(itl) {
     b.vj("A")("stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 10 * 60, 1)("stop2", 8 * 3600 + 15 * 60, 8 * 3600 + 15 * 60, 1)(
         "stop3", 8 * 3600 + 20 * 60);
     b.vj("B")("stop1", 9 * 3600)("stop2", 10 * 3600);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -612,10 +567,7 @@ BOOST_AUTO_TEST_CASE(mdi) {
     b.vj("C")("stop4", 16 * 3600, 16 * 3600, std::numeric_limits<uint16_t>::max(), true, true)(
         "stop5", 16 * 3600 + 15 * 60)("stop6", 16 * 3600 + 30 * 60, 16 * 3600 + 30 * 60,
                                       std::numeric_limits<uint16_t>::max(), false, true);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -637,10 +589,7 @@ BOOST_AUTO_TEST_CASE(mdi) {
 BOOST_AUTO_TEST_CASE(max_duration) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -664,10 +613,7 @@ BOOST_AUTO_TEST_CASE(max_transfers) {
     b.vj("C")("stop3", 9000)("stop2", 11000);
     b.vj("D")("stop3", 9000)("stop4", 9500);
     b.vj("E")("stop4", 10000)("stop2", 10500);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*(b.data));
     type::PT_Data& d = *b.data->pt_data;
 
@@ -698,10 +644,7 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in) {
 
     b.connection("S4", "S4", 120);
 
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*b.data);
 
     auto result = raptor.compute(b.data->pt_data->stop_areas_map["S1"], b.data->pt_data->stop_areas_map["S5"],
@@ -752,10 +695,7 @@ BOOST_AUTO_TEST_CASE(arrival_with_alighting) {
             "stop_point:B", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900)(
             "stop_point:C", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900);
 
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*b.data);
     const type::PT_Data& d = *b.data->pt_data;
 
@@ -838,10 +778,7 @@ BOOST_AUTO_TEST_CASE(departure_with_boarding) {
             "stop_point:B", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
             "stop_point:C", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
 
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*b.data);
     const type::PT_Data& d = *b.data->pt_data;
 
@@ -902,10 +839,7 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings) {
             "S3", "00:25"_t, "00:25"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
             "S4", "00:35"_t, "00:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
 
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     RAPTOR raptor(*b.data);
     const type::PT_Data& d = *b.data->pt_data;
 
@@ -953,10 +887,7 @@ BOOST_AUTO_TEST_CASE(stay_in_pass_midnight) {
                     .block_id("42")("S3", "24:45"_t, "24:45"_t)("S4", "24:50"_t, "24:50"_t)("S5", "24:55"_t, "24:55"_t)
                     .make();
 
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     vj1->next_vj = vj2;
     vj1->prev_vj = nullptr;
     vj2->prev_vj = vj1;

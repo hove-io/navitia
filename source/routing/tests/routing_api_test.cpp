@@ -149,11 +149,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
                                                                          8 * 3600 + 21 * 60);
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -210,11 +206,7 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     b.vj("B")("stop_area:stop0", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 15 * 60,
                                                                          8 * 3600 + 16 * 60);
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->build_proximity_list();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
@@ -291,12 +283,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     b.vj("9658", "1111111", "block1", true)("ehv", 60300, 60600)("ehb", 60780, 60780)("bet", 61080, 61080)(
         "btl", 61560, 61560)("vg", 61920, 61920)("ht", 62340, 62340);
     b.vj("4462", "1111111", "block1", true)("ht", 62760, 62760)("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -347,12 +335,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     b.vj("4462", "1111111", "block1", true)("ht:4a", 62760, 62760)("hto", 62940, 62940)("rs", 63180, 63180);
     b.connection("ht:4", "ht:4a", 120);
     b.connection("ht:4a", "ht:4", 120);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -408,12 +392,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     b.vj("9658", "1111111", "block1", true)("ehv", 60300, 60600)("ehb", 60780, 60780)("bet", 61080, 61080)(
         "btl", 61560, 61560)("vg", 61920, 61920)("ht:4", 62340, 62340);
     b.vj("4462", "1111111", "block1", true)("ht:4a", 62400, 62400)("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -479,12 +459,8 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     b.vj("4462", "1111111", "block1", true)("ht:4a", 62400, 62400)("hto", 62940, 62940)("end", 63180, 63180);
     // Note: the vj '4462' is a service extension of '9658' because
     // they have the same block_id ('block1') and 4462 have been defined after 9658
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -542,12 +518,8 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     b.vj("9658", "1111111", "block1", true)("ehv", 60300, 60600)("ehb", 60780, 60780)("start", 61080, 61080)(
         "btl", 61560, 61560)("vg", 61920, 61920)("end", 62340, 62340);
     b.vj("4462", "1111111", "block1", true)("ht:4a", 62400, 62400)("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -592,12 +564,8 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     b.vj("9658", "1111111", "block1", true)("ehv", 60300, 60600)("ehb", 60780, 60780)("start", 61080, 61080)(
         "btl", 61560, 61560)("vg", 61920, 61920)("ht:4", 62340, 62350);
     b.vj("4462", "1111111", "block1", true)("end", 62400, 62500)("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -655,12 +623,8 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
         "btl", 61560, 61560)("vg", 61920, 61920)("end", 62340, 62340);  // same point and same time
     b.vj("4462", "1111111", "block1", true)("end", 62340, 62340)        // same point and same time
         ("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -696,12 +660,8 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     b.vj("9658", "1111111", "block1", true)("ehv", 60300, 60600)("ehb", 60780, 60780)("bet", 61080, 61080)(
         "btl", 61560, 61560)("vg", 61920, 61920)("ht:4", 62340, 62340);
     b.vj("4462", "1111111", "block1", true)("ht:4a", 62400, 62400)("hto", 62940, 62940)("rs", 63180, 63180);
-    b.finish();
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -757,11 +717,7 @@ BOOST_AUTO_TEST_CASE(journey_array) {
     b.vj("A")("stop_area:stop1", 9 * 3600 + 10 * 60, 9 * 3600 + 11 * 60)("stop_area:stop2", 9 * 3600 + 20 * 60,
                                                                          9 * 3600 + 21 * 60);
     navitia::type::Data data;
-    b.finish();
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->geo_ref->init();
     b.data->build_proximity_list();
     b.data->meta->production_date =
@@ -1865,9 +1821,7 @@ struct isochrone_fixture {
         b.vj("l5")("A", "8:28"_t)("C", "9:50"_t);
         b.vj("l6")("C", "8:29"_t)("B", "10:50"_t);
 
-        b.data->pt_data->sort_and_index();
-        b.data->build_uri();
-        b.data->build_raptor();
+        b.make();
     }
 
     ed::builder b;
@@ -1986,11 +1940,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     ed::builder b("20150314");
     b.vj("l")("A", 8 * 3600 + 25 * 60)("B", 8 * 3600 + 35 * 60);
 
-    b.finish();
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     std::set<ChannelType> channel_types;
 
     auto default_date = "20150314T000000"_dt;
@@ -2042,11 +1992,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     ed::builder b("20150314");
     b.vj("l")("A", 8 * 3600 + 25 * 60)("B", 8 * 3600 + 35 * 60);
 
-    b.finish();
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     auto default_date = "20150314T000000"_dt;
     auto default_period = boost::posix_time::time_period(default_date, "20500317T000000"_dt);
@@ -2096,11 +2042,7 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     b.vj("B")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 10 * 3600 + 20 * 60,
                                                                          10 * 3600 + 21 * 60);
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
@@ -2239,11 +2181,7 @@ BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
     b.vj("l")("stop_point:A", "8:00"_t, "8:05"_t)("stop_point:B", "9:00"_t, "9:05"_t)(
         "stop_point:C", "10:00"_t, "10:05"_t)("stop_point:D", "11:00"_t, "11:05"_t);
 
-    b.finish();
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     nr::RAPTOR raptor(*b.data);
 
@@ -2289,10 +2227,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
     b.sa("stop3")("stop_point:stop3", 10, 5, false);
     b.vj("vj")("stop_point:stop1", 1000, 1100)("stop_point:stop2", 1200, 1500)("stop_point:stop3", 1700, 2000);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
     auto prod_len = boost::gregorian::days(1);
     b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
@@ -2420,10 +2355,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     b.vj("vj3")("stop_point:sa2:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s3", "8:10"_t, "8:11"_t);
     b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s4", "8:05"_t, "8:11"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->build_proximity_list();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
     auto prod_len = boost::gregorian::days(1);
@@ -2620,10 +2552,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
         .st_shape(shape_S2)("stop_point:stop3", 1700, 2000)
         .st_shape(shape_S3);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date =
         boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
 
@@ -2710,10 +2639,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     b.vj("vj3")("stop_point:sa1:sp1", "8:04"_t, "8:05"_t)("stop_point:sa2:sp2", "8:14"_t, "8:15"_t);
     b.vj("vj4")("stop_point:sa1:sp1", "8:06"_t, "8:07"_t)("stop_point:sa2:sp2", "8:16"_t, "8:17"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->build_proximity_list();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
     auto prod_len = boost::gregorian::days(1);
@@ -2923,10 +2849,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
     // journey 2
     b.vj("vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:25"_t, "8:26"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->build_proximity_list();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
     auto prod_len = boost::gregorian::days(1);
@@ -3230,10 +3153,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     b.vj("A", "1", "", false, "vjC_out_of_24_bound")("stop_point:sa1:s1", "08:00:00"_t)("stop_point:sa3:s1",
                                                                                         "08:05:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->build_proximity_list();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
     auto prod_len = boost::gregorian::days(1);
