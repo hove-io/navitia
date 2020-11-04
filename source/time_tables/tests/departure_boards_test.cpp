@@ -2416,10 +2416,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea) {
                                                                                                        "11:00"_t);
     b.vj("Line1").route("Route1").name("VJ2")("C:sp", "09:10"_t)("B:sp", "10:10"_t)("Avj2", "11:10"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     terminus_schedules(pb_creator, "stop_area.uri=C", {}, {}, d("20160101T073000"), 86400, 0, 10, 0, nt::RTLevel::Base,
@@ -2535,10 +2532,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         .name("BVJ4")("Avj2", "08:30"_t)("B:sp", "09:30"_t)("C:sp", "10:30"_t)("D:sp", "11:30"_t)("E:sp", "11:40"_t)(
             "F:sp", "11:45"_t)("I:sp", "11:50"_t)("J2", "12:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     {
         // Calculate terminus schedule at StopArea (C)
@@ -2655,10 +2649,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_0) {
 
     b.vj("Line1").route("Route1").name("VJ1")("Avj1", "08:00"_t)("Avj2", "09:00"_t)("B:sp", "10:00"_t)("C:sp",
                                                                                                        "11:00"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     terminus_schedules(pb_creator, "stop_area.uri=A", {}, {}, d("20160101T073000"), 86400, 0, 10, 0, nt::RTLevel::Base,
@@ -2710,10 +2701,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_1) {
     b.vj("Line1").route("Route1").name("VJ1")("Avj1", "08:00"_t)("Avj2", "08:10"_t)("B:sp", "10:00"_t)("C:sp",
                                                                                                        "11:00"_t);
     b.vj("Line1").route("Route1").name("VJ2")("Avj2", "08:15"_t)("B:sp", "10:30"_t)("C:sp", "11:10"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     terminus_schedules(pb_creator, "stop_area.uri=A", {}, {}, d("20160101T073000"), 86400, 0, 10, 0, nt::RTLevel::Base,

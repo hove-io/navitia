@@ -282,7 +282,7 @@ struct JourneyPatternEndsByDirection {
 
 // For the JP of 'tested', check if all the JPP following 'tested' itself are included in the same order
 // in the JP 'direction', starting from  JPP 'direction' itself
-static bool is_jp_end_included_in_direction(PbCreator& pb_creator,
+static bool is_jp_end_included_in_direction(const std::vector<nt::StopPoint*>& stop_points,
                                             const routing::JourneyPatternPoint& tested,
                                             const routing::JourneyPatternPoint& direction,
                                             const routing::JourneyPatternContainer& jpc) {
@@ -292,8 +292,8 @@ static bool is_jp_end_included_in_direction(PbCreator& pb_creator,
     for (uint16_t direction_it = direction.order.val; direction_it < jp_direction.jpps.size(); ++direction_it) {
         const auto& jpp_tested = jpc.get(jp_tested.jpps[tested_it]);
         const auto& jpp_direction = jpc.get(jp_direction.jpps[direction_it]);
-        const type::StopPoint* sp_tested = pb_creator.data->pt_data->stop_points[jpp_tested.sp_idx.val];
-        const type::StopPoint* sp_direction = pb_creator.data->pt_data->stop_points[jpp_direction.sp_idx.val];
+        const type::StopPoint* sp_tested = stop_points[jpp_tested.sp_idx.val];
+        const type::StopPoint* sp_direction = stop_points[jpp_direction.sp_idx.val];
         if (sp_tested->stop_area->idx == sp_direction->stop_area->idx) {
             ++tested_it;
             if (tested_it >= jp_tested.jpps.size()) {
@@ -509,7 +509,7 @@ void terminus_schedules(PbCreator& pb_creator,
                 auto& jp_ends_by_direction = jp_ends_by_directions_it->second[jp_ends_by_dir_it];
                 const auto& direction = pb_creator.data->dataRaptor->jp_container.get(jp_ends_by_direction.direction);
                 // 1. jp_end is included in one direction :  associate that JP's final part to this direction
-                if (is_jp_end_included_in_direction(pb_creator, jp_end, direction,
+                if (is_jp_end_included_in_direction(pb_creator.data->pt_data->stop_points, jp_end, direction,
                                                     pb_creator.data->dataRaptor->jp_container)) {
                     jp_ends_by_direction.jp_ends.push_back(jpp_idx);  // associate to direction
                     is_jp_end_associated_to_a_direction = true;
@@ -518,7 +518,7 @@ void terminus_schedules(PbCreator& pb_creator,
                 // 2. If a jp_end includes a referent direction it becomes referent direction for that group of jp_ends.
                 // NB: A new jp_end can "reconciliate" multiple group of jp_ends that were separated
                 // (include their referent directions), in that case they are all merged.
-                if (is_jp_end_included_in_direction(pb_creator, direction, jp_end,
+                if (is_jp_end_included_in_direction(pb_creator.data->pt_data->stop_points, direction, jp_end,
                                                     pb_creator.data->dataRaptor->jp_container)) {
                     if (!referent_direction_for) {
                         referent_direction_for = jp_ends_by_direction;  // richest direction is the first one we found
