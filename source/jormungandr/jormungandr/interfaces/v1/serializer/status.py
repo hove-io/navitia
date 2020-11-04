@@ -54,6 +54,7 @@ class ParametersSerializer(serpy.Serializer):
     min_bike = Field(schema_type=int)
     min_bss = Field(schema_type=int)
     min_car = Field(schema_type=int)
+    min_ridesharing = Field(schema_type=int)
     min_taxi = Field(schema_type=int)
     night_bus_filter_base_factor = Field(schema_type=int)
     night_bus_filter_max_factor = Field(schema_type=float)

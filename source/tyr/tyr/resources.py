@@ -479,6 +479,13 @@ class Instance(flask_restful.Resource):
             default=instance.min_car,
         )
         parser.add_argument(
+            'min_ridesharing',
+            type=int,
+            help='minimum duration of ridesharing',
+            location=('json', 'values'),
+            default=instance.min_ridesharing,
+        )
+        parser.add_argument(
             'min_taxi',
             type=int,
             help='minimum duration of taxi fallback',
@@ -787,6 +794,7 @@ class Instance(flask_restful.Resource):
                         'min_bike',
                         'min_bss',
                         'min_car',
+                        'min_ridesharing',
                         'min_taxi',
                         'max_duration',
                         'walking_transfer_penalty',

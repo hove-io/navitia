@@ -365,6 +365,8 @@ class Instance(db.Model):  # type: ignore
 
     min_car = db.Column(db.Integer, default=default_values.min_car, nullable=False)
 
+    min_ridesharing = db.Column(db.Integer, default=default_values.min_ridesharing, nullable=False)
+
     min_taxi = db.Column(db.Integer, default=default_values.min_taxi, nullable=False)
 
     max_duration = db.Column(
