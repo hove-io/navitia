@@ -145,7 +145,6 @@ class TestBlablalines(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
-        # For start teleport section we take departure to pickup duration
         assert rsj_sections[0].get('duration') == 174
         assert (
             rsj_sections[0].get('departure_date_time') == '20120614T075500'
@@ -181,7 +180,6 @@ class TestBlablalines(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[2].get('duration') == 76
         assert rsj_sections[2].get('departure_date_time') == '20120614T081935'
         assert rsj_sections[2].get('arrival_date_time') == '20120614T082051'
-        # For end teleport section we take dropoff to destination duration
 
         fps = response['feed_publishers']
         assert len(fps) == 2

@@ -288,13 +288,14 @@ class RidesharingServiceManager(object):
             start_teleport_section.origin.CopyFrom(from_pt_obj)
             start_teleport_section.destination.CopyFrom(pb_rsj_pickup)
             if rsj.origin_pickup_shape:
+                # If stree_network shape in the offer contains only two coords, we use default CROW_FLY section"
                 if len(rsj.origin_pickup_shape) == 2:
                     start_teleport_section.type = response_pb2.CROW_FLY
-                    start_teleport_section.length = rsj.origin_pickup_distance
+                    start_teleport_section.length = int(rsj.origin_pickup_distance)
                     start_teleport_section.shape.extend(rsj.origin_pickup_shape)
                 else:
                     start_teleport_section.type = response_pb2.STREET_NETWORK
-                    start_teleport_section.length = rsj.origin_pickup_distance
+                    start_teleport_section.length = int(rsj.origin_pickup_distance)
                     start_teleport_section.street_network.length = start_teleport_section.length
                     start_teleport_section.street_network.duration = start_teleport_section.duration
                     start_teleport_section.street_network.mode = response_pb2.Walking
@@ -309,7 +310,7 @@ class RidesharingServiceManager(object):
 
             # We take departure to pickup duration
             if rsj.origin_pickup_duration:
-                start_teleport_section.duration = rsj.origin_pickup_duration
+                start_teleport_section.duration = int(rsj.origin_pickup_duration)
                 pb_rsj.durations.walking += start_teleport_section.duration
                 pb_rsj.durations.total += start_teleport_section.duration
                 pb_rsj.duration = start_teleport_section.duration
@@ -366,7 +367,7 @@ class RidesharingServiceManager(object):
             if rsj.dropoff_date_time:
                 rs_section.end_date_time = rsj.dropoff_date_time
             if rsj.duration:
-                rs_section.duration = rsj.duration
+                rs_section.duration = int(rsj.duration)
             # report values to journey
             pb_rsj.distances.ridesharing += rs_section.length
             pb_rsj.durations.total += rs_section.duration
@@ -380,13 +381,14 @@ class RidesharingServiceManager(object):
             end_teleport_section.origin.CopyFrom(pb_rsj_dropoff)
             end_teleport_section.destination.CopyFrom(to_pt_obj)
             if rsj.dropoff_dest_shape:
+                # If stree_network shape in the offer contains only two coords, we use default CROW_FLY section"
                 if len(rsj.dropoff_dest_shape) == 2:
                     end_teleport_section.type = response_pb2.CROW_FLY
-                    end_teleport_section.length = rsj.dropoff_dest_distance
+                    end_teleport_section.length = int(rsj.dropoff_dest_distance)
                     end_teleport_section.shape.extend(rsj.dropoff_dest_shape)
                 else:
                     end_teleport_section.type = response_pb2.STREET_NETWORK
-                    end_teleport_section.length = rsj.dropoff_dest_distance
+                    end_teleport_section.length = int(rsj.dropoff_dest_distance)
                     end_teleport_section.street_network.length = end_teleport_section.length
                     end_teleport_section.street_network.duration = end_teleport_section.duration
                     end_teleport_section.street_network.mode = response_pb2.Walking
@@ -401,7 +403,7 @@ class RidesharingServiceManager(object):
 
             # We take dropoff to destination duration
             if rsj.dropoff_dest_duration:
-                end_teleport_section.duration = rsj.dropoff_dest_duration
+                end_teleport_section.duration = int(rsj.dropoff_dest_duration)
                 pb_rsj.durations.walking += end_teleport_section.duration
                 pb_rsj.durations.total += end_teleport_section.duration
                 pb_rsj.duration += end_teleport_section.duration

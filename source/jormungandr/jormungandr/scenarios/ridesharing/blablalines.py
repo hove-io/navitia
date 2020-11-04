@@ -175,6 +175,7 @@ class Blablalines(AbstractRidesharingService):
             res.available_seats = offer.get('available_seats')
             res.total_seats = None
 
+            # departure coord is absent in the offer and hence to be generated from the request
             res.departure_date_time = request_datetime
             res.pickup_date_time = res.departure_date_time + res.origin_pickup_duration
             res.dropoff_date_time = res.pickup_date_time + res.duration

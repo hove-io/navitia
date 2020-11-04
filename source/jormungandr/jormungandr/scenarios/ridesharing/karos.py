@@ -111,7 +111,7 @@ class Karos(AbstractRidesharingService):
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
             res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
-            res.origin_pickup_distance = int(offer.get('departureToPickupWalkingDistance'))
+            res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
             res.origin_pickup_shape = []
             origin_pickup_shape = decode_polyline(offer.get('departureToPickupWalkingPolyline'), precision=5)
             if origin_pickup_shape:
@@ -119,7 +119,7 @@ class Karos(AbstractRidesharingService):
                     (type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in origin_pickup_shape)
                 )
             res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
-            res.dropoff_dest_distance = int(offer.get('dropoffToArrivalWalkingDistance'))
+            res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
             res.dropoff_dest_shape = []
             dropoff_dest_shape = decode_polyline(offer.get('dropoffToArrivalWalkingPolyline'), precision=5)
             if dropoff_dest_shape:
