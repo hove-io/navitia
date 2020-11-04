@@ -147,8 +147,15 @@ class TestBlablalines(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[0].get('mode') == 'walking'
         # For start teleport section we take departure to pickup duration
         assert rsj_sections[0].get('duration') == 174
+        assert (
+            rsj_sections[0].get('departure_date_time') == '20120614T075500'
+        )  # for blablalines departure_date_time = request_date_time
+        assert rsj_sections[0].get('arrival_date_time') == '20120614T075754'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
+        assert rsj_sections[1].get('duration') == 1301
+        assert rsj_sections[1].get('departure_date_time') == '20120614T075754'
+        assert rsj_sections[1].get('arrival_date_time') == '20120614T081935'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
         rsj_info = rsj_sections[1].get('ridesharing_informations')
@@ -171,8 +178,10 @@ class TestBlablalines(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
-        # For end teleport section we take dropoff to destination duration
         assert rsj_sections[2].get('duration') == 76
+        assert rsj_sections[2].get('departure_date_time') == '20120614T081935'
+        assert rsj_sections[2].get('arrival_date_time') == '20120614T082051'
+        # For end teleport section we take dropoff to destination duration
 
         fps = response['feed_publishers']
         assert len(fps) == 2

@@ -120,7 +120,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         test ridesharing_jouneys details
         """
         q = (
-            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "journeys?from=0.0000898312;0.0000698312&to=0.00188646;0.00071865&datetime=20120614T075500&"
             "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM".format(
                 first='ridesharing', last='walking'
             )
@@ -154,7 +154,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 224
-        assert rs_journeys[0].get('durations').get('walking') == 0
+        assert rs_journeys[0].get('durations').get('walking') == 2
         assert rs_journeys[0].get('durations').get('ridesharing') == 1057
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -162,8 +162,14 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
+        assert rsj_sections[0].get('duration') == 2
+        assert rsj_sections[0].get('departure_date_time') == '20171225T070757'
+        assert rsj_sections[0].get('arrival_date_time') == '20171225T070759'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
+        assert rsj_sections[1].get('duration') == 1057
+        assert rsj_sections[1].get('departure_date_time') == '20171225T070759'
+        assert rsj_sections[1].get('arrival_date_time') == '20171225T072536'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [-1.68635, 48.1101]
         rsj_info = rsj_sections[1].get('ridesharing_informations')
@@ -191,6 +197,9 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
+        assert rsj_sections[2].get('duration') == 0
+        assert rsj_sections[2].get('departure_date_time') == '20171225T072536'
+        assert rsj_sections[2].get('arrival_date_time') == '20171225T072536'
 
         fps = response['feed_publishers']
         assert len(fps) == 2

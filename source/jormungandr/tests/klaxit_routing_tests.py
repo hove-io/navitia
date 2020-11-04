@@ -146,16 +146,19 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         rsj_sections = rs_journeys[0].get('sections')
         assert len(rsj_sections) == 3
 
-        assert rsj_sections[0].get('type') == 'crow_fly'
+        assert rsj_sections[0].get('type') == 'street_network'
         assert rsj_sections[0].get('mode') == 'walking'
-        # For start teleport section we take departure to pickup duration
         assert rsj_sections[0].get('duration') == 174
+        assert rsj_sections[0].get('departure_date_time') == '20201006T123935'
+        assert rsj_sections[0].get('arrival_date_time') == '20201006T124229'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
+        assert rsj_sections[1].get('duration') == 1301
+        assert rsj_sections[1].get('departure_date_time') == '20201006T124229'
+        assert rsj_sections[1].get('arrival_date_time') == '20201006T130410'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
         # ridesharing duration comes from the offer
-        assert rsj_sections[1].get('duration') == 1301
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
         assert rsj_info.get('operator') == 'klaxit'
@@ -171,10 +174,11 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         assert ticket['links'][0]['id'] == rsj_sections[1]['id']
         assert rs_journeys[0].get('fare').get('total').get('value') == tickets[0].get('cost').get('value')
 
-        assert rsj_sections[2].get('type') == 'crow_fly'
+        assert rsj_sections[2].get('type') == 'street_network'
         assert rsj_sections[2].get('mode') == 'walking'
-        # For end teleport section we take dropoff to destination duration
         assert rsj_sections[2].get('duration') == 76
+        assert rsj_sections[2].get('departure_date_time') == '20201006T130410'
+        assert rsj_sections[2].get('arrival_date_time') == '20201006T130526'
 
         fps = response['feed_publishers']
         assert len(fps) == 2

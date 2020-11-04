@@ -275,29 +275,47 @@ class RidesharingServiceManager(object):
             dropoff_coord = get_pt_object_coord(pb_rsj_dropoff)
 
             pb_rsj.requested_date_time = period_extremity.datetime
-            if rsj.pickup_date_time:
-                pb_rsj.departure_date_time = rsj.pickup_date_time
-            if rsj.dropoff_date_time:
-                pb_rsj.arrival_date_time = rsj.dropoff_date_time
+            if rsj.departure_date_time:
+                pb_rsj.departure_date_time = rsj.departure_date_time
+            if rsj.arrival_date_time:
+                pb_rsj.arrival_date_time = rsj.arrival_date_time
             pb_rsj.tags.append('ridesharing')
 
             # start teleport section
             start_teleport_section = pb_rsj.sections.add()
             start_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
-            start_teleport_section.type = response_pb2.CROW_FLY
             start_teleport_section.street_network.mode = response_pb2.Walking
             start_teleport_section.origin.CopyFrom(from_pt_obj)
             start_teleport_section.destination.CopyFrom(pb_rsj_pickup)
-            start_teleport_section.length = int(crowfly_distance_between(from_coord, pickup_coord))
+            if rsj.origin_pickup_shape:
+                if len(rsj.origin_pickup_shape) == 2:
+                    start_teleport_section.type = response_pb2.CROW_FLY
+                    start_teleport_section.length = rsj.origin_pickup_distance
+                    start_teleport_section.shape.extend(rsj.origin_pickup_shape)
+                else:
+                    start_teleport_section.type = response_pb2.STREET_NETWORK
+                    start_teleport_section.length = rsj.origin_pickup_distance
+                    start_teleport_section.street_network.length = start_teleport_section.length
+                    start_teleport_section.street_network.duration = start_teleport_section.duration
+                    start_teleport_section.street_network.mode = response_pb2.Walking
+                    for sh in rsj.origin_pickup_shape:
+                        coord = start_teleport_section.street_network.coordinates.add()
+                        coord.lon = float(sh.lon)
+                        coord.lat = float(sh.lat)
+            else:
+                start_teleport_section.type = response_pb2.CROW_FLY
+                start_teleport_section.length = int(crowfly_distance_between(from_coord, pickup_coord))
+                start_teleport_section.shape.extend([from_coord, pickup_coord])
 
             # We take departure to pickup duration
-            start_teleport_section.duration = int(getattr(rsj, 'origin_pickup_duration', 0))
-            pb_rsj.durations.walking += start_teleport_section.duration
-            pb_rsj.durations.total += start_teleport_section.duration
-
-            start_teleport_section.shape.extend([from_coord, pickup_coord])
+            if rsj.origin_pickup_duration:
+                start_teleport_section.duration = rsj.origin_pickup_duration
+                pb_rsj.durations.walking += start_teleport_section.duration
+                pb_rsj.durations.total += start_teleport_section.duration
+                pb_rsj.duration = start_teleport_section.duration
+            if rsj.departure_date_time:
+                start_teleport_section.begin_date_time = rsj.departure_date_time
             if rsj.pickup_date_time:
-                start_teleport_section.begin_date_time = rsj.pickup_date_time
                 start_teleport_section.end_date_time = rsj.pickup_date_time
             # report value to journey
             pb_rsj.distances.walking += start_teleport_section.length
@@ -343,9 +361,9 @@ class RidesharingServiceManager(object):
 
             rs_section.shape.extend(rsj.shape)
 
-            if rsj.pickup_date_time and rsj.dropoff_date_time:
-                rs_section.duration = rsj.dropoff_date_time - rsj.pickup_date_time
+            if rsj.pickup_date_time:
                 rs_section.begin_date_time = rsj.pickup_date_time
+            if rsj.dropoff_date_time:
                 rs_section.end_date_time = rsj.dropoff_date_time
             if rsj.duration:
                 rs_section.duration = rsj.duration
@@ -353,26 +371,45 @@ class RidesharingServiceManager(object):
             pb_rsj.distances.ridesharing += rs_section.length
             pb_rsj.durations.total += rs_section.duration
             pb_rsj.durations.ridesharing += rs_section.duration
+            pb_rsj.duration += rs_section.duration
 
             # end teleport section
             end_teleport_section = pb_rsj.sections.add()
             end_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
-            end_teleport_section.type = response_pb2.CROW_FLY
             end_teleport_section.street_network.mode = response_pb2.Walking
             end_teleport_section.origin.CopyFrom(pb_rsj_dropoff)
             end_teleport_section.destination.CopyFrom(to_pt_obj)
-            end_teleport_section.length = int(crowfly_distance_between(dropoff_coord, to_coord))
+            if rsj.dropoff_dest_shape:
+                if len(rsj.dropoff_dest_shape) == 2:
+                    end_teleport_section.type = response_pb2.CROW_FLY
+                    end_teleport_section.length = rsj.dropoff_dest_distance
+                    end_teleport_section.shape.extend(rsj.dropoff_dest_shape)
+                else:
+                    end_teleport_section.type = response_pb2.STREET_NETWORK
+                    end_teleport_section.length = rsj.dropoff_dest_distance
+                    end_teleport_section.street_network.length = end_teleport_section.length
+                    end_teleport_section.street_network.duration = end_teleport_section.duration
+                    end_teleport_section.street_network.mode = response_pb2.Walking
+                    for sh in rsj.dropoff_dest_shape:
+                        coord = end_teleport_section.street_network.coordinates.add()
+                        coord.lon = float(sh.lon)
+                        coord.lat = float(sh.lat)
+            else:
+                end_teleport_section.type = response_pb2.CROW_FLY
+                end_teleport_section.length = int(crowfly_distance_between(dropoff_coord, to_coord))
+                end_teleport_section.shape.extend([dropoff_coord, to_coord])
 
             # We take dropoff to destination duration
-            end_teleport_section.duration = int(getattr(rsj, 'dropoff_dest_duration', 0))
-            pb_rsj.durations.walking += end_teleport_section.duration
-            pb_rsj.durations.total += end_teleport_section.duration
-            pb_rsj.duration += pb_rsj.durations.total
+            if rsj.dropoff_dest_duration:
+                end_teleport_section.duration = rsj.dropoff_dest_duration
+                pb_rsj.durations.walking += end_teleport_section.duration
+                pb_rsj.durations.total += end_teleport_section.duration
+                pb_rsj.duration += end_teleport_section.duration
 
-            end_teleport_section.shape.extend([dropoff_coord, to_coord])
             if rsj.dropoff_date_time:
                 end_teleport_section.begin_date_time = rsj.dropoff_date_time
-                end_teleport_section.end_date_time = rsj.dropoff_date_time
+            if rsj.arrival_date_time:
+                end_teleport_section.end_date_time = rsj.arrival_date_time
             # report value to journey
             pb_rsj.distances.walking += end_teleport_section.length
 

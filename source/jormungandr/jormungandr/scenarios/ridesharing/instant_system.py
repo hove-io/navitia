@@ -34,7 +34,7 @@ import logging
 import pybreaker
 import pytz
 
-from jormungandr import utils
+from jormungandr.utils import Coords, make_timestamp_from_str
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
@@ -44,6 +44,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
 )
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
+import jormungandr.street_network.utils
 
 DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
     'id': 'Instant System',
@@ -121,7 +122,7 @@ class InstantSystem(AbstractRidesharingService):
 
         return (j for j in raw_journeys if has_ridesharing_path(j))
 
-    def _make_response(self, raw_json):
+    def _make_response(self, raw_json, from_coord, to_coord):
         raw_journeys = raw_json.get('journeys')
 
         if not raw_journeys:
@@ -141,22 +142,50 @@ class InstantSystem(AbstractRidesharingService):
                 res.metadata = self.journey_metadata
 
                 res.distance = j.get('distance')
-                res.duration = None
 
                 res.ridesharing_ad = j.get('url')
 
                 ridesharing_ad = p['rideSharingAd']
+
+                # departure coord
+                lat, lon = from_coord.split(',')
+                departure_coord = Coords(lat=lat, lon=lon)
+
+                # pick up coord
                 from_data = p['from']
+                pickup_lat = from_data.get('lat')
+                pickup_lon = from_data.get('lon')
+                pickup_coord = Coords(lat=pickup_lat, lon=pickup_lon)
 
-                res.pickup_place = rsj.Place(
-                    addr=from_data.get('name'), lat=from_data.get('lat'), lon=from_data.get('lon')
+                res.pickup_place = rsj.Place(addr=from_data.get('name'), lat=pickup_lat, lon=pickup_lon)
+
+                res.origin_pickup_distance = int(
+                    jormungandr.street_network.utils.crowfly_distance_between(departure_coord, pickup_coord)
                 )
+                res.origin_pickup_duration = jormungandr.street_network.utils.get_manhattan_duration(
+                    res.origin_pickup_distance, 1.12
+                )
+                res.origin_pickup_shape = None  # Not specified
 
+                # drop off coord
                 to_data = p['to']
+                dropoff_lat = to_data.get('lat')
+                dropoff_lon = to_data.get('lon')
+                dropoff_coord = Coords(lat=dropoff_lat, lon=dropoff_lon)
 
-                res.dropoff_place = rsj.Place(
-                    addr=to_data.get('name'), lat=to_data.get('lat'), lon=to_data.get('lon')
+                res.dropoff_place = rsj.Place(addr=to_data.get('name'), lat=dropoff_lat, lon=dropoff_lon)
+
+                # arrival coord
+                lat, lon = to_coord.split(',')
+                arrival_coord = Coords(lat=lat, lon=lon)
+
+                res.dropoff_dest_distance = int(
+                    jormungandr.street_network.utils.crowfly_distance_between(dropoff_coord, arrival_coord)
                 )
+                res.dropoff_dest_duration = jormungandr.street_network.utils.get_manhattan_duration(
+                    res.dropoff_dest_distance, 1.12
+                )
+                res.dropoff_dest_shape = None  # Not specified
 
                 # shape is a list of type_pb2.GeographicalCoord()
                 res.shape = []
@@ -174,8 +203,11 @@ class InstantSystem(AbstractRidesharingService):
                         type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
                     )
 
-                res.pickup_date_time = utils.make_timestamp_from_str(p['departureDate'])
-                res.dropoff_date_time = utils.make_timestamp_from_str(p['arrivalDate'])
+                res.pickup_date_time = make_timestamp_from_str(p['departureDate'])
+                res.departure_date_time = res.pickup_date_time - res.origin_pickup_duration
+                res.dropoff_date_time = make_timestamp_from_str(p['arrivalDate'])
+                res.arrival_date_time = res.dropoff_date_time + res.dropoff_dest_duration
+                res.duration = res.dropoff_date_time - res.pickup_date_time
 
                 user = ridesharing_ad['user']
 
@@ -249,7 +281,7 @@ class InstantSystem(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(resp.json())
+            r = self._make_response(resp.json(), from_coord, to_coord)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.instant-system').info(
                 'Received ridesharing offers : %s',
