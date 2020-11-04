@@ -46,7 +46,7 @@ from jormungandr.interfaces.v1.make_links import (
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp, dt_to_str
+from jormungandr.utils import date_to_timestamp, dt_to_str, has_invalid_reponse_code, journeys_absent
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
@@ -108,7 +108,7 @@ class add_journey_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200 or 'journeys' not in objects[0]:
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
             for journey in objects[0]['journeys']:
@@ -186,9 +186,7 @@ class add_fare_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200:
-                return objects
-            if "journeys" not in objects[0]:
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
             if 'tickets' not in objects[0]:
@@ -231,9 +229,7 @@ class add_tad_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200:
-                return objects
-            if "journeys" not in objects[0]:
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
             for j in objects[0]['journeys']:
@@ -303,15 +299,15 @@ class rig_journey(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            response, status, _ = objects
-            if status != 200:
+            if has_invalid_reponse_code(objects):
                 return objects
 
             if not hasattr(g, 'origin_detail') or not hasattr(g, 'destination_detail'):
                 return objects
 
+            response = objects[0]
             for j in response.get('journeys', []):
-                if not 'sections' in j:
+                if 'sections' not in j:
                     continue
                 logging.debug(
                     'for journey changing origin: {old_o} to {new_o}'
