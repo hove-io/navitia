@@ -53,9 +53,7 @@ static std::pair<const JourneyPattern&, const JourneyPatternPoint&> get_first_jp
 BOOST_AUTO_TEST_CASE(test1) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    b.make();
 
     std::vector<JppIdx> jpps;
     for (const auto jpp : b.data->dataRaptor->jp_container.get_jpps())
@@ -165,10 +163,7 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
@@ -352,10 +347,7 @@ struct departure_helper {
 BOOST_FIXTURE_TEST_CASE(test_discrete_next_arrivals_prev_departures, departure_helper) {
     b.vj("A")("stop1", "8:00"_t, "8:01"_t)("stop2", "9:00"_t, "9:01"_t)("stop3", "10:00"_t, "10:01"_t);
     b.vj("B")("stop2", "8:30"_t, "8:31"_t)("stop3", "9:30"_t, "9:31"_t)("stop4", "10:30"_t, "10:31"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     auto result_next_arrivals =
         get_stop_times(StopEvent::drop_off, get_jpp_idx("stop1"), today, tomorrow, 100, *b.data, nt::RTLevel::Base);
@@ -417,10 +409,7 @@ BOOST_FIXTURE_TEST_CASE(test_discrete_lolipop, departure_helper) {
     b.vj("A")("s1", "8:00"_t, "8:01"_t)("s2", "9:00"_t, "9:01"_t)("s3", "10:00"_t, "10:01"_t)("s2", "11:00"_t,
                                                                                               "11:01"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     // at s2, we have 2 arrivals
     auto next_arrivals =
@@ -507,10 +496,7 @@ BOOST_FIXTURE_TEST_CASE(dep_arr_filtering, departure_helper) {
     b.vj("C", "1111", "", true, "C3")("x", "10:30"_t, "10:31"_t)("center", "23:45"_t, "23:56"_t)("y", "23:55"_t,
                                                                                                  "23:56"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     auto next_arrivals =
         get_stop_times(StopEvent::drop_off, get_jpp_idx("center"), today, tomorrow, 5, *b.data, nt::RTLevel::Base);

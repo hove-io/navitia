@@ -49,10 +49,7 @@ BOOST_AUTO_TEST_CASE(frequency_vehicle_journeys_test) {
 
     b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")
         .name("vj:1")("stop1", "09:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data = b.data.get();
     uint depth = 3;
