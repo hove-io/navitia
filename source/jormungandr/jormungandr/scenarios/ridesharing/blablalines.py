@@ -150,19 +150,7 @@ class Blablalines(AbstractRidesharingService):
                 jormungandr.street_network.utils.crowfly_distance_between(dropoff_coord, arrival_coord)
             )
 
-            # shape is a list of type_pb2.GeographicalCoord()
-            res.shape = []
-            shape = decode_polyline(offer.get('journey_polyline'), precision=5)
-            if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
-
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                res.shape.append(
-                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                )
+            res.shape = self._retreive_main_shape(offer, 'journey_polyline', res.pickup_place, res.dropoff_place)
 
             currency = offer.get('price', {}).get('currency')
             if currency == "EUR":

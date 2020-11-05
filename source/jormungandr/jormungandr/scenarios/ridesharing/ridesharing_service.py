@@ -32,6 +32,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 from jormungandr import new_relic
+from jormungandr.utils import decode_polyline
+from navitiacommon import type_pb2
 from collections import namedtuple
 import pybreaker
 import requests as requests
@@ -127,6 +129,21 @@ class AbstractRidesharingService(object):
         :return: a list(mandatory) contains solutions
         """
         pass
+
+    def _retreive_shape(self, json, field):
+        shape = []
+        decoded_shape = decode_polyline(json.get(field), precision=5)
+        if decoded_shape:
+            shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in decoded_shape))
+        return shape
+
+    def _retreive_main_shape(self, offer, field, pickup_place, dropoff_place):
+        shape = self._retreive_shape(offer, field)
+        if not shape or pickup_place.lon != shape[0].lon or pickup_place.lat != shape[0].lat:
+            shape.insert(0, type_pb2.GeographicalCoord(lon=pickup_place.lon, lat=pickup_place.lat))
+        if not shape or dropoff_place.lon != shape[-1].lon or dropoff_place.lat != shape[-1].lat:
+            shape.append(type_pb2.GeographicalCoord(lon=dropoff_place.lon, lat=dropoff_place.lat))
+        return shape
 
     @abc.abstractmethod
     def _get_feed_publisher(self):

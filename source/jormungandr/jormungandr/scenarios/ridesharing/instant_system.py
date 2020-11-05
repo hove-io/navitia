@@ -190,21 +190,7 @@ class InstantSystem(AbstractRidesharingService):
                 )
                 res.dropoff_dest_shape = None  # Not specified
 
-                # shape is a list of type_pb2.GeographicalCoord()
-                res.shape = []
-                shape = decode_polyline(p.get('shape'), precision=5)
-                if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                    res.shape.append(
-                        type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat)
-                    )
-
-                if shape:
-                    res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-                if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                    res.shape.append(
-                        type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                    )
+                res.shape = self._retreive_main_shape(p, 'shape', res.pickup_place, res.dropoff_place)
 
                 res.pickup_date_time = make_timestamp_from_str(p['departureDate'])
                 res.departure_date_time = res.pickup_date_time - res.origin_pickup_duration

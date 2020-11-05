@@ -110,22 +110,14 @@ class Karos(AbstractRidesharingService):
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
+
             res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
             res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
-            res.origin_pickup_shape = []
-            origin_pickup_shape = decode_polyline(offer.get('departureToPickupWalkingPolyline'), precision=5)
-            if origin_pickup_shape:
-                res.origin_pickup_shape.extend(
-                    (type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in origin_pickup_shape)
-                )
+            res.origin_pickup_shape = self._retreive_shape(offer, 'departureToPickupWalkingPolyline')
+
             res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
             res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
-            res.dropoff_dest_shape = []
-            dropoff_dest_shape = decode_polyline(offer.get('dropoffToArrivalWalkingPolyline'), precision=5)
-            if dropoff_dest_shape:
-                res.dropoff_dest_shape.extend(
-                    (type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in dropoff_dest_shape)
-                )
+            res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
@@ -134,19 +126,7 @@ class Karos(AbstractRidesharingService):
                 addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
             )
 
-            # shape is a list of type_pb2.GeographicalCoord()
-            res.shape = []
-            shape = decode_polyline(offer.get('journeyPolyline'), precision=5)
-            if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
-
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                res.shape.append(
-                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                )
+            res.shape = self._retreive_main_shape(offer, 'journeyPolyline', res.pickup_place, res.dropoff_place)
 
             res.price = offer.get('price', {}).get('amount') * 100.0
             res.currency = "centime"

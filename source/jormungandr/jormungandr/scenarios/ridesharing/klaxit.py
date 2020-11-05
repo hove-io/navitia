@@ -106,13 +106,6 @@ class Klaxit(AbstractRidesharingService):
 
         for offer in raw_json:
 
-            def _retreive_shape(field):
-                shape = []
-                decoded_shape = decode_polyline(offer.get(field), precision=5)
-                if decoded_shape:
-                    shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in decoded_shape))
-                return shape
-
             res = rsj.RidesharingJourney()
             res.metadata = self.journey_metadata
             res.distance = offer.get('distance')
@@ -121,11 +114,11 @@ class Klaxit(AbstractRidesharingService):
 
             res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
             res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
-            res.origin_pickup_shape = _retreive_shape('departureToPickupWalkingPolyline')
+            res.origin_pickup_shape = self._retreive_shape(offer, 'departureToPickupWalkingPolyline')
 
             res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
             res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
-            res.dropoff_dest_shape = _retreive_shape('dropoffToArrivalWalkingPolyline')
+            res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
@@ -134,19 +127,7 @@ class Klaxit(AbstractRidesharingService):
                 addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
             )
 
-            # shape is a list of type_pb2.GeographicalCoord()
-            res.shape = []
-            shape = decode_polyline(offer.get('journeyPolyline'), precision=5)
-            if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
-
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                res.shape.append(
-                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                )
+            res.shape = self._retreive_main_shape(offer, 'journeyPolyline', res.pickup_place, res.dropoff_place)
 
             # For Klaxit the price is in euro
             res.price = offer.get('price', {}).get('amount') * 100.0
