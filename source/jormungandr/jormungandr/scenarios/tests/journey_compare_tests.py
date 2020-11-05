@@ -1187,3 +1187,31 @@ def test_filter_direct_path_mode_car():
     journey.tags.append("car")
     f = jf.FilterDirectPathMode(["car"])
     assert f.filter_func(journey)
+
+
+def test_heavy_journey_ridesharing():
+    """
+    the first time the duration of the ridesharing section is superior to the min value, so we keep the journey
+    on the second test the duration is inferior to the min, so we delete the journey
+    """
+    journey = response_pb2.Journey()
+    journey.sections.add()
+    journey.sections[-1].type = response_pb2.STREET_NETWORK
+    journey.sections[-1].street_network.mode = response_pb2.Ridesharing
+    journey.durations.ridesharing = journey.sections[-1].duration = 25
+
+    # Ridesharing duration is superior to min_ridesharing value so we have ridesharing section
+    f = jf.FilterTooShortHeavyJourneys(min_ridesharing=20, orig_modes=['ridesharing', 'walking'])
+    assert f.filter_func(journey)
+
+    # Ridesharing duration is inferior to min_ridesharing value but there is no walking option
+    # In this case we have ridesharing section
+    journey.durations.ridesharing = journey.sections[-1].duration = 15
+    f = jf.FilterTooShortHeavyJourneys(min_ridesharing=20, orig_modes=['ridesharing'])
+    assert f.filter_func(journey)
+
+    # Ridesharing duration is inferior to min_ridesharing value and there is also walking option
+    # In this case we have reject ridesharing section
+    journey.durations.ridesharing = journey.sections[-1].duration = 15
+    f = jf.FilterTooShortHeavyJourneys(min_ridesharing=20, orig_modes=['ridesharing', 'walking'])
+    assert not f.filter_func(journey)

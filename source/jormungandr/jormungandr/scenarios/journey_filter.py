@@ -131,13 +131,19 @@ def filter_journeys(responses, instance, request):
     min_bike = request.get('_min_bike', None)
     min_car = request.get('_min_car', None)
     min_taxi = request.get('_min_taxi', None)
+    min_ridesharing = request.get('_min_ridesharing', None)
     orig_modes = request.get('origin_mode', [])
     dest_modes = request.get('destination_mode', [])
     min_nb_transfers = request.get('min_nb_transfers', 0)
 
     filters = [
         FilterTooShortHeavyJourneys(
-            min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, orig_modes=orig_modes, dest_modes=dest_modes
+            min_bike=min_bike,
+            min_car=min_car,
+            min_taxi=min_taxi,
+            min_ridesharing=min_ridesharing,
+            orig_modes=orig_modes,
+            dest_modes=dest_modes,
         ),
         FilterTooLongWaiting(),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
@@ -183,10 +189,13 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
     message = 'too_short_heavy_mode_fallback'
 
-    def __init__(self, min_bike=None, min_car=None, min_taxi=None, orig_modes=None, dest_modes=None):
+    def __init__(
+        self, min_bike=None, min_car=None, min_taxi=None, min_ridesharing=None, orig_modes=None, dest_modes=None
+    ):
         self.min_bike = min_bike
         self.min_car = min_car
         self.min_taxi = min_taxi
+        self.min_ridesharing = min_ridesharing
         self.orig_modes = [] if orig_modes is None else orig_modes
         self.dest_modes = [] if dest_modes is None else dest_modes
 
@@ -219,9 +228,11 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
                 min_mode = self.min_car
             elif s.street_network.mode == response_pb2.Taxi:
                 min_mode = self.min_taxi
+            elif s.street_network.mode == response_pb2.Ridesharing:
+                min_mode = self.min_ridesharing
 
             if (
-                s.street_network.mode in (response_pb2.Car, response_pb2.Taxi)
+                s.street_network.mode in (response_pb2.Car, response_pb2.Taxi, response_pb2.Ridesharing)
                 and min_mode is not None
                 and _exceed_min_duration(
                     s, journey, min_duration=min_mode, orig_modes=self.orig_modes, dest_modes=self.dest_modes
@@ -641,11 +652,17 @@ def filter_detailed_journeys(responses, request):
     min_bike = request.get('_min_bike', None)
     min_car = request.get('_min_car', None)
     min_taxi = request.get('_min_taxi', None)
+    min_ridesharing = request.get('_min_ridesharing', None)
     orig_modes = request.get('origin_mode', [])
     dest_modes = request.get('destination_mode', [])
 
     too_heavy_journey_filter = FilterTooShortHeavyJourneys(
-        min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, orig_modes=orig_modes, dest_modes=dest_modes
+        min_bike=min_bike,
+        min_car=min_car,
+        min_taxi=min_taxi,
+        min_ridesharing=min_ridesharing,
+        orig_modes=orig_modes,
+        dest_modes=dest_modes,
     )
     f_wrapped = filter_wrapper(is_debug=request.get('debug', False), filter_obj=too_heavy_journey_filter)
 
