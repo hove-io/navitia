@@ -162,6 +162,7 @@ class InstantSystem(AbstractRidesharingService):
                 res.origin_pickup_distance = int(
                     jormungandr.street_network.utils.crowfly_distance_between(departure_coord, pickup_coord)
                 )
+                # we choose to calculate with speed=1.12 the average speed for a walker
                 res.origin_pickup_duration = jormungandr.street_network.utils.get_manhattan_duration(
                     res.origin_pickup_distance, 1.12
                 )
@@ -182,6 +183,7 @@ class InstantSystem(AbstractRidesharingService):
                 res.dropoff_dest_distance = int(
                     jormungandr.street_network.utils.crowfly_distance_between(dropoff_coord, arrival_coord)
                 )
+                # we choose to calculate with speed=1.12 the average speed for a walker
                 res.dropoff_dest_duration = jormungandr.street_network.utils.get_manhattan_duration(
                     res.dropoff_dest_distance, 1.12
                 )
