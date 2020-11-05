@@ -159,7 +159,7 @@ class RidesharingServiceManager(object):
         self.update_config()
         return self._ridesharing_services_legacy + list(self._ridesharing_services.values())
 
-    def decorate_journeys_with_ridesharing_offers(self, response, request):
+    def decorate_journeys_with_ridesharing_offers(self, response, request, instance):
         # TODO: disable same journey schedule link for ridesharing journey?
         if self.greenlet_pool_actived:
             logging.info('ridesharing is called in async mode')
@@ -191,10 +191,11 @@ class RidesharingServiceManager(object):
                                 section.origin,
                                 section.destination,
                                 period_extremity,
+                                instance,
                             )
                         else:
                             pb_rsjs, pb_tickets, pb_fps = self.build_ridesharing_journeys(
-                                section.origin, section.destination, period_extremity
+                                section.origin, section.destination, period_extremity, instance
                             )
                             self.add_new_ridesharing_results(
                                 pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
@@ -217,7 +218,9 @@ class RidesharingServiceManager(object):
 
         response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
-    def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
+    def get_ridesharing_journeys_with_feed_publishers(
+        self, from_coord, to_coord, period_extremity, instance, limit=None
+    ):
         calls = []
         res = []
         fps = set()
@@ -225,7 +228,9 @@ class RidesharingServiceManager(object):
         for service in self.get_all_ridesharing_services():
 
             def _call(s=service):
-                return s.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+                return s.request_journeys_with_feed_publisher(
+                    from_coord, to_coord, period_extremity, instance, limit
+                )
 
             calls.append(_call)
 
@@ -243,13 +248,15 @@ class RidesharingServiceManager(object):
 
         return res, fps
 
-    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity):
+    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity, instance):
         from_coord = get_pt_object_coord(from_pt_obj)
         to_coord = get_pt_object_coord(to_pt_obj)
         from_str = "{},{}".format(from_coord.lat, from_coord.lon)
         to_str = "{},{}".format(to_coord.lat, to_coord.lon)
         try:
-            rsjs, fps = self.get_ridesharing_journeys_with_feed_publishers(from_str, to_str, period_extremity)
+            rsjs, fps = self.get_ridesharing_journeys_with_feed_publishers(
+                from_str, to_str, period_extremity, instance
+            )
         except Exception as e:
             self.logger.exception(
                 'Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}', from_str, to_str

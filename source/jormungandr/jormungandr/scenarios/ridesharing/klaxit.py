@@ -105,27 +105,27 @@ class Klaxit(AbstractRidesharingService):
         ridesharing_journeys = []
 
         for offer in raw_json:
+
+            def _retreive_shape(field):
+                shape = []
+                decoded_shape = decode_polyline(offer.get(field), precision=5)
+                if decoded_shape:
+                    shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in decoded_shape))
+                return shape
+
             res = rsj.RidesharingJourney()
             res.metadata = self.journey_metadata
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
+
             res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
             res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
-            res.origin_pickup_shape = []
-            origin_pickup_shape = decode_polyline(offer.get('departureToPickupWalkingPolyline'), precision=5)
-            if origin_pickup_shape:
-                res.origin_pickup_shape.extend(
-                    (type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in origin_pickup_shape)
-                )
+            res.origin_pickup_shape = _retreive_shape('departureToPickupWalkingPolyline')
+
             res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
             res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
-            res.dropoff_dest_shape = []
-            dropoff_dest_shape = decode_polyline(offer.get('dropoffToArrivalWalkingPolyline'), precision=5)
-            if dropoff_dest_shape:
-                res.dropoff_dest_shape.extend(
-                    (type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in dropoff_dest_shape)
-                )
+            res.dropoff_dest_shape = _retreive_shape('dropoffToArrivalWalkingPolyline')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
@@ -172,7 +172,7 @@ class Klaxit(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'

@@ -187,7 +187,7 @@ class Blablalines(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
