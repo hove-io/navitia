@@ -1,4 +1,11 @@
-Checks:          '-*, modernize-avoid-bind, modernize-concat-nested-namespaces, modernize-deprecated-headers, modernize-deprecated-ios-base-aliases, modernize-loop-convert'
+Checks: '-*,
+        modernize-avoid-bind,
+        modernize-concat-nested-namespaces,
+        modernize-deprecated-headers,
+        modernize-deprecated-ios-base-aliases,
+        modernize-loop-convert,
+        modernize-make-shared, modernize-make-unique,
+        modernize-pass-by-value'
 HeaderFilterRegex: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file

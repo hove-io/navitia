@@ -32,6 +32,7 @@ www.navitia.io
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/geometry.hpp>
+#include <utility>
 
 namespace navitia {
 namespace georef {
@@ -40,17 +41,17 @@ Admin::Admin(idx_t idx,
              const std::string& uri,
              const std::string& name,
              int level,
-             const std::string& insee,
-             const std::string& label,
+             std::string insee,
+             std::string label,
              const nt::GeographicalCoord& coord,
-             const Postal_codes& postal_codes)
+             Postal_codes postal_codes)
     : Header(idx, uri),
       Nameable(name),
       level(level),
-      insee(insee),
-      label(label),
+      insee(std::move(insee)),
+      label(std::move(label)),
       coord(coord),
-      postal_codes(postal_codes) {}
+      postal_codes(std::move(postal_codes)) {}
 
 std::string Admin::get_range_postal_codes() {
     std::string post_code;

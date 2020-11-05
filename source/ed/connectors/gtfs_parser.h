@@ -367,7 +367,7 @@ public:
     GtfsData gtfs_data;
 
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GenericGtfsParser(const std::string& path);
+    GenericGtfsParser(std::string path);
     virtual ~GenericGtfsParser();
 
     /// Remplit la structure passée en paramètre

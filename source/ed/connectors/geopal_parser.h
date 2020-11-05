@@ -62,7 +62,7 @@ public:
 
     ed::Georef data;
 
-    GeopalParser(const std::string& path);
+    GeopalParser(std::string path);
 
     void fill();
 };
