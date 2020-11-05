@@ -55,6 +55,7 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
+UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 
 
@@ -159,6 +160,17 @@ def str_datetime_utc_to_local(dt, timezone):
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
 
 
+def local_str_date_to_utc(str, tz=None):
+    timezone = tz or get_timezone()
+    dt = str_to_dt(str)
+    if timezone:
+        local = pytz.timezone(timezone)
+        local_dt = local.localize(dt, is_dst=None)
+        utc_date = local_dt.astimezone(pytz.UTC)
+        return utc_date
+    return None
+
+
 def timestamp_to_datetime(timestamp, tz=None):
     """
     Convert a timestamp to datetime
@@ -182,8 +194,8 @@ def timestamp_to_datetime(timestamp, tz=None):
     return None
 
 
-def dt_to_str(dt):
-    return dt.strftime(DATETIME_FORMAT)
+def dt_to_str(dt, _format=DATETIME_FORMAT):
+    return dt.strftime(_format)
 
 
 def timestamp_to_str(timestamp):

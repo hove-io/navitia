@@ -46,7 +46,14 @@ from jormungandr.interfaces.v1.make_links import (
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp, dt_to_str, has_invalid_reponse_code, journeys_absent
+from jormungandr.utils import (
+    date_to_timestamp,
+    dt_to_str,
+    has_invalid_reponse_code,
+    journeys_absent,
+    local_str_date_to_utc,
+    UTC_DATETIME_FORMAT,
+)
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
@@ -272,11 +279,12 @@ class add_tad_links(object):
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
                         args = dict()
+                        date_utc = local_str_date_to_utc(s.get('departure_date_time'), instance.timezone)
                         args['departure_latitude'] = from_coord.get('lat')
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = s.get('departure_date_time')
+                        args['requested_departure_time'] = dt_to_str(date_utc, _format=UTC_DATETIME_FORMAT)
                         url = "{}://home?".format(app_value)
                         tad_link = make_external_service_link(
                             url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args
