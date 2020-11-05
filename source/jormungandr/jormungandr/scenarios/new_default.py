@@ -1229,7 +1229,7 @@ class Scenario(simple.Scenario):
                 logger.debug('trying to add ridesharing journeys')
                 try:
                     instance.ridesharing_services_manager.decorate_journeys_with_ridesharing_offers(
-                        pb_response, request
+                        pb_response, request, instance
                     )
                 except Exception:
                     logger.exception('Error while retrieving ridesharing ads')

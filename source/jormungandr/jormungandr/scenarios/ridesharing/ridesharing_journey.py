@@ -80,6 +80,8 @@ class RidesharingJourney(object):
         'ridesharing_ad',
         'pickup_place',
         'dropoff_place',
+        'departure_date_time',
+        'arrival_date_time',
         'pickup_date_time',
         'dropoff_date_time',
         # driver will be Individual
@@ -90,4 +92,8 @@ class RidesharingJourney(object):
         'available_seats',
         'origin_pickup_duration',
         'dropoff_dest_duration',
+        'origin_pickup_distance',
+        'dropoff_dest_distance',
+        'origin_pickup_shape',
+        'dropoff_dest_shape',
     )

@@ -150,7 +150,7 @@ def blablalines_test():
             datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
         )
         ridesharing_journeys, feed_publisher = blablalines.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity
+            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance=DummyInstance()
         )
 
         assert len(ridesharing_journeys) == 2
@@ -215,6 +215,7 @@ def test_request_journeys_should_raise_on_non_200():
                 utils.PeriodExtremity(
                     datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
                 ),
+                DummyInstance(),
             )
 
         exception_params = e.value.get_params().values()

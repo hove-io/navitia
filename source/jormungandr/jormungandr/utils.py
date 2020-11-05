@@ -70,6 +70,12 @@ def kilometers_to_meters(distance):
     return distance * 1000.0
 
 
+class Coords:
+    def __init__(self, lat, lon):
+        self.lat = float(lat)
+        self.lon = float(lon)
+
+
 def is_coord(uri):
     # for the moment we do a simple check
     return get_lon_lat(uri) != (None, None)

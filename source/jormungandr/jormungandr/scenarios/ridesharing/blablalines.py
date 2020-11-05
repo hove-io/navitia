@@ -41,8 +41,9 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline
+from jormungandr.utils import decode_polyline, Coords
 from navitiacommon import type_pb2
+import jormungandr.street_network.utils
 
 DEFAULT_BLABLALINES_FEED_PUBLISHER = {
     'id': 'blablalines',
@@ -99,7 +100,7 @@ class Blablalines(AbstractRidesharingService):
             'network': self.network,
         }
 
-    def _make_response(self, raw_json):
+    def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
 
         if not raw_json:
             return []
@@ -114,29 +115,42 @@ class Blablalines(AbstractRidesharingService):
             res.distance = offer.get('distance')
             res.duration = offer.get('duration')
             res.ridesharing_ad = offer.get('web_url')
+
+            # departure coord
+            lat, lon = from_coord.split(',')
+            departure_coord = Coords(lat=lat, lon=lon)
+
+            # pick up coord
+            pickup_lat = offer.get('pickup_latitude')
+            pickup_lon = offer.get('pickup_longitude')
+            pickup_coord = Coords(lat=pickup_lat, lon=pickup_lon)
+
+            res.pickup_place = rsj.Place(addr='', lat=pickup_lat, lon=pickup_lon)
+
             res.origin_pickup_duration = offer.get('departure_to_pickup_walking_time')
+            res.origin_pickup_shape = None  # Not specified
+            res.origin_pickup_distance = int(
+                jormungandr.street_network.utils.crowfly_distance_between(departure_coord, pickup_coord)
+            )
+
+            # drop off coord
+            dropoff_lat = offer.get('dropoff_latitude')
+            dropoff_lon = offer.get('dropoff_longitude')
+            dropoff_coord = Coords(lat=dropoff_lat, lon=dropoff_lon)
+
+            res.dropoff_place = rsj.Place(addr='', lat=dropoff_lat, lon=dropoff_lon)
+
+            # arrival coord
+            lat, lon = to_coord.split(',')
+            arrival_coord = Coords(lat=lat, lon=lon)
+
             res.dropoff_dest_duration = offer.get('dropoff_to_arrival_walking_time')
-
-            res.pickup_place = rsj.Place(
-                addr='', lat=offer.get('pickup_latitude'), lon=offer.get('pickup_longitude')
-            )
-            res.dropoff_place = rsj.Place(
-                addr='', lat=offer.get('dropoff_latitude'), lon=offer.get('dropoff_longitude')
+            res.dropoff_dest_shape = None  # Not specified
+            res.dropoff_dest_distance = int(
+                jormungandr.street_network.utils.crowfly_distance_between(dropoff_coord, arrival_coord)
             )
 
-            # shape is a list of type_pb2.GeographicalCoord()
-            res.shape = []
-            shape = decode_polyline(offer.get('journey_polyline'), precision=5)
-            if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
-
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                res.shape.append(
-                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                )
+            res.shape = self._retreive_main_shape(offer, 'journey_polyline', res.pickup_place, res.dropoff_place)
 
             currency = offer.get('price', {}).get('currency')
             if currency == "EUR":
@@ -149,9 +163,11 @@ class Blablalines(AbstractRidesharingService):
             res.available_seats = offer.get('available_seats')
             res.total_seats = None
 
-            # not specified
-            res.pickup_date_time = None
-            res.dropoff_date_time = None
+            # departure coord is absent in the offer and hence to be generated from the request
+            res.departure_date_time = request_datetime
+            res.pickup_date_time = res.departure_date_time + res.origin_pickup_duration
+            res.dropoff_date_time = res.pickup_date_time + res.duration
+            res.arrival_date_time = res.dropoff_date_time + res.dropoff_dest_duration
 
             res.driver = rsj.Individual(alias=None, gender=None, image=None, rate=None, rate_count=None)
 
@@ -159,7 +175,7 @@ class Blablalines(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -210,7 +226,7 @@ class Blablalines(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(resp.json())
+            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.blablalines').info(
                 'Received ridesharing offers : %s',
