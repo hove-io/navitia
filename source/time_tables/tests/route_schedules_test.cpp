@@ -504,10 +504,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
     b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st4", "3:00"_t)("st5", "4:00"_t)("st6",
                                                                                                         "5:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -543,10 +540,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
                                                                                                         "7:00"_t);
     b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st6", "8:00"_t)("st7", "9:00"_t)("st8", "10:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -579,10 +573,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
     b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     using btp = boost::posix_time::time_period;
     b.impact(nt::RTLevel::Adapted, "Disruption 1")
@@ -651,10 +642,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
     b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     using btp = boost::posix_time::time_period;
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
@@ -731,10 +719,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     b.data->pt_data->meta_vjs.get_mut("vj:0")->associated_calendars.insert({c->uri, a1});
     b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator_cal(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -791,10 +776,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
         "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
         "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -822,10 +804,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
 
     b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")
         .name("vj:1")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto* data_ptr = b.data.get();
     auto first_sunday = navitia::to_posix_timestamp("20180101T000000"_dt);

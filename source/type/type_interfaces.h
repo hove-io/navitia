@@ -326,6 +326,10 @@ template <>
 inline Type_e get_type_e<StopPoint>() {
     return Type_e::StopPoint;
 }
+template <>
+inline Type_e get_type_e<Line>() {
+    return Type_e::Line;
+}
 
 }  // namespace type
 // trait to access the number of elements in the Mode_e enum

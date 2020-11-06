@@ -35,6 +35,7 @@ except ImportError:
     pass
 import logging, operator
 from jormungandr.scenarios import new_default
+from jormungandr import app
 from jormungandr.utils import PeriodExtremity, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
@@ -418,6 +419,7 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
         self._scenario = Distributed()
+        self.greenlet_pool_size = app.config.get('GREENLET_POOL_SIZE', 8)
 
     def get_context(self):
         return PartialResponseContext()
@@ -435,7 +437,9 @@ class Scenario(new_default.Scenario):
         Note that the cleaning process depends on the implementation of futures.
         """
         try:
-            with FutureManager() as future_manager, timed_logger(logger, 'call_kraken', request_id):
+            with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(
+                logger, 'call_kraken', request_id
+            ):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
                         future_manager, request, instance, krakens_call, type_pb2.ISOCHRONE
@@ -457,7 +461,7 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
 
         try:
-            with FutureManager() as future_manager, timed_logger(
+            with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(
                 logger, 'finalise_journeys', "{}_finalise_journeys".format(request_id)
             ):
                 self._scenario.finalise_journeys(
@@ -500,7 +504,7 @@ class Scenario(new_default.Scenario):
 
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         try:
-            with FutureManager() as future_manager:
+            with FutureManager(self.greenlet_pool_size) as future_manager:
                 return self._scenario._compute_isochrone_common(
                     future_manager, request, instance, krakens_call, type_pb2.graphical_isochrone
                 )

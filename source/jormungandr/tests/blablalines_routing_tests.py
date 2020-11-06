@@ -34,7 +34,7 @@ from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, get_links_dict
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
-DUMMY_BLABLACAR_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
+DUMMY_BLABLALINES_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
     'scenario': 'new_default',
@@ -46,16 +46,16 @@ MOCKED_INSTANCE_CONF = {
                     "api_key": "key",
                     "network": "Super Covoit",
                     "timedelta": 3600,
-                    "feed_publisher": DUMMY_BLABLACAR_FEED_PUBLISHER,
+                    "feed_publisher": DUMMY_BLABLALINES_FEED_PUBLISHER,
                 },
-                "class": "jormungandr.scenarios.ridesharing.blablacar.Blablacar",
+                "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
             }
         ]
     },
 }
 
 
-BLABLACAR_RESPONSE = [
+BLABLALINES_RESPONSE = [
     {
         "id": "53e0ac4f-e693-4e29-8f69-eb1142d5b99e_2020-09-28",
         "journey_polyline": "svr_H}fyC{@g@[[o@u@Qc@[sBMm@Qe@[g@e@k@aBuAIKOI?AACCEEAIDAN@DMf@GZ@d@QbBOzAy@xFAJ]r@IPOQm@a@wDoB?C?ECIGAGD?@m@c@uCiCcCgBEKsB}AK?IGs@i@m@y@Wm@oAoDaB_EYk@y@kAyDmG_A}Ao@}AQeAIcAOiBUw@Yc@WWUKiAe@USSQKOACAIEQMOOGO@MHKPGd@CZK^INq@`A}@lAmEhGcIdLcPlUqGdJ[XE?K@KFK\AH?DQl@aFjH{IlMoCdEgBrCkG~JqDtFcLpPyb@pn@aHdKoHjKcAtAQLSLC?G@KFMZAVI`@eCvDoAnBs@rAe@~@{@pBg@tAk@fBcEpO{FpTeL~a@wBfIoAjEy@fBK?KDOPIXCd@F`@UxAY`AQn@o@zCwAxFiAbEMd@cCdJ_BxF[t@GAE?KDILAP@RHLBB]`Bw@fDYbAQn@gBrGqAnFq@rCyIj\qH|XMNe@vAq@dCcFpRaF|QuFbT}CdL{CbLgE`PiCjJcApDYWoB{@gBw@_EiBiAi@[KwBmAiF}CuAm@Q@}A{@sFeDkDqBsIwEkYmOyJ_FgEmBiEeB_EuAkCw@aCm@{AWaCa@aCYcF[yCG_D@iEPaDXeANmBZsCl@wDdA_DhAcEfBiHjDoLzF}h@fWoKbFcAh@]E_Cl@s@L_AJqA?}@IkAOcAUaA[y@e@{@i@SISA_@Fa@T]XYd@Gn@R|@X~@p@dAn@|@h@z@?B?D@HJNB?@?|@~ArE`IPl@t@tAt@hBdAvCzBxFj@tHn@|Iz@zL~@nMf@hGLb@F`@TzCJpB^@VERSN]@a@Ae@|By@bA[dCw@NKpDiAxAc@|@U",
@@ -74,19 +74,21 @@ BLABLACAR_RESPONSE = [
 ]
 
 
-def mock_blablacar(_, params):
-    return MockResponse(BLABLACAR_RESPONSE, 200)
+def mock_blablalines(_, params):
+    return MockResponse(BLABLALINES_RESPONSE, 200)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mock_http_blablacar(monkeypatch):
-    monkeypatch.setattr('jormungandr.scenarios.ridesharing.blablacar.Blablacar._call_service', mock_blablacar)
+def mock_http_blablalines(monkeypatch):
+    monkeypatch.setattr(
+        'jormungandr.scenarios.ridesharing.blablalines.Blablalines._call_service', mock_blablalines
+    )
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
+class TestBlablalines(NewDefaultScenarioAbstractTestFixture):
     """
-    Integration test with Blablacar
+    Integration test with Blablalines
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
     """
 
@@ -114,7 +116,7 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
         tickets = response.get('tickets')
         assert len(tickets) == 1
         assert tickets[0].get('cost').get('currency') == 'centime'
-        assert tickets[0].get('cost').get('value') == '1.0'
+        assert tickets[0].get('cost').get('value') == '100.0'
         ticket = tickets[0]
 
         ridesharing_kraken = journeys[0]
@@ -135,7 +137,7 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 18869
-        assert rs_journeys[0].get('durations').get('walking') == 0  # two crow_fly sections have 0 duration
+        assert rs_journeys[0].get('durations').get('walking') == 250
         assert rs_journeys[0].get('durations').get('ridesharing') == 1301
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -143,13 +145,21 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
+        assert rsj_sections[0].get('duration') == 174
+        assert (
+            rsj_sections[0].get('departure_date_time') == '20120614T075500'
+        )  # for blablalines departure_date_time = request_date_time
+        assert rsj_sections[0].get('arrival_date_time') == '20120614T075754'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
+        assert rsj_sections[1].get('duration') == 1301
+        assert rsj_sections[1].get('departure_date_time') == '20120614T075754'
+        assert rsj_sections[1].get('arrival_date_time') == '20120614T081935'
         assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
         assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
-        assert rsj_info.get('operator') == 'blablacar'
+        assert rsj_info.get('operator') == 'blablalines'
         assert rsj_info.get('seats').get('available') == 3
 
         assert 'total' not in rsj_info.get('seats')
@@ -167,11 +177,14 @@ class TestBlablacar(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
+        assert rsj_sections[2].get('duration') == 76
+        assert rsj_sections[2].get('departure_date_time') == '20120614T081935'
+        assert rsj_sections[2].get('arrival_date_time') == '20120614T082051'
 
         fps = response['feed_publishers']
         assert len(fps) == 2
 
         def equals_to_dummy_fp(fp):
-            return fp == DUMMY_BLABLACAR_FEED_PUBLISHER
+            return fp == DUMMY_BLABLALINES_FEED_PUBLISHER
 
         assert any(equals_to_dummy_fp(fp) for fp in fps)

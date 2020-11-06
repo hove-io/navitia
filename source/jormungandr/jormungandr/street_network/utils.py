@@ -47,6 +47,10 @@ def crowfly_distance_between(start_coord, end_coord):
     return EARTH_RADIUS_IN_METERS * 2.0 * math.asin(math.sqrt(lat_h + tmp * lon_h))
 
 
+def get_manhattan_duration(distance, speed):
+    return int((distance * math.sqrt(2)) / speed)
+
+
 def make_speed_switcher(req):
     from jormungandr.fallback_modes import FallbackModes
 

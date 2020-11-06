@@ -174,6 +174,8 @@ stop_points_nearby_duration = 5 * 60  # In secs
 
 asynchronous_ridesharing = False
 
+ridesharing_greenlet_pool_size = 10
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

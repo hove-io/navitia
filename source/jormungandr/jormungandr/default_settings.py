@@ -24,6 +24,12 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
 
 DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
 
+# Active the asynchronous ridesharing mode
+ASYNCHRONOUS_RIDESHARING = boolean(os.getenv('JORMUNGANDR_ASYNCHRONOUS_RIDESHARING', False))
+# Active ridesharing service call with async greenlet
+GREENLET_POOL_FOR_RIDESHARING_SERVICES = boolean(os.getenv('JORMUNGANDR_GREENLET_POOL_FOR_RIDESHARING', False))
+RIDESHARING_GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_RIDESHARING_GREENLET_POOL_SIZE', 10))
+
 # disable authentication
 PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 
@@ -168,8 +174,8 @@ CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S = 60  # the circuit breaker retries after this 
 CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_BLABLACAR_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_BLABLACAR_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_BLABLALINES_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_BLABLALINES_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 CIRCUIT_BREAKER_MAX_KAROS_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_KAROS_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)

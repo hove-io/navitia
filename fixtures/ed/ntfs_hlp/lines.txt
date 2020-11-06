@@ -1,0 +1,3 @@
+line_id,line_code,line_name,forward_line_name,forward_direction,backward_line_name,backward_direction,line_color,line_text_color,line_sort_order,network_id,commercial_mode_id,contributor_id,geometry_id,line_opening_time,line_closing_time
+SAR:0080,"80","Rennes (Henri Fréville) <> Laillé (Gingouillère) <> Bruz (DGA-MI)","Laillé (Gingouillère) <> Bruz (DGA-MI)",SAR:SA:4708,"Rennes (Henri Fréville)",SAR:SA:1447,BA65A5,FFFFFF,48,STAR,Bus,SAR,,06:50:00,20:43:00
+SAR:0072,"72","Rennes (Henri Fréville) -> Chartres-de-Bretagne -> Pont-Péan (Bois Esnault)","Chartres-de-Bretagne - Pont-Péan - Laillé",SAR:SA:3901,"Rennes (Henri Fréville)",SAR:SA:1447,004F9E,FFFFFF,41,STAR,Bus,SAR,,06:05:00,26:24:00

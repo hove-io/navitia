@@ -758,6 +758,10 @@ def is_valid_line(line, depth_check=1):
     get_not_null(line, "name")
     get_not_null(line, "id")
 
+    for physical_mode in line.get("physical_modes", []):
+        is_valid_physical_mode(physical_mode)
+    is_valid_commercial_mode(get_not_null(line, "commercial_mode"))
+
     for c in line.get('comments', []):
         is_valid_comment(c)
 

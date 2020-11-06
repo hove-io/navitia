@@ -39,6 +39,7 @@ www.navitia.io
 #include <fstream>
 #include <iostream>
 #include <set>
+#include <utility>
 
 namespace nm = ed::types;
 typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
@@ -1151,7 +1152,7 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     }
 }
 
-GenericGtfsParser::GenericGtfsParser(const std::string& path) : path(path) {
+GenericGtfsParser::GenericGtfsParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
 }
 GenericGtfsParser::~GenericGtfsParser() {}

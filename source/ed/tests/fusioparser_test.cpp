@@ -28,6 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include <boost/range/algorithm/find_if.hpp>
 #include "ed/data.h"
 #include "ed/connectors/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
@@ -563,4 +564,115 @@ BOOST_AUTO_TEST_CASE(gtfs_stop_code_tests) {
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("J", "gtfs_stop_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("E", "external_code"), true);
     BOOST_REQUIRE_EQUAL(data.if_object_code_exist("A", "external_code"), true);
+}
+
+ed::types::VehicleJourney* find_vj_by_heasign(ed::Data& data, const std::string headsign) {
+    auto it = boost::find_if(data.vehicle_journeys, [&](const auto vj) { return vj->headsign == headsign; });
+
+    if (it == data.vehicle_journeys.end())
+        throw std::invalid_argument("No Vj with headsign : " + headsign);
+
+    return *it;
+}
+
+BOOST_AUTO_TEST_CASE(gtfs_hlp_pickup_and_drop_off_from_data) {
+    ed::connectors::FusioParser parser(ntfs_path + "_hlp");
+    ed::Data data;
+    parser.fill(data);
+    data.complete();
+
+    /*
+     * When nothing is stated for 'pickup_type' and 'drop_off_type' in the data (stop_times.txt)
+     * we allow ONLY FOR a stay-in on DIFFERENT stop points :
+     *      * pickup at the last stop for the starting vehicle of a stay-in  (A)
+     *      * drop-off at the first stop for the ending vehicle of a stay-in  (B)
+     */
+    {
+        auto start_stay_in_vehicle = find_vj_by_heasign(data, "start_stayin_diff_sp");
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, true);  // (A)
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = find_vj_by_heasign(data, "end_stayin_diff_sp");
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, true);  // (B)
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
+
+    {
+        /*
+         * If 'pickup_type' and 'drop_off_type' are stated in the data, we want to honour it.
+         */
+        auto start_stay_in_vehicle = find_vj_by_heasign(data, "start_stayin_diff_sp_with_data");
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, false);  // forbidden in the data
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = find_vj_by_heasign(data, "end_stayin_diff_sp_with_data");
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, false);  // forbidden in the data
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
+
+    /*
+     * No special case for a stray-in on the same stop point
+     */
+    {
+        auto start_stay_in_vehicle = find_vj_by_heasign(data, "start_stayin_same_sp");
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, false);  // (A)
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = find_vj_by_heasign(data, "end_stayin_same_sp");
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, false);  // (B)
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
+
+    {
+        /*
+         * If 'pickup_type' and 'drop_off_type' are stated in the data, we want to honour it.
+         */
+        auto start_stay_in_vehicle = find_vj_by_heasign(data, "start_stayin_same_sp_with_data");
+        auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+
+        auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, false);  // forbidden in the data
+        BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+
+        auto end_stay_in_vehicle = find_vj_by_heasign(data, "end_stayin_same_sp_with_data");
+        auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
+        BOOST_CHECK_EQUAL(end_vehicle_start->pick_up_allowed, true);
+        BOOST_CHECK_EQUAL(end_vehicle_start->drop_off_allowed, false);  // forbidden in the data
+
+        auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
+        BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+    }
 }

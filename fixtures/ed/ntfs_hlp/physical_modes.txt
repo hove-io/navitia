@@ -1,0 +1,2 @@
+physical_mode_id,physical_mode_name,co2_emission
+Bus,"Bus",129.7

@@ -105,11 +105,20 @@ class Klaxit(AbstractRidesharingService):
         ridesharing_journeys = []
 
         for offer in raw_json:
+
             res = rsj.RidesharingJourney()
             res.metadata = self.journey_metadata
             res.distance = offer.get('distance')
             res.ridesharing_ad = offer.get('webUrl')
             res.duration = offer.get('duration')
+
+            res.origin_pickup_duration = offer.get('departureToPickupWalkingTime')
+            res.origin_pickup_distance = offer.get('departureToPickupWalkingDistance')
+            res.origin_pickup_shape = self._retreive_shape(offer, 'departureToPickupWalkingPolyline')
+
+            res.dropoff_dest_duration = offer.get('dropoffToArrivalWalkingTime')
+            res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
+            res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
             res.pickup_place = rsj.Place(
                 addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
@@ -118,29 +127,19 @@ class Klaxit(AbstractRidesharingService):
                 addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
             )
 
-            # shape is a list of type_pb2.GeographicalCoord()
-            res.shape = []
-            shape = decode_polyline(offer.get('journeyPolyline'), precision=5)
-            if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
-                res.shape.append(type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
+            res.shape = self._retreive_main_shape(offer, 'journeyPolyline', res.pickup_place, res.dropoff_place)
 
-            if shape:
-                res.shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in shape))
-
-            if not shape or res.dropoff_place.lon != shape[-1][0] or res.dropoff_place.lat != shape[-1][1]:
-                res.shape.append(
-                    type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat)
-                )
-
-            res.price = offer.get('price', {}).get('amount')
+            # For Klaxit the price is in euro
+            res.price = offer.get('price', {}).get('amount') * 100.0
             res.currency = "centime"
 
             res.available_seats = offer.get('available_seats')
             res.total_seats = None
 
             res.pickup_date_time = offer.get('driverDepartureDate')
-            if res.pickup_date_time is not None:
-                res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
+            res.departure_date_time = res.pickup_date_time - res.origin_pickup_duration
+            res.dropoff_date_time = res.pickup_date_time + offer.get('duration')
+            res.arrival_date_time = res.dropoff_date_time + res.dropoff_dest_duration
 
             driver_alias = offer.get('driver', {}).get('alias')
             driver_grade = offer.get('driver', {}).get('grade')
@@ -154,7 +153,7 @@ class Klaxit(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -193,14 +192,14 @@ class Klaxit(AbstractRidesharingService):
         if resp:
             r = self._make_response(resp.json())
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
-            logging.getLogger('stat.ridesharing.instant-system').info(
+            logging.getLogger('stat.ridesharing.klaxit').info(
                 'Received ridesharing offers : %s',
                 len(r),
                 extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': len(r)},
             )
             return r
         self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
-        logging.getLogger('stat.ridesharing.instant-system').info(
+        logging.getLogger('stat.ridesharing.klaxit').info(
             'Received ridesharing offers : 0',
             extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': 0},
         )

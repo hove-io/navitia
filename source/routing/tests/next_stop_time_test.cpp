@@ -1052,10 +1052,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
     b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1217,10 +1214,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
     b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1401,10 +1395,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(
         spa3, sp3_arrival);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1623,10 +1614,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     std::string spa2 = "stop2";
     b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1774,10 +1762,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     b.frequency_vj("A", start_time1, end_time1, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
     b.frequency_vj("A", start_time2, end_time2, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -2195,10 +2180,7 @@ BOOST_AUTO_TEST_CASE(next_stop_time_with_distant_bounds) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     b.vj("A", "10000001", "")(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -2399,10 +2381,7 @@ BOOST_AUTO_TEST_CASE(freq_next_stop_time_with_distant_bounds) {
     std::string spa2 = "stop2";
     b.frequency_vj("A", start_time, end_time, headway_sec, "", "10000001")(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);

@@ -170,7 +170,7 @@ def klaxit_service_test():
         )
 
         ridesharing_journeys, feed_publisher = klaxit.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity
+            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance=DummyInstance()
         )
 
         assert len(ridesharing_journeys) == 2
@@ -194,7 +194,7 @@ def klaxit_service_test():
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
 
-        assert ridesharing_journeys[0].price == 0.51
+        assert ridesharing_journeys[0].price == 51.0
         assert ridesharing_journeys[0].currency == 'centime'
 
         # Klaxit doesn't have any information on seats
@@ -214,7 +214,7 @@ def klaxit_service_test():
         assert ridesharing_journeys[1].dropoff_place.lat == 48.8559454289402
         assert ridesharing_journeys[1].dropoff_place.lon == 2.37563525508835
 
-        assert ridesharing_journeys[1].price == 0.56
+        assert ridesharing_journeys[1].price == pytest.approx(56.0, abs=0.01)
         assert ridesharing_journeys[1].currency == 'centime'
 
         # Klaxit doesn't have any information on seats
@@ -241,6 +241,7 @@ def test_request_journeys_should_raise_on_non_200():
                 utils.PeriodExtremity(
                     datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
                 ),
+                DummyInstance(),
             )
 
         exception_params = e.value.get_params().values()

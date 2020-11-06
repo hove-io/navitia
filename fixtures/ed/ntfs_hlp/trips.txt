@@ -1,0 +1,9 @@
+route_id,service_id,trip_id,trip_headsign,block_id,company_id,physical_mode_id,trip_property_id,contributor_id,geometry_id,dataset_id
+SAR:0072,12,SAR:null012972-1,start_stayin_diff_sp,6919,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0080,12,SAR:null014029-1,end_stayin_diff_sp,6919,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0072,12,SAR:null012972-2,start_stayin_diff_sp_with_data,7020,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0080,12,SAR:null014029-2,end_stayin_diff_sp_with_data,7020,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0072,12,SAR:null012972-3,start_stayin_same_sp,8030,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0080,12,SAR:null014029-3,end_stayin_same_sp,8030,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0072,12,SAR:null012972-4,start_stayin_same_sp_with_data,9040,SAR:1,Bus,1,SAR,SAR:0,
+SAR:0080,12,SAR:null014029-4,end_stayin_same_sp_with_data,9040,SAR:1,Bus,1,SAR,SAR:0,
