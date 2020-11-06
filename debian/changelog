@@ -1,3 +1,14 @@
+navitia2 (8.0.0) unstable; urgency=low
+
+  * [Jormun] adapt properly durations, distances and sections for ridesharing journeys  <https://github.com/CanalTP/navitia/pull/3316>
+  * [Kraken] terminus shchedules API: Group by StopArea  <https://github.com/CanalTP/navitia/pull/3313>
+  * [Jormungandr] Add lines in StopArea and StopPoint when depth = 3 in the query  <https://github.com/CanalTP/navitia/pull/3312>
+  * [Jormun] Ridesharing async mode with greenlet  <https://github.com/CanalTP/navitia/pull/3293>
+  * [Jormun] Rename Blablacar to Blablalines, price in centime, crofly durations calculated   <https://github.com/CanalTP/navitia/pull/3309>
+  * [ed] Fix pickup and drop-off integrity for stay-in  <https://github.com/CanalTP/navitia/pull/3304>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Fri, 06 Nov 2020 14:11:30 +0100
+
 navitia2 (7.3.0) unstable; urgency=low
 
   * [Kraken] reactivate the parameter max_extra_second_pass  <https://github.com/CanalTP/navitia/pull/3306>
