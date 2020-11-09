@@ -287,6 +287,7 @@ struct calendar_fixture {
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
+        b.data->pt_data->codes.add(b.get<nt::Network>("base_network"), "app_code", "ilevia");
 
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1);
