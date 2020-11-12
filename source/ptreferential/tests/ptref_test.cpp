@@ -736,6 +736,7 @@ BOOST_AUTO_TEST_CASE(test_ptref_complete_pathes) {
     const auto PhysicalMode = Type_e::PhysicalMode;
     const auto MetaVehicleJourney = Type_e::MetaVehicleJourney;
     const auto Impact = Type_e::Impact;
+    const auto LineGroup = Type_e::LineGroup;
     using p = std::vector<Type_e>;  // A path in the graph is a vector of PTRef types (only "source" is missing)
 
     BOOST_CHECK_EQUAL_RANGE(get_path(CommercialMode, StopArea), p({Line, Route, StopArea}));
@@ -783,19 +784,14 @@ BOOST_AUTO_TEST_CASE(test_ptref_complete_pathes) {
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, Network), p({VehicleJourney, Route, Line, Network}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, PhysicalMode), p({VehicleJourney, PhysicalMode}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, Route), p({VehicleJourney, Route}));
-    // BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, StopArea), p({VehicleJourney, Route, StopArea}));  // indirect shortcut
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, StopArea),
                             p({VehicleJourney, JourneyPattern, JourneyPatternPoint, StopPoint, StopArea}));
-    // BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, StopPoint), p({VehicleJourney, Route, StopPoint}));	// indirect
-    // shortcut
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, StopPoint),
                             p({VehicleJourney, JourneyPattern, JourneyPatternPoint, StopPoint}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, ValidityPattern), p({VehicleJourney, ValidityPattern}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Dataset, VehicleJourney), p({VehicleJourney}));
 
     BOOST_CHECK_EQUAL_RANGE(get_path(Impact, Company), p({Line, Company}));
-    // BOOST_CHECK_EQUAL_RANGE(get_path(Impact, Dataset), p({Route, Dataset}));  // indirect shortcut  // 2 paths with
-    // Route, VehicleJourney, Dataset
     BOOST_CHECK_EQUAL_RANGE(get_path(Impact, JourneyPattern), p({Route, JourneyPattern}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Impact, JourneyPatternPoint), p({StopPoint, JourneyPatternPoint}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Impact, Line), p({Line}));
@@ -857,6 +853,10 @@ BOOST_AUTO_TEST_CASE(test_ptref_complete_pathes) {
     BOOST_CHECK_EQUAL_RANGE(get_path(Line, StopPoint), p({Route, StopPoint}));  // indirect shortcut
     BOOST_CHECK_EQUAL_RANGE(get_path(Line, ValidityPattern), p({Route, VehicleJourney, ValidityPattern}));
     BOOST_CHECK_EQUAL_RANGE(get_path(Line, VehicleJourney), p({Route, VehicleJourney}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(Line, LineGroup), p({LineGroup}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(LineGroup, Line), p({Line}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(Line, CommercialMode), p({CommercialMode}));
+    BOOST_CHECK_EQUAL_RANGE(get_path(CommercialMode, Line), p({Line}));
 
     BOOST_CHECK_EQUAL_RANGE(get_path(MetaVehicleJourney, Company), p({VehicleJourney, Company}));
     BOOST_CHECK_EQUAL_RANGE(get_path(MetaVehicleJourney, Dataset), p({VehicleJourney, Dataset}));
@@ -932,7 +932,6 @@ BOOST_AUTO_TEST_CASE(test_ptref_complete_pathes) {
     BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, Line), p({Route, Line}));  // indirect shortcut
     BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, MetaVehicleJourney),
                             p({StopPoint, JourneyPatternPoint, JourneyPattern, VehicleJourney, MetaVehicleJourney}));
-    // BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, Network), p({StopPoint, Route, Line, Network}));  // indirect shortcut
     BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, Network), p({Route, Line, Network}));
     BOOST_CHECK_EQUAL_RANGE(get_path(StopArea, PhysicalMode),
                             p({StopPoint, JourneyPatternPoint, JourneyPattern, PhysicalMode}));
