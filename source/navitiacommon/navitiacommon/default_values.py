@@ -74,6 +74,8 @@ min_bss = 4 * 60 + 3 * 60  # we want 4minute on the bike, so we add the time to 
 
 min_car = 5 * 60
 
+min_ridesharing = 10 * 60
+
 min_taxi = 4 * 60
 
 car_park_duration = 5 * 60

@@ -531,6 +531,12 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('max_car_no_park_direct_path_duration', instance_db, self.name)
 
+    @property
+    def min_ridesharing(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('min_ridesharing', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')

@@ -148,6 +148,7 @@ instance_fields = {
     'min_bike': fields.Raw,
     'min_bss': fields.Raw,
     'min_car': fields.Raw,
+    'min_ridesharing': fields.Raw,
     'min_taxi': fields.Raw,
     'min_tc_with_bike': fields.Raw,
     'min_tc_with_bss': fields.Raw,
