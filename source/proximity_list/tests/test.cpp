@@ -282,12 +282,12 @@ BOOST_AUTO_TEST_CASE(test_filter) {
     result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 
-    // Bad request
+    // To be able to manage filter with more than one type of pt_objects we don't manage filter error
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
     find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, {}, "stop_area.name=paspouet bachibouzouk", 1, 10, 0,
          data);
     result = pb_creator.get_response();
-    BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_poi_filter) {

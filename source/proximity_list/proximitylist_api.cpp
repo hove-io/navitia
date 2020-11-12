@@ -131,9 +131,7 @@ void find(navitia::PbCreator& pb_creator,
                 pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                          "Problem while parsing the query:" + parse_error.more);
                 return;
-            } catch (const ptref::ptref_error& pt_error) {
-                pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more);
-                return;
+            } catch (const std::exception&) {
             }
         }
         // We have to find all objects within distance, then apply the filter

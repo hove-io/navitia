@@ -176,6 +176,59 @@ class TestPlaces(AbstractTestFixture):
         assert places_nearby[0]["embedded_type"] == "stop_point"
         assert places_nearby[0]["id"] == "stop_point:stopC"
 
+    def test_places_nearby_with_filter_and_multi_type(self):
+        """
+        Check api /places_nearby with combination of multi parameter &type[] and &filter
+        """
+        # places_nearby with /coords and type[]=poi gives 4 pois
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=poi"
+        response = self.query(query)
+        assert len(response.get('places_nearby', [])) == 4
+        assert response.get('places_nearby', [])[0]['embedded_type'] == "poi"
+
+        # places_nearby with /coords and type[]=stop_point gives 4 stop_points
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point"
+        response = self.query(query)
+        assert len(response.get('places_nearby', [])) == 4
+        assert response.get('places_nearby', [])[0]['embedded_type'] == "stop_point"
+
+        # places_nearby with /coords and type[]=poi, filter=line.uri=D gives 0 poi (empty response)
+        query = "coords/0.000001;0.000898311281954/places_nearby?type[]=poi&filter=line.uri=D"
+        response, status = self.query_region(query, check=False)
+        assert status == 200
+        assert len(response.get('places_nearby', [])) == 0
+
+        # places_nearby with /coords and type[]=stop_point, filter=line.uri=D gives 2 stop_points
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&filter=line.uri=D"
+        response = self.query(query)
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 2
+        is_valid_places(places_nearby)
+        assert places_nearby[0]['embedded_type'] == "stop_point"
+        assert places_nearby[1]['embedded_type'] == "stop_point"
+
+        # places_nearby with /coords and type[]=stop_point&type[]=poi, filter=line.uri=D gives 2 stop_points
+        query = (
+            "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&type[]=poi&filter=line.uri=D"
+        )
+        response = self.query(query)
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 2
+        is_valid_places(places_nearby)
+        assert places_nearby[0]['embedded_type'] == "stop_point"
+        assert places_nearby[1]['embedded_type'] == "stop_point"
+
+        # Invalid filter of type unable_to_parse is managed
+        query = (
+            "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&type[]=poi&filter=toto=tata"
+        )
+        response = self.query(query)
+        assert 'error' in response
+        assert 'unable_to_parse' in response['error']['id']
+        assert (
+            response["error"]["message"] == "Problem while parsing the query:Filter: unable to parse toto=tata"
+        )
+
     def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
 
