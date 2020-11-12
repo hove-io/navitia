@@ -127,6 +127,10 @@ void find(navitia::PbCreator& pb_creator,
         if (!filter.empty()) {
             try {
                 indexes = ptref::make_query(type, filter, forbidden_uris, *pb_creator.data);
+            } catch (const ptref::parsing_error& parse_error) {
+                pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                         "Problem while parsing the query:" + parse_error.more);
+                return;
             } catch (const std::exception&) {
             }
         }

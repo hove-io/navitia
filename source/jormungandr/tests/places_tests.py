@@ -218,6 +218,17 @@ class TestPlaces(AbstractTestFixture):
         assert places_nearby[0]['embedded_type'] == "stop_point"
         assert places_nearby[1]['embedded_type'] == "stop_point"
 
+        # Invalid filter of type unable_to_parse is managed
+        query = (
+            "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&type[]=poi&filter=toto=tata"
+        )
+        response = self.query(query)
+        assert 'error' in response
+        assert 'unable_to_parse' in response['error']['id']
+        assert (
+            response["error"]["message"] == "Problem while parsing the query:Filter: unable to parse toto=tata"
+        )
+
     def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
 
