@@ -396,7 +396,8 @@ void Worker::autocomplete(const pbnavitia::PlacesRequest& request) {
 void Worker::pt_object(const pbnavitia::PtobjectRequest& request) {
     const auto* data = this->pb_creator.data;
     navitia::autocomplete::autocomplete(this->pb_creator, request.q(), vector_of_pb_types(request), request.depth(),
-                                        request.count(), vector_of_admins(request), request.search_type(), *data);
+                                        request.count(), vector_of_admins(request), request.search_type(), *data, 1.0,
+                                        request.filter());
 }
 
 void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest& request) {
