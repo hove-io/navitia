@@ -58,8 +58,6 @@ class RidesharingServiceManager(object):
         self._last_update = datetime.datetime(1970, 1, 1)
         self._update_interval = update_interval
         self.instance = instance
-        self.greenlet_pool_size = app.config.get('RIDESHARING_GREENLET_POOL_SIZE', 8)
-        self.greenlet_pool_actived = app.config.get('GREENLET_POOL_FOR_RIDESHARING_SERVICES', False)
 
     def init_ridesharing_services(self):
         # Init legacy ridesharing from config file
@@ -160,13 +158,13 @@ class RidesharingServiceManager(object):
         return self._ridesharing_services_legacy + list(self._ridesharing_services.values())
 
     def decorate_journeys_with_ridesharing_offers(self, response, request, instance):
-        # TODO: disable same journey schedule link for ridesharing journey?
-        if self.greenlet_pool_actived:
+        greenlet_pool_actived = instance.greenlet_pool_for_ridesharing_services
+        if greenlet_pool_actived:
             logging.info('ridesharing is called in async mode')
         else:
             logging.info('ridesharing is called in sequential mode')
 
-        with FutureManager(self.greenlet_pool_size) as future_manager:
+        with FutureManager(instance.ridesharing_greenlet_pool_size) as future_manager:
             futures = {}
             for journey_idx, journey in enumerate(response.journeys):
                 if 'ridesharing' not in journey.tags or to_be_deleted(journey):
@@ -185,7 +183,7 @@ class RidesharingServiceManager(object):
                         else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
                             period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                        if self.greenlet_pool_actived:
+                        if greenlet_pool_actived:
                             futures[journey_idx][section_idx] = future_manager.create_future(
                                 self.build_ridesharing_journeys,
                                 section.origin,
@@ -201,7 +199,7 @@ class RidesharingServiceManager(object):
                                 pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
                             )
 
-            if self.greenlet_pool_actived:
+            if greenlet_pool_actived:
                 for journey_idx in futures:
                     for section_idx in futures[journey_idx]:
                         pb_rsjs, pb_tickets, pb_fps = futures[journey_idx][section_idx].wait_and_get()
@@ -235,8 +233,8 @@ class RidesharingServiceManager(object):
             calls.append(_call)
 
         call_res = []
-        if self.greenlet_pool_actived:
-            with FutureManager() as future_manager:
+        if instance.greenlet_pool_for_ridesharing_services:
+            with FutureManager(instance.ridesharing_greenlet_pool_size) as future_manager:
                 futures = [future_manager.create_future(call) for call in calls]
             call_res = (f.wait_and_get() for f in futures)
         else:
