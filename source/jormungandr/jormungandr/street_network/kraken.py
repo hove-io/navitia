@@ -230,18 +230,17 @@ class Kraken(AbstractStreetNetworkService):
 
         return res.sn_routing_matrix
 
+    def make_location(self, obj):
+        return type_pb2.LocationContext(place=self.get_uri_pt_object(obj), access_duration=0)
+
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        req.sn_routing_matrix.origins.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(o), access_duration=0) for o in origins)
-        )
-        req.sn_routing_matrix.destinations.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
-        )
+        req.sn_routing_matrix.origins.extend((self.make_location(o) for o in origins))
+        req.sn_routing_matrix.destinations.extend((self.make_location(d) for d in destinations))
 
         req.sn_routing_matrix.mode = self._hanlde_car_no_park_modes(street_network_mode)
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
