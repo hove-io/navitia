@@ -1240,3 +1240,49 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region("pois/poi:station_1/poi_types")
         assert len(response["poi_types"]) == 1
         assert response["poi_types"][0]["id"] == "poi_type:amenity:bicycle_rental"
+
+    def test_pt_objects_with_filter(self):
+        response = self.query_region('pt_objects?q=stop&type[]=stop_point')
+        is_valid_pt_objects_response(response)
+        assert len(get_not_null(response, 'pt_objects')) == 4
+
+        # Add filter on StopArea
+        response = self.query_region('pt_objects?q=stop&type[]=stop_point&filter=stop_area.id=stopB&depth=3')
+        pt_objects = get_not_null(response, 'pt_objects')
+        assert len(pt_objects) == 1
+        assert get_not_null(pt_objects[0], 'id') == 'stop_point:stopB'
+        assert get_not_null(pt_objects[0]['stop_point']['stop_area'], 'id') == 'stopB'
+
+        # Filter on physical_mode
+        response = self.query_region(
+            'pt_objects?q=stop&type[]=stop_point&filter=physical_mode.id=physical_mode:0x1&depth=3'
+        )
+        pt_objects = get_not_null(response, 'pt_objects')
+        assert len(pt_objects) == 2
+        sp1 = pt_objects[0]['stop_point']
+        assert sp1['id'] == 'stop_point:stopA'
+        assert 'physical_mode:0x1' in [mode['id'] for mode in sp1['physical_modes']]
+        sp2 = pt_objects[1]['stop_point']
+        assert sp2['id'] == 'stop_point:stopC'
+        assert 'physical_mode:0x1' in [mode['id'] for mode in sp2['physical_modes']]
+
+        # request on stop_area without filter
+        response = self.query_region('pt_objects?q=stop&type[]=stop_area')
+        pt_objects = get_not_null(response, 'pt_objects')
+        assert len(pt_objects) == 3
+        stop_area_ids = [sa['id'] for sa in pt_objects]
+        assert 'stopA' in stop_area_ids
+        assert 'stopB' in stop_area_ids
+        assert 'stopC' in stop_area_ids
+
+        # Filter on line
+        response = self.query_region('pt_objects?q=stop&type[]=stop_area&filter=line.id=PM&depth=3')
+        pt_objects = get_not_null(response, 'pt_objects')
+        assert len(pt_objects) == 2
+        stop_area_ids = [sa['id'] for sa in pt_objects]
+        assert 'stopA' in stop_area_ids
+        assert 'stopB' in stop_area_ids
+        sa1_line_ids = [line['id'] for line in pt_objects[0]['stop_area']['lines']]
+        assert 'PM' in sa1_line_ids
+        sa2_line_ids = [line['id'] for line in pt_objects[1]['stop_area']['lines']]
+        assert 'PM' in sa2_line_ids

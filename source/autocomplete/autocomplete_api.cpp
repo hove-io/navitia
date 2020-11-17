@@ -366,7 +366,8 @@ void autocomplete(navitia::PbCreator& pb_creator,
                   const std::vector<std::string>& admins,
                   int search_type,
                   const navitia::type::Data& d,
-                  float main_stop_area_weight_factor) {
+                  float main_stop_area_weight_factor,
+                  const std::string& ptref_filter) {
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
         return;
@@ -389,8 +390,28 @@ void autocomplete(navitia::PbCreator& pb_creator,
             if (search_type == 0) {
                 update_quality(found, query_word_vec.size());
             }
+
+            // Manage filter only if autocomplete result exit
+            type::Indexes indexes;
+            if (found.size() > 0) {
+                if (!ptref_filter.empty()) {
+                    try {
+                        indexes = ptref::make_query(type, ptref_filter, d);
+                    } catch (const ptref::parsing_error& parse_error) {
+                        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                                 "Problem while parsing the query:" + parse_error.more);
+                        return;
+                    } catch (const std::exception&) {
+                    }
+                }
+            }
+
             for (const auto& r : found) {
-                results.emplace_back(type, r);
+                if (ptref_filter.empty()) {
+                    results.emplace_back(type, r);
+                } else if (indexes.find(r.idx) != indexes.cend()) {
+                    results.emplace_back(type, r);
+                }
             }
         }
         if (search_type == 0 && results.size() > size_t(nbmax)) {

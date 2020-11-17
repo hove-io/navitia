@@ -559,6 +559,7 @@ Differents kind of objects can be returned (sorted as):
 -   line
 -   route
 -   stop_area
+-   stop_point
 
 Here is a typical use case. A traveler has to find a line between the
 1500 lines around Paris.
@@ -630,9 +631,10 @@ HTTP/1.1 200 OK
   Required | Name     | Type             | Description          | Default value
 -----------|----------|------------------|----------------------|-----------------
   yep      | q        | string           | The search term      |
-  nop      | type[]   | array of string  | Type of objects you want to query It takes one the following values: [`network`, `commercial_mode`, `line`, `route`, `stop_area`] | [`network`, `commercial_mode`, `line`, `route`, `stop_area`]
+  nop      | type[]   | array of string  | Type of objects you want to query It takes one the following values: [`network`, `commercial_mode`, `line`, `route`, `stop_area`, `stop_point`] | [`network`, `commercial_mode`, `line`, `route`, `stop_area`]
   nop      | disable_disruption | boolean  | Remove disruptions from the response  | False
   nop      | depth    | int              | Json response [depth](#depth) | 1
+  nop      | filter   | string  | Use to filter returned objects. for example: network.id=sncf |
 
 <aside class="warning">
 There is no pagination for this api

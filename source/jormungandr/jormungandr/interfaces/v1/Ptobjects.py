@@ -88,6 +88,7 @@ class Ptobjects(ResourceUri):
         self.parsers['get'].add_argument(
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
+        self.parsers['get'].add_argument("filter", type=six.text_type, default="", help="Filter your objects")
         self.collection = 'pt_objects'
         self.get_decorators.insert(0, get_obj_serializer(self))
 
