@@ -175,10 +175,8 @@ class Kraken(AbstractStreetNetworkService):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = self.get_uri_pt_object(pt_object_origin)
-        req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = self.get_uri_pt_object(pt_object_destination)
-        req.direct_path.destination.access_duration = 0
+        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
+        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(mode)
