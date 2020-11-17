@@ -243,12 +243,12 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_no_dst) {
     //=> no stop area in the file, so one area has been created for each stop point
     // Stop areas
     BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "Navitia:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Furnace Creek Resort (Demo)");
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 36.425288, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), -117.133162, 0.1);
 
-    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "Navitia:AMV");
     BOOST_CHECK_EQUAL(data.stop_areas[8]->name, "Amargosa Valley (Demo)");
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lat(), 36.641496, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lon(), -116.40094, 0.1);
@@ -343,12 +343,12 @@ static void check_gtfs_google_example(const ed::Data& data) {
     BOOST_CHECK_EQUAL(data.networks[0]->uri, "DTA");
 
     BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 9);
-    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "Navitia:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Furnace Creek Resort (Demo)");
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lat(), 36.425288, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[0]->coord.lon(), -117.133162, 0.1);
 
-    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "AMV");
+    BOOST_CHECK_EQUAL(data.stop_areas[8]->uri, "Navitia:AMV");
     BOOST_CHECK_EQUAL(data.stop_areas[8]->name, "Amargosa Valley (Demo)");
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lat(), 36.641496, 0.1);
     BOOST_CHECK_CLOSE(data.stop_areas[8]->coord.lon(), -116.40094, 0.1);

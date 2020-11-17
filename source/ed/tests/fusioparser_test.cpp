@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
         BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Brunoy-Wittlich");
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SCF:SP:SPOCENoctilien87976902");
+        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "Navitia:SCF:SP:SPOCENoctilien87976902");
     }
 
     // For retrocompatibity
