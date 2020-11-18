@@ -1290,8 +1290,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_max_count_values_with_pagination(self):
         """
         Verify use of parameter count in ptref
-        Default value is fixed for each api
-        Maximum value is limit to 200 except for /journeys (1000)
+        Default value is fixed to 1000
         """
         response = self.query_region("vehicle_journeys")
         assert response['pagination']['items_per_page'] == 25
@@ -1303,7 +1302,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert response['pagination']['items_on_page'] == 2
         assert response['pagination']['total_result'] == 8
 
-        response = self.query_region("vehicle_journeys?count=500")
-        assert response['pagination']['items_per_page'] == 200
+        response = self.query_region("vehicle_journeys?count=1200")
+        assert response['pagination']['items_per_page'] == 1000
         assert response['pagination']['items_on_page'] == 8
         assert response['pagination']['total_result'] == 8

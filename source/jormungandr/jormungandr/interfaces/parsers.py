@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import app
 from navitiacommon import parser_args_type
 
-parser_max_count = app.config.get(str('PARSER_MAX_COUNT'), 200)
+parser_max_count = app.config.get(str('PARSER_MAX_COUNT'), 1000)
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
-journey_max_count = app.config.get(str('JOURNEY_MAX_COUNT'), 1000)
-journey_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=journey_max_count)
+places_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=200)
