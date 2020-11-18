@@ -34,7 +34,7 @@ import logging, json, hashlib, datetime
 from flask import request, g
 from flask_restful import abort
 from jormungandr import i_manager, app, fallback_modes
-from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.parsers import journey_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.timezone import set_request_timezone
@@ -344,7 +344,7 @@ class Journeys(JourneyCommon):
 
         parser_get = self.parsers["get"]
 
-        parser_get.add_argument("count", type=default_count_arg_type, help='Fixed number of different journeys')
+        parser_get.add_argument("count", type=journey_count_arg_type, help='Fixed number of different journeys')
         parser_get.add_argument("_min_journeys_calls", type=int, hidden=True)
         parser_get.add_argument("_final_line_filter", type=BooleanType(), hidden=True)
         parser_get.add_argument(
