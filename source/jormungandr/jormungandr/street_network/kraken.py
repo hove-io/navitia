@@ -107,6 +107,7 @@ class Kraken(AbstractStreetNetworkService):
             'max_taxi_duration_to_pt',
             'ridesharing_speed',
             'max_ridesharing_duration_to_pt',
+            '_enable_instructions',
         ]:
             direct_path_request[attr] = request[attr]
 
@@ -200,7 +201,7 @@ class Kraken(AbstractStreetNetworkService):
                 'max_{}_duration_to_pt'.format(mode)
             ]
 
-        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instruction']
+        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
 
         return req
 

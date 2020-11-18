@@ -559,7 +559,7 @@ class Journeys(JourneyCommon):
         )
 
         parser_get.add_argument(
-            "_enable_instruction",
+            "_enable_instructions",
             type=BooleanType(),
             default=True,
             hidden=True,
