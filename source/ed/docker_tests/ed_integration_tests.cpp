@@ -286,8 +286,8 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(commercial_metro->uri, "commercial_mode:Metro");
 
     BOOST_REQUIRE_EQUAL(pt_data.stop_areas.size(), 9);
-    const auto* fur_creek = pt_data.stop_areas_map.at("stop_area:FUR_CREEK_RES");
-    BOOST_CHECK_EQUAL(fur_creek->uri, "stop_area:FUR_CREEK_RES");
+    const auto* fur_creek = pt_data.stop_areas_map.at("stop_area:Navitia:FUR_CREEK_RES");
+    BOOST_CHECK_EQUAL(fur_creek->uri, "stop_area:Navitia:FUR_CREEK_RES");
     BOOST_CHECK_EQUAL(fur_creek->name, "Furnace Creek Resort (Demo)");
     BOOST_CHECK_CLOSE(fur_creek->coord.lat(), 36.425288, 0.001);
     BOOST_CHECK_CLOSE(fur_creek->coord.lon(), -117.133162, 0.001);
