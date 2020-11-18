@@ -558,6 +558,14 @@ class Journeys(JourneyCommon):
             help="enhance response with accessibility equipement details",
         )
 
+        parser_get.add_argument(
+            "_enable_instruction",
+            type=BooleanType(),
+            default=True,
+            hidden=True,
+            help="Enable/Disable the narrative instructions for street network sections",
+        )
+
         for mode in FallbackModes.modes_str():
             parser_get.add_argument(
                 "max_{}_direct_path_duration".format(mode),

@@ -200,6 +200,8 @@ class Kraken(AbstractStreetNetworkService):
                 'max_{}_duration_to_pt'.format(mode)
             ]
 
+        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instruction']
+
         return req
 
     def get_uri_pt_object(self, pt_object):
