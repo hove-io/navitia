@@ -147,8 +147,6 @@ struct StopArea : public Header, Nameable, hasProperties {
     const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
-    // StopArea Created from orphan StopPoint: This parameter is used to standardize the stoparea uri
-    bool from_orphan_stoppoint = false;
 
     StopArea() {}
     StopArea(idx_t idx, std::string uri) : Header(idx, uri), Nameable(uri) {}

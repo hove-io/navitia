@@ -481,7 +481,15 @@ BOOST_AUTO_TEST_CASE(admin_stations_retrocompatibilty_tests) {
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->admin, "admin:A");
         BOOST_REQUIRE_EQUAL(data.admin_stop_areas[0]->stop_area.size(), 1);
         BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->name, "Brunoy-Wittlich");
-        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "Navitia:SCF:SP:SPOCENoctilien87976902");
+        BOOST_CHECK_EQUAL(data.admin_stop_areas[0]->stop_area[0]->uri, "SCF:SA:SAOCE87976902");
+
+        std::string prefix = "Navitia:";
+        for (const auto& sa : data.stop_areas) {
+            if (sa->uri == "SCF:SA:SAOCE87976902") {
+                continue;
+            }
+            BOOST_CHECK_EQUAL(sa->uri.substr(0, prefix.length()), prefix);
+        }
     }
 
     // For retrocompatibity

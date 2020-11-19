@@ -342,7 +342,7 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         sa->coord.set_lon(sp->coord.lon());
         sa->coord.set_lat(sp->coord.lat());
         sa->name = sp->name;
-        sa->uri = sp->uri;
+        sa->uri = "Navitia:" + sp->uri;
         if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
 
@@ -358,7 +358,6 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
             // we fetch the defautl dataset timezone
             sa->time_zone_with_name = {data.tz_wrapper.tz_name, data.tz_wrapper.boost_timezone};
         }
-        sa->from_orphan_stoppoint = true;
         nb_added_sa++;
     }
 
@@ -1258,9 +1257,6 @@ void GenericGtfsParser::fill_default_modes(Data& data) {
 void normalize_extcodes(Data& data) {
     for (nm::StopArea* sa : data.stop_areas) {
         boost::algorithm::replace_first(sa->uri, "StopArea:", "");
-        if (sa->from_orphan_stoppoint) {
-            sa->uri = "Navitia:" + sa->uri;
-        }
     }
     for (nm::StopPoint* sp : data.stop_points) {
         boost::algorithm::replace_first(sp->uri, "StopPoint:", "");
