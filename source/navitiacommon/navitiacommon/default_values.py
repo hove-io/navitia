@@ -176,6 +176,8 @@ stop_points_nearby_duration = 5 * 60  # In secs
 
 asynchronous_ridesharing = False
 
+greenlet_pool_for_ridesharing_services = False
+
 ridesharing_greenlet_pool_size = 10
 
 
