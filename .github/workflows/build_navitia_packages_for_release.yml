@@ -44,5 +44,5 @@ jobs:
       if: success()
       run: |
           version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
-          echo '{"text":":information_source: Github Actions: build_navitia_packages_for_release succeded - ${{version_number}} navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
-          echo '{"text":":octopus: Navitia Release: The version ${{version_number}} is available. changelog: https://github.com/CanalTP/navitia/releases/tag/v${{version_number}}"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
+          echo '{"text":":information_source: Github Actions: build_navitia_packages_for_release succeded - $version_number navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Navitia Release: The version $version_number is available. changelog: https://github.com/CanalTP/navitia/releases/tag/v$version_number"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
