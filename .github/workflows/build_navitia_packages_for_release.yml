@@ -1,6 +1,8 @@
 name: Build Navitia Packages For Release
 
 on:
+  # for test only
+  pull_request:
   push:
     branches:
       - release
