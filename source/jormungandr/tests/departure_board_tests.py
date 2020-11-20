@@ -695,6 +695,55 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["display_informations"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["commercial_mode"] == "Bus"
 
+    # Test on an on_demand_transport with start stop_datetime as on_demand_transport
+    def test_journey_with_odt_in_start_stop_date_time(self):
+        """
+        journeys with odt -> start or end stop_datetime contains "on_demand_transport" in "additional_informations[]"
+        network with code.type = "app_code" and code.value = "ilevia"
+        There should be a deeplink of app_code ilevia dans section.links[]
+        """
+        response = self.query_region("journeys?from=ODTstop1&to=ODTstop2&datetime=20120615T103500")
+        assert len(response['journeys']) == 1
+        journey = response['journeys'][0]
+        assert len(journey['sections']) == 1
+        section = journey['sections'][0]
+        assert section['type'] == "on_demand_transport"
+        assert "odt_with_stop_time" in section['additional_informations']
+        assert len(section['stop_date_times']) == 2
+        assert "on_demand_transport" in section['stop_date_times'][0]['additional_informations']
+        assert len(section['stop_date_times'][1]['additional_informations']) == 0
+
+        # verify network in links
+        assert len(section['links']) == 7
+        assert "base_network" in [link['id'] for link in section['links'] if link['type'] == "network"]
+
+        # verify app deep link in links
+        deep_link = section['links'][-1]
+        assert "ilevia://home?" in deep_link['href']
+        assert "departure_latitude=0" in deep_link['href']
+        assert "departure_longitude=0" in deep_link['href']
+        assert "destination_latitude=0" in deep_link['href']
+        assert "destination_longitude=0" in deep_link['href']
+        assert "requested_departure_time=2012-06-15T11:00:00+0000" in deep_link['href']
+        assert deep_link['type'] == "tad_dynamic_link"
+        assert deep_link['rel'] == "tad_dynamic_link"
+        assert deep_link['templated'] is False
+
+    def test_journey_with_estimated_datetime_in_start_stop_date_time(self):
+        """
+        journeys with public_transport even if start stop_datetime is "date_time_estimated"
+        No deeplink
+        """
+        response = self.query_region("journeys?from=ODTstop1&to=ODTstop2&datetime=20120615T080000")
+
+        assert len(response['journeys']) == 1
+        section = response['journeys'][0]['sections'][0]
+        assert section['type'] == "public_transport"
+        assert "has_datetime_estimated" in section['additional_informations']
+        assert len(section['stop_date_times']) == 2
+        assert "date_time_estimated" in section['stop_date_times'][0]['additional_informations']
+        assert len(section['stop_date_times'][1]['additional_informations']) == 0
+
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])

@@ -187,3 +187,34 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
             return fp == DUMMY_KLAXIT_FEED_PUBLISHER
 
         assert any(equals_to_dummy_fp(fp) for fp in fps)
+
+    def test_filter_ridesharing_with_parameter(self):
+        """
+        test ridesharing_jouneys details
+        """
+        q = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={rs}&first_section_mode[]={walk}&last_section_mode[]={walk}&forbidden_uris[]=PM&"
+            "debug=true".format(rs='ridesharing', walk='walking')
+        )
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+
+        # Ridesharing journey is eliminated as the duration is inferior to default min_ridesharing(600)
+        # Note: ridesharing journey is eliminated only if walking option is added for that fallback
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 3
+        ridesharing_journey = next((journey for journey in journeys if "ridesharing" in journey['tags']), None)
+        assert ridesharing_journey is not None
+        assert ridesharing_journey['durations']['ridesharing'] == 43
+        assert "deleted_because_too_short_heavy_mode_fallback" in ridesharing_journey['tags']
+
+        # Modify min_ridesharing value from 600 to 40 (< 43) not to eliminate ridesharing journey
+        q += "&_min_ridesharing=40"
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 3
+        ridesharing_journey = next((journey for journey in journeys if "ridesharing" in journey['tags']), None)
+        assert ridesharing_journey is not None
+        assert "deleted_because_too_short_heavy_mode_fallback" not in ridesharing_journey['tags']

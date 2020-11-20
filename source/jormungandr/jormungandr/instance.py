@@ -506,6 +506,18 @@ class Instance(object):
         return get_value_or_default('asynchronous_ridesharing', instance_db, self.name)
 
     @property
+    def ridesharing_greenlet_pool_size(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('ridesharing_greenlet_pool_size', instance_db, self.name)
+
+    @property
+    def greenlet_pool_for_ridesharing_services(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('greenlet_pool_for_ridesharing_services', instance_db, self.name)
+
+    @property
     def max_nb_crowfly_by_mode(self):
         # type: () -> Dict[Text, int]
         instance_db = self.get_models()
@@ -530,6 +542,12 @@ class Instance(object):
         # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_car_no_park_direct_path_duration', instance_db, self.name)
+
+    @property
+    def min_ridesharing(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('min_ridesharing', instance_db, self.name)
 
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')

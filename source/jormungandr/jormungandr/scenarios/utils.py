@@ -256,6 +256,9 @@ def updated_request_with_default(request, instance):
     if request['_min_taxi'] is None:
         request['_min_taxi'] = instance.min_taxi
 
+    if request['_min_ridesharing'] is None:
+        request['_min_ridesharing'] = instance.min_ridesharing
+
 
 def change_ids(new_journeys, response_index):
     """

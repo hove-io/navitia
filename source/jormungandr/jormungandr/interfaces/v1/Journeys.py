@@ -38,14 +38,27 @@ from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
+from jormungandr.interfaces.v1.make_links import (
+    create_external_link,
+    create_internal_link,
+    make_external_service_link,
+)
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp, dt_to_str
+from jormungandr.utils import (
+    date_to_timestamp,
+    dt_to_str,
+    has_invalid_reponse_code,
+    journeys_absent,
+    local_str_date_to_utc,
+    UTC_DATETIME_FORMAT,
+)
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
+from navitiacommon import type_pb2
+from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
@@ -102,8 +115,9 @@ class add_journey_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200 or 'journeys' not in objects[0]:
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
+
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
                 allowed_ids = {
@@ -179,14 +193,13 @@ class add_fare_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if objects[1] != 200:
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
-            if "journeys" not in objects[0]:
-                return objects
-            ticket_by_section = defaultdict(list)
+
             if 'tickets' not in objects[0]:
                 return objects
 
+            ticket_by_section = defaultdict(list)
             for t in objects[0]['tickets']:
                 if "links" in t:
                     for s in t['links']:
@@ -217,6 +230,72 @@ class add_fare_links(object):
         return wrapper
 
 
+# Add TAD deep links in each section of type on_demand_transport if network contains app_code in codes
+class add_tad_links(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+                return objects
+
+            for j in objects[0]['journeys']:
+                if "sections" not in j:
+                    continue
+                for s in j['sections']:
+                    # For a section with type = on_demand_transport
+                    if s.get('type') == 'on_demand_transport':
+                        # get network uri from the link
+                        network_id = next(
+                            (link['id'] for link in s.get('links', []) if link['type'] == "network"), None
+                        )
+                        if not network_id:
+                            continue
+
+                        region = kwargs.get('region')
+                        if region is None:
+                            continue
+
+                        # Get the Network details and verify if it contains codes with type = "app_code"
+                        instance = i_manager.instances.get(region)
+                        network_details = instance.ptref.get_objs(
+                            type_pb2.NETWORK, 'network.uri={}'.format(network_id)
+                        )
+                        network_dict = protobuf_to_dict(next(network_details))
+                        app_value = next(
+                            (
+                                code['value']
+                                for code in network_dict.get('codes', [])
+                                if code.get('type') == "app_code"
+                            ),
+                            None,
+                        )
+                        if not app_value:
+                            continue
+
+                        # Prepare parameters for the deeplink of external service
+                        from_embedded_type = s.get('from').get('embedded_type')
+                        to_embedded_type = s.get('to').get('embedded_type')
+                        from_coord = s.get('from').get(from_embedded_type).get('coord')
+                        to_coord = s.get('to').get(to_embedded_type).get('coord')
+                        args = dict()
+                        date_utc = local_str_date_to_utc(s.get('departure_date_time'), instance.timezone)
+                        args['departure_latitude'] = from_coord.get('lat')
+                        args['departure_longitude'] = from_coord.get('lon')
+                        args['destination_latitude'] = to_coord.get('lat')
+                        args['destination_longitude'] = to_coord.get('lon')
+                        args['requested_departure_time'] = dt_to_str(date_utc, _format=UTC_DATETIME_FORMAT)
+                        url = "{}://home?".format(app_value)
+                        tad_link = make_external_service_link(
+                            url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args
+                        )
+                        s['links'].append(tad_link)
+
+            return objects
+
+        return wrapper
+
+
 class rig_journey(object):
     """
     decorator to rig journeys in order to put back the requested origin/destination in the journeys
@@ -228,15 +307,15 @@ class rig_journey(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            response, status, _ = objects
-            if status != 200:
+            if has_invalid_reponse_code(objects):
                 return objects
 
             if not hasattr(g, 'origin_detail') or not hasattr(g, 'destination_detail'):
                 return objects
 
+            response = objects[0]
             for j in response.get('journeys', []):
-                if not 'sections' in j:
+                if 'sections' not in j:
                     continue
                 logging.debug(
                     'for journey changing origin: {old_o} to {new_o}'
@@ -320,6 +399,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_min_car", hidden=True, type=int)
         parser_get.add_argument("_min_bike", hidden=True, type=int)
         parser_get.add_argument("_min_taxi", hidden=True, type=int)
+        parser_get.add_argument("_min_ridesharing", hidden=True, type=int)
         parser_get.add_argument(
             "bss_stands",
             type=BooleanType(),
@@ -492,6 +572,7 @@ class Journeys(JourneyCommon):
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
+    @add_tad_links()
     @add_debug_info()
     @add_fare_links()
     @add_journey_href()

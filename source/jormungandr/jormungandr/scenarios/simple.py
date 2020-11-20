@@ -188,6 +188,7 @@ class Scenario(object):
             for admin_uri in request["admin_uri[]"]:
                 req.pt_objects.admin_uris.append(admin_uri)
         req.disable_disruption = request["disable_disruption"]
+        req.pt_objects.filter = request['filter']
 
         resp = instance.send_and_receive(req)
         # The result contains places but not pt_objects,

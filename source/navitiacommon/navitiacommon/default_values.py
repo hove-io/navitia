@@ -74,6 +74,8 @@ min_bss = 4 * 60 + 3 * 60  # we want 4minute on the bike, so we add the time to 
 
 min_car = 5 * 60
 
+min_ridesharing = 10 * 60
+
 min_taxi = 4 * 60
 
 car_park_duration = 5 * 60
@@ -173,6 +175,8 @@ here_max_matrix_points = 100
 stop_points_nearby_duration = 5 * 60  # In secs
 
 asynchronous_ridesharing = False
+
+greenlet_pool_for_ridesharing_services = False
 
 ridesharing_greenlet_pool_size = 10
 
