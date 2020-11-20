@@ -1,3 +1,9 @@
+navitia2 (8.2.0) unstable; urgency=low
+
+  * [Github Actions] Remove set-env  <https://github.com/CanalTP/navitia/pull/3326>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 20 Nov 2020 14:11:30 +0100
+
 navitia2 (8.1.0) unstable; urgency=low
 
   * [Jormungandr] Add a deeplink in a on_demand_transport section  <https://github.com/CanalTP/navitia/pull/3315>
