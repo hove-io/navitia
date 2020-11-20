@@ -17,10 +17,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: install zip dependency
       run: apt update && apt install -y zip httpie
-    - name: retreive version number
-      run: |
-          version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
-          echo "::set-env name=VERSION_NUMBER::$version_number"
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -45,5 +41,6 @@ jobs:
     - name: slack notification (the job has successed)
       if: success()
       run: |
-          echo '{"text":":information_source: Github Actions: build_navitia_packages_for_release succeded - ${{env.VERSION_NUMBER}} navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
-          echo '{"text":":octopus: Navitia Release: The version ${{env.VERSION_NUMBER}} is available. changelog: https://github.com/CanalTP/navitia/releases/tag/v${{env.VERSION_NUMBER}}"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
+          version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
+          echo '{"text":":information_source: Github Actions: build_navitia_packages_for_release succeded - ${{version_number}} navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Navitia Release: The version ${{version_number}} is available. changelog: https://github.com/CanalTP/navitia/releases/tag/v${{version_number}}"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
