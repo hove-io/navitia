@@ -1,3 +1,13 @@
+navitia2 (8.1.0) unstable; urgency=low
+
+  * [Jormungandr] Add a deeplink in a on_demand_transport section  <https://github.com/CanalTP/navitia/pull/3315>
+  * [Jormungandr + Tyr] Add min_ridesharing in db configuration and implement in journeys  <https://github.com/CanalTP/navitia/pull/3318>
+  * [Places_nearby] filter with 'or' having atleast one matching criteria should work   <https://github.com/CanalTP/navitia/pull/3320>
+  * [Autocomplete] Add filter in pt_objects request  <https://github.com/CanalTP/navitia/pull/3321>
+  * [Jormungandr] missing ridesharing db parameters fetching to parallelize calls  <https://github.com/CanalTP/navitia/pull/3322>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 20 Nov 2020 10:11:32 +0100
+
 navitia2 (8.0.0) unstable; urgency=low
 
   * [Jormun] adapt properly durations, distances and sections for ridesharing journeys  <https://github.com/CanalTP/navitia/pull/3316>
