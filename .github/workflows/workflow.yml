@@ -135,16 +135,6 @@ jobs:
         pre-commit run --all --show-diff-on-failure
 
 
-  check_artemis:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: check artemis
-      run: ./source/scripts/checkJenkinsJob.sh Artemis
-    - name: check artemis IDFM
-      run: ./source/scripts/checkJenkinsJob.sh Artemis_idfm
-
-
   release_script_tests:
     runs-on: ubuntu-latest
     steps:
