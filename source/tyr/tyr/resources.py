@@ -1812,6 +1812,13 @@ class AutocompleteParameter(flask_restful.Resource):
             choices=utils.admin_source_types,
         )
         parser.add_argument('admin_level', type=int, action='append', required=False)
+        parser.add_argument(
+            'config_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir',
+            location=('json', 'values'),
+        )
 
         args = parser.parse_args()
 
@@ -1823,6 +1830,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.poi = args['poi']
             autocomplete_parameter.admin = args['admin']
             autocomplete_parameter.admin_level = args['admin_level']
+            autocomplete_parameter.config_toml = args['config_toml']
             db.session.add(autocomplete_parameter)
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_parameter.name)
@@ -1880,7 +1888,13 @@ class AutocompleteParameter(flask_restful.Resource):
         parser.add_argument(
             'admin_level', type=int, action='append', required=False, default=autocomplete_param.admin_level
         )
-
+        parser.add_argument(
+            'config_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir',
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
 
         try:
@@ -1889,6 +1903,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_param.poi = args['poi']
             autocomplete_param.admin = args['admin']
             autocomplete_param.admin_level = args['admin_level']
+            autocomplete_param.config_toml = args['config_toml']
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_param.name)
 
