@@ -279,6 +279,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     if instance.poi_type_json:
         poi_types_json = instance.poi_type_json.poi_types_json
 
+    osm_filename = unzip_if_needed(osm_filename)
     if os.path.isdir(osm_filename):
         osm_filename = glob.glob('{}/*.pbf'.format(osm_filename))[0]
 

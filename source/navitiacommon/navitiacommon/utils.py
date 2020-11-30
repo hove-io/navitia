@@ -71,6 +71,8 @@ def type_of_data(filename):
             return 'geopal'
         if any(f for f in files if f.endswith("poi.txt")):
             return 'poi'
+        if any(f for f in files if f.endswith(".pbf")):
+            return 'osm'
         return None
 
     if not isinstance(filename, list):
