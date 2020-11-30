@@ -85,8 +85,15 @@ def type_of_data(filename):
 
     # we test if we recognize a ptfile in the list of files
     t = files_type(files)
-    if t:  # the path to load the data is the directory since there are several files
+    if t and t in [
+        'fusio',
+        'gtfs',
+        'fare',
+        'poi',
+    ]:  # the path to load the data is the directory since there are several files
         return t, os.path.dirname(files[0])
+    if t and t in ['osm']:
+        return t, files[0]
 
     for filename in files:
         if filename.endswith('.pbf'):
