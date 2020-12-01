@@ -194,6 +194,35 @@ def test_create_autocomplete_with_config_toml():
     assert resp['config_toml'] == json_with_config_toml["config_toml"]
 
 
+def test_put_autocomplete_with_config_toml_not_in_database():
+    json_with_config_toml = {
+        "name": "bobette",
+        "address": "BANO",
+        "admin": "OSM",
+        "admin_level": [8],
+        "config_toml": "dataset = \"bobette\"\n\n[admin]\nimport = true\ncity_level = 8\nlevels = [8]\n\n"
+        "[way]\nimport = true\n\n[poi]\nimport = true\n",
+        "poi": "OSM",
+        "street": "OSM",
+    }
+
+    resp, status_code = api_put(
+        '/v0/autocomplete_parameters/bobette',
+        data=json.dumps(json_with_config_toml),
+        content_type='application/json',
+        check=False,
+    )
+
+    assert status_code == 201
+    assert resp['name'] == json_with_config_toml["name"]
+    assert resp['street'] == 'OSM'
+    assert resp['address'] == 'BANO'
+    assert resp['poi'] == 'OSM'
+    assert resp['admin'] == 'OSM'
+    assert resp['admin_level'] == [8]
+    assert resp['config_toml'] == json_with_config_toml["config_toml"]
+
+
 def test_delete_autocomplete(create_two_autocomplete_parameters):
     resp = api_get('/v0/autocomplete_parameters/')
     assert len(resp) == 2
