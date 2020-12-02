@@ -53,6 +53,8 @@ jobs:
     - uses: actions/checkout@v2
       with:
           submodules: 'recursive'
+    - name: Dummy test
+      run: wget https://${{secrets.jenkins_token}}@ci.navitia.io/job/mimirsbrunn_release_package/lastSuccessfulBuild/artifact/*zip*/archive.zip
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
