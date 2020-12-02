@@ -39,7 +39,7 @@ def upgrade():
         config_toml += "levels = {}\n\n".format(row['admin_level'])
 
         # Streets
-        config_toml += "[way]\n"
+        config_toml += "[street]\n"
         tmp = "{}".format(row['street'] == "OSM")
         config_toml += "import = {}\n\n".format(tmp.lower())
 

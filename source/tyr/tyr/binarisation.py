@@ -720,21 +720,21 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     logger.debug('running osm2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL']
-    working_directory = unzip_if_needed(filename)
-
-    filename = "custom_config"
-    custom_config_config_toml = '{}/{}.toml'.format(os.path.dirname(working_directory), filename)
+    data_filename = unzip_if_needed(filename)
+    custom_config = "custom_config"
+    working_directory = os.path.dirname(data_filename)
+    custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     with open(custom_config_config_toml, 'w') as f:
         f.write(autocomplete_instance.config_toml.encode("utf-8"))
     params = [
         '-i',
-        working_directory,
+        data_filename,
         '--connection-string',
         cnx_string,
         '-D',
-        working_directory,
+        "{}/".format(working_directory),
         '-s',
-        filename,
+        custom_config,
     ]
     try:
         res = launch_exec("osm2mimir", params, logger)
