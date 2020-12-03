@@ -35,7 +35,7 @@ You can navigate through a response using 2 parameters
 |count     |int |Number of items per page |
 
 <aside class="notice">
-    The number of objects returned for a request can <b>not be superior than 1000</b>.
+    The number of objects returned for a request can <b>not be superior than 1000 (except 200 for api /places)</b>.
     If you request for more, Navitia will return the first 1000, and you will have to paginate to get next 1000.
 </aside>
 

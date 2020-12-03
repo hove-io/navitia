@@ -38,7 +38,7 @@ from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.parsers import default_count_arg_type, places_count_arg_type
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
 from datetime import datetime
@@ -94,7 +94,7 @@ class Places(ResourceUri):
             help="The type of data to search",
         )
         self.parsers["get"].add_argument(
-            "count", type=default_count_arg_type, default=10, help="The maximum number of places returned"
+            "count", type=places_count_arg_type, default=10, help="The maximum number of places returned"
         )
         self.parsers["get"].add_argument(
             "search_type", type=int, default=0, hidden=True, help="Type of search: firstletter or type error"
