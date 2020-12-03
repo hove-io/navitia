@@ -342,7 +342,7 @@ void StopsGtfsHandler::handle_stop_point_without_area(Data& data) {
         sa->coord.set_lon(sp->coord.lon());
         sa->coord.set_lat(sp->coord.lat());
         sa->name = sp->name;
-        sa->uri = sp->uri;
+        sa->uri = "Navitia:" + sp->uri;
         if (sp->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING))
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
 
