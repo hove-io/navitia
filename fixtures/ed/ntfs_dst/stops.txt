@@ -1,5 +1,6 @@
 stop_id,visible,stop_name,stop_lat,stop_lon,zone_id,location_type,parent_station,stop_timezone,equipment_id,contributor_id,geometry_id
 SCF:SP:SPOCENoctilien87976902,1,"Brunoy-Wittlich",0,0,0,0,SCF:SA:SAOCE87976902,Europe/Paris,,SCF,
+SCF:SA:SAOCE87976902,1,"Brunoy-Wittlich",0,0,0,1,,Europe/Paris,,SCF,
 SCF:SP:SPOCENoctilien87977355,1,"Corbeil-Essonnes-Tart.",0,0,0,0,SCF:SA:SAOCE87977355,Europe/Paris,,SCF,
 SCF:SP:SPOCENoctilien87977942,1,"Evry-Pyramides",48.62582,2.429027,0,0,SCF:SA:SAOCE87977942,Europe/Paris,,SCF,
 SCF:SP:SPOCENoctilien87978072,1,"Gare de Châtelet",48.859792,2.34807,0,0,SCF:SA:SAOCE87758607,Europe/Paris,,SCF,

@@ -149,6 +149,14 @@ class TestPlaces(AbstractTestFixture):
         is_valid_places(places_nearby)
         assert places_nearby[0]["embedded_type"] == "stop_point"
         assert places_nearby[0]["id"] == "stop_point:stopC"
+        assert response['pagination']['items_per_page'] == 1
+
+        # The max count is limited to 1000 even if &count=1100 is used
+        query = "/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_point&count=1100"
+        response = self.query(query)
+        assert response['pagination']['items_on_page'] == 4
+        assert response['pagination']['total_result'] == 4
+        assert response['pagination']['items_per_page'] == 1000
 
     def test_places_nearby_with_coords_with_type_filter_and_count(self):
         """

@@ -33,3 +33,4 @@ from navitiacommon import parser_args_type
 
 parser_max_count = app.config.get(str('PARSER_MAX_COUNT'), 1000)
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
+places_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=200)

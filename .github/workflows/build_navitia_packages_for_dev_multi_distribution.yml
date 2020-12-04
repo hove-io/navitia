@@ -1,0 +1,45 @@
+name: Build Navitia Packages For Dev Multi Distributions
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            distribution: [debian8, debian9, debian10]
+
+    container:
+      image: navitia/${{matrix.distribution}}_dev
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install zip dependency
+      run: apt update && apt install -y zip httpie
+    - name: dkpg-buildpackage
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+    - name: create navitia_${{matrix.distribution}}_packages.zip
+      run: |
+        zip navitia_${{matrix.distribution}}_packages.zip ../navitia-*
+
+    - name: upload ${{matrix.distribution}} packages
+      uses: actions/upload-artifact@v1
+      with:
+        name: navitia-${{matrix.distribution}}-packages
+        path: "navitia_${{matrix.distribution}}_packages.zip"
+    - name: remove useless temporary files
+      run: rm -rf ../navitia-*
+    - name: trigger deploy on artemis
+      if: ${{matrix.distribution}} == 'debian8'
+      run: echo "Trigger Artemis later"
+    - name: slack notification (the job has failed)
+      if: failure()
+      run: |
+          echo '{"text":":warning: Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev+Multi+Distributions%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}

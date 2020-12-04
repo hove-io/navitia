@@ -37,7 +37,7 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.utils import make_speed_switcher
 
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 from zmq import green as zmq
 import six
 import pybreaker
@@ -92,6 +92,12 @@ class Asgard(TransientSocket, Kraken):
             },
             'zmq_socket_ttl': self.socket_ttl,
         }
+
+    def make_location(self, obj):
+        coord = get_pt_object_coord(obj)
+        return type_pb2.LocationContext(
+            place="", access_duration=0, lon=round(coord.lon, 6), lat=round(coord.lat, 6)
+        )
 
     def get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs

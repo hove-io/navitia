@@ -278,6 +278,7 @@ autocomplete_parameter_fields = {
     'address': fields.Raw,
     'poi': fields.Raw,
     'admin': fields.Raw,
+    'config_toml': fields.Raw,
     'admin_level': fields.List(fields.Integer),
 }
 

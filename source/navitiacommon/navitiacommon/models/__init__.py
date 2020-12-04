@@ -883,9 +883,18 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
     admin = db.Column(db.Text, nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=True, server_default="{}")
     poi_types_json = db.Column(db.Text, nullable=True)
+    config_toml = db.Column(db.Text, nullable=True)
 
     def __init__(
-        self, name=None, street=None, address=None, poi=None, admin=None, admin_level=None, poi_types_json=None
+        self,
+        name=None,
+        street=None,
+        address=None,
+        poi=None,
+        admin=None,
+        admin_level=None,
+        poi_types_json=None,
+        config_toml=None,
     ):
         self.name = name
         self.street = street
@@ -894,6 +903,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
         self.admin = admin
         self.admin_level = admin_level
         self.poi_types_json = poi_types_json
+        self.config_toml = config_toml
 
     def main_dir(self, root_path):
         return os.path.join(root_path, self.name)

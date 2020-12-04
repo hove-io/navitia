@@ -1812,6 +1812,13 @@ class AutocompleteParameter(flask_restful.Resource):
             choices=utils.admin_source_types,
         )
         parser.add_argument('admin_level', type=int, action='append', required=False)
+        parser.add_argument(
+            'config_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir',
+            location=('json', 'values'),
+        )
 
         args = parser.parse_args()
 
@@ -1823,6 +1830,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.poi = args['poi']
             autocomplete_parameter.admin = args['admin']
             autocomplete_parameter.admin_level = args['admin_level']
+            autocomplete_parameter.config_toml = args['config_toml']
             db.session.add(autocomplete_parameter)
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_parameter.name)
@@ -1839,7 +1847,13 @@ class AutocompleteParameter(flask_restful.Resource):
         return resp
 
     def put(self, version=0, name=None):
-        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
+        autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first()
+        status = 200
+        if not autocomplete_param:
+            logging.info('Create new autocomplete "{}"'.format(name))
+            autocomplete_param = models.AutocompleteParameter(name=name)
+            db.session.add(autocomplete_param)
+            status = 201
         parser = reqparse.RequestParser()
         parser.add_argument(
             'street',
@@ -1880,26 +1894,31 @@ class AutocompleteParameter(flask_restful.Resource):
         parser.add_argument(
             'admin_level', type=int, action='append', required=False, default=autocomplete_param.admin_level
         )
-
+        parser.add_argument(
+            'config_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir',
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
-
         try:
             autocomplete_param.street = args['street']
             autocomplete_param.address = args['address']
             autocomplete_param.poi = args['poi']
             autocomplete_param.admin = args['admin']
             autocomplete_param.admin_level = args['admin_level']
+            autocomplete_param.config_toml = args['config_toml']
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_param.name)
 
         except Exception:
             logging.exception("fail")
             raise
-
         resp = marshal(autocomplete_param, autocomplete_parameter_fields)
         if version == 1:
-            return {'autocomplete_parameters': [resp]}
-        return resp
+            return {'autocomplete_parameters': [resp]}, status
+        return resp, status
 
     def delete(self, version=0, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()

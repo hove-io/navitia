@@ -26,9 +26,9 @@ includes:
   - apis
   - objects
   - stuff
+  - realtime
   - lexicon
   - errors
-  - realtime
 
 search: true
 ---
