@@ -107,6 +107,7 @@ class Kraken(AbstractStreetNetworkService):
             'max_taxi_duration_to_pt',
             'ridesharing_speed',
             'max_ridesharing_duration_to_pt',
+            '_enable_instructions',
         ]:
             direct_path_request[attr] = request[attr]
 
@@ -175,10 +176,8 @@ class Kraken(AbstractStreetNetworkService):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = self.get_uri_pt_object(pt_object_origin)
-        req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = self.get_uri_pt_object(pt_object_destination)
-        req.direct_path.destination.access_duration = 0
+        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
+        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(mode)
@@ -201,6 +200,8 @@ class Kraken(AbstractStreetNetworkService):
             req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
                 'max_{}_duration_to_pt'.format(mode)
             ]
+
+        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
 
         return req
 
@@ -230,18 +231,17 @@ class Kraken(AbstractStreetNetworkService):
 
         return res.sn_routing_matrix
 
+    def make_location(self, obj):
+        return type_pb2.LocationContext(place=self.get_uri_pt_object(obj), access_duration=0)
+
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
-        req.sn_routing_matrix.origins.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(o), access_duration=0) for o in origins)
-        )
-        req.sn_routing_matrix.destinations.extend(
-            (type_pb2.LocationContext(place=self.get_uri_pt_object(d), access_duration=0) for d in destinations)
-        )
+        req.sn_routing_matrix.origins.extend((self.make_location(o) for o in origins))
+        req.sn_routing_matrix.destinations.extend((self.make_location(d) for d in destinations))
 
         req.sn_routing_matrix.mode = self._hanlde_car_no_park_modes(street_network_mode)
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
