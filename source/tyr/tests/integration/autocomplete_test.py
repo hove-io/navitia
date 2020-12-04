@@ -96,6 +96,7 @@ def test_get_all_autocomplete(create_autocomplete_parameter):
     assert resp[0]['poi'] == 'FUSIO'
     assert resp[0]['admin'] == 'OSM'
     assert resp[0]['admin_level'] == [8, 9]
+    assert not resp[0]['config_toml']
 
 
 def test_get_autocomplete_by_name(create_two_autocomplete_parameters):
@@ -109,6 +110,7 @@ def test_get_autocomplete_by_name(create_two_autocomplete_parameters):
     assert resp['poi'] == 'FUSIO'
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8, 9]
+    assert not resp['config_toml']
 
 
 def test_post_autocomplete(autocomplete_parameter_json):
@@ -124,6 +126,7 @@ def test_post_autocomplete(autocomplete_parameter_json):
     assert resp['poi'] == 'FUSIO'
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8]
+    assert not resp['config_toml']
 
 
 def test_post_autocomplete_cosmo():
@@ -139,6 +142,7 @@ def test_post_autocomplete_cosmo():
     assert resp['poi'] == 'OSM'
     assert resp['admin'] == 'COSMOGONY'
     assert resp['admin_level'] == []
+    assert not resp['config_toml']
 
 
 def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_parameter_json):
@@ -149,6 +153,7 @@ def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_param
     assert resp['poi'] == 'FUSIO'
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8, 9]
+    assert not resp['config_toml']
 
     resp = api_put(
         '/v0/autocomplete_parameters/france',
@@ -161,6 +166,61 @@ def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_param
     assert resp['poi'] == 'FUSIO'
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8]
+    assert not resp['config_toml']
+
+
+def test_create_autocomplete_with_config_toml():
+    json_with_config_toml = {
+        "name": "bobette",
+        "address": "BANO",
+        "admin": "OSM",
+        "admin_level": [8],
+        "config_toml": "dataset = \"bobette\"\n\n[admin]\nimport = true\ncity_level = 8\nlevels = [8]\n\n"
+        "[way]\nimport = true\n\n[poi]\nimport = true\n",
+        "poi": "OSM",
+        "street": "OSM",
+    }
+
+    resp = api_post(
+        '/v0/autocomplete_parameters', data=json.dumps(json_with_config_toml), content_type='application/json'
+    )
+
+    assert resp['name'] == json_with_config_toml["name"]
+    assert resp['street'] == 'OSM'
+    assert resp['address'] == 'BANO'
+    assert resp['poi'] == 'OSM'
+    assert resp['admin'] == 'OSM'
+    assert resp['admin_level'] == [8]
+    assert resp['config_toml'] == json_with_config_toml["config_toml"]
+
+
+def test_put_autocomplete_with_config_toml_not_in_database():
+    json_with_config_toml = {
+        "name": "bobette",
+        "address": "BANO",
+        "admin": "OSM",
+        "admin_level": [8],
+        "config_toml": "dataset = \"bobette\"\n\n[admin]\nimport = true\ncity_level = 8\nlevels = [8]\n\n"
+        "[way]\nimport = true\n\n[poi]\nimport = true\n",
+        "poi": "OSM",
+        "street": "OSM",
+    }
+
+    resp, status_code = api_put(
+        '/v0/autocomplete_parameters/bobette',
+        data=json.dumps(json_with_config_toml),
+        content_type='application/json',
+        check=False,
+    )
+
+    assert status_code == 201
+    assert resp['name'] == json_with_config_toml["name"]
+    assert resp['street'] == 'OSM'
+    assert resp['address'] == 'BANO'
+    assert resp['poi'] == 'OSM'
+    assert resp['admin'] == 'OSM'
+    assert resp['admin_level'] == [8]
+    assert resp['config_toml'] == json_with_config_toml["config_toml"]
 
 
 def test_delete_autocomplete(create_two_autocomplete_parameters):

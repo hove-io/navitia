@@ -160,7 +160,6 @@ def collect_metric(task_type, job, dataset_uid):
     yield
     end = datetime.datetime.utcnow()
     try:
-        logger = logging.getLogger(__name__)
         dataset = models.DataSet.find_by_uid(dataset_uid)
         metric = models.Metric()
         metric.job = job
@@ -716,31 +715,28 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
 @celery.task(bind=True)
 def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch osm2mimir """
+
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running osm2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL']
-    working_directory = unzip_if_needed(filename)
-
-    params = ['-i', working_directory, '--connection-string', cnx_string]
-    for lvl in autocomplete_instance.admin_level:
-        params.append('--level')
-        params.append(str(lvl))
-    if autocomplete_instance.admin == 'OSM':
-        params.append('--import-admin')
-    if autocomplete_instance.street == 'OSM':
-        params.append('--import-way')
-    if autocomplete_instance.poi == 'OSM':
-        params.append('--import-poi')
-        if autocomplete_instance.poi_types_json:
-            poi_types_file_name = '{}/poi-types.json'.format(os.path.dirname(working_directory))
-            with open(poi_types_file_name, 'w') as f:
-                f.write(autocomplete_instance.poi_types_json)
-            params.append('--poi-config')
-            params.append(poi_types_file_name)
-    params.append('--dataset')
-    params.append(autocomplete_instance.name)
+    data_filename = unzip_if_needed(filename)
+    custom_config = "custom_config"
+    working_directory = os.path.dirname(data_filename)
+    custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
+    with open(custom_config_config_toml, 'w') as f:
+        f.write(autocomplete_instance.config_toml.encode("utf-8"))
+    params = [
+        '-i',
+        data_filename,
+        '--connection-string',
+        cnx_string,
+        '-D',
+        "{}/".format(working_directory),
+        '-s',
+        custom_config,
+    ]
     try:
         res = launch_exec("osm2mimir", params, logger)
         if res != 0:
