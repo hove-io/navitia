@@ -8,7 +8,6 @@ pull_request_rules:
       - status-success=build (navitia/debian10_dev)
       - status-success=checks
       - status-success=precommit
-      - status-success=check_artemis
       - base=dev
       - label!=do_not_merge
       - label!=wip
