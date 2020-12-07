@@ -64,7 +64,7 @@ class InstantSystem(AbstractRidesharingService):
         feed_publisher=DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER,
         rating_scale_min=None,
         rating_scale_max=None,
-        timeout=2,
+        timeout=5,
         crowfly_radius=200,
         timeframe_duration=1800,
     ):
@@ -123,7 +123,7 @@ class InstantSystem(AbstractRidesharingService):
 
         return (j for j in raw_journeys if has_ridesharing_path(j))
 
-    def _make_response(self, raw_json, from_coord, to_coord, instance):
+    def _make_response(self, raw_json, from_coord, to_coord, instance_params):
         raw_journeys = raw_json.get('journeys')
 
         if not raw_journeys:
@@ -165,7 +165,7 @@ class InstantSystem(AbstractRidesharingService):
                 )
                 # we choose to calculate with speed=1.12 the average speed for a walker
                 res.origin_pickup_duration = jormungandr.street_network.utils.get_manhattan_duration(
-                    res.origin_pickup_distance, instance.walking_speed
+                    res.origin_pickup_distance, instance_params.walking_speed
                 )
                 res.origin_pickup_shape = None  # Not specified
 
@@ -186,7 +186,7 @@ class InstantSystem(AbstractRidesharingService):
                 )
                 # we choose to calculate with speed=1.12 the average speed for a walker
                 res.dropoff_dest_duration = jormungandr.street_network.utils.get_manhattan_duration(
-                    res.dropoff_dest_distance, instance.walking_speed
+                    res.dropoff_dest_distance, instance_params.walking_speed
                 )
                 res.dropoff_dest_shape = None  # Not specified
 
@@ -228,7 +228,7 @@ class InstantSystem(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -270,8 +270,8 @@ class InstantSystem(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(resp.json(), from_coord, to_coord, instance)
-            self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
+            r = self._make_response(resp.json(), from_coord, to_coord, instance_params)
+            self.record_additional_info('   Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.instant-system').info(
                 'Received ridesharing offers : %s',
                 len(r),
