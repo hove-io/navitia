@@ -50,6 +50,16 @@ jobs:
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: build
       run: DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+    - name: install zip dependency
+      run: apt update && apt install -y zip httpie
+    - name: create navitia_debian_packages.zip
+      run: |
+        zip navitia_debian_packages.zip ../navitia-*
+    - name: upload debian packages
+      uses: actions/upload-artifact@v1
+      with:
+        name: navitia-debian-packages
+        path: "navitia_debian_packages.zip"
     - name: Tests python2
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
@@ -58,6 +68,7 @@ jobs:
         ctest --output-on-failure
     - name: Tests python3
       run: |
+        cd build_package
         pip install virtualenv -U
         virtualenv -p /usr/local/bin/python3.6 navitia_py3
         . navitia_py3/bin/activate
@@ -69,6 +80,7 @@ jobs:
         deactivate
     - name: remove useless tests
       run: |
+        cd build_package
         rm -rf tests/mock_kraken kraken/tests ed/tests fare/tests routing/tests calendar/tests
         rm -rf georef/tests proximity_list/tests time_tables/tests equipment/tests
         rm -rf ptreferential/tests
@@ -78,6 +90,7 @@ jobs:
         pip install -r source/sql/requirements.txt
     - name: docker_test for python2
       run: |
+        cd build_package
         python -V
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
@@ -87,6 +100,7 @@ jobs:
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     - name: docker_test for python3
       run: |
+        cd build_package
         . navitia_py3/bin/activate
         python -V
         pip install -r source/tyr/requirements_dev.txt
