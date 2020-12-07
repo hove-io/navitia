@@ -68,7 +68,6 @@ jobs:
         ctest --output-on-failure
     - name: Tests python3
       run: |
-        cd build_package
         pip install virtualenv -U
         virtualenv -p /usr/local/bin/python3.6 navitia_py3
         . navitia_py3/bin/activate
@@ -76,6 +75,7 @@ jobs:
         pip install -r source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        cd build_package
         ctest --output-on-failure
         deactivate
     - name: remove useless tests
@@ -100,13 +100,13 @@ jobs:
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     - name: docker_test for python3
       run: |
-        cd build_package
         . navitia_py3/bin/activate
         python -V
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
+        cd build_package
         make docker_test
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
