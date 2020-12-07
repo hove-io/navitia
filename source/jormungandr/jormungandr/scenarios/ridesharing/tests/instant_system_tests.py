@@ -250,7 +250,10 @@ def instant_system_test():
             datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
         )
         ridesharing_journeys, feed_publisher = instant_system.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance=DummyInstance()
+            from_coord=from_coord,
+            to_coord=to_coord,
+            period_extremity=period_extremity,
+            instance_params=DummyInstance(),
         )
 
         assert len(ridesharing_journeys) == 2
