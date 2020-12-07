@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump GitHub context
+      env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: checkout submodules
+      shell: bash
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: check submodules
+      run: ./source/scripts/check_submodules.sh
+
+
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
+
+    container:
+        image: ${{matrix.docker_image}}
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
+    - name: Install dependencies for python2
+      run: pip install -r source/jormungandr/requirements_dev.txt
+    - name: build
+      run: DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+    - name: Tests python2
+      run: |
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+    - name: Tests python3
+      run: |
+        pip install virtualenv -U
+        virtualenv -p /usr/local/bin/python3.6 navitia_py3
+        . navitia_py3/bin/activate
+        python -V
+        pip install -r source/jormungandr/requirements_dev.txt
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+        deactivate
+    - name: remove useless tests
+      run: |
+        rm -rf tests/mock_kraken kraken/tests ed/tests fare/tests routing/tests calendar/tests
+        rm -rf georef/tests proximity_list/tests time_tables/tests equipment/tests
+        rm -rf ptreferential/tests
+    - name: install Tyr dependencies for python2
+      run: |
+        pip install -r source/tyr/requirements_dev.txt
+        pip install -r source/sql/requirements.txt
+    - name: docker_test for python2
+      run: |
+        python -V
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
+        echo $NAVITIA_CHAOS_DUMP_PATH
+        make docker_test
+      env:
+        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
+        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+    - name: docker_test for python3
+      run: |
+        . navitia_py3/bin/activate
+        python -V
+        pip install -r source/tyr/requirements_dev.txt
+        pip install -r source/sql/requirements.txt
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
+        echo $NAVITIA_CHAOS_DUMP_PATH
+        make docker_test
+      env:
+        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
+        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+
+
+  precommit:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+      # we need python 3.6 and clang-format-6.0
+      # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
+      # resolved
+    steps:
+    - uses: actions/checkout@v1
+    - name: install dependencies
+      run: |
+        apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
+        pip install -r requirements_pre-commit.txt --upgrade
+    - name: get submodule
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: Build Protobuf
+      run: bash source/scripts/build_protobuf.sh
+    - name: Pre-commit Run
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+      run: |
+        pre-commit install --install-hooks
+        pre-commit run --all --show-diff-on-failure
+
+
+  release_script_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '2.7'
+    - uses: actions/checkout@v2
+    - uses: dschep/install-pipenv-action@v1
+    - name: Setup Pipenv and Run tests
+      working-directory: release
+      env:
+        GIT_PYTHON_REFRESH: quiet
+      run: |
+        pipenv install --dev
+        pipenv run pytest
+        pipenv --rm
