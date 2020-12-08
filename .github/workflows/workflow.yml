@@ -37,10 +37,10 @@ jobs:
 
     strategy:
         matrix:
-            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
+            distribution: [debian8, debian9, debian10]
 
     container:
-        image: ${{matrix.docker_image}}
+      image: navitia/${{matrix.distribution}}_dev
 
     services:
       rabbitmq:
@@ -58,14 +58,14 @@ jobs:
       run: DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
     - name: install zip dependency
       run: apt update && apt install -y zip httpie
-    - name: create navitia_debian_packages.zip
+    - name: create navitia_${{matrix.distribution}}_packages.zip
       run: |
-        zip navitia_debian_packages.zip ../navitia-*
-    - name: upload debian packages
+        zip navitia_${{matrix.distribution}}_packages.zip ../navitia-*
+    - name: upload ${{matrix.distribution}} packages
       uses: actions/upload-artifact@v1
       with:
-        name: navitia-debian-packages
-        path: "navitia_debian_packages.zip"
+        name: navitia-${{matrix.distribution}}-packages
+        path: "navitia_${{matrix.distribution}}_packages.zip"
     - name: Tests python2
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
