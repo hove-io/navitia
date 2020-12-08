@@ -59,8 +59,10 @@ jobs:
         mkdir build
         cd build
         cmake -DSTRIP_SYMBOLS=ON ../source
-    - name: Build with tests
-      run:  make -j $(nproc)
+    - name: Build (including test execs)
+      run:  |
+       cd build
+       make -j $(nproc)
     - name: Tests python2
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
