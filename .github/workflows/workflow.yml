@@ -10,7 +10,6 @@ on:
     types:
       - created
 
-
 jobs:
   info:
     runs-on: ubuntu-latest
@@ -55,14 +54,23 @@ jobs:
           submodules: 'recursive'
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
-    - name: configure
-      run: cmake -DSTRIP_SYMBOLS=ON source
-    - name: make
-      run:  make -j $(nproc)
+    - name: build
+      run: DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+    - name: install zip dependency
+      run: apt update && apt install -y zip httpie
+    - name: create navitia_debian_packages.zip
+      run: |
+        zip navitia_debian_packages.zip ../navitia-*
+    - name: upload debian packages
+      uses: actions/upload-artifact@v1
+      with:
+        name: navitia-debian-packages
+        path: "navitia_debian_packages.zip"
     - name: Tests python2
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        cd build_package
         ctest --output-on-failure
     - name: Tests python3
       run: |
@@ -73,10 +81,12 @@ jobs:
         pip install -r source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        cd build_package
         ctest --output-on-failure
         deactivate
     - name: remove useless tests
       run: |
+        cd build_package
         rm -rf tests/mock_kraken kraken/tests ed/tests fare/tests routing/tests calendar/tests
         rm -rf georef/tests proximity_list/tests time_tables/tests equipment/tests
         rm -rf ptreferential/tests
@@ -86,6 +96,7 @@ jobs:
         pip install -r source/sql/requirements.txt
     - name: docker_test for python2
       run: |
+        cd build_package
         python -V
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
@@ -101,6 +112,7 @@ jobs:
         pip install -r source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
+        cd build_package
         make docker_test
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
