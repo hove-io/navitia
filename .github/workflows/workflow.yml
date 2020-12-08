@@ -38,6 +38,7 @@ jobs:
     strategy:
         matrix:
             distribution: [debian8, debian9, debian10]
+        max-parallel: 1
 
     container:
       image: navitia/${{matrix.distribution}}_dev
