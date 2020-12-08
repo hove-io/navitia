@@ -271,7 +271,7 @@ class InstantSystem(AbstractRidesharingService):
 
         if resp:
             r = self._make_response(resp.json(), from_coord, to_coord, instance_params)
-            self.record_additional_info('   Received ridesharing offers', nb_ridesharing_offers=len(r))
+            self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.instant-system').info(
                 'Received ridesharing offers : %s',
                 len(r),
