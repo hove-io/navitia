@@ -1819,7 +1819,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
             ]
         )
         assert new_trip_disrupt['application_periods'][0]['begin'] == '20120614T080100'
-        assert new_trip_disrupt['application_periods'][0]['end'] == '20120614T080101'  # last second is excluded
+        assert new_trip_disrupt['application_periods'][0]['end'] == '20120614T080102'
 
         # Check that a PT journey now exists
         response = self.query_region(C_B_query)
@@ -1832,6 +1832,12 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
+
+        # Check date_times
+        assert pt_journey['sections'][0]['departure_date_time'] == '20120614T080100'
+        assert pt_journey['sections'][0]['arrival_date_time'] == '20120614T080102'
+        assert pt_journey['sections'][0]['stop_date_times'][0]['arrival_date_time'] == '20120614T080100'
+        assert pt_journey['sections'][0]['stop_date_times'][-1]['arrival_date_time'] == '20120614T080102'
 
         # Check /pt_objects after: new objects created
         response = self.query_region(ptobj_query)
