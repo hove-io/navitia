@@ -1030,7 +1030,7 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 | nop     | free_radius_from     | int     | Radius length (in meters) around the coordinates of departure in which the stop points are considered free to go (crowfly=0) | 0           |
 | nop     | free_radius_to	     | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)  | 0           |
-| nop     | timeframe_duration	     | int     | Minimum timeframe to search journeys (maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
+| nop     | timeframe_duration	     | int     | Minimum timeframe to search journeys (in seconds, maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
