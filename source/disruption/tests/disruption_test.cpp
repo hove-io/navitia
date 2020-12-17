@@ -189,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
 
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131220T123200"));
-    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123201"));
 }
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
@@ -213,7 +213,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     BOOST_CHECK_EQUAL(impact->status(), pbnavitia::ActiveStatus::active);
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131223T123200"));
-    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123201"));
 }
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
@@ -241,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
 
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131221T083200"));
-    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123200"));
+    BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123201"));
 }
 
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {

@@ -537,7 +537,7 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
     def run_check(self, object_id, type_):
         links = []
-        journey_query_2_to_format = "journeys?from={from_coord}&to={to_coord}&disruption_active=true".format(
+        journey_query_2_to_format = "journeys?from={from_coord}&to={to_coord}&data_freshness=realtime".format(
             from_coord=s_coord, to_coord=r_coord
         )
         journey_query_2_to_format += "&datetime={datetime}"
@@ -640,17 +640,207 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         We delete the network disruption and test if there's a journey using
         the line B.
         """
-        response = self.query_region(journey_basic_query)
 
+        def contains_pt_journey(resp):
+            return any(
+                [
+                    len([s for s in j["sections"] if s["type"] == "public_transport"]) == 1
+                    for j in resp["journeys"]
+                ]
+            )
+
+        def get_pt_sections(resp):
+            return [s for j in response['journeys'] for s in j['sections'] if s['type'] == 'public_transport']
+
+        response = self.query_region(journey_basic_query)
         assert "journeys" in response
         disruptions = self.get_disruptions(response)
         # no disruptions on the journey for the moment
         assert not disruptions
 
-        # some disruption are loaded on the dataset though
+        # Check which line is used in PT journey
+        pt_sections = get_pt_sections(response)
+        assert len(pt_sections) == 1
+        assert pt_sections[0]['departure_date_time'] == '20120614T080100'
+        assert pt_sections[0]['arrival_date_time'] == '20120614T080102'
+        line_id = next(o['id'] for o in pt_sections[0]['links'] if o['type'] == 'line')
+        assert line_id == 'A'
+
+        # some disruptions are loaded on the dataset though
         nb_pre_loaded_disruption = len(get_not_null(self.query_region('disruptions'), 'disruptions'))
         assert nb_pre_loaded_disruption == 11
 
+        # Check that there is one non-blocking disruption on some lines existing in the dataset:
+        response = self.query_region(
+            journey_basic_query + "&_current_datetime=20120614T080000&data_freshness=base_schedule"
+        )
+        assert len(response['disruptions']) == 1
+        assert response['disruptions'][0]['severity']['effect'] == 'UNKNOWN_EFFECT'
+        impacted_lines = [
+            obj['pt_object']['id']
+            for obj in response['disruptions'][0]['impacted_objects']
+            if obj['pt_object']['embedded_type'] == 'line'
+        ]
+        assert 'A' in impacted_lines
+        assert 'B' in impacted_lines
+        assert 'C' in impacted_lines
+
+        # Step 1 : Send an impact on the line 'A' with end date same as PT departure datetime
+        # Information on PT section: departure = 20120614T080100 / arrival = 20120614T080102
+        # Proposed application period = (20120614T080000, 20120614T080100)
+        self.send_mock(
+            "blocking_line_disruption_ending_at_pt_departure",
+            "A",
+            "line",
+            blocking=True,
+            start_period="20120614T080000",
+            end_period="20120614T080100",
+        )
+
+        # Check disruptions
+        response = self.query_region('disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) - nb_pre_loaded_disruption == 1
+        for d in disruptions:
+            is_valid_disruption(d)
+        assert "blocking_line_disruption_ending_at_pt_departure" in [d['disruption_uri'] for d in disruptions]
+        nb_pre_loaded_disruption = len(disruptions)
+
+        # Check that the journey with PT exists and line 'A' is used in PT
+        response = self.query_region(
+            journey_basic_query + "&_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert contains_pt_journey(response) is True
+        pt_sections = get_pt_sections(response)
+        assert len(pt_sections) == 1
+        assert pt_sections[0]['departure_date_time'] == '20120614T080100'
+        assert pt_sections[0]['arrival_date_time'] == '20120614T080102'
+        line_id = next(o['id'] for o in pt_sections[0]['links'] if o['type'] == 'line')
+        assert line_id == 'A'
+
+        # One disruption on line 'A' with severity 'UNKNOWN_EFFECT' exists (ignored disruption)
+        assert len(response['disruptions']) == 1
+        assert response['disruptions'][0]['severity']['effect'] == 'UNKNOWN_EFFECT'
+        impacted_lines = [
+            obj['pt_object']['id']
+            for obj in response['disruptions'][0]['impacted_objects']
+            if obj['pt_object']['embedded_type'] == 'line'
+        ]
+        assert 'A' in impacted_lines
+
+        # Step 2 : Send an impact on the line 'A' with start date same as PT arrival datetime
+        # Proposed application period = (20120614T080102, 20120614T090000)
+        self.send_mock(
+            "blocking_line_disruption_starting_from_pt_arrival",
+            "A",
+            "line",
+            blocking=True,
+            start_period="20120614T080102",
+            end_period="20120614T090000",
+        )
+        # Check disruptions
+        response = self.query_region('disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) - nb_pre_loaded_disruption == 1
+        for d in disruptions:
+            is_valid_disruption(d)
+        assert "blocking_line_disruption_starting_from_pt_arrival" in [d['disruption_uri'] for d in disruptions]
+        nb_pre_loaded_disruption = len(disruptions)
+
+        # Check that the journey with PT exists and line 'A' is used in PT
+        response = self.query_region(
+            journey_basic_query + "&_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert contains_pt_journey(response) is True
+        pt_sections = get_pt_sections(response)
+        assert len(pt_sections) == 1
+        assert pt_sections[0]['departure_date_time'] == '20120614T080100'
+        assert pt_sections[0]['arrival_date_time'] == '20120614T080102'
+        line_id = next(o['id'] for o in pt_sections[0]['links'] if o['type'] == 'line')
+        assert line_id == 'A'
+
+        # One disruption on line 'A' with severity 'UNKNOWN_EFFECT' exists
+        assert len(response['disruptions']) == 1
+        assert response['disruptions'][0]['severity']['effect'] == 'UNKNOWN_EFFECT'
+        impacted_lines = [
+            obj['pt_object']['id']
+            for obj in response['disruptions'][0]['impacted_objects']
+            if obj['pt_object']['embedded_type'] == 'line'
+        ]
+        assert 'A' in impacted_lines
+
+        # Step 3 : Send an impact on the line 'A' with start date 1 second before PT arrival datetime
+        # Proposed application period = (20120614T080101, 20120614T090000)
+        self.send_mock(
+            "blocking_line_disruption_starting_1s_before_pt_arrival",
+            "A",
+            "line",
+            blocking=True,
+            start_period="20120614T080101",
+            end_period="20120614T090000",
+        )
+        # Check disruptions
+        response = self.query_region('disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) - nb_pre_loaded_disruption == 1
+        for d in disruptions:
+            is_valid_disruption(d)
+        assert "blocking_line_disruption_starting_1s_before_pt_arrival" in [
+            d['disruption_uri'] for d in disruptions
+        ]
+        nb_pre_loaded_disruption = len(disruptions)
+
+        # Check that line 'A' is not used any more in the journey with PT instead it's line 'M'
+        response = self.query_region(
+            journey_basic_query + "&_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert contains_pt_journey(response) is True
+        pt_sections = get_pt_sections(response)
+        assert len(pt_sections) == 1
+        assert pt_sections[0]['departure_date_time'] == '20120614T080101'
+        assert pt_sections[0]['arrival_date_time'] == '20120614T080103'
+        line_id = next(o['id'] for o in pt_sections[0]['links'] if o['type'] == 'line')
+        assert line_id == 'M'
+        # No disruption on line 'M'
+        assert len(response['disruptions']) == 0
+
+        # Step 4 : Send an impact on the line 'M' with end date 1 second after PT departure datetime
+        # Information on PT section: departure = 20120614T080101 / arrival = 20120614T080103
+        # Proposed application period = (20120614T080000, 20120614T080102)
+        self.send_mock(
+            "blocking_line_disruption_ending_1s_after_pt_departure",
+            "M",
+            "line",
+            blocking=True,
+            start_period="20120614T080000",
+            end_period="20120614T080102",
+        )
+        # Check disruptions
+        response = self.query_region('disruptions')
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) - nb_pre_loaded_disruption == 1
+        for d in disruptions:
+            is_valid_disruption(d)
+        assert "blocking_line_disruption_ending_1s_after_pt_departure" in [
+            d['disruption_uri'] for d in disruptions
+        ]
+        nb_pre_loaded_disruption = len(disruptions)
+
+        # Check that line 'M' is not used any more in the journey with PT instead it's line 'B'
+        response = self.query_region(
+            journey_basic_query + "&_current_datetime=20120614T080000&data_freshness=realtime"
+        )
+        assert contains_pt_journey(response) is True
+        pt_sections = get_pt_sections(response)
+        assert len(pt_sections) == 1
+        assert pt_sections[0]['departure_date_time'] == '20120614T180100'
+        assert pt_sections[0]['arrival_date_time'] == '20120614T180102'
+        line_id = next(o['id'] for o in pt_sections[0]['links'] if o['type'] == 'line')
+        assert line_id == 'B'
+        # No disruption on line 'B'
+        assert len(response['disruptions']) == 0
+
+        # Send blocking impacts on line A and base_network with very wide application period
         self.send_mock("blocking_line_disruption", "A", "line", blocking=True)
         self.send_mock("blocking_network_disruption", "base_network", "network", blocking=True)
 
@@ -663,15 +853,9 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert {"blocking_line_disruption", "blocking_network_disruption"}.issubset(
             set([d['disruption_uri'] for d in disruptions])
         )
-
-        response = self.query_region(journey_basic_query + "&disruption_active=true")
-
-        assert all(
-            [
-                len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0
-                for j in response["journeys"]
-            ]
-        )
+        # Check that there is no more PT journey in the response
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        assert contains_pt_journey(response) is False
 
         # we should then not have disruptions (since we don't get any journey)
         disruptions = self.get_disruptions(response)
@@ -679,7 +863,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         # we then query for the same journey but without disruptions,
         # so we'll have a journey (but the disruptions will be displayed
-        response = self.query_region(journey_basic_query + "&disruption_active=false")
+        response = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         disruptions = self.get_disruptions(response)
         assert disruptions
         assert len(disruptions) == 2
@@ -687,7 +871,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert 'blocking_network_disruption' in disruptions
 
         self.send_mock("blocking_network_disruption", "base_network", "network", blocking=True, is_deleted=True)
-        response = self.query_region(journey_basic_query + "&disruption_active=true")
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         links = []
 
         def get_line_id(k, v):
@@ -699,7 +883,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert all([id_ != "A" for id_ in links])
 
         # we also query without disruption and obviously we should not have the network disruptions
-        response = self.query_region(journey_basic_query + "&disruption_active=false")
+        response = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         assert 'journeys' in response
         disruptions = self.get_disruptions(response)
         assert disruptions
