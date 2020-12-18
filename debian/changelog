@@ -1,3 +1,11 @@
+navitia2 (9.1.0) unstable; urgency=low
+
+  * [Doc]: timefame_duration added  <https://github.com/CanalTP/navitia/pull/3340>
+  * [Disrutpions]: Fix application period end value  <https://github.com/CanalTP/navitia/pull/3339>
+  * [CI] fix slack messages with version number  <https://github.com/CanalTP/navitia/pull/3336>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 18 Dec 2020 10:12:53 +0100
+
 navitia2 (9.0.0) unstable; urgency=low
 
   * [Jormungandr] Reduce size of matrix request and direct path response  <https://github.com/CanalTP/navitia/pull/3325>

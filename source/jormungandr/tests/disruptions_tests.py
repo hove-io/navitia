@@ -526,34 +526,37 @@ class TestDisruptions(AbstractTestFixture):
         assert len(disruptions) == 5
 
         # in the disruptoins the earliest one is called 'too_bad_all_lines'
-        # and is active on [20120614T060000, 20120614T115959[
+        # and is active on [20120614T060000, 20120614T120000] in 'main_routing_test'
         too_bad_all_line = next(d for d in disruptions if d['id'] == 'too_bad_all_lines')
         assert too_bad_all_line['application_periods'][0]['begin'] == '20120614T060000'
-        assert too_bad_all_line['application_periods'][0]['end'] == '20120614T115959'
+        assert too_bad_all_line['application_periods'][0]['end'] == '20120614T120000'
 
         # if we ask the all the disruption valid until 20120615, we only got 'too_bad_all_lines'
         disrup = self.query_region('lines/A/disruptions?until=20120615T000000')['disruptions']
         assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
 
         # same if we ask until a date in too_bad_all_line application_periods
+        # filter condition: period.begin < until
         disrup = self.query_region('lines/A/disruptions?until=20120614T105959')['disruptions']
         assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
 
         # same if we ask for the very beginning of the disruption
+        # filter condition: period.begin <= until
         disrup = self.query_region('lines/A/disruptions?until=20120614T060000')['disruptions']
         assert {d['id'] for d in disrup} == {'too_bad_all_lines'}
 
         # but the very second before, we got nothing
+        # filter condition: period.begin <= until
         _, code = self.query_region('lines/A/disruptions?until=20120614T055959', check=False)
         assert code == 404
 
         # if we ask for all disruption valid since 20120614T115959 (the end of too_bad_all_line),
-        # we got all the disruptions
+        # we got all the disruptions (filter condition: period.end > since)
         disrup = self.query_region('lines/A/disruptions?since=20120614T115959')['disruptions']
         assert len(disrup) == 5
 
-        # if we ask for all disruption valid since 20120614T120000 (the second after the end of
-        # too_bad_all_line), we got all of them but 'too_bad_all_lines'
+        # if we ask for all disruption valid since 20120614T120000, we got all of them but 'too_bad_all_lines'
+        # filter condition: period.end > since
         disrup = self.query_region('lines/A/disruptions?since=20120614T120000')['disruptions']
         assert len(disrup) == 4 and not any(d for d in disrup if d['id'] == 'too_bad_all_lines')
 

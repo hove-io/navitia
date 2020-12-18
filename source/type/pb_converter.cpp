@@ -1151,7 +1151,7 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     for (const auto& app_period : impact->application_periods) {
         auto p = pb_impact->add_application_periods();
         p->set_begin(navitia::to_posix_timestamp(app_period.begin()));
-        p->set_end(navitia::to_posix_timestamp(app_period.last()));
+        p->set_end(navitia::to_posix_timestamp(app_period.end()));
     }
 
     // TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
