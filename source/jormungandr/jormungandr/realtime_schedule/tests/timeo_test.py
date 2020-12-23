@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, division
 import datetime
 import mock
+import requests_mock
 from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
@@ -210,6 +211,27 @@ def get_passages_test():
         passages = timeo._get_passages(
             MockResponse(504, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
         )
+
+
+@requests_mock.Mocker()
+def get_next_passage_for_route_point_with_requests_response_model_test(requests_mock):
+    '''
+        We test a call on Timeo based on a real requests' response model object.
+
+        requests.models.Response() behaves differently from our mock_response
+        as a boolean cast is performed on request.models.Response() to return True
+        if the http status code is less than 400.
+
+        Hence a Timeo request with a 404 response should raise an error !
+    '''
+    timeo_test_url = 'http://bob.com/tata'
+
+    requests_mock.get(timeo_test_url, status_code=404)
+
+    timeo = Timeo('tata', timeo_test_url, {}, 'UTC')
+    timeo._make_url = mock.MagicMock(return_value=timeo_test_url)
+    with raises(RealtimeProxyError):
+        timeo._get_next_passage_for_route_point(mock.MagicMock())
 
 
 def get_passages_no_passages_test():
