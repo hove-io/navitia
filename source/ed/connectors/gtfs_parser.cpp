@@ -179,7 +179,7 @@ int time_to_int(const std::string& time) {
         result = boost::lexical_cast<int>(elts[0]) * 3600;
         result += boost::lexical_cast<int>(elts[1]) * 60;
         result += boost::lexical_cast<int>(elts[2]);
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         return std::numeric_limits<int>::min();
     }
     return result;
@@ -373,7 +373,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     try {
         stop->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
         stop->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
-    } catch (boost::bad_lexical_cast) {
+    } catch (const boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(logger,
                        "Impossible to parse the coordinate for " + row[id_c] + " " + row[code_c] + " " + row[name_c]);
         return false;
@@ -619,7 +619,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
             ++data.count_too_long_connections;
             return;
         }
-    } catch (boost::bad_lexical_cast&) {
+    } catch (const boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(logger, "Invalid connection time: " + row[time_c]);
         return;
     }
