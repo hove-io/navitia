@@ -39,7 +39,7 @@ namespace navitia {
 namespace vptranslator {
 
 using navitia::type::ValidityPattern;
-using Week = navitia::type::Calendar::Week;
+using Week = navitia::type::WeekPattern;
 using boost::gregorian::date;
 using boost::gregorian::date_duration;
 using boost::gregorian::date_period;
