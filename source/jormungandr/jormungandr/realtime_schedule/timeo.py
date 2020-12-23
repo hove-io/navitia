@@ -183,19 +183,10 @@ class Timeo(RealtimeProxy):
             extra={'rt_system_id': six.text_type(self.rt_system_id)},
         )
         r = self._call_timeo(url)
-        if not r:
-            return None
-
         return self._get_passages(r, current_dt, route_point.fetch_line_uri())
 
     def _get_passages(self, response, current_dt, line_uri=None):
         status_code = response.status_code
-        timeo_resp = response.json()
-
-        logging.getLogger(__name__).debug(
-            'timeo response: {}'.format(timeo_resp), extra={'rt_system_id': six.text_type(self.rt_system_id)}
-        )
-
         # Handling http error
         if status_code != 200:
             logging.getLogger(__name__).error(
@@ -203,6 +194,11 @@ class Timeo(RealtimeProxy):
                 extra={'rt_system_id': six.text_type(self.rt_system_id), 'status_code': status_code},
             )
             raise RealtimeProxyError('non 200 response')
+
+        timeo_resp = response.json()
+        logging.getLogger(__name__).debug(
+            'timeo response: {}'.format(timeo_resp), extra={'rt_system_id': six.text_type(self.rt_system_id)}
+        )
 
         # internal timeo error handling
         message_responses = timeo_resp.get('MessageResponse')
