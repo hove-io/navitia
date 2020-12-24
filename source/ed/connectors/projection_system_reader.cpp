@@ -81,7 +81,7 @@ ConvCoord ProjectionSystemReader::read_conv_coord() const {
     if (reader.has_col(is_degree_col, row)) {
         try {
             is_degree = boost::lexical_cast<bool>(row.at(is_degree_col));
-        } catch (boost::bad_lexical_cast) {
+        } catch (const boost::bad_lexical_cast&) {
             LOG4CPLUS_INFO(logger, "Unable to cast '" << row[is_degree_col] << "' to bool, ignoring parameter");
         }
     }
