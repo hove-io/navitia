@@ -36,9 +36,9 @@ jobs:
         path: "navitia_${{matrix.distribution}}_packages.zip"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
-    - name: trigger deploy on artemis
+    - name: run artemis NG on https://jenkins-core.canaltp.fr/job/artemis_ng
       if: ${{matrix.distribution}} == 'debian8'
-      run: echo "Trigger Artemis later"
+      run: http -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/build
     - name: slack notification (the job has failed)
       if: failure()
       run: |
