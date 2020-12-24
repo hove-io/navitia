@@ -213,8 +213,7 @@ def get_passages_test():
         )
 
 
-@requests_mock.Mocker()
-def get_next_passage_for_route_point_with_requests_response_model_test(requests_mock):
+def get_next_passage_for_route_point_with_requests_response_model_test():
     '''
         We test a call on Timeo based on a real requests' response model object.
 
@@ -226,12 +225,13 @@ def get_next_passage_for_route_point_with_requests_response_model_test(requests_
     '''
     timeo_test_url = 'http://bob.com/tata'
 
-    requests_mock.get(timeo_test_url, status_code=404)
+    with requests_mock.Mocker() as mocker:
+        mocker.get(timeo_test_url, status_code=404)
 
-    timeo = Timeo('tata', timeo_test_url, {}, 'UTC')
-    timeo._make_url = mock.MagicMock(return_value=timeo_test_url)
-    with raises(RealtimeProxyError):
-        timeo._get_next_passage_for_route_point(mock.MagicMock())
+        timeo = Timeo('tata', timeo_test_url, {}, 'UTC')
+        timeo._make_url = mock.MagicMock(return_value=timeo_test_url)
+        with raises(RealtimeProxyError):
+            timeo._get_next_passage_for_route_point(mock.MagicMock())
 
 
 def get_passages_no_passages_test():
