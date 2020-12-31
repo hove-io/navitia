@@ -224,6 +224,13 @@ struct disruption_fixture {
             impact_acquired->application_periods.push_back(pt::time_period(
                 pt::ptime(*it, pt::duration_from_string("06:00")), pt::ptime(*it, pt::duration_from_string("20:00"))));
         }
+        navitia::type::disruption::ApplicationPattern application_pattern;
+        application_pattern.add_time_slot("06:00"_t, "20:00"_t);
+        application_pattern.week_pattern = std::bitset<7>{"1111111"};
+        application_pattern.application_period =
+            boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20140301"),
+                                          boost::gregorian::from_undelimited_string("20140305"));
+        impact_acquired->application_patterns.push_back(application_pattern);
     }
 
     std::unique_ptr<Disruption> disruption;
@@ -231,10 +238,27 @@ struct disruption_fixture {
     pt::ptime time_in_publication_period = pt::time_from_string("2013-02-22 20:00:00");
 };
 
+BOOST_FIXTURE_TEST_CASE(application_patterns, disruption_fixture) {
+    auto impact = _impact.lock();
+
+    auto application_patterns = impact->application_patterns;
+    BOOST_CHECK_EQUAL(application_patterns.size(), 1);
+
+    auto application_pattern = application_patterns[0];
+    BOOST_CHECK_EQUAL(application_pattern.application_period,
+                      boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20140301"),
+                                                    boost::gregorian::from_undelimited_string("20140305")));
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern, std::bitset<7>{"1111111"});
+    BOOST_CHECK_EQUAL(application_pattern.time_slots.size(), 1);
+
+    auto time_slot = application_pattern.time_slots[0];
+    BOOST_CHECK_EQUAL(time_slot.begin, "06:00"_t);
+    BOOST_CHECK_EQUAL(time_slot.end, "20:00"_t);
+}
+
 BOOST_FIXTURE_TEST_CASE(message_publishable, disruption_fixture) {
     auto impact = _impact.lock();
     auto p = pt::time_period(pt::time_from_string("2013-03-01 07:00:00"), pt::hours(1));  // in publication period
-
     BOOST_CHECK(impact->is_valid(time_in_publication_period, p));
     BOOST_CHECK_NOT(impact->is_valid(pt::time_from_string("2013-02-22 06:00:00"), p));  // before publication period
     BOOST_CHECK_NOT(impact->is_valid(pt::time_from_string("2013-02-24 01:00:00"), p));  // after in publication period

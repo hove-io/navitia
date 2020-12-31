@@ -409,6 +409,12 @@ Impacter& Impacter::application_periods(const boost::posix_time::time_period& p)
     return *this;
 }
 
+Impacter& Impacter::application_patterns(const dis::ApplicationPattern& application_pattern) {
+    impact->application_patterns.push_back(application_pattern);
+    impact->sort_application_patterns();
+    return *this;
+}
+
 Impacter& Impacter::publish(const boost::posix_time::time_period& p) {
     // to ease use without a DisruptionCreator
     impact->disruption->publication_period = p;
