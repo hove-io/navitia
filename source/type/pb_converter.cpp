@@ -1154,6 +1154,27 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
         p->set_end(navitia::to_posix_timestamp(app_period.end()));
     }
 
+    for (const auto& app_period : impact->application_patterns) {
+        auto application_pattern = pb_impact->add_application_patterns();
+        auto application_period = application_pattern->mutable_application_period();
+        application_period->set_begin(
+            navitia::to_posix_timestamp(navitia::ptime(app_period.application_period.begin())));
+        application_period->set_end(navitia::to_posix_timestamp(navitia::ptime(app_period.application_period.end())));
+        auto week = application_pattern->mutable_week_pattern();
+        week->set_monday(app_period.week_pattern[navitia::Monday]);
+        week->set_tuesday(app_period.week_pattern[navitia::Tuesday]);
+        week->set_wednesday(app_period.week_pattern[navitia::Wednesday]);
+        week->set_thursday(app_period.week_pattern[navitia::Thursday]);
+        week->set_friday(app_period.week_pattern[navitia::Friday]);
+        week->set_saturday(app_period.week_pattern[navitia::Saturday]);
+        week->set_sunday(app_period.week_pattern[navitia::Sunday]);
+        for (const auto& ts : app_period.time_slots) {
+            auto time_slot = application_pattern->add_time_slots();
+            time_slot->set_begin(ts.begin);
+            time_slot->set_end(ts.end);
+        }
+    }
+
     // TODO: updated at must be computed with the max of all computed values (from disruption, impact, ...)
     pb_impact->set_updated_at(navitia::to_posix_timestamp(impact->updated_at));
 
