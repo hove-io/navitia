@@ -45,6 +45,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/algorithm/transform.hpp>
+#include <google/protobuf/text_format.h>
 
 /*
 
@@ -140,24 +141,45 @@ public:
         }
 
         using btp = boost::posix_time::time_period;
+        nt::disruption::ApplicationPattern applivation_pattern;
+        applivation_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
+        applivation_pattern.add_time_slot("12:32"_t, "12:33"_t);
+        applivation_pattern.week_pattern[navitia::Friday] = true;
+        applivation_pattern.week_pattern[navitia::Saturday] = true;
         b.impact(nt::RTLevel::Adapted)
             .uri("mess1")
             .publish(btp("20131219T123200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131220T123200"_dt, "20131221T123201"_dt))
+            .application_patterns(applivation_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Line, "line:A", *b.data->pt_data);
+
+        applivation_pattern = nt::disruption::ApplicationPattern();
+        applivation_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
+        applivation_pattern.add_time_slot("08:32"_t, "12:32"_t);
+        applivation_pattern.week_pattern[navitia::Friday] = true;
+        applivation_pattern.week_pattern[navitia::Saturday] = true;
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess0")
             .publish(btp("20131221T083200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131221T083200"_dt, "20131221T123201"_dt))
+            .application_patterns(applivation_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Line, "line:S", *b.data->pt_data);
+
+        applivation_pattern = nt::disruption::ApplicationPattern();
+        applivation_pattern.application_period = boost::gregorian::date_period("20131223"_d, "20131225"_d);
+        applivation_pattern.add_time_slot("12:32"_t, "12:33"_t);
+        applivation_pattern.week_pattern[navitia::Monday] = true;
+        applivation_pattern.week_pattern[navitia::Tuesday] = true;
+        applivation_pattern.week_pattern[navitia::Wednesday] = true;
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess2")
             .application_periods(btp("20131223T123200"_dt, "20131225T123201"_dt))
             .publish(btp("20131224T123200"_dt, "20131226T123201"_dt))
+            .application_patterns(applivation_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Network, "network:K", *b.data->pt_data);
     }
@@ -170,6 +192,8 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
     navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:R", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
+    std::string s;
+    google::protobuf::TextFormat::PrintToString(resp, &s);
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
 
@@ -190,6 +214,26 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131220T123200"));
     BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123201"));
+
+    BOOST_REQUIRE_EQUAL(impact->application_patterns_size(), 1);
+    auto application_pattern = impact->application_patterns(0);
+    BOOST_CHECK_EQUAL(application_pattern.application_period().begin(),
+                      navitia::test::to_posix_timestamp("20131220T000000"));
+    BOOST_CHECK_EQUAL(application_pattern.application_period().end(),
+                      navitia::test::to_posix_timestamp("20131221T000000"));
+
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
+    auto time_slot = application_pattern.time_slots(0);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "123200"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().wednesday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().thursday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().friday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().saturday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().sunday(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
@@ -214,6 +258,26 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131223T123200"));
     BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131225T123201"));
+
+    BOOST_REQUIRE_EQUAL(impact->application_patterns_size(), 1);
+    auto application_pattern = impact->application_patterns(0);
+    BOOST_CHECK_EQUAL(application_pattern.application_period().begin(),
+                      navitia::test::to_posix_timestamp("20131223T000000"));
+    BOOST_CHECK_EQUAL(application_pattern.application_period().end(),
+                      navitia::test::to_posix_timestamp("20131225T000000"));
+
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
+    auto time_slot = application_pattern.time_slots(0);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "123200"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().wednesday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().thursday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().friday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().saturday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().sunday(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
@@ -242,6 +306,26 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     BOOST_REQUIRE_EQUAL(impact->application_periods_size(), 1);
     BOOST_CHECK_EQUAL(impact->application_periods(0).begin(), navitia::test::to_posix_timestamp("20131221T083200"));
     BOOST_CHECK_EQUAL(impact->application_periods(0).end(), navitia::test::to_posix_timestamp("20131221T123201"));
+
+    BOOST_REQUIRE_EQUAL(impact->application_patterns_size(), 1);
+    auto application_pattern = impact->application_patterns(0);
+    BOOST_CHECK_EQUAL(application_pattern.application_period().begin(),
+                      navitia::test::to_posix_timestamp("20131220T000000"));
+    BOOST_CHECK_EQUAL(application_pattern.application_period().end(),
+                      navitia::test::to_posix_timestamp("20131221T000000"));
+
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
+    auto time_slot = application_pattern.time_slots(0);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "083200"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().wednesday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().thursday(), false);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().friday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().saturday(), true);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().sunday(), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(Test1, Params) {

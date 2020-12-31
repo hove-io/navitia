@@ -1002,8 +1002,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 6
-        assert {"1PM", "1A", "1B", "1C", "1D", "1M"} == {l['code'] for l in lines}
+        assert len(lines) == 7
+        assert {"1PM", "1A", "1B", "1C", "1D", "1K", "1M"} == {l['code'] for l in lines}
 
     def test_line_filter_line_code(self):
         """test filtering lines from line code 1A in the pt call"""
@@ -1170,7 +1170,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('disruptions')
 
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 11
+        assert len(disruptions) == 12
         for d in disruptions:
             is_valid_disruption(d)
 
@@ -1195,7 +1195,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('trips')
 
         trips = get_not_null(response, 'trips')
-        assert len(trips) == 8
+        assert len(trips) == 9
         for t in trips:
             is_valid_trip(t)
 
@@ -1294,15 +1294,15 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         """
         response = self.query_region("vehicle_journeys")
         assert response['pagination']['items_per_page'] == 25
-        assert response['pagination']['items_on_page'] == 8
-        assert response['pagination']['total_result'] == 8
+        assert response['pagination']['items_on_page'] == 9
+        assert response['pagination']['total_result'] == 9
 
         response = self.query_region("vehicle_journeys?count=2")
         assert response['pagination']['items_per_page'] == 2
         assert response['pagination']['items_on_page'] == 2
-        assert response['pagination']['total_result'] == 8
+        assert response['pagination']['total_result'] == 9
 
         response = self.query_region("vehicle_journeys?count=1200")
         assert response['pagination']['items_per_page'] == 1000
-        assert response['pagination']['items_on_page'] == 8
-        assert response['pagination']['total_result'] == 8
+        assert response['pagination']['items_on_page'] == 9
+        assert response['pagination']['total_result'] == 9

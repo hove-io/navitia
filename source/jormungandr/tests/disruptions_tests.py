@@ -89,6 +89,37 @@ class TestDisruptions(AbstractTestFixture):
             assert lines_disrupt[0]['contributor'] == 'contrib'
             assert lines_disrupt[0]['uri'] == 'too_bad_again'
             assert lines_disrupt[0]['severity']['name'] == 'bad severity'
+
+            application_patterns = lines_disrupt[0]["application_patterns"]
+            assert len(application_patterns) == 1
+            assert application_patterns[0]["application_period"]["begin"] == "20120801"
+            assert application_patterns[0]["application_period"]["end"] == "20120901"
+            week_days = ['monday', 'tuesday', 'friday', 'wednesday', 'thursday', 'sunday', 'saturday']
+            for day in week_days:
+                assert application_patterns[0]["week_pattern"][day]
+
+            application_patterns = lines_disrupt[1]["application_patterns"]
+            assert len(application_patterns) == 2
+            assert application_patterns[0]["application_period"]["begin"] == "20121001"
+            assert application_patterns[0]["application_period"]["end"] == "20121015"
+
+            for day in week_days:
+                assert application_patterns[0]["week_pattern"][day]
+            time_slots = application_patterns[0]["time_slots"]
+            assert len(time_slots) == 1
+            assert time_slots[0]["begin"] == '000000'
+            assert time_slots[0]["end"] == '120000'
+
+            assert application_patterns[1]["application_period"]["begin"] == "20121201"
+            assert application_patterns[1]["application_period"]["end"] == "20121215"
+            for day in week_days:
+                assert application_patterns[0]["week_pattern"][day]
+
+            time_slots = application_patterns[0]["time_slots"]
+            assert len(time_slots) == 1
+            assert time_slots[0]["begin"] == '000000'
+            assert time_slots[0]["end"] == '120000'
+
             # we should be able to find the line in the disruption impacted objects
             impacted_objs = lines_disrupt[0]['impacted_objects']
             # this disruption impacts a line and a network
@@ -373,6 +404,59 @@ class TestDisruptions(AbstractTestFixture):
         assert len(impacts) == 5
         assert 'impact_published_later' in impacts
 
+    def test_disruption_publication_date_filter_many_application_patterns(self):
+        """
+        test the publication date filter
+
+        'disruption_on_line_A_but_publish_later' is published from 2012-08-28 10:00
+
+        so at 9 it is not in the list, at 11, we get it
+        """
+        response = self.query_region('traffic_reports?_current_datetime=20120810T090000')
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 5
+        assert 'impact_k' in impacts
+        impact_k = impacts["impact_k"]
+
+        assert impact_k['disruption_id'] == 'disruption_on_line_K'
+        is_valid_disruption(impact_k)
+        assert len(impact_k["application_periods"]) == 14
+        application_patterns = impact_k["application_patterns"]
+        assert len(application_patterns) == 2
+        time_slots = application_patterns[0]["time_slots"]
+        assert len(time_slots) == 2
+        assert time_slots[0]["begin"] == '081500'
+        assert time_slots[0]["end"] == '093000'
+        assert time_slots[1]["begin"] == '121000'
+        assert time_slots[1]["end"] == '133000'
+        assert application_patterns[0]["application_period"]["begin"] == "20120806"
+        assert application_patterns[0]["application_period"]["end"] == '20120812'
+        assert application_patterns[0]["week_pattern"]['monday']
+        assert application_patterns[0]["week_pattern"]['tuesday']
+        assert application_patterns[0]["week_pattern"]['friday']
+        assert not application_patterns[0]["week_pattern"]['wednesday']
+        assert not application_patterns[0]["week_pattern"]['thursday']
+        assert not application_patterns[0]["week_pattern"]['sunday']
+        assert application_patterns[0]["week_pattern"]['saturday']
+
+        time_slots = application_patterns[1]["time_slots"]
+        assert len(time_slots) == 2
+        assert time_slots[0]["begin"] == '111500'
+        assert time_slots[0]["end"] == '133500'
+        assert time_slots[1]["begin"] == '171000'
+        assert time_slots[1]["end"] == '184500'
+
+        assert application_patterns[1]["application_period"]["begin"] == '20120820'
+        assert application_patterns[1]["application_period"]["end"] == '20120826'
+        assert not application_patterns[1]["week_pattern"]['monday']
+        assert application_patterns[1]["week_pattern"]['tuesday']
+        assert not application_patterns[1]["week_pattern"]['friday']
+        assert application_patterns[1]["week_pattern"]['wednesday']
+        assert application_patterns[1]["week_pattern"]['thursday']
+        assert not application_patterns[1]["week_pattern"]['sunday']
+        assert not application_patterns[1]["week_pattern"]['saturday']
+
     def test_disruption_datefilter_limits(self):
         """
         the _current_datetime is by default in UTC, we test that this is correctly taken into account
@@ -590,19 +674,19 @@ class TestDisruptions(AbstractTestFixture):
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 11
+        assert len(disruptions) == 12
 
         # filtering disruptions on line A
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_uris[]=A")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 6
+        assert len(disruptions) == 7
 
         # for retrocompatibility purpose forbidden_id[] is the same
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=A")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 6
+        assert len(disruptions) == 7
 
         # when we forbid another id, we find again all our disruptions
         response, code = self.query_no_assert(
@@ -610,7 +694,7 @@ class TestDisruptions(AbstractTestFixture):
         )
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 11
+        assert len(disruptions) == 12
 
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20120801T000000")
@@ -621,7 +705,7 @@ class TestDisruptions(AbstractTestFixture):
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
-        assert len(line_reports) == 6
+        assert len(line_reports) == 7
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
@@ -634,7 +718,7 @@ class TestDisruptions(AbstractTestFixture):
         assert line_reports[0]['pt_objects'][1]['network']['links'][1]['id'] == 'later_impact'
         assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
 
-        for line_report in line_reports[1:]:
+        for line_report in line_reports[2:]:
             assert len(line_report['pt_objects']) == 2
             assert line_report['pt_objects'][0]['id'] == 'base_network'
             assert line_report['pt_objects'][1]['id'] == 'stopA'
@@ -650,7 +734,7 @@ class TestDisruptions(AbstractTestFixture):
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
-        assert len(line_reports) == 6
+        assert len(line_reports) == 7
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
@@ -661,12 +745,12 @@ class TestDisruptions(AbstractTestFixture):
         assert line_reports[0]['pt_objects'][1]['network']['links'][0]['id'] == 'too_bad_again'
         assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
 
-        for line_report in line_reports[1:]:
+        for line_report in line_reports[2:]:
             assert len(line_report['pt_objects']) == 2
             assert line_report['pt_objects'][0]['id'] == 'base_network'
             assert line_report['pt_objects'][1]['id'] == 'stopA'
 
-        for line_report in line_reports[1:]:
+        for line_report in line_reports[2:]:
             assert len(line_report['pt_objects']) == 2
             assert line_report['pt_objects'][0]['id'] == 'base_network'
             assert line_report['pt_objects'][1]['id'] == 'stopA'
@@ -677,7 +761,7 @@ class TestDisruptions(AbstractTestFixture):
         for line_report in line_reports:
             is_valid_line_report(line_report)
         # 6 lines affected by disruptions in this response: A,B,C,D,M,PM
-        assert len(line_reports) == 6
+        assert len(line_reports) == 7
 
         response = self.query_region("line_reports?_current_datetime=20120801T000000&forbidden_uris[]=M")
         line_reports = get_not_null(response, 'line_reports')
