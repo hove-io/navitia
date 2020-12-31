@@ -280,6 +280,7 @@ struct ApplicationPattern {
     void add_time_slot(uint32_t begin, uint32_t end);
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
+    void sort_time_slots();
 };
 
 struct Impact {
@@ -335,6 +336,7 @@ struct Impact {
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
+    void sort_application_patterns();
 
 private:
     std::vector<PtObj> _informed_entities;
