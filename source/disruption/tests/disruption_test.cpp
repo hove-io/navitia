@@ -224,8 +224,8 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
 
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
     auto time_slot = application_pattern.time_slots(0);
-    BOOST_REQUIRE_EQUAL(time_slot.begin(), "123200"_t);
-    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "12:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "12:33"_t);
 
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), false);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), false);
@@ -268,8 +268,8 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
 
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
     auto time_slot = application_pattern.time_slots(0);
-    BOOST_REQUIRE_EQUAL(time_slot.begin(), "123200"_t);
-    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "12:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "12:33"_t);
 
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), true);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), true);
@@ -316,8 +316,8 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
 
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots_size(), 1);
     auto time_slot = application_pattern.time_slots(0);
-    BOOST_REQUIRE_EQUAL(time_slot.begin(), "083200"_t);
-    BOOST_REQUIRE_EQUAL(time_slot.end(), "123201"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.begin(), "08:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end(), "12:32"_t);
 
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().monday(), false);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern().tuesday(), false);
