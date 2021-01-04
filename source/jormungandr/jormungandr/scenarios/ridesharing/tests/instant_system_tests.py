@@ -179,6 +179,8 @@ DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I d
 class DummyInstance:
     name = ''
     walking_speed = 1.12
+    greenlet_pool_for_ridesharing_services = True
+    ridesharing_greenlet_pool_size = 42
 
 
 def get_ridesharing_service_test():
@@ -249,8 +251,10 @@ def instant_system_test():
         period_extremity = utils.PeriodExtremity(
             datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
         )
+
+        params = RidesharingServiceManager.InstanceParams.make_params(DummyInstance())
         ridesharing_journeys, feed_publisher = instant_system.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance=DummyInstance()
+            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance_params=params
         )
 
         assert len(ridesharing_journeys) == 2

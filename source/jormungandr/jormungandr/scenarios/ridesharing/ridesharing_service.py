@@ -106,14 +106,16 @@ class AbstractRidesharingService(object):
             )
             raise RidesharingServiceError(str(e))
 
-    def request_journeys_with_feed_publisher(self, from_coord, to_coord, period_extremity, instance, limit=None):
+    def request_journeys_with_feed_publisher(
+        self, from_coord, to_coord, period_extremity, instance_params, limit=None
+    ):
         """
         This function shouldn't be overwritten!
 
         :return: a list(mandatory) contains solutions and a feed_publisher
         """
         try:
-            journeys = self._request_journeys(from_coord, to_coord, period_extremity, instance, limit)
+            journeys = self._request_journeys(from_coord, to_coord, period_extremity, instance_params, limit)
             feed_publisher = self._get_feed_publisher()
 
             self.record_call('ok')
@@ -121,10 +123,11 @@ class AbstractRidesharingService(object):
             return journeys, feed_publisher
         except RidesharingServiceError as e:
             self.record_call('failure', **e.get_params())
+            self.logger.exception('')
             return [], None
 
     @abc.abstractmethod
-    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params, limit=None):
         """
         :return: a list(mandatory) contains solutions
         """
