@@ -122,7 +122,13 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "     extract(epoch from ch.updated_at  AT TIME ZONE 'UTC') :: bigint as channel_updated_at,"
                  "     cht.id as channel_type_id, cht.name as channel_type,"
                  // Property & Associate property fields
-                 "     adp.value as property_value, pr.key as property_key, pr.type as property_type"
+                 "     adp.value as property_value, pr.key as property_key, pr.type as property_type, "
+                 // Pattern and time slots
+                 "  extract(epoch from pt.start_date ) ::int as pattern_start_date, extract(epoch from pt.end_date ) "
+                 "::int as pattern_end_date, pt.weekly_pattern as pattern_weekly_pattern, "
+                 "  pt.id as pattern_id, "
+                 "  extract(epoch from ts.begin ) ::int as time_slot_end, extract(epoch from ts.end ) as "
+                 "time_slot_end, ts.id as time_slot_id "
                  // Request
                  "     FROM disruption AS d"
                  "     JOIN contributor AS co ON d.contributor_id = co.id"
@@ -148,6 +154,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "     LEFT JOIN channel_type as cht on ch.id = cht.channel_id"
                  "     LEFT JOIN associate_disruption_property adp ON adp.disruption_id = d.id"
                  "     LEFT JOIN property pr ON pr.id = adp.property_id"
+                 "     LEFT JOIN pattern AS pt ON pt.impact_id = i.id"
+                 "     LEFT JOIN time_slot AS ts ON ts.pattern_id = pt.id"
                  "     WHERE "
                  "     (NOT (d.start_publication_date >= '%s' OR d.end_publication_date <= '%s')"
                  "     OR (d.start_publication_date<='%s' and d.end_publication_date IS NULL))"
