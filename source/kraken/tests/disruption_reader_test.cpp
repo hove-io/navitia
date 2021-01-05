@@ -117,7 +117,14 @@ struct Const_it {
                   {"channel_created_at", Value()},
                   {"channel_updated_at", Value()},
                   {"channel_type_id", Value()},
-                  {"channel_type", Value()}};
+                  {"channel_type", Value()},
+                  {"pattern_start_date", Value()},
+                  {"pattern_end_date", Value()},
+                  {"pattern_weekly_pattern", Value()},
+                  {"pattern_id", Value()},
+                  {"time_slot_begin", Value()},
+                  {"time_slot_end", Value()},
+                  {"time_slot_id", Value()}};
     }
 
     void set_disruption(const std::string& id,
@@ -182,6 +189,22 @@ struct Const_it {
         values["application_id"] = id;
         values["application_start_date"] = start;
         values["application_end_date"] = end;
+    }
+
+    void set_application_pattern(const std::string& id,
+                                 const std::string& start_date,
+                                 const std::string& end_date,
+                                 const std::string& week) {
+        values["pattern_id"] = id;
+        values["pattern_start_date"] = start_date;
+        values["pattern_end_date"] = end_date;
+        values["pattern_weekly_pattern"] = week;
+    }
+
+    void set_time_slot(const std::string& id, const std::string& start_time, const std::string& end_time) {
+        values["time_slot_id"] = id;
+        values["time_slot_begin"] = start_time;
+        values["time_slot_end"] = end_time;
     }
 
     void set_ptobject(const std::string& id,
@@ -416,6 +439,46 @@ BOOST_AUTO_TEST_CASE(application_period) {
     BOOST_CHECK_EQUAL(application.end(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(application_pattern) {
+    navitia::type::PT_Data pt_data;
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
+
+    Const_it const_it;
+    const_it.set_application_pattern("0", "1", "2", "0101110");
+    reader.impact = new chaos::Impact();
+    reader.fill_application_pattern(const_it);
+    BOOST_CHECK_EQUAL(reader.impact->application_patterns_size(), 1);
+    auto application = reader.impact->application_patterns(0);
+    BOOST_CHECK_EQUAL(application.time_slots_size(), 0);
+    BOOST_CHECK_EQUAL(application.start_date(), 1);
+    BOOST_CHECK_EQUAL(application.end_date(), 2);
+
+    auto week_pattern = application.week_pattern();
+    BOOST_CHECK_EQUAL(week_pattern.monday(), false);
+    BOOST_CHECK_EQUAL(week_pattern.tuesday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.wednesday(), false);
+    BOOST_CHECK_EQUAL(week_pattern.thursday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.friday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.saturday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.sunday(), false);
+}
+
+BOOST_AUTO_TEST_CASE(time_slot) {
+    navitia::type::PT_Data pt_data;
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
+    reader.pattern = new chaos::Pattern();
+
+    Const_it const_it;
+    const_it.set_time_slot("0", "1", "2");
+    reader.fill_time_slot(const_it);
+    BOOST_CHECK_EQUAL(reader.pattern->time_slots_size(), 1);
+    auto time_slot = reader.pattern->time_slots(0);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 1);
+    BOOST_CHECK_EQUAL(time_slot.end(), 2);
+}
+
 BOOST_AUTO_TEST_CASE(pt_object) {
     navitia::type::PT_Data pt_data;
     navitia::type::MetaData meta;
@@ -462,6 +525,10 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     const_it.set_impact("1", "11", "22");
     const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
+
+    const_it.set_application_pattern("ap:0", "1", "2", "1010100");
+    const_it.set_time_slot("ts:0", "1", "2");
+
     const_it.set_ptobject("id", "uri", "line", "1", "2");
     const_it.set_property("key", "type", "42");
     reader(const_it);
@@ -500,6 +567,27 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     auto application = impact.application_periods(0);
     BOOST_CHECK_EQUAL(application.start(), 1);
     BOOST_CHECK_EQUAL(application.end(), 2);
+
+    BOOST_REQUIRE_EQUAL(impact.application_patterns_size(), 1);
+
+    auto pattern = impact.application_patterns(0);
+    BOOST_CHECK_EQUAL(pattern.start_date(), 1);
+    BOOST_CHECK_EQUAL(pattern.end_date(), 2);
+
+    auto week_pattern = pattern.week_pattern();
+    BOOST_CHECK_EQUAL(week_pattern.monday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.tuesday(), false);
+    BOOST_CHECK_EQUAL(week_pattern.wednesday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.thursday(), false);
+    BOOST_CHECK_EQUAL(week_pattern.friday(), true);
+    BOOST_CHECK_EQUAL(week_pattern.saturday(), false);
+    BOOST_CHECK_EQUAL(week_pattern.sunday(), false);
+
+    BOOST_CHECK_EQUAL(pattern.time_slots_size(), 1);
+    auto time_slot = pattern.time_slots(0);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 1);
+    BOOST_CHECK_EQUAL(time_slot.end(), 2);
+
     BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 1);
     auto ptobject = impact.informed_entities(0);
     BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
@@ -511,6 +599,83 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     BOOST_CHECK_EQUAL(property.type(), "type");
     BOOST_CHECK_EQUAL(property.value(), "42");
 }
+
+BOOST_AUTO_TEST_CASE(two_application_patterns) {
+    navitia::type::PT_Data pt_data;
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
+    const_it.set_ptobject("id", "uri", "line", "1", "2");
+
+    const_it.set_application_period("0", "1", "2");
+    const_it.set_application_pattern("ap:0", "1", "2", "0100110");
+    const_it.set_time_slot("ts:0", "1", "2");
+
+    reader(const_it);
+    const_it.set_time_slot("ts:1", "3", "4");
+    reader(const_it);
+
+    const_it.set_application_pattern("ap:1", "3", "4", "0011001");
+    const_it.set_time_slot("ts:3", "4", "5");
+    reader(const_it);
+
+    const_it.set_time_slot("ts:4", "6", "7");
+    reader(const_it);
+
+    const auto& disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_REQUIRE_EQUAL(disruption->tags_size(), 1);
+    auto tag = disruption->tags(0);
+    BOOST_CHECK_EQUAL(tag.id(), "1");
+    BOOST_CHECK_EQUAL(tag.name(), "name");
+    BOOST_CHECK_EQUAL(tag.created_at(), 11);
+    BOOST_CHECK_EQUAL(tag.updated_at(), 22);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_REQUIRE_EQUAL(impact.application_periods_size(), 1);
+    auto application = impact.application_periods(0);
+    BOOST_CHECK_EQUAL(application.start(), 1);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 1);
+    auto ptobject = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(ptobject.uri(), "uri");
+
+    BOOST_REQUIRE_EQUAL(impact.application_patterns_size(), 2);
+    auto application_pattern = impact.application_patterns(0);
+    BOOST_CHECK_EQUAL(application_pattern.start_date(), 1);
+    BOOST_CHECK_EQUAL(application_pattern.end_date(), 2);
+    BOOST_CHECK_EQUAL(application_pattern.time_slots_size(), 2);
+    auto time_slot = application_pattern.time_slots(0);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 1);
+    BOOST_CHECK_EQUAL(time_slot.end(), 2);
+    time_slot = application_pattern.time_slots(1);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 3);
+    BOOST_CHECK_EQUAL(time_slot.end(), 4);
+
+    application_pattern = impact.application_patterns(1);
+    BOOST_CHECK_EQUAL(application_pattern.start_date(), 3);
+    BOOST_CHECK_EQUAL(application_pattern.end_date(), 4);
+    BOOST_CHECK_EQUAL(application_pattern.time_slots_size(), 2);
+
+    time_slot = application_pattern.time_slots(0);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 4);
+    BOOST_CHECK_EQUAL(time_slot.end(), 5);
+    time_slot = application_pattern.time_slots(1);
+    BOOST_CHECK_EQUAL(time_slot.begin(), 6);
+    BOOST_CHECK_EQUAL(time_slot.end(), 7);
+}
+
 BOOST_AUTO_TEST_CASE(two_tags) {
     navitia::type::PT_Data pt_data;
     navitia::type::MetaData meta;
