@@ -38,7 +38,7 @@ jobs:
       run: rm -rf ../navitia-*
     - name: run artemis NG on https://jenkins-core.canaltp.fr/job/artemis_ng
       if: ${{matrix.distribution}} == 'debian8'
-      run: http -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/build
+      run: http -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters
     - name: slack notification (the job has failed)
       if: failure()
       run: |
