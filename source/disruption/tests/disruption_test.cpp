@@ -45,7 +45,6 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/range/algorithm/transform.hpp>
-#include <google/protobuf/text_format.h>
 
 /*
 
@@ -192,8 +191,6 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
     navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:R", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
-    std::string s;
-    google::protobuf::TextFormat::PrintToString(resp, &s);
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
 
