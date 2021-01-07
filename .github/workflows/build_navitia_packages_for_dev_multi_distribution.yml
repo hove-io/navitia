@@ -1,6 +1,7 @@
 name: Build Navitia Packages For Dev Multi Distributions
 
 on:
+  pull_request:
   push:
     branches:
       - dev
