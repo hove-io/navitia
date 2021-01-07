@@ -127,7 +127,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "  extract(epoch from pt.start_date ) ::int as pattern_start_date, extract(epoch from pt.end_date ) "
                  "::int as pattern_end_date, pt.weekly_pattern as pattern_weekly_pattern, "
                  "  pt.id as pattern_id, "
-                 "  extract(epoch from ts.begin ) ::int as time_slot_end, extract(epoch from ts.end ) as "
+                 "  extract(epoch from ts.begin ) ::int as time_slot_begin, extract(epoch from ts.end ) as "
                  "time_slot_end, ts.id as time_slot_id "
                  // Request
                  "     FROM disruption AS d"
