@@ -133,7 +133,7 @@ SpeedsParser SpeedsParser::defaults() {
 
 boost::optional<float> SpeedsParser::get_speed(const std::string& highway,
                                                const boost::optional<std::string>& max_speed) const {
-    boost::optional<float> speed;
+    auto speed = boost::make_optional(false, float{});
 
     if (max_speeds_by_type.empty() && speed_factor_by_type.empty()) {
         return boost::none;

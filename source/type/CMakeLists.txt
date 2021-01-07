@@ -59,7 +59,7 @@ add_custom_command(OUTPUT ${PROTO_HDRS} ${PROTO_SRCS}
 add_custom_command (OUTPUT ${NAVITIACOMMON_PROTO_PY}
     COMMAND protoc ARGS "--python_out=${NAVITIACOMMON_DIR}"
     type.proto response.proto request.proto task.proto stat.proto
-    COMMAND 2to3 -w ${NAVITIACOMMON_PROTO_PY}
+    COMMAND 2to3 --no-diffs -w ${NAVITIACOMMON_PROTO_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/navitia-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 
@@ -67,7 +67,7 @@ add_custom_command (OUTPUT ${NAVITIACOMMON_PROTO_PY}
 add_custom_command (OUTPUT ${MONITOR_KRAKEN_PROTO_PY}
     COMMAND protoc ARGS "--python_out=${MONITOR_KRAKEN_DIR}"
     type.proto response.proto request.proto
-    COMMAND 2to3 -w ${MONITOR_KRAKEN_PROTO_PY}
+    COMMAND 2to3 --no-diffs -w ${MONITOR_KRAKEN_PROTO_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/navitia-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 
@@ -75,7 +75,7 @@ add_custom_command (OUTPUT ${MONITOR_KRAKEN_PROTO_PY}
 add_custom_command (OUTPUT ${JORMUNGANDR_TEST_PY}
     COMMAND protoc ARGS "--python_out=${JORMUNGANDR_TEST_DIR}"
     chaos.proto gtfs-realtime.proto kirin.proto
-    COMMAND 2to3 -w ${JORMUNGANDR_TEST_PY}
+    COMMAND 2to3 --no-diffs -w ${JORMUNGANDR_TEST_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 

@@ -1796,8 +1796,7 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest,
     }
 
     auto session_departure = departure;
-
-    boost::optional<georef::PathItem::TransportCaracteristic> last_transportation_carac = {};
+    auto last_transportation_carac = boost::make_optional(false, georef::PathItem::TransportCaracteristic{});
     auto section = create_section(pb_journey, path.path_items.front(), depth);
     georef::PathItem last_item;
 
