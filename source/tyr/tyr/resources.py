@@ -745,6 +745,13 @@ class Instance(flask_restful.Resource):
             default=instance.max_ridesharing_duration_to_pt,
         )
         parser.add_argument(
+            'stop_points_nearby_duration',
+            type=int,
+            help="define the duration to reach stop points by crow fly",
+            location=('json', 'values'),
+            default=instance.stop_points_nearby_duration,
+        )
+        parser.add_argument(
             'asynchronous_ridesharing',
             type=inputs.boolean,
             help='Active the asynchronous mode for ridesharing',
@@ -837,6 +844,7 @@ class Instance(flask_restful.Resource):
                         'max_taxi_duration_to_pt',
                         'max_car_no_park_direct_path_duration',
                         'ridesharing_speed',
+                        'stop_points_nearby_duration',
                         'max_ridesharing_duration_to_pt',
                         'asynchronous_ridesharing',
                         'greenlet_pool_for_ridesharing_services',

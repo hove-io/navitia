@@ -197,6 +197,7 @@ instance_fields = {
     'ridesharing_speed': fields.Raw,
     'max_ridesharing_duration_to_pt': fields.Raw,
     'traveler_profiles': fields.List(fields.Nested(traveler_profile)),
+    'stop_points_nearby_duration': fields.Integer,
     'asynchronous_ridesharing': fields.Boolean,
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields)),
     'greenlet_pool_for_ridesharing_services': fields.Boolean,
