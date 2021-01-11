@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
     auto impact_sptr = impacts[0].lock();
     BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
-    auto application_pattern = impact_sptr->application_patterns[0];
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
     BOOST_REQUIRE_EQUAL(
         application_pattern.application_period,
         boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::date(2012, 6, 16)));
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
 
-    auto time_slot = application_pattern.time_slots[0];
+    auto time_slot = *(application_pattern.time_slots.begin());
     BOOST_REQUIRE_EQUAL(time_slot.begin, "15:32"_t);
     BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1111111");
@@ -299,13 +299,13 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
     auto impact_sptr = impacts[0].lock();
     BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
-    auto application_pattern = impact_sptr->application_patterns[0];
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
     BOOST_REQUIRE_EQUAL(
         application_pattern.application_period,
         boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::date(2012, 6, 17)));
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
 
-    auto time_slot = application_pattern.time_slots[0];
+    auto time_slot = *(application_pattern.time_slots.begin());
     BOOST_REQUIRE_EQUAL(time_slot.begin, "12:32"_t);
     BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1111111");
@@ -377,13 +377,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
     auto impact_sptr = impacts[0].lock();
     BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
-    auto application_pattern = impact_sptr->application_patterns[0];
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
     BOOST_REQUIRE_EQUAL(
         application_pattern.application_period,
         boost::gregorian::date_period(boost::gregorian::date(2012, 6, 16), boost::gregorian::date(2012, 6, 18)));
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
 
-    auto time_slot = application_pattern.time_slots[0];
+    auto time_slot = *(application_pattern.time_slots.begin());
     BOOST_REQUIRE_EQUAL(time_slot.begin, "17:32"_t);
     BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1100001");
@@ -1026,16 +1026,19 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_with_many_time_slots) {
     BOOST_REQUIRE_EQUAL(impacts.size(), 1);
     auto impact_sptr = impacts[0].lock();
     BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
-    auto application_pattern = impact_sptr->application_patterns[0];
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
     BOOST_REQUIRE_EQUAL(
         application_pattern.application_period,
         boost::gregorian::date_period(boost::gregorian::date(2012, 6, 4), boost::gregorian::date(2012, 6, 10)));
     BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 2);
 
-    BOOST_REQUIRE_EQUAL(application_pattern.time_slots[0].begin, "10:32"_t);
-    BOOST_REQUIRE_EQUAL(application_pattern.time_slots[0].end, "12:32"_t);
-    BOOST_REQUIRE_EQUAL(application_pattern.time_slots[1].begin, "15:32"_t);
-    BOOST_REQUIRE_EQUAL(application_pattern.time_slots[1].end, "17:32"_t);
+    auto time_slot = *(application_pattern.time_slots.begin());
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "10:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
+
+    time_slot = *std::next(application_pattern.time_slots.begin(), 1);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "15:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "17:32"_t);
     BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "0111001");
 
     BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Monday], true);

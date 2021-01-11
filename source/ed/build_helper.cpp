@@ -410,8 +410,7 @@ Impacter& Impacter::application_periods(const boost::posix_time::time_period& p)
 }
 
 Impacter& Impacter::application_patterns(const dis::ApplicationPattern& application_pattern) {
-    impact->application_patterns.push_back(application_pattern);
-    impact->sort_application_patterns();
+    impact->application_patterns.insert(application_pattern);
     return *this;
 }
 

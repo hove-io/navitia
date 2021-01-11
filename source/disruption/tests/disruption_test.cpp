@@ -140,45 +140,45 @@ public:
         }
 
         using btp = boost::posix_time::time_period;
-        nt::disruption::ApplicationPattern applivation_pattern;
-        applivation_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
-        applivation_pattern.add_time_slot("12:32"_t, "12:33"_t);
-        applivation_pattern.week_pattern[navitia::Friday] = true;
-        applivation_pattern.week_pattern[navitia::Saturday] = true;
+        nt::disruption::ApplicationPattern application_pattern;
+        application_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
+        application_pattern.add_time_slot("12:32"_t, "12:33"_t);
+        application_pattern.week_pattern[navitia::Friday] = true;
+        application_pattern.week_pattern[navitia::Saturday] = true;
         b.impact(nt::RTLevel::Adapted)
             .uri("mess1")
             .publish(btp("20131219T123200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131220T123200"_dt, "20131221T123201"_dt))
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Line, "line:A", *b.data->pt_data);
 
-        applivation_pattern = nt::disruption::ApplicationPattern();
-        applivation_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
-        applivation_pattern.add_time_slot("08:32"_t, "12:32"_t);
-        applivation_pattern.week_pattern[navitia::Friday] = true;
-        applivation_pattern.week_pattern[navitia::Saturday] = true;
+        application_pattern = nt::disruption::ApplicationPattern();
+        application_pattern.application_period = boost::gregorian::date_period("20131220"_d, "20131221"_d);
+        application_pattern.add_time_slot("08:32"_t, "12:32"_t);
+        application_pattern.week_pattern[navitia::Friday] = true;
+        application_pattern.week_pattern[navitia::Saturday] = true;
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess0")
             .publish(btp("20131221T083200"_dt, "20131221T123201"_dt))
             .application_periods(btp("20131221T083200"_dt, "20131221T123201"_dt))
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Line, "line:S", *b.data->pt_data);
 
-        applivation_pattern = nt::disruption::ApplicationPattern();
-        applivation_pattern.application_period = boost::gregorian::date_period("20131223"_d, "20131225"_d);
-        applivation_pattern.add_time_slot("12:32"_t, "12:33"_t);
-        applivation_pattern.week_pattern[navitia::Monday] = true;
-        applivation_pattern.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern.week_pattern[navitia::Wednesday] = true;
+        application_pattern = nt::disruption::ApplicationPattern();
+        application_pattern.application_period = boost::gregorian::date_period("20131223"_d, "20131225"_d);
+        application_pattern.add_time_slot("12:32"_t, "12:33"_t);
+        application_pattern.week_pattern[navitia::Monday] = true;
+        application_pattern.week_pattern[navitia::Tuesday] = true;
+        application_pattern.week_pattern[navitia::Wednesday] = true;
 
         b.impact(nt::RTLevel::Adapted)
             .uri("mess2")
             .application_periods(btp("20131223T123200"_dt, "20131225T123201"_dt))
             .publish(btp("20131224T123200"_dt, "20131226T123201"_dt))
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern)
             .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
             .on(nt::Type_e::Network, "network:K", *b.data->pt_data);
     }

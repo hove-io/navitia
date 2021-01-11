@@ -669,16 +669,16 @@ struct routing_api_data {
             .msg("try again", nt::disruption::ChannelType::sms)
             .publish(default_period);
 
-        nt::disruption::ApplicationPattern applivation_pattern;
-        applivation_pattern.application_period = boost::gregorian::date_period("20120801"_d, "20120901"_d);
-        applivation_pattern.add_time_slot("00:00"_t, "12:00"_t);
-        applivation_pattern.week_pattern[navitia::Monday] = true;
-        applivation_pattern.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern.week_pattern[navitia::Wednesday] = true;
-        applivation_pattern.week_pattern[navitia::Thursday] = true;
-        applivation_pattern.week_pattern[navitia::Friday] = true;
-        applivation_pattern.week_pattern[navitia::Saturday] = true;
-        applivation_pattern.week_pattern[navitia::Sunday] = true;
+        nt::disruption::ApplicationPattern application_pattern;
+        application_pattern.application_period = boost::gregorian::date_period("20120801"_d, "20120901"_d);
+        application_pattern.add_time_slot("00:00"_t, "12:00"_t);
+        application_pattern.week_pattern[navitia::Monday] = true;
+        application_pattern.week_pattern[navitia::Tuesday] = true;
+        application_pattern.week_pattern[navitia::Wednesday] = true;
+        application_pattern.week_pattern[navitia::Thursday] = true;
+        application_pattern.week_pattern[navitia::Friday] = true;
+        application_pattern.week_pattern[navitia::Saturday] = true;
+        application_pattern.week_pattern[navitia::Sunday] = true;
 
         // we create one disruption on line A
         b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A")
@@ -687,7 +687,7 @@ struct routing_api_data {
             .impact()
             .uri("too_bad_again")
             .application_periods(default_period)
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern)
             .severity("disruption")
             .on(nt::Type_e::Line, "A", *b.data->pt_data)
             .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
@@ -696,27 +696,27 @@ struct routing_api_data {
 
         // we create another disruption on line A, but with
         // different date to test the period filtering
-        applivation_pattern = nt::disruption::ApplicationPattern();
-        applivation_pattern.application_period = boost::gregorian::date_period("20121001"_d, "20121015"_d);
-        applivation_pattern.add_time_slot("00:00"_t, "12:00"_t);
-        applivation_pattern.week_pattern[navitia::Monday] = true;
-        applivation_pattern.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern.week_pattern[navitia::Wednesday] = true;
-        applivation_pattern.week_pattern[navitia::Thursday] = true;
-        applivation_pattern.week_pattern[navitia::Friday] = true;
-        applivation_pattern.week_pattern[navitia::Saturday] = true;
-        applivation_pattern.week_pattern[navitia::Sunday] = true;
+        application_pattern = nt::disruption::ApplicationPattern();
+        application_pattern.application_period = boost::gregorian::date_period("20121001"_d, "20121015"_d);
+        application_pattern.add_time_slot("00:00"_t, "12:00"_t);
+        application_pattern.week_pattern[navitia::Monday] = true;
+        application_pattern.week_pattern[navitia::Tuesday] = true;
+        application_pattern.week_pattern[navitia::Wednesday] = true;
+        application_pattern.week_pattern[navitia::Thursday] = true;
+        application_pattern.week_pattern[navitia::Friday] = true;
+        application_pattern.week_pattern[navitia::Saturday] = true;
+        application_pattern.week_pattern[navitia::Sunday] = true;
 
-        nt::disruption::ApplicationPattern applivation_pattern_1;
-        applivation_pattern_1.application_period = boost::gregorian::date_period("20121201"_d, "20121215"_d);
-        applivation_pattern_1.add_time_slot("00:00"_t, "12:00"_t);
-        applivation_pattern_1.week_pattern[navitia::Monday] = true;
-        applivation_pattern_1.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern_1.week_pattern[navitia::Wednesday] = true;
-        applivation_pattern_1.week_pattern[navitia::Thursday] = true;
-        applivation_pattern_1.week_pattern[navitia::Friday] = true;
-        applivation_pattern_1.week_pattern[navitia::Saturday] = true;
-        applivation_pattern_1.week_pattern[navitia::Sunday] = true;
+        nt::disruption::ApplicationPattern application_pattern_1;
+        application_pattern_1.application_period = boost::gregorian::date_period("20121201"_d, "20121215"_d);
+        application_pattern_1.add_time_slot("00:00"_t, "12:00"_t);
+        application_pattern_1.week_pattern[navitia::Monday] = true;
+        application_pattern_1.week_pattern[navitia::Tuesday] = true;
+        application_pattern_1.week_pattern[navitia::Wednesday] = true;
+        application_pattern_1.week_pattern[navitia::Thursday] = true;
+        application_pattern_1.week_pattern[navitia::Friday] = true;
+        application_pattern_1.week_pattern[navitia::Saturday] = true;
+        application_pattern_1.week_pattern[navitia::Sunday] = true;
 
         b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_A_but_later")
             .publication_period(default_period)
@@ -724,8 +724,8 @@ struct routing_api_data {
             .uri("later_impact")
             .application_periods(btp("20121001T000000"_dt, "20121015T120000"_dt))
             .application_periods(btp("20121201T000000"_dt, "20121215T120000"_dt))
-            .application_patterns(applivation_pattern_1)
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern_1)
+            .application_patterns(application_pattern)
             .severity("info")
             .on(nt::Type_e::Line, "A", *b.data->pt_data)
             .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
@@ -846,7 +846,7 @@ struct routing_api_data {
 
         // Add impact on line (K) with many application patterns and many time slots
         /*
-         applivation_pattern 1
+         application_pattern 1
                                 Application period  : 20120806               20120812
                                 times slots         : 081500 - 093000
                                                     : 121000 - 133000
@@ -854,7 +854,7 @@ struct routing_api_data {
                                 week pattern        : Monday Tuesday Wednesday Thursday Friday Saturday Sunday
                                                         x       x                           x       x
 
-         applivation_pattern 2
+         application_pattern 2
                                 Application period  : 20120820               20120826
                                 times slots         : 111500 - 133500
                                                     : 171000 - 184500
@@ -863,29 +863,29 @@ struct routing_api_data {
                                                                 x         x       x
          */
 
-        applivation_pattern = nt::disruption::ApplicationPattern();
-        applivation_pattern.application_period = boost::gregorian::date_period("20120806"_d, "20120812"_d);
-        applivation_pattern.add_time_slot("08:15"_t, "09:30"_t);
-        applivation_pattern.add_time_slot("12:10"_t, "13:30"_t);
-        applivation_pattern.week_pattern[navitia::Monday] = true;
-        applivation_pattern.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern.week_pattern[navitia::Wednesday] = false;
-        applivation_pattern.week_pattern[navitia::Thursday] = false;
-        applivation_pattern.week_pattern[navitia::Friday] = true;
-        applivation_pattern.week_pattern[navitia::Saturday] = true;
-        applivation_pattern.week_pattern[navitia::Sunday] = false;
+        application_pattern = nt::disruption::ApplicationPattern();
+        application_pattern.application_period = boost::gregorian::date_period("20120806"_d, "20120812"_d);
+        application_pattern.add_time_slot("08:15"_t, "09:30"_t);
+        application_pattern.add_time_slot("12:10"_t, "13:30"_t);
+        application_pattern.week_pattern[navitia::Monday] = true;
+        application_pattern.week_pattern[navitia::Tuesday] = true;
+        application_pattern.week_pattern[navitia::Wednesday] = false;
+        application_pattern.week_pattern[navitia::Thursday] = false;
+        application_pattern.week_pattern[navitia::Friday] = true;
+        application_pattern.week_pattern[navitia::Saturday] = true;
+        application_pattern.week_pattern[navitia::Sunday] = false;
 
-        applivation_pattern_1 = nt::disruption::ApplicationPattern();
-        applivation_pattern_1.application_period = boost::gregorian::date_period("20120820"_d, "20120826"_d);
-        applivation_pattern_1.add_time_slot("11:15"_t, "13:35"_t);
-        applivation_pattern_1.add_time_slot("17:10"_t, "18:45"_t);
-        applivation_pattern_1.week_pattern[navitia::Monday] = false;
-        applivation_pattern_1.week_pattern[navitia::Tuesday] = true;
-        applivation_pattern_1.week_pattern[navitia::Wednesday] = true;
-        applivation_pattern_1.week_pattern[navitia::Thursday] = true;
-        applivation_pattern_1.week_pattern[navitia::Friday] = false;
-        applivation_pattern_1.week_pattern[navitia::Saturday] = false;
-        applivation_pattern_1.week_pattern[navitia::Sunday] = false;
+        application_pattern_1 = nt::disruption::ApplicationPattern();
+        application_pattern_1.application_period = boost::gregorian::date_period("20120820"_d, "20120826"_d);
+        application_pattern_1.add_time_slot("11:15"_t, "13:35"_t);
+        application_pattern_1.add_time_slot("17:10"_t, "18:45"_t);
+        application_pattern_1.week_pattern[navitia::Monday] = false;
+        application_pattern_1.week_pattern[navitia::Tuesday] = true;
+        application_pattern_1.week_pattern[navitia::Wednesday] = true;
+        application_pattern_1.week_pattern[navitia::Thursday] = true;
+        application_pattern_1.week_pattern[navitia::Friday] = false;
+        application_pattern_1.week_pattern[navitia::Saturday] = false;
+        application_pattern_1.week_pattern[navitia::Sunday] = false;
 
         // we create one disruption on line A
         b.disrupt(nt::RTLevel::Adapted, "disruption_on_line_K")
@@ -893,7 +893,7 @@ struct routing_api_data {
             .contributor("contrib")
             .impact()
             .uri("impact_k")
-            .application_patterns(applivation_pattern)
+            .application_patterns(application_pattern)
             .application_periods(btp("20120806T081500"_dt, "20120806T093000"_dt))
             .application_periods(btp("20120806T121000"_dt, "20120806T133000"_dt))
             .application_periods(btp("20120807T081500"_dt, "20120807T093000"_dt))
@@ -902,7 +902,7 @@ struct routing_api_data {
             .application_periods(btp("20120810T121000"_dt, "20120810T133000"_dt))
             .application_periods(btp("20120811T081500"_dt, "20120811T093000"_dt))
             .application_periods(btp("20120811T121000"_dt, "20120811T133000"_dt))
-            .application_patterns(applivation_pattern_1)
+            .application_patterns(application_pattern_1)
             .application_periods(btp("20120820T111500"_dt, "20120820T133500"_dt))
             .application_periods(btp("20120820T171000"_dt, "20120820T171000"_dt))
             .application_periods(btp("20120821T111500"_dt, "20120821T133500"_dt))

@@ -268,6 +268,8 @@ struct TimeSlot {
     uint32_t end = 0;    ///< seconds since midnight
     TimeSlot(uint32_t begin = 0, uint32_t end = 0) : begin{begin}, end{end} {}
 
+    bool operator<(const TimeSlot& other) const;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 };
@@ -275,12 +277,13 @@ struct TimeSlot {
 struct ApplicationPattern {
     navitia::type::WeekPattern week_pattern;
     boost::gregorian::date_period application_period{boost::gregorian::date(), boost::gregorian::date()};
-    std::vector<TimeSlot> time_slots;
+    std::set<TimeSlot, std::less<TimeSlot>> time_slots;
 
     void add_time_slot(uint32_t begin, uint32_t end);
+    bool operator<(const ApplicationPattern& other) const;
+
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
-    void sort_time_slots();
 };
 
 struct Impact {
@@ -296,7 +299,7 @@ struct Impact {
     // i.e. the canceled base schedule period for vj
     std::vector<boost::posix_time::time_period> application_periods;
 
-    std::vector<ApplicationPattern> application_patterns;
+    std::set<ApplicationPattern, std::less<ApplicationPattern>> application_patterns;
 
     boost::shared_ptr<Severity> severity;
 
@@ -336,7 +339,6 @@ struct Impact {
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
-    void sort_application_patterns();
 
 private:
     std::vector<PtObj> _informed_entities;

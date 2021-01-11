@@ -343,14 +343,16 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
-void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
-    this->time_slots.push_back(TimeSlot(begin, end));
+bool TimeSlot::operator<(const TimeSlot& other) const {
+    return this->begin < other.begin;
 }
 
-void ApplicationPattern::sort_time_slots() {
-    boost::sort(this->time_slots, [](const nt::disruption::TimeSlot& ts1, const nt::disruption::TimeSlot& ts2) -> bool {
-        return ts1.begin < ts2.begin;
-    });
+void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
+    this->time_slots.insert(TimeSlot(begin, end));
+}
+
+bool ApplicationPattern::operator<(const ApplicationPattern& other) const {
+    return this->application_period.begin() < other.application_period.begin();
 }
 
 template <class Cont>
@@ -507,17 +509,6 @@ PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data) {
             return transform_pt_object(uri, pt_data.meta_vjs);
         default:
             return UnknownPtObj();
-    }
-}
-
-void Impact::sort_application_patterns() {
-    boost::sort(
-        this->application_patterns,
-        [](const nt::disruption::ApplicationPattern& ap1, const nt::disruption::ApplicationPattern& ap2) -> bool {
-            return ap1.application_period.begin() < ap2.application_period.begin();
-        });
-    for (auto& application_pattern : this->application_patterns) {
-        application_pattern.sort_time_slots();
     }
 }
 

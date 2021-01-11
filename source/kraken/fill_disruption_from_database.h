@@ -402,15 +402,17 @@ struct DisruptionDatabaseReader {
         pattern = impact->add_application_patterns();
         FILL_REQUIRED(pattern, start_date, int32_t)
         FILL_REQUIRED(pattern, end_date, int32_t)
-        const auto& week = std::bitset<7>{const_it["pattern_weekly_pattern"].template as<std::string>()};
+        auto week_str = const_it["pattern_weekly_pattern"].template as<std::string>();
+        std::reverse(week_str.begin(), week_str.end());
+        const auto& week = std::bitset<7>{week_str};
         auto* week_pattern = pattern->mutable_week_pattern();
-        week_pattern->set_monday(week[6 - navitia::Monday]);
-        week_pattern->set_tuesday(week[6 - navitia::Tuesday]);
-        week_pattern->set_wednesday(week[6 - navitia::Wednesday]);
-        week_pattern->set_thursday(week[6 - navitia::Thursday]);
-        week_pattern->set_friday(week[6 - navitia::Friday]);
-        week_pattern->set_saturday(week[6 - navitia::Saturday]);
-        week_pattern->set_sunday(week[6 - navitia::Sunday]);
+        week_pattern->set_monday(week[navitia::Monday]);
+        week_pattern->set_tuesday(week[navitia::Tuesday]);
+        week_pattern->set_wednesday(week[navitia::Wednesday]);
+        week_pattern->set_thursday(week[navitia::Thursday]);
+        week_pattern->set_friday(week[navitia::Friday]);
+        week_pattern->set_saturday(week[navitia::Saturday]);
+        week_pattern->set_sunday(week[navitia::Sunday]);
     }
 
     template <typename T>

@@ -283,8 +283,9 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
     return res;
 }
 
-static std::vector<nt::disruption::ApplicationPattern> make_application_pattern(const chaos::Impact& chaos_impact) {
-    std::vector<nt::disruption::ApplicationPattern> res;
+static std::set<nt::disruption::ApplicationPattern, std::less<nt::disruption::ApplicationPattern>>
+make_application_pattern(const chaos::Impact& chaos_impact) {
+    std::set<nt::disruption::ApplicationPattern, std::less<nt::disruption::ApplicationPattern>> res;
     for (const auto& chaos_app : chaos_impact.application_patterns()) {
         auto application_pattern = nt::disruption::ApplicationPattern();
         application_pattern.application_period =
@@ -299,9 +300,9 @@ static std::vector<nt::disruption::ApplicationPattern> make_application_pattern(
         application_pattern.week_pattern[navitia::Sunday] = chaos_week_pattern.sunday();
 
         for (const auto& chaos_ts : chaos_app.time_slots()) {
-            application_pattern.time_slots.emplace_back(chaos_ts.begin(), chaos_ts.end());
+            application_pattern.time_slots.insert(nt::disruption::TimeSlot(chaos_ts.begin(), chaos_ts.end()));
         }
-        res.push_back(application_pattern);
+        res.insert(application_pattern);
     }
     return res;
 }
@@ -321,7 +322,6 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
     }
 
     impact->application_patterns = make_application_pattern(chaos_impact);
-    impact->sort_application_patterns();
 
     impact->severity = make_severity(chaos_impact.severity(), holder);
 

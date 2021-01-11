@@ -230,7 +230,7 @@ struct disruption_fixture {
         application_pattern.application_period =
             boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20140301"),
                                           boost::gregorian::from_undelimited_string("20140305"));
-        impact_acquired->application_patterns.push_back(application_pattern);
+        impact_acquired->application_patterns.insert(application_pattern);
     }
 
     std::unique_ptr<Disruption> disruption;
@@ -241,17 +241,19 @@ struct disruption_fixture {
 BOOST_FIXTURE_TEST_CASE(application_patterns, disruption_fixture) {
     auto impact = _impact.lock();
 
-    auto application_patterns = impact->application_patterns;
-    BOOST_CHECK_EQUAL(application_patterns.size(), 1);
+    std::set<nt::disruption::ApplicationPattern, std::less<nt::disruption::ApplicationPattern>>
+        tmp_application_patterns = impact->application_patterns;
 
-    auto application_pattern = application_patterns[0];
+    BOOST_CHECK_EQUAL(tmp_application_patterns.size(), 1);
+
+    auto application_pattern = *(tmp_application_patterns.begin());
     BOOST_CHECK_EQUAL(application_pattern.application_period,
                       boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20140301"),
                                                     boost::gregorian::from_undelimited_string("20140305")));
     BOOST_CHECK_EQUAL(application_pattern.week_pattern, std::bitset<7>{"1111111"});
     BOOST_CHECK_EQUAL(application_pattern.time_slots.size(), 1);
 
-    auto time_slot = application_pattern.time_slots[0];
+    auto time_slot = *(application_pattern.time_slots.begin());
     BOOST_CHECK_EQUAL(time_slot.begin, "06:00"_t);
     BOOST_CHECK_EQUAL(time_slot.end, "20:00"_t);
 }
