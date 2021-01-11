@@ -52,5 +52,5 @@ jobs:
     - name: run artemis NG on https://jenkins-core.canaltp.fr/job/artemis_ng
       run: http -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters
     - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
-      if: ${{ github.event_name == 'pull_request' }}
+      if: ${{ github.event_name == 'push' }}
       run: http -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM="artemis_debian8"
