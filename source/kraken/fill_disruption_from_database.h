@@ -400,8 +400,12 @@ struct DisruptionDatabaseReader {
     template <typename T>
     void fill_application_pattern(T const_it) {
         pattern = impact->add_application_patterns();
-        FILL_REQUIRED(pattern, start_date, int32_t)
-        FILL_REQUIRED(pattern, end_date, int32_t)
+        auto start_date = navitia::to_int_date(
+            boost::gregorian::from_string(const_it["pattern_start_date"].template as<std::string>()));
+        auto end_date = navitia::to_int_date(
+            boost::gregorian::from_string(const_it["pattern_end_date"].template as<std::string>()));
+        pattern->set_start_date(start_date);
+        pattern->set_end_date(end_date);
         auto week_str = const_it["pattern_weekly_pattern"].template as<std::string>();
         std::reverse(week_str.begin(), week_str.end());
         const auto& week = std::bitset<7>{week_str};

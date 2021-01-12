@@ -67,7 +67,7 @@ class DateField(PbField, DateType):
     """
 
     def to_value(self, value):
-        date = timestamp_to_datetime(value).date()
+        date = datetime.fromtimestamp(value).date()
         return dt_to_str(date, _format="%Y%m%d")
 
 

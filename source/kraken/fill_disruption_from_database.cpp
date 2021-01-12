@@ -124,8 +124,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                  // Property & Associate property fields
                  "     adp.value as property_value, pr.key as property_key, pr.type as property_type,"
                  // Pattern and time slots
-                 "  extract(epoch from pt.start_date ) ::int as pattern_start_date,"
-                 "  extract(epoch from pt.end_date ) ::int as pattern_end_date,"
+                 "  pt.start_date as pattern_start_date,"
+                 "  pt.end_date as pattern_end_date,"
                  "  pt.weekly_pattern as pattern_weekly_pattern,"
                  "  pt.id as pattern_id,"
                  "  extract(epoch from ts.begin ) ::int as time_slot_begin,"
