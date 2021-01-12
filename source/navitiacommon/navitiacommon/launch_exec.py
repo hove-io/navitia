@@ -89,7 +89,15 @@ def read_async(fd):
 
 def launch_exec_traces(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
-    log = 'Launching ' + exec_name + ' ' + ' '.join(args)
+    args_copy = list(args)
+
+    args_to_be_hidden = ["--cities-connection-string"]
+    for to_be_hidden in args_to_be_hidden:
+        if args_copy.count(to_be_hidden) != 0:
+            i = args_copy.index(to_be_hidden)
+            args_copy[i + 1] = "xxxxxxxxx"
+
+    log = 'Launching ' + exec_name + ' ' + ' '.join(args_copy)
     # we hide the password in logs
     logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
 
