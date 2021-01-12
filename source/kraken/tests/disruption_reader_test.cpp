@@ -445,14 +445,15 @@ BOOST_AUTO_TEST_CASE(application_pattern) {
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
     Const_it const_it;
-    const_it.set_application_pattern("0", "1", "2", "0101110");
+    const_it.set_application_pattern("0", "2021-01-10", "2021-01-15", "0101110");
     reader.impact = new chaos::Impact();
     reader.fill_application_pattern(const_it);
     BOOST_CHECK_EQUAL(reader.impact->application_patterns_size(), 1);
     auto application = reader.impact->application_patterns(0);
     BOOST_CHECK_EQUAL(application.time_slots_size(), 0);
-    BOOST_CHECK_EQUAL(application.start_date(), 1);
-    BOOST_CHECK_EQUAL(application.end_date(), 2);
+
+    BOOST_CHECK_EQUAL(application.start_date(), navitia::to_int_date("20210110"_d));
+    BOOST_CHECK_EQUAL(application.end_date(), navitia::to_int_date("20210115"_d));
 
     auto week_pattern = application.week_pattern();
     BOOST_CHECK_EQUAL(week_pattern.monday(), false);
@@ -526,7 +527,7 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
     const_it.set_application_period("0", "1", "2");
 
-    const_it.set_application_pattern("ap:0", "1", "2", "1010100");
+    const_it.set_application_pattern("ap:0", "2021-01-10", "2021-01-15", "1010100");
     const_it.set_time_slot("ts:0", "1", "2");
 
     const_it.set_ptobject("id", "uri", "line", "1", "2");
@@ -571,8 +572,8 @@ BOOST_AUTO_TEST_CASE(one_of_each) {
     BOOST_REQUIRE_EQUAL(impact.application_patterns_size(), 1);
 
     auto pattern = impact.application_patterns(0);
-    BOOST_CHECK_EQUAL(pattern.start_date(), 1);
-    BOOST_CHECK_EQUAL(pattern.end_date(), 2);
+    BOOST_CHECK_EQUAL(pattern.start_date(), navitia::to_int_date("20210110"_d));
+    BOOST_CHECK_EQUAL(pattern.end_date(), navitia::to_int_date("20210115"_d));
 
     auto week_pattern = pattern.week_pattern();
     BOOST_CHECK_EQUAL(week_pattern.monday(), true);
@@ -614,14 +615,14 @@ BOOST_AUTO_TEST_CASE(two_application_patterns) {
     const_it.set_ptobject("id", "uri", "line", "1", "2");
 
     const_it.set_application_period("0", "1", "2");
-    const_it.set_application_pattern("ap:0", "1", "2", "0100110");
+    const_it.set_application_pattern("ap:0", "2020-10-05", "2020-10-15", "0100110");
     const_it.set_time_slot("ts:0", "1", "2");
 
     reader(const_it);
     const_it.set_time_slot("ts:1", "3", "4");
     reader(const_it);
 
-    const_it.set_application_pattern("ap:1", "3", "4", "0011001");
+    const_it.set_application_pattern("ap:1", "2020-10-15", "2020-10-20", "0011001");
     const_it.set_time_slot("ts:3", "4", "5");
     reader(const_it);
 
@@ -653,8 +654,8 @@ BOOST_AUTO_TEST_CASE(two_application_patterns) {
 
     BOOST_REQUIRE_EQUAL(impact.application_patterns_size(), 2);
     auto application_pattern = impact.application_patterns(0);
-    BOOST_CHECK_EQUAL(application_pattern.start_date(), 1);
-    BOOST_CHECK_EQUAL(application_pattern.end_date(), 2);
+    BOOST_CHECK_EQUAL(application_pattern.start_date(), navitia::to_int_date("20201005"_d));
+    BOOST_CHECK_EQUAL(application_pattern.end_date(), navitia::to_int_date("20201015"_d));
     BOOST_CHECK_EQUAL(application_pattern.time_slots_size(), 2);
     auto time_slot = application_pattern.time_slots(0);
     BOOST_CHECK_EQUAL(time_slot.begin(), 1);
@@ -664,8 +665,8 @@ BOOST_AUTO_TEST_CASE(two_application_patterns) {
     BOOST_CHECK_EQUAL(time_slot.end(), 4);
 
     application_pattern = impact.application_patterns(1);
-    BOOST_CHECK_EQUAL(application_pattern.start_date(), 3);
-    BOOST_CHECK_EQUAL(application_pattern.end_date(), 4);
+    BOOST_CHECK_EQUAL(application_pattern.start_date(), navitia::to_int_date("20201015"_d));
+    BOOST_CHECK_EQUAL(application_pattern.end_date(), navitia::to_int_date("20201020"_d));
     BOOST_CHECK_EQUAL(application_pattern.time_slots_size(), 2);
 
     time_slot = application_pattern.time_slots(0);

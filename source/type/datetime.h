@@ -163,6 +163,10 @@ inline int32_t to_int_date(boost::posix_time::ptime ptime) {
     return (boost::posix_time::ptime(ptime.date()) - posix_epoch).total_seconds();  // todo bound/overflow check ?
 }
 
+inline int32_t to_int_date(boost::gregorian::date date) {
+    return (boost::posix_time::ptime(date) - posix_epoch).total_seconds();  // todo bound/overflow check ?
+}
+
 /**
  * weekday enum (because boost::date_time::weekdays start on sunday and we want monday to be the first day)
  */
