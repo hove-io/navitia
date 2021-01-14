@@ -1,0 +1,27 @@
+pipeline {
+    agent {
+        docker {
+            image 'navitia/debian8_dev'
+            args '--user root'
+        }
+    }
+    stages {
+        stage ('navitia dev coverage') {
+            steps {
+                sh '''
+                  mkdir -p build_package; cd build_package
+                  # we set a custom instance timeout because jenkins can be very slow
+                  CUSTOM_INSTANCE_TIMEOUT=1500 cmake -DCMAKE_BUILD_TYPE=Profile ../source
+                  make -j1
+
+                '''
+            }
+        }
+    }
+    post {
+        always {
+            junit(testResults: "**/nosetest*.xml", allowEmptyResults: true)
+            cleanWs()
+        }
+    }
+}
