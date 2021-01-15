@@ -39,8 +39,9 @@ jobs:
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
 
-    #- name: trigger jenkins to publish Artifacts on internal server
-      #run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/publish-navitia-packages/buildWithParameters PLATFORM=navitia_debian8_packages
+    - name: trigger jenkins to publish Artifacts on internal server
+      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/publish-navitia-packages/buildWithParameters PLATFORM=navitia_debian8_packages
+
     - name: slack notification (the job has failed)
       if: failure()
       run: |
