@@ -43,7 +43,7 @@ namespace navitia {
 namespace vptranslator {
 
 struct BlockPattern {
-    navitia::type::Calendar::Week week;
+    navitia::type::WeekPattern week;
     std::set<boost::gregorian::date_period> validity_periods;
     std::set<navitia::type::ExceptionDate> exceptions;
 

@@ -86,6 +86,7 @@ namespace disruption {
 struct Disruption;
 struct Impact;
 struct Message;
+struct ApplicationPattern;
 }  // namespace disruption
 }  // namespace type
 }  // namespace navitia

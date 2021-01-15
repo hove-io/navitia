@@ -263,6 +263,29 @@ struct AuxInfoForMetaVJ {
 };
 }  // namespace detail
 
+struct TimeSlot {
+    uint32_t begin = 0;  ///< seconds since midnight
+    uint32_t end = 0;    ///< seconds since midnight
+    TimeSlot(uint32_t begin = 0, uint32_t end = 0) : begin{begin}, end{end} {}
+
+    bool operator<(const TimeSlot& other) const;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
+
+struct ApplicationPattern {
+    navitia::type::WeekPattern week_pattern;
+    boost::gregorian::date_period application_period{boost::gregorian::date(), boost::gregorian::date()};
+    std::set<TimeSlot, std::less<TimeSlot>> time_slots;
+
+    void add_time_slot(uint32_t begin, uint32_t end);
+    bool operator<(const ApplicationPattern& other) const;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
+
 struct Impact {
     using SharedImpact = boost::shared_ptr<Impact>;
     std::string uri;
@@ -275,6 +298,8 @@ struct Impact {
     // the application period define when the impact happen
     // i.e. the canceled base schedule period for vj
     std::vector<boost::posix_time::time_period> application_periods;
+
+    std::set<ApplicationPattern, std::less<ApplicationPattern>> application_patterns;
 
     boost::shared_ptr<Severity> severity;
 

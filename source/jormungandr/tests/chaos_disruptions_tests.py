@@ -668,7 +668,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         # some disruptions are loaded on the dataset though
         nb_pre_loaded_disruption = len(get_not_null(self.query_region('disruptions'), 'disruptions'))
-        assert nb_pre_loaded_disruption == 11
+        assert nb_pre_loaded_disruption == 12
 
         # Check that there is one non-blocking disruption on some lines existing in the dataset:
         response = self.query_region(
@@ -985,7 +985,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         """
         query = 'disruptions?since=20120801T000000'
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 10
+        assert len(disruptions) == 11
 
         # query with parameter tags[]
         resp, code = self.query_region('disruptions?since=20120801T000000&tags[]=tag_name', check=False)
@@ -1001,7 +1001,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         self.send_mock("disruption_on_stopB", "stopB", "stop_area", message='message', tags=tags)
 
         disruptions = self.query_region(query)['disruptions']
-        assert len(disruptions) == 13
+        assert len(disruptions) == 14
 
         disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=rer')['disruptions']
         assert len(disruptions) == 1

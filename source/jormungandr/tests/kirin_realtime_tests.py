@@ -267,7 +267,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 8
+        assert initial_nb_vehicle_journeys == 9
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
@@ -569,7 +569,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 8
+        assert initial_nb_vehicle_journeys == 9
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -982,10 +982,10 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
     def test_read_trip_effect_from_tripupdate(self):
         disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])
-        assert nb_disruptions_before == 11
+        assert nb_disruptions_before == 12
 
         vjs_before = self.query_region('vehicle_journeys')
-        assert len(vjs_before['vehicle_journeys']) == 8
+        assert len(vjs_before['vehicle_journeys']) == 9
 
         self.send_mock(
             "vjA",
@@ -1012,7 +1012,7 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
             effect='reduced_service',
         )
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 12
+        assert len(disrupts['disruptions']) == 13
         assert has_the_disruption(disrupts, 'reduced_service_vjA')
         last_disrupt = disrupts['disruptions'][-1]
         assert last_disrupt['severity']['effect'] == 'REDUCED_SERVICE'
@@ -1020,7 +1020,7 @@ class TestKirinReadTripEffectFromTripUpdate(MockKirinDisruptionsFixture):
 
         vjs_after = self.query_region('vehicle_journeys')
         # we got a new vj due to the disruption, which means the disruption is handled correctly
-        assert len(vjs_after['vehicle_journeys']) == 9
+        assert len(vjs_after['vehicle_journeys']) == 10
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -1164,7 +1164,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 12
+        assert len(disrupts['disruptions']) == 13
         assert has_the_disruption(disrupts, 'vjA_delayed')
 
         # query from S to R: Journey without delay with departure from B at 20120614T080100
@@ -1228,7 +1228,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 13
+        assert len(disrupts['disruptions']) == 14
         assert has_the_disruption(disrupts, 'vjA_delayed_with_new_stop_time')
         last_disrupt = disrupts['disruptions'][-1]
         assert last_disrupt['severity']['effect'] == 'MODIFIED_SERVICE'
@@ -1284,7 +1284,7 @@ class TestKirinOnNewStopTimeInBetween(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 14
+        assert len(disrupts['disruptions']) == 15
         assert has_the_disruption(disrupts, 'deleted_stop_time')
 
         # the journey doesn't have public_transport
@@ -1305,7 +1305,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         """
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 11
+        assert len(disrupts['disruptions']) == 12
 
         C_to_R_query = "journeys?from={from_coord}&to={to_coord}".format(
             from_coord='stop_point:stopC', to_coord='stop_point:stopA'
@@ -1357,7 +1357,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 12
+        assert len(disrupts['disruptions']) == 13
         assert has_the_disruption(disrupts, 'new_stop_time')
         last_disruption = disrupts['disruptions'][-1]
         assert last_disruption['impacted_objects'][0]['impacted_stops'][0]['arrival_status'] == 'added'
@@ -1396,7 +1396,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
 
         # Verify disruptions
         disrupts = self.query_region('disruptions?_current_datetime=20120614T080000')
-        assert len(disrupts['disruptions']) == 13
+        assert len(disrupts['disruptions']) == 14
         assert has_the_disruption(disrupts, 'deleted_stop_time')
         last_disruption = disrupts['disruptions'][-1]
         assert last_disruption['impacted_objects'][0]['impacted_stops'][0]['arrival_status'] == 'deleted'
@@ -2045,7 +2045,7 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         resp = self.query_region("vehicle_journeys/vehicle_journey:vjA/companies")
         assert resp["companies"][0]["id"] == "base_company"
         resp = self.query_region("companies/base_company/vehicle_journeys")
-        assert len(resp["vehicle_journeys"]) == 8
+        assert len(resp["vehicle_journeys"]) == 9
 
         # network <-> contributor
         resp = self.query_region("networks/base_network/contributors")
@@ -2177,7 +2177,7 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         resp = self.query_region("lines/line:stopC_stopB/companies")
         assert resp["companies"][0]["id"] == "base_company"
         resp = self.query_region("companies/base_company/lines")
-        assert resp["lines"][6]["id"] == "line:stopC_stopB"
+        assert resp["lines"][7]["id"] == "line:stopC_stopB"
 
         # vehicle_journey <-> company
         resp = self.query_region(
@@ -2345,7 +2345,7 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         # we have 8 vehicle_jouneys
         pt_response = self.query_region('vehicle_journeys')
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
-        assert initial_nb_vehicle_journeys == 8
+        assert initial_nb_vehicle_journeys == 9
 
         disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
         disruptions_before = self.query_region(disruption_query)

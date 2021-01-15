@@ -45,6 +45,7 @@ www.navitia.io
 #include <boost/format.hpp>
 #include <boost/serialization/variant.hpp>
 #include <boost/serialization/set.hpp>
+#include <boost/range/algorithm.hpp>
 
 namespace nt = navitia::type;
 
@@ -97,9 +98,21 @@ SERIALIZABLE(AuxInfoForMetaVJ)
 }  // namespace detail
 
 template <class Archive>
+void TimeSlot::serialize(Archive& ar, const unsigned int /*unused*/) {
+    ar& begin& end;
+}
+SERIALIZABLE(TimeSlot)
+
+template <class Archive>
+void ApplicationPattern::serialize(Archive& ar, const unsigned int /*unused*/) {
+    ar& week_pattern& application_period& time_slots;
+}
+SERIALIZABLE(ApplicationPattern)
+
+template <class Archive>
 void Impact::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& company_id& physical_mode_id& headsign& created_at& updated_at& application_periods& severity&
-        _informed_entities& messages& disruption& aux_info;
+        _informed_entities& messages& disruption& aux_info& application_patterns;
 }
 SERIALIZABLE(Impact)
 
@@ -328,6 +341,18 @@ bool Impact::is_line_section_of(const Line& line) const {
         const auto* line_section = boost::get<nt::disruption::LineSection>(&entity);
         return line_section && line_section->line && line_section->line->idx == line.idx;
     });
+}
+
+bool TimeSlot::operator<(const TimeSlot& other) const {
+    return this->begin < other.begin;
+}
+
+void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
+    this->time_slots.insert(TimeSlot(begin, end));
+}
+
+bool ApplicationPattern::operator<(const ApplicationPattern& other) const {
+    return this->application_period.begin() < other.application_period.begin();
 }
 
 template <class Cont>

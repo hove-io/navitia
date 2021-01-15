@@ -88,8 +88,7 @@ inline ExceptionDate::ExceptionType to_exception_type(const std::string& str) {
 
 struct Calendar : public Nameable, public Header {
     const static Type_e type = Type_e::Calendar;
-    typedef std::bitset<7> Week;
-    Week week_pattern;
+    navitia::type::WeekPattern week_pattern;
     std::vector<boost::gregorian::date_period> active_periods;
     std::vector<ExceptionDate> exceptions;
 

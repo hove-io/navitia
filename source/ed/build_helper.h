@@ -226,6 +226,7 @@ struct Impacter {
     const nt::disruption::Disruption& get_disruption() const;
     Impacter& uri(const std::string& u);
     Impacter& application_periods(const boost::posix_time::time_period& p);
+    Impacter& application_patterns(const nt::disruption::ApplicationPattern& application_pattern);
     Impacter& severity(nt::disruption::Effect,
                        std::string uri = "",
                        const std::string& wording = "",

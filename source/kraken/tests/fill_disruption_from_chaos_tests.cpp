@@ -114,6 +114,23 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     app_period->set_start(ntest::to_posix_timestamp("20120614T153200"));
     app_period->set_end(ntest::to_posix_timestamp("20120616T123200"));
 
+    auto* ch_application_pattern = impact->add_application_patterns();
+    ch_application_pattern->set_start_date(ntest::to_int_date("20120614T153200"));
+    ch_application_pattern->set_end_date(ntest::to_int_date("20120616T123200"));
+
+    auto week = ch_application_pattern->mutable_week_pattern();
+    week->set_monday(1);
+    week->set_tuesday(1);
+    week->set_wednesday(1);
+    week->set_thursday(1);
+    week->set_friday(1);
+    week->set_saturday(1);
+    week->set_sunday(1);
+
+    auto* ch_time_slot = ch_application_pattern->add_time_slots();
+    ch_time_slot->set_begin("15:32"_t);
+    ch_time_slot->set_end("12:32"_t);
+
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
@@ -135,6 +152,21 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
                         vj->adapted_validity_pattern()->days);
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "001101"),
                         vj->base_validity_pattern()->days);
+
+    auto impacts = b.data->pt_data->disruption_holder.get_weak_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact_sptr = impacts[0].lock();
+    BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
+    BOOST_REQUIRE_EQUAL(
+        application_pattern.application_period,
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::date(2012, 6, 16)));
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+
+    auto time_slot = *(application_pattern.time_slots.begin());
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "15:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1111111");
 
     // we delete the disruption, all must be as before!
     navitia::delete_disruption("test01", *b.data->pt_data, *b.data->meta);
@@ -200,6 +232,23 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         object = impact->add_informed_entities();
         object->set_pt_object_type(chaos::PtObject_Type_stop_area);
         object->set_uri("stop_area:stop2");
+
+        auto* ch_application_pattern = impact->add_application_patterns();
+        ch_application_pattern->set_start_date(ntest::to_int_date("20120614T123200"));
+        ch_application_pattern->set_end_date(ntest::to_int_date("20120617T123200"));
+
+        auto week = ch_application_pattern->mutable_week_pattern();
+        week->set_monday(1);
+        week->set_tuesday(1);
+        week->set_wednesday(1);
+        week->set_thursday(1);
+        week->set_friday(1);
+        week->set_saturday(1);
+        week->set_sunday(1);
+
+        auto* ch_time_slot = ch_application_pattern->add_time_slots();
+        ch_time_slot->set_begin("12:32"_t);
+        ch_time_slot->set_end("12:32"_t);
     }
 
     auto check = [](const nt::Data& data) {
@@ -246,6 +295,21 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 
     check(*b.data);
 
+    auto impacts = b.data->pt_data->disruption_holder.get_weak_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact_sptr = impacts[0].lock();
+    BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
+    BOOST_REQUIRE_EQUAL(
+        application_pattern.application_period,
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 14), boost::gregorian::date(2012, 6, 17)));
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+
+    auto time_slot = *(application_pattern.time_slots.begin());
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1111111");
+
     navitia::delete_disruption(disruption.id(), *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
@@ -285,12 +349,44 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     app_period->set_start(ntest::to_posix_timestamp("20120616T173200"));
     app_period->set_end(ntest::to_posix_timestamp("20120618T123200"));
 
+    auto* ch_application_pattern = impact->add_application_patterns();
+    ch_application_pattern->set_start_date(ntest::to_int_date("20120616T173200"));
+    ch_application_pattern->set_end_date(ntest::to_int_date("20120618T123200"));
+
+    auto week = ch_application_pattern->mutable_week_pattern();
+    week->set_monday(1);
+    week->set_tuesday(0);
+    week->set_wednesday(0);
+    week->set_thursday(0);
+    week->set_friday(0);
+    week->set_saturday(1);
+    week->set_sunday(1);
+
+    auto* ch_time_slot = ch_application_pattern->add_time_slots();
+    ch_time_slot->set_begin("17:32"_t);
+    ch_time_slot->set_end("12:32"_t);
+
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
     auto* vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "010001"), dump_vj(*vj));
+
+    auto impacts = b.data->pt_data->disruption_holder.get_weak_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact_sptr = impacts[0].lock();
+    BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
+    BOOST_REQUIRE_EQUAL(
+        application_pattern.application_period,
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 16), boost::gregorian::date(2012, 6, 18)));
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+
+    auto time_slot = *(application_pattern.time_slots.begin());
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "17:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "1100001");
 }
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
@@ -832,4 +928,124 @@ BOOST_AUTO_TEST_CASE(is_publishable_test) {
     publication_period.set_start(ntest::to_posix_timestamp("20180618T113000"));
     publication_period.set_end(ntest::to_posix_timestamp("20180623T113000"));
     BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), true);
+}
+
+BOOST_AUTO_TEST_CASE(add_impact_on_line_with_many_time_slots) {
+    ed::builder b("20120614");
+    b.vj("A", "000111", "", true, "vj:1")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)(
+        "stop_area:stop2", 8 * 3600 + 20 * 60, 8 * 3600 + 21 * 60);
+    b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", 9 * 3600 + 10 * 60, 9 * 3600 + 11 * 60)(
+        "stop_area:stop2", 9 * 3600 + 20 * 60, 9 * 3600 + 21 * 60);
+    b.vj("A", "001101", "", true, "vj:3")("stop_area:stop1", 16 * 3600 + 10 * 60, 16 * 3600 + 11 * 60)(
+        "stop_area:stop2", 16 * 3600 + 20 * 60, 16 * 3600 + 21 * 60);
+    navitia::type::Data data;
+    b.make();
+    b.data->meta->production_date =
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 03), boost::gregorian::days(30));
+
+    // we delete the line A for three day, the first two vj start too early for being impacted on the first day
+    // the third vj start too late for being impacted the last day
+
+    chaos::Disruption disruption;
+    disruption.set_id("test01");
+    // Add a period with valid start date without end date
+    auto period = disruption.mutable_publication_period();
+    period->set_start(ntest::to_posix_timestamp("20120613T153200"));
+    auto* impact = disruption.add_impacts();
+    impact->set_id("impact_id");
+    auto* severity = impact->mutable_severity();
+    severity->set_id("severity");
+    severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+    auto* object = impact->add_informed_entities();
+    object->set_pt_object_type(chaos::PtObject_Type_line);
+    object->set_uri("A");
+    /*
+        Appelication patterns
+                        monday tuesday wednesday thursday friday saturday sunday
+     10:32 -> 12:32        1      0        0        1        1     1         0
+    */
+    auto* app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120604T103200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120604T123200"));
+
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120607T103200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120607T123200"));
+
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120608T103200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120608T123200"));
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120609T103200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120609T123200"));
+
+    /*
+        Appelication patterns
+                        monday tuesday wednesday thursday friday saturday sunday
+     15:32 -> 17:32        1      0        0        1        1     1         0
+    */
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120604T153200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120604T173200"));
+
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120607T153200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120607T173200"));
+
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120608T153200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120608T173200"));
+    app_period = impact->add_application_periods();
+    app_period->set_start(ntest::to_posix_timestamp("20120609T153200"));
+    app_period->set_end(ntest::to_posix_timestamp("20120609T173200"));
+
+    auto* ch_application_pattern = impact->add_application_patterns();
+    ch_application_pattern->set_start_date(ntest::to_int_date("20120604T000000"));
+    ch_application_pattern->set_end_date(ntest::to_int_date("20120610T000000"));
+
+    auto week = ch_application_pattern->mutable_week_pattern();
+    week->set_monday(1);
+    week->set_tuesday(0);
+    week->set_wednesday(0);
+    week->set_thursday(1);
+    week->set_friday(1);
+    week->set_saturday(1);
+    week->set_sunday(0);
+
+    auto* ch_time_slot = ch_application_pattern->add_time_slots();
+    ch_time_slot->set_begin("10:32"_t);
+    ch_time_slot->set_end("12:32"_t);
+
+    ch_time_slot = ch_application_pattern->add_time_slots();
+    ch_time_slot->set_begin("15:32"_t);
+    ch_time_slot->set_end("17:32"_t);
+
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
+
+    auto impacts = b.data->pt_data->disruption_holder.get_weak_impacts();
+    BOOST_REQUIRE_EQUAL(impacts.size(), 1);
+    auto impact_sptr = impacts[0].lock();
+    BOOST_REQUIRE_EQUAL(impact_sptr->application_patterns.size(), 1);
+    auto application_pattern = *(impact_sptr->application_patterns.begin());
+    BOOST_REQUIRE_EQUAL(
+        application_pattern.application_period,
+        boost::gregorian::date_period(boost::gregorian::date(2012, 6, 4), boost::gregorian::date(2012, 6, 10)));
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 2);
+
+    auto time_slot = *(application_pattern.time_slots.begin());
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "10:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "12:32"_t);
+
+    time_slot = *std::next(application_pattern.time_slots.begin(), 1);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "15:32"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "17:32"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.week_pattern.to_string(), "0111001");
+
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Monday], true);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Tuesday], false);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Wednesday], false);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Thursday], true);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Friday], true);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Saturday], true);
+    BOOST_CHECK_EQUAL(application_pattern.week_pattern[navitia::Sunday], false);
 }

@@ -71,12 +71,15 @@ struct DisruptionDatabaseReader {
     chaos::Channel* channel = nullptr;
     chaos::PtObject* pt_object = nullptr;
     chaos::DisruptionProperty* property = nullptr;
+    chaos::Pattern* pattern = nullptr;
 
     std::string last_channel_type_id = "";
 
     std::set<std::string> message_ids;
     std::set<std::tuple<std::string, std::string, std::string>> properties;
-    std::set<std::string> appplication_periods_ids;
+    std::set<std::string> application_periods_ids;
+    std::set<std::string> pattern_ids;
+    std::set<std::string> time_slot_ids;
     std::set<std::tuple<std::string, std::string>> line_section_route_set;
     type::PT_Data& pt_data;
     const type::MetaData& meta;
@@ -106,8 +109,11 @@ struct DisruptionDatabaseReader {
             channel = nullptr;
             pt_object = nullptr;
             message_ids.clear();
-            appplication_periods_ids.clear();
+            application_periods_ids.clear();
             line_section_route_set.clear();
+            pattern = nullptr;
+            pattern_ids.clear();
+            time_slot_ids.clear();
         }
 
         if (disruption && !const_it["property_key"].is_null() && !const_it["property_type"].is_null()
@@ -124,9 +130,21 @@ struct DisruptionDatabaseReader {
         }
 
         if (impact && !const_it["application_id"].is_null()
-            && (!appplication_periods_ids.count(const_it["application_id"].template as<std::string>()))) {
+            && (!application_periods_ids.count(const_it["application_id"].template as<std::string>()))) {
             fill_application_period(const_it);
-            appplication_periods_ids.insert(const_it["application_id"].template as<std::string>());
+            application_periods_ids.insert(const_it["application_id"].template as<std::string>());
+        }
+
+        if (impact && !const_it["pattern_id"].is_null()
+            && (!pattern_ids.count(const_it["pattern_id"].template as<std::string>()))) {
+            fill_application_pattern(const_it);
+            pattern_ids.insert(const_it["pattern_id"].template as<std::string>());
+        }
+
+        if (pattern && !const_it["time_slot_id"].is_null()
+            && (!time_slot_ids.count(const_it["time_slot_id"].template as<std::string>()))) {
+            fill_time_slot(const_it);
+            time_slot_ids.insert(const_it["time_slot_id"].template as<std::string>());
         }
 
         // To manage line_section and it's elements as start, end and routes, we should re-use the pt_object
@@ -377,6 +395,35 @@ struct DisruptionDatabaseReader {
         FILL_REQUIRED(property, key, std::string)
         FILL_REQUIRED(property, type, std::string)
         FILL_REQUIRED(property, value, std::string)
+    }
+
+    template <typename T>
+    void fill_application_pattern(T const_it) {
+        pattern = impact->add_application_patterns();
+        auto start_date = navitia::to_int_date(
+            boost::gregorian::from_string(const_it["pattern_start_date"].template as<std::string>()));
+        auto end_date = navitia::to_int_date(
+            boost::gregorian::from_string(const_it["pattern_end_date"].template as<std::string>()));
+        pattern->set_start_date(start_date);
+        pattern->set_end_date(end_date);
+        auto week_str = const_it["pattern_weekly_pattern"].template as<std::string>();
+        std::reverse(week_str.begin(), week_str.end());
+        const auto& week = std::bitset<7>{week_str};
+        auto* week_pattern = pattern->mutable_week_pattern();
+        week_pattern->set_monday(week[navitia::Monday]);
+        week_pattern->set_tuesday(week[navitia::Tuesday]);
+        week_pattern->set_wednesday(week[navitia::Wednesday]);
+        week_pattern->set_thursday(week[navitia::Thursday]);
+        week_pattern->set_friday(week[navitia::Friday]);
+        week_pattern->set_saturday(week[navitia::Saturday]);
+        week_pattern->set_sunday(week[navitia::Sunday]);
+    }
+
+    template <typename T>
+    void fill_time_slot(T const_it) {
+        chaos::TimeSlot* time_slot = pattern->add_time_slots();
+        FILL_REQUIRED(time_slot, begin, int32_t)
+        FILL_REQUIRED(time_slot, end, int32_t)
     }
 };
 
