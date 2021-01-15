@@ -416,7 +416,7 @@ Path create_path(const GeoRef& geo_ref,
 
     // On reparcourt tout dans le bon ordre
     nt::idx_t last_way = type::invalid_idx;
-    boost::optional<PathItem::TransportCaracteristic> last_transport_carac{};
+    auto last_transport_carac = boost::make_optional(false, PathItem::TransportCaracteristic{});
     PathItem path_item;
     path_item.coordinates.push_back(geo_ref.graph[reverse_path.back()].coord);
 

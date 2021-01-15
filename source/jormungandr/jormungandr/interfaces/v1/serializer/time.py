@@ -28,11 +28,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import serpy
 from datetime import datetime
+import time
 from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, TimeType, DateTimeType
-from jormungandr.utils import timestamp_to_str
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, TimeType, DateTimeType, DateType
+from jormungandr.utils import timestamp_to_str, dt_to_str, timestamp_to_datetime
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -61,6 +61,16 @@ class DateTimeField(PbField, DateTimeType):
         return timestamp_to_str(value)
 
 
+class DateField(PbField, DateType):
+    """
+    custom date format from timestamp
+    """
+
+    def to_value(self, value):
+        date = datetime.fromtimestamp(value).date()
+        return dt_to_str(date, _format="%Y%m%d")
+
+
 class DateTimeDictField(Field, DateTimeType):
     """
     custom date format from timestamp
@@ -73,3 +83,20 @@ class DateTimeDictField(Field, DateTimeType):
 class PeriodSerializer(PbNestedSerializer):
     begin = DateTimeField()
     end = DateTimeField()
+
+
+class PeriodDateSerializer(PbNestedSerializer):
+    begin = DateField()
+    end = DateField()
+
+
+class LocalTimeField(NestedPbField, TimeType):
+    def to_value(self, value):
+        if value == __date_time_null_value__:
+            return ""
+        return time.strftime("%H%M%S", time.gmtime(value))
+
+
+class PeriodTimeSerializer(PbNestedSerializer):
+    begin = LocalTimeField()
+    end = LocalTimeField()

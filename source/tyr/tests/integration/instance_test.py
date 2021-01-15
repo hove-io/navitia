@@ -149,6 +149,7 @@ def test_update_instances(create_instance):
         "max_car_no_park_direct_path_duration": 555,
         "ridesharing_speed": 3.3,
         "max_ridesharing_duration_to_pt": 777,
+        "stop_points_nearby_duration": 888,
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')

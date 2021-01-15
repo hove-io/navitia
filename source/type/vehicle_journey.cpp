@@ -295,7 +295,7 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
      *  - s1/s2/s5 from the 11th to the 15th
      * */
     std::set<RankStopTime> res;
-    boost::optional<RankStopTime> section_start_rank;
+    auto section_start_rank = boost::make_optional(false, RankStopTime{});
     bool section_starting = false, section_ending = false;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;

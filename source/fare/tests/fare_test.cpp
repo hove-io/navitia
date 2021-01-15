@@ -72,7 +72,7 @@ static boost::gregorian::date parse_nav_date(const std::string& date_str) {
     try {
         date = boost::gregorian::date(boost::lexical_cast<int>(res.at(0)), boost::lexical_cast<int>(res.at(1)),
                                       boost::lexical_cast<int>(res.at(2)));
-    } catch (boost::bad_lexical_cast e) {
+    } catch (const boost::bad_lexical_cast& e) {
         throw std::string("Conversion des chiffres dans la date impossible " + date_str);
     }
     return date;

@@ -37,6 +37,9 @@ www.navitia.io
 
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;
+namespace bg = boost::gregorian;
+
+auto from_posix = navitia::from_posix_timestamp;
 
 namespace navitia {
 
@@ -54,8 +57,6 @@ static nt::disruption::Property make_property(const chaos::DisruptionProperty& c
 }
 
 static void update_tag(nt::disruption::Tag& tag, const chaos::Tag& chaos_tag) {
-    auto from_posix = navitia::from_posix_timestamp;
-
     tag.uri = chaos_tag.id();
     tag.name = chaos_tag.name();
     tag.created_at = from_posix(chaos_tag.created_at());
@@ -77,7 +78,6 @@ static boost::shared_ptr<nt::disruption::Tag> make_tag(const chaos::Tag& chaos_t
 }
 
 static void update_cause(nt::disruption::Cause& cause, const chaos::Cause& chaos_cause) {
-    auto from_posix = navitia::from_posix_timestamp;
     cause.uri = chaos_cause.id();
     cause.wording = chaos_cause.wording();
     cause.created_at = from_posix(chaos_cause.created_at());
@@ -103,7 +103,6 @@ static boost::shared_ptr<nt::disruption::Cause> make_cause(const chaos::Cause& c
 static void update_severity(nt::disruption::Severity& severity, const chaos::Severity& chaos_severity) {
     namespace tr = transit_realtime;
     namespace new_disr = nt::disruption;
-    auto from_posix = navitia::from_posix_timestamp;
 
     severity.uri = chaos_severity.id();
     severity.wording = chaos_severity.wording();
@@ -284,10 +283,33 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
     return res;
 }
 
+static std::set<nt::disruption::ApplicationPattern, std::less<nt::disruption::ApplicationPattern>>
+make_application_pattern(const chaos::Impact& chaos_impact) {
+    std::set<nt::disruption::ApplicationPattern, std::less<nt::disruption::ApplicationPattern>> res;
+    for (const auto& chaos_app : chaos_impact.application_patterns()) {
+        auto application_pattern = nt::disruption::ApplicationPattern();
+        application_pattern.application_period =
+            bg::date_period(from_posix(chaos_app.start_date()).date(), from_posix(chaos_app.end_date()).date());
+        auto chaos_week_pattern = chaos_app.week_pattern();
+        application_pattern.week_pattern[navitia::Monday] = chaos_week_pattern.monday();
+        application_pattern.week_pattern[navitia::Tuesday] = chaos_week_pattern.tuesday();
+        application_pattern.week_pattern[navitia::Wednesday] = chaos_week_pattern.wednesday();
+        application_pattern.week_pattern[navitia::Thursday] = chaos_week_pattern.thursday();
+        application_pattern.week_pattern[navitia::Friday] = chaos_week_pattern.friday();
+        application_pattern.week_pattern[navitia::Saturday] = chaos_week_pattern.saturday();
+        application_pattern.week_pattern[navitia::Sunday] = chaos_week_pattern.sunday();
+
+        for (const auto& chaos_ts : chaos_app.time_slots()) {
+            application_pattern.time_slots.insert(nt::disruption::TimeSlot(chaos_ts.begin(), chaos_ts.end()));
+        }
+        res.insert(application_pattern);
+    }
+    return res;
+}
+
 static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact& chaos_impact,
                                                              nt::PT_Data& pt_data,
                                                              const navitia::type::MetaData& meta) {
-    auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
     auto impact = boost::make_shared<nt::disruption::Impact>();
@@ -298,12 +320,16 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
     for (const auto& chaos_ap : chaos_impact.application_periods()) {
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
     }
+
+    impact->application_patterns = make_application_pattern(chaos_impact);
+
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
     for (auto& ptobj : make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
         nt::disruption::Impact::link_informed_entity(std::move(ptobj), impact, meta.production_date,
                                                      nt::RTLevel::Adapted, pt_data);
     }
+
     for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);
@@ -343,7 +369,6 @@ static const type::disruption::Disruption& make_disruption(const chaos::Disrupti
                                                            const navitia::type::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
-    auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
     auto& disruption = holder.make_disruption(chaos_disruption.id(), nt::RTLevel::Adapted);

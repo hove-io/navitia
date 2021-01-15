@@ -1,6 +1,7 @@
 name: Build Navitia Packages For Dev Multi Distributions
 
 on:
+  pull_request:
   push:
     branches:
       - dev
@@ -36,10 +37,24 @@ jobs:
         path: "navitia_${{matrix.distribution}}_packages.zip"
     - name: remove useless temporary files
       run: rm -rf ../navitia-*
-    - name: trigger deploy on artemis
-      if: ${{matrix.distribution}} == 'debian8'
-      run: echo "Trigger Artemis later"
     - name: slack notification (the job has failed)
       if: failure()
       run: |
           echo '{"text":":warning: Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev+Multi+Distributions%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+  artemis:
+    runs-on: ubuntu-latest
+    container:
+      image: navitia/debian10_dev
+    needs: build
+    steps:
+    - name: install  dependency
+      run: apt update && apt install -y httpie
+    - name: run artemis NG on push
+      if: ${{ github.event_name == 'push' }}
+      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=push navitia_branch=dev
+    - name: run artemis NG on pull request
+      if: ${{ github.event_name == 'pull_request' }}
+      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=pull_request navitia_branch=${{github.head_ref}}
+    - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
+      if: ${{ github.event_name == 'push' }}
+      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8

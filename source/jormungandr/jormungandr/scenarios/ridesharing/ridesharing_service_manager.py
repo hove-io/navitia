@@ -46,6 +46,19 @@ from importlib import import_module
 
 
 class RidesharingServiceManager(object):
+    class InstanceParams(object):
+        greenlet_pool_for_ridesharing_services = True
+        ridesharing_greenlet_pool_size = 1
+        walking_speed = 1.12
+
+        @classmethod
+        def make_params(cls, instance):
+            param = cls()
+            param.greenlet_pool_for_ridesharing_services = instance.greenlet_pool_for_ridesharing_services
+            param.ridesharing_greenlet_pool_size = instance.ridesharing_greenlet_pool_size
+            param.walking_speed = instance.walking_speed
+            return param
+
     def __init__(
         self, instance, ridesharing_services_configuration, rs_services_getter=None, update_interval=60
     ):
@@ -182,18 +195,18 @@ class RidesharingServiceManager(object):
                             period_extremity = PeriodExtremity(section.end_date_time, False)
                         else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
                             period_extremity = PeriodExtremity(section.begin_date_time, True)
-
+                        instance_params = self.InstanceParams.make_params(instance)
                         if greenlet_pool_actived:
                             futures[journey_idx][section_idx] = future_manager.create_future(
                                 self.build_ridesharing_journeys,
                                 section.origin,
                                 section.destination,
                                 period_extremity,
-                                instance,
+                                instance_params,
                             )
                         else:
                             pb_rsjs, pb_tickets, pb_fps = self.build_ridesharing_journeys(
-                                section.origin, section.destination, period_extremity, instance
+                                section.origin, section.destination, period_extremity, instance_params
                             )
                             self.add_new_ridesharing_results(
                                 pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
@@ -217,7 +230,7 @@ class RidesharingServiceManager(object):
         response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
     def get_ridesharing_journeys_with_feed_publishers(
-        self, from_coord, to_coord, period_extremity, instance, limit=None
+        self, from_coord, to_coord, period_extremity, instance_params, limit=None
     ):
         calls = []
         res = []
@@ -227,14 +240,14 @@ class RidesharingServiceManager(object):
 
             def _call(s=service):
                 return s.request_journeys_with_feed_publisher(
-                    from_coord, to_coord, period_extremity, instance, limit
+                    from_coord, to_coord, period_extremity, instance_params, limit
                 )
 
             calls.append(_call)
 
         call_res = []
-        if instance.greenlet_pool_for_ridesharing_services:
-            with FutureManager(instance.ridesharing_greenlet_pool_size) as future_manager:
+        if instance_params.greenlet_pool_for_ridesharing_services:
+            with FutureManager(instance_params.ridesharing_greenlet_pool_size) as future_manager:
                 futures = [future_manager.create_future(call) for call in calls]
             call_res = (f.wait_and_get() for f in futures)
         else:
@@ -246,14 +259,14 @@ class RidesharingServiceManager(object):
 
         return res, fps
 
-    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity, instance):
+    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity, instance_params):
         from_coord = get_pt_object_coord(from_pt_obj)
         to_coord = get_pt_object_coord(to_pt_obj)
         from_str = "{},{}".format(from_coord.lat, from_coord.lon)
         to_str = "{},{}".format(to_coord.lat, to_coord.lon)
         try:
             rsjs, fps = self.get_ridesharing_journeys_with_feed_publishers(
-                from_str, to_str, period_extremity, instance
+                from_str, to_str, period_extremity, instance_params
             )
         except Exception as e:
             self.logger.exception(

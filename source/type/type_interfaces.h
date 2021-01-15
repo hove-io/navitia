@@ -95,6 +95,8 @@ enum class Type_e {
     size = 29
 };
 
+typedef std::bitset<7> WeekPattern;
+
 enum class OdtLevel_e { scheduled = 0, with_stops = 1, zonal = 2, all = 3 };
 
 struct Nameable {

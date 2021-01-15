@@ -80,7 +80,7 @@ struct mock_kraken {
         do {
             try {
                 lb.run();
-            } catch (zmq::error_t) {
+            } catch (const zmq::error_t&) {
             }  // lors d'un SIGHUP on restore la queue
         } while (true);
     }

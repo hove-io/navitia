@@ -28,7 +28,6 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import serpy
 
 from jormungandr.interfaces.v1.serializer.base import (
     PbGenericSerializer,
@@ -37,7 +36,13 @@ from jormungandr.interfaces.v1.serializer.base import (
     SortedGenericSerializer,
 )
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateType
-from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
+from jormungandr.interfaces.v1.serializer.time import (
+    TimeField,
+    PeriodSerializer,
+    DateTimeField,
+    PeriodDateSerializer,
+    PeriodTimeSerializer,
+)
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
 from jormungandr.parking_space_availability.bss import stands
@@ -266,6 +271,12 @@ class StringListField(Field):
         return getter
 
 
+class ApplicationPatternSerializer(PbNestedSerializer):
+    week_pattern = WeekPatternSerializer()
+    application_period = PeriodDateSerializer()
+    time_slots = PeriodTimeSerializer(many=True)
+
+
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri')
 
@@ -273,6 +284,7 @@ class DisruptionSerializer(PbNestedSerializer):
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = (jsonschema.Field(schema_type=str),)
     application_periods = PeriodSerializer(many=True)
+    application_patterns = ApplicationPatternSerializer(many=True, display_none=False)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
     tags = StringListField(display_none=False)
