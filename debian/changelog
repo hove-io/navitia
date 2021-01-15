@@ -1,3 +1,15 @@
+navitia2 (10.0.0) unstable; urgency=low
+
+  * [kraken] Add application patterns on distruption  <https://github.com/CanalTP/navitia/pull/3348>
+  * [doc] Bump redcarpet from 3.3.4 to 3.5.1 in /documentation/slate  <https://github.com/CanalTP/navitia/pull/3352>
+  * [Tyr] Add "stop_points_nearby_duration" to configuration  <https://github.com/CanalTP/navitia/pull/3346>
+  * [Ridesharing] fix greenlet_pool_for_ridesharing_services  <https://github.com/CanalTP/navitia/pull/3335>
+  * [Jormun] Fix - Timeo should raise on HTTP error  <https://github.com/CanalTP/navitia/pull/3342>
+  * [CI] Trigger deploy on Artemis machine after a push  <https://github.com/CanalTP/navitia/pull/3350>
+  * [CI] trigger new Artemis after a merge  <https://github.com/CanalTP/navitia/pull/3341>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 15 Jan 2021 13:01:57 +0100
+
 navitia2 (9.1.0) unstable; urgency=low
 
   * [Doc]: timefame_duration added  <https://github.com/CanalTP/navitia/pull/3340>
