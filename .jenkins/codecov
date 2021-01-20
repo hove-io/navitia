@@ -70,6 +70,7 @@ pipeline {
         always {
             xunit([JUnit(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/nosetest*.xml', skipNoTestFiles: false, stopProcessingIfError: true),
             BoostTest(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/results*.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+            archiveArtifacts artifacts: '**/results*.xml', fingerprint: true
             cleanWs()
         }
     }
