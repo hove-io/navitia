@@ -6,22 +6,72 @@ pipeline {
         }
     }
     stages {
-        stage ('navitia dev coverage') {
+        stage ('Checkout') {
             steps {
                 sh '''
-                  mkdir -p build_package; cd build_package
+                  sed -i 's,git\\@github.com:\\([^/]*\\)/\\(.*\\).git,https://github.com/\\1/\\2,' .gitmodules
+                  git submodule update --init --recursive
+                  mkdir -p build_package
+                '''
+            }
+        }
+        stage ('Compilation') {
+            steps {
+                sh '''
+                  cd build_package
                   # we set a custom instance timeout because jenkins can be very slow
                   CUSTOM_INSTANCE_TIMEOUT=1500 cmake -DCMAKE_BUILD_TYPE=Profile ../source
                   make -j1
+                '''
+            }
+        }
+        stage ('Clean') {
+            steps {
+                sh '''
+                    # cleaning test xml files
+                    find build_package/ -name results*.xml -exec rm {} \\;
+                    find build_package/ -name nosetest*.xml -exec rm {} \\;
+                    find build_package/ -name '*.gcda' -exec rm {} \\;
+                    find build_package/ -name '*.gdata' -exec rm {} \\;
+                '''
+            }
+        }
 
+        stage ('dependancies') {
+            steps {
+                sh '''
+                    pip install virtualenv -U
+                    rm -rf venv/
+                    virtualenv --system-site-packages venv
+                    . venv/bin/activate
+                    pip install --exists-action=w -r source/jormungandr/requirements.txt
+                    if [ -e source/jormungandr/requirements_dev.txt ]
+                    then
+                    pip install --exists-action=w -r source/jormungandr/requirements_dev.txt
+                    fi
+                    pip install --exists-action=w -r source/tyr/requirements.txt
+                '''
+            }
+        }
+        stage ('Tests') {
+            steps {
+                sh '''
+                    rm -rf tmp/
+                    mkdir tmp
+                    . venv/bin/activate
+                    cd build_package;
+                    service rabbitmq-server start
+                    CUSTOM_INSTANCE_TIMEOUT=1500 make test
                 '''
             }
         }
     }
     post {
         always {
-            junit(testResults: "**/nosetest*.xml", allowEmptyResults: true)
+            xunit([JUnit(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/nosetest*.xml', skipNoTestFiles: false, stopProcessingIfError: true),
+            BoostTest(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/results*.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
             cleanWs()
         }
     }
 }
+
