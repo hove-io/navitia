@@ -37,7 +37,7 @@ pipeline {
             }
         }
 
-        stage ('dependancies') {
+        stage ('Dependancies') {
             steps {
                 sh '''
                     pip install virtualenv -U
@@ -65,12 +65,21 @@ pipeline {
                 '''
             }
         }
+        stage ('PublishCodeCov') {
+            steps {
+                withCredentials([string(credentialsId: 'codecov_token', variable: 'CODE_COV_TOKEN')]) {
+                sh '''
+                    echo CODE_COV_TOKEN
+                    echo $CODE_COV_TOKEN
+                '''
+            }
+         }
+        }
     }
     post {
         always {
             xunit([JUnit(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/nosetest*.xml', skipNoTestFiles: false, stopProcessingIfError: true),
             BoostTest(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/results*.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
-            archiveArtifacts artifacts: '**/results*.xml', fingerprint: true
             cleanWs()
         }
     }
