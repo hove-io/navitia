@@ -119,14 +119,31 @@ class Karos(AbstractRidesharingService):
             res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
             res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
-            res.pickup_place = rsj.Place(
-                addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
-            )
-            res.dropoff_place = rsj.Place(
-                addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
-            )
+            shape = self._retreive_shape(offer, 'journeyPolyline')
+            # This is a particular case for Karos. We don't need extrapolation for the rest of the ride.
+            # It change the pickup and dropoff place
+            if len(shape) > 2:
+                res.pickup_place = rsj.Place(
+                    addr='', lat=shape[0].lat, lon=shape[0].lon
+                )
+                res.dropoff_place = rsj.Place(
+                    addr='', lat=shape[-1].lat, lon=shape[-1].lon
+                )
 
-            res.shape = self._retreive_main_shape(offer, 'journeyPolyline', res.pickup_place, res.dropoff_place)
+                shape = shape[1:-1]
+                if not shape or res.pickup_place.lon != shape[0].lon or res.pickup_place.lat != shape[0].lat:
+                    shape.insert(0, type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
+                if not shape or res.dropoff_place.lon != shape[-1].lon or res.dropoff_place.lat != shape[-1].lat:
+                    shape.append(type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat))
+            else:
+                res.pickup_place = rsj.Place(
+                    addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
+                )
+                res.dropoff_place = rsj.Place(
+                    addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
+                )
+
+            res.shape = shape
 
             res.price = offer.get('price', {}).get('amount') * 100.0
             res.currency = "centime"

@@ -164,8 +164,8 @@ class TestKaros(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[1].get('duration') == 1301
         assert rsj_sections[1].get('departure_date_time') == '20201006T124229'
         assert rsj_sections[1].get('arrival_date_time') == '20201006T130410'
-        assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
-        assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.78995, 47.28728]
+        assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.78975, 47.28698]
+        assert rsj_sections[1].get('geojson').get('coordinates')[2] == [0.79009, 47.28742]
         # ridesharing duration comes from the offer
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
