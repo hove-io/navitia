@@ -33,6 +33,8 @@ pipeline {
                     find build_package/ -name nosetest*.xml -exec rm {} \\;
                     find build_package/ -name '*.gcda' -exec rm {} \\;
                     find build_package/ -name '*.gdata' -exec rm {} \\;
+                    rm -rf tmp/
+                    rm -rf venv/
                 '''
             }
         }
@@ -41,7 +43,6 @@ pipeline {
             steps {
                 sh '''
                     pip install virtualenv -U
-                    rm -rf venv/
                     virtualenv --system-site-packages venv
                     . venv/bin/activate
                     pip install --exists-action=w -r source/jormungandr/requirements.txt
@@ -56,7 +57,6 @@ pipeline {
         stage ('Tests') {
             steps {
                 sh '''
-                    rm -rf tmp/
                     mkdir tmp
                     . venv/bin/activate
                     cd build_package;
