@@ -120,21 +120,20 @@ class Karos(AbstractRidesharingService):
             res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
             shape = self._retreive_shape(offer, 'journeyPolyline')
-            # This is a particular case for Karos. We don't need extrapolation for the rest of the ride.
-            # It change the pickup and dropoff place
-            if len(shape) > 2:
+            # This is a particular case for Karos.
+            # we don't use the :
+            # driverArrivalLat   - driverArrivalLng
+            # driverDepartureLat - driverDepartureLng
+            # Because that doesn't represent the start and the end of our ride. It represents extra
+            # informations about the complete driver ride.
+            # We fill the pickup and dropoff place with the shape
+            if len(shape) >= 2:
                 res.pickup_place = rsj.Place(
                     addr='', lat=shape[0].lat, lon=shape[0].lon
                 )
                 res.dropoff_place = rsj.Place(
                     addr='', lat=shape[-1].lat, lon=shape[-1].lon
                 )
-
-                shape = shape[1:-1]
-                if not shape or res.pickup_place.lon != shape[0].lon or res.pickup_place.lat != shape[0].lat:
-                    shape.insert(0, type_pb2.GeographicalCoord(lon=res.pickup_place.lon, lat=res.pickup_place.lat))
-                if not shape or res.dropoff_place.lon != shape[-1].lon or res.dropoff_place.lat != shape[-1].lat:
-                    shape.append(type_pb2.GeographicalCoord(lon=res.dropoff_place.lon, lat=res.dropoff_place.lat))
             else:
                 res.pickup_place = rsj.Place(
                     addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
