@@ -69,8 +69,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'codecov_token', variable: 'CODE_COV_TOKEN')]) {
                 sh '''
-                    echo CODE_COV_TOKEN
-                    echo $CODE_COV_TOKEN
+                    export CODECOV_TOKEN=CODE_COV_TOKEN
+                    bash -c "bash <(curl -s https://codecov.io/bash)"
                 '''
             }
          }
