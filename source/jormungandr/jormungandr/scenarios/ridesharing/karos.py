@@ -128,12 +128,8 @@ class Karos(AbstractRidesharingService):
             # informations about the complete driver ride.
             # We fill the pickup and dropoff place with the shape
             if len(shape) >= 2:
-                res.pickup_place = rsj.Place(
-                    addr='', lat=shape[0].lat, lon=shape[0].lon
-                )
-                res.dropoff_place = rsj.Place(
-                    addr='', lat=shape[-1].lat, lon=shape[-1].lon
-                )
+                res.pickup_place = rsj.Place(addr='', lat=shape[0].lat, lon=shape[0].lon)
+                res.dropoff_place = rsj.Place(addr='', lat=shape[-1].lat, lon=shape[-1].lon)
             else:
                 res.pickup_place = rsj.Place(
                     addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
