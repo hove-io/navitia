@@ -69,8 +69,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'codecov_token', variable: 'CODE_COV_TOKEN')]) {
                 sh '''
                     export CODECOV_TOKEN=CODE_COV_TOKEN
-                    echo "TODO"
-                    #bash -c "bash <(curl -s https://codecov.io/bash)"
+                    bash -c "bash <(curl -s https://codecov.io/bash)"
                 '''
             }
          }
@@ -78,10 +77,28 @@ pipeline {
     }
     post {
         always {
+            failure {
+                script {
+                    emailext subject: 'Navitia-CovCode Dev build has failed',
+                             to: 'tech.navitia.development@kisio.com',
+                             body: "${env.JOB_NAME} has failed (${env.BUILD_NUMBER} ) - ${env.BUILD_URL}"
+
+                    slackSend color: "danger",
+                              channel: "navitia-core-team",
+                              message: "${env.JOB_NAME} has failed (${env.BUILD_NUMBER} ) - ${env.BUILD_URL}"
+                }
+            }
+            cleanup {
+                sh '''
+                    cd build_package;
+                    make clean
+                '''
+            }
             xunit([JUnit(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/nosetest*.xml', skipNoTestFiles: false, stopProcessingIfError: true),
             BoostTest(deleteOutputFiles: true, failIfNotNew: true, pattern: '**/results*.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
             cleanWs()
         }
     }
 }
+
 
