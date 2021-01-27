@@ -121,18 +121,13 @@ class ReleaseManager:
             exit(1)
 
     def get_new_version_number(self):
-        latest_version = None
         last_tag = self.git.describe('--tags', abbrev=0)
 
-        version = re.search('.*(\d+\.\d+\.\d+).*', last_tag)
-        if version:
-            latest_version = version.group(1)
-
-        if not latest_version:
+        if not last_tag:
             print("no latest version found")
             exit(1)
 
-        version_n = latest_version.split('.')
+        version_n = last_tag[1:].split('.')
         print("latest version is {}".format(version_n))
 
         self.version = [int(i) for i in version_n]
