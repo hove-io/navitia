@@ -847,12 +847,12 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                             //                         << " walking after : " <<
                             //                         navitia::str(previous_walking_duration));
                             // }
+                            BOOST_ASSERT(visitor.be(candidate_debark_time, workingDt));
                             workingDt = candidate_debark_time;
                             working_walking_duration = previous_walking_duration;
                             boarding_stop_point = jpp.sp_idx;
 
                             base_dt = candidate_base_dt;
-                            BOOST_ASSERT(!visitor.comp(workingDt, previous_dt));
                         }
                     }
                 }

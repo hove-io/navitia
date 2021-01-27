@@ -119,14 +119,26 @@ class Karos(AbstractRidesharingService):
             res.dropoff_dest_distance = offer.get('dropoffToArrivalWalkingDistance')
             res.dropoff_dest_shape = self._retreive_shape(offer, 'dropoffToArrivalWalkingPolyline')
 
-            res.pickup_place = rsj.Place(
-                addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
-            )
-            res.dropoff_place = rsj.Place(
-                addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
-            )
+            shape = self._retreive_shape(offer, 'journeyPolyline')
+            # This is a particular case for Karos.
+            # we don't use the :
+            # driverArrivalLat   - driverArrivalLng
+            # driverDepartureLat - driverDepartureLng
+            # Because that doesn't represent the start and the end of our ride. It represents extra
+            # informations about the complete driver ride.
+            # We fill the pickup and dropoff place with the shape
+            if len(shape) >= 2:
+                res.pickup_place = rsj.Place(addr='', lat=shape[0].lat, lon=shape[0].lon)
+                res.dropoff_place = rsj.Place(addr='', lat=shape[-1].lat, lon=shape[-1].lon)
+            else:
+                res.pickup_place = rsj.Place(
+                    addr='', lat=offer.get('driverDepartureLat'), lon=offer.get('driverDepartureLng')
+                )
+                res.dropoff_place = rsj.Place(
+                    addr='', lat=offer.get('driverArrivalLat'), lon=offer.get('driverArrivalLng')
+                )
 
-            res.shape = self._retreive_main_shape(offer, 'journeyPolyline', res.pickup_place, res.dropoff_place)
+            res.shape = shape
 
             res.price = offer.get('price', {}).get('amount') * 100.0
             res.currency = "centime"

@@ -268,18 +268,18 @@ def karos_service_test():
         )
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
-        assert ridesharing_journeys[0].pickup_place.lat == 48.8181
-        assert ridesharing_journeys[0].pickup_place.lon == 2.398
+        assert ridesharing_journeys[0].pickup_place.lat == 48.8047
+        assert ridesharing_journeys[0].pickup_place.lon == 2.2897
 
         assert ridesharing_journeys[0].dropoff_place.addr == ""  # address is not provided in mock
-        assert ridesharing_journeys[0].dropoff_place.lat == 48.7849
-        assert ridesharing_journeys[0].dropoff_place.lon == 2.1832
+        assert ridesharing_journeys[0].dropoff_place.lat == 48.7821
+        assert ridesharing_journeys[0].dropoff_place.lon == 2.1738
 
         assert ridesharing_journeys[0].shape
         assert ridesharing_journeys[0].shape[0].lat == ridesharing_journeys[0].pickup_place.lat
         assert ridesharing_journeys[0].shape[0].lon == ridesharing_journeys[0].pickup_place.lon
-        assert ridesharing_journeys[0].shape[1].lat == 48.8047  # test that we really load a shape
-        assert ridesharing_journeys[0].shape[1].lon == 2.2897
+        assert ridesharing_journeys[0].shape[1].lat == 48.8046  # test that we really load a shape
+        assert ridesharing_journeys[0].shape[1].lon == 2.2895
         assert ridesharing_journeys[0].shape[-1].lat == ridesharing_journeys[0].dropoff_place.lat
         assert ridesharing_journeys[0].shape[-1].lon == ridesharing_journeys[0].dropoff_place.lon
 
