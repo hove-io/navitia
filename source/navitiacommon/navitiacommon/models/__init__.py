@@ -310,7 +310,7 @@ class Instance(db.Model):  # type: ignore
     # params for jormungandr
     # ============================================================
     # the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
-    scenario = db.Column(db.Text, nullable=False, default='new_default')
+    scenario = db.Column(db.Text, nullable=False, default='distributed')
 
     # order of the journey, this order is for clockwise request, else it is reversed
     journey_order = db.Column(
