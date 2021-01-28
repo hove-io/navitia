@@ -158,6 +158,15 @@ class Asgard(TransientSocket, Kraken):
 
         response = self._call_asgard(req)
 
+        # car_no_park is interpreted as car for Asgard, we need to overwrite the streetnetwork mode here
+        if mode == "car_no_park":
+            try:
+                response.journeys[0].sections[0].street_network.mode = response_pb2.CarNoPark
+            except AttributeError:
+                pass
+            except Exception as e:
+                raise e
+
         if response and mode == FallbackModes.bike.name:
             response = self._add_cycle_lane_length(response)
 
