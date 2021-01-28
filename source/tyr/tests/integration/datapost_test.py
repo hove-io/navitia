@@ -149,3 +149,27 @@ def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr):
         with open(path, 'rb'):
             response, status = api_post('/v0/autocomplete_parameters/bob/update_data', check=False)
             assert status == 404
+
+
+def test_post_zip_file_on_job_should_succeed(create_instance_fr):
+    with app.app_context():
+        filename = 'fusio.zip'
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename
+        )
+        with open(path, 'rb') as f:
+            files = {'file': (f, filename)}
+            resp, status = api_post('/v0/jobs/fr', data=files, check=False)
+            assert status == 200
+
+
+def test_post_zip_file_on_job_with_wrong_extension(create_instance_fr):
+    with app.app_context():
+        filename = 'empty_file_without_extension'
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename
+        )
+        with open(path, 'rb') as f:
+            files = {'file': (f, filename)}
+            resp, status = api_post('/v0/jobs/fr', data=files, check=False)
+            assert status == 400

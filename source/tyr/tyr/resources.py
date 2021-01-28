@@ -124,6 +124,7 @@ class Job(flask_restful.Resource):
 
         if not request.files:
             return {'message': 'the Data file is missing'}, 400
+
         content = request.files['file']
         logger = get_instance_logger(instance)
         logger.info('content received: %s', content)
@@ -132,9 +133,19 @@ class Job(flask_restful.Resource):
         if not os.path.exists(instance.source_directory):
             return {'error': 'input folder unavailable'}, 500
 
+        if utils.filename_has_valid_extension(content.filename) == False:
+            return (
+                {
+                    'message': "Filename has invalid extension :'{}'".format(content.filename),
+                    'valid_extensions': utils.get_valid_extensions(),
+                },
+                400,
+            )
+
         full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
-        content.save(full_file_name + ".tmp")
-        shutil.move(full_file_name + ".tmp", full_file_name)
+        tmp_file_name = full_file_name + ".tmp"
+        content.save(tmp_file_name)
+        shutil.move(tmp_file_name, full_file_name)
 
         return {'message': 'OK'}, 200
 
