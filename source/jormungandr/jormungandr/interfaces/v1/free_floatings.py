@@ -37,7 +37,7 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type, places_count_arg_type
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.scenarios.utils import free_floatings_type
-from navitiacommon.parser_args_type import OptionValue
+from navitiacommon.parser_args_type import OptionValue, CoordFormat
 from jormungandr.instance import Instance
 from typing import Optional, Dict
 
@@ -72,6 +72,11 @@ class FreeFloatingsNearby(ResourceUri):
         )
         parser_get.add_argument("distance", type=int, default=500, help="Distance range of the query in meters")
         parser_get.add_argument("count", type=default_count_arg_type, default=10, help="Elements per page")
+        self.parsers['get'].add_argument(
+            "coord",
+            type=CoordFormat(nullable=True),
+            help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
+        )
 
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
@@ -79,24 +84,22 @@ class FreeFloatingsNearby(ResourceUri):
         args = self.parsers["get"].parse_args()
         instance = i_manager.instances.get(self.region)
 
+        # coord in the form of uri:
+        # /coverage/<coverage name>/coord=<lon;lat>/freefloatings_nearby?...
         if uri:
             if uri[-1] == '/':
                 uri = uri[:-1]
             uris = uri.split("/")
-            if len(uris) >= 2:
+            if len(uris) >= 2 and uris[-2] == 'coord':
                 args["coord"] = transform_id(uris[-1])
-                # for coherence we check the type of the object
-                obj_type = uris[-2]
-                if obj_type not in places_types:
-                    abort(404, message='places_nearby api not available for {}'.format(obj_type))
             else:
                 abort(404)
+        # coord as parameter: /coverage/<coverage name>/freefloatings_nearby?coord=<lon;lat>&...
         else:
-            abort(404)
+            coord = args.get("coord")
+            if coord is None:
+                abort(404)
         self._register_interpreted_parameters(args)
         resp = instance.free_floating_provider_manager.manage_free_floatins(args)
 
         return resp, 200
-
-    def options(self, **kwargs):
-        return self.api_description(**kwargs)
