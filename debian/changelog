@@ -1,3 +1,14 @@
+navitia2 (10.2.0) unstable; urgency=low
+
+  * [Tyr] Ensure files sent to Tyr have valid extensions  <https://github.com/CanalTP/navitia/pull/3361>
+  * [Jormungandr] Fix car_no_park mode  <https://github.com/CanalTP/navitia/pull/3356>
+  * [ridesharing] Karaos - fix main shape without useless coords  <https://github.com/CanalTP/navitia/pull/3358>
+  * [CI] Navitia code coverage  <https://github.com/CanalTP/navitia/pull/3359>
+  * [CI] Release with multi-packages  <https://github.com/CanalTP/navitia/pull/3355>
+  * [kraken] Fix failing tests in debug mode  <https://github.com/CanalTP/navitia/pull/3357>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 29 Jan 2021 13:01:15 +0100
+
 navitia2 (10.1.0) unstable; urgency=low
 
   * [release] fix script_release  <https://github.com/CanalTP/navitia/pull/3360>
