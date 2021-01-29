@@ -63,6 +63,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
+from jormungandr.free_floatings import FreeFloatingProviderManager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -114,6 +115,7 @@ class Instance(object):
         autocomplete_type,
         instance_equipment_providers,  # type: List[Text]
         streetnetwork_backend_manager,
+        free_floating_provider_configurations,
     ):
         self.geom = None
         self.geojson = None
@@ -176,6 +178,9 @@ class Instance(object):
 
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
+        # Init free-floating providers from config
+        self.free_floating_provider_manager = FreeFloatingProviderManager(free_floating_provider_configurations)
+        self.free_floating_provider_manager.init_providers(free_floating_provider_configurations)
 
     def get_providers_from_db(self):
         """

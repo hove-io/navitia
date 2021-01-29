@@ -120,6 +120,7 @@ class InstanceManager(object):
             config.get('default_autocomplete', None),
             config.get('equipment_details_providers', []),
             self._streetnetwork_backend_manager,
+            config.get('free_floatings_providers', []),
         )
         self.instances[instance.name] = instance
 

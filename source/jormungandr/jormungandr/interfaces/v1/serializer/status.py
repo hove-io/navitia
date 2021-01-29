@@ -200,6 +200,13 @@ class EquipmentProvidersServicesSerializer(NullableDictSerializer):
         return obj.get('equipment_providers', [])
 
 
+class FreeFloatingProvidersServicesSerializer(NullableDictSerializer):
+    free_floating_providers_keys = MethodField(schema_type=str, many=True, display_none=True)
+
+    def get_free_floating_providers_keys(self, obj):
+        return obj.get('free_floating_providers_keys', [])
+
+
 class CoverageErrorSerializer(NullableDictSerializer):
     code = Field(schema_type=str)
     value = Field(schema_type=str)
@@ -221,6 +228,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
     equipment_providers_services = EquipmentProvidersServicesSerializer()
+    free_floating_providers_services = FreeFloatingProvidersServicesSerializer()
     start_production_date = Field(schema_type=str, display_none=False)
     last_load_status = Field(schema_type=bool, display_none=False)
     is_open_data = Field(schema_type=bool, display_none=False)
