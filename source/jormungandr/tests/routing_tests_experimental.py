@@ -842,7 +842,12 @@ class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        # find the pt journey with taxi as it fallback mode
+        # find the pt journey with car_no_pt as it fallback mode
+        car_no_park_direct_path = next((j for j in journeys if 'non_pt' in j['tags']), None)
+        assert car_no_park_direct_path
+        assert "car_no_park" in car_no_park_direct_path['tags']
+
+        # find the pt journey with car_no_pt as it fallback mode
         car_no_park_with_pt = next((j for j in journeys if 'non_pt' not in j['tags']), None)
         assert car_no_park_with_pt
 

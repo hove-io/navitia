@@ -36,6 +36,55 @@ street_source_types = ['OSM']
 address_source_types = ['BANO', 'OA']
 poi_source_types = ['FUSIO', 'OSM']
 admin_source_types = ['OSM', 'COSMOGONY']
+valid_filename_extensions = ['txt', 'zip', 'geopal', 'csv', 'pbf', 'poi', 'poly', 'wkt']
+
+
+def filename_extension(filename):
+    '''
+    Return the filename extension as string
+    >>> filename_extension('my_filename.zip')
+    'zip'
+
+    >>> filename_extension('file.with.multiple.dotes')
+    'dotes'
+
+    >>> filename_extension('/path/to/my/filename.txt')
+    'txt'
+
+    >>> filename_extension('my_filename_with_no_extension')
+    ''
+
+    >>> filename_extension('')
+    ''
+    '''
+
+    dote_split = filename.split(".")
+    return dote_split[-1] if len(dote_split) > 1 else ''
+
+
+def filename_has_valid_extension(filename):
+    '''
+    Return True is the filename extension is valid. Casing is ignored.
+    >>> filename_has_valid_extension('file.zip')
+    True
+
+    >>> filename_has_valid_extension('file.ZiP')
+    True
+
+    >>> filename_has_valid_extension('file.unknown')
+    False
+
+    >>> filename_has_valid_extension('no_extension')
+    False
+    '''
+    return filename_extension(filename).lower() in get_valid_extensions()
+
+
+def get_valid_extensions():
+    '''
+    Return a list of string defining valid filename extensions for a job
+    '''
+    return valid_filename_extensions
 
 
 def type_of_data(filename):
