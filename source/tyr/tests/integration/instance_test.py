@@ -381,7 +381,7 @@ def test_update_instances_with_invalid_scenario(create_instance):
     assert status == 400
 
     resp = api_get('/v0/instances/')
-    assert resp[0]['scenario'] == 'new_default'
+    assert resp[0]['scenario'] == 'distributed'
 
 
 def test_update_max_nb_crowfly_by_mode(create_instance):
