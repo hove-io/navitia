@@ -41,6 +41,8 @@ pipeline {
         stage ('Dependancies') {
             steps {
                 sh '''
+                    apt update
+                    apt-get install curl
                     pip install virtualenv -U
                     virtualenv --system-site-packages venv
                     . venv/bin/activate
