@@ -37,7 +37,7 @@ from jormungandr.interfaces.v1.serializer.base import (
 
 class CoordSerializer(serpy.DictSerializer):
     lat = DoubleToStringField(attr='lat')
-    lon = DoubleToStringField(attr='lat')
+    lon = DoubleToStringField(attr='lon')
 
 
 class FreeFloatingSerializer(serpy.DictSerializer):

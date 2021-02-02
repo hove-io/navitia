@@ -33,29 +33,27 @@ import logging
 import datetime
 
 
-class FreeFloatingProviderManager(object):
+class ExternalServiceProviderManager(object):
     def __init__(self, provider_configuration, providers_getter=None, update_interval=600):
         self.logger = logging.getLogger(__name__)
         self.providers_config = provider_configuration
-        self.providers_keys = []
+        self.providers_keys = provider_configuration
         self._providers_getter = providers_getter
-        self._free_floating_providers = {}
-        self._free_floating_providers_legacy = {}
+        self._external_service_providers = {}
+        self._external_service_providers_legacy = {}
         self._free_floating_providers_last_update = {}
         self._last_update = datetime.datetime(1970, 1, 1)
         self._update_interval = update_interval
 
-    def init_providers(self, providers_keys):
+    def init_providers(self):
         """
         Create free_floating providers only if defined in the Jormungandr instance and not already created
         :param providers_keys: list of providers defined in the instance
         """
-        self.providers_keys = providers_keys
-
         # Init legacy providers from config file
         for provider in self.providers_config:
             key = provider['id']
-            self._free_floating_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
+            self._external_service_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
 
     def _init_class(self, cls, arguments):
         """
@@ -78,13 +76,13 @@ class FreeFloatingProviderManager(object):
     def _update_provider(self, provider):
         self.logger.info('updating/adding {} free-floating provider'.format(provider.id))
         try:
-            self._free_floating_providers[provider.id] = self._init_class(provider.klass, provider.args)
+            self._external_service_providers[provider.id] = self._init_class(provider.klass, provider.args)
             self._free_floating_providers_last_update[provider.id] = provider.last_update()
         except Exception:
             self.logger.exception('impossible to initialize free-floating provider')
 
         # If the provider added in db is also defined in legacy, delete it.
-        self._free_floating_providers_legacy.pop(provider.id, None)
+        self._external_service_providers_legacy.pop(provider.id, None)
 
     def update_config(self):
         """
@@ -106,7 +104,7 @@ class FreeFloatingProviderManager(object):
             self.logger.exception('Failure to retrieve free_floating providers configuration')
         if not providers:
             self.logger.debug('No providers/All providers disabled in db')
-            self._free_floating_providers = {}
+            self._external_service_providers = {}
             self._free_floating_providers_last_update = {}
 
             return
@@ -123,7 +121,7 @@ class FreeFloatingProviderManager(object):
         """
         Call free-floating provider to call external service (Forseti)
         :param request: the request query received
-        :return: response: free_floatings json ?
+        :return: response: external_services json ?
         """
         for provider in self._get_providers().values():
             resp = provider.get_free_floatings(arguments)
@@ -134,7 +132,7 @@ class FreeFloatingProviderManager(object):
         # Make sure we update the providers list from the database before returning them
         self.update_config()
 
-        return dict(self._free_floating_providers, **self._free_floating_providers_legacy)
+        return dict(self._external_service_providers, **self._external_service_providers_legacy)
 
     def status(self):
         providers_status = []

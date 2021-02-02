@@ -37,12 +37,12 @@ from six.moves.urllib.parse import urlencode
 
 class ForsetiProvider(object):
     """
-    Class managing calls to forseti webservice, providing free_floatings
+    Class managing calls to forseti webservice, providing external_services
     """
 
-    def __init__(self, url, timeout=2, **kwargs):
+    def __init__(self, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
-        self.url = url
+        self.service_url = service_url
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_FORSETI_FAIL']),
@@ -54,13 +54,15 @@ class ForsetiProvider(object):
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 30))
     def _call_webservice(self, arguments):
         """
-        Call free_floatings webservice with URL defined in settings
+        Call external_services webservice with URL defined in settings
         :return: data received from the webservice
         """
-        logging.getLogger(__name__).debug('forseti free_floatings service , call url : {}'.format(self.url))
+        logging.getLogger(__name__).debug(
+            'forseti external_services service , call url : {}'.format(self.service_url)
+        )
         result = None
         try:
-            url = "{}?{}".format(self.url, urlencode(arguments, doseq=True))
+            url = "{}?{}".format(self.service_url, urlencode(arguments, doseq=True))
             response = self.breaker.call(requests.get, url=url, timeout=self.timeout)
             return response
             self.record_call("OK")

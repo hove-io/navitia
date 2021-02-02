@@ -64,9 +64,9 @@ def add_common_status(response, instance):
         'equipment_providers'
     ] = instance.equipment_provider_manager.status()
 
-    response['status']['free_floating_providers_services'] = {}
-    response['status']['free_floating_providers_services'][
-        'free_floating_providers_keys'
-    ] = instance.free_floating_provider_manager.providers_keys
+    response['status']['external_providers_services'] = {}
+    response['status']['external_providers_services'][
+        'external_service_providers_keys'
+    ] = instance.external_service_provider_manager.providers_keys
 
     response['status']['autocomplete'] = instance.autocomplete.status()
