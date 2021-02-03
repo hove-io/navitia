@@ -347,10 +347,6 @@ class Instance(db.Model):  # type: ignore
         db.Integer, default=default_values.max_ridesharing_duration_to_pt, nullable=False
     )
 
-    external_services = db.relationship(
-        "ExternalService", secondary=associate_instance_external_service, backref="instances", lazy='joined'
-    )
-
     max_taxi_duration_to_pt = db.Column(
         db.Integer, default=default_values.max_taxi_duration_to_pt, nullable=False
     )
@@ -576,6 +572,10 @@ class Instance(db.Model):  # type: ignore
 
     ridesharing_services = db.relationship(
         "RidesharingService", secondary=associate_instance_ridesharing, backref="instances", lazy='joined'
+    )
+
+    external_services = db.relationship(
+        "ExternalService", secondary=associate_instance_external_service, backref="instances", lazy='joined'
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

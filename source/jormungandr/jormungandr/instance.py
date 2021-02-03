@@ -63,7 +63,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
-from jormungandr.external_services import ExternalServiceProviderManager
+from jormungandr.external_services import ExternalServiceManager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -178,11 +178,17 @@ class Instance(object):
 
         # Init equipment providers from config
         self.equipment_provider_manager.init_providers(instance_equipment_providers)
+
         # Init free-floating providers from config
-        self.external_service_provider_manager = ExternalServiceProviderManager(
-            external_service_provider_configurations
-        )
-        self.external_service_provider_manager.init_providers()
+        if disable_database:
+            self.external_service_provider_manager = ExternalServiceManager(
+                self, external_service_provider_configurations
+            )
+        else:
+            self.external_service_provider_manager = ExternalServiceManager(
+                self, external_service_provider_configurations, self.get_external_service_providers_from_db
+            )
+        self.external_service_provider_manager.init_external_services()
 
     def get_providers_from_db(self):
         """
@@ -195,6 +201,12 @@ class Instance(object):
         :return: a callable query of ridesharing services associated to the current instance in db
         """
         return self._get_models().ridesharing_services
+
+    def get_external_service_providers_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        return self._get_models().external_services
 
     @property
     def autocomplete(self):

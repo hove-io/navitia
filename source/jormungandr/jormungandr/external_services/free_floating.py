@@ -35,7 +35,7 @@ import requests as requests
 from six.moves.urllib.parse import urlencode
 
 
-class ForsetiProvider(object):
+class FreeFloatingProvider(object):
     """
     Class managing calls to forseti webservice, providing external_services
     """
@@ -100,14 +100,14 @@ class ForsetiProvider(object):
     @classmethod
     def _check_response(cls, response):
         if response is None:
-            raise ForsetiError('impossible to access free-floating service')
+            raise FreeFloatingError('impossible to access free-floating service')
         if response.status_code == 503:
-            raise ForsetiUnavailable('forseti responded with 503')
+            raise FreeFloatingUnavailable('forseti responded with 503')
         if response.status_code != 200:
             error_msg = 'free-floating request failed with HTTP code {}'.format(response.status_code)
             if response.text:
                 error_msg += ' ({})'.format(response.text)
-            raise ForsetiError(error_msg)
+            raise FreeFloatingError(error_msg)
 
     @classmethod
     def response_marshaler(cls, response):
@@ -127,9 +127,9 @@ class ForsetiProvider(object):
         return resp
 
 
-class ForsetiError(RuntimeError):
+class FreeFloatingError(RuntimeError):
     pass
 
 
-class ForsetiUnavailable(RuntimeError):
+class FreeFloatingUnavailable(RuntimeError):
     pass

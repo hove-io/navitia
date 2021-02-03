@@ -56,7 +56,6 @@ from jormungandr.parking_space_availability import (
     ParkingPlaces,
 )
 from jormungandr.equipments.sytral import SytralProvider
-from jormungandr.external_services.forseti import ForsetiProvider
 from jormungandr.ptref import FeedPublisher
 
 import uuid
@@ -590,13 +589,4 @@ def mock_equipment_providers(equipment_provider_manager, data, code_types_list):
     }
     equipment_provider_manager._equipment_providers["sytral"]._call_webservice = mock.MagicMock(
         return_value=data
-    )
-
-
-def mock_external_service_providers(external_service_provider_manager, data):
-    external_service_provider_manager._external_service_providers = {
-        "forseti": ForsetiProvider(service_url="fake.url", timeout=3)
-    }
-    external_service_provider_manager._external_service_providers["forseti"]._call_webservice = mock.MagicMock(
-        return_value=data, status_code=200
     )

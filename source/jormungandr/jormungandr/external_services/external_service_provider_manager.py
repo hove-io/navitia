@@ -31,36 +31,52 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 import logging
 import datetime
+from jormungandr import utils
 
 
-class ExternalServiceProviderManager(object):
-    def __init__(self, provider_configuration, providers_getter=None, update_interval=600):
+class ExternalServiceManager(object):
+    def __init__(
+        self, instance, external_service_configuration, external_service_getter=None, update_interval=600
+    ):
         self.logger = logging.getLogger(__name__)
-        self.providers_config = provider_configuration
-        self.providers_keys = provider_configuration
-        self._providers_getter = providers_getter
-        self._external_service_providers = {}
-        self._external_service_providers_legacy = {}
-        self._free_floating_providers_last_update = {}
+        self._external_service_configuration = external_service_configuration
+        self._external_service_getter = external_service_getter
+        # List of external services grouped by navitia_service_type
+        self._external_services_legacy = {}
+        self._external_services_from_db = {}
+        self._external_services_last_update = {}
         self._last_update = datetime.datetime(1970, 1, 1)
         self._update_interval = update_interval
+        self.instance = instance
 
-    def init_providers(self):
-        """
-        Create free_floating providers only if defined in the Jormungandr instance and not already created
-        :param providers_keys: list of providers defined in the instance
-        """
-        # Init legacy providers from config file
-        for provider in self.providers_config:
-            key = provider['id']
-            self._external_service_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
+    def init_external_services(self):
+        # Init external services from config file
+        for config in self._external_service_configuration:
+            # Set default arguments
+            if 'args' not in config:
+                config['args'] = {}
+            if 'service_url' not in config['args']:
+                config['args'].update({'service_url': None})
+            try:
+                service = utils.create_object(config)
+            except KeyError as e:
+                raise KeyError(
+                    'impossible to build a external service for {}, '
+                    'missing mandatory field in configuration: {}'.format(self.instance.name, e.message)
+                )
+            self.logger.info(
+                '** External service: {} used for instance: {} **'.format(
+                    type(service).__name__, self.instance.name
+                )
+            )
+            self._external_services_legacy.setdefault(config['navitia_service'], []).append(service)
 
     def _init_class(self, cls, arguments):
         """
-        Create an instance of a provider according to config
-        :param cls: provider class in Jormungandr found in config file
-        :param arguments: parameters to set in the provider class
-        :return: instance of provider
+        Create an instance of a external service according to config
+        :param cls: name of the class configured in the database
+        :param arguments: parameters from the database required
+        :return: instance of external service
         """
         try:
             if '.' not in cls:
@@ -73,75 +89,82 @@ class ExternalServiceProviderManager(object):
         except ImportError:
             self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
-    def _update_provider(self, provider):
-        self.logger.info('updating/adding {} free-floating provider'.format(provider.id))
-        try:
-            self._external_service_providers[provider.id] = self._init_class(provider.klass, provider.args)
-            self._free_floating_providers_last_update[provider.id] = provider.last_update()
-        except Exception:
-            self.logger.exception('impossible to initialize free-floating provider')
-
-        # If the provider added in db is also defined in legacy, delete it.
-        self._external_service_providers_legacy.pop(provider.id, None)
-
     def update_config(self):
         """
-        Update list of free_floating providers from db
+        Update list of external services from db
         """
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
-            or not self._providers_getter
+            or not self._external_service_getter
         ):
             return
 
-        self.logger.debug('Updating free_floating providers from db')
+        self.logger.debug('Updating external services from db')
         self._last_update = datetime.datetime.utcnow()
 
-        providers = []
+        services = []
         try:
-            providers = self._providers_getter()
+            services = self._external_service_getter()
         except Exception:
-            self.logger.exception('Failure to retrieve free_floating providers configuration')
-        if not providers:
-            self.logger.debug('No providers/All providers disabled in db')
-            self._external_service_providers = {}
-            self._free_floating_providers_last_update = {}
+            self.logger.exception('Failure to retrieve external service configuration')
+        if not services:
+            self.logger.debug('No external service/All external services disabled in db')
+            self._external_services_last_update = {}
 
             return
 
-        for provider in providers:
+        for service in services:
             if (
-                provider.id not in self._free_floating_providers_last_update
-                or provider.last_update() > self._free_floating_providers_last_update[provider.id]
+                service.id not in self._external_services_last_update
+                or service.last_update() > self._external_services_last_update[service.id]
             ):
-                self._update_provider(provider)
+                self._update_external_service(service)
+
+        # If any external service is present in database, service from configuration file in no more used.
+        self._external_services_legacy = self._external_services_from_db
+
+    def _update_external_service(self, service):
+        self.logger.info('adding {} external service'.format(service.id))
+        try:
+            service_obj = self._init_class(service.klass, service.args)
+            if service_obj not in self._external_services_from_db.get(service.navitia_service, []):
+                self._external_services_from_db.setdefault(service.navitia_service, []).append(service_obj)
+            self._external_services_last_update[service.id] = service.last_update()
+        except Exception:
+            self.logger.exception('impossible to initialize external service')
 
     # Here comes the function to call forseti/free_floating
-    def manage_free_floatins(self, arguments):
+    def manage_free_floatins(self, navitia_service, arguments):
         """
-        Call free-floating provider to call external service (Forseti)
-        :param request: the request query received
-        :return: response: external_services json ?
+        Get appropriate external service for 'navitia_service' and call it
+        :param navitia_service: external service to be used to query
+        :param arguments: parameters to be added in the query
+        :return: response: external_services json
         """
-        for provider in self._get_providers().values():
-            resp = provider.get_free_floatings(arguments)
+        service = self._get_external_service(navitia_service)
+        if service:
+            resp = service.get_free_floatings(arguments)
             if resp:
                 return resp
+        return None
 
-    def _get_providers(self):
-        # Make sure we update the providers list from the database before returning them
+    def _get_external_service(self, navitia_service):
+        # Make sure we update the external services list from the database before returning them
         self.update_config()
-
-        return dict(self._external_service_providers, **self._external_service_providers_legacy)
+        service = self._external_services_legacy.get(navitia_service, [])
+        if len(service) > 0:
+            return service[0]
+        else:
+            return None
 
     def status(self):
-        providers_status = []
-        for provider in self.providers_config:
-            providers_status.append(
+        services_status = []
+        for service in self._external_service_configuration:
+            services_status.append(
                 {
-                    'id': provider['id'],
-                    'timeout': provider['args']['timeout'],
-                    'fail_max': provider['args']['fail_max'],
+                    'id': service['id'],
+                    'timeout': service['args']['timeout'],
+                    'fail_max': service['args']['fail_max'],
                 }
             )
-        return providers_status
+        return services_status

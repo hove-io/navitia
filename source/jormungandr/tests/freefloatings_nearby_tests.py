@@ -40,14 +40,14 @@ MOCKED_INSTANCE_CONF = {
         'external_services_providers': [
             {
                 "id": "forseti_free_floatings",
-                "navitia_service": "external_services",
+                "navitia_service": "free_floatings",
                 "args": {
                     "service_url": "http://wtf/free_floatings",
                     "timeout": 10,
                     "circuit_breaker_max_fail": 4,
                     "circuit_breaker_reset_timeout": 60,
                 },
-                "class": "jormungandr.external_services.forseti.ForsetiProvider",
+                "class": "jormungandr.external_services.free_floating.FreeFloatingProvider",
             }
         ]
     },
@@ -95,7 +95,7 @@ def mock_free_floating(_, params):
 @pytest.fixture(scope="function", autouse=True)
 def mock_http_free_floating(monkeypatch):
     monkeypatch.setattr(
-        'jormungandr.external_services.forseti.ForsetiProvider._call_webservice', mock_free_floating
+        'jormungandr.external_services.free_floating.FreeFloatingProvider._call_webservice', mock_free_floating
     )
 
 

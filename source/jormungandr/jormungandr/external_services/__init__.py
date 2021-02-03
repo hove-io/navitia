@@ -28,4 +28,4 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-from jormungandr.external_services.external_service_provider_manager import ExternalServiceProviderManager
+from jormungandr.external_services.external_service_provider_manager import ExternalServiceManager

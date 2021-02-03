@@ -100,6 +100,6 @@ class FreeFloatingsNearby(ResourceUri):
             if coord is None:
                 abort(404)
         self._register_interpreted_parameters(args)
-        resp = instance.external_service_provider_manager.manage_free_floatins(args)
+        resp = instance.external_service_provider_manager.manage_free_floatins('free_floatings', args)
 
         return resp, 200

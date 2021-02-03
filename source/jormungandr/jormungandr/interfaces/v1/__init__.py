@@ -67,6 +67,6 @@ def add_common_status(response, instance):
     response['status']['external_providers_services'] = {}
     response['status']['external_providers_services'][
         'external_service_providers_keys'
-    ] = instance.external_service_provider_manager.providers_keys
+    ] = instance.external_service_provider_manager._external_service_configuration
 
     response['status']['autocomplete'] = instance.autocomplete.status()
