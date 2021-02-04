@@ -32,6 +32,7 @@ from importlib import import_module
 import logging
 import datetime
 from jormungandr import utils
+from jormungandr.exceptions import ConfigException
 
 
 class ExternalServiceManager(object):
@@ -60,10 +61,12 @@ class ExternalServiceManager(object):
             try:
                 service = utils.create_object(config)
             except KeyError as e:
-                raise KeyError(
-                    'impossible to build a external service for {}, '
-                    'missing mandatory field in configuration: {}'.format(self.instance.name, e.message)
-                )
+                self.logger.error('Impossible to create external service with missing key: {}'.format(e.message))
+                continue
+            except ConfigException as e:
+                self.logger.error('Impossible to create external service with wrong class: {}'.format(e.message))
+                continue
+
             self.logger.info(
                 '** External service: {} used for instance: {} **'.format(
                     type(service).__name__, self.instance.name
@@ -89,6 +92,15 @@ class ExternalServiceManager(object):
         except ImportError:
             self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
+    def _need_update(self, services):
+        for service in services:
+            if (
+                service.id not in self._external_services_last_update
+                or service.last_update() > self._external_services_last_update[service.id]
+            ):
+                return True
+        return False
+
     def update_config(self):
         """
         Update list of external services from db
@@ -110,15 +122,15 @@ class ExternalServiceManager(object):
         if not services:
             self.logger.debug('No external service/All external services disabled in db')
             self._external_services_last_update = {}
-
             return
 
+        if not self._need_update(services):
+            return
+
+        # We update all the services if any one of them is updated
+        self._external_services_from_db = {}
         for service in services:
-            if (
-                service.id not in self._external_services_last_update
-                or service.last_update() > self._external_services_last_update[service.id]
-            ):
-                self._update_external_service(service)
+            self._update_external_service(service)
 
         # If any external service is present in database, service from configuration file in no more used.
         self._external_services_legacy = self._external_services_from_db
