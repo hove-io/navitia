@@ -150,7 +150,7 @@ class FakeInstance(Instance):
             zmq_socket_type=None,
             autocomplete_type='kraken',
             streetnetwork_backend_manager=StreetNetworkBackendManager(),
-            free_floating_provider_configurations=[],
+            external_service_provider_configurations=[],
         )
         self.disable_database = disable_database
         self.equipment_provider_manager = EquipmentProviderManager(equipment_details_config)
