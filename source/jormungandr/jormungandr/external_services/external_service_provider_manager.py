@@ -32,7 +32,6 @@ from importlib import import_module
 import logging
 import datetime
 from jormungandr import utils
-from jormungandr.exceptions import ConfigException
 
 
 class ExternalServiceManager(object):
@@ -63,7 +62,7 @@ class ExternalServiceManager(object):
             except KeyError as e:
                 self.logger.error('Impossible to create external service with missing key: {}'.format(e.message))
                 continue
-            except ConfigException as e:
+            except Exception as e:
                 self.logger.error('Impossible to create external service with wrong class: {}'.format(e.message))
                 continue
 
