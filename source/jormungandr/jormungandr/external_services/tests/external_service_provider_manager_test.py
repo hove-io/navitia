@@ -31,6 +31,7 @@
 from jormungandr.external_services.external_service_provider_manager import ExternalServiceManager
 from navitiacommon.models import ExternalService
 import datetime
+import pytest
 
 valid_configuration = [
     {
@@ -61,6 +62,20 @@ wrong_key_configuration = [
     }
 ]
 
+wrong_class_configuration = [
+    {
+        "id": "forseti_free_floatings",
+        "navitia_service": "free_floatings",
+        "args": {
+            "service_url": "http://wtf/free_floatings",
+            "timeout": 10,
+            "circuit_breaker_max_fail": 4,
+            "circuit_breaker_reset_timeout": 60,
+        },
+        "class": "jormungandr.external_services.free_floating.toto",
+    }
+]
+
 
 class MockInstance:
     def __init__(self, name="test1"):
@@ -78,6 +93,11 @@ def external_service_provider_manager_config_from_file_test():
     Test that external services are created from env when conditions are met
     """
     instance = MockInstance()
+
+    # With configuration having wrong class no external service is initialized
+    manager = ExternalServiceManager(instance, external_service_configuration=wrong_class_configuration)
+    with pytest.raises(Exception):
+        manager.init_external_services()
 
     # With configuration missing a key in "args" external service will be initialized
     # with a right key without any value
