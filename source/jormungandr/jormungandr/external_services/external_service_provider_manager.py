@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -145,7 +145,7 @@ class ExternalServiceManager(object):
             self.logger.exception('impossible to initialize external service')
 
     # Here comes the function to call forseti/free_floating
-    def manage_free_floatins(self, navitia_service, arguments):
+    def manage_free_floatings(self, navitia_service, arguments):
         """
         Get appropriate external service for 'navitia_service' and call it
         :param navitia_service: external service to be used to query
@@ -155,8 +155,7 @@ class ExternalServiceManager(object):
         service = self._get_external_service(navitia_service)
         if service:
             resp = service.get_free_floatings(arguments)
-            if resp:
-                return resp
+            return resp
         return None
 
     def _get_external_service(self, navitia_service):

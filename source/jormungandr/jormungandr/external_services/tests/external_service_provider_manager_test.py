@@ -1,5 +1,5 @@
 # encoding: utf-8
-# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -30,8 +30,6 @@
 
 from jormungandr.external_services.external_service_provider_manager import ExternalServiceManager
 from navitiacommon.models import ExternalService
-
-from mock import MagicMock
 import datetime
 
 valid_configuration = [
@@ -111,7 +109,6 @@ def external_service_provider_manager_config_from_file_test():
 
     # With a valid configuration a proper external service will be initialized
     manager = ExternalServiceManager(instance, external_service_configuration=valid_configuration)
-    # manager._init_class = MagicMock(return_value="ExternalService")
     manager.init_external_services()
     assert len(manager._external_services_legacy) == 1
     assert len(manager._external_services_legacy.get('free_floatings', [])) == 1

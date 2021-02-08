@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -100,6 +100,6 @@ class FreeFloatingsNearby(ResourceUri):
             if coord is None:
                 abort(404)
         self._register_interpreted_parameters(args)
-        resp = instance.external_service_provider_manager.manage_free_floatins('free_floatings', args)
+        resp = instance.external_service_provider_manager.manage_free_floatings('free_floatings', args)
 
         return resp, 200

@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -63,27 +63,26 @@ class FreeFloatingProvider(object):
         result = None
         try:
             url = "{}?{}".format(self.service_url, urlencode(arguments, doseq=True))
-            response = self.breaker.call(requests.get, url=url, timeout=self.timeout)
-            return response
-            self.record_call("OK")
+            result = self.breaker.call(requests.get, url=url, timeout=self.timeout)
+            self.record_call(url=url, status="OK")
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Service SytralRT is dead (error: {})'.format(e))
-            self.record_call('failure', reason='circuit breaker open')
+            logging.getLogger(__name__).error('Service Forseti is dead (error: {})'.format(e))
+            self.record_call(url=url, status='failure', reason='circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('SytralRT service timeout (error: {})'.format(t))
-            self.record_call('failure', reason='timeout')
+            logging.getLogger(__name__).error('Forseti service timeout (error: {})'.format(t))
+            self.record_call(url=url, status='failure', reason='timeout')
         except Exception as e:
-            logging.getLogger(__name__).exception('SytralRT service error: {}'.format(e))
-            self.record_call('failure', reason=str(e))
+            logging.getLogger(__name__).exception('Forseti service error: {}'.format(e))
+            self.record_call(url=url, status='failure', reason=str(e))
         return result
 
-    def record_call(self, status, **kwargs):
+    def record_call(self, url, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'free_floatings_id': "Forseti", 'dataset': "?????", 'status': status}
+        params = {'freefloating_service_id': "Forseti", 'status': status, 'freefloating_service_url': url}
         params.update(kwargs)
-        new_relic.record_custom_event('parking_status', params)
+        new_relic.record_custom_event('freefloating_status', params)
 
     def get_free_floatings(self, arguments):
         """
@@ -91,11 +90,7 @@ class FreeFloatingProvider(object):
         """
         raw_response = self._call_webservice(arguments)
 
-        # Here process data ??
-        if raw_response:
-            resp = self.response_marshaler(raw_response)
-            return resp
-        return None
+        return self.response_marshaler(raw_response)
 
     @classmethod
     def _check_response(cls, response):
@@ -119,8 +114,7 @@ class FreeFloatingProvider(object):
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
             raise
-        # Clean dict objects depending on depth passed in request parameter.
-        # json_response = cls._clean_response(json_response, depth)
+
         from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 
         resp = FreeFloatingsSerializer(json_response).data
