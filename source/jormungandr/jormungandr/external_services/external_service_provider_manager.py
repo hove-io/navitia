@@ -32,6 +32,7 @@ from importlib import import_module
 import logging
 import datetime
 from jormungandr import utils
+from jormungandr.exceptions import ConfigException
 
 
 class ExternalServiceManager(object):
@@ -60,17 +61,14 @@ class ExternalServiceManager(object):
             try:
                 service = utils.create_object(config)
             except KeyError as e:
-                self.logger.error('Impossible to create external service with missing key: {}'.format(e.message))
-                continue
+                self.logger.error('Impossible to create external service with missing key: {}'.format(str(e)))
+                raise KeyError('Impossible to create external service with missing key: {}'.format(str(e)))
             except Exception as e:
-                self.logger.error('Impossible to create external service with wrong class: {}'.format(e.message))
-                continue
-
-            self.logger.info(
-                '** External service: {} used for instance: {} **'.format(
-                    type(service).__name__, self.instance.name
+                self.logger.error('Impossible to create external service with wrong class: {}'.format(str(e)))
+                raise ConfigException(
+                    'Impossible to create external service with wrong class: {}'.format(str(e))
                 )
-            )
+
             self._external_services_legacy.setdefault(config['navitia_service'], []).append(service)
 
     def _init_class(self, cls, arguments):

@@ -50,6 +50,7 @@ class FreeFloatingSerializer(serpy.DictSerializer):
     battery = NestedPropertyField(attr='battery')
     deeplink = NestedPropertyField(attr='deeplink')
     coord = CoordSerializer(attr='coord')
+    distance = NestedPropertyField(attr='distance')
 
 
 class FreeFloatingsSerializer(serpy.DictSerializer):

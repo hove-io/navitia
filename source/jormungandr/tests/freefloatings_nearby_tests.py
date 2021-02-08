@@ -70,6 +70,7 @@ FREE_FLOATINGS_RESPONSE = {
             "coord": {"lat": 48.848715, "lon": 2.37618},
             "propulsion": "ELECTRIC",
             "battery": 91,
+            "distance": 100.55,
             "attributes": ["ELECTRIC"],
             "deeplink": "https://cityscoot.onelink.me/8GT9?pid=FLUCTUO&c=CS-API-FLUCTUO&af_dp=cityscoot%3A%2F%2Fcities%2F4%2Fscooters%2F18055&af_web_dp=https%3A%2F%2Fwww.cityscoot.eu%2F&af_force_deeplink=true",
         },
@@ -129,6 +130,7 @@ class TestFreeFloating(AbstractTestFixture):
 
         # Second free_floating contains more attributes
         assert free_floatings[1]['public_id'] == 'FB-435-HD'
+        assert free_floatings[1]['distance'] == 100.55
         assert free_floatings[1]['provider_name'] == 'Cityscoot'
         assert free_floatings[1]['type'] == 'MOTORSCOOTER'
         assert free_floatings[1]['id'] == 'Y2l0eXNjb290Ok1PVE9SU0NPT1RFUjpGQi00MzUtSEQ='

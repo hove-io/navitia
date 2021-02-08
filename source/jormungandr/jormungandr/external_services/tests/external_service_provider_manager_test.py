@@ -46,20 +46,7 @@ valid_configuration = [
     }
 ]
 
-wrong_class_configuration = [
-    {
-        "id": "forseti_free_floatings",
-        "navitia_service": "free_floatings",
-        "args": {
-            "service_url": "http://wtf/free_floatings",
-            "timeout": 10,
-            "circuit_breaker_max_fail": 4,
-            "circuit_breaker_reset_timeout": 60,
-        },
-        "class": "jormungandr.external_services.free_floating.toto",
-    }
-]
-
+# in args the key 'url' is not correct. It should be 'service_url'
 wrong_key_configuration = [
     {
         "id": "forseti_free_floatings",
@@ -91,11 +78,6 @@ def external_service_provider_manager_config_from_file_test():
     Test that external services are created from env when conditions are met
     """
     instance = MockInstance()
-
-    # With configuration having wrong class no external service is initialized
-    manager = ExternalServiceManager(instance, external_service_configuration=wrong_class_configuration)
-    manager.init_external_services()
-    assert not manager._external_services_legacy
 
     # With configuration missing a key in "args" external service will be initialized
     # with a right key without any value
@@ -142,6 +124,15 @@ def services_getter_update():
     return [service]
 
 
+def services_getter_update_with_wrong_class():
+    service = ExternalService(id='forseti_free_floatings')
+    service.navitia_service = 'free_floatings'
+    service.klass = 'jormungandr.external_services.free_floating.Toto'
+    service.args = {'service_url': 'http://update/free_floatings', 'timeout': 10}
+    service.created_at = datetime.datetime.utcnow()
+    return [service]
+
+
 def external_service_provider_manager_db_test():
     """
     # Test that external services are created from db when conditions are met
@@ -177,6 +168,12 @@ def external_service_provider_manager_db_test():
     assert service.timeout == 10
     assert service.breaker.reset_timeout == 60
     assert service.breaker.fail_max == 4
+
+    # No service is re-initialized from the new configurations in the db as the class is wrong one
+    manager_update = manager._last_update
+    manager._external_service_getter = services_getter_update_with_wrong_class
+    manager.update_config()
+    assert len(manager._external_services_legacy) == 0
 
 
 def external_service_provider_manager_config_from_file_and_db_test():
