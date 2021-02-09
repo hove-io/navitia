@@ -34,6 +34,7 @@ www.navitia.io
 #include "utils/functions.h"  //navitia::absolute_path function
 #include "utils/init.h"
 #include "utils/zmq.h"
+#include "utils/get_hostname.h"
 
 #include <boost/thread.hpp>
 #include <google/protobuf/descriptor.h>
@@ -139,11 +140,13 @@ int main(int argn, char** argv) {
     }
 
     int nb_threads = conf.nb_threads();
+    const std::string hostname = navitia::get_hostname();
+
     // Launch pool of worker threads
     LOG4CPLUS_INFO(logger, "starting workers threads");
     for (int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-        threads.create_thread([&context, &data_manager, conf, &metrics, thread_nbr] {
-            return doWork(context, data_manager, conf, metrics, thread_nbr);
+        threads.create_thread([&context, &data_manager, conf, &metrics, &hostname, thread_nbr] {
+            return doWork(context, data_manager, conf, metrics, hostname, thread_nbr);
         });
     }
 
