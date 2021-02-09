@@ -2931,6 +2931,8 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
     BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip:modified:0:feed-1");
     BOOST_CHECK_EQUAL(vj->idx, 1);
+    BOOST_CHECK_EQUAL(vj->name, "");
+    BOOST_CHECK_EQUAL(vj->headsign, "");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
@@ -3079,6 +3081,8 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
     BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip_2:modified:0:feed-2");
     BOOST_CHECK_EQUAL(vj->idx, 2);
+    BOOST_CHECK_EQUAL(vj->name, "trip_headsign");
+    BOOST_CHECK_EQUAL(vj->headsign, "trip_headsign");
     BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip_2");
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
