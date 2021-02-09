@@ -42,6 +42,8 @@ places_type = {
     'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
 }
 
+free_floatings_type = ['BIKE', 'SCOOTER', 'MOTORSCOOTER', 'STATION', 'CAR', 'OTHER']
+
 
 pt_object_type = {
     'network': type_pb2.NETWORK,

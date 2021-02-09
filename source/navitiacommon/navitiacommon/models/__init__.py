@@ -267,6 +267,14 @@ associate_instance_ridesharing = db.Table(
     db.PrimaryKeyConstraint('instance_id', 'ridesharing_id', name='instance_ridesharing_pk'),
 )
 
+associate_instance_external_service = db.Table(
+    'associate_instance_external_service',
+    db.metadata,
+    db.Column('instance_id', db.Integer, db.ForeignKey('instance.id')),
+    db.Column('external_service_id', db.Text, db.ForeignKey('external_service.id')),
+    db.PrimaryKeyConstraint('instance_id', 'external_service_id', name='instance_external_service_pk'),
+)
+
 # We need that here for the foreign keys in instance
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 
@@ -564,6 +572,10 @@ class Instance(db.Model):  # type: ignore
 
     ridesharing_services = db.relationship(
         "RidesharingService", secondary=associate_instance_ridesharing, backref="instances", lazy='joined'
+    )
+
+    external_services = db.relationship(
+        "ExternalService", secondary=associate_instance_external_service, backref="instances", lazy='joined'
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
@@ -948,3 +960,4 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
 from navitiacommon.models.bss_provider import BssProvider
 from navitiacommon.models.equipments_providers import EquipmentsProvider
 from navitiacommon.models.ridesharing_service import RidesharingService
+from navitiacommon.models.external_service import ExternalService

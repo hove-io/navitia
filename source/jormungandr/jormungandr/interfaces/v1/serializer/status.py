@@ -200,6 +200,13 @@ class EquipmentProvidersServicesSerializer(NullableDictSerializer):
         return obj.get('equipment_providers', [])
 
 
+class ExternalServiceProvidersServicesSerializer(NullableDictSerializer):
+    external_service_providers_keys = MethodField(schema_type=str, many=True, display_none=True)
+
+    def get_external_service_providers_keys(self, obj):
+        return obj.get('external_service_providers_keys', [])
+
+
 class CoverageErrorSerializer(NullableDictSerializer):
     code = Field(schema_type=str)
     value = Field(schema_type=str)
@@ -221,6 +228,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
     equipment_providers_services = EquipmentProvidersServicesSerializer()
+    external_providers_services = ExternalServiceProvidersServicesSerializer()
     start_production_date = Field(schema_type=str, display_none=False)
     last_load_status = Field(schema_type=bool, display_none=False)
     is_open_data = Field(schema_type=bool, display_none=False)

@@ -47,6 +47,7 @@ from jormungandr.interfaces.v1 import (
     JSONSchema,
     LineReports,
     EquipmentReports,
+    free_floatings,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -302,6 +303,17 @@ class V1Routing(AModule):
             coord + '<uri:uri>/terminus_schedules',
             '/terminus_schedules',
             endpoint='terminus_schedules',
+        )
+
+        self.add_resource(
+            free_floatings.FreeFloatingsNearby,
+            region + 'freefloatings_nearby',
+            coord + 'freefloatings_nearby',
+            region + '<uri:uri>/freefloatings_nearby',
+            coord + '<uri:uri>/freefloatings_nearby',
+            '/coord/' + lon_lat + 'freefloatings_nearby',
+            '/coords/' + lon_lat + 'freefloatings_nearby',
+            endpoint='freefloatings_nearby',
         )
 
         self.add_resource(JSONSchema.Schema, '/schema', endpoint="schema")
