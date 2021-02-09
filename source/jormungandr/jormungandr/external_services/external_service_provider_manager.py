@@ -151,28 +151,16 @@ class ExternalServiceManager(object):
         :return: response: external_services json
         """
         service = self._get_external_service(navitia_service)
-        if service:
-            resp = service.get_free_floatings(arguments)
-            return resp
-        return None
+        return service.get_free_floatings(arguments) if service else None
 
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them
         self.update_config()
         service = self._external_services_legacy.get(navitia_service, [])
-        if len(service) > 0:
-            return service[0]
-        else:
-            return None
+        return service[0] if service else None
 
     def status(self):
-        services_status = []
-        for service in self._external_service_configuration:
-            services_status.append(
-                {
-                    'id': service['id'],
-                    'timeout': service['args']['timeout'],
-                    'fail_max': service['args']['fail_max'],
-                }
-            )
-        return services_status
+        return [
+            {'id': service['id'], 'timeout': service['args']['timeout'], 'fail_max': service['args']['fail_max']}
+            for service in self._external_service_configuration
+        ]

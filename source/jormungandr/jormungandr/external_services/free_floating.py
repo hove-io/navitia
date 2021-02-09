@@ -33,6 +33,7 @@ import pybreaker
 import logging
 import requests as requests
 from six.moves.urllib.parse import urlencode
+from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 
 
 class FreeFloatingProvider(object):
@@ -114,11 +115,7 @@ class FreeFloatingProvider(object):
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
             raise
-
-        from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
-
-        resp = FreeFloatingsSerializer(json_response).data
-        return resp
+        return FreeFloatingsSerializer(json_response).data
 
 
 class FreeFloatingError(RuntimeError):

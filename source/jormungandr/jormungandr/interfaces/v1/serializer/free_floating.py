@@ -58,8 +58,4 @@ class FreeFloatingsSerializer(serpy.DictSerializer):
     warnings = BetaEndpointsSerializer()
 
     def get_free_floatings(self, obj):
-        res = []
-        for free_floating in obj.get('free_floatings', []):
-            res.append(FreeFloatingSerializer(free_floating).data)
-
-        return res
+        return [FreeFloatingSerializer(ff).data for ff in obj.get('free_floatings', [])]

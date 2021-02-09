@@ -49,17 +49,6 @@ def build_instance_shape(instance):
     return None
 
 
-places_types = {
-    'stop_areas',
-    'stop_points',
-    'pois',
-    'addresses',
-    'coords',
-    'places',
-    'coord',
-}  # add admins when possible
-
-
 class FreeFloatingsNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
