@@ -67,6 +67,7 @@ inline void doWork(zmq::context_t& context,
                    DataManager<navitia::type::Data>& data_manager,
                    navitia::kraken::Configuration conf,
                    const navitia::Metrics& metrics,
+                   const std::string& hostname,
                    int worker_id) {
     auto logger = log4cplus::Logger::getInstance("worker");
 
@@ -161,8 +162,8 @@ inline void doWork(zmq::context_t& context,
 
         auto start_timestamp = (start - navitia::posix_epoch).total_milliseconds();
         auto end_timestamp = (end - navitia::posix_epoch).total_milliseconds();
-        LOG4CPLUS_INFO(logger, "Api : " << pbnavitia::API_Name(api) << ", worker : " << worker_id
-                                        << ", request : " << request_id << ", start : " << start_timestamp
-                                        << ", end : " << end_timestamp);
+        LOG4CPLUS_INFO(logger, "Api : " << pbnavitia::API_Name(api) << ", hostname: " << hostname
+                                        << ", worker : " << worker_id << ", request : " << request_id
+                                        << ", start : " << start_timestamp << ", end : " << end_timestamp);
     }
 }
