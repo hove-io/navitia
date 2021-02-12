@@ -1,3 +1,14 @@
+navitia2 (10.3.0) unstable; urgency=low
+
+  * [Jormungandr] Add api freefoatings nearby  <https://github.com/CanalTP/navitia/pull/3366>
+  * [Realtime] VJ name is Headsign with a new trip  <https://github.com/CanalTP/navitia/pull/3367>
+  * [CI] Fix token and correction if failure job  <https://github.com/CanalTP/navitia/pull/3365>
+  * [CI] Temporary remove Docker Compose Github Action fail Slack message  <https://github.com/CanalTP/navitia/pull/3364>
+  * [CI] Install curl for jenkins job (codecov)  <https://github.com/CanalTP/navitia/pull/3363>
+  * [Tyr] Set `distributed` as default scenario for Navitia's instances  <https://github.com/CanalTP/navitia/pull/3362>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 12 Feb 2021 11:02:44 +0100
+
 navitia2 (10.2.0) unstable; urgency=low
 
   * [Tyr] Ensure files sent to Tyr have valid extensions  <https://github.com/CanalTP/navitia/pull/3361>

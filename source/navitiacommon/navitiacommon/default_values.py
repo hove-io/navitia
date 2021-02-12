@@ -180,6 +180,8 @@ greenlet_pool_for_ridesharing_services = False
 
 ridesharing_greenlet_pool_size = 10
 
+external_service = 'free_floatings'
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

@@ -194,6 +194,13 @@ class AbstractTestFixture(unittest.TestCase):
         return i_manager.instances[key].equipment_provider_manager
 
     @classmethod
+    def external_service_provider_manager(cls, key):
+        """
+        retrieve corresponding free_floating provider manager
+        """
+        return i_manager.instances[key].external_service_provider_manager
+
+    @classmethod
     def setup_class(cls):
         cls.tester = app.test_client()
         cls.krakens_pool = {}

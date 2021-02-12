@@ -422,6 +422,7 @@ class FakeInstance(Instance):
             autocomplete_type='kraken',
             instance_equipment_providers=[],
             streetnetwork_backend_manager=StreetNetworkBackendManager(),
+            external_service_provider_configurations=[],
         )
 
 

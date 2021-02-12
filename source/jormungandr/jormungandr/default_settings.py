@@ -88,7 +88,6 @@ for key, value in os.environ.items():
     elif key.startswith('JORMUNGANDR_EQUIPMENT_DETAILS_PROVIDER_'):
         EQUIPMENT_DETAILS_PROVIDERS.append(json.loads(value))
 
-
 # Parameters for statistics
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))
 BROKER_URL = os.getenv('JORMUNGANDR_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
@@ -188,6 +187,9 @@ CIRCUIT_BREAKER_ASGARD_TIMEOUT_S = 60  # the circuit breaker retries after this 
 
 CIRCUIT_BREAKER_MAX_KLAXIT_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_FORSETI_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_FORSETI_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 
 # Default region instance

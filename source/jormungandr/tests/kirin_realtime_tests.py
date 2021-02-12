@@ -2463,8 +2463,7 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
         # Check the vehicle_journey created by real-time
         new_vj = self.query_region('vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip')
         assert len(new_vj['vehicle_journeys']) == 1
-        # Name is empty but headsign assigned from the disruption
-        assert (new_vj['vehicle_journeys'][0]['name']) == ''
+        assert (new_vj['vehicle_journeys'][0]['name']) == 'trip_headsign'
         assert (new_vj['vehicle_journeys'][0]['headsign']) == 'trip_headsign'
 
 
