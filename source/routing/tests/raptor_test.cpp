@@ -3453,3 +3453,121 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_2");
     BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_2");
 }
+
+BOOST_AUTO_TEST_CASE(test_jira1686_should_arrive_at_earliest) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "0:10"_t)("C", "1:00"_t);
+    b.vj("2")("B", "0:10"_t)("C", "1:01"_t);
+    b.make();
+
+    auto& sa_map = b.get_data().pt_data->stop_areas_map;
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*sa_map["A"]->stop_point_list[0])] = 10_min;
+    departures[SpIdx(*sa_map["B"]->stop_point_list[0])] = 1_min;
+
+    arrivals[SpIdx(*sa_map["C"]->stop_point_list[0])] = 0_min;
+
+    auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);  // should be 2 ??
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "A");
+}
+
+BOOST_AUTO_TEST_CASE(test_jira1686_should_arrive_at_earliest_with_direct_path) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "0:10"_t)("C", "1:00"_t);
+    b.vj("2")("B", "0:10"_t)("C", "1:01"_t);
+    b.make();
+
+    auto& sa_map = b.get_data().pt_data->stop_areas_map;
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*sa_map["A"]->stop_point_list[0])] = 10_min;
+    departures[SpIdx(*sa_map["B"]->stop_point_list[0])] = 1_min;
+
+    arrivals[SpIdx(*sa_map["C"]->stop_point_list[0])] = 0_min;
+
+    auto res = RAPTOR(b.get_data())
+                   .compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t), type::RTLevel::Base, 2_min,
+                                DateTimeUtils::inf,
+                                10,      // max transfer
+                                {},      // Accessibility params
+                                {}, {},  // forbidden & allowed ids
+                                true,    // clockwise
+                                5_min    // direct path duration <---------
+                   );
+
+    BOOST_REQUIRE_EQUAL(res.size(), 0);  // should be 1 ??
+    // BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
+}
+
+BOOST_AUTO_TEST_CASE(test_jira1686_should_take_journey_with_minimum_walking_) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "0:10"_t)("C", "1:00"_t)("D", "2:00");
+    b.vj("2")("B", "0:10"_t)("C", "1:01"_t)("E", "2:01");
+    b.make();
+
+    auto& sa_map = b.get_data().pt_data->stop_areas_map;
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*sa_map["A"]->stop_point_list[0])] = 1_min;
+    arrivals[SpIdx(*sa_map["D"]->stop_point_list[0])] = 0_min;
+
+    departures[SpIdx(*sa_map["B"]->stop_point_list[0])] = 0_min;
+    arrivals[SpIdx(*sa_map["E"]->stop_point_list[0])] = 0_min;
+
+    auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_jira1686_should_take_journey_with_minimum_walking_on_transfert) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "0:10"_t)("C", "1:00"_t)("D", "2:00");
+    b.vj("2")("B", "0:10"_t)("C", "1:01"_t)("E", "2:01");
+
+    b.vj("3")("F", "2:30"_t)("G", "3:00");
+    b.connection("D", "F", 120);
+    b.connection("E", "F", 120);
+
+    b.make();
+
+    auto& sa_map = b.get_data().pt_data->stop_areas_map;
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*sa_map["A"]->stop_point_list[0])] = 10_min;
+    departures[SpIdx(*sa_map["B"]->stop_point_list[0])] = 1_min;
+
+    arrivals[SpIdx(*sa_map["G"]->stop_point_list[0])] = 1_min;
+
+    auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
+}
+
+BOOST_AUTO_TEST_CASE(test_jira1686_should_take_journey_with_minimum_walking_on_transfert_2) {
+    ed::builder b("20150101");
+    b.vj("1")("A", "0:30"_t)("C", "1:00"_t)("D", "2:00");
+    b.vj("2")("B", "0:10"_t)("C", "1:01"_t)("E", "2:01");
+
+    b.vj("3")("F", "2:30"_t)("G", "3:00");
+    b.connection("D", "F", 120);
+    b.connection("E", "F", 120);
+
+    b.make();
+
+    auto& sa_map = b.get_data().pt_data->stop_areas_map;
+    routing::map_stop_point_duration departures, arrivals;
+
+    departures[SpIdx(*sa_map["A"]->stop_point_list[0])] = 10_min;
+    departures[SpIdx(*sa_map["B"]->stop_point_list[0])] = 1_min;
+
+    arrivals[SpIdx(*sa_map["G"]->stop_point_list[0])] = 1_min;
+
+    auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
+}
