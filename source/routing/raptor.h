@@ -44,6 +44,7 @@ www.navitia.io
 #include "raptor_solution_reader.h"
 #include "routing.h"
 #include "routing/journey.h"
+#include "utils/idx_map.h"
 #include "utils/timer.h"
 #include "dataraptor.h"
 #include "raptor_utils.h"
@@ -78,12 +79,9 @@ struct RAPTOR {
     /// Each element of index i in this vector represents the labels with i transfers
     std::vector<Labels> labels;
     std::vector<Labels> first_pass_labels;
-    /// Contains the best arrival (or departure time) for each stoppoint
-    IdxMap<type::StopPoint, DateTime> best_labels_pts;
-    IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
-    IdxMap<type::StopPoint, DateTime> best_labels_pts_walking;
-    IdxMap<type::StopPoint, DateTime> best_labels_transfers_walking;
+    /// Contains the best arrival (or departure time) for each stoppoint
+    Labels best_labels;
 
     /// Number of transfers done for the moment
     unsigned int count;
@@ -100,10 +98,7 @@ struct RAPTOR {
 
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
-          best_labels_pts(data.pt_data->stop_points),
-          best_labels_transfers(data.pt_data->stop_points),
-          best_labels_pts_walking(data.pt_data->stop_points),
-          best_labels_transfers_walking(data.pt_data->stop_points),
+          best_labels(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),

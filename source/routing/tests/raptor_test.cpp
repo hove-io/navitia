@@ -3568,6 +3568,7 @@ BOOST_AUTO_TEST_CASE(test_jira1686_should_take_journey_with_minimum_walking_on_t
 
     auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
 
-    BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res[0].items[0].stop_points[0]->uri, "A");
+    BOOST_CHECK_EQUAL(res[1].items[0].stop_points[0]->uri, "B");
 }

@@ -34,6 +34,7 @@ www.navitia.io
 #include "utils/idx_map.h"
 
 #include <boost/container/flat_map.hpp>
+#include <boost/range/algorithm/fill.hpp>
 
 namespace navitia {
 
@@ -67,6 +68,21 @@ inline bool is_dt_initialized(const DateTime dt) {
 }
 
 struct Labels {
+    using Map = IdxMap<type::StopPoint, DateTime>;
+
+    Labels() {}
+    Labels(const std::vector<type::StopPoint*> stop_points)
+        : dt_pts(stop_points),
+          dt_transfers(stop_points),
+          walking_duration_pts(stop_points),
+          walking_duration_transfers(stop_points) {}
+
+    Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers)
+        : dt_pts(std::move(dt_pts)),
+          dt_transfers(std::move(dt_transfers)),
+          walking_duration_pts(std::move(walkings)),
+          walking_duration_transfers(std::move(walking_transfers)) {}
+
     inline friend void swap(Labels& lhs, Labels& rhs) {
         swap(lhs.dt_pts, rhs.dt_pts);
         swap(lhs.dt_transfers, rhs.dt_transfers);
@@ -98,7 +114,17 @@ struct Labels {
     inline DateTime& mut_walking_duration_pt(SpIdx sp_idx) { return walking_duration_pts[sp_idx]; }
     inline DateTime& mut_walking_duration_transfer(SpIdx sp_idx) { return walking_duration_transfers[sp_idx]; }
 
-    const IdxMap<type::StopPoint, DateTime>& get_dt_pts() { return dt_pts; }
+    Map& get_dt_pts() { return dt_pts; }
+    Map& get_dt_transfers() { return dt_transfers; }
+    Map& get_walking_duration_pts() { return walking_duration_pts; }
+    Map& get_walking_duration_transfers() { return walking_duration_transfers; }
+
+    void fill_values(DateTime pts, DateTime transfert, DateTime walking, DateTime walking_transfert) {
+        boost::fill(dt_pts.values(), pts);
+        boost::fill(dt_transfers.values(), transfert);
+        boost::fill(walking_duration_pts.values(), walking);
+        boost::fill(walking_duration_transfers.values(), walking_transfert);
+    }
 
 private:
     inline void init(const std::vector<type::StopPoint*>& stops, DateTime val) {
@@ -115,17 +141,19 @@ private:
     // More precisely, at time dt_pts[stop_point], we just alighted from
     // a vehicle going through stop_point, but we need to do a transfer
     // before being able to board a new vehicle.
-    IdxMap<type::StopPoint, DateTime> dt_pts;
+    Map dt_pts;
+
     // dt_transfers[stop_point] stores the earliest time at which we are able
     // to board a vehicle leaving from stop_point (i.e. a transfer to stop_point has been done).
-    IdxMap<type::StopPoint, DateTime> dt_transfers;
+    Map dt_transfers;
 
     // walking_duration_pts[stop_point] stores the total walking duration (fallback + transfers)  of a
     // journey that alight to stop_point at DateTime dt_pts[stop_point]
-    IdxMap<type::StopPoint, DateTime> walking_duration_pts;
+    Map walking_duration_pts;
+
     // waling_duration_transfers[stop_point] stores the total walking duration (fallback + transfers) of a
     // journey that allows to board a vehicle at stop_point at DateTime transfers_pts[stop_point]
-    IdxMap<type::StopPoint, DateTime> walking_duration_transfers;
+    Map walking_duration_transfers;
 };
 
 }  // namespace routing
