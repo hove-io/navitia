@@ -44,6 +44,7 @@ www.navitia.io
 #include "raptor_solution_reader.h"
 #include "routing.h"
 #include "routing/journey.h"
+#include "routing/labels.h"
 #include "utils/idx_map.h"
 #include "utils/timer.h"
 #include "dataraptor.h"

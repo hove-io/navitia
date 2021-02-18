@@ -1,9 +1,5 @@
 
-SET(ROUTING_SRC
-  routing.cpp raptor_solution_reader.cpp raptor.cpp raptor_api.cpp
-  next_stop_time.cpp dataraptor.cpp journey_pattern_container.cpp get_stop_times.cpp
-  isochrone.cpp heat_map.cpp
-  journey.cpp)
+FILE(GLOB ROUTING_SRC "*.cpp")
 
 add_library(routing ${ROUTING_SRC})
 target_link_libraries(routing  georef autocomplete pthread)
