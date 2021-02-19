@@ -18,7 +18,6 @@ struct Labels {
     Labels(const std::vector<type::StopPoint*> stop_points);
     Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers);
 
-    friend void swap(Labels& lhs, Labels& rhs);
     // initialize the structure according to the number of jpp
     void init_inf(const std::vector<type::StopPoint*>& stops) { init(stops, DateTimeUtils::inf); }
     // initialize the structure according to the number of jpp

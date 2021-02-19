@@ -17,11 +17,6 @@ Labels::Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers
       walking_duration_pts(std::move(walkings)),
       walking_duration_transfers(std::move(walking_transfers)) {}
 
-void swap(Labels& lhs, Labels& rhs) {
-    swap(lhs.dt_pts, rhs.dt_pts);
-    swap(lhs.dt_transfers, rhs.dt_transfers);
-}
-
 void Labels::clear(const Labels& clean) {
     dt_pts = clean.dt_pts;
     dt_transfers = clean.dt_transfers;
