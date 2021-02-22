@@ -617,18 +617,18 @@ class Instance(object):
                         break  # remaining socket are still in "keep alive" state
                 except IndexError:
                     break
+
         _reap_sockets(self._sockets)
         _reap_sockets(self._pt_sockets)
-
 
     @contextmanager
     def socket(self, context, pt_socket=False):
 
         socket = None
-        if pt_socket :
+        if pt_socket:
             sockets = self._pt_sockets
             socket_path = self.pt_socket_path
-        else :
+        else:
             sockets = self._sockets
             socket_path = self.socket_path
 
@@ -642,8 +642,6 @@ class Instance(object):
         finally:
             if not socket.closed:
                 sockets.append((socket, time.time()))
-
-
 
     def send_and_receive(self, *args, **kwargs):
         """
