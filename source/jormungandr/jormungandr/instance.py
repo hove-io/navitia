@@ -603,57 +603,47 @@ class Instance(object):
             return
         logger = logging.getLogger(__name__)
         now = time.time()
-        while True:
-            try:
-                socket, t = self._sockets.popleft()
-                if now - t > ttl:
-                    logger.debug("closing one socket for %s", self.name)
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                else:
-                    self._sockets.appendleft((socket, t))
-                    break  # remaining socket are still in "keep alive" state
-            except IndexError:
-                break
-                now = time.time()
-        while True:
-            try:
-                socket, t = self._pt_sockets.popleft()
-                if now - t > ttl:
-                    logger.debug("closing one socket for %s", self.name)
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                else:
-                    self._pt_sockets.appendleft((socket, t))
-                    break  # remaining socket are still in "keep alive" state
-            except IndexError:
-                break
+
+        def _reap_sockets(sockets):
+            while True:
+                try:
+                    socket, t = sockets.popleft()
+                    if now - t > ttl:
+                        logger.debug("closing one socket for %s", self.name)
+                        socket.setsockopt(zmq.LINGER, 0)
+                        socket.close()
+                    else:
+                        self._sockets.appendleft((socket, t))
+                        break  # remaining socket are still in "keep alive" state
+                except IndexError:
+                    break
+        _reap_sockets(self._sockets)
+        _reap_sockets(self._pt_sockets)
+
 
     @contextmanager
     def socket(self, context, pt_socket=False):
+
         socket = None
-        if not pt_socket:
-            try:
-                socket, _ = self._sockets.pop()
-            except IndexError:  # there is no socket available: lets create one
-                socket = context.socket(zmq.REQ)
-                socket.connect(self.socket_path)
-            try:
-                yield socket
-            finally:
-                if not socket.closed:
-                    self._sockets.append((socket, time.time()))
-        else:
-            try:
-                socket, _ = self._pt_sockets.pop()
-            except IndexError:  # there is no socket available: lets create one
-                socket = context.socket(zmq.REQ)
-                socket.connect(self.pt_socket_path)
-            try:
-                yield socket
-            finally:
-                if not socket.closed:
-                    self._pt_sockets.append((socket, time.time()))
+        if pt_socket :
+            sockets = self._pt_sockets
+            socket_path = self.pt_socket_path
+        else :
+            sockets = self._sockets
+            socket_path = self.socket_path
+
+        try:
+            socket, _ = sockets.pop()
+        except IndexError:  # there is no socket available: lets create one
+            socket = context.socket(zmq.REQ)
+            socket.connect(socket_path)
+        try:
+            yield socket
+        finally:
+            if not socket.closed:
+                sockets.append((socket, time.time()))
+
+
 
     def send_and_receive(self, *args, **kwargs):
         """
