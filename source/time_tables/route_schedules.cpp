@@ -427,10 +427,6 @@ void route_schedule(PbCreator& pb_creator,
                     auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
                     const auto& vj_st = navitia::VjStopTimes(vj, sts);
                     pb_creator.fill(&vj_st, vj_display_information, 0);
-                    // as we only issue headsign for vj in route_schedules:
-                    // - need to override headsign with trip headsign (i.e. vj.name)
-                    // - issue all headsigns of the vj in headsigns
-                    vj_display_information->set_headsign(vj->name);
                     for (const auto& headsign : pb_creator.data->pt_data->headsign_handler.get_all_headsigns(vj)) {
                         vj_display_information->add_headsigns(headsign);
                     }
