@@ -182,7 +182,7 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
     }
     const Labels& clean_labels = clockwise ? data.dataRaptor->labels_const : data.dataRaptor->labels_const_reverse;
     for (auto& lbl_list : labels) {
-        lbl_list.clear(clean_labels);
+        lbl_list = clean_labels;
     }
 
     best_labels.fill_values(bound, bound, DateTimeUtils::not_valid, DateTimeUtils::not_valid);
@@ -335,11 +335,13 @@ Journey convert_to_bound(const StartingPointSndPhase& sp, bool clockwise) {
 }  // namespace
 
 // copy and do the off by one for strict comparison for the second pass.
-static IdxMap<type::StopPoint, DateTime>& snd_pass_best_labels(const bool clockwise,
-                                                               IdxMap<type::StopPoint, DateTime>& best_labels) {
-    for (auto& dt : best_labels.values()) {
-        if (is_dt_initialized(dt)) {
-            dt += clockwise ? -1 : 1;
+static Labels& snd_pass_best_labels(const bool clockwise, Labels& best_labels) {
+    for (auto& dt : best_labels.get_labels_map().values()) {
+        if (is_dt_initialized(dt.dt_pts)) {
+            dt.dt_pts += clockwise ? -1 : 1;
+        }
+        if (is_dt_initialized(dt.dt_transfers)) {
+            dt.dt_transfers += clockwise ? -1 : 1;
         }
     }
     return best_labels;
@@ -348,14 +350,14 @@ static IdxMap<type::StopPoint, DateTime>& snd_pass_best_labels(const bool clockw
 static void init_best_pts_snd_pass(const routing::map_stop_point_duration& departures,
                                    const DateTime& departure_datetime,
                                    const bool clockwise,
-                                   IdxMap<type::StopPoint, DateTime>& best_labels) {
+                                   Labels& best_labels) {
     for (const auto& d : departures) {
         if (clockwise) {
-            best_labels[d.first] =
-                std::min(best_labels[d.first], uint(departure_datetime + d.second.total_seconds() - 1));
+            best_labels.mut_dt_pt(d.first) =
+                std::min(best_labels.dt_pt(d.first), uint(departure_datetime + d.second.total_seconds() - 1));
         } else {
-            best_labels[d.first] =
-                std::max(best_labels[d.first], uint(departure_datetime - d.second.total_seconds() + 1));
+            best_labels.mut_dt_pt(d.first) =
+                std::max(best_labels.dt_pt(d.first), uint(departure_datetime - d.second.total_seconds() + 1));
         }
     }
 }
@@ -438,14 +440,17 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto starting_points = make_starting_points_snd_phase(*this, calc_dest, accessibilite_params, clockwise);
     swap(labels, first_pass_labels);
 
+    const auto inrows_labels = best_labels.inrow_labels();
+
     auto best_labels_for_snd_pass = Labels(
         // durations and transfers are swapped for the 2nd pass as we are going backward in time
-        best_labels.get_dt_transfers(), best_labels.get_dt_pts(), best_labels.get_walking_duration_transfers(),
-        best_labels.get_walking_duration_pts());
+        inrows_labels[1],   // dt transfers as pts
+        inrows_labels[0],   // dt pts as transfers
+        inrows_labels[3],   // walking duration transfers as walking duration
+        inrows_labels[2]);  // walking duration pts as walking duration transfers
 
-    snd_pass_best_labels(clockwise, best_labels_for_snd_pass.get_dt_pts());
-    init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_for_snd_pass.get_dt_pts());
-    snd_pass_best_labels(clockwise, best_labels_for_snd_pass.get_dt_transfers());
+    snd_pass_best_labels(clockwise, best_labels_for_snd_pass);
+    init_best_pts_snd_pass(calc_dep, departure_datetime, clockwise, best_labels_for_snd_pass);
 
     LOG4CPLUS_TRACE(raptor_logger, "starting points 2nd phase " << std::endl
                                                                 << print_starting_points_snd_phase(starting_points));

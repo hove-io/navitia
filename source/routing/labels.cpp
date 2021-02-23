@@ -1,43 +1,50 @@
 
 #include "routing/labels.h"
+#include <boost/range/combine.hpp>
 
 namespace navitia {
 namespace routing {
 
 Labels::Labels() {}
-Labels::Labels(const std::vector<type::StopPoint*> stop_points)
-    : dt_pts(stop_points),
-      dt_transfers(stop_points),
-      walking_duration_pts(stop_points),
-      walking_duration_transfers(stop_points) {}
+Labels::Labels(const std::vector<type::StopPoint*> stop_points) : labels(stop_points) {}
 
-Labels::Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers)
-    : dt_pts(std::move(dt_pts)),
-      dt_transfers(std::move(dt_transfers)),
-      walking_duration_pts(std::move(walkings)),
-      walking_duration_transfers(std::move(walking_transfers)) {}
+Labels::Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers) {
+    const auto& zip = boost::combine(dt_pts, dt_transfers.values(), walkings.values(), walking_transfers.values());
+    labels.resize(zip.size());
+    for (const auto& z : zip) {
+        const auto sp_idx = z.get<0>().first;
+        labels[sp_idx] = Label{z.get<0>().second, z.get<1>(), z.get<2>(), z.get<3>()};
+    }
+}
 
-void Labels::clear(const Labels& clean) {
-    dt_pts = clean.dt_pts;
-    dt_transfers = clean.dt_transfers;
+std::array<Labels::Map, 4> Labels::inrow_labels() {
+    std::array<Map, 4> row_labels;
 
-    walking_duration_pts = clean.walking_duration_pts;
-    walking_duration_transfers = clean.walking_duration_transfers;
+    for (auto& row_label : row_labels)
+        row_label.resize(labels.size());
+
+    for (const auto& l : labels) {
+        const auto& sp_idx = l.first;
+        const auto& label = l.second;
+
+        row_labels[0][sp_idx] = label.dt_pts;
+        row_labels[1][sp_idx] = label.dt_transfers;
+        row_labels[2][sp_idx] = label.walking_duration_pts;
+        row_labels[3][sp_idx] = label.walking_duration_transfers;
+    }
+
+    return row_labels;
 }
 
 void Labels::fill_values(DateTime pts, DateTime transfert, DateTime walking, DateTime walking_transfert) {
-    boost::fill(dt_pts.values(), pts);
-    boost::fill(dt_transfers.values(), transfert);
-    boost::fill(walking_duration_pts.values(), walking);
-    boost::fill(walking_duration_transfers.values(), walking_transfert);
+    Label default_label{pts, transfert, walking, walking_transfert};
+    boost::fill(labels.values(), default_label);
 }
 
 void Labels::init(const std::vector<type::StopPoint*>& stops, DateTime val) {
-    dt_pts.assign(stops, val);
-    dt_transfers.assign(stops, val);
-
-    walking_duration_pts.assign(stops, DateTimeUtils::not_valid);
-    walking_duration_transfers.assign(stops, DateTimeUtils::not_valid);
+    Label init_label{val, val, DateTimeUtils::not_valid, DateTimeUtils::not_valid};
+    labels.assign(stops, init_label);
 }
+
 }  // namespace routing
 }  // namespace navitia
