@@ -40,7 +40,7 @@ struct Labels {
 
     Labels();
     Labels(const std::vector<type::StopPoint*> stop_points);
-    Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers);
+    Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers);
 
     // initialize the structure according to the number of jpp
     void init_inf(const std::vector<type::StopPoint*>& stops) { init(stops, DateTimeUtils::inf); }

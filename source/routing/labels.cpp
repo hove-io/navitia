@@ -8,7 +8,7 @@ namespace routing {
 Labels::Labels() {}
 Labels::Labels(const std::vector<type::StopPoint*> stop_points) : labels(stop_points) {}
 
-Labels::Labels(Map dt_pts, Map dt_transfers, Map walkings, Map walking_transfers) {
+Labels::Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers) {
     const auto& zip = boost::combine(dt_pts, dt_transfers.values(), walkings.values(), walking_transfers.values());
     labels.resize(zip.size());
     for (const auto& z : zip) {
