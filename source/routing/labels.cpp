@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #include "routing/labels.h"
-#include <boost/range/combine.hpp>
+#include "utils/boost_patched/range/combine.hpp"
 
 namespace navitia {
 namespace routing {
