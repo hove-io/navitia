@@ -1153,7 +1153,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert len(route_schedules) == 1
         assert len(route_schedules[0]['table']['headers']) == 1
         display_info = route_schedules[0]['table']['headers'][0]['display_informations']
-        assert display_info['headsign'] == "A00"
+        assert display_info['headsign'] == "vjA_hs"
         assert {"A00", "vjA_hs"} == set(display_info['headsigns'])
 
     def test_trip_id_vj(self):
