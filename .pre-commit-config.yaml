@@ -12,6 +12,7 @@ repos:
     -   id: check-ast
     -   id: check-merge-conflict
     -   id: check-yaml
+        args: [--allow-multiple-documents]
     -   id: flake8
         language_version: python2.7
 -   repo: https://github.com/CanalTP/navitia-pre-commit

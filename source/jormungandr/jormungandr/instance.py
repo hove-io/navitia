@@ -102,6 +102,7 @@ def _make_property_getter(attr_name):
 class Instance(object):
     name = None  # type: Text
     _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
+    _pt_sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
 
     def __init__(
         self,
@@ -116,10 +117,12 @@ class Instance(object):
         instance_equipment_providers,  # type: List[Text]
         streetnetwork_backend_manager,
         external_service_provider_configurations,
+        pt_zmq_socket=None,  # type: Text
     ):
         self.geom = None
         self.geojson = None
         self._sockets = deque()
+        self._pt_sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -136,6 +139,10 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
+        if pt_zmq_socket:
+            self.pt_socket_path = pt_zmq_socket
+        else:
+            self.pt_socket_path = zmq_socket
 
         disable_database = app.config[str('DISABLE_DATABASE')]
         if disable_database:
@@ -596,32 +603,45 @@ class Instance(object):
             return
         logger = logging.getLogger(__name__)
         now = time.time()
-        while True:
-            try:
-                socket, t = self._sockets.popleft()
-                if now - t > ttl:
-                    logger.debug("closing one socket for %s", self.name)
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                else:
-                    self._sockets.appendleft((socket, t))
-                    break  # remaining socket are still in "keep alive" state
-            except IndexError:
-                break
+
+        def _reap_sockets(sockets):
+            while True:
+                try:
+                    socket, t = sockets.popleft()
+                    if now - t > ttl:
+                        logger.debug("closing one socket for %s", self.name)
+                        socket.setsockopt(zmq.LINGER, 0)
+                        socket.close()
+                    else:
+                        self._sockets.appendleft((socket, t))
+                        break  # remaining socket are still in "keep alive" state
+                except IndexError:
+                    break
+
+        _reap_sockets(self._sockets)
+        _reap_sockets(self._pt_sockets)
 
     @contextmanager
-    def socket(self, context):
+    def socket(self, context, pt_socket=False):
+
         socket = None
+        if pt_socket:
+            sockets = self._pt_sockets
+            socket_path = self.pt_socket_path
+        else:
+            sockets = self._sockets
+            socket_path = self.socket_path
+
         try:
-            socket, _ = self._sockets.pop()
+            socket, _ = sockets.pop()
         except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
-            socket.connect(self.socket_path)
+            socket.connect(socket_path)
         try:
             yield socket
         finally:
             if not socket.closed:
-                self._sockets.append((socket, time.time()))
+                sockets.append((socket, time.time()))
 
     def send_and_receive(self, *args, **kwargs):
         """
@@ -638,7 +658,8 @@ class Instance(object):
         logger = logging.getLogger(__name__)
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
-        with self.socket(self.context) as socket:
+        pt_socket = request.requested_api == type_pb2.pt_planner
+        with self.socket(self.context, pt_socket) as socket:
             if 'request_id' in kwargs and kwargs['request_id']:
                 request.request_id = kwargs['request_id']
             else:

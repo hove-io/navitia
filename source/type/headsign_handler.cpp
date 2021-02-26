@@ -78,6 +78,10 @@ void HeadsignHandler::update_headsign_mvj_after_remove(const VehicleJourney& vj,
     }
 }
 
+const std::string& HeadsignHandler::get_headsign(const VehicleJourney* vj) const {
+    return vj->headsign;
+}
+
 const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) const {
     // if no headsign map for vj: return name
     if (!navitia::contains(headsign_changes, stop_time.vehicle_journey)) {
