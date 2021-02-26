@@ -1,3 +1,11 @@
+navitia2 (10.4.0) unstable; urgency=low
+
+  * [Jormungandr] Alternative socket for pt queries  <https://github.com/CanalTP/navitia/pull/3251>
+  * [Kraken] Fix headsign for transilien coverage  <https://github.com/CanalTP/navitia/pull/3371>
+  * [Kraken] fix headsign in route_schedules API  <https://github.com/CanalTP/navitia/pull/3369>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Fri, 26 Feb 2021 12:02:19 +0100
+
 navitia2 (10.3.0) unstable; urgency=low
 
   * [Jormungandr] Add api freefoatings nearby  <https://github.com/CanalTP/navitia/pull/3366>
