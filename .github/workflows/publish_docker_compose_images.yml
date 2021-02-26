@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get branch name
-      shell: bash
-      run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
     - uses: actions/checkout@v2
       with:
         repository: CanalTP/navitia-docker-compose
@@ -22,5 +19,5 @@ jobs:
       run: sudo apt update && sudo apt install -y httpie
     - name: build, create and publish images for branch [ dev ]
       working-directory: builder_from_package
-      run: ./build.sh -o ${{secrets.ACTION_SECRET_KEY}} -t navitia_builder -b dev -r -u ${{secrets.DOCKER_USER}} -p ${{secrets.DOCKER_PASSWORD}}
+      run: ./build.sh -o ${{secrets.action_secret_key}} -t navitia_builder -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
