@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - release
+  pull_request:
 
 jobs:
   build:
@@ -17,7 +18,7 @@ jobs:
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
     - name: build navitia_builder docker image
-      working-directory: builder
+      working-directory: builder_from_package
       run: docker build --pull --no-cache=true -t navitia_builder .
     - if: github.ref == 'refs/heads/dev'
       name: create and publish DEV images
