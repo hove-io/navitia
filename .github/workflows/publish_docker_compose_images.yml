@@ -20,5 +20,5 @@ jobs:
       run: sudo apt update && sudo apt install -y httpie
     - name: build, create and publish images for branch [ ${{ env.BRANCH_NAME }} ]
       working-directory: builder_from_package
-      run: ./build.sh -e push -o ${{secrets.action_secret_key}} -t navitia_builder -b ${{ env.BRANCH_NAME }} -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -e push -o ${{secrets.access_token_github}} -t navitia_builder -b ${{ env.BRANCH_NAME }} -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
