@@ -69,6 +69,7 @@ class DateTimeTypeSerializer(PbNestedSerializer):
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True), display_none=True)
     data_freshness = EnumField(attr="realtime_level", display_none=True)
+    occupancy = jsonschema.Field(schema_type=int)
 
     def get_links(self, obj):
         disruption_links = [

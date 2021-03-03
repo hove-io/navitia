@@ -57,7 +57,6 @@ class ExternalServiceError(RuntimeError):
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractExternalService(object):
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 24 * 60 * 60))
     def _call_webservice(self, arguments):
         """
         Call external_services webservice with URL defined in settings
