@@ -23,6 +23,7 @@ jobs:
     - name: generate documentation on dev
       working-directory: documentation/slate
       run: |
+        rm -f Gemfile.lock
         gem -v
         sudo gem update --default
         gem -v
