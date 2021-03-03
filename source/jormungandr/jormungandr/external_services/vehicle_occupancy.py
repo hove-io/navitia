@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import cache, app, memory_cache
+from jormungandr import cache, app
 import pybreaker
 import logging
 import requests as requests
@@ -53,8 +53,7 @@ class VehicleOccupancyProvider(AbstractExternalService):
             ),
         )
 
-    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 60 * 60))
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
+    @cache.memoize(app.config.get(str('default_cache'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
     def get_response(self, arguments):
         """
         Get vehicle_occupancy information from Forseti webservice
