@@ -24,7 +24,6 @@ jobs:
       working-directory: documentation/slate
       run: |
         rm -f Gemfile.lock
-        sudo gem update --default
         bundle install
         bundle exec middleman build
         rm -fr /tmp/job_documentation_publish_slate
