@@ -24,6 +24,8 @@ jobs:
       working-directory: documentation/slate
       run: |
         gem -v
+        gem update --default
+        gem -v
         bundle install
         bundle -v
         bundle exec middleman build
