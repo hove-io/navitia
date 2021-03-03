@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: install bundle
-      run: sudo apt update && sudo apt install -y bundler
+      run:  sudo apt install -y bundler
     - name: install httpie dependency
       run: sudo apt install -y httpie
     - name: git checkout on dev
