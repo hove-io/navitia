@@ -32,6 +32,7 @@ jobs:
         mv build /tmp/job_documentation_publish_slate
     - name: move new documentation on gh-pages
       run: |
+        rm -f documentation/slate/Gemfile.lock
         git fetch origin gh-pages:gh-pages
         git checkout gh-pages
         rm -fr *
