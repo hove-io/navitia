@@ -23,6 +23,7 @@ jobs:
     - name: generate documentation on dev
       working-directory: documentation/slate
       run: |
+        gem -v
         bundle install
         bundle -v
         bundle exec middleman build
