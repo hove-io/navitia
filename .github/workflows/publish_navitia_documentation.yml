@@ -24,18 +24,13 @@ jobs:
       working-directory: documentation/slate
       run: |
         rm -f Gemfile.lock
-        gem -v
-        sudo gem update --default
-        gem -v
         bundle install
-        bundle -v
         bundle exec middleman build
         rm -fr /tmp/job_documentation_publish_slate
         mkdir -p /tmp/job_documentation_publish_slate
         mv build /tmp/job_documentation_publish_slate
     - name: move new documentation on gh-pages
       run: |
-        rm -f documentation/slate/Gemfile.lock
         git fetch origin gh-pages:gh-pages
         git checkout gh-pages
         rm -fr *
