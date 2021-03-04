@@ -53,12 +53,19 @@ jobs:
     - uses: actions/checkout@v2
       with:
           submodules: 'recursive'
+    - name: Install SonarCloud's dependencies for C++ analysis
+      run : |
+        apt update
+        apt install -y unzip wget
+        wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
+        unzip -u build-wrapper-linux-x86.zip
+        unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure
       run: cmake -DSTRIP_SYMBOLS=ON source
-    - name: make
-      run:  make -j $(nproc)
+    - name:
+      run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
     - name: Tests python2
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
@@ -105,7 +112,24 @@ jobs:
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
-
+    - name: SonarCloud Scan
+      if: matrix.docker_image == 'navitia/debian10_dev' # We only want 1 scan as it would bloat sonarcube otherwise
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+          sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+                -Dsonar.host.url=https://sonarcloud.io \
+                -Dsonar.login=$SONAR_TOKEN \
+                -Dsonar.organization=canaltp \
+                -Dsonar.projectKey=CanalTP_navitia \
+                -Dsonar.projectName=Navitia \
+                -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
+                -Dsonar.pullrequest.key=${{ github.event.number }} \
+                -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
+                -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
+                -Dsonar.cfamily.cache.enabled=false \
+                -Dsonar.cfamily.threads=$(nproc)
 
   precommit:
     runs-on: ubuntu-latest
@@ -151,3 +175,5 @@ jobs:
         pipenv install --dev
         pipenv run pytest
         pipenv --rm
+
+
