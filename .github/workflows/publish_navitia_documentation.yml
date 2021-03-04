@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: install bundle
-      run: sudo apt update && sudo apt install -y bundler
+      run:  sudo apt install -y bundler
     - name: install httpie dependency
       run: sudo apt install -y httpie
     - name: git checkout on dev
@@ -22,6 +22,7 @@ jobs:
     - name: generate documentation on dev
       working-directory: documentation/slate
       run: |
+        rm -f Gemfile.lock
         bundle install
         bundle exec middleman build
         rm -fr /tmp/job_documentation_publish_slate
@@ -52,3 +53,4 @@ jobs:
       if: failure()
       run: |
           echo '{"text":":warning: Github Actions: publish_navitia_documentation failed ! (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+
