@@ -5,12 +5,6 @@ on:
     workflows: ["Build Navitia Packages For Dev Multi Distributions"]
     types:
       - completed
-      - requested
-  pull_request:
-  push:
-    branches:
-      - dev
-      - release
 
 jobs:
   build:
