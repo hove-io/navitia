@@ -46,6 +46,8 @@ MOCKED_INSTANCE_CONF = {
                     "api_key": "key",
                     "network": "Super Covoit",
                     "feed_publisher": DUMMY_KLAXIT_FEED_PUBLISHER,
+                    "rating_scale_min": 0,
+                    "rating_scale_max": 5,
                 },
                 "class": "jormungandr.scenarios.ridesharing.klaxit.Klaxit",
             }
@@ -162,6 +164,14 @@ class TestKlaxit(NewDefaultScenarioAbstractTestFixture):
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
         assert rsj_info.get('operator') == 'klaxit'
+        # Driver and ratings
+        assert rsj_info.get('driver').get('alias') == "Mohamed M"
+        assert rsj_info.get('driver').get('image') == "https://driver.png"
+        assert rsj_info.get('driver').get('gender') is None
+        assert rsj_info.get('driver').get('rating').get('value') == 5.0
+        assert rsj_info.get('driver').get('rating').get('scale_min') == 0.0
+        assert rsj_info.get('driver').get('rating').get('scale_max') == 5.0
+        assert rsj_info.get('driver').get('rating').get('count') == 0.0
 
         rsj_links = rsj_sections[1].get('links')
         assert len(rsj_links) == 2
