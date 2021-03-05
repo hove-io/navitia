@@ -36,23 +36,14 @@ import pybreaker
 import logging
 import requests as requests
 from six.moves.urllib.parse import urlencode
-from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 
 
 class ExternalServiceError(RuntimeError):
-    def __init__(self, reason, http_status=None, http_reason=None, http_txt=None):
-        super(RuntimeError, self).__init__(reason)
-        self.http_status = http_status
-        self.http_reason = http_reason
-        self.http_txt = http_txt
+    pass
 
-    def get_params(self):
-        return {
-            'reason': str(self),
-            'http_status': self.http_status,
-            'http_reason': self.http_reason,
-            'http_response': self.http_txt,
-        }
+
+class ExternalServiceUnavailable(RuntimeError):
+    pass
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -85,33 +76,25 @@ class AbstractExternalService(object):
         """
         status can be in: ok, failure
         """
-        params = {'freefloating_service_id': "Forseti", 'status': status, 'freefloating_service_url': url}
+        params = {'external_service_id': "Forseti", 'status': status, 'external_service_url': url}
         params.update(kwargs)
-        new_relic.record_custom_event('freefloating_status', params)
+        new_relic.record_custom_event('external_service_status', params)
 
     @abc.abstractmethod
     def get_response(self, arguments):
         """
-        Get free-floating information from Forseti webservice
+        Get external service information from Forseti webservice
         """
         pass
 
     @classmethod
     def _check_response(cls, response):
         if response is None:
-            raise FreeFloatingError('impossible to access free-floating service')
+            raise ExternalServiceError('impossible to access external service')
         if response.status_code == 503:
-            raise FreeFloatingUnavailable('forseti responded with 503')
+            raise ExternalServiceUnavailable('forseti responded with 503')
         if response.status_code != 200:
-            error_msg = 'free-floating request failed with HTTP code {}'.format(response.status_code)
+            error_msg = 'external service request failed with HTTP code {}'.format(response.status_code)
             if response.text:
                 error_msg += ' ({})'.format(response.text)
-            raise FreeFloatingError(error_msg)
-
-
-class FreeFloatingError(RuntimeError):
-    pass
-
-
-class FreeFloatingUnavailable(RuntimeError):
-    pass
+            raise ExternalServiceError(error_msg)

@@ -28,11 +28,9 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import cache, app, new_relic
+from jormungandr import app
 import pybreaker
 import logging
-import requests as requests
-from six.moves.urllib.parse import urlencode
 from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 from jormungandr.external_services.external_service import AbstractExternalService
 
@@ -59,10 +57,10 @@ class FreeFloatingProvider(AbstractExternalService):
         """
         raw_response = self._call_webservice(arguments)
 
-        return self.response_marshaler(raw_response)
+        return self.response_marshaller(raw_response)
 
     @classmethod
-    def response_marshaler(cls, response):
+    def response_marshaller(cls, response):
         cls._check_response(response)
         try:
             json_response = response.json()

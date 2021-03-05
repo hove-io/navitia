@@ -252,7 +252,7 @@ class GeocodeJson(AbstractAutocomplete):
         return response
 
     @classmethod
-    def response_marshaler(cls, response_bragi, uri=None, depth=1):
+    def response_marshaller(cls, response_bragi, uri=None, depth=1):
         cls._check_response(response_bragi, uri)
         try:
             json_response = response_bragi.json()
@@ -340,7 +340,7 @@ class GeocodeJson(AbstractAutocomplete):
         raw_response = self.call_bragi(url, method, **kwargs)
         depth = request.get('depth', 1)
 
-        return self.response_marshaler(raw_response, None, depth)
+        return self.response_marshaller(raw_response, None, depth)
 
     def geo_status(self, instance):
         raise NotImplementedError
@@ -367,7 +367,7 @@ class GeocodeJson(AbstractAutocomplete):
         params.append(("timeout", int(self.fast_timeout * 1000)))
 
         raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
-        return self.response_marshaler(raw_response, uri)
+        return self.response_marshaller(raw_response, uri)
 
     def status(self):
         return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}

@@ -31,9 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import cache, app
 import pybreaker
 import logging
-import requests as requests
-from six.moves.urllib.parse import urlencode
-from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 from jormungandr.external_services.external_service import AbstractExternalService
 
 
@@ -53,13 +50,13 @@ class VehicleOccupancyProvider(AbstractExternalService):
             ),
         )
 
-    @cache.memoize(app.config.get(str('default_cache'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
     def get_response(self, arguments):
         """
         Get vehicle_occupancy information from Forseti webservice
         """
         raw_response = self._call_webservice(arguments)
-        resp = self.response_marshaler(raw_response)
+        resp = self.response_marshaller(raw_response)
         vehicle_occupancies = resp.get('vehicle_occupancies', [])
         if len(vehicle_occupancies) > 0:
             vo = vehicle_occupancies[0]['occupancy']
@@ -67,7 +64,7 @@ class VehicleOccupancyProvider(AbstractExternalService):
         return 0
 
     @classmethod
-    def response_marshaler(cls, response):
+    def response_marshaller(cls, response):
         cls._check_response(response)
         try:
             json_response = response.json()
