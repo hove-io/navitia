@@ -6,6 +6,7 @@ on:
     branches: [publish_docker_compose_job_is_waiting]
     types:
       - completed
+      - requested
 
 jobs:
   build:
