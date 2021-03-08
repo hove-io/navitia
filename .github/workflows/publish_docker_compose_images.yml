@@ -3,10 +3,9 @@ name: Publish Docker Compose Images
 on:
   workflow_run:
     workflows: ["Build Navitia Packages For Dev Multi Distributions"]
-    branches: [publish_docker_compose_job_is_waiting]
+    branches: [dev]
     types:
       - completed
-      - requested
 
 jobs:
   build:
