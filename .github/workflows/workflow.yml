@@ -113,7 +113,9 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
     - name: SonarCloud Scan
-      if: matrix.docker_image == 'navitia/debian10_dev' # We only want 1 scan as it would bloat sonarcube otherwise
+      # We only want 1 scan as it would bloat sonarcube otherwise
+      # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
+      if: matrix.docker_image == 'navitia/debian10_dev' && github.event_name == 'push'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
