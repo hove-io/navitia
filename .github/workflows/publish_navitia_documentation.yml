@@ -14,17 +14,16 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: install bundle
-      run:  sudo apt install -y bundler
-    - name: install httpie dependency
-      run: sudo apt install -y httpie
+      run:  sudo apt install -y bundler httpie
     - name: git checkout on dev
       run: git checkout dev
     - name: generate documentation on dev
       working-directory: documentation/slate
       run: |
         rm -f Gemfile.lock
-        bundle install
-        bundle exec middleman build
+        gem install bundler:1.17.3 # Because of middleman 3.3 dependency
+        bundler _1.17.3_ install # Force usage of bundler 1.17.3
+        bundler _1.17.3_ exec middleman build
         rm -fr /tmp/job_documentation_publish_slate
         mkdir -p /tmp/job_documentation_publish_slate
         mv build /tmp/job_documentation_publish_slate
