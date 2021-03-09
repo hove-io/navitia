@@ -89,7 +89,7 @@ class AbstractExternalService(object):
 
     @classmethod
     def _check_response(cls, response):
-        if response is None:
+        if not response:
             raise ExternalServiceError('impossible to access external service')
         if response.status_code == 503:
             raise ExternalServiceUnavailable('forseti responded with 503')
