@@ -44,6 +44,8 @@ www.navitia.io
 #include "raptor_solution_reader.h"
 #include "routing.h"
 #include "routing/journey.h"
+#include "routing/labels.h"
+#include "utils/idx_map.h"
 #include "utils/timer.h"
 #include "dataraptor.h"
 #include "raptor_utils.h"
@@ -78,12 +80,9 @@ struct RAPTOR {
     /// Each element of index i in this vector represents the labels with i transfers
     std::vector<Labels> labels;
     std::vector<Labels> first_pass_labels;
-    /// Contains the best arrival (or departure time) for each stoppoint
-    IdxMap<type::StopPoint, DateTime> best_labels_pts;
-    IdxMap<type::StopPoint, DateTime> best_labels_transfers;
 
-    IdxMap<type::StopPoint, DateTime> best_labels_pts_walking;
-    IdxMap<type::StopPoint, DateTime> best_labels_transfers_walking;
+    /// Contains the best arrival (or departure time) for each stoppoint
+    Labels best_labels;
 
     /// Number of transfers done for the moment
     unsigned int count;
@@ -100,10 +99,7 @@ struct RAPTOR {
 
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
-          best_labels_pts(data.pt_data->stop_points),
-          best_labels_transfers(data.pt_data->stop_points),
-          best_labels_pts_walking(data.pt_data->stop_points),
-          best_labels_transfers_walking(data.pt_data->stop_points),
+          best_labels(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
@@ -145,8 +141,8 @@ struct RAPTOR {
     std::vector<Path> compute_all(const map_stop_point_duration& departures,
                                   const map_stop_point_duration& destinations,
                                   const DateTime& departure_datetime,
-                                  const nt::RTLevel rt_level,
-                                  const navitia::time_duration& transfer_penalty,
+                                  const nt::RTLevel rt_level = type::RTLevel::Base,
+                                  const navitia::time_duration& transfer_penalty = 2_min,
                                   const DateTime& bound = DateTimeUtils::inf,
                                   const uint32_t max_transfers = 10,
                                   const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),

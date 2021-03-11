@@ -267,7 +267,7 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
+        const auto& best_lbl = raptor.best_labels.dt_pt(sp_idx);
         if (in_bound(best_lbl, bound, clockwise)) {
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];
@@ -298,7 +298,7 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
+        const auto& best_lbl = raptor.best_labels.dt_pt(sp_idx);
         if (in_bound(best_lbl, bound, clockwise)) {
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];
@@ -329,7 +329,7 @@ static BoundBox find_boundary_box(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
+        const auto& best_lbl = raptor.best_labels.dt_pt(sp_idx);
         if (in_bound(best_lbl, bound, clockwise)) {
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];

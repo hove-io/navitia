@@ -42,8 +42,6 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-struct Route;
-
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;

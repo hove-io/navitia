@@ -384,6 +384,8 @@ struct builder {
     void finalize_disruption_batch();
 
     navitia::georef::Way* add_way(const std::string& name, const std::string& way_type, const bool visible = true);
+
+    const navitia::type::Data& get_data() { return *data.get(); }
 };
 
 }  // namespace ed
