@@ -269,12 +269,11 @@ class ReleaseManager:
             write_lines.append(u'  * \n')
 
         author_name = self.git.config('user.name')
-        author_mail = self.git.config('user.email')
         write_lines.extend(
             [
                 u'\n',
-                u' -- {name} <{mail}>  {now} +0100\n'.format(
-                    name=author_name, mail=author_mail, now=datetime.now().strftime("%a, %d %b %Y %H:%m:%S")
+                u' -- {name}  {now} +0100\n'.format(
+                    name=author_name, now=datetime.now().strftime("%a, %d %b %Y %H:%m:%S")
                 ),
                 u'\n',
             ]
