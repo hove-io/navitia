@@ -367,6 +367,20 @@ class MixedSchedule(object):
             rt_proxy, schedule, next_rt_passages = future.get()
             rt_proxy._update_stop_schedule(schedule, next_rt_passages)
 
+    def _manage_occupancies(self, schedules):
+        vo_service = self.instance.external_service_provider_manager.get_vehicle_occupancy_service()
+        if not vo_service:
+            return
+        for schedule in schedules:
+            sp_id = schedule.stop_point.uri
+            for date_time in schedule.date_times:
+                vj_id = date_time.properties.vehicle_journey_id
+                args = {"stop_id": sp_id, "vehiclejourney_id": vj_id}
+                # TODO: this call may be parallelized with gevent
+                # Not done now as it's only a POC and our WS Forseti/vehicle_occupancies will only have fewer
+                # elements (less than 5000 for line 40 and 45). The Cache with 1 hour duration works well
+                date_time.occupancy = vo_service.get_response(args)
+
     def terminus_schedules(self, request):
         resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
 
@@ -382,4 +396,5 @@ class MixedSchedule(object):
             return resp
 
         self._manage_realtime(request, resp.stop_schedules)
+        self._manage_occupancies(resp.stop_schedules)
         return resp
