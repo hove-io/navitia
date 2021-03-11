@@ -1,10 +1,11 @@
 name: Publish Docker Compose Images
 
 on:
-  push:
-    branches:
-      - dev
-      - release
+  workflow_run:
+    workflows: ["Build Navitia Packages For Dev Multi Distributions"]
+    branches: [dev]
+    types:
+      - completed
 
 jobs:
   build:
