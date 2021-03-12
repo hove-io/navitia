@@ -1,3 +1,19 @@
+navitia2 (10.5.0) unstable; urgency=low
+
+  * [Jormungandr] Feed attribute occupancy in stop_schedules.date_time from /vehicle_occupancies   <https://github.com/CanalTP/navitia/pull/3378>
+  * [Jormungandr] Uniformalizing driver ratings in ridesharing  <https://github.com/CanalTP/navitia/pull/3380>
+  * [CI]: Remove old build dev job  <https://github.com/CanalTP/navitia/pull/3385>
+  * [docker compose] waiting artifacts to run GA job  <https://github.com/CanalTP/navitia/pull/3379>
+  * [Raptor] Labels refacto  <https://github.com/CanalTP/navitia/pull/3370>
+  * [CI] Documentation Build permission issue  <https://github.com/CanalTP/navitia/pull/3383>
+  * [CI] Activate Sonarcloud scan on internal branch merge  <https://github.com/CanalTP/navitia/pull/3381>
+  * [CI] Integrate Navitia analysis to SonarCloud  <https://github.com/CanalTP/navitia/pull/3375>
+  * Doc : fix workflow  <https://github.com/CanalTP/navitia/pull/3377>
+  * Revert "[CI] Temporary remove Docker Compose Github Action fail Slack message"  <https://github.com/CanalTP/navitia/pull/3374>
+  * [CI] fix build docker compose images  <https://github.com/CanalTP/navitia/pull/3372>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 12 Mar 2021 10:03:59 +0100
+
 navitia2 (10.4.0) unstable; urgency=low
 
   * [Jormungandr] Alternative socket for pt queries  <https://github.com/CanalTP/navitia/pull/3251>
