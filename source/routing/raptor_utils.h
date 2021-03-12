@@ -32,26 +32,14 @@ www.navitia.io
 
 #include "type/datetime.h"
 #include "utils/idx_map.h"
+#include "type/fwd_type.h"
 
 #include <boost/container/flat_map.hpp>
 #include <boost/range/algorithm/fill.hpp>
 
 namespace navitia {
-
-namespace type {
-struct StopPoint;
-struct StopTime;
-struct Route;
-struct Line;
-struct VehicleJourney;
-struct MetaVehicleJourney;
-struct PhysicalMode;
-}  // namespace type
-
 namespace routing {
 
-struct JourneyPattern;
-struct JourneyPatternPoint;
 using JppIdx = Idx<JourneyPatternPoint>;
 using JpIdx = Idx<JourneyPattern>;
 using SpIdx = Idx<type::StopPoint>;

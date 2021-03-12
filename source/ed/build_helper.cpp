@@ -823,8 +823,8 @@ void builder::make() {
     generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
-    finish();
     data->build_relations();
+    finish();
 }
 
 void builder::finalize_disruption_batch() {
