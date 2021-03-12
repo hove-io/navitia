@@ -46,20 +46,16 @@ using namespace navitia::timetables;
 // fetched before vj:0 in get_stop_times. Since passages display departure / arrival times
 // we need to check that the departures are correctly ordered regardless.
 BOOST_AUTO_TEST_CASE(passages_boarding_order) {
-    ed::builder b("20170101");
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+            "stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
+            "stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
-        "stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
-        "stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+        b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+            "stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
+            "stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+    });
 
-    b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
-        "stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
-        "stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
-
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
     auto* data_ptr = b.data.get();
 
     // next departures
@@ -82,21 +78,16 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
 }
 
 BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
-    ed::builder b("20170101");
-    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
-    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20170108");
-    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    ed::builder b("20170101", [](ed::builder& b) {
+        boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
+        boost::gregorian::date end = boost::gregorian::date_from_iso_string("20170108");
+        b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+        b.vj("L1", "1111111")
+            .name("vj:0")("stop1", "8:00"_t, "8:01"_t)("stop2", "8:05"_t, "8:06"_t)("stop3", "8:10"_t, "8:11"_t);
 
-    b.vj("L1", "1111111")
-        .name("vj:0")("stop1", "8:00"_t, "8:01"_t)("stop2", "8:05"_t, "8:06"_t)("stop3", "8:10"_t, "8:11"_t);
-
-    b.vj("L1", "1111111")
-        .name("vj:1")("stop1", "9:00"_t, "9:01"_t)("stop2", "9:05"_t, "9:06"_t)("stop3", "9:10"_t, "9:11"_t);
-
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+        b.vj("L1", "1111111")
+            .name("vj:1")("stop1", "9:00"_t, "9:01"_t)("stop2", "9:05"_t, "9:06"_t)("stop3", "9:10"_t, "9:11"_t);
+    });
     auto* data_ptr = b.data.get();
 
     navitia::PbCreator pb_creator_pdep(data_ptr, bt::second_clock::universal_time(), null_time_period);

@@ -51,9 +51,8 @@ static std::pair<const JourneyPattern&, const JourneyPatternPoint&> get_first_jp
 }
 
 BOOST_AUTO_TEST_CASE(test1) {
-    ed::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
-    b.make();
+    ed::builder b("20120614",
+                  [&](ed::builder& b) { b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250); });
 
     std::vector<JppIdx> jpps;
     for (const auto jpp : b.data->dataRaptor->jp_container.get_jpps())
@@ -93,32 +92,28 @@ BOOST_AUTO_TEST_CASE(test1) {
  *
  */
 BOOST_AUTO_TEST_CASE(test_calendar) {
-    ed::builder b("20120614");
     DateTime vj1_departure = 8000;
     DateTime vj2_departure = 8100;
     DateTime vj3_departure = 9000;
     std::string spa1 = "stop1";
-    b.vj("A", "1010", "", true, "vj1")(spa1, vj1_departure, vj1_departure)("useless", 10000, 10000);
-    b.vj("A", "1010", "", true, "vj2")(spa1, vj2_departure, vj2_departure)("useless", 11000, 11000);
-    b.vj("A", "1111", "", true, "vj3")(spa1, vj3_departure, vj3_departure)("useless", 12000, 12000);
+    type::Calendar* cal = nullptr;
 
-    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri = "cal1";
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "1010", "", true, "vj1")(spa1, vj1_departure, vj1_departure)("useless", 10000, 10000);
+        b.vj("A", "1010", "", true, "vj2")(spa1, vj2_departure, vj2_departure)("useless", 11000, 11000);
+        b.vj("A", "1111", "", true, "vj3")(spa1, vj3_departure, vj3_departure)("useless", 12000, 12000);
 
-    b.finish();
+        cal = new type::Calendar(b.data->meta->production_date.begin());
+        cal->uri = "cal1";
 
-    for (auto vj_name : {"vj1", "vj2"}) {
-        auto associated_cal = new type::AssociatedCalendar();
-        associated_cal->calendar = cal;
-        b.data->pt_data->meta_vjs.get_mut(vj_name)->associated_calendars.insert({cal->uri, associated_cal});
-    }
-
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+        for (auto vj_name : {"vj1", "vj2"}) {
+            auto associated_cal = new type::AssociatedCalendar();
+            associated_cal->calendar = cal;
+            b.data->pt_data->meta_vjs.get_mut(vj_name)->associated_calendars.insert({cal->uri, associated_cal});
+        }
+    });
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
-
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     BOOST_REQUIRE_EQUAL(res.size(), 2);
@@ -157,13 +152,14 @@ BOOST_AUTO_TEST_CASE(test_calendar) {
  *
  */
 BOOST_AUTO_TEST_CASE(test_no_calendar) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
-    b.make();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
+    });
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
 
@@ -187,28 +183,24 @@ BOOST_AUTO_TEST_CASE(test_no_calendar) {
  *
  */
 BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
-    ed::builder b("20120614");
     std::string spa1 = "stop1";
     DateTime vj1_departure = 8000;
     size_t headway_sec = 100;
-    b.frequency_vj("A", vj1_departure, 9000, headway_sec, "default_network", "1010", "", true, "vj1")(
-        spa1, vj1_departure, vj1_departure)("useless_stop", 10000, 10000);
+    type::Calendar* cal = nullptr;
 
-    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri = "cal1";
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", vj1_departure, 9000, headway_sec, "default_network", "1010", "", true, "vj1")(
+            spa1, vj1_departure, vj1_departure)("useless_stop", 10000, 10000);
 
-    b.finish();
+        cal = new type::Calendar(b.data->meta->production_date.begin());
+        cal->uri = "cal1";
 
-    auto associated_cal = new type::AssociatedCalendar();
-    associated_cal->calendar = cal;
-    b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
-
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+        auto associated_cal = new type::AssociatedCalendar();
+        associated_cal->calendar = cal;
+        b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
+    });
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
-
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     BOOST_REQUIRE_EQUAL(res.size(), 11);
@@ -245,28 +237,24 @@ BOOST_AUTO_TEST_CASE(test_frequency_for_calendar) {
  *
  */
 BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
-    ed::builder b("20120614");
     std::string spa1 = "stop1";
     DateTime vj1_departure = 70000;
     size_t headway_sec = 1000;
-    b.frequency_vj("A", vj1_departure, 2001, headway_sec, "default_network", "1010", "", true, "vj1")(
-        spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
+    type::Calendar* cal = nullptr;
 
-    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri = "cal1";
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", vj1_departure, 2001, headway_sec, "default_network", "1010", "", true, "vj1")(
+            spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
 
-    b.finish();
+        cal = new type::Calendar(b.data->meta->production_date.begin());
+        cal->uri = "cal1";
 
-    auto associated_cal = new type::AssociatedCalendar();
-    associated_cal->calendar = cal;
-    b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
-
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+        auto associated_cal = new type::AssociatedCalendar();
+        associated_cal->calendar = cal;
+        b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
+    });
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
-
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     // end of day is 86400, so we have (86400 - 70000) / 1000 + the stop on the morning (2001 / 1000)
@@ -288,28 +276,24 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
  *
  */
 BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
-    ed::builder b("20120614");
     std::string spa1 = "stop1";
     DateTime vj1_departure = 70000;
     size_t headway_sec = 1000;
-    b.frequency_vj("A", vj1_departure, 90001, headway_sec, "default_network", "1010", "", true, "vj1")(
-        spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
+    type::Calendar* cal = nullptr;
 
-    auto cal(new type::Calendar(b.data->meta->production_date.begin()));
-    cal->uri = "cal1";
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", vj1_departure, 90001, headway_sec, "default_network", "1010", "", true, "vj1")(
+            spa1, vj1_departure, vj1_departure)("useless_stop", 87400, 87400);
 
-    b.finish();
+        cal = new type::Calendar(b.data->meta->production_date.begin());
+        cal->uri = "cal1";
 
-    auto associated_cal = new type::AssociatedCalendar();
-    associated_cal->calendar = cal;
-    b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
-
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+        auto associated_cal = new type::AssociatedCalendar();
+        associated_cal->calendar = cal;
+        b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars.insert({cal->uri, associated_cal});
+    });
 
     auto jpp1 = get_first_jp_jpp(b, spa1);
-
     auto res = get_all_calendar_stop_times(jpp1.first, jpp1.second, cal->uri);
 
     // end of day is 86400, so we have (90001 - 70000) / 1000 + 1 (for the last second)

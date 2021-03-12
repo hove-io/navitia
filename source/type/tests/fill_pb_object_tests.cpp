@@ -47,14 +47,11 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
-    ed::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050);
-    b.vj("A")("stop1", 8000, 8050);
-    b.vj("V")("stop2", 8000, 8050);
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A")("stop1", 8000, 8050);
+        b.vj("A")("stop1", 8000, 8050);
+        b.vj("V")("stop2", 8000, 8050);
+    });
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
     Route* r = b.data->pt_data->routes_map["A:0"];
@@ -79,13 +76,8 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
 }
 
 BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
-    ed::builder b("20120614");
     auto* route = new Route();
-    b.data->pt_data->routes.push_back(route);
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    ed::builder b("20120614", [&](ed::builder& b) { b.data->pt_data->routes.push_back(route); });
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
     boost::gregorian::date d1(2014, 06, 14);
@@ -101,27 +93,26 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
 }
 
 BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
-    ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
-    // Physical_mode = Tram
-    b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
-        "stop2", 8200, 8250);
-    // Physical_mode = Metro
-    b.vj("A", "11110000", "", true, "", "", "", "physical_mode:0x1")("stop1", 8000, 8050)("stop2", 8200, 8250)(
-        "stop3", 8500, 8500);
-    // Physical_mode = Car
-    b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "", "physical_mode:Car")("stop4", 8000, 8050)(
-        "stop5", 8200, 8250)("stop6", 8500, 8500);
+    ed::builder b("201303011T1739", [](ed::builder& b) {
+        b.generate_dummy_basis();
+        // Physical_mode = Tram
+        b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
+            "stop2", 8200, 8250);
+        // Physical_mode = Metro
+        b.vj("A", "11110000", "", true, "", "", "", "physical_mode:0x1")("stop1", 8000, 8050)("stop2", 8200, 8250)(
+            "stop3", 8500, 8500);
+        // Physical_mode = Car
+        b.vj_with_network("Network2", "B", "00001111", "", true, "", "", "", "physical_mode:Car")("stop4", 8000, 8050)(
+            "stop5", 8200, 8250)("stop6", 8500, 8500);
 
-    nt::Line* ln = b.lines.find("A")->second;
-    ln->network = b.data->pt_data->networks_map["Network1"];
-    ln->commercial_mode = b.data->pt_data->commercial_modes_map["0x1"];
+        nt::Line* ln = b.lines.find("A")->second;
+        ln->network = b.data->pt_data->networks_map["Network1"];
+        ln->commercial_mode = b.data->pt_data->commercial_modes_map["0x1"];
 
-    ln = b.lines.find("B")->second;
-    ln->network = b.data->pt_data->networks_map["Network2"];
-    ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
-
-    b.make();
+        ln = b.lines.find("B")->second;
+        ln->network = b.data->pt_data->networks_map["Network2"];
+        ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
+    });
 
     auto stop_area = new pbnavitia::StopArea();
     boost::gregorian::date d1(2014, 06, 14);
@@ -146,10 +137,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
 
 // Test that the geojson isn't in the pb object when disabling geojson output
 BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
-    ed::builder b("20161026");
-
-    b.vj("A");
-    b.make();
+    ed::builder b("20161026", [](ed::builder& b) { b.vj("A"); });
 
     Route* r = b.data->pt_data->routes_map["A:0"];
     auto route = new pbnavitia::Route;
@@ -190,30 +178,29 @@ std::set<std::string> uris(const C& objs) {
  * - vjb  on "d2"
  */
 BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
-    ed::builder b("20160101");
+    nt::VehicleJourney* vj_a = nullptr;
+    ed::builder b("20160101", [&](ed::builder& b) {
+        auto* c1 = b.add<nt::Contributor>("c1", "name-c1");
+        auto* d1 = b.add<nt::Dataset>("d1", "name-d1");
+        d1->contributor = c1;
+        c1->dataset_list.insert(d1);
 
-    auto* c1 = b.add<nt::Contributor>("c1", "name-c1");
-    auto* d1 = b.add<nt::Dataset>("d1", "name-d1");
-    d1->contributor = c1;
-    c1->dataset_list.insert(d1);
+        auto* d2 = b.add<nt::Dataset>("d2", "name-d2");
+        d2->contributor = c1;
+        c1->dataset_list.insert(d2);
 
-    auto* d2 = b.add<nt::Dataset>("d2", "name-d2");
-    d2->contributor = c1;
-    c1->dataset_list.insert(d2);
+        auto* c2 = b.add<nt::Contributor>("c2", "name-c2");
+        auto* d3 = b.add<nt::Dataset>("d3", "name-d3");
+        d3->contributor = c2;
+        c2->dataset_list.insert(d3);
 
-    auto* c2 = b.add<nt::Contributor>("c2", "name-c2");
-    auto* d3 = b.add<nt::Dataset>("d3", "name-d3");
-    d3->contributor = c2;
-    c2->dataset_list.insert(d3);
-
-    auto* vj_a = b.vj("A")("stop1", 8000, 8050).make();
-    vj_a->dataset = d1;
-    auto* vj_a2 = b.vj("A")("stop1", 8000, 8050).make();
-    vj_a2->dataset = d3;
-    auto* vj_b = b.vj("B")("stop2", 8000, 8050).make();
-    vj_b->dataset = d2;
-
-    b.make();
+        vj_a = b.vj("A")("stop1", 8000, 8050).make();
+        vj_a->dataset = d1;
+        auto* vj_a2 = b.vj("A")("stop1", 8000, 8050).make();
+        vj_a2->dataset = d3;
+        auto* vj_b = b.vj("B")("stop2", 8000, 8050).make();
+        vj_b->dataset = d2;
+    });
 
     auto objs = navitia::ptref_indexes<nt::Contributor>(vj_a, *b.data);
     BOOST_CHECK_EQUAL_RANGE(uris(objs), std::set<std::string>({"c1"}));
@@ -247,10 +234,7 @@ BOOST_AUTO_TEST_CASE(label_formater_line) {
 }
 
 BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
-    ed::builder b("20161026");
-
-    b.vj("A great \"uri\" for café");
-    b.make();
+    ed::builder b("20161026", [](ed::builder& b) { b.vj("A great \"uri\" for café"); });
 
     auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(b.data->pt_data->lines.front(), *b.data);
     BOOST_CHECK_EQUAL(modes.size(), 1);
@@ -258,7 +242,6 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
 
 BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
     ed::builder b("20120614");
-    b.make();
 
     auto pt_journey = new pbnavitia::Journey();
     boost::gregorian::date d1(2014, 06, 14);

@@ -36,64 +36,66 @@ namespace bg = boost::gregorian;
  */
 struct departure_board_fixture {
     ed::builder b;
-    departure_board_fixture() : b("20160101") {
-        b.sa("SA1")("S1")("S2");
+    navitia::type::StopPoint* sp_ptr;
+    departure_board_fixture()
+        : b("20160101", [&](ed::builder& b) {
+              b.sa("SA1")("S1")("S2");
 
-        b.vj("A")
-            .route("A:0", "forward")
-            .name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
-        b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
-        b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
+              b.vj("A")
+                  .route("A:0", "forward")
+                  .name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
+              b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
+              b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
 
-        b.vj("B").route("B:1", "anticlockwise").name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
+              b.vj("B")
+                  .route("B:1", "anticlockwise")
+                  .name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
-        b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
-        b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
+              b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
+              b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
 
-        // J is late
-        b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
-        b.lines.find("J")->second->properties["realtime_system"] = "Kisio数字";
+              // J is late
+              b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
+              b.lines.find("J")->second->properties["realtime_system"] = "Kisio数字";
 
-        b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
-        b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
-        b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
-        b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
-        b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
-        b.lines.find("K")->second->properties["realtime_system"] = "Kisio数字";
+              b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
+              b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
+              b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
+              b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
+              b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
+              b.lines.find("K")->second->properties["realtime_system"] = "Kisio数字";
 
-        b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
-        b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
-        b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-        b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
+              b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
+              b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
+              b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
+              b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
 
-        b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
-        b.vj("P", "11111").name("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
-        b.vj("Q", "11111").name("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
+              b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
+              b.vj("P", "11111")
+                  .name("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
+              b.vj("Q", "11111")
+                  .name("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
 
-        b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t)
-            .name("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-                "stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
-                "stopf3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+              b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t)
+                  .name("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0,
+                                   300)("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true,
+                                        true, 900, 900)("stopf3", "18:10"_t, "18:10"_t,
+                                                        std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-        navitia::georef::Admin* ad = new navitia::georef::Admin();
-        ad->name = "Quimper";
-        ad->uri = "Quimper";
-        ad->level = 8;
-        ad->postal_codes.push_back("29000");
-        ad->idx = 0;
-        b.data->geo_ref->admins.push_back(ad);
-        auto* sp_ptr = b.sps.at("S43");
-        sp_ptr->name = "Terminus";
-        sp_ptr->stop_area->name = "Terminus";
-        sp_ptr->admin_list.push_back(ad);
-        sp_ptr->stop_area->admin_list.push_back(ad);
+              navitia::georef::Admin* ad = new navitia::georef::Admin();
+              ad->name = "Quimper";
+              ad->uri = "Quimper";
+              ad->level = 8;
+              ad->postal_codes.push_back("29000");
+              ad->idx = 0;
+              b.data->geo_ref->admins.push_back(ad);
 
-        b.finish();
-        b.data->pt_data->sort_and_index();
-        b.data->pt_data->build_uri();
-        b.data->complete();
-        b.data->compute_labels();
-
+              auto* sp_ptr = b.sps.at("S43");
+              sp_ptr->name = "Terminus";
+              sp_ptr->stop_area->name = "Terminus";
+              sp_ptr->admin_list.push_back(ad);
+              sp_ptr->stop_area->admin_list.push_back(ad);
+          }) {
         b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(5));
 
         sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
@@ -205,83 +207,85 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* r_vj1;
     navitia::type::VehicleJourney* r_vj2;
 
-    calendar_fixture() : b("20120614", "departure board") {
-        // 2 vj during the week
-        b.vj("line:A", "1", "", true, "week")("stop1", "10:00"_t, "10:10"_t)("stop2", "12:00"_t, "12:10"_t);
-        b.vj("line:A", "101", "", true, "week_bis")("stop1", "11:00"_t, "11:10"_t)("stop2", "14:00"_t, "14:10"_t);
-        // NOTE: we give a first random validity pattern because the builder try to factorize them
+    calendar_fixture()
+        : b("20120614",
+            [&](ed::builder& b) {
+                // 2 vj during the week
+                b.vj("line:A", "1", "", true, "week")("stop1", "10:00"_t, "10:10"_t)("stop2", "12:00"_t, "12:10"_t);
+                b.vj("line:A", "101", "", true, "week_bis")("stop1", "11:00"_t, "11:10"_t)("stop2", "14:00"_t,
+                                                                                           "14:10"_t);
+                // NOTE: we give a first random validity pattern because the builder try to factorize them
 
-        // only one on the week end
-        b.vj("line:A", "10101", "", true, "weekend")("stop1", "20:00"_t, "20:10"_t)("stop2", "21:00"_t, "21:10"_t);
+                // only one on the week end
+                b.vj("line:A", "10101", "", true, "weekend")("stop1", "20:00"_t, "20:10"_t)("stop2", "21:00"_t,
+                                                                                            "21:10"_t);
 
-        // and one everytime
-        auto& builder_vj =
-            b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)("stop2", "16:00"_t, "16:10"_t);
-        // Add a comment on the vj
-        auto& pt_data = *(b.data->pt_data);
-        pt_data.comments.add(builder_vj.vj, nt::Comment("vj comment", "on_demand_transport"));
+                // and one everytime
+                auto& builder_vj = b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)(
+                    "stop2", "16:00"_t, "16:10"_t);
+                // Add a comment on the vj
+                auto& pt_data = *(b.data->pt_data);
+                pt_data.comments.add(builder_vj.vj, nt::Comment("vj comment", "on_demand_transport"));
 
-        // and wednesday that will not be matched to any cal
-        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", "17:00"_t, "17:10"_t)("stop2", "18:00"_t,
-                                                                                          "18:10"_t);
+                // and wednesday that will not be matched to any cal
+                b.vj("line:A", "110010011", "", true, "wednesday")("stop1", "17:00"_t, "17:10"_t)("stop2", "18:00"_t,
+                                                                                                  "18:10"_t);
 
-        // Check partial terminus tag
-        b.vj("A").vp("10111111").name("vj1")("Tstop1", "10:00"_t, "10:00"_t)("Tstop2", "10:30"_t, "10:30"_t);
-        b.vj("A")
-            .vp("00000011")
-            .name("vj2")("Tstop1", "10:30"_t, "10:30"_t)("Tstop2", "11:00"_t, "11:00"_t)("Tstop3", "11:30"_t,
-                                                                                         "11:30"_t);
+                // Check partial terminus tag
+                b.vj("A").vp("10111111").name("vj1")("Tstop1", "10:00"_t, "10:00"_t)("Tstop2", "10:30"_t, "10:30"_t);
+                b.vj("A")
+                    .vp("00000011")
+                    .name("vj2")("Tstop1", "10:30"_t, "10:30"_t)("Tstop2", "11:00"_t, "11:00"_t)("Tstop3", "11:30"_t,
+                                                                                                 "11:30"_t);
 
-        // Check date_time_estimated at stoptime
-        b.vj("B", "10111111", "", true, "date_time_estimated", "")("ODTstop1", "10:00"_t, "10:00"_t)(
-            "ODTstop2", "10:30"_t, "10:30"_t);
-        // Check on_demand_transport at stoptime
-        b.vj("B", "10111111", "", true, "on_demand_transport", "")("ODTstop1", "11:00"_t, "11:00"_t)(
-            "ODTstop2", "11:30"_t, "11:30"_t);
+                // Check date_time_estimated at stoptime
+                b.vj("B", "10111111", "", true, "date_time_estimated", "")("ODTstop1", "10:00"_t, "10:00"_t)(
+                    "ODTstop2", "10:30"_t, "10:30"_t);
+                // Check on_demand_transport at stoptime
+                b.vj("B", "10111111", "", true, "on_demand_transport", "")("ODTstop1", "11:00"_t, "11:00"_t)(
+                    "ODTstop2", "11:30"_t, "11:30"_t);
 
-        // Check line opening in stop schedules
-        b.vj("C", "110011000001", "", true, "vj_C", "")("stop1_C", "11:00"_t, "11:00"_t)("stop2_C", "11:30"_t,
-                                                                                         "11:30"_t);
+                // Check line opening in stop schedules
+                b.vj("C", "110011000001", "", true, "vj_C", "")("stop1_C", "11:00"_t, "11:00"_t)("stop2_C", "11:30"_t,
+                                                                                                 "11:30"_t);
 
-        b.vj("D", "110000001111", "", true, "vj_D", "")("stop1_D", "00:10"_t, "00:10"_t)(
-            "stop2_D", "01:40"_t, "01:40"_t)("stop3_D", "02:50"_t, "02:50"_t);
-        /*
-                                                   StopR3                            StopR4
-                                            ------------------------------------------
-                      StopR1               /
-            Line R : ---------------------/StopR2
-                                          \         StopR5                            StopR6
-                                           \ ------------------------------------------
+                b.vj("D", "110000001111", "", true, "vj_D", "")("stop1_D", "00:10"_t, "00:10"_t)(
+                    "stop2_D", "01:40"_t, "01:40"_t)("stop3_D", "02:50"_t, "02:50"_t);
+                /*
+                                                           StopR3                            StopR4
+                                                    ------------------------------------------
+                              StopR1               /
+                    Line R : ---------------------/StopR2
+                                                  \         StopR5                            StopR6
+                                                   \ ------------------------------------------
 
-        */
+                */
 
-        b.vj("R", "10111111", "", true, "R:vj1", "")("StopR1", "10:00"_t, "10:00"_t)("StopR2", "10:30"_t, "10:30"_t)(
-            "StopR3", "11:00"_t, "11:00"_t)("StopR4", "11:30"_t, "11:30"_t);
-        b.vj("R", "10111111", "", true, "R:vj2", "")("StopR1", "10:00"_t, "10:00"_t)("StopR2", "10:30"_t, "10:30"_t)(
-            "StopR5", "11:00"_t, "11:00"_t)("StopR6", "11:30"_t, "11:30"_t);
-        // Add opening and closing time
-        b.lines["C"]->opening_time = boost::posix_time::time_duration(9, 0, 0);
-        b.lines["C"]->closing_time = boost::posix_time::time_duration(21, 0, 0);
-        b.lines["D"]->opening_time = boost::posix_time::time_duration(23, 30, 0);
-        b.lines["D"]->closing_time = boost::posix_time::time_duration(6, 0, 0);
-        b.lines["line:A"]->color = "289728";
-        b.lines["line:A"]->text_color = "FFD700";
-        b.lines["line:A"]->code = "A";
+                b.vj("R", "10111111", "", true, "R:vj1", "")("StopR1", "10:00"_t, "10:00"_t)(
+                    "StopR2", "10:30"_t, "10:30"_t)("StopR3", "11:00"_t, "11:00"_t)("StopR4", "11:30"_t, "11:30"_t);
+                b.vj("R", "10111111", "", true, "R:vj2", "")("StopR1", "10:00"_t, "10:00"_t)(
+                    "StopR2", "10:30"_t, "10:30"_t)("StopR5", "11:00"_t, "11:00"_t)("StopR6", "11:30"_t, "11:30"_t);
+                // Add opening and closing time
+                b.lines["C"]->opening_time = boost::posix_time::time_duration(9, 0, 0);
+                b.lines["C"]->closing_time = boost::posix_time::time_duration(21, 0, 0);
+                b.lines["D"]->opening_time = boost::posix_time::time_duration(23, 30, 0);
+                b.lines["D"]->closing_time = boost::posix_time::time_duration(6, 0, 0);
+                b.lines["line:A"]->color = "289728";
+                b.lines["line:A"]->text_color = "FFD700";
+                b.lines["line:A"]->code = "A";
 
-        // Add admins to test display_informations.direction
-        navitia::georef::Admin* ad = new navitia::georef::Admin();
-        ad->name = "admin_name";
-        ad->uri = "admin_uri";
-        ad->level = 8;
-        ad->postal_codes.push_back("29000");
-        ad->idx = 0;
-        b.data->geo_ref->admins.push_back(ad);
-        auto* sp_ptr = b.sps.at("Tstop3");
-        sp_ptr->stop_area->admin_list.push_back(ad);
-
-        b.finish();
-        b.data->build_uri();
-
+                // Add admins to test display_informations.direction
+                navitia::georef::Admin* ad = new navitia::georef::Admin();
+                ad->name = "admin_name";
+                ad->uri = "admin_uri";
+                ad->level = 8;
+                ad->postal_codes.push_back("29000");
+                ad->idx = 0;
+                b.data->geo_ref->admins.push_back(ad);
+                auto* sp_ptr = b.sps.at("Tstop3");
+                sp_ptr->stop_area->admin_list.push_back(ad);
+            },
+            "departure board") {
         b.data->pt_data->codes.add(b.get<nt::VehicleJourney>("vehicle_journey:R:vj1"), "source", "Code-R-vj1");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR1"), "source", "Code-StopR1");
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
@@ -292,6 +296,7 @@ struct calendar_fixture {
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1);
 
+        auto& pt_data = *(b.data->pt_data);
         navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
         vj->stop_time_list[0].set_odt(true);
 
