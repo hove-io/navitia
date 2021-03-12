@@ -142,6 +142,15 @@ class ExternalServiceManager(object):
         except Exception:
             self.logger.exception('impossible to initialize external service')
 
+    def get_vehicle_occupancy_service(self):
+        """
+        Get appropriate external service for 'navitia_service' and call it
+        :param navitia_service: external service to be used to query
+        :param arguments: parameters to be added in the query
+        :return: response: external_services json
+        """
+        return self._get_external_service("vehicle_occupancies")
+
     # Here comes the function to call forseti/free_floating
     def manage_free_floatings(self, navitia_service, arguments):
         """
@@ -151,7 +160,7 @@ class ExternalServiceManager(object):
         :return: response: external_services json
         """
         service = self._get_external_service(navitia_service)
-        return service.get_free_floatings(arguments) if service else None
+        return service.get_response(arguments) if service else None
 
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them

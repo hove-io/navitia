@@ -28,16 +28,15 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import app
+from jormungandr import cache, app
 import pybreaker
 import logging
-from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
 from jormungandr.external_services.external_service import AbstractExternalService
 
 
-class FreeFloatingProvider(AbstractExternalService):
+class VehicleOccupancyProvider(AbstractExternalService):
     """
-    Class managing calls to forseti webservice, providing free_floating
+    Class managing calls to forseti webservice, providing vehicle_occupancies
     """
 
     def __init__(self, service_url, timeout=2, **kwargs):
@@ -51,13 +50,15 @@ class FreeFloatingProvider(AbstractExternalService):
             ),
         )
 
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
     def get_response(self, arguments):
         """
-        Get free-floating information from Forseti webservice
+        Get vehicle_occupancy information from Forseti webservice
         """
         raw_response = self._call_webservice(arguments)
-
-        return self.response_marshaller(raw_response)
+        resp = self.response_marshaller(raw_response)
+        vehicle_occupancies = resp.get('vehicle_occupancies', [])
+        return vehicle_occupancies[0].get('occupancy', 0) if vehicle_occupancies else 0
 
     @classmethod
     def response_marshaller(cls, response):
@@ -69,4 +70,4 @@ class FreeFloatingProvider(AbstractExternalService):
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
             raise
-        return FreeFloatingsSerializer(json_response).data
+        return json_response

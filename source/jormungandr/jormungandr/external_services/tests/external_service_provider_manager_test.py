@@ -33,7 +33,7 @@ from navitiacommon.models import ExternalService
 import datetime
 import pytest
 
-valid_configuration = [
+free_floating_valid_configuration = [
     {
         "id": "forseti_free_floatings",
         "navitia_service": "free_floatings",
@@ -48,7 +48,7 @@ valid_configuration = [
 ]
 
 # in args the key 'url' is not correct. It should be 'service_url'
-wrong_key_configuration = [
+free_floating_wrong_key_configuration = [
     {
         "id": "forseti_free_floatings",
         "navitia_service": "free_floatings",
@@ -62,7 +62,8 @@ wrong_key_configuration = [
     }
 ]
 
-wrong_class_configuration = [
+# in args the class '..toto' is not correct. It should be 'FreeFloatingProvider'
+free_floating_wrong_class_configuration = [
     {
         "id": "forseti_free_floatings",
         "navitia_service": "free_floatings",
@@ -73,6 +74,20 @@ wrong_class_configuration = [
             "circuit_breaker_reset_timeout": 60,
         },
         "class": "jormungandr.external_services.free_floating.toto",
+    }
+]
+
+vehicle_occupancy_valid_configuration = [
+    {
+        "id": "forseti_vehicle_occupancies",
+        "navitia_service": "vehicle_occupancies",
+        "args": {
+            "service_url": "http://config_from_file/vehicle_occupancies",
+            "timeout": 5,
+            "circuit_breaker_max_fail": 3,
+            "circuit_breaker_reset_timeout": 30,
+        },
+        "class": "jormungandr.external_services.vehicle_occupancy.VehicleOccupancyProvider",
     }
 ]
 
@@ -95,13 +110,17 @@ def external_service_provider_manager_config_from_file_test():
     instance = MockInstance()
 
     # With configuration having wrong class no external service is initialized
-    manager = ExternalServiceManager(instance, external_service_configuration=wrong_class_configuration)
+    manager = ExternalServiceManager(
+        instance, external_service_configuration=free_floating_wrong_class_configuration
+    )
     with pytest.raises(Exception):
         manager.init_external_services()
 
     # With configuration missing a key in "args" external service will be initialized
     # with a right key without any value
-    manager = ExternalServiceManager(instance, external_service_configuration=wrong_key_configuration)
+    manager = ExternalServiceManager(
+        instance, external_service_configuration=free_floating_wrong_key_configuration
+    )
     manager.init_external_services()
     assert len(manager._external_services_legacy) == 1
     assert len(manager._external_services_legacy.get('free_floatings', [])) == 1
@@ -110,7 +129,7 @@ def external_service_provider_manager_config_from_file_test():
     assert service.timeout == 10
 
     # With a valid configuration a proper external service will be initialized
-    manager = ExternalServiceManager(instance, external_service_configuration=valid_configuration)
+    manager = ExternalServiceManager(instance, external_service_configuration=free_floating_valid_configuration)
     manager.init_external_services()
     assert len(manager._external_services_legacy) == 1
     assert len(manager._external_services_legacy.get('free_floatings', [])) == 1
@@ -119,6 +138,19 @@ def external_service_provider_manager_config_from_file_test():
     assert service.timeout == 10
     assert service.breaker.reset_timeout == 60
     assert service.breaker.fail_max == 4
+
+    # With a valid configuration for vehicle_occupancy a service will be initialized
+    manager = ExternalServiceManager(
+        instance, external_service_configuration=vehicle_occupancy_valid_configuration
+    )
+    manager.init_external_services()
+    assert len(manager._external_services_legacy) == 1
+    assert len(manager._external_services_legacy.get('vehicle_occupancies', [])) == 1
+    service = manager._external_services_legacy.get('vehicle_occupancies', [])[0]
+    assert service.service_url == "http://config_from_file/vehicle_occupancies"
+    assert service.timeout == 5
+    assert service.breaker.reset_timeout == 30
+    assert service.breaker.fail_max == 3
 
 
 def services_getter_ok():
@@ -130,12 +162,13 @@ def services_getter_ok():
 
     service2 = ExternalService(id='forseti_vehicle_occupancies')
     service2.navitia_service = 'vehicle_occupancies'
-    service2.klass = 'jormungandr.external_services.free_floating.FreeFloatingProvider'
-    service2.args = {'service_url': 'http://127.0.0.1:8080/vehicle_occupancies', 'timeout': 5}
+    service2.klass = 'jormungandr.external_services.vehicle_occupancy.VehicleOccupancyProvider'
+    service2.args = {'service_url': 'http://127.0.0.1:8080/vehicle_occupancies', 'timeout': 10}
+    service2.created_at = datetime.datetime.utcnow()
     return [service1, service2]
 
 
-def services_getter_update():
+def free_floating_services_getter_update():
     service = ExternalService(id='forseti_free_floatings')
     service.navitia_service = 'free_floatings'
     service.klass = 'jormungandr.external_services.free_floating.FreeFloatingProvider'
@@ -149,6 +182,15 @@ def services_getter_update_with_wrong_class():
     service.navitia_service = 'free_floatings'
     service.klass = 'jormungandr.external_services.free_floating.Toto'
     service.args = {'service_url': 'http://update/free_floatings', 'timeout': 10}
+    service.created_at = datetime.datetime.utcnow()
+    return [service]
+
+
+def vehicle_occcupancy_services_getter_update():
+    service = ExternalService(id='forseti_vehicle_occupancies')
+    service.navitia_service = 'vehicle_occupancies'
+    service.klass = 'jormungandr.external_services.vehicle_occupancy.VehicleOccupancyProvider'
+    service.args = {'service_url': 'http://update/vehicle_occupancies', 'timeout': 15}
     service.created_at = datetime.datetime.utcnow()
     return [service]
 
@@ -168,6 +210,7 @@ def external_service_provider_manager_db_test():
     # 2 external services defined in the db are associated to the coverage
     # one with navitia_service=free_floatings where as another with navitia_service=vehicle_occupancies
     # For api /free_floatings the service associated to navitia_service=free_floatings will be used
+    # For api /vehicle_occupancies the service associated to navitia_service=vehicle_occupancies will be used
     manager.update_config()
     assert len(manager._external_services_legacy) == 2
     service = manager._external_services_legacy.get('free_floatings', [])[0]
@@ -175,10 +218,15 @@ def external_service_provider_manager_db_test():
     assert service.timeout == 5
     assert service.breaker.reset_timeout == 60
     assert service.breaker.fail_max == 4
+    service = manager._external_services_legacy.get('vehicle_occupancies', [])[0]
+    assert service.service_url == "http://127.0.0.1:8080/vehicle_occupancies"
+    assert service.timeout == 10
+    assert service.breaker.reset_timeout == 60
+    assert service.breaker.fail_max == 4
     manager_update = manager._last_update
 
-    # services are re-initialized from the new configurations in the db (services_getter_update)
-    manager._external_service_getter = services_getter_update
+    # services are re-initialized from the new configurations in the db (free_floating_services_getter_update)
+    manager._external_service_getter = free_floating_services_getter_update
     manager.update_config()
 
     assert manager._last_update > manager_update
@@ -186,6 +234,19 @@ def external_service_provider_manager_db_test():
     service = manager._external_services_legacy.get('free_floatings', [])[0]
     assert service.service_url == 'http://update/free_floatings'
     assert service.timeout == 10
+    assert service.breaker.reset_timeout == 60
+    assert service.breaker.fail_max == 4
+
+    # services are re-initialized from the new configurations in the db (vehicle_occcupancy_services_getter_update)
+    manager_update = manager._last_update
+    manager._external_service_getter = vehicle_occcupancy_services_getter_update
+    manager.update_config()
+
+    assert manager._last_update > manager_update
+    assert len(manager._external_services_legacy) == 1
+    service = manager._external_services_legacy.get('vehicle_occupancies', [])[0]
+    assert service.service_url == 'http://update/vehicle_occupancies'
+    assert service.timeout == 15
     assert service.breaker.reset_timeout == 60
     assert service.breaker.fail_max == 4
 
@@ -201,7 +262,7 @@ def external_service_provider_manager_config_from_file_and_db_test():
     # Test that external services are created from configuration but replaced by services form db
     """
     instance = MockInstance()
-    manager = ExternalServiceManager(instance, valid_configuration, services_getter_ok, -1)
+    manager = ExternalServiceManager(instance, free_floating_valid_configuration, services_getter_ok, -1)
 
     # We use env or file configuration only for debug purpose while will be replaced by services
     # from the DB after
@@ -214,11 +275,17 @@ def external_service_provider_manager_config_from_file_and_db_test():
     # 2 external services defined in the db are associated to the coverage
     # one with navitia_service=free_floatings where as another with navitia_service=vehicle_occupancies
     # For api /free_floatings the service associated to navitia_service=free_floatings will be used
+    # For api /vehicle_occupancies the service associated to navitia_service=vehicle_occupancies will be used
     # All the services from configuration file are all removed.
     manager.update_config()
     assert len(manager._external_services_legacy) == 2
     service = manager._external_services_legacy.get('free_floatings', [])[0]
     assert service.service_url == "http://config_from_db/free_floatings"
     assert service.timeout == 5
+    assert service.breaker.reset_timeout == 60
+    assert service.breaker.fail_max == 4
+    service = manager._external_services_legacy.get('vehicle_occupancies', [])[0]
+    assert service.service_url == "http://127.0.0.1:8080/vehicle_occupancies"
+    assert service.timeout == 10
     assert service.breaker.reset_timeout == 60
     assert service.breaker.fail_max == 4

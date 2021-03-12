@@ -61,6 +61,8 @@ class Karos(AbstractRidesharingService):
         timeout=2,
         departure_radius=2,
         arrival_radius=2,
+        rating_scale_min=None,
+        rating_scale_max=None,
     ):
         self.service_url = service_url
         self.api_key = api_key
@@ -70,10 +72,15 @@ class Karos(AbstractRidesharingService):
         self.timedelta = timedelta
         self.departure_radius = departure_radius
         self.arrival_radius = arrival_radius
+        self.rating_scale_min = rating_scale_min
+        self.rating_scale_max = rating_scale_max
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(
-            system_id=self.system_id, network=self.network, rating_scale_min=None, rating_scale_max=None
+            system_id=self.system_id,
+            network=self.network,
+            rating_scale_min=self.rating_scale_min,
+            rating_scale_max=self.rating_scale_max,
         )
 
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))

@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/idx_map.h"
 #include "routing/next_stop_time.h"
 #include "routing/journey_pattern_container.h"
+#include "routing/labels.h"
 
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>

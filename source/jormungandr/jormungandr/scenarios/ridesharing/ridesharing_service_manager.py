@@ -362,7 +362,7 @@ class RidesharingServiceManager(object):
                     rs_section.ridesharing_information.driver.gender = response_pb2.MALE
                 elif rsj.driver.gender == Gender.FEMALE:
                     rs_section.ridesharing_information.driver.gender = response_pb2.FEMALE
-            if rsj.driver.rate is not None and rsj.driver.rate_count:
+            if rsj.driver.rate is not None:
                 rs_section.ridesharing_information.driver.rating.value = rsj.driver.rate
             if rsj.driver.rate_count:
                 rs_section.ridesharing_information.driver.rating.count = rsj.driver.rate_count
