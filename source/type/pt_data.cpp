@@ -46,6 +46,7 @@ www.navitia.io
 #include "type/physical_mode.h"
 #include "utils/functions.h"
 
+#include <boost/none.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
 namespace nt = navitia::type;
@@ -93,6 +94,22 @@ type::Network* PT_Data::get_or_create_network(const std::string& uri, const std:
     return network;
 }
 
+type::Company* PT_Data::get_or_create_company(const std::string& uri, const std::string& name) {
+    auto company_it = companies_map.find(uri);
+
+    if (company_it != companies_map.end())
+        return company_it->second;
+
+    auto* company = new navitia::type::Company();
+    company->idx = companies.size();
+    company->name = name;
+    company->uri = uri;
+    companies.push_back(company);
+    companies_map.insert({uri, company});
+
+    return company;
+}
+
 type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& uri, const std::string& name) {
     const auto it = commercial_modes_map.find(uri);
     if (it != commercial_modes_map.end()) {
@@ -108,6 +125,65 @@ type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& 
     commercial_modes_map[uri] = mode;
 
     return mode;
+}
+
+type::PhysicalMode* PT_Data::get_or_create_physical_mode(const std::string& uri,
+                                                         const std::string& name,
+                                                         const double co2_emission) {
+    const auto pmode_it = physical_modes_map.find(uri);
+
+    if (pmode_it != physical_modes_map.end())
+        return pmode_it->second;
+
+    auto* mode = new navitia::type::PhysicalMode();
+    mode->name = name;
+    mode->uri = uri;
+
+    if (co2_emission >= 0.f)
+        mode->co2_emission = co2_emission;
+
+    mode->idx = physical_modes.size();
+    physical_modes.push_back(mode);
+    physical_modes_map.insert({mode->uri, mode});
+
+    return mode;
+}
+
+type::Dataset* PT_Data::get_or_create_dataset(const std::string& uri,
+                                              const std::string& name,
+                                              type::Contributor* contributor) {
+    const auto dataset_it = datasets_map.find(uri);
+
+    if (dataset_it != datasets_map.end())
+        return dataset_it->second;
+
+    auto* dataset = new navitia::type::Dataset();
+    dataset->idx = datasets.size();
+    dataset->uri = uri;
+    dataset->name = name;
+    dataset->contributor = contributor;
+    contributor->dataset_list.insert(dataset);
+    datasets.push_back(dataset);
+    datasets_map.insert({dataset->uri, dataset});
+
+    return dataset;
+}
+
+type::Contributor* PT_Data::get_or_create_contributor(const std::string& uri, const std::string& name) {
+    const auto contrib_it = contributors_map.find(uri);
+
+    if (contrib_it != contributors_map.end())
+        return contrib_it->second;
+
+    auto* contributor = new navitia::type::Contributor();
+    contributor->uri = uri;
+    contributor->name = name;
+
+    contributor->idx = contributors.size();
+    contributors.push_back(contributor);
+    contributors_map.insert({contributor->uri, contributor});
+
+    return contributor;
 }
 
 type::Line* PT_Data::get_or_create_line(const std::string& uri,
