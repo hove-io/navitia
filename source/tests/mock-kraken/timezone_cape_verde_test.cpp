@@ -108,14 +108,9 @@ int main(int argc, const char* const argv[]) {
                       // time
                       line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("26:55"));
 
-                      b.generate_dummy_basis();
-                      b.finish();
-                      b.data->pt_data->sort_and_index();
-                      b.data->build_raptor();
-                      b.data->build_uri();
                       b.build_autocomplete();
                   },
-                  "canal tp", "Atlantic/Cape_Verde", timezones);
+                  false, "canal tp", "Atlantic/Cape_Verde", timezones);
 
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 

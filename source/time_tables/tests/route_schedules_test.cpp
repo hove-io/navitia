@@ -227,6 +227,7 @@ struct route_schedule_calendar_fixture {
 
                 b.data->meta->production_date = boost::gregorian::date_period(begin, end);
             },
+            false,
             "canal tp",
             "paris",
             {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}) {}
@@ -392,6 +393,7 @@ struct CalWithDSTFixture {
                     mvj->associated_calendars.insert({cal->uri, a1});
                 }
             },
+            true,
             "canal tp",
             "paris",
             {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}) {}

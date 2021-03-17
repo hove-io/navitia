@@ -609,6 +609,7 @@ SA builder::sa(const std::string& name,
 
 builder::builder(const std::string& date,
                  std::function<void(builder&)> builder_callback,
+                 bool no_dummy,
                  const std::string& publisher_name,
                  const std::string& timezone_name,
                  navitia::type::TimeZoneHandler::dst_periods timezone)
@@ -628,6 +629,8 @@ builder::builder(const std::string& date,
 
     tz_handler = data->pt_data->tz_manager.get_or_create(timezone_name, data->meta->production_date.begin(), timezone);
 
+    if (no_dummy == false)
+        generate_dummy_basis();
     builder_callback(*this);
     make();
 }
@@ -797,7 +800,6 @@ void builder::finish() {
 }
 
 void builder::make() {
-    generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
     data->build_relations();

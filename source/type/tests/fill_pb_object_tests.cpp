@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
 
 BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     ed::builder b("201303011T1739", [](ed::builder& b) {
-        b.generate_dummy_basis();
         // Physical_mode = Tram
         b.vj_with_network("Network1", "A", "11110000", "", true, "", "", "", "physical_mode:0x0")("stop1", 8000, 8050)(
             "stop2", 8200, 8250);

@@ -215,7 +215,9 @@ struct data_set {
                 vj = b.data->pt_data->vehicle_journeys.back();
                 vj->dataset = dataset;
                 dataset->vehiclejourney_list.insert(vj);
+                b.data->complete();
             },
+            true,
             publisher_name,
             timezone_name,
             timezones) {}

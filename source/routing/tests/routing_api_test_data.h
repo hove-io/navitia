@@ -947,7 +947,7 @@ struct routing_api_data {
 
     navitia::type::GeographicalCoord HouseNmber42 = {10., 100., false};
 
-    ed::builder b = {"20120614", ed::builder::make_builder, "routing api data"};
+    ed::builder b = {"20120614", ed::builder::make_builder, true, "routing api data"};
 
     navitia::type::EntryPoint origin;
     navitia::type::EntryPoint destination;

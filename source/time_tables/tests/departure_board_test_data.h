@@ -38,64 +38,68 @@ struct departure_board_fixture {
     ed::builder b;
     navitia::type::StopPoint* sp_ptr;
     departure_board_fixture()
-        : b("20160101", [&](ed::builder& b) {
-              b.sa("SA1")("S1")("S2");
+        : b("20160101",
+            [&](ed::builder& b) {
+                b.sa("SA1")("S1")("S2");
 
-              b.vj("A")
-                  .route("A:0", "forward")
-                  .name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
-              b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
-              b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
+                b.vj("A")
+                    .route("A:0", "forward")
+                    .name("A:vj1")("A:s", "08:00"_t)("S1", "09:00"_t)("S2", "10:00"_t)("A:e", "11:00"_t);
+                b.vj("A").name("A:vj2")("A:s", "09:00"_t)("S1", "10:00"_t)("S2", "11:00"_t)("A:e", "12:00"_t);
+                b.vj("A").name("A:vj3")("A:s", "10:00"_t)("S1", "11:00"_t)("S2", "12:00"_t)("A:e", "13:00"_t);
 
-              b.vj("B")
-                  .route("B:1", "anticlockwise")
-                  .name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
+                b.vj("B")
+                    .route("B:1", "anticlockwise")
+                    .name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
-              b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
-              b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
+                b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
+                b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
 
-              // J is late
-              b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
-              b.lines.find("J")->second->properties["realtime_system"] = "Kisio数字";
+                // J is late
+                b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
+                b.lines.find("J")->second->properties["realtime_system"] = "Kisio数字";
 
-              b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
-              b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
-              b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
-              b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
-              b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
-              b.lines.find("K")->second->properties["realtime_system"] = "Kisio数字";
+                b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
+                b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
+                b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
+                b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
+                b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
+                b.lines.find("K")->second->properties["realtime_system"] = "Kisio数字";
 
-              b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
-              b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
-              b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-              b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
+                b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
+                b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
+                b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
+                b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
 
-              b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
-              b.vj("P", "11111")
-                  .name("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
-              b.vj("Q", "11111")
-                  .name("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
+                b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
+                b.vj("P", "11111")
+                    .name("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
+                b.vj("Q", "11111")
+                    .name("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
 
-              b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t)
-                  .name("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0,
-                                   300)("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true,
-                                        true, 900, 900)("stopf3", "18:10"_t, "18:10"_t,
-                                                        std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+                b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t)
+                    .name("vj:freq")("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true,
+                                     0, 300)("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true,
+                                             true, 900, 900)("stopf3", "18:10"_t, "18:10"_t,
+                                                             std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-              navitia::georef::Admin* ad = new navitia::georef::Admin();
-              ad->name = "Quimper";
-              ad->uri = "Quimper";
-              ad->level = 8;
-              ad->postal_codes.push_back("29000");
-              ad->idx = 0;
-              b.data->geo_ref->admins.push_back(ad);
+                navitia::georef::Admin* ad = new navitia::georef::Admin();
+                ad->name = "Quimper";
+                ad->uri = "Quimper";
+                ad->level = 8;
+                ad->postal_codes.push_back("29000");
+                ad->idx = 0;
+                b.data->geo_ref->admins.push_back(ad);
+                auto* sp_ptr = b.sps.at("S43");
+                sp_ptr->name = "Terminus";
+                sp_ptr->stop_area->name = "Terminus";
+                sp_ptr->admin_list.push_back(ad);
+                sp_ptr->stop_area->admin_list.push_back(ad);
 
-              auto* sp_ptr = b.sps.at("S43");
-              sp_ptr->name = "Terminus";
-              sp_ptr->stop_area->name = "Terminus";
-              sp_ptr->admin_list.push_back(ad);
-              sp_ptr->stop_area->admin_list.push_back(ad);
-          }) {
+                b.data->complete();
+                b.data->compute_labels();
+            },
+            true) {
         b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(5));
 
         sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
@@ -284,132 +288,139 @@ struct calendar_fixture {
                 b.data->geo_ref->admins.push_back(ad);
                 auto* sp_ptr = b.sps.at("Tstop3");
                 sp_ptr->stop_area->admin_list.push_back(ad);
+
+                // b.finish();
+                b.data->build_uri();
+
+                pt_data.codes.add(b.get<nt::VehicleJourney>("vehicle_journey:R:vj1"), "source", "Code-R-vj1");
+                pt_data.codes.add(b.get<nt::StopPoint>("StopR1"), "source", "Code-StopR1");
+                pt_data.codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
+                pt_data.codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
+                pt_data.codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
+                pt_data.codes.add(b.get<nt::Network>("base_network"), "app_code", "ilevia");
+
+                beg = b.data->meta->production_date.begin();
+                end_of_year = beg + boost::gregorian::years(1);
+
+                navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
+                vj->stop_time_list[0].set_odt(true);
+
+                vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
+                vj->stop_time_list[0].set_date_time_estimated(true);
+
+                vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
+                vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+                vj_week_bis = pt_data.vehicle_journeys_map["vehicle_journey:week_bis"];
+                vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
+                vj_weekend = pt_data.vehicle_journeys_map["vehicle_journey:weekend"];
+                vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
+
+                r_vj1 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj1"];
+                r_vj1->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+                r_vj2 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj2"];
+                r_vj2->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+
+                vj_all = pt_data.vehicle_journeys_map["vehicle_journey:all"];
+                vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
+                vj_wednesday = pt_data.vehicle_journeys_map["vehicle_journey:wednesday"];
+                vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+
+                // Check partial terminus for calendar
+                auto cal_partial_terminus = new navitia::type::Calendar(b.data->meta->production_date.begin());
+                cal_partial_terminus->uri = "cal_partial_terminus";
+                cal_partial_terminus->active_periods.push_back({beg, end_of_year});
+                cal_partial_terminus->week_pattern = std::bitset<7>{"1111111"};
+                pt_data.calendars.push_back(cal_partial_terminus);
+                b.lines["A"]->calendar_list.push_back(cal_partial_terminus);
+
+                // we now add 2 similar calendars
+                auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
+                week_cal->uri = "week_cal";
+                week_cal->active_periods.push_back({beg, end_of_year});
+                week_cal->week_pattern = std::bitset<7>{"1111100"};
+                pt_data.calendars.push_back(week_cal);
+                b.lines["A"]->calendar_list.push_back(week_cal);
+
+                auto weekend_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
+                weekend_cal->uri = "weekend_cal";
+                weekend_cal->active_periods.push_back({beg, end_of_year});
+                weekend_cal->week_pattern = std::bitset<7>{"0000011"};
+                pt_data.calendars.push_back(weekend_cal);
+
+                auto not_associated_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
+                not_associated_cal->uri = "not_associated_cal";
+                not_associated_cal->active_periods.push_back({beg, end_of_year});
+                not_associated_cal->week_pattern = std::bitset<7>{"0010000"};
+                pt_data.calendars.push_back(not_associated_cal);  // not associated to the line
+
+                // both calendars are associated to the line
+                b.lines["line:A"]->calendar_list.push_back(week_cal);
+                b.lines["line:A"]->calendar_list.push_back(weekend_cal);
+                for (auto r : pt_data.routes) {
+                    r->destination = b.sas.find("stop2")->second;
+                }
+
+                auto* line = b.lines["A"];
+                for (auto r : line->route_list) {
+                    r->destination = b.sas.find("Tstop3")->second;
+                }
+
+                line = b.lines["R"];
+                for (auto r : line->route_list) {
+                    r->destination = b.sas.find("StopR2")->second;
+                }
+
+                // and add a comment on a line
+                pt_data.comments.add(b.lines["line:A"], nt::Comment("walk the line", "information"));
+
+                auto it_sa = b.sas.find("Tstop3");
+                auto it_rt = pt_data.routes_map.find("A:1");
+                it_rt->second->destination = it_sa->second;
+
+                // load metavj calendar association from database (association is tested in
+                // ed/tests/associated_calendar_test.cpp)
+                navitia::type::AssociatedCalendar* associated_calendar_for_week =
+                    new navitia::type::AssociatedCalendar();
+                navitia::type::AssociatedCalendar* associated_calendar_for_week_end =
+                    new navitia::type::AssociatedCalendar();
+                navitia::type::AssociatedCalendar* associated_calendar_for_terminus =
+                    new navitia::type::AssociatedCalendar();
+
+                navitia::type::AssociatedCalendar* associated_calendar_for_line_r =
+                    new navitia::type::AssociatedCalendar();
+
+                associated_calendar_for_week->calendar = week_cal;
+                associated_calendar_for_week_end->calendar = weekend_cal;
+                pt_data.associated_calendars.push_back(associated_calendar_for_week);
+                pt_data.associated_calendars.push_back(associated_calendar_for_week_end);
+                auto* week_mvj = pt_data.meta_vjs.get_mut("week");
+                week_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+                auto* week_bis_mvj = pt_data.meta_vjs.get_mut("week_bis");
+                week_bis_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+                auto* weekend_mvj = pt_data.meta_vjs.get_mut("weekend");
+                weekend_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
+                auto* all_mvj = pt_data.meta_vjs.get_mut("all");
+                all_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
+                all_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
+
+                associated_calendar_for_terminus->calendar = cal_partial_terminus;
+                pt_data.associated_calendars.push_back(associated_calendar_for_terminus);
+                auto* cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj1");
+                cal_partial_terminus_mvj->associated_calendars[cal_partial_terminus->uri] =
+                    associated_calendar_for_terminus;
+                cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj2");
+                cal_partial_terminus_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week;
+
+                associated_calendar_for_line_r->calendar = not_associated_cal;
+                auto* r_vj1_mvj = pt_data.meta_vjs.get_mut("R:vj1");
+                r_vj1_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
+                auto* r_vj2_mvj = pt_data.meta_vjs.get_mut("R:vj2");
+                r_vj2_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
+
+                b.data->complete();
             },
+            true,
             "departure board") {
-        b.data->pt_data->codes.add(b.get<nt::VehicleJourney>("vehicle_journey:R:vj1"), "source", "Code-R-vj1");
-        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR1"), "source", "Code-StopR1");
-        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
-        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
-        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
-        b.data->pt_data->codes.add(b.get<nt::Network>("base_network"), "app_code", "ilevia");
-
-        beg = b.data->meta->production_date.begin();
-        end_of_year = beg + boost::gregorian::years(1);
-
-        auto& pt_data = *(b.data->pt_data);
-        navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
-        vj->stop_time_list[0].set_odt(true);
-
-        vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
-        vj->stop_time_list[0].set_date_time_estimated(true);
-
-        vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
-        vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        vj_week_bis = pt_data.vehicle_journeys_map["vehicle_journey:week_bis"];
-        vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
-        vj_weekend = pt_data.vehicle_journeys_map["vehicle_journey:weekend"];
-        vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
-
-        r_vj1 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj1"];
-        r_vj1->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
-        r_vj2 = pt_data.vehicle_journeys_map["vehicle_journey:R:vj2"];
-        r_vj2->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
-
-        vj_all = pt_data.vehicle_journeys_map["vehicle_journey:all"];
-        vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
-        vj_wednesday = pt_data.vehicle_journeys_map["vehicle_journey:wednesday"];
-        vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
-
-        // Check partial terminus for calendar
-        auto cal_partial_terminus = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        cal_partial_terminus->uri = "cal_partial_terminus";
-        cal_partial_terminus->active_periods.push_back({beg, end_of_year});
-        cal_partial_terminus->week_pattern = std::bitset<7>{"1111111"};
-        pt_data.calendars.push_back(cal_partial_terminus);
-        b.lines["A"]->calendar_list.push_back(cal_partial_terminus);
-
-        // we now add 2 similar calendars
-        auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        week_cal->uri = "week_cal";
-        week_cal->active_periods.push_back({beg, end_of_year});
-        week_cal->week_pattern = std::bitset<7>{"1111100"};
-        pt_data.calendars.push_back(week_cal);
-        b.lines["A"]->calendar_list.push_back(week_cal);
-
-        auto weekend_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        weekend_cal->uri = "weekend_cal";
-        weekend_cal->active_periods.push_back({beg, end_of_year});
-        weekend_cal->week_pattern = std::bitset<7>{"0000011"};
-        pt_data.calendars.push_back(weekend_cal);
-
-        auto not_associated_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
-        not_associated_cal->uri = "not_associated_cal";
-        not_associated_cal->active_periods.push_back({beg, end_of_year});
-        not_associated_cal->week_pattern = std::bitset<7>{"0010000"};
-        pt_data.calendars.push_back(not_associated_cal);  // not associated to the line
-
-        // both calendars are associated to the line
-        b.lines["line:A"]->calendar_list.push_back(week_cal);
-        b.lines["line:A"]->calendar_list.push_back(weekend_cal);
-        for (auto r : pt_data.routes) {
-            r->destination = b.sas.find("stop2")->second;
-        }
-
-        auto* line = b.lines["A"];
-        for (auto r : line->route_list) {
-            r->destination = b.sas.find("Tstop3")->second;
-        }
-
-        line = b.lines["R"];
-        for (auto r : line->route_list) {
-            r->destination = b.sas.find("StopR2")->second;
-        }
-
-        // and add a comment on a line
-        pt_data.comments.add(b.lines["line:A"], nt::Comment("walk the line", "information"));
-
-        auto it_sa = b.sas.find("Tstop3");
-        auto it_rt = pt_data.routes_map.find("A:1");
-        it_rt->second->destination = it_sa->second;
-
-        // load metavj calendar association from database (association is tested in
-        // ed/tests/associated_calendar_test.cpp)
-        navitia::type::AssociatedCalendar* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
-        navitia::type::AssociatedCalendar* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();
-        navitia::type::AssociatedCalendar* associated_calendar_for_terminus = new navitia::type::AssociatedCalendar();
-
-        navitia::type::AssociatedCalendar* associated_calendar_for_line_r = new navitia::type::AssociatedCalendar();
-
-        associated_calendar_for_week->calendar = week_cal;
-        associated_calendar_for_week_end->calendar = weekend_cal;
-        pt_data.associated_calendars.push_back(associated_calendar_for_week);
-        pt_data.associated_calendars.push_back(associated_calendar_for_week_end);
-        auto* week_mvj = pt_data.meta_vjs.get_mut("week");
-        week_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
-        auto* week_bis_mvj = pt_data.meta_vjs.get_mut("week_bis");
-        week_bis_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
-        auto* weekend_mvj = pt_data.meta_vjs.get_mut("weekend");
-        weekend_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
-        auto* all_mvj = pt_data.meta_vjs.get_mut("all");
-        all_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
-        all_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
-
-        associated_calendar_for_terminus->calendar = cal_partial_terminus;
-        pt_data.associated_calendars.push_back(associated_calendar_for_terminus);
-        auto* cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj1");
-        cal_partial_terminus_mvj->associated_calendars[cal_partial_terminus->uri] = associated_calendar_for_terminus;
-        cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj2");
-        cal_partial_terminus_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week;
-
-        associated_calendar_for_line_r->calendar = not_associated_cal;
-        auto* r_vj1_mvj = pt_data.meta_vjs.get_mut("R:vj1");
-        r_vj1_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
-        auto* r_vj2_mvj = pt_data.meta_vjs.get_mut("R:vj2");
-        r_vj2_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
-
-        b.data->build_uri();
-        b.data->complete();
-        b.data->build_raptor();
         b.data->geo_ref->init();
     }
 };

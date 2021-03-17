@@ -49,7 +49,6 @@ using navitia::type::Type_e;
 
 BOOST_AUTO_TEST_CASE(sans_filtre) {
     ed::builder b("201303011T1739", [](ed::builder& b) {
-        b.generate_dummy_basis();
         b.vj("A")("stop1", 8000, 8050)("stop2", 8200, 8250);
         b.vj("B")("stop3", 9000, 9050)("stop4", 9200, 9250);
         b.connection("stop2", "stop3", 10 * 60);
@@ -92,7 +91,6 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
 
 BOOST_AUTO_TEST_CASE(physical_modes) {
     ed::builder b("201303011T1739", [](ed::builder& b) {
-        b.generate_dummy_basis();
         // Physical_mode = Car
         b.vj("A", "11110000", "", true, "", "", "", "physical_mode:Car")("stop1", 8000, 8050)("stop2", 8200, 8250);
         // Physical_mode = Metro
