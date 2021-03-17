@@ -509,10 +509,7 @@ struct routing_api_data {
 
         b.data->complete();
         b.manage_admin();
-        b.finish();
-        b.data->build_uri();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
+        b.make();
 
         // Add SYTRAL codes on stop point
         auto* sp = b.get<nt::StopPoint>("stop_point:stopA");
