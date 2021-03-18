@@ -46,7 +46,6 @@ www.navitia.io
 #include "type/physical_mode.h"
 #include "utils/functions.h"
 
-#include <boost/none.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
 namespace nt = navitia::type;

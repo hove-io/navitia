@@ -29,9 +29,7 @@ www.navitia.io
 */
 
 #include "build_helper.h"
-
 #include "ed/connectors/gtfs_parser.h"
-#include "utils/map_find.h"
 
 #include <boost/range/algorithm/find_if.hpp>
 #include <utility>
