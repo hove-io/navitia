@@ -145,8 +145,12 @@ class Places(ResourceUri):
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         self._register_interpreted_parameters(args)
-        if len(args['q']) == 0:
+        size_q = len(args['q'])
+        if size_q == 0:
             abort(400, message="Search word absent")
+
+        if size_q > 1024:
+            abort(413, message="Number of characters allowed for the search is 1024")
 
         if args['disable_geojson']:
             g.disable_geojson = True
