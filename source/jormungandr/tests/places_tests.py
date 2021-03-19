@@ -388,6 +388,22 @@ class TestPlaces(AbstractTestFixture):
             assert place['embedded_type'] == "stop_area"
             assert len(place['stop_area'].get('lines')) > 0
 
+    def test_places_with_empty_q(self):
+        response, status = self.query_region("places?q=", check=False)
+        assert status == 400
+        assert response["message"] == u'Search word absent'
+
+    def test_places_with_1025_char(self):
+        q = "K" * 1025
+        response, status = self.query_region("places?q={q}".format(q=q), check=False)
+        assert status == 413
+        assert response["message"] == u'Number of characters allowed for the search is 1024'
+
+    def test_places_with_1024_char(self):
+        q = "K" * 1024
+        response, status = self.query_region("places?q={q}".format(q=q), check=False)
+        assert status == 200
+
     def test_stop_point_attributes_with_different_depth(self):
         """ verify that stop_area contains lines in all apis with depth>2 """
         # API places without depth
