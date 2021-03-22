@@ -169,7 +169,7 @@ class Places(ResourceUri):
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
-
+        args["request_id"] = args.get('request_id', flask.request.id)
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
 
