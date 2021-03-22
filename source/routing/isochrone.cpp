@@ -210,7 +210,7 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto best_lbl = raptor.best_labels.dt_pt(sp_idx);
+        const auto best_lbl = raptor.best_labels[sp_idx].dt_pt;
         if (in_bound(best_lbl, bound, clockwise)) {
             uint duration_left = abs(int(best_lbl) - int(bound));
             if (duration_left * speed < MIN_RADIUS) {

@@ -476,7 +476,8 @@ struct RaptorSolutionReader {
                 continue;
             }
             const SpIdx end_sp_idx = SpIdx(*end_st.stop_point);
-            const DateTime end_limit = raptor.labels[count - 1].dt_transfer(end_sp_idx);
+            const auto& prev_label = raptor.labels[count - 1][end_sp_idx];
+            const DateTime end_limit = prev_label.dt_transfer;
             if (v.comp(end_limit, cur_dt)) {
                 continue;
             }
@@ -505,7 +506,7 @@ struct RaptorSolutionReader {
                                              : raptor.data.dataRaptor->connections.backward_connections;
 
         for (const auto& conn : cnx_list[sp_idx]) {
-            const DateTime transfer_limit = raptor.labels[count].dt_pt(conn.sp_idx);
+            const DateTime transfer_limit = raptor.labels[count][conn.sp_idx].dt_pt;
             const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
             if (v.comp(transfer_limit, transfer_end)) {
                 continue;
@@ -536,7 +537,7 @@ struct RaptorSolutionReader {
                       const unsigned nb_stay_in,
                       Transfers& transfers) {
         const unsigned transfer_t = v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
-        const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
+        const DateTime begin_limit = raptor.labels[count][begin_sp_idx].dt_pt;
         for (const auto& jpp : raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
@@ -570,7 +571,7 @@ struct RaptorSolutionReader {
     }
 
     void begin_pt(const unsigned count, const SpIdx begin_sp_idx, const DateTime begin_dt) {
-        const DateTime begin_limit = raptor.labels[count].dt_pt(begin_sp_idx);
+        const DateTime begin_limit = raptor.labels[count][begin_sp_idx].dt_pt;
         for (const auto& jpp : raptor.jpps_from_sp[begin_sp_idx]) {
             // trying to begin
             const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
@@ -602,12 +603,15 @@ void read_solutions(const RAPTOR& raptor,
                                                 accessibilite_params, transfer_penalty, end_point);
     const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_point.sp_idx);
     for (unsigned count = 1; count <= raptor.count; ++count) {
-        auto& working_labels = raptor.labels[count];
+        const auto& working_labels = raptor.labels[count];
+        const auto& first_endpoint_label = raptor.labels[0][end_point.sp_idx];
+
         for (const auto& a : v.clockwise() ? deps : arrs) {
             SpIdx sp_idx = a.first;
+            const auto& working_label = working_labels[sp_idx];
             navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
 
-            if (!working_labels.pt_is_initialized(a.first)) {
+            if (!is_dt_initialized(working_label.dt_pt)) {
                 continue;
             }
             if (!raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) {
@@ -615,10 +619,10 @@ void read_solutions(const RAPTOR& raptor,
             }
             reader.nb_sol_added = 0;
             // we check that it's worth to explore this possible journey
-            auto transfer_duration = working_labels.walking_duration_pt(a.first) - end_point_street_network_duration;
-            auto j = make_bound_journey(
-                working_labels.dt_pt(a.first), a.second, raptor.labels[0].dt_transfer(end_point.sp_idx),
-                end_point_street_network_duration, count, navitia::seconds(transfer_duration), v.clockwise());
+            auto transfer_duration = working_label.walking_duration_pt - end_point_street_network_duration;
+            auto j = make_bound_journey(working_label.dt_pt, a.second, first_endpoint_label.dt_transfer,
+                                        end_point_street_network_duration, count, navitia::seconds(transfer_duration),
+                                        v.clockwise());
             LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
                                                                   << std::endl
                                                                   << j);
@@ -630,7 +634,7 @@ void read_solutions(const RAPTOR& raptor,
             }
             try {
                 LOG4CPLUS_DEBUG(raptor.raptor_logger, "try to build journey ");
-                reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
+                reader.begin_pt(count, a.first, working_label.dt_pt);
             } catch (stop_search&) {
             }
         }
