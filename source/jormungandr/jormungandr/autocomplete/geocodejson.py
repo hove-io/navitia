@@ -300,7 +300,6 @@ class GeocodeJson(AbstractAutocomplete):
 
         params.extend([("q", request["q"]), ("limit", request["count"])])
         if request.get("type[]"):
-            types = []
             map_type = {
                 "administrative_region": [self.TYPE_CITY],
                 "address": [self.TYPE_STREET, self.TYPE_HOUSE],
@@ -321,7 +320,7 @@ class GeocodeJson(AbstractAutocomplete):
         if timeout:
             # bragi timeout is in ms
             params.append(("timeout", int(timeout * 1000)))
-
+        params.append(("request_id", request["request_id"]))
         return params
 
     def get(self, request, instances):
@@ -353,7 +352,7 @@ class GeocodeJson(AbstractAutocomplete):
         """
         return param.split(";")
 
-    def get_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
 
         params = self.basic_params(instances)
         lon, lat = get_lon_lat_from_id(uri)
@@ -365,6 +364,7 @@ class GeocodeJson(AbstractAutocomplete):
             url = self.make_url('features', uri)
 
         params.append(("timeout", int(self.fast_timeout * 1000)))
+        params.append(("request_id", request_id))
 
         raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaller(raw_response, uri)

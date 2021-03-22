@@ -506,8 +506,11 @@ def bragi_call_test():
     with app.app_context():
         # we mock the http call to return the hard coded mock_response
         with requests_mock.Mocker() as m:
-            m.get('http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000', json=bragi_response)
-            raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instances=[])
+            m.get(
+                'http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000&request_id=123',
+                json=bragi_response,
+            )
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'request_id': '123'}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
             bragi_house_jaures_response_check(places[0])
@@ -517,8 +520,13 @@ def bragi_call_test():
             assert m.called
 
         with requests_mock.Mocker() as m:
-            m.post('http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000', json=bragi_response)
-            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instances=[])
+            m.post(
+                'http://bob.com/autocomplete?limit=10&q=rue+bobette&timeout=2000&request_id=123',
+                json=bragi_response,
+            )
+            raw_response = bragi.get(
+                {'q': 'rue bobette', 'count': 10, "request_id": "123", 'shape': geojson()}, instances=[]
+            )
             places = raw_response.get('places')
             assert len(places) == 4
             bragi_house_jaures_response_check(places[0])
@@ -537,10 +545,10 @@ def bragi_make_params_with_instance_test():
     instance.poi_dataset = None
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {"q": "aa", "count": 20}
+    request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('timeout', 1000)]
+    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('timeout', 1000), ("request_id", "1234")]
     params.sort()
     rsp.sort()
     assert rsp == params
@@ -558,10 +566,17 @@ def bragi_make_params_with_multiple_instances_test():
     instance2.poi_dataset = None
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {"q": "aa", "count": 20}
+    request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[instance1, instance2], timeout=1)
-    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('pt_dataset[]', 'bob'), ('timeout', 1000)]
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('pt_dataset[]', 'bib'),
+        ('pt_dataset[]', 'bob'),
+        ('timeout', 1000),
+        ("request_id", "1234"),
+    ]
 
     params.sort()
     rsp.sort()
@@ -574,10 +589,10 @@ def bragi_make_params_without_instance_test():
     """
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {"q": "aa", "count": 20}
+    request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
-    rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100)]
+    rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100), ("request_id", "1234")]
     params.sort()
     rsp.sort()
     assert rsp == params
@@ -592,10 +607,17 @@ def bragi_make_params_with_instance_and_poi_test():
     instance.poi_dataset = 'priv.bob'
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {"q": "aa", "count": 20}
+    request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bob'), ('poi_dataset[]', 'priv.bob'), ('timeout', 1000)]
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('pt_dataset[]', 'bob'),
+        ('poi_dataset[]', 'priv.bob'),
+        ('timeout', 1000),
+        ("request_id", "1234"),
+    ]
     params.sort()
     rsp.sort()
     assert rsp == params

@@ -44,7 +44,7 @@ def test_geocodejson_check_response(mock):
         gj = GeocodeJson(host=url)
 
         with pytest.raises(GeocodeJsonError) as exc:
-            gj.get_by_uri('my_method')
+            gj.get_by_uri('my_method', request_id="123")
 
         assert "42" in str(exc)
         assert "this is a response" in str(exc)
