@@ -29,6 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import abort
 from flask.globals import request
+import flask
 from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, timestamp_to_datetime
 
 import navitiacommon.type_pb2 as type_pb2
@@ -141,11 +142,12 @@ class Scenario(object):
         return resp
 
     def places(self, request, instance):
+        request["request_id"] = request.get('request_id', flask.request.id)
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instances=[instance])
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        request_id = request.get('request_id', None)
+        request_id = request.get('request_id', flask.request.id)
         try:
             return autocomplete.get_by_uri(
                 uri=request["uri"],
