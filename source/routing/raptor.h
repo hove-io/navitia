@@ -120,6 +120,10 @@ struct RAPTOR {
     // pt_data object getters by typed idx
     const type::StopPoint* get_sp(SpIdx idx) const { return data.pt_data->stop_points[idx.val]; }
 
+    inline const type::RoutePoint& get_route_point(RoutePointIdx idx) const {
+        return data.pt_data->route_points[idx.val];
+    }
+
     /// Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path> compute(const type::StopArea* departure,
                               const type::StopArea* destination,

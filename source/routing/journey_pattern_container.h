@@ -58,6 +58,7 @@ const type::StopTime& get_corresponding_stop_time(const type::VehicleJourney& vj
 struct JourneyPatternPoint {
     JpIdx jp_idx;
     SpIdx sp_idx;
+    RoutePointIdx rp_idx;
     RankJourneyPatternPoint order;
     bool operator==(const JourneyPatternPoint& other) const { return sp_idx == other.sp_idx && order == other.order; }
 };
@@ -199,11 +200,11 @@ private:
     IdxMap<type::PhysicalMode, std::vector<JppIdx>> jpps_from_phy_mode;
 
     template <typename VJ>
-    void add_vj(const VJ&);
+    void add_vj(const VJ&, const type::PT_Data& pt_data);
     template <typename VJ>
     static JpKey make_key(const VJ&);
-    JpIdx make_jp(const JpKey&);
-    JppIdx make_jpp(const JpIdx&, const SpIdx&, const RankJourneyPatternPoint& order);
+    JpIdx make_jp(const JpKey&, const type::PT_Data& pt_data);
+    JppIdx make_jpp(const JpIdx&, const SpIdx&, const RoutePointIdx&, const RankJourneyPatternPoint& order);
     JourneyPattern& get_mut(const JpIdx&);
 };
 

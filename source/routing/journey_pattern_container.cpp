@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "tests/utils_test.h"
 #include "type/pt_data.h"
+#include "type/route_point.h"
 
 #include <type_traits>
 
@@ -74,10 +75,10 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     jpps_from_phy_mode.assign(pt_data.physical_modes);
     for (const auto* route : pt_data.routes) {
         for (const auto& vj : route->discrete_vehicle_journey_list) {
-            add_vj(*vj);
+            add_vj(*vj, pt_data);
         }
         for (const auto& vj : route->frequency_vehicle_journey_list) {
-            add_vj(*vj);
+            add_vj(*vj, pt_data);
         }
     }
 }
@@ -192,7 +193,7 @@ static bool overtake(const VJ& vj, const std::vector<const VJ*>& vjs) {
 }
 
 template <typename VJ>
-void JourneyPatternContainer::add_vj(const VJ& vj) {
+void JourneyPatternContainer::add_vj(const VJ& vj, const nt::PT_Data& pt_data) {
     // Get the existing jps according to the key.
     const auto key = make_key(vj);
     auto& jps = map[key];
@@ -211,7 +212,7 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
     }
 
     // We did not find a jp, creating a new one.
-    const auto jp_idx = make_jp(key);
+    const auto jp_idx = make_jp(key, pt_data);
     jps.push_back(jp_idx);
     jps_from_route[key.route_idx].push_back(jp_idx);
     jps_from_phy_mode[key.phy_mode_idx].push_back(jp_idx);
@@ -219,14 +220,19 @@ void JourneyPatternContainer::add_vj(const VJ& vj) {
     jp_from_vj[VjIdx(vj)] = jp_idx;
 }
 
-JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
+JpIdx JourneyPatternContainer::make_jp(const JpKey& key, const nt::PT_Data& pt_data) {
     const auto jp_idx = JpIdx(jps.size());
     JourneyPattern jp;
     jp.route_idx = key.route_idx;
     jp.phy_mode_idx = key.phy_mode_idx;
     RankJourneyPatternPoint order(0);
     for (const auto& jpp_key : key.jpp_keys) {
-        jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
+        const SpIdx& sp_idx = jpp_key.sp_idx;
+        const type::StopPoint* sp = pt_data.stop_points[sp_idx.val];
+        type::Route* route = pt_data.routes[jp.route_idx.val];
+        const auto& rp = sp->route_point_list.at(route);
+
+        jp.jpps.push_back(make_jpp(jp_idx, sp_idx, RoutePointIdx{rp}, order++));
     }
     jpps_from_phy_mode[jp.phy_mode_idx].insert(jpps_from_phy_mode[jp.phy_mode_idx].end(), jp.jpps.begin(),
                                                jp.jpps.end());
@@ -236,9 +242,10 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
 
 JppIdx JourneyPatternContainer::make_jpp(const JpIdx& jp_idx,
                                          const SpIdx& sp_idx,
+                                         const RoutePointIdx& rp_idx,
                                          const RankJourneyPatternPoint& order) {
     const auto idx = JppIdx(jpps.size());
-    jpps.push_back({jp_idx, sp_idx, order});
+    jpps.push_back({jp_idx, sp_idx, rp_idx, order});
     return idx;
 }
 

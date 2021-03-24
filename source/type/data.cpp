@@ -47,6 +47,7 @@ www.navitia.io
 #include "type/meta_vehicle_journey.h"
 #include "type/physical_mode.h"
 #include "type/commercial_mode.h"
+#include "type/route_point.h"
 #include "utils/functions.h"
 #include "utils/serialization_atomic.h"
 #include "utils/serialization_unique_ptr.h"
@@ -448,6 +449,16 @@ void Data::build_relations() {
         build_companies(vj);
         if (!navitia::contains(vj->route->line->physical_mode_list, vj->physical_mode)) {
             vj->route->line->physical_mode_list.push_back(vj->physical_mode);
+        }
+    }
+
+    auto& route_points = pt_data->route_points;
+    for (auto* sp : pt_data->stop_points) {
+        for (auto* route : sp->route_list) {
+            // Add new Route Point to PT_data
+            route_points.push_back({idx_t(route_points.size()), sp, route});
+            // set back-reference with the stop_point
+            sp->route_point_list.emplace(route, route_points.back());
         }
     }
 }

@@ -1,4 +1,4 @@
-/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -28,45 +28,40 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#pragma once
+#include "type/route_point.h"
+#include "type/stop_point.h"
 
-#include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
-#include "type/fwd_type.h"
-
-#include <boost/container/flat_set.hpp>
-#include <boost/container/flat_map.hpp>
-
-#include <vector>
-#include <set>
+#include <boost/range/adaptor/indirected.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm_ext/insert.hpp>
+#include <boost/range/numeric.hpp>
+#include <boost/range/adaptor/type_erased.hpp>
 
 namespace navitia {
 namespace type {
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
+namespace ba = boost::adaptors;
 
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-    boost::container::flat_set<Route*> route_list;
-    boost::container::flat_map<Route*, std::reference_wrapper<RoutePoint>> route_point_list;
+RoutePointRefs route_points_from(const StopPointRange& sps) {
+    auto to_route_point_list = [](const StopPoint& sp) { return ba::values(sp.route_point_list); };
+    auto to_route_point_list_size = [](const StopPoint& sp) { return sp.route_point_list.size(); };
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
+    size_t rp_size = boost::accumulate(sps | ba::transformed(to_route_point_list_size), 0);
 
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
+    RoutePointRefs rps;
+    rps.reserve(rp_size);
 
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
-};
+    for (const auto& e : sps | ba::transformed(to_route_point_list)) {
+        boost::insert(rps, rps.end(), e);
+    }
+
+    return rps;
+}
+
+RoutePointRefs route_points_from(const std::vector<StopPoint*>& sps) {
+    return route_points_from(sps | ba::indirected);
+}
 
 }  // namespace type
 }  // namespace navitia

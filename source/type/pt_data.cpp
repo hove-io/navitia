@@ -44,6 +44,7 @@ www.navitia.io
 #include "type/multi_polygon_map.h"
 #include "type/commercial_mode.h"
 #include "type/physical_mode.h"
+#include "type/route_point.h"
 #include "utils/functions.h"
 
 #include <boost/range/algorithm/find_if.hpp>

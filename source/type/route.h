@@ -41,9 +41,6 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-struct StopPoint;
-struct StopArea;
-
 struct Route : public Header, Nameable, HasMessages {
     const static Type_e type = Type_e::Route;
     Line* line = nullptr;

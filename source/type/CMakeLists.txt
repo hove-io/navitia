@@ -100,11 +100,36 @@ target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
 add_library(pb_converter pb_converter.cpp)
 target_link_libraries(pb_converter thermometer vptranslator pthread pb_lib)
 
-add_library(types message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
-    validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
-    contributor.cpp dataset.cpp company.cpp commercial_mode.cpp physical_mode.cpp line.cpp route.cpp
-    vehicle_journey.cpp meta_vehicle_journey.cpp stop_time.cpp type_interfaces.cpp comment_container.cpp
-    odt_properties.cpp comment.cpp static_data.cpp entry_point.cpp)
+add_library(types
+    calendar.cpp
+    comment.cpp
+    comment_container.cpp
+    commercial_mode.cpp
+    company.cpp
+    connection.cpp
+    contributor.cpp
+    dataset.cpp
+    datetime.cpp
+    entry_point.cpp
+    geographical_coord.cpp
+    line.cpp
+    message.cpp
+    meta_vehicle_journey.cpp
+    network.cpp
+    odt_properties.cpp
+    physical_mode.cpp
+    route.cpp
+    route_point.cpp
+    static_data.cpp
+    stop_area.cpp
+    stop_point.cpp
+    stop_time.cpp
+    timezone_manager.cpp
+    type_interfaces.cpp
+    type_utils.cpp
+    validity_pattern.cpp
+    vehicle_journey.cpp
+)
 target_link_libraries(types ptreferential utils pb_lib protobuf)
 add_dependencies(types protobuf_files)
 

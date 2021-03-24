@@ -44,12 +44,14 @@ using JppIdx = Idx<JourneyPatternPoint>;
 using JpIdx = Idx<JourneyPattern>;
 using SpIdx = Idx<type::StopPoint>;
 using RouteIdx = Idx<type::Route>;
+using RoutePointIdx = Idx<type::RoutePoint>;
 using LineIdx = Idx<type::Line>;
 using VjIdx = Idx<type::VehicleJourney>;
 using MvjIdx = Idx<type::MetaVehicleJourney>;
 using PhyModeIdx = Idx<type::PhysicalMode>;
 
 using map_stop_point_duration = boost::container::flat_map<SpIdx, navitia::time_duration>;
+using map_route_point_duration = boost::container::flat_map<RoutePointIdx, navitia::time_duration>;
 
 inline bool is_dt_initialized(const DateTime dt) {
     return dt != DateTimeUtils::inf && dt != DateTimeUtils::min;

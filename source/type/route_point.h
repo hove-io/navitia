@@ -1,4 +1,4 @@
-/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -30,43 +30,26 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
 #include "type/fwd_type.h"
+#include "utils/idx_map.h"
 
-#include <boost/container/flat_set.hpp>
-#include <boost/container/flat_map.hpp>
+#include <boost/range/any_range.hpp>
 
-#include <vector>
-#include <set>
+#include <utility>
 
 namespace navitia {
 namespace type {
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
-
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-    boost::container::flat_set<Route*> route_list;
-    boost::container::flat_map<Route*, std::reference_wrapper<RoutePoint>> route_point_list;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
+struct RoutePoint {
+    idx_t idx;
+    StopPoint* stop_point;
+    Route* route;
 };
+
+using RoutePointRefs = std::vector<std::reference_wrapper<type::RoutePoint>>;
+using StopPointRange = boost::any_range<StopPoint, boost::forward_traversal_tag, StopPoint&, std::ptrdiff_t>;
+
+RoutePointRefs route_points_from(const StopPointRange& sps);
 
 }  // namespace type
 }  // namespace navitia

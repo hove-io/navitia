@@ -33,6 +33,7 @@ www.navitia.io
 #include "georef/fwd_georef.h"
 #include "type/message.h"
 #include "type/request.pb.h"
+#include "type/route_point.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 #include "utils/flat_enum_map.h"
@@ -72,6 +73,8 @@ public:
 #undef COLLECTION_AND_MAP
 
     std::vector<StopPointConnection*> stop_point_connections;
+    std::vector<RoutePoint> route_points;
+
     // meta vj factory
     navitia::ObjFactory<MetaVehicleJourney> meta_vjs;
 

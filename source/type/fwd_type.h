@@ -73,6 +73,7 @@ struct MetaVehicleJourney;
 struct Network;
 struct PhysicalMode;
 struct Route;
+struct RoutePoint;
 struct StopArea;
 struct StopPoint;
 struct StopPointConnection;
