@@ -467,13 +467,14 @@ Note: email addresses are validated via api not only on the format but on it's e
 
 ###### POST Parameters
 
-name         | description                                                                          | required | default                            |
--------------|--------------------------------------------------------------------------------------|----------|------------------------------------|
-email        | adress email of the user                                                             | yep      |                                    |
-login        | login of the user                                                                    | yep      |                                    |
-type         | type of the user between: [with_free_instances, without_free_instances, super_user]  | nope     | with_free_instances                |
-end_point_id | the id of the endpoint for this user (in most case the default value is good enough  | nope     | the default end_point (navitia.io) |
-shape        | the shape (geojson) to be used for autocomplete for this user                        | nope     | null                               |
+name            | description                                                                          | required | default                            |
+----------------|--------------------------------------------------------------------------------------|----------|------------------------------------|
+email           | adress email of the user                                                             | yep      |                                    |
+login           | login of the user                                                                    | yep      |                                    |
+type            | type of the user between: [with_free_instances, without_free_instances, super_user]  | nope     | with_free_instances                |
+end_point_id    | the id of the endpoint for this user (in most case the default value is good enough  | nope     | the default end_point (navitia.io) |
+shape           | the shape (geojson) to be used for autocomplete for this user                        | nope     | null                               |
+billing_plan_id | the id of the billing_plan for this user                                             | nope     | Will use the default billing plan  |
 
 
     POST /v0/users/?email=alex@example.com&login=alex
