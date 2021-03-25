@@ -34,3 +34,4 @@ jsonschema==2.6.0
 python-dateutil==2.5.3
 typing==3.7.4
 coloredlogs==10.0
+pydns==2.3.6
