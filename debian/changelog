@@ -1,3 +1,11 @@
+navitia2 (10.6.0) unstable; urgency=low
+
+  * [Jormungandr] Add "request_id" parameter to the Bragi call  <https://github.com/CanalTP/navitia/pull/3395>
+  * [Jormungandr] Limit the "q" parameter in the places API  <https://github.com/CanalTP/navitia/pull/3390>
+  * [doc] Precision on sandbox  <https://github.com/CanalTP/navitia/pull/3389>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 26 Mar 2021 10:03:27 +0100
+
 navitia2 (10.5.0) unstable; urgency=low
 
   * [Jormungandr] Feed attribute occupancy in stop_schedules.date_time from /vehicle_occupancies   <https://github.com/CanalTP/navitia/pull/3378>
