@@ -33,6 +33,7 @@ import json
 import pytest
 import mock
 from navitiacommon import models
+from navitiacommon.constants import DEFAULT_SCOPE_SHAPE
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 from six.moves.urllib.parse import quote
@@ -169,11 +170,10 @@ def test_get_users_empty():
 
 
 def assert_default_scop_shape(response):
-    default_scope_shape = ['admin', 'street', 'addr', 'poi']
     assert "scope_shape" in response
-    assert len(response['scope_shape']) == len(default_scope_shape)
+    assert len(response['scope_shape']) == len(DEFAULT_SCOPE_SHAPE)
     for ss in response['scope_shape']:
-        assert ss in default_scope_shape
+        assert ss in DEFAULT_SCOPE_SHAPE
 
 
 def test_add_user_without_shape(mock_rabbit):
