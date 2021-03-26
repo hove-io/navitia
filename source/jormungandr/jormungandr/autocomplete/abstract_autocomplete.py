@@ -54,7 +54,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def get_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
         """
         look for an object with its uri
 

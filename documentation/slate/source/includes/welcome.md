@@ -30,6 +30,11 @@ Technically, Navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API th
 Navitia is instanciated and exposed publicly through [api.navitia.io](http://api.navitia.io).<br>Developments on Navitia are lead by Kisio Digital (previously CanalTP).<br>Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 
+### About "sandbox" coverage
+<aside class="notice">
+Every example is based on fake data. Sandbox data is made up of few fake metro lines from a single network on the area of Paris only. If you want to play with real data, use your token and explore the world !
+</aside>
+
 <aside class="notice">
 A fake token is used in examples below: be aware that this token is really limited ("sandbox" coverage only).</br>
 You have to use yours to get real services on real data (your token has no access to "sandbox" coverage).
