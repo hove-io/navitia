@@ -137,9 +137,11 @@ class User(db.Model):  # type: ignore
     # because we don't want postgis dependency for the tyr database
     shape = db.Column(db.Text, nullable=True)
     default_coord = db.Column(db.Text, nullable=True)
-    scope_shape = db.Enum(*ENUM_SCOPE_SHAPE, name='scope_shape')
-    defult_scope_shape = "{" + ", ".join(DEFAULT_SCOPE_SHAPE) + "}"
-    scope_shape = db.Column(ArrayOfEnum(scope_shape), nullable=False, server_default=defult_scope_shape)
+    scope_shape = db.Column(
+        ArrayOfEnum(db.Enum(*ENUM_SCOPE_SHAPE, name='scope_shape')),
+        nullable=False,
+        server_default="{" + ", ".join(DEFAULT_SCOPE_SHAPE) + "}",
+    )
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
