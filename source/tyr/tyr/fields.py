@@ -234,6 +234,7 @@ user_fields = {
     'has_shape': HasShape,
     'shape': Shape,
     'default_coord': fields.Raw,
+    'scope_shape': fields.List(fields.String),
 }
 
 user_fields_full = deepcopy(user_fields)
