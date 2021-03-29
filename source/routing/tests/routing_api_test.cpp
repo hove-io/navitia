@@ -1663,36 +1663,39 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     size_t CC = 2;
     size_t DD = 3;
 
-    ed::builder b = {"20120614"};
+    ed::builder b = {"20120614", [&](ed::builder& b) {
+                         boost::add_vertex(ng::Vertex(A), b.data->geo_ref->graph);
+                         boost::add_vertex(ng::Vertex(B), b.data->geo_ref->graph);
+                         boost::add_vertex(ng::Vertex(C), b.data->geo_ref->graph);
+                         boost::add_vertex(ng::Vertex(D), b.data->geo_ref->graph);
+                         b.data->geo_ref->init();
 
-    boost::add_vertex(ng::Vertex(A), b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(B), b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(C), b.data->geo_ref->graph);
-    boost::add_vertex(ng::Vertex(D), b.data->geo_ref->graph);
-    b.data->geo_ref->init();
+                         size_t way_idx = 0;
+                         for (const auto& name : {"ab", "bc", "ac", "cd"}) {
+                             ng::Way* way = new ng::Way();
+                             way->name = "rue " + std::string(name);
+                             way->idx = way_idx++;
+                             way->way_type = "rue";
+                             b.data->geo_ref->ways.push_back(way);
+                         }
 
-    size_t way_idx = 0;
-    for (const auto& name : {"ab", "bc", "ac", "cd"}) {
-        ng::Way* way = new ng::Way();
-        way->name = "rue " + std::string(name);
-        way->idx = way_idx++;
-        way->way_type = "rue";
-        b.data->geo_ref->ways.push_back(way);
-    }
+                         size_t e_idx(0);
+                         // we add each edge as a one way street
+                         boost::add_edge(BB, AA, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
+                         // B->C is very cheap but will not be used
+                         boost::add_edge(BB, CC, ng::Edge(e_idx++, navitia::seconds(1)), b.data->geo_ref->graph);
+                         boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
+                         boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
-    size_t e_idx(0);
-    // we add each edge as a one way street
-    boost::add_edge(BB, AA, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
-    // B->C is very cheap but will not be used
-    boost::add_edge(BB, CC, ng::Edge(e_idx++, navitia::seconds(1)), b.data->geo_ref->graph);
-    boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
-    boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
+                         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
+                         b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
+                         b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
+                         b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
 
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
-    b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
-    b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
-    b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
+                         b.data->build_proximity_list();
+                     }};
 
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), 7_days);
     // start from A
     auto start = A;
     start.set_lat(A.lat() - 0.000000001);
@@ -1704,13 +1707,6 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     std::string destination_uri = str(boost::format("coord:%1%:%2%") % D.lon() % D.lat());
     navitia::type::EntryPoint destination{navitia::type::Type_e::Coord, destination_uri};
     destination.streetnetwork_params.max_duration = bt::pos_infin;
-
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
-    b.data->build_proximity_list();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), 7_days);
 
     // first we want to check that the projection is done on A->B (the whole point of this test)
     auto starting_edge = ng::ProjectionData(start, *b.data->geo_ref);

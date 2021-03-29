@@ -118,23 +118,26 @@ public:
     ed::builder b;
     u_int64_t end_date;
 
-    Params() : b("20120614"), end_date("20130614T000000"_pts) {
-        b.vj_with_network("network:R", "line:A", "11111111", "", true, "")(
-            "stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
-                                                                       8 * 3600 + 21 * 60);
-        b.vj_with_network("network:R", "line:S", "11111111", "", true, "")(
-            "stop_area:stop5", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop6", 8 * 3600 + 20 * 60,
-                                                                       8 * 3600 + 21 * 60);
-        b.vj_with_network("network:K", "line:B", "11111111", "", true, "")(
-            "stop_area:stop3", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop4", 8 * 3600 + 20 * 60,
-                                                                       8 * 3600 + 21 * 60);
-        b.vj_with_network("network:M", "line:M", "11111111", "", true, "")(
-            "stop_area:stop22", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop22", 8 * 3600 + 20 * 60,
-                                                                        8 * 3600 + 21 * 60);
-        b.vj_with_network("network:Test", "line:test", "11111111", "", true, "")(
-            "stop_area:stop22", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop22", 8 * 3600 + 20 * 60,
-                                                                        8 * 3600 + 21 * 60);
-        b.make();
+    Params()
+        : b("20120614",
+            [](ed::builder& b) {
+                b.vj_with_network("network:R", "line:A", "11111111", "", true, "")(
+                    "stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
+                                                                               8 * 3600 + 21 * 60);
+                b.vj_with_network("network:R", "line:S", "11111111", "", true, "")(
+                    "stop_area:stop5", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop6", 8 * 3600 + 20 * 60,
+                                                                               8 * 3600 + 21 * 60);
+                b.vj_with_network("network:K", "line:B", "11111111", "", true, "")(
+                    "stop_area:stop3", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop4", 8 * 3600 + 20 * 60,
+                                                                               8 * 3600 + 21 * 60);
+                b.vj_with_network("network:M", "line:M", "11111111", "", true, "")(
+                    "stop_area:stop22", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop22", 8 * 3600 + 20 * 60,
+                                                                                8 * 3600 + 21 * 60);
+                b.vj_with_network("network:Test", "line:test", "11111111", "", true, "")(
+                    "stop_area:stop22", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop22", 8 * 3600 + 20 * 60,
+                                                                                8 * 3600 + 21 * 60);
+            }),
+          end_date("20130614T000000"_pts) {
         for (navitia::type::Line* line : b.data->pt_data->lines) {
             line->network->line_list.push_back(line);
         }
@@ -383,13 +386,13 @@ struct DisruptedNetwork {
     const boost::posix_time::ptime since = "20180102T060000"_dt;
     const boost::posix_time::ptime until = "20180103T060000"_dt;
 
-    DisruptedNetwork() : b("20180101") {
-        b.vj_with_network("network_1", "line_1").route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t);
-        b.vj_with_network("network_2", "line_2").route("route_2")("sp2_1", "08:10"_t)("sp2_2", "08:20"_t);
-        b.vj_with_network("network_3", "line_3")
-            .route("route_3")("sp3_1", "08:10"_t)("sp3_2", "08:20"_t)("sp3_3", "08:30"_t)("sp3_4", "08:40"_t);
-        b.make();
-
+    DisruptedNetwork()
+        : b("20180101", [](ed::builder& b) {
+              b.vj_with_network("network_1", "line_1").route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t);
+              b.vj_with_network("network_2", "line_2").route("route_2")("sp2_1", "08:10"_t)("sp2_2", "08:20"_t);
+              b.vj_with_network("network_3", "line_3")
+                  .route("route_3")("sp3_1", "08:10"_t)("sp3_2", "08:20"_t)("sp3_3", "08:30"_t)("sp3_4", "08:40"_t);
+          }) {
         auto period = time_period(since, until);
 
         // Let's create a disruption for all the different pt_objects related to

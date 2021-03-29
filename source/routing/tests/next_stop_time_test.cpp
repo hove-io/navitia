@@ -62,18 +62,16 @@ static JppIdx get_first_jpp_idx(const ed::builder& b, const std::string& sa) {
  */
 
 BOOST_AUTO_TEST_CASE(dropoff_pickup) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     DateTime sp2_departure = 8150;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    // no pickup nor drop off allowed
-    b.vj("A")(spa1, sp1_departure, sp1_departure, 0, false, false)(spa2, sp2_arrival, sp2_arrival, 0, false, false);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        // no pickup nor drop off allowed
+        b.vj("A")(spa1, sp1_departure, sp1_departure, 0, false, false)(spa2, sp2_arrival, sp2_arrival, 0, false, false);
+    });
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -220,7 +218,6 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
  *  À chaque demande a l'heure + 1, on veut le trajet le lendemain.target
  */
 BOOST_AUTO_TEST_CASE(base) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     DateTime sp2_departure = 8150;
@@ -228,11 +225,11 @@ BOOST_AUTO_TEST_CASE(base) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
-    b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -400,16 +397,13 @@ BOOST_AUTO_TEST_CASE(base) {
  * Même cas que pour le test précédent.
  */
 BOOST_AUTO_TEST_CASE(passe_minuit_1) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 86300;
     DateTime sp2_arrival = 86500;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) { b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival); });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -528,7 +522,6 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
  */
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 86300;
     DateTime sp2_departure = 86500;
@@ -536,11 +529,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
-    b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A")(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -727,16 +720,15 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
  * On test le deuxième jour, doit renvoyer les horaires le deuxieme jour
  */
 BOOST_AUTO_TEST_CASE(base_vp) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -820,19 +812,18 @@ BOOST_AUTO_TEST_CASE(base_vp) {
  * On teste le deuxième jour, doit renvoyer les horaires le deuxieme jour
  */
 BOOST_AUTO_TEST_CASE(vj2) {
-    ed::builder b("20120614");
     DateTime sp1_departure1 = 8000;
     DateTime sp2_arrival1 = 8100;
     DateTime sp1_departure2 = 9000;
     DateTime sp2_arrival2 = 9100;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A")(spa1, sp1_departure1)(spa2, sp2_arrival1);
-    b.vj("A")(spa1, sp1_departure2)(spa2, sp2_arrival2);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A")(spa1, sp1_departure1)(spa2, sp2_arrival1);
+        b.vj("A")(spa1, sp1_departure2)(spa2, sp2_arrival2);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -961,19 +952,18 @@ BOOST_AUTO_TEST_CASE(vj2) {
  */
 
 BOOST_AUTO_TEST_CASE(vp2) {
-    ed::builder b("20120614");
     DateTime sp1_departure1 = 8000;
     DateTime sp2_arrival1 = 8100;
     DateTime sp1_departure2 = 9000;
     DateTime sp2_arrival2 = 9100;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A", "10", "", true)(spa1, sp1_departure1)(spa2, sp2_arrival1);
-    b.vj("A", "10", "", true)(spa1, sp1_departure2)(spa2, sp2_arrival2);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "10", "", true)(spa1, sp1_departure1)(spa2, sp2_arrival1);
+        b.vj("A", "10", "", true)(spa1, sp1_departure2)(spa2, sp2_arrival2);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1043,7 +1033,6 @@ BOOST_AUTO_TEST_CASE(vp2) {
  */
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 86300;
     DateTime sp2_departure = 86500;
@@ -1051,8 +1040,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
-    b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.make();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1205,7 +1197,6 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
  * Même cas que pour le test précédent.
  */
 BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 86300;
     DateTime sp2_departure = 86400;
@@ -1213,8 +1204,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
-    b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
-    b.make();
+
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("A", "10", "", true)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(spa3, sp3_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1379,7 +1373,6 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
  *  À chaque demande a l'heure + 1, on veut le trajet le lendemain.target
  */
 BOOST_AUTO_TEST_CASE(freq_base) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 000;
     DateTime sp2_arrival = 100;
     DateTime sp2_departure = 150;
@@ -1388,14 +1381,15 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     DateTime end_time = 7000;
     uint32_t headway_sec = 300;
     DateTime last_time = start_time + headway_sec * std::ceil((end_time - start_time) / headway_sec);
-
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
     std::string spa3 = "stop3";
-    b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(
-        spa3, sp3_arrival);
 
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival, sp2_departure)(
+            spa3, sp3_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1602,19 +1596,19 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     }
 }
 BOOST_AUTO_TEST_CASE(freq_pam) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     DateTime start_time = 6000;
     DateTime end_time = DateTimeUtils::SECONDS_PER_DAY + 1000;
     uint32_t headway_sec = 500;
     DateTime last_time = start_time + headway_sec * std::ceil((end_time - start_time) / headway_sec);
-
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", start_time, end_time, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -1746,7 +1740,6 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
 
 /// Tests avec deux fréquences, une passe minuit et pas l'autre
 BOOST_AUTO_TEST_CASE(freq_base_pam) {
-    ed::builder b("20120614");
     DateTime sp1_departure = 8000;
     DateTime sp2_arrival = 8100;
     DateTime start_time1 = 6000;
@@ -1759,10 +1752,12 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
 
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.frequency_vj("A", start_time1, end_time1, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
-    b.frequency_vj("A", start_time2, end_time2, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.frequency_vj("A", start_time1, end_time1, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
+        b.frequency_vj("A", start_time2, end_time2, headway_sec)(spa1, sp1_departure)(spa2, sp2_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -2174,13 +2169,15 @@ BOOST_FIXTURE_TEST_CASE(test_get_next_dep_overnight_midnight_case, midnight_freq
  * This is a line circulating only on sundays.
  */
 BOOST_AUTO_TEST_CASE(next_stop_time_with_distant_bounds) {
-    ed::builder b("20180107");
     DateTime sp1_departure = "10:00:00"_t;
     DateTime sp2_arrival = "10:30:00"_t;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.vj("A", "10000001", "")(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
-    b.make();
+
+    ed::builder b("20180107", [&](ed::builder& b) {
+        b.vj("A", "10000001", "")(spa1, sp1_departure, sp1_departure)(spa2, sp2_arrival, sp2_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);
@@ -2371,7 +2368,6 @@ BOOST_AUTO_TEST_CASE(next_stop_time_with_distant_bounds) {
 }
 
 BOOST_AUTO_TEST_CASE(freq_next_stop_time_with_distant_bounds) {
-    ed::builder b("20180107");
     DateTime sp1_departure = "10:00:00"_t;
     DateTime sp2_arrival = "10:30:00"_t;
     DateTime start_time = sp1_departure;
@@ -2379,9 +2375,11 @@ BOOST_AUTO_TEST_CASE(freq_next_stop_time_with_distant_bounds) {
     uint32_t headway_sec = 3600;
     std::string spa1 = "stop1";
     std::string spa2 = "stop2";
-    b.frequency_vj("A", start_time, end_time, headway_sec, "", "10000001")(spa1, sp1_departure)(spa2, sp2_arrival);
 
-    b.make();
+    ed::builder b("20180107", [&](ed::builder& b) {
+        b.frequency_vj("A", start_time, end_time, headway_sec, "", "10000001")(spa1, sp1_departure)(spa2, sp2_arrival);
+    });
+
     NextStopTime next_st(*b.data);
 
     auto jpp1 = get_first_jpp_idx(b, spa1);

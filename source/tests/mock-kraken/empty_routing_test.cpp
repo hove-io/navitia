@@ -36,7 +36,7 @@ int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     // for some tests we want an empty region but with a bounding box
-    ed::builder b = {"20120614", "empty routing"};
+    ed::builder b = {"20120614", ed::builder::make_builder, true, "empty routing"};
 
     routing_api_data<normal_speed_provider> routing_data;
 

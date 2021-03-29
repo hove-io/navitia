@@ -138,7 +138,15 @@ public:
     type::Network* get_or_create_network(const std::string& uri,
                                          const std::string& name,
                                          int sort = std::numeric_limits<int>::max());
+    type::Company* get_or_create_company(const std::string& uri, const std::string& name);
     type::CommercialMode* get_or_create_commercial_mode(const std::string& uri, const std::string& name);
+    type::PhysicalMode* get_or_create_physical_mode(const std::string& uri,
+                                                    const std::string& name,
+                                                    const double co2_emission);
+    type::Contributor* get_or_create_contributor(const std::string& uri, const std::string& name);
+    type::Dataset* get_or_create_dataset(const std::string& uri,
+                                         const std::string& name,
+                                         type::Contributor* contributor);
     type::Line* get_or_create_line(const std::string& uri,
                                    const std::string& name,
                                    type::Network* network,

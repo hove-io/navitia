@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #include "build_helper.h"
-
 #include "ed/connectors/gtfs_parser.h"
 
 #include <boost/range/algorithm/find_if.hpp>
@@ -607,6 +606,8 @@ SA builder::sa(const std::string& name,
 }
 
 builder::builder(const std::string& date,
+                 std::function<void(builder&)> builder_callback,
+                 bool no_dummy,
                  const std::string& publisher_name,
                  const std::string& timezone_name,
                  navitia::type::TimeZoneHandler::dst_periods timezone)
@@ -625,6 +626,11 @@ builder::builder(const std::string& date,
     }
 
     tz_handler = data->pt_data->tz_manager.get_or_create(timezone_name, data->meta->production_date.begin(), timezone);
+
+    if (no_dummy == false)
+        generate_dummy_basis();
+    builder_callback(*this);
+    make();
 }
 
 void builder::connection(const std::string& name1, const std::string& name2, float length) {
@@ -686,14 +692,9 @@ static double get_co2_emission(const std::string& uri) {
 }
 
 void builder::generate_dummy_basis() {
-    auto* company = new navitia::type::Company();
-    company->idx = this->data->pt_data->companies.size();
-    company->name = "base_company";
-    company->uri = "base_company";
-    this->data->pt_data->companies.push_back(company);
+    this->data->pt_data->get_or_create_company("base_company", "base_company");
 
-    const std::string default_network_name = "base_network";
-    this->data->pt_data->get_or_create_network(default_network_name, default_network_name);
+    this->data->pt_data->get_or_create_network("base_network", "base_network");
 
     this->data->pt_data->get_or_create_commercial_mode("0x0", "Tramway");
     this->data->pt_data->get_or_create_commercial_mode("0x1", "Metro");
@@ -703,34 +704,11 @@ void builder::generate_dummy_basis() {
     this->data->pt_data->get_or_create_commercial_mode("Car", "Car");
 
     for (navitia::type::CommercialMode* mt : this->data->pt_data->commercial_modes) {
-        auto* mode = new navitia::type::PhysicalMode();
-        double co2_emission;
-        mode->idx = mt->idx;
-        mode->name = mt->name;
-        mode->uri = "physical_mode:" + mt->uri;
-        co2_emission = get_co2_emission(mt->uri);
-        if (co2_emission >= 0.) {
-            mode->co2_emission = co2_emission;
-        }
-        this->data->pt_data->physical_modes.push_back(mode);
-        this->data->pt_data->physical_modes_map[mode->uri] = mode;
+        data->pt_data->get_or_create_physical_mode("physical_mode:" + mt->uri, mt->name, get_co2_emission(mt->uri));
     }
     // default dataset and contributor
-    auto* contributor = new navitia::type::Contributor();
-    contributor->idx = this->data->pt_data->contributors.size();
-    contributor->uri = "default:contributor";
-    contributor->name = "default contributor";
-    this->data->pt_data->contributors.push_back(contributor);
-    this->data->pt_data->contributors_map[contributor->uri] = contributor;
-
-    auto* dataset = new navitia::type::Dataset();
-    dataset->idx = this->data->pt_data->datasets.size();
-    dataset->uri = "default:dataset";
-    dataset->name = "default dataset";
-    dataset->contributor = contributor;
-    contributor->dataset_list.insert(dataset);
-    this->data->pt_data->datasets.push_back(dataset);
-    this->data->pt_data->datasets_map[dataset->uri] = dataset;
+    auto* contributor = data->pt_data->get_or_create_contributor("default:contributor", "default:contributor");
+    data->pt_data->get_or_create_dataset("default:dataset", "default:dataset", contributor);
 }
 
 void builder::build_blocks() {
@@ -820,16 +798,16 @@ void builder::finish() {
 }
 
 void builder::make() {
-    generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
-    finish();
     data->build_relations();
+    finish();
 }
 
 void builder::finalize_disruption_batch() {
     data->pt_data->build_autocomplete(*(data->geo_ref));
     data->pt_data->clean_weak_impacts();
+    data->build_relations();
     data->build_raptor(1);
 }
 

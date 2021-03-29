@@ -52,15 +52,13 @@ namespace ng = navitia::georef;
 // co2_emission defined and > 0.0
 BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     std::vector<std::string> forbidden;
-    ed::builder b("20120614");
-    b.sa("stop_area:stop1", 4.2973, 46.945686);
-    b.sa("stop_area:stop2", 4.373721, 46.665326);
-    b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
-                                                                         8 * 3600 + 21 * 60);
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area:stop1", 4.2973, 46.945686);
+        b.sa("stop_area:stop2", 4.373721, 46.665326);
+        b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
+                                                                             8 * 3600 + 21 * 60);
+    });
     navitia::type::Data data;
-    b.make();
-    b.data->meta->production_date =
-        boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
     nr::RAPTOR raptor(*b.data);
     navitia::type::PhysicalMode* mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
     navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys.at(0);
@@ -73,7 +71,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    ng::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(b.street_network);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
@@ -93,15 +91,12 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
 // co2_emission defined and = 0.0
 BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     std::vector<std::string> forbidden;
-    ed::builder b("20120614");
-    b.sa("stop_area:stop1", 4.2973, 46.945686);
-    b.sa("stop_area:stop2", 4.373721, 46.665326);
-    b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
-                                                                         8 * 3600 + 21 * 60);
-    navitia::type::Data data;
-    b.make();
-    b.data->meta->production_date =
-        boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area:stop1", 4.2973, 46.945686);
+        b.sa("stop_area:stop2", 4.373721, 46.665326);
+        b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
+                                                                             8 * 3600 + 21 * 60);
+    });
     nr::RAPTOR raptor(*b.data);
 
     navitia::type::PhysicalMode* mt = b.data->pt_data->physical_modes_map["physical_mode:0x0"];
@@ -113,7 +108,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    ng::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(b.street_network);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
@@ -132,15 +127,12 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
 // co2_emission defined and < 0.0
 BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     std::vector<std::string> forbidden;
-    ed::builder b("20120614");
-    b.sa("stop_area:stop1", 4.2973, 46.945686);
-    b.sa("stop_area:stop2", 4.373721, 46.665326);
-    b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
-                                                                         8 * 3600 + 21 * 60);
-    navitia::type::Data data;
-    b.make();
-    b.data->meta->production_date =
-        boost::gregorian::date_period(boost::gregorian::date(2012, 06, 14), boost::gregorian::days(7));
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area:stop1", 4.2973, 46.945686);
+        b.sa("stop_area:stop2", 4.373721, 46.665326);
+        b.vj("A")("stop_area:stop1", 8 * 3600 + 10 * 60, 8 * 3600 + 11 * 60)("stop_area:stop2", 8 * 3600 + 20 * 60,
+                                                                             8 * 3600 + 21 * 60);
+    });
     nr::RAPTOR raptor(*b.data);
     navitia::type::PhysicalMode* mt = b.data->pt_data->physical_modes_map["physical_mode:0x1"];
     navitia::type::VehicleJourney* vj = b.data->pt_data->vehicle_journeys.at(0);
@@ -149,7 +141,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     navitia::type::Type_e destination_type = b.data->get_type_of_id("stop_area:stop2");
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
-    ng::StreetNetwork sn_worker(*data.geo_ref);
+    ng::StreetNetwork sn_worker(b.street_network);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,

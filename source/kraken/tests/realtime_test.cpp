@@ -86,8 +86,9 @@ static pbnavitia::Response compute_iti(const ed::builder& b,
 }
 
 BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
@@ -139,8 +140,9 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
  *
  */
 BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150929");
     const auto& pt_data = b.data->pt_data;
@@ -156,13 +158,13 @@ BOOST_AUTO_TEST_CASE(train_cancellation_on_unused_day) {
 }
 
 BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    b.make();
     auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
@@ -190,14 +192,14 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
 }
 
 BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
-    ed::builder b("20150928");
-    b.vj("A", "111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.vj("B")("stop1", "08:00"_t)("stop2", "09:30"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj("B")("stop1", "08:00"_t)("stop2", "09:30"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    b.make();
     auto raptor = std::make_unique<navitia::routing::RAPTOR>(*(b.data));
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
@@ -228,24 +230,24 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
 }
 
 BOOST_AUTO_TEST_CASE(train_delayed) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
-    // to test company
-    navitia::type::Company* cmp1 = new navitia::type::Company();
-    cmp1->line_list.push_back(b.lines["A"]);
-    cmp1->idx = b.data->pt_data->companies.size();
-    cmp1->name = "Comp1";
-    cmp1->uri = comp_id_1;
-    b.data->pt_data->companies.push_back(cmp1);
-    b.data->pt_data->companies_map[comp_id_1] = cmp1;
-    b.lines["A"]->company_list.push_back(cmp1);
+        // to test company
+        navitia::type::Company* cmp1 = new navitia::type::Company();
+        cmp1->line_list.push_back(b.lines["A"]);
+        cmp1->idx = b.data->pt_data->companies.size();
+        cmp1->name = "Comp1";
+        cmp1->uri = comp_id_1;
+        b.data->pt_data->companies.push_back(cmp1);
+        b.data->pt_data->companies_map[comp_id_1] = cmp1;
+        b.lines["A"]->company_list.push_back(cmp1);
+    });
 
     transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T0810"_pts).delay(9_min), RTStopTime("stop2", "20150928T0910"_pts).delay(9_min)},
         transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS, comp_id_1);
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -322,13 +324,13 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 }
 
 BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T0810"_pts).delay(9_min), RTStopTime("stop2", "20150928T0910"_pts).delay(9_min)});
-    b.data->build_uri();
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data, true, true);
 
@@ -336,8 +338,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
 }
 
 BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    });
 
     transit_realtime::TripUpdate trip_update_1 = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -348,7 +351,6 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T0810"_pts), RTStopTime("stop2", "20150928T0910"_pts).delay(9_min),
          RTStopTime("stop3", "20150928T1030"_pts).delay(29_min)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -426,14 +428,14 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
 }
 
 BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
+    });
 
     transit_realtime::TripUpdate trip_update =
         ntest::make_trip_update_message("vj:1", "20150928",
                                         {RTStopTime("stop1", "20150928T2330"_pts).delay(30_min),
                                          RTStopTime("stop2", "20150929T0025"_pts).delay(30_min)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -483,9 +485,10 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
 }
 
 BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
-    b.vj("B", "000001", "", true, "vj:2")("stop3", "22:00"_t)("stop4", "22:30"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "23:00"_t)("stop2", "23:55"_t);
+        b.vj("B", "000001", "", true, "vj:2")("stop3", "22:00"_t)("stop4", "22:30"_t);
+    });
 
     transit_realtime::TripUpdate trip_update_A =
         ntest::make_trip_update_message("vj:1", "20150928",
@@ -496,8 +499,6 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
         ntest::make_trip_update_message("vj:2", "20150928",
                                         {RTStopTime("stop3", "20150928T2230"_pts).delay(30_min),
                                          RTStopTime("stop4", "20150928T2300"_pts).delay(30_min)});
-
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
@@ -556,13 +557,13 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
 }
 
 BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
     transit_realtime::TripUpdate trip_update_A =
         ntest::make_trip_update_message("vj:1", "20150928",
                                         {RTStopTime("stop1", "20150928T0810"_pts).delay(10_min),
                                          RTStopTime("stop2", "20150928T0910"_pts).delay(10_min)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -648,9 +649,10 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
 BOOST_AUTO_TEST_CASE(invalid_delay) {
     // we add a non valid delay, it shoudl be rejected and no disruption added
-    ed::builder b("20150928");
-    auto vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t).make();
-    b.data->build_uri();
+    navitia::type::VehicleJourney* vj = nullptr;
+    ed::builder b("20150928", [&](ed::builder& b) {
+        vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t).make();
+    });
 
     transit_realtime::TripUpdate wrong_st_order = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -702,13 +704,13 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
  * D0: +1 day (two times)
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150929T0610"_pts).delay(9_min), RTStopTime("stop2", "20150929T0710"_pts).delay(9_min)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -761,13 +763,13 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
  * D0: +1 day pass-midnight (two times)
  */
 BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150929T1710"_pts).delay(9_h), RTStopTime("stop2", "20150930T0110"_pts).delay(16_h)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -826,8 +828,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
  * D0: +1 hour
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -835,7 +838,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T0901"_pts).delay(24_h), RTStopTime("stop2", "20150928T1001"_pts).delay(24_h)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -888,9 +890,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
 }
 
 BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
-    ed::builder b("20190101");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.make();
+    ed::builder b("20190101", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -963,8 +965,9 @@ BOOST_AUTO_TEST_CASE(add_delays_and_back_to_normal) {
  * D0: back to normal
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -973,7 +976,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928", {RTStopTime("stop1", "20150928T0801"_pts), RTStopTime("stop2", "20150928T0901"_pts)},
         transit_realtime::Alert_Effect::Alert_Effect_UNKNOWN_EFFECT);
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1033,8 +1035,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
  * D1: +1 hour
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1042,7 +1045,6 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     transit_realtime::TripUpdate second_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150929",
         {RTStopTime("stop1", "20150929T0901"_pts).delay(25_h), RTStopTime("stop2", "20150929T1001"_pts).delay(25_h)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1101,14 +1103,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
  * D0: cancel
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150929T0610"_pts).delay(22_h), RTStopTime("stop2", "20150929T0710"_pts).delay(22_h)});
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1163,14 +1165,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
  * D1: cancel
  */
 BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150929T0610"_pts).delay(22_h), RTStopTime("stop2", "20150929T0710"_pts).delay(22_h)});
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150929");
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1224,12 +1226,12 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
  * D1: cancel
  */
 BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = make_cancellation_message("vj:1", "20150928");
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150929");
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1288,14 +1290,14 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
  * D0: cancel
  */
 BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T1801"_pts).delay(10_h), RTStopTime("stop2", "20150928T1901"_pts).delay(10_h)});
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1351,8 +1353,9 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
  * D2: cancel
  */
 BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
-    ed::builder b("20150928");
-    b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
+    });
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1361,8 +1364,6 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
         "vj:1", "20150929",
         {RTStopTime("stop1", "20150929T1010"_pts).delay(2_h), RTStopTime("stop2", "20150929T1110"_pts).delay(2_h)});
     transit_realtime::TripUpdate third_trip_update = make_cancellation_message("vj:1", "20150930");
-
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     auto vj = pt_data->vehicle_journeys.front();
@@ -1412,11 +1413,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
 }
 
 BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
-    ed::builder b("20150928");
-    b.vj_with_network("nt", "A", "000111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.vj_with_network("nt", "A", "000111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
-    b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
-    b.make();
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "000111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj_with_network("nt", "A", "000111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
+        b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
+    });
 
     transit_realtime::TripUpdate trip_update_vj2 = ntest::make_trip_update_message(
         "vj:2", "20150928",
@@ -1435,9 +1436,9 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
 }
 
 BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
-    ed::builder b("20150928");
-    b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.make();
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+    });
 
     transit_realtime::TripUpdate trip_update =
         ntest::make_trip_update_message("vj:1", "20150928",
@@ -1456,16 +1457,15 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
  *
  * */
 BOOST_AUTO_TEST_CASE(unknown_stop_point) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    });
 
     transit_realtime::TripUpdate bad_trip_update =
         ntest::make_trip_update_message("vj:1", "20150928",
                                         {RTStopTime("stop1", "20150928T0810"_pts).delay(9_min),
                                          RTStopTime("stop_unknown_toto", "20150928T0910"_pts).delay(9_min),  // <--- bad
                                          RTStopTime("stop3", "20150928T1001"_pts).delay(9_min)});
-
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1509,8 +1509,9 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
  * applied in the original order
  * */
 BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
-    ed::builder b("20150928");
-    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+    });
 
     auto trip_update_1 = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1524,7 +1525,6 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
         "vj:1", "20150928",
         {RTStopTime("stop1", "20150928T0810"_pts), RTStopTime("stop2", "20150928T0925"_pts).delay(26_min),
          RTStopTime("stop3", "20150928T1001"_pts)});
-    b.data->build_uri();
 
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1585,15 +1585,13 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
 }
 
 BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
-    ed::builder b("20170101");
-
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
-                                                std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-        "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
-        "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
-        "stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
-
-    b.make();
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
+                                                    std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
+            "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
+            "stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+    });
 
     auto trip_update_1 = ntest::make_trip_update_message(
         "vj:1", "20170102",
@@ -1647,14 +1645,12 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
 }
 
 BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
-    ed::builder b("20170101");
-
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
-                                                std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-        "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
-        "stop_point:10", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 0);
-
-    b.make();
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
+                                                    std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
+            "stop_point:10", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 0);
+    });
 
     auto trip_update_1 = ntest::make_trip_update_message(
         "vj:1", "20170102",
@@ -1697,10 +1693,8 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
 }
 
 BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
-    ed::builder b("20170101");
-
-    b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t);
-    b.make();
+    ed::builder b("20170101",
+                  [](ed::builder& b) { b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t); });
 
     auto trip_update_1 = ntest::make_trip_update_message("vj:1", "20170101",
                                                          {
@@ -1760,10 +1754,9 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
  * We first do not stop at B and C, then we send another disruption to stop at C but with a delay
  */
 BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
-    ed::builder b("20170101");
-
-    b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t);
-    b.make();
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t);
+    });
 
     auto trip_update_1 = ntest::make_trip_update_message("vj:1", "20170101",
                                                          {
@@ -1858,9 +1851,9 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
  * C to E -> print disruption
  */
 BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
-    ed::builder b("20150928");
-    b.vj("1").name("vj:1")("A", "08:00"_t)("B", "09:00"_t)("C", "10:00"_t)("D", "11:00"_t)("E", "12:00"_t);
-    b.data->build_uri();
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj("1").name("vj:1")("A", "08:00"_t)("B", "09:00"_t)("C", "10:00"_t)("D", "11:00"_t)("E", "12:00"_t);
+    });
 
     transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1930,9 +1923,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
 }
 
 BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
-    ed::builder b("20150928");
-    b.vj("1").name("vj:1")("A", "08:00"_t)("B", "09:00"_t);
-    b.data->build_uri();
+    ed::builder b("20150928", [](ed::builder& b) { b.vj("1").name("vj:1")("A", "08:00"_t)("B", "09:00"_t); });
 
     transit_realtime::TripUpdate trip_update1 = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1976,9 +1967,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
 }
 
 BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
-    ed::builder b("20171101");
-    b.vj("1").name("vj:1")("A", "08:00"_t)("B", "08:00"_t)("C", "09:00"_t);
-    b.data->build_uri();
+    ed::builder b("20171101",
+                  [](ed::builder& b) { b.vj("1").name("vj:1")("A", "08:00"_t)("B", "08:00"_t)("C", "09:00"_t); });
 
     transit_realtime::TripUpdate trip_update1 = ntest::make_trip_update_message(
         "vj:1", "20171101",
@@ -2028,17 +2018,14 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
 }
 
 BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
-    ed::builder b("20171101");
-
-    b.sa("A", 0, 0, true, true);
-    b.sa("B", 0, 0, true, true);
-    b.sa("B_bis", 0, 0, true, true);
-    b.sa("C", 0, 0, true, true);
-    b.sa("D", 0, 0, true, true);
-
-    b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
-
-    b.make();
+    ed::builder b("20171101", [](ed::builder& b) {
+        b.sa("A", 0, 0, true, true);
+        b.sa("B", 0, 0, true, true);
+        b.sa("B_bis", 0, 0, true, true);
+        b.sa("C", 0, 0, true, true);
+        b.sa("D", 0, 0, true, true);
+        b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
+    });
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2128,17 +2115,14 @@ BOOST_AUTO_TEST_CASE(add_new_stop_time_in_the_trip) {
 
 BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     // Init data for a vj = vj:1 -> A -> B -> C
-    ed::builder b("20171101");
-
-    b.sa("A", 0, 0, true, true);
-    b.sa("B", 0, 0, true, true);
-    b.sa("B_bis", 0, 0, true, true);
-    b.sa("C", 0, 0, true, true);
-    b.sa("D", 0, 0, true, true);
-
-    b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
-
-    b.make();
+    ed::builder b("20171101", [](ed::builder& b) {
+        b.sa("A", 0, 0, true, true);
+        b.sa("B", 0, 0, true, true);
+        b.sa("B_bis", 0, 0, true, true);
+        b.sa("C", 0, 0, true, true);
+        b.sa("D", 0, 0, true, true);
+        b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
+    });
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2291,17 +2275,14 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
 BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour) {
     // Init data for a vj = vj:1 -> A -> B -> C
-    ed::builder b("20171101");
-
-    b.sa("A", 0, 0, true, true);
-    b.sa("B", 0, 0, true, true);
-    b.sa("B_bis", 0, 0, true, true);
-    b.sa("C", 0, 0, true, true);
-    b.sa("D", 0, 0, true, true);
-
-    b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
-
-    b.make();
+    ed::builder b("20171101", [](ed::builder& b) {
+        b.sa("A", 0, 0, true, true);
+        b.sa("B", 0, 0, true, true);
+        b.sa("B_bis", 0, 0, true, true);
+        b.sa("C", 0, 0, true, true);
+        b.sa("D", 0, 0, true, true);
+        b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
+    });
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2375,17 +2356,14 @@ BOOST_AUTO_TEST_CASE(add_new_and_delete_existingstop_time_in_the_trip_for_detour
 
 BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_in_the_trip_for_detour) {
     // Init data for a vj = vj:1 -> A -> B -> C
-    ed::builder b("20171101");
-
-    b.sa("A", 0, 0, true, true);
-    b.sa("B", 0, 0, true, true);
-    b.sa("B_bis", 0, 0, true, true);
-    b.sa("C", 0, 0, true, true);
-    b.sa("D", 0, 0, true, true);
-
-    b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
-
-    b.make();
+    ed::builder b("20171101", [](ed::builder& b) {
+        b.sa("A", 0, 0, true, true);
+        b.sa("B", 0, 0, true, true);
+        b.sa("B_bis", 0, 0, true, true);
+        b.sa("C", 0, 0, true, true);
+        b.sa("D", 0, 0, true, true);
+        b.vj("1").name("vj:1")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t);
+    });
 
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2453,15 +2431,13 @@ BOOST_AUTO_TEST_CASE(add_new_with_earlier_arrival_and_delete_existingstop_time_i
 }
 
 BOOST_AUTO_TEST_CASE(should_get_base_stoptime_with_realtime_added_stop_time) {
-    ed::builder b("20171101");
-
-    b.sa("A");
-    b.sa("B");
-    b.sa("C");
-    b.sa("D");
-
-    b.vj("L1").name("vj:1")("stop_point:A", "08:10"_t)("stop_point:C", "08:30"_t)("stop_point:D", "08:40"_t);
-    b.make();
+    ed::builder b("20171101", [](ed::builder& b) {
+        b.sa("A");
+        b.sa("B");
+        b.sa("C");
+        b.sa("D");
+        b.vj("L1").name("vj:1")("stop_point:A", "08:10"_t)("stop_point:C", "08:30"_t)("stop_point:D", "08:40"_t);
+    });
 
     tr::TripUpdate add_stop =
         ntest::make_trip_update_message("vj:1", "20171101",
@@ -2526,11 +2502,12 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop) {
                  \ /
         (08:30)   C
     */
-    ed::builder b("20171101");
-
-    const auto* vj =
-        b.vj("L1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("B", "08:40"_t)("A", "08:50"_t).make();
-    b.make();
+    const navitia::type::VehicleJourney* vj = nullptr;
+    ed::builder b("20171101", [&](ed::builder& b) {
+        vj = b.vj("L1")
+                 .name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("B", "08:40"_t)("A", "08:50"_t)
+                 .make();
+    });
 
     navitia::handle_realtime("add_new_stop", timestamp,
                              ntest::make_trip_update_message("vj:1", "20171101",
@@ -2574,11 +2551,12 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
                 ▼
         (08:50) D
     */
-    ed::builder b("20171101");
-
-    const auto* vj =
-        b.vj("L1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("B", "08:40"_t)("D", "08:50"_t).make();
-    b.make();
+    nt::VehicleJourney* vj = nullptr;
+    ed::builder b("20171101", [&](ed::builder& b) {
+        vj = b.vj("L1")
+                 .name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("B", "08:40"_t)("D", "08:50"_t)
+                 .make();
+    });
 
     navitia::handle_realtime("add_new_stop", timestamp,
                              ntest::make_trip_update_message("vj:1", "20171101",
@@ -2608,82 +2586,80 @@ BOOST_AUTO_TEST_CASE(should_get_correct_base_stop_time_with_lollipop_II) {
 }
 
 struct AddTripDataset {
-    AddTripDataset() : b("20190101") {
-        b.sa("A", 0, 0, true, true);
-        b.sa("B", 0, 0, true, true);
-        b.sa("C", 0, 0, true, true);
-        b.sa("D", 0, 0, true, true);
-        b.sa("E", 0, 0, true, true);
-        b.sa("F", 0, 0, true, true);
-        b.sa("G", 0, 0, true, true);
-        b.sa("H", 0, 0, true, true);
-        b.sa("I", 0, 0, true, true);
-        b.sa("J", 0, 0, true, true);
+    AddTripDataset()
+        : comp_name("comp_name"),
+          comp_uri("comp_uri"),
+          phy_mode_name("name physical_mode_uri"),
+          phy_mode_uri("physical_mode_uri"),
+          phy_mode_name_2("name physical_mode_uri_2"),
+          phy_mode_uri_2("physical_mode_uri_2"),
+          contributor_name("contributor_name"),
+          contributor_uri("contributor_uri"),
+          dataset_name("dataset_name"),
+          dataset_uri("dataset_uri"),
+          b("20190101", [&](ed::builder& b) {
+              b.sa("A", 0, 0, true, true);
+              b.sa("B", 0, 0, true, true);
+              b.sa("C", 0, 0, true, true);
+              b.sa("D", 0, 0, true, true);
+              b.sa("E", 0, 0, true, true);
+              b.sa("F", 0, 0, true, true);
+              b.sa("G", 0, 0, true, true);
+              b.sa("H", 0, 0, true, true);
+              b.sa("I", 0, 0, true, true);
+              b.sa("J", 0, 0, true, true);
 
-        b.vj("1").name("vj:1").physical_mode("physical_mode_uri")("stop_point:A", "08:00"_t)("stop_point:B", "08:30"_t)(
-            "stop_point:C", "09:00"_t)("stop_point:D", "09:30"_t);
+              b.vj("1").name("vj:1").physical_mode("physical_mode_uri")("stop_point:A", "08:00"_t)(
+                  "stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t)("stop_point:D", "09:30"_t);
 
-        // Add company
-        comp_name = "comp_name";
-        comp_uri = "comp_uri";
-        navitia::type::Company* cmp1 = new navitia::type::Company();
-        cmp1->line_list.push_back(b.lines["1"]);
-        cmp1->idx = b.data->pt_data->companies.size();
-        cmp1->name = comp_name;
-        cmp1->uri = comp_uri;
-        b.data->pt_data->companies.push_back(cmp1);
-        b.data->pt_data->companies_map[comp_uri] = cmp1;
-        b.lines["1"]->company_list.push_back(cmp1);
+              // Add company
+              navitia::type::Company* cmp1 = new navitia::type::Company();
+              cmp1->line_list.push_back(b.lines["1"]);
+              cmp1->idx = b.data->pt_data->companies.size();
+              cmp1->name = comp_name;
+              cmp1->uri = comp_uri;
+              b.data->pt_data->companies.push_back(cmp1);
+              b.data->pt_data->companies_map[comp_uri] = cmp1;
+              b.lines["1"]->company_list.push_back(cmp1);
 
-        // Add physical mode
-        phy_mode_name = "name physical_mode_uri";
-        phy_mode_uri = "physical_mode_uri";
-        navitia::type::PhysicalMode* phy_mode = new navitia::type::PhysicalMode();
-        phy_mode->idx = b.data->pt_data->physical_modes.size();
-        phy_mode->name = phy_mode_name;
-        phy_mode->uri = phy_mode_uri;
-        phy_mode->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys[0]);
-        b.data->pt_data->physical_modes.push_back(phy_mode);
-        b.data->pt_data->physical_modes_map[phy_mode_uri] = phy_mode;
-        b.lines["1"]->physical_mode_list.push_back(phy_mode);
+              // Add physical mode
+              navitia::type::PhysicalMode* phy_mode = new navitia::type::PhysicalMode();
+              phy_mode->idx = b.data->pt_data->physical_modes.size();
+              phy_mode->name = phy_mode_name;
+              phy_mode->uri = phy_mode_uri;
+              phy_mode->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys[0]);
+              b.data->pt_data->physical_modes.push_back(phy_mode);
+              b.data->pt_data->physical_modes_map[phy_mode_uri] = phy_mode;
+              b.lines["1"]->physical_mode_list.push_back(phy_mode);
 
-        // Add second physical mode
-        phy_mode_name_2 = "name physical_mode_uri_2";
-        phy_mode_uri_2 = "physical_mode_uri_2";
-        phy_mode = new navitia::type::PhysicalMode();
-        phy_mode->idx = b.data->pt_data->physical_modes.size();
-        phy_mode->name = phy_mode_name_2;
-        phy_mode->uri = phy_mode_uri_2;
-        phy_mode->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys[0]);
-        b.data->pt_data->physical_modes.push_back(phy_mode);
-        b.data->pt_data->physical_modes_map[phy_mode_uri_2] = phy_mode;
+              // Add second physical mode
+              phy_mode = new navitia::type::PhysicalMode();
+              phy_mode->idx = b.data->pt_data->physical_modes.size();
+              phy_mode->name = phy_mode_name_2;
+              phy_mode->uri = phy_mode_uri_2;
+              phy_mode->vehicle_journey_list.push_back(b.data->pt_data->vehicle_journeys[0]);
+              b.data->pt_data->physical_modes.push_back(phy_mode);
+              b.data->pt_data->physical_modes_map[phy_mode_uri_2] = phy_mode;
 
-        // Add contributor
-        contributor_name = "contributor_name";
-        contributor_uri = "contributor_uri";
-        navitia::type::Contributor* contributor = new navitia::type::Contributor();
-        contributor->idx = b.data->pt_data->contributors.size();
-        contributor->name = contributor_name;
-        contributor->uri = contributor_uri;
-        b.data->pt_data->contributors.push_back(contributor);
-        b.data->pt_data->contributors_map[contributor->uri] = contributor;
+              // Add contributor
+              navitia::type::Contributor* contributor = new navitia::type::Contributor();
+              contributor->idx = b.data->pt_data->contributors.size();
+              contributor->name = contributor_name;
+              contributor->uri = contributor_uri;
+              b.data->pt_data->contributors.push_back(contributor);
+              b.data->pt_data->contributors_map[contributor->uri] = contributor;
 
-        // Add dataset
-        dataset_name = "dataset_name";
-        dataset_uri = "dataset_uri";
-        navitia::type::Dataset* dataset = new navitia::type::Dataset();
-        dataset->idx = b.data->pt_data->datasets.size();
-        dataset->name = dataset_name;
-        dataset->uri = dataset_uri;
-        dataset->contributor = contributor;
-        b.data->pt_data->datasets.push_back(dataset);
-        b.data->pt_data->datasets_map[dataset->uri] = dataset;
-        b.data->pt_data->contributors_map[contributor->uri]->dataset_list.insert(dataset);
+              // Add dataset
+              navitia::type::Dataset* dataset = new navitia::type::Dataset();
+              dataset->idx = b.data->pt_data->datasets.size();
+              dataset->name = dataset_name;
+              dataset->uri = dataset_uri;
+              dataset->contributor = contributor;
+              b.data->pt_data->datasets.push_back(dataset);
+              b.data->pt_data->datasets_map[dataset->uri] = dataset;
+              b.data->pt_data->contributors_map[contributor->uri]->dataset_list.insert(dataset);
+          }) {}
 
-        b.make();
-    }
-
-    ed::builder b;
     std::string comp_name;
     std::string comp_uri;
     std::string phy_mode_name;
@@ -2694,6 +2670,7 @@ struct AddTripDataset {
     std::string contributor_uri;
     std::string dataset_name;
     std::string dataset_uri;
+    ed::builder b;
 };
 
 BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode_network, AddTripDataset) {
