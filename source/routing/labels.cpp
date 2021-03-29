@@ -56,10 +56,10 @@ std::array<Labels::Map, 4> Labels::inrow_labels() {
         const auto& sp_idx = l.first;
         const auto& label = l.second;
 
-        row_labels[0][sp_idx] = label.dt_pts;
-        row_labels[1][sp_idx] = label.dt_transfers;
-        row_labels[2][sp_idx] = label.walking_duration_pts;
-        row_labels[3][sp_idx] = label.walking_duration_transfers;
+        row_labels[0][sp_idx] = label.dt_pt;
+        row_labels[1][sp_idx] = label.dt_transfer;
+        row_labels[2][sp_idx] = label.walking_duration_pt;
+        row_labels[3][sp_idx] = label.walking_duration_transfer;
     }
 
     return row_labels;
