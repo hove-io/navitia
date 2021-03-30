@@ -548,7 +548,17 @@ def bragi_make_params_with_instance_test():
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
-    rsp = [('q', 'aa'), ('limit', 20), ('pt_dataset[]', 'bib'), ('timeout', 1000), ("request_id", "1234")]
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('pt_dataset[]', 'bib'),
+        ('timeout', 1000),
+        ("request_id", "1234"),
+        ('scope_shape[]', 'addr'),
+        ('scope_shape[]', 'admin'),
+        ('scope_shape[]', 'poi'),
+        ('scope_shape[]', 'street'),
+    ]
     params.sort()
     rsp.sort()
     assert rsp == params
@@ -576,6 +586,10 @@ def bragi_make_params_with_multiple_instances_test():
         ('pt_dataset[]', 'bob'),
         ('timeout', 1000),
         ("request_id", "1234"),
+        ('scope_shape[]', 'addr'),
+        ('scope_shape[]', 'admin'),
+        ('scope_shape[]', 'poi'),
+        ('scope_shape[]', 'street'),
     ]
 
     params.sort()
@@ -592,7 +606,16 @@ def bragi_make_params_without_instance_test():
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
-    rsp = [('q', 'aa'), ('limit', 20), ('timeout', 100), ("request_id", "1234")]
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('timeout', 100),
+        ("request_id", "1234"),
+        ('scope_shape[]', 'addr'),
+        ('scope_shape[]', 'admin'),
+        ('scope_shape[]', 'poi'),
+        ('scope_shape[]', 'street'),
+    ]
     params.sort()
     rsp.sort()
     assert rsp == params
@@ -617,6 +640,37 @@ def bragi_make_params_with_instance_and_poi_test():
         ('poi_dataset[]', 'priv.bob'),
         ('timeout', 1000),
         ("request_id", "1234"),
+        ('scope_shape[]', 'addr'),
+        ('scope_shape[]', 'admin'),
+        ('scope_shape[]', 'poi'),
+        ('scope_shape[]', 'street'),
+    ]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
+
+
+def bragi_make_params_with_scope_shape_test():
+    """
+    test of generate params with instance which includes a poi dataset
+    """
+    instance = mock.MagicMock()
+    instance.name = 'bob'
+    instance.poi_dataset = 'priv.bob'
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {"q": "aa", "count": 20, "request_id": "1234", "scope_shape[]": ["poi", "street"]}
+
+    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('pt_dataset[]', 'bob'),
+        ('poi_dataset[]', 'priv.bob'),
+        ('timeout', 1000),
+        ("request_id", "1234"),
+        ('scope_shape[]', 'poi'),
+        ('scope_shape[]', 'street'),
     ]
     params.sort()
     rsp.sort()
