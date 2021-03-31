@@ -55,7 +55,7 @@ from navitiacommon.parser_args_type import (
     DateTimeFormat,
     DepthArgument,
 )
-from navitiacommon.constants import ENUM_SCOPE_SHAPE, DEFAULT_SCOPE_SHAPE
+from navitiacommon.constants import ENUM_SHAPE_SCOPE, DEFAULT_SHAPE_SCOPE
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 import six
 from jormungandr.instance import Instance
@@ -144,8 +144,8 @@ class Places(ResourceUri):
         )
 
         self.parsers["get"].add_argument(
-            "scope_shape[]",
-            type=OptionValue(ENUM_SCOPE_SHAPE),
+            "shape_scope[]",
+            type=OptionValue(ENUM_SHAPE_SCOPE),
             action="append",
             help="The scope shape on data to search",
         )
@@ -168,8 +168,8 @@ class Places(ResourceUri):
         if args['shape'] is None and user and user.shape:
             args['shape'] = json.loads(user.shape)
 
-        if not args.get("scope_shape[]") and user:
-            args.update({"scope_shape[]": user.scope_shape})
+        if not args.get("shape_scope[]") and user:
+            args.update({"shape_scope[]": user.shape_scope})
 
         if user and user.default_coord:
             if args['from'] is None:

@@ -40,7 +40,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
 
 from navitiacommon import default_values
-from navitiacommon.constants import DEFAULT_SCOPE_SHAPE, ENUM_SCOPE_SHAPE
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
 import os
 
 db = SQLAlchemy()  # type: SQLAlchemy
@@ -137,10 +137,10 @@ class User(db.Model):  # type: ignore
     # because we don't want postgis dependency for the tyr database
     shape = db.Column(db.Text, nullable=True)
     default_coord = db.Column(db.Text, nullable=True)
-    scope_shape = db.Column(
-        ArrayOfEnum(db.Enum(*ENUM_SCOPE_SHAPE, name='scope_shape')),
+    shape_scope = db.Column(
+        ArrayOfEnum(db.Enum(*ENUM_SHAPE_SCOPE, name='shape_scope')),
         nullable=False,
-        server_default="{" + ", ".join(DEFAULT_SCOPE_SHAPE) + "}",
+        server_default="{" + ", ".join(DEFAULT_SHAPE_SCOPE) + "}",
     )
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):

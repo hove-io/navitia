@@ -31,5 +31,5 @@
 
 from __future__ import absolute_import
 
-ENUM_SCOPE_SHAPE = ('admin', 'street', 'addr', 'poi', 'stop')
-DEFAULT_SCOPE_SHAPE = ('admin', 'street', 'addr', 'poi')
+ENUM_SHAPE_SCOPE = ('admin', 'street', 'addr', 'poi', 'stop')
+DEFAULT_SHAPE_SCOPE = ('admin', 'street', 'addr', 'poi')

@@ -33,7 +33,7 @@ import json
 import pytest
 import mock
 from navitiacommon import models
-from navitiacommon.constants import DEFAULT_SCOPE_SHAPE
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 from six.moves.urllib.parse import quote
@@ -170,10 +170,10 @@ def test_get_users_empty():
 
 
 def assert_default_scop_shape(response):
-    assert "scope_shape" in response
-    assert len(response['scope_shape']) == len(DEFAULT_SCOPE_SHAPE)
-    for ss in response['scope_shape']:
-        assert ss in DEFAULT_SCOPE_SHAPE
+    assert "shape_scope" in response
+    assert len(response['shape_scope']) == len(DEFAULT_SHAPE_SCOPE)
+    for ss in response['shape_scope']:
+        assert ss in DEFAULT_SHAPE_SCOPE
 
 
 def test_add_user_without_shape(mock_rabbit):
@@ -402,48 +402,48 @@ def test_add_user_invalid_type(mock_rabbit):
     assert mock_rabbit.call_count == 0
 
 
-def test_add_user_invalid_scope_shape(mock_rabbit):
+def test_add_user_invalid_shape_scope(mock_rabbit):
     """
-    creation of a user with an invalid scope_shape
+    creation of a user with an invalid shape_scope
     """
-    user = {'login': 'user1', 'email': 'user1@example.com', "scope_shape": ["ab"]}
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["ab"]}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
     assert "message" in resp
     message = resp["message"]
-    assert "scope_shape" in message
+    assert "shape_scope" in message
     assert (
-        message["scope_shape"]
-        == u"The scope_shape argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave ab"
+        message["shape_scope"]
+        == u"The shape_scope argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave ab"
     )
     assert mock_rabbit.call_count == 0
 
 
-def test_add_user_valid_scope_shape(mock_rabbit):
+def test_add_user_valid_shape_scope(mock_rabbit):
     """
-    creation of a user with an invalid scope_shape
+    creation of a user with an invalid shape_scope
     """
-    user = {'login': 'user1', 'email': 'user1@example.com', "scope_shape": ["stop", "admin"]}
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["stop", "admin"]}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 200
-    assert "scope_shape" in resp
-    scope_shape = resp["scope_shape"]
-    assert len(scope_shape) == len(user["scope_shape"])
-    for ss in scope_shape:
-        assert ss in user["scope_shape"]
+    assert "shape_scope" in resp
+    shape_scope = resp["shape_scope"]
+    assert len(shape_scope) == len(user["shape_scope"])
+    for ss in shape_scope:
+        assert ss in user["shape_scope"]
     assert mock_rabbit.call_count == 1
 
 
-def test_update_user_valid_scope_shape(create_multiple_users):
+def test_update_user_valid_shape_scope(create_multiple_users):
     """
-    Update of a user with valid scope_shape
+    Update of a user with valid shape_scope
     """
     resp = api_get('/v0/users/')
     assert len(resp) == 2
 
     for user in resp:
         assert_default_scop_shape(user)
-    user = {'login': 'user1', 'email': 'user1@example.com', "scope_shape": ["poi", "stop"]}
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["poi", "stop"]}
     resp, status = api_put(
         '/v0/users/{}'.format(create_multiple_users['user1']),
         check=False,
@@ -451,21 +451,21 @@ def test_update_user_valid_scope_shape(create_multiple_users):
         content_type='application/json',
     )
     assert status == 200
-    assert len(resp["scope_shape"]) == len(user["scope_shape"])
-    for ss in resp["scope_shape"]:
-        assert ss in user["scope_shape"]
+    assert len(resp["shape_scope"]) == len(user["shape_scope"])
+    for ss in resp["shape_scope"]:
+        assert ss in user["shape_scope"]
 
 
-def test_update_user_invalid_scope_shape(create_multiple_users, mock_rabbit):
+def test_update_user_invalid_shape_scope(create_multiple_users, mock_rabbit):
     """
-    Update of a user with invalid scope_shape
+    Update of a user with invalid shape_scope
     """
     resp = api_get('/v0/users/')
     assert len(resp) == 2
 
     for user in resp:
         assert_default_scop_shape(user)
-    user = {'login': 'user1', 'email': 'user1@example.com', "scope_shape": ["bob"]}
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["bob"]}
     resp, status = api_put(
         '/v0/users/{}'.format(create_multiple_users['user1']),
         check=False,
@@ -475,10 +475,10 @@ def test_update_user_invalid_scope_shape(create_multiple_users, mock_rabbit):
     assert status == 400
     assert "message" in resp
     message = resp["message"]
-    assert "scope_shape" in message
+    assert "shape_scope" in message
     assert (
-        message["scope_shape"]
-        == u"The scope_shape argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave bob"
+        message["shape_scope"]
+        == u"The shape_scope argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave bob"
     )
     assert mock_rabbit.call_count == 0
 

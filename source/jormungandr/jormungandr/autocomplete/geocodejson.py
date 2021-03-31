@@ -42,7 +42,7 @@ import requests
 import pybreaker
 from jormungandr import app
 from jormungandr.exceptions import UnknownObject
-from navitiacommon.constants import DEFAULT_SCOPE_SHAPE
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 
 
 def create_admin_field(geocoding):
@@ -314,10 +314,10 @@ class GeocodeJson(AbstractAutocomplete):
 
                 for t in map_type[type]:
                     params.append(("type[]", t))
-        scope_shape = request.get("scope_shape[]")
-        scope_shape = scope_shape if scope_shape else DEFAULT_SCOPE_SHAPE
-        for ss in scope_shape:
-            params.append(("scope_shape[]", ss))
+        shape_scope = request.get("shape_scope[]")
+        shape_scope = shape_scope if shape_scope else DEFAULT_SHAPE_SCOPE
+        for ss in shape_scope:
+            params.append(("shape_scope[]", ss))
 
         if request.get("from"):
             lon, lat = self.get_coords(request["from"])
