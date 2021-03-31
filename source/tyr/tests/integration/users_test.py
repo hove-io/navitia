@@ -28,11 +28,12 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
+from tests.check_utils import api_get, api_post, api_delete, api_put
 import json
 import pytest
 import mock
 from navitiacommon import models
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 from six.moves.urllib.parse import quote
@@ -168,6 +169,13 @@ def test_get_users_empty():
     assert resp == []
 
 
+def assert_default_scop_shape(response):
+    assert "shape_scope" in response
+    assert len(response['shape_scope']) == len(DEFAULT_SHAPE_SCOPE)
+    for ss in response['shape_scope']:
+        assert ss in DEFAULT_SHAPE_SCOPE
+
+
 def test_add_user_without_shape(mock_rabbit):
     """
     creation of a user without shape
@@ -190,6 +198,7 @@ def test_add_user_without_shape(mock_rabbit):
     assert resp['shape'] is None
     assert resp['has_shape'] is False
     assert mock_rabbit.called
+    assert_default_scop_shape(resp)
 
     # we did not give any coord, so we don't have some
     assert resp['default_coord'] is None
@@ -200,6 +209,7 @@ def test_add_user_without_shape(mock_rabbit):
     check(resp[0])
     assert resp[0]['shape'] is None
     assert resp[0]['has_shape'] is False
+    assert_default_scop_shape(resp[0])
 
     # with disable_geojson=false
     resp = api_get('/v0/users/?disable_geojson=false')
@@ -207,6 +217,7 @@ def test_add_user_without_shape(mock_rabbit):
     check(resp[0])
     assert resp[0]['shape'] is None
     assert resp[0]['has_shape'] is False
+    assert_default_scop_shape(resp[0])
 
 
 def test_add_user(mock_rabbit, geojson_polygon):
@@ -235,12 +246,14 @@ def test_add_user(mock_rabbit, geojson_polygon):
     check(resp)
     assert resp['shape'] == geojson_polygon
     assert resp['default_coord'] == coord
+    assert_default_scop_shape(resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
     assert resp[0]['shape'] == {}
     assert mock_rabbit.called
+    assert_default_scop_shape(resp[0])
 
 
 def test_add_user_with_multipolygon(mock_rabbit, geojson_multipolygon):
@@ -297,6 +310,7 @@ def test_add_user_with_plus(mock_rabbit):
     assert len(resp) == 1
     _check_user_resp(user, resp[0])
     assert mock_rabbit.called
+    assert_default_scop_shape(resp[0])
 
 
 def test_add_user_with_plus_no_json(mock_rabbit):
@@ -306,11 +320,13 @@ def test_add_user_with_plus_no_json(mock_rabbit):
     user = {'login': 'user1+test@example.com', 'email': 'user1+test@example.com'}
     resp = api_post('/v0/users/', data=user)
     _check_user_resp(user, resp)
+    assert_default_scop_shape(resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     _check_user_resp(user, resp[0])
     assert mock_rabbit.called
+    assert_default_scop_shape(resp[0])
 
 
 def test_add_user_with_plus_in_query(mock_rabbit):
@@ -323,11 +339,13 @@ def test_add_user_with_plus_in_query(mock_rabbit):
 
     resp = api_post('/v0/users/?login={email}&email={email}'.format(email=quote(user['email'])))
     _check_user_resp(user, resp)
+    assert_default_scop_shape(resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     _check_user_resp(user, resp[0])
     assert mock_rabbit.called
+    assert_default_scop_shape(resp[0])
 
 
 def test_add_duplicate_login_user(create_user, mock_rabbit):
@@ -384,6 +402,87 @@ def test_add_user_invalid_type(mock_rabbit):
     assert mock_rabbit.call_count == 0
 
 
+def test_add_user_invalid_shape_scope(mock_rabbit):
+    """
+    creation of a user with an invalid shape_scope
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["ab"]}
+    resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
+    assert status == 400
+    assert "message" in resp
+    message = resp["message"]
+    assert "shape_scope" in message
+    assert (
+        message["shape_scope"]
+        == u"The shape_scope argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave ab"
+    )
+    assert mock_rabbit.call_count == 0
+
+
+def test_add_user_valid_shape_scope(mock_rabbit):
+    """
+    creation of a user with an invalid shape_scope
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["stop", "admin"]}
+    resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
+    assert status == 200
+    assert "shape_scope" in resp
+    shape_scope = resp["shape_scope"]
+    assert len(shape_scope) == len(user["shape_scope"])
+    for ss in shape_scope:
+        assert ss in user["shape_scope"]
+    assert mock_rabbit.call_count == 1
+
+
+def test_update_user_valid_shape_scope(create_multiple_users):
+    """
+    Update of a user with valid shape_scope
+    """
+    resp = api_get('/v0/users/')
+    assert len(resp) == 2
+
+    for user in resp:
+        assert_default_scop_shape(user)
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["poi", "stop"]}
+    resp, status = api_put(
+        '/v0/users/{}'.format(create_multiple_users['user1']),
+        check=False,
+        data=json.dumps(user),
+        content_type='application/json',
+    )
+    assert status == 200
+    assert len(resp["shape_scope"]) == len(user["shape_scope"])
+    for ss in resp["shape_scope"]:
+        assert ss in user["shape_scope"]
+
+
+def test_update_user_invalid_shape_scope(create_multiple_users, mock_rabbit):
+    """
+    Update of a user with invalid shape_scope
+    """
+    resp = api_get('/v0/users/')
+    assert len(resp) == 2
+
+    for user in resp:
+        assert_default_scop_shape(user)
+    user = {'login': 'user1', 'email': 'user1@example.com', "shape_scope": ["bob"]}
+    resp, status = api_put(
+        '/v0/users/{}'.format(create_multiple_users['user1']),
+        check=False,
+        data=json.dumps(user),
+        content_type='application/json',
+    )
+    assert status == 400
+    assert "message" in resp
+    message = resp["message"]
+    assert "shape_scope" in message
+    assert (
+        message["shape_scope"]
+        == u"The shape_scope argument must be in list ('admin', 'street', 'addr', 'poi', 'stop'), you gave bob"
+    )
+    assert mock_rabbit.call_count == 0
+
+
 def test_multiple_users(create_multiple_users, mock_rabbit):
     """
     check the list
@@ -431,6 +530,7 @@ def test_delete_user(create_multiple_users, mock_rabbit):
     assert u['end_point']['name'] == 'navitia.io'
     assert u['billing_plan']['name'] == 'nav_ctp'
     assert mock_rabbit.call_count == 1
+    assert_default_scop_shape(u)
 
 
 def test_delete_invalid_user(create_multiple_users, mock_rabbit):

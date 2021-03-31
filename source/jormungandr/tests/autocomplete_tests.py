@@ -154,3 +154,18 @@ class TestAutocomplete(AbstractTestFixture):
         places = get_not_null(response, 'places')
         assert len(places) == 1
         assert places[0]['name'] == 'quai NEUF (Quimper)'
+
+    def test_place_with_shape_scope_invald(self):
+        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape_scope[]=bob')
+        assert status == 400
+
+    def test_place_with_one_shape_scope_accepted(self):
+        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape_scope[]=poi')
+        assert status == 200
+
+    def test_place_with_many_shape_scope_accepted(self):
+        _, status = self.query_no_assert(
+            '/v1/coverage/main_autocomplete_test/places?q=Gare'
+            '&shape_scope[]=poi&shape_scope[]=street&shape_scope[]=addr'
+        )
+        assert status == 200

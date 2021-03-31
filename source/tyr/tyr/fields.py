@@ -234,24 +234,14 @@ user_fields = {
     'has_shape': HasShape,
     'shape': Shape,
     'default_coord': fields.Raw,
+    'shape_scope': fields.List(fields.String),
 }
 
-user_fields_full = {
-    'id': fields.Raw,
-    'login': fields.Raw,
-    'email': fields.Raw,
-    'block_until': FieldDate,
-    'type': fields.Raw(),
-    'keys': fields.List(fields.Nested(key_fields)),
-    'authorizations': fields.List(
-        fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
-    ),
-    'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields),
-    'has_shape': HasShape,
-    'shape': Shape,
-    'default_coord': fields.Raw,
-}
+user_fields_full = deepcopy(user_fields)
+user_fields_full["keys"] = fields.List(fields.Nested(key_fields))
+user_fields_full["authorizations"] = fields.List(
+    fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
+)
 
 dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
 

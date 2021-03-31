@@ -42,6 +42,7 @@ import requests
 import pybreaker
 from jormungandr import app
 from jormungandr.exceptions import UnknownObject
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 
 
 def create_admin_field(geocoding):
@@ -313,6 +314,10 @@ class GeocodeJson(AbstractAutocomplete):
 
                 for t in map_type[type]:
                     params.append(("type[]", t))
+        shape_scope = request.get("shape_scope[]")
+        shape_scope = shape_scope if shape_scope else DEFAULT_SHAPE_SCOPE
+        for ss in shape_scope:
+            params.append(("shape_scope[]", ss))
 
         if request.get("from"):
             lon, lat = self.get_coords(request["from"])
@@ -326,7 +331,7 @@ class GeocodeJson(AbstractAutocomplete):
     def get(self, request, instances):
         params = self.make_params(request, instances, self.timeout)
 
-        shape = request.get('shape', None)
+        shape = request.get('shape')
 
         url = self.make_url('autocomplete')
         kwargs = {"params": params, "timeout": self.timeout}
