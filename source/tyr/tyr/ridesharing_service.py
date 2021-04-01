@@ -56,7 +56,7 @@ class RidesharingService(flask_restful.Resource):
     @InputJsonValidator(ridesharing_service_format)
     def put(self, id=None, version=0):
         """
-        Create or update an equipment provider in db
+        Create or update a ridesharing service in db
         """
         input_json = request.get_json(force=True, silent=False)
         try:
@@ -76,7 +76,7 @@ class RidesharingService(flask_restful.Resource):
 
     def delete(self, id=None, version=0):
         """
-        Delete an equipment service in db, i.e. set parameter DISCARDED to TRUE
+        Delete a ridesharing service in db, i.e. set parameter DISCARDED to TRUE
         """
         if not id:
             abort(400, status="error", message='id is required')

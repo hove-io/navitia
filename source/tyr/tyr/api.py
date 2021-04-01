@@ -30,7 +30,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr import resources, app, api, ridesharing_service
+from tyr import resources, app, api, ridesharing_service, external_service
 import flask_restful
 
 # we always want pretty json
@@ -122,6 +122,12 @@ api.add_resource(
     ridesharing_service.RidesharingService,
     '/v<int:version>/ridesharing_services',
     '/v<int:version>/ridesharing_services/<string:id>',
+)
+
+api.add_resource(
+    external_service.ExternalService,
+    '/v<int:version>/external_services',
+    '/v<int:version>/external_services/<string:id>',
 )
 
 api.add_resource(
