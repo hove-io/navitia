@@ -109,6 +109,7 @@ class FakeUser(models.User):
         shape=None,
         shape_scope=None,
         default_coord=None,
+        block_until=None,
     ):
         """
         We just need a fake user, we don't really care about its identity
@@ -124,6 +125,7 @@ class FakeUser(models.User):
         self._is_blocked = is_blocked
         self.shape = shape
         self.default_coord = default_coord
+        self.block_until = block_until
         self.shape_scope = shape_scope if shape_scope else DEFAULT_SHAPE_SCOPE
 
     @classmethod

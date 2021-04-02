@@ -36,6 +36,7 @@ from .check_utils import *
 from jormungandr import app
 import json
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
+from datetime import datetime
 
 
 BRAGI_RESPONSE = {"features": []}
@@ -134,7 +135,12 @@ user_in_db_auth = {
         'user_without_any_coverage', 8, have_access_to_free_instances=False
     ),
     "api_users": FakeUserAuth(
-        "api_users", 9, shape=multipolygon, shape_scope=["poi", "admin"], default_coord="2.4;48.6"
+        "api_users",
+        9,
+        shape=multipolygon,
+        shape_scope=["poi", "admin"],
+        default_coord="2.4;48.6",
+        block_until=datetime(year=2019, month=10, day=5, hour=23, minute=58, second=30),
     ),
 }
 
@@ -204,6 +210,7 @@ class TestUsersApi(AbstractTestAuthentication):
             assert "coord" in response
             assert response["coord"]["lon"] == "2.4"
             assert response["coord"]["lat"] == "48.6"
+            assert response["block_until"] == "20191005T235830"
 
     def test_users_without_token(self):
         """

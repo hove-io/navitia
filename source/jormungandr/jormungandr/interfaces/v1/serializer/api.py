@@ -61,7 +61,7 @@ from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, Journ
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
-from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
+from jormungandr.interfaces.v1.serializer.time import DateTimeDictField, DateTimeDbField
 from jormungandr.utils import (
     get_current_datetime_str,
     get_timezone_str,
@@ -466,6 +466,7 @@ class UserSerializer(serpy.Serializer):
     end_point = MethodField(schema_type=EndPointSerializer(), display_none=False)
     coord = MethodField(display_none=False, description='Default coord of user')
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    block_until = DateTimeDbField(schema_type=DateTimeDictField, display_none=False)
 
     def get_end_point(self, obj):
         if obj.end_point:
