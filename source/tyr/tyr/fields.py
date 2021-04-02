@@ -94,6 +94,10 @@ ridesharing_service_list_fields = {
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields))
 }
 
+external_service_fields = deepcopy(generic_field)
+external_service_fields['navitia_service'] = fields.Raw
+external_service_list_fields = {'external_services': fields.List(fields.Nested(external_service_fields))}
+
 streetnetwork_backend_fields = deepcopy(generic_field)
 streetnetwork_backend_list_fields = {
     'streetnetwork_backends': fields.List(fields.Nested(streetnetwork_backend_fields))
@@ -202,6 +206,7 @@ instance_fields = {
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields)),
     'greenlet_pool_for_ridesharing_services': fields.Boolean,
     'ridesharing_greenlet_pool_size': fields.Integer,
+    'external_services': fields.List(fields.Nested(external_service_fields)),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

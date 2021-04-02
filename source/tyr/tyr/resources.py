@@ -711,6 +711,15 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
+        parser.add_argument(
+            'external_services',
+            type=str,
+            action="append",
+            help='list of ids of external services available for the instance',
+            location=('json', 'values'),
+            default=[],
+        )
+
         list_modes = ["car", "car_no_park", "walking", "bike", "bss", "ridesharing", "taxi"]
         for mode in list_modes:
             parser.add_argument(
@@ -892,6 +901,15 @@ class Instance(flask_restful.Resource):
                     msg = "Couldn't set ridesharing services - '{}' isn't present in db".format(
                         ridesharing_service_id
                     )
+                    return {"message": msg}, 400
+
+            instance.external_services = []
+            for external_service_id in args.external_services:
+                external_service = models.ExternalService.query.get(external_service_id)
+                if external_service:
+                    instance.external_services.append(external_service)
+                else:
+                    msg = "Couldn't set external services - '{}' isn't present in db".format(external_service_id)
                     return {"message": msg}, 400
 
             db.session.commit()

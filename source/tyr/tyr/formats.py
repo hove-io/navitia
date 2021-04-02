@@ -123,3 +123,24 @@ ridesharing_service_format = {
     },
     'required': ['klass', 'args'],
 }
+
+navitia_service_type = ["free_floatings", "vehicle_occupancies"]
+external_service_format = {
+    'type': 'object',
+    'properties': {
+        'klass': {'type': 'string'},
+        'navitia_service': {'enum': navitia_service_type},
+        'args': {
+            'type': 'object',
+            'properties': {
+                'service_url': {'type': 'string'},
+                'timeout': {'type': 'number'},
+                'circuit_breaker_max_fail': {'type': 'number'},
+                'circuit_breaker_reset_timeout': {'type': 'number'},
+            },
+            'required': ['service_url'],
+        },
+        'discarded': {'type': 'boolean'},
+    },
+    'required': ['klass', 'navitia_service', 'args'],
+}
