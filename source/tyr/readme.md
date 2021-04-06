@@ -472,7 +472,7 @@ name            | description                                                   
 email           | adress email of the user                                                             | yep      |                                    |
 login           | login of the user                                                                    | yep      |                                    |
 type            | type of the user, one of the following values: [with_free_instances, without_free_instances, super_user]  | nope     | with_free_instances                |
-end_point_id    | the id of the endpoint for this user (in most case the default value is good enough  | nope     | the default end_point (navitia.io) |
+end_point_id    | the id of the endpoint for this user (in most cases the default value is good enough  | nope     | the default end_point (navitia.io) |
 shape           | the shape (geojson) to be used for autocomplete for this user                        | nope     | null                               |
 billing_plan_id | the id of the billing_plan for this user                                             | nope     | the default billing plan  |
 
