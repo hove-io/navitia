@@ -580,7 +580,9 @@ class Journeys(JourneyCommon):
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
-        parser_get.add_argument("max_waiting", type=PositiveInteger(), help='Maximum waiting, must be > 0')
+        parser_get.add_argument(
+            "max_waiting_duration", type=PositiveInteger(), help='Maximum waiting, must be > 0'
+        )
 
     @add_tad_links()
     @add_debug_info()

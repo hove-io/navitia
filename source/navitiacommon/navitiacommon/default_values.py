@@ -182,8 +182,8 @@ ridesharing_greenlet_pool_size = 10
 
 external_service = 'free_floatings'
 
-# max_waiting default value 4h: 4*60*60 = 14400 secondes
-max_waiting = 4 * 60 * 60
+# max_waiting_duration default value 4h: 4*60*60 = 14400 secondes
+max_waiting_duration = 4 * 60 * 60
 
 
 def get_value_or_default(attr, instance, instance_name):

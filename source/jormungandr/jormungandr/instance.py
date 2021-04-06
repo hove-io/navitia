@@ -293,10 +293,10 @@ class Instance(object):
         return self._scenario
 
     @property
-    def max_waiting(self):
+    def max_waiting_duration(self):
         # type: () -> int
         instance_db = self.get_models()
-        return get_value_or_default('max_waiting', instance_db, self.name)
+        return get_value_or_default('max_waiting_duration', instance_db, self.name)
 
     @property
     def journey_order(self):

@@ -795,11 +795,11 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'max_waiting',
+            'max_waiting_duration',
             type=int,
             help='max duration waiting (Seconds)',
             location=('json', 'values'),
-            default=instance.max_waiting,
+            default=instance.max_waiting_duration,
         )
 
         args = parser.parse_args()
@@ -878,7 +878,7 @@ class Instance(flask_restful.Resource):
                         'asynchronous_ridesharing',
                         'greenlet_pool_for_ridesharing_services',
                         'ridesharing_greenlet_pool_size',
-                        'max_waiting',
+                        'max_waiting_duration',
                     ],
                 ),
                 maxlen=0,
