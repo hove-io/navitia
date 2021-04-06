@@ -581,7 +581,10 @@ class Journeys(JourneyCommon):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
         parser_get.add_argument(
-            "max_waiting_duration", type=PositiveInteger(), help='Maximum waiting, must be > 0'
+            "max_waiting_duration",
+            type=PositiveInteger(),
+            help='A journey containing a waiting section with a duration greater or equal to  max_waiting_duration '
+            'will be discarded. Units : seconds. Must be > 0. Default value : 4h',
         )
 
     @add_tad_links()
