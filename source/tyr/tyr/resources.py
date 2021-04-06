@@ -797,7 +797,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument(
             'max_waiting',
             type=int,
-            help='max duration waiting (Minutes)',
+            help='max duration waiting (Seconds)',
             location=('json', 'values'),
             default=instance.max_waiting,
         )
