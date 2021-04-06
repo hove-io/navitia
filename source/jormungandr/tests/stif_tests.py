@@ -182,3 +182,59 @@ class TestStif(AbstractTestFixture):
 
         response = self.query_region(query)
         assert len(response['journeys']) == 2
+
+    def test_stif_max_waiting(self):
+        """
+        Test max waiting :
+        stopA --> StopC --> StopB
+        Waiting 30 minutes in StopC
+        """
+        # default max_waiting = 4*60*60
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default".format(
+            from_sp="stopA", to_sp="stopB", datetime="20140614T084500"
+        )
+
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['arrival_date_time'] == '20140614T110000'
+        assert response['journeys'][0]['sections'][1]["type"] == 'waiting'
+        assert response['journeys'][0]['sections'][1]["duration"] == 30 * 60
+        assert response['journeys'][1]['arrival_date_time'] == '20140614T120000'
+
+    def test_stif_override_max_waiting(self):
+        """
+        Test max waiting :
+        stopA --> StopC --> StopB
+        Waiting 30 minutes in StopC
+        """
+        # override max_waiting 15 minutes
+        # max_waiting = 15*60 = 900
+        query = (
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "&max_waiting={max_waiting}".format(
+                from_sp="stopA", to_sp="stopB", datetime="20140614T084500", max_waiting=15 * 60
+            )
+        )
+
+        response = self.query_region(query)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['arrival_date_time'] == '20140614T120000'
+
+    def test_stif_invalid_max_waiting(self):
+        """
+        Test max waiting :
+        stopA --> StopC --> StopB
+        Waiting 30 minutes in StopC
+        """
+        # override max_waiting 15 minutes
+        # max_waiting = -10
+        query = (
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "&max_waiting={max_waiting}".format(
+                from_sp="stopA", to_sp="stopB", datetime="20140614T084500", max_waiting=-10
+            )
+        )
+
+        response, status_code = self.query_region(query, check=False)
+        assert status_code == 400
+        assert response["message"].startswith('parameter "max_waiting" invalid')
