@@ -39,6 +39,7 @@ import io
 from operator import itemgetter
 
 from navitiacommon import models
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 import pytest
 
 
@@ -106,7 +107,9 @@ class FakeUser(models.User):
         is_super_user=False,
         is_blocked=False,
         shape=None,
+        shape_scope=None,
         default_coord=None,
+        block_until=None,
     ):
         """
         We just need a fake user, we don't really care about its identity
@@ -122,6 +125,8 @@ class FakeUser(models.User):
         self._is_blocked = is_blocked
         self.shape = shape
         self.default_coord = default_coord
+        self.block_until = block_until
+        self.shape_scope = shape_scope if shape_scope else DEFAULT_SHAPE_SCOPE
 
     @classmethod
     def get_from_token(cls, token, valid_until):

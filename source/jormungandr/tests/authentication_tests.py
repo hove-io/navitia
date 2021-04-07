@@ -35,7 +35,8 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
 import json
-import mock
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
+from datetime import datetime
 
 
 BRAGI_RESPONSE = {"features": []}
@@ -117,6 +118,11 @@ class FakeUserAuth(FakeUser):
         return mock_instances.values()
 
 
+multipolygon = (
+    '{"type":"Feature","geometry":{"type":"MultiPolygo","coordiates": '
+    '[[[[2.4,48.6],[2.8,48.6],[2.7,48.9],[2.4,48.6]]], [[[2.1,48.9],[2.2,48.6],[2.4,48.9],[2.1,48.9]]]]}}'
+)
+
 user_in_db_auth = {
     'bob': FakeUserAuth('bob', 1),
     'bobette': FakeUserAuth('bobette', 2),
@@ -127,6 +133,14 @@ user_in_db_auth = {
     'super_user': FakeUserAuth('super_user', 7, is_super_user=True),
     'user_without_any_coverage': FakeUserAuth(
         'user_without_any_coverage', 8, have_access_to_free_instances=False
+    ),
+    "api_users": FakeUserAuth(
+        "api_users",
+        9,
+        shape=multipolygon,
+        shape_scope=["poi", "admin"],
+        default_coord="2.4;48.6",
+        block_until=datetime(year=2019, month=10, day=5, hour=23, minute=58, second=30),
     ),
 }
 
@@ -164,6 +178,46 @@ class AbstractTestAuthentication(AbstractTestFixture):
         app.config['PUBLIC'] = self.old_public_val
         app.config['DISABLE_DATABASE'] = self.old_db_val
         models.Instance.get_by_name = self.old_instance_getter
+
+
+@dataset({"main_routing_test": {}})
+class TestUsersApi(AbstractTestAuthentication):
+    def test_users_default_values(self):
+        """
+        User With default values
+        """
+        with user_set(app, FakeUserAuth, 'bob'):
+            response_obj = self.app.get('/v1/users')
+            response = json.loads(response_obj.data)
+            assert response["type"] == "with_free_instances"
+            assert "shape_scope" in response
+            assert len(DEFAULT_SHAPE_SCOPE) == len(response['shape_scope'])
+            for ss in response['shape_scope']:
+                assert ss in DEFAULT_SHAPE_SCOPE
+
+    def test_users_with_shape(self):
+        """
+        User with shape and shape_scope
+        """
+        with user_set(app, FakeUserAuth, 'api_users'):
+            response_obj = self.app.get('/v1/users')
+            response = json.loads(response_obj.data)
+            assert response["type"] == "with_free_instances"
+            assert len(response['shape_scope']) == 2
+            for ss in response['shape_scope']:
+                assert ss in ["poi", "admin"]
+            assert "shape" in response
+            assert "coord" in response
+            assert response["coord"]["lon"] == "2.4"
+            assert response["coord"]["lat"] == "48.6"
+            assert response["block_until"] == "20191005T235830"
+
+    def test_users_without_token(self):
+        """
+        User without token
+        """
+        response_obj = self.app.get('/v1/users')
+        assert response_obj.status_code == 401
 
 
 @dataset({"main_routing_test": {}, "departure_board_test": {}})
