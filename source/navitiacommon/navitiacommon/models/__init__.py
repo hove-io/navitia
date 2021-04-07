@@ -584,7 +584,9 @@ class Instance(db.Model):  # type: ignore
         "ExternalService", secondary=associate_instance_external_service, backref="instances", lazy='joined'
     )
     # max_waiting_duration default value 4h: 4*60*60 = 14400 minutes
-    max_waiting_duration = db.Column(db.Integer, nullable=False, server_default='14400')
+    max_waiting_duration = db.Column(
+        db.Integer, nullable=False, server_default='{}'.format(default_values.max_waiting_duration)
+    )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name

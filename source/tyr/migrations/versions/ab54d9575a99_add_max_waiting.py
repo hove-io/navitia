@@ -12,11 +12,18 @@ down_revision = '43b19d690da2'
 
 from alembic import op
 import sqlalchemy as sa
+from navitiacommon import default_values
 
 
 def upgrade():
     op.add_column(
-        'instance', sa.Column('max_waiting_duration', sa.Integer(), server_default='14400', nullable=False)
+        'instance',
+        sa.Column(
+            'max_waiting_duration',
+            sa.Integer(),
+            server_default='{}'.format(default_values.max_waiting_duration),
+            nullable=False,
+        ),
     )
 
 
