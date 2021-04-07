@@ -135,6 +135,9 @@ def filter_journeys(responses, instance, request):
     orig_modes = request.get('origin_mode', [])
     dest_modes = request.get('destination_mode', [])
     min_nb_transfers = request.get('min_nb_transfers', 0)
+    max_waiting_duration = request.get('max_waiting_duration')
+    if not max_waiting_duration:
+        max_waiting_duration = instance.max_waiting_duration
 
     filters = [
         FilterTooShortHeavyJourneys(
@@ -145,7 +148,7 @@ def filter_journeys(responses, instance, request):
             orig_modes=orig_modes,
             dest_modes=dest_modes,
         ),
-        FilterTooLongWaiting(),
+        FilterTooLongWaiting(max_waiting_duration=max_waiting_duration),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
     ]
 
@@ -261,6 +264,9 @@ class FilterTooLongWaiting(SingleJourneyFilter):
 
     message = 'too_long_waiting'
 
+    def __init__(self, max_waiting_duration=4 * 60 * 60):
+        self.max_waiting_duration = max_waiting_duration
+
     def filter_func(self, journey):
         """
         filter journeys with a too long section of type waiting
@@ -271,15 +277,14 @@ class FilterTooLongWaiting(SingleJourneyFilter):
         # if there is no transfer it won't have any waiting sections
         if journey.nb_transfers == 0:
             return True
-        # if the total duration is smaller that the max_waiting, no need to check
-        max_waiting = 4 * 60 * 60
-        if journey.duration < max_waiting:
+
+        if journey.duration < self.max_waiting_duration:
             return True
 
         for s in journey.sections:
             if s.type != response_pb2.WAITING:
                 continue
-            if s.duration < max_waiting:
+            if s.duration < self.max_waiting_duration:
                 continue
             return False
         return True

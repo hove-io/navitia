@@ -794,6 +794,14 @@ class Instance(flask_restful.Resource):
             default=instance.ridesharing_greenlet_pool_size,
         )
 
+        parser.add_argument(
+            'max_waiting_duration',
+            type=int,
+            help='max duration waiting (Seconds)',
+            location=('json', 'values'),
+            default=instance.max_waiting_duration,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -870,6 +878,7 @@ class Instance(flask_restful.Resource):
                         'asynchronous_ridesharing',
                         'greenlet_pool_for_ridesharing_services',
                         'ridesharing_greenlet_pool_size',
+                        'max_waiting_duration',
                     ],
                 ),
                 maxlen=0,

@@ -207,6 +207,7 @@ instance_fields = {
     'greenlet_pool_for_ridesharing_services': fields.Boolean,
     'ridesharing_greenlet_pool_size': fields.Integer,
     'external_services': fields.List(fields.Nested(external_service_fields)),
+    'max_waiting_duration': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

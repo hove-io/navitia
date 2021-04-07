@@ -580,6 +580,13 @@ class Journeys(JourneyCommon):
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
+        parser_get.add_argument(
+            "max_waiting_duration",
+            type=PositiveInteger(),
+            help='A journey containing a waiting section with a duration greater or equal to  max_waiting_duration '
+            'will be discarded. Units : seconds. Must be > 0. Default value : 4h',
+        )
+
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()
