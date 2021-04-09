@@ -55,6 +55,7 @@ from navitiacommon.default_traveler_profile_params import (
     default_traveler_profile_params,
     acceptable_traveler_types,
 )
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
@@ -710,6 +711,15 @@ class Instance(flask_restful.Resource):
             default=[],
         )
 
+        parser.add_argument(
+            'external_services',
+            type=str,
+            action="append",
+            help='list of ids of external services available for the instance',
+            location=('json', 'values'),
+            default=[],
+        )
+
         list_modes = ["car", "car_no_park", "walking", "bike", "bss", "ridesharing", "taxi"]
         for mode in list_modes:
             parser.add_argument(
@@ -782,6 +792,14 @@ class Instance(flask_restful.Resource):
             help='ridesharing greenlet pool size',
             location=('json', 'values'),
             default=instance.ridesharing_greenlet_pool_size,
+        )
+
+        parser.add_argument(
+            'max_waiting_duration',
+            type=int,
+            help='max duration waiting (Seconds)',
+            location=('json', 'values'),
+            default=instance.max_waiting_duration,
         )
 
         args = parser.parse_args()
@@ -860,6 +878,7 @@ class Instance(flask_restful.Resource):
                         'asynchronous_ridesharing',
                         'greenlet_pool_for_ridesharing_services',
                         'ridesharing_greenlet_pool_size',
+                        'max_waiting_duration',
                     ],
                 ),
                 maxlen=0,
@@ -893,6 +912,15 @@ class Instance(flask_restful.Resource):
                     )
                     return {"message": msg}, 400
 
+            instance.external_services = []
+            for external_service_id in args.external_services:
+                external_service = models.ExternalService.query.get(external_service_id)
+                if external_service:
+                    instance.external_services.append(external_service)
+                else:
+                    msg = "Couldn't set external services - '{}' isn't present in db".format(external_service_id)
+                    return {"message": msg}, 400
+
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -914,6 +942,24 @@ class User(flask_restful.Resource):
         parser.add_argument('key', type=six.text_type, required=False, case_sensitive=False, help='key')
         parser.add_argument('end_point_id', type=int)
         parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
+        parser.add_argument(
+            'shape_scope[]',
+            type=OptionValue(ENUM_SHAPE_SCOPE),
+            case_sensitive=False,
+            required=False,
+            action='append',
+            dest='shape_scope',
+            location='values',
+            default=DEFAULT_SHAPE_SCOPE,
+        )
+        parser.add_argument(
+            'shape_scope',
+            type=OptionValue(ENUM_SHAPE_SCOPE),
+            action='append',
+            required=False,
+            location='json',
+            default=DEFAULT_SHAPE_SCOPE,
+        )
         return parser
 
     def _get_user_by_id(self, user_id):
@@ -945,7 +991,6 @@ class User(flask_restful.Resource):
                 return self._get_all_users(args)
 
     def post(self):
-        user = None
         parser = reqparse.RequestParser()
         parser.add_argument(
             'login',
@@ -991,6 +1036,14 @@ class User(flask_restful.Resource):
         )
         parser.add_argument('shape', type=geojson_argument, required=False, location=('json', 'values'))
         parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
+        parser.add_argument(
+            'shape_scope',
+            type=OptionValue(ENUM_SHAPE_SCOPE),
+            action='append',
+            required=False,
+            default=DEFAULT_SHAPE_SCOPE,
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
 
         if not validate_email(
@@ -1000,7 +1053,6 @@ class User(flask_restful.Resource):
         ):
             return {'error': 'email invalid'}, 400
 
-        end_point = None
         if args['end_point_id']:
             end_point = models.EndPoint.query.get(args['end_point_id'])
         else:
@@ -1024,6 +1076,7 @@ class User(flask_restful.Resource):
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])
             user.default_coord = args['default_coord']
+            user.shape_scope = args.get("shape_scope")
             db.session.add(user)
             db.session.commit()
 
@@ -1096,6 +1149,14 @@ class User(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
+        parser.add_argument(
+            'shape_scope',
+            type=OptionValue(ENUM_SHAPE_SCOPE),
+            action='append',
+            required=False,
+            default=DEFAULT_SHAPE_SCOPE,
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
 
         if not validate_email(
@@ -1131,6 +1192,7 @@ class User(flask_restful.Resource):
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])
             user.default_coord = args['default_coord']
+            user.shape_scope = args['shape_scope']
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()

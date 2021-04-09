@@ -99,22 +99,18 @@ When comparing VJ1 and VJ4, we compare VJ1(stopC) with VJ4(stopD)
 and when we compare VJ4 and VJ1, we compare VJ4(stopB) with VJ1(stopC).
 */
 struct route_schedule_fixture {
-    ed::builder b = {"20120614"};
+    ed::builder b;
 
-    route_schedule_fixture() {
-        const std::string a_name = "stopA", b_name = "stopB", c_name = "stopC", d_name = "stopD";
-        b.vj("A", "1111111", "", true, "1", "hs_1", "1")(c_name, 8 * 3600 + 5 * 60)(d_name, 9 * 3600 + 30 * 60);
-        b.vj("A", "1111111", "", true, "2", "hs_2", "2")(a_name, 8 * 3600)(b_name, 8 * 3600 + 10 * 60);
-        b.vj("A", "1111111", "", true, "3", "hs_3", "3")(a_name, 8 * 3600 + 5 * 60)(b_name, 8 * 3600 + 20 * 60);
-        b.vj("A", "1111111", "", true, "4", "hs_4", "4")(b_name, 8 * 3600 + 25 * 60)(d_name, 9 * 3600 + 35 * 60);
-        b.finish();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
-        b.data->pt_data->build_uri();
-
+    route_schedule_fixture()
+        : b("20120614", [](ed::builder& b) {
+              const std::string a_name = "stopA", b_name = "stopB", c_name = "stopC", d_name = "stopD";
+              b.vj("A", "1111111", "", true, "1", "hs_1", "1")(c_name, 8 * 3600 + 5 * 60)(d_name, 9 * 3600 + 30 * 60);
+              b.vj("A", "1111111", "", true, "2", "hs_2", "2")(a_name, 8 * 3600)(b_name, 8 * 3600 + 10 * 60);
+              b.vj("A", "1111111", "", true, "3", "hs_3", "3")(a_name, 8 * 3600 + 5 * 60)(b_name, 8 * 3600 + 20 * 60);
+              b.vj("A", "1111111", "", true, "4", "hs_4", "4")(b_name, 8 * 3600 + 25 * 60)(d_name, 9 * 3600 + 35 * 60);
+          }) {
         boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
         boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
-
         b.data->meta->production_date = boost::gregorian::date_period(begin, end);
     }
 };
@@ -167,73 +163,74 @@ We have the following associations :
 */
 struct route_schedule_calendar_fixture {
     // we complicate things a bit, we say that the vjs have a utc offset
-    ed::builder b = {"20120614", "canal tp", "paris", {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}};
+    ed::builder b;
     navitia::type::Calendar *c1, *c2, *c3, *c4;
     navitia::type::VehicleJourney *vj5, *vj6, *vj7;
 
-    route_schedule_calendar_fixture() {
-        const std::string S1_name = "S1", S2_name = "S2", S3_name = "S3";
-        boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
-        boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
+    route_schedule_calendar_fixture()
+        : b("20120614",
+            [&](ed::builder& b) {
+                const std::string S1_name = "S1", S2_name = "S2", S3_name = "S3";
+                boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20120613");
+                boost::gregorian::date end = boost::gregorian::date_from_iso_string("20120630");
 
-        vj5 = b.vj("B", "1111111", "", true, "VJ5", "hs_VJ5", "MVJ5")(S1_name, "10:00"_t)(S2_name, "10:30"_t)(S3_name,
-                                                                                                              "11:00"_t)
-                  .make();
-        vj6 = b.vj("B", "1111111", "", true, "VJ6", "hs_VJ6", "MVJ6")(S1_name, "11:00"_t)(S2_name, "11:30"_t)(S3_name,
-                                                                                                              "12:00"_t)
-                  .make();
-        vj7 = b.vj("B", "1111111", "", true, "VJ7", "hs_VJ7", "MVJ7")(S1_name, "13:00"_t)(S2_name, "13:37"_t)(S3_name,
-                                                                                                              "14:00"_t)
-                  .make();
+                vj5 = b.vj("B", "1111111", "", true, "VJ5", "hs_VJ5", "MVJ5")(S1_name, "10:00"_t)(S2_name, "10:30"_t)(
+                           S3_name, "11:00"_t)
+                          .make();
+                vj6 = b.vj("B", "1111111", "", true, "VJ6", "hs_VJ6", "MVJ6")(S1_name, "11:00"_t)(S2_name, "11:30"_t)(
+                           S3_name, "12:00"_t)
+                          .make();
+                vj7 = b.vj("B", "1111111", "", true, "VJ7", "hs_VJ7", "MVJ7")(S1_name, "13:00"_t)(S2_name, "13:37"_t)(
+                           S3_name, "14:00"_t)
+                          .make();
 
-        auto save_cal = [&](navitia::type::Calendar* cal) {
-            b.data->pt_data->calendars.push_back(cal);
-            b.data->pt_data->calendars_map[cal->uri] = cal;
-        };
+                auto save_cal = [&](navitia::type::Calendar* cal) {
+                    b.data->pt_data->calendars.push_back(cal);
+                    b.data->pt_data->calendars_map[cal->uri] = cal;
+                };
 
-        c1 = new navitia::type::Calendar(begin);
-        c1->uri = "C1";
-        c1->active_periods.push_back({begin, end});
-        c1->week_pattern = std::bitset<7>("1111100");
-        save_cal(c1);
-        c2 = new navitia::type::Calendar(begin);
-        c2->uri = "C2";
-        c2->active_periods.push_back({begin, end});
-        c2->week_pattern = std::bitset<7>("0000011");
-        save_cal(c2);
-        c3 = new navitia::type::Calendar(begin);
-        c3->uri = "C3";
-        c3->active_periods.push_back({begin, end});
-        c3->week_pattern = std::bitset<7>("1111111");
-        save_cal(c3);
-        c4 = new navitia::type::Calendar(begin);
-        c4->uri = "C4";
-        c4->active_periods.push_back({begin, end});
-        c4->week_pattern = std::bitset<7>("0000000");
-        save_cal(c4);
+                c1 = new navitia::type::Calendar(begin);
+                c1->uri = "C1";
+                c1->active_periods.push_back({begin, end});
+                c1->week_pattern = std::bitset<7>("1111100");
+                save_cal(c1);
+                c2 = new navitia::type::Calendar(begin);
+                c2->uri = "C2";
+                c2->active_periods.push_back({begin, end});
+                c2->week_pattern = std::bitset<7>("0000011");
+                save_cal(c2);
+                c3 = new navitia::type::Calendar(begin);
+                c3->uri = "C3";
+                c3->active_periods.push_back({begin, end});
+                c3->week_pattern = std::bitset<7>("1111111");
+                save_cal(c3);
+                c4 = new navitia::type::Calendar(begin);
+                c4->uri = "C4";
+                c4->active_periods.push_back({begin, end});
+                c4->week_pattern = std::bitset<7>("0000000");
+                save_cal(c4);
 
-        auto a1 = new navitia::type::AssociatedCalendar;
-        a1->calendar = c1;
-        b.data->pt_data->associated_calendars.push_back(a1);
-        auto a2 = new navitia::type::AssociatedCalendar;
-        a2->calendar = c2;
-        b.data->pt_data->associated_calendars.push_back(a2);
-        auto a3 = new navitia::type::AssociatedCalendar;
-        a3->calendar = c3;
-        b.data->pt_data->associated_calendars.push_back(a3);
+                auto a1 = new navitia::type::AssociatedCalendar;
+                a1->calendar = c1;
+                b.data->pt_data->associated_calendars.push_back(a1);
+                auto a2 = new navitia::type::AssociatedCalendar;
+                a2->calendar = c2;
+                b.data->pt_data->associated_calendars.push_back(a2);
+                auto a3 = new navitia::type::AssociatedCalendar;
+                a3->calendar = c3;
+                b.data->pt_data->associated_calendars.push_back(a3);
 
-        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c1->uri, a1});
-        b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c2->uri, a2});
-        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c2->uri, a2});
-        b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, a3});
+                b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c1->uri, a1});
+                b.data->pt_data->meta_vjs.get_mut("MVJ5")->associated_calendars.insert({c2->uri, a2});
+                b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c2->uri, a2});
+                b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, a3});
 
-        b.finish();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
-        b.data->pt_data->build_uri();
-
-        b.data->meta->production_date = boost::gregorian::date_period(begin, end);
-    }
+                b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+            },
+            false,
+            "canal tp",
+            "paris",
+            {{"02:00"_t, {{"20120614"_d, "20130614"_d}}}}) {}
 
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
         auto* data_ptr = b.data.get();
@@ -372,32 +369,34 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
  *
  */
 struct CalWithDSTFixture {
-    ed::builder b = {"20150614", "canal tp", "paris", {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}};
+    ed::builder b;
 
-    CalWithDSTFixture() {
-        auto normal_vp = "111111";
-        auto shifted_vp = "111110";
-        b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t);
-        b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t);
-        b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t);
+    CalWithDSTFixture()
+        : b("20150614",
+            [](ed::builder& b) {
+                auto normal_vp = "111111";
+                auto shifted_vp = "111110";
+                b.vj("B", shifted_vp)("S1", "22:50"_t)("S2", "23:05"_t)("S3", "23:15"_t);
+                b.vj("B", shifted_vp)("S1", "23:50"_t)("S2", "00:05"_t)("S3", "00:15"_t);
+                b.vj("B", normal_vp)("S1", "00:50"_t)("S2", "01:05"_t)("S3", "01:15"_t);
 
-        auto cal = new navitia::type::Calendar();
-        cal->uri = "cal";
-        b.data->pt_data->calendars.push_back(cal);
-        b.data->pt_data->calendars_map[cal->uri] = cal;
+                auto cal = new navitia::type::Calendar();
+                cal->uri = "cal";
+                b.data->pt_data->calendars.push_back(cal);
+                b.data->pt_data->calendars_map[cal->uri] = cal;
 
-        auto a1 = new navitia::type::AssociatedCalendar;
-        a1->calendar = cal;
-        b.data->pt_data->associated_calendars.push_back(a1);
+                auto a1 = new navitia::type::AssociatedCalendar;
+                a1->calendar = cal;
+                b.data->pt_data->associated_calendars.push_back(a1);
 
-        for (auto& mvj : b.data->pt_data->meta_vjs) {
-            mvj->associated_calendars.insert({cal->uri, a1});
-        }
-
-        b.finish();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
-    }
+                for (auto& mvj : b.data->pt_data->meta_vjs) {
+                    mvj->associated_calendars.insert({cal->uri, a1});
+                }
+            },
+            true,
+            "canal tp",
+            "paris",
+            {{"02:00"_t, {{"20150614"_d, "20160614"_d}}}}) {}
 };
 
 BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp, CalWithDSTFixture) {
@@ -441,39 +440,35 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
 //
 // Detail in associated PR https://github.com/CanalTP/navitia/pull/1304
 BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
-    ed::builder b = {"20151127"};
     navitia::type::Calendar* c1;
 
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20160101");
 
-    b.vj("L", "111111", "", true, "A", "hs_A", "A")("st1", "23:30"_t)("st2", "23:40"_t)("st3", "23:50"_t);
-    b.vj("L", "111111", "", true, "B", "hs_B", "B")("st1", "23:50"_t)("st2", "24:00"_t)("st3", "24:10"_t);
-    b.vj("L", "111110", "", true, "C", "hs_C", "C")("st1", "24:10"_t)("st2", "24:20"_t)("st3", "24:30"_t);
+    ed::builder b("20151127", [&](ed::builder& b) {
+        b.vj("L", "111111", "", true, "A", "hs_A", "A")("st1", "23:30"_t)("st2", "23:40"_t)("st3", "23:50"_t);
+        b.vj("L", "111111", "", true, "B", "hs_B", "B")("st1", "23:50"_t)("st2", "24:00"_t)("st3", "24:10"_t);
+        b.vj("L", "111110", "", true, "C", "hs_C", "C")("st1", "24:10"_t)("st2", "24:20"_t)("st3", "24:30"_t);
 
-    auto save_cal = [&](navitia::type::Calendar* cal) {
-        b.data->pt_data->calendars.push_back(cal);
-        b.data->pt_data->calendars_map[cal->uri] = cal;
-    };
+        auto save_cal = [&](navitia::type::Calendar* cal) {
+            b.data->pt_data->calendars.push_back(cal);
+            b.data->pt_data->calendars_map[cal->uri] = cal;
+        };
 
-    c1 = new navitia::type::Calendar(begin);
-    c1->uri = "C1";
-    c1->active_periods.push_back({begin, end});
-    c1->week_pattern = std::bitset<7>("1111111");
-    save_cal(c1);
+        c1 = new navitia::type::Calendar(begin);
+        c1->uri = "C1";
+        c1->active_periods.push_back({begin, end});
+        c1->week_pattern = std::bitset<7>("1111111");
+        save_cal(c1);
 
-    auto a1 = new navitia::type::AssociatedCalendar;
-    a1->calendar = c1;
-    b.data->pt_data->associated_calendars.push_back(a1);
+        auto a1 = new navitia::type::AssociatedCalendar;
+        a1->calendar = c1;
+        b.data->pt_data->associated_calendars.push_back(a1);
 
-    b.data->pt_data->meta_vjs.get_mut("A")->associated_calendars.insert({c1->uri, a1});
-    b.data->pt_data->meta_vjs.get_mut("B")->associated_calendars.insert({c1->uri, a1});
-    b.data->pt_data->meta_vjs.get_mut("C")->associated_calendars.insert({c1->uri, a1});
-
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
+        b.data->pt_data->meta_vjs.get_mut("A")->associated_calendars.insert({c1->uri, a1});
+        b.data->pt_data->meta_vjs.get_mut("B")->associated_calendars.insert({c1->uri, a1});
+        b.data->pt_data->meta_vjs.get_mut("C")->associated_calendars.insert({c1->uri, a1});
+    });
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -497,14 +492,13 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
 // st5 4 6 7
 // st6 5 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_1) {
-    ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st4", "5:00"_t)("st5", "6:00"_t)("st6", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "3:00"_t)("st3", "5:00"_t)(
-        "st4", "6:00"_t)("st5", "7:00"_t)("st6", "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st4", "3:00"_t)("st5", "4:00"_t)("st6",
-                                                                                                        "5:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st4", "5:00"_t)("st5", "6:00"_t)("st6", "7:00"_t);
+        b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "3:00"_t)("st3", "5:00"_t)(
+            "st4", "6:00"_t)("st5", "7:00"_t)("st6", "8:00"_t);
+        b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st4", "3:00"_t)("st5", "4:00"_t)("st6",
+                                                                                                            "5:00"_t);
+    });
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -533,14 +527,13 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
 // st7  9 10
 // st8 10 11
 BOOST_AUTO_TEST_CASE(complicated_order_2) {
-    ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
-        "st4", "5:00"_t)("st5", "7:00"_t)("st6", "9:00"_t)("st7", "10:00"_t)("st8", "11:00"_t);
-    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "2:00"_t)("st2", "3:00"_t)("st3", "4:00"_t)("st6",
-                                                                                                        "7:00"_t);
-    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st6", "8:00"_t)("st7", "9:00"_t)("st8", "10:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
+            "st4", "5:00"_t)("st5", "7:00"_t)("st6", "9:00"_t)("st7", "10:00"_t)("st8", "11:00"_t);
+        b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "2:00"_t)("st2", "3:00"_t)("st3", "4:00"_t)("st6",
+                                                                                                            "7:00"_t);
+        b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st6", "8:00"_t)("st7", "9:00"_t)("st8", "10:00"_t);
+    });
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -565,15 +558,14 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
 // st3 6 7
 // st4 7 8
 BOOST_AUTO_TEST_CASE(complicated_order_3) {
-    ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
-                                                                                                        "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
-    b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
-    b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
+        b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
+                                                                                                            "8:00"_t);
+        b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
+        b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
+        b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
+    });
 
     using btp = boost::posix_time::time_period;
     b.impact(nt::RTLevel::Adapted, "Disruption 1")
@@ -634,15 +626,14 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
 // st4
 
 BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
-    ed::builder b = {"20120614"};
-    b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
-    b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
-                                                                                                        "8:00"_t);
-    b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
-    b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
-    b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "A", "hs_A", "A")("st3", "6:00"_t)("st4", "7:00"_t);
+        b.vj("L", "1111111", "", true, "B", "hs_B", "B")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "7:00"_t)("st4",
+                                                                                                            "8:00"_t);
+        b.vj("L", "1111111", "", true, "C", "hs_C", "C")("st1", "2:00"_t)("st2", "3:00"_t);
+        b.vj("L", "1111111", "", true, "D", "hs_D", "D")("st1", "3:00"_t)("st2", "4:00"_t);
+        b.vj("L", "1111111", "", true, "E", "hs_E", "E")("st1", "4:00"_t)("st2", "5:00"_t);
+    });
 
     using btp = boost::posix_time::time_period;
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
@@ -688,38 +679,36 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
 
 // Test that frequency are correctly displayed and that we get departure_times and not boarding times
 BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
-    ed::builder b("20170101");
-
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
-
-    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-        "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
-        "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
-
-    b.vj("L1").name("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
-        "stop2", "23:55"_t, "23:55"_t, std::numeric_limits<uint16_t>::max(), true, true, 600, 1800)(
-        "stop3", "24:10"_t, "24:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
-
-    b.frequency_vj("L1", "18:00"_t, "19:00"_t, "00:30"_t)
-        .name("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-            "stop2", "18:05"_t, "18:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
-            "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
-
     navitia::type::Calendar* c = new navitia::type::Calendar(begin);
-    c->uri = "C1";
-    c->active_periods.push_back({begin, end});
-    c->week_pattern = std::bitset<7>("1111111");
-    b.data->pt_data->calendars.push_back(c);
-    b.data->pt_data->calendars_map[c->uri] = c;
 
-    auto a1 = new navitia::type::AssociatedCalendar;
-    a1->calendar = c;
-    b.data->pt_data->associated_calendars.push_back(a1);
-    b.data->pt_data->meta_vjs.get_mut("vj:0")->associated_calendars.insert({c->uri, a1});
-    b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
+    ed::builder b("20170101", [&](ed::builder& b) {
+        b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
+            "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-    b.make();
+        b.vj("L1").name("vj:2")("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)(
+            "stop2", "23:55"_t, "23:55"_t, std::numeric_limits<uint16_t>::max(), true, true, 600, 1800)(
+            "stop3", "24:10"_t, "24:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+
+        b.frequency_vj("L1", "18:00"_t, "19:00"_t, "00:30"_t)
+            .name("vj:1")("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+                "stop2", "18:05"_t, "18:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
+                "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+        c->uri = "C1";
+        c->active_periods.push_back({begin, end});
+        c->week_pattern = std::bitset<7>("1111111");
+        b.data->pt_data->calendars.push_back(c);
+        b.data->pt_data->calendars_map[c->uri] = c;
+
+        auto a1 = new navitia::type::AssociatedCalendar;
+        a1->calendar = c;
+        b.data->pt_data->associated_calendars.push_back(a1);
+        b.data->pt_data->meta_vjs.get_mut("vj:0")->associated_calendars.insert({c->uri, a1});
+        b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
+    });
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator_cal(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -766,17 +755,15 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
 
 // Check that results are in the right order even if the boarding_time are in a different one
 BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
-    ed::builder b("20170101");
+    ed::builder b("20170101", [&](ed::builder& b) {
+        b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
+            "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
+            "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
-    b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)(
-        "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)(
-        "stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
-
-    b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
-        "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
-        "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
-
-    b.make();
+        b.vj("L1").name("vj:1")("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)(
+            "stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)(
+            "stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+    });
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -798,13 +785,11 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
 }
 
 BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
-    ed::builder b("20180101");
-
-    b.vj("L1", "10000001").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t);
-
-    b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")
-        .name("vj:1")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
-    b.make();
+    ed::builder b("20180101", [&](ed::builder& b) {
+        b.vj("L1", "10000001").name("vj:0")("stop1", "8:00"_t, "8:00"_t)("stop2", "8:05"_t, "8:05"_t);
+        b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001")
+            .name("vj:1")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:05:00"_t, "10:05:00"_t);
+    });
 
     auto* data_ptr = b.data.get();
     auto first_sunday = navitia::to_posix_timestamp("20180101T000000"_dt);

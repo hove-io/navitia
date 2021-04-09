@@ -90,13 +90,13 @@ void dataRAPTOR::JppsFromJp::load(const JourneyPatternContainer& jp_container) {
     }
 }
 
-void dataRAPTOR::load(const type::PT_Data& data, size_t cache_size) {
-    jp_container.load(data);
-    labels_const.init_inf(data.stop_points);
-    labels_const_reverse.init_min(data.stop_points);
+void dataRAPTOR::load(const type::PT_Data& pt_data, size_t cache_size) {
+    jp_container.load(pt_data);
+    labels_const.init_inf(pt_data.stop_points);
+    labels_const_reverse.init_min(pt_data.stop_points);
 
-    connections.load(data);
-    jpps_from_sp.load(data, jp_container);
+    connections.load(pt_data);
+    jpps_from_sp.load(pt_data, jp_container);
     jpps_from_jp.load(jp_container);
     next_stop_time_data.load(jp_container);
 

@@ -48,6 +48,7 @@ from jormungandr.interfaces.v1 import (
     LineReports,
     EquipmentReports,
     free_floatings,
+    users,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -316,4 +317,5 @@ class V1Routing(AModule):
             endpoint='freefloatings_nearby',
         )
 
+        self.add_resource(users.User, "/users", endpoint='users')
         self.add_resource(JSONSchema.Schema, '/schema', endpoint="schema")

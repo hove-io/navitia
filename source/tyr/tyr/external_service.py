@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -35,36 +35,36 @@ import flask_restful
 from flask_restful import marshal_with, marshal, abort
 
 import sqlalchemy
-from tyr.fields import ridesharing_service_list_fields, ridesharing_service_fields
-from tyr.formats import ridesharing_service_format
+from tyr.fields import external_service_list_fields, external_service_fields
+from tyr.formats import external_service_format
 from navitiacommon import models, utils
 import logging
 from tyr.validations import InputJsonValidator
 
 
-class RidesharingService(flask_restful.Resource):
-    @marshal_with(ridesharing_service_list_fields)
+class ExternalService(flask_restful.Resource):
+    @marshal_with(external_service_list_fields)
     def get(self, id=None, version=0):
         if id:
             try:
-                return {'ridesharing_services': [models.RidesharingService.find_by_id(id)]}
+                return {'external_services': [models.ExternalService.find_by_id(id)]}
             except sqlalchemy.orm.exc.NoResultFound:
-                return {'ridesharing_services': []}, 404
+                return {'external_services': []}, 404
         else:
-            return {'ridesharing_services': models.RidesharingService.all()}
+            return {'external_services': models.ExternalService.all()}
 
-    @InputJsonValidator(ridesharing_service_format)
+    @InputJsonValidator(external_service_format)
     def put(self, id=None, version=0):
         """
-        Create or update a ridesharing service in db
+        Create or update an external service like free_floatings, vehicle_occupancies in db
         """
         input_json = request.get_json(force=True, silent=False)
         try:
-            service = models.RidesharingService.find_by_id(id)
+            service = models.ExternalService.find_by_id(id)
             status = 200
         except sqlalchemy.orm.exc.NoResultFound:
-            logging.getLogger(__name__).info("Create new service {}".format(id))
-            service = models.RidesharingService(id)
+            logging.getLogger(__name__).info("Create a new service {}".format(id))
+            service = models.ExternalService(id)
             models.db.session.add(service)
             status = 201
         service.from_json(input_json)
@@ -72,16 +72,16 @@ class RidesharingService(flask_restful.Resource):
             models.db.session.commit()
         except sqlalchemy.exc.IntegrityError as ex:
             abort(400, status="error", message=str(ex))
-        return {'ridesharing_services': [marshal(service, ridesharing_service_fields)]}, status
+        return {'external_services': [marshal(service, external_service_fields)]}, status
 
     def delete(self, id=None, version=0):
         """
-        Delete a ridesharing service in db, i.e. set parameter DISCARDED to TRUE
+        Delete an external service in db, i.e. set parameter DISCARDED to TRUE
         """
         if not id:
             abort(400, status="error", message='id is required')
         try:
-            provider = models.RidesharingService.find_by_id(id)
+            provider = models.ExternalService.find_by_id(id)
             provider.discarded = True
             models.db.session.commit()
             return None, 204

@@ -55,6 +55,7 @@ from navitiacommon.parser_args_type import (
     DateTimeFormat,
     DepthArgument,
 )
+from navitiacommon.constants import ENUM_SHAPE_SCOPE, DEFAULT_SHAPE_SCOPE
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 import six
 from jormungandr.instance import Instance
@@ -142,6 +143,13 @@ class Places(ResourceUri):
             'shape', type=geojson_argument(), help='Geographical shape to limit the search.'
         )
 
+        self.parsers["get"].add_argument(
+            "shape_scope[]",
+            type=OptionValue(ENUM_SHAPE_SCOPE),
+            action="append",
+            help="The scope shape on data to search",
+        )
+
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         self._register_interpreted_parameters(args)
@@ -159,6 +167,9 @@ class Places(ResourceUri):
 
         if args['shape'] is None and user and user.shape:
             args['shape'] = json.loads(user.shape)
+
+        if not args.get("shape_scope[]") and user:
+            args.update({"shape_scope[]": user.shape_scope})
 
         if user and user.default_coord:
             if args['from'] is None:

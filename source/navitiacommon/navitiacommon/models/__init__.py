@@ -40,6 +40,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from sqlalchemy.dialects.postgresql.json import JSONB
 
 from navitiacommon import default_values
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
 import os
 
 db = SQLAlchemy()  # type: SQLAlchemy
@@ -136,6 +137,11 @@ class User(db.Model):  # type: ignore
     # because we don't want postgis dependency for the tyr database
     shape = db.Column(db.Text, nullable=True)
     default_coord = db.Column(db.Text, nullable=True)
+    shape_scope = db.Column(
+        ArrayOfEnum(db.Enum(*ENUM_SHAPE_SCOPE, name='shape_scope')),
+        nullable=False,
+        server_default="{" + ", ".join(DEFAULT_SHAPE_SCOPE) + "}",
+    )
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
@@ -576,6 +582,10 @@ class Instance(db.Model):  # type: ignore
 
     external_services = db.relationship(
         "ExternalService", secondary=associate_instance_external_service, backref="instances", lazy='joined'
+    )
+    # max_waiting_duration default value 4h: 4*60*60 = 14400 minutes
+    max_waiting_duration = db.Column(
+        db.Integer, nullable=False, server_default='{}'.format(default_values.max_waiting_duration)
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

@@ -29,7 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import datetime
 import pytz
 
 from jormungandr.interfaces.v1.serializer import (
@@ -62,7 +61,7 @@ from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, Journ
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
-from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
+from jormungandr.interfaces.v1.serializer.time import DateTimeDictField, DateTimeDbField
 from jormungandr.utils import (
     get_current_datetime_str,
     get_timezone_str,
@@ -429,3 +428,67 @@ class TechnicalStatusSerializer(NullableDictSerializer):
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data
+
+
+class AuthorizationSerializer(serpy.Serializer):
+    instance = MethodField(display_none=False)
+    api = MethodField(display_none=True)
+
+    def get_api(self, obj):
+        if obj.api:
+            return obj.api.name
+        return None
+
+    def get_instance(self, obj):
+        if obj.instance:
+            return obj.instance.name
+        return None
+
+
+class BillingPlanSerializer(serpy.Serializer):
+    name = Field(schema_type=str)
+    max_request_count = Field(schema_type=int)
+    max_object_count = Field(schema_type=int)
+    default = Field(schema_type=bool)
+
+
+class EndPointSerializer(serpy.Serializer):
+    name = Field(schema_type=str)
+    default = Field(schema_type=bool)
+
+
+class UserSerializer(serpy.Serializer):
+    authorizations = MethodField(schema_type=AuthorizationSerializer(), display_none=False)
+    shape_scope = Field(schema_type=list, description='The scope shape on data to search')
+    shape = Field(schema_type=str, display_none=False, description='GeoJSON of the shape of the user')
+    type = Field(schema_type=str)
+    billing_plan = MethodField(schema_type=BillingPlanSerializer(), display_none=False)
+    end_point = MethodField(schema_type=EndPointSerializer(), display_none=False)
+    coord = MethodField(display_none=False, description='Default coord of user')
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    block_until = DateTimeDbField(schema_type=DateTimeDictField, display_none=False)
+
+    def get_end_point(self, obj):
+        if obj.end_point:
+            return EndPointSerializer(obj.end_point, display_none=False).data
+        return None
+
+    def get_billing_plan(self, obj):
+        if obj.billing_plan:
+            return BillingPlanSerializer(obj.billing_plan, display_none=False).data
+        return None
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, is_utc=True, display_none=False).data
+
+    def get_authorizations(self, obj):
+        if obj.authorizations:
+            return [AuthorizationSerializer(auto, display_none=False).data for auto in obj.authorizations]
+        return None
+
+    def get_coord(self, obj):
+        if obj.default_coord:
+            default_coord = obj.default_coord.split(";")
+            if len(default_coord) == 2:
+                return {"lon": default_coord[0], "lat": default_coord[1]}
+        return None

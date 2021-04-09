@@ -283,8 +283,12 @@ struct builder {
     boost::optional<navitia::georef::vertex_t> vertex_a;
     boost::optional<navitia::georef::vertex_t> vertex_b;
 
+    static void make_builder(builder&) {}
+
     /// 'date' is the beggining date of all the validity patterns
     builder(const std::string& date,
+            std::function<void(builder&)> builder_callback = make_builder,
+            bool no_dummy = false,
             const std::string& publisher_name = "canal tp",
             const std::string& timezone_name = "UTC",
             navitia::type::TimeZoneHandler::dst_periods timezone = {});

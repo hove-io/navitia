@@ -94,6 +94,10 @@ ridesharing_service_list_fields = {
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields))
 }
 
+external_service_fields = deepcopy(generic_field)
+external_service_fields['navitia_service'] = fields.Raw
+external_service_list_fields = {'external_services': fields.List(fields.Nested(external_service_fields))}
+
 streetnetwork_backend_fields = deepcopy(generic_field)
 streetnetwork_backend_list_fields = {
     'streetnetwork_backends': fields.List(fields.Nested(streetnetwork_backend_fields))
@@ -202,6 +206,8 @@ instance_fields = {
     'ridesharing_services': fields.List(fields.Nested(ridesharing_service_fields)),
     'greenlet_pool_for_ridesharing_services': fields.Boolean,
     'ridesharing_greenlet_pool_size': fields.Integer,
+    'external_services': fields.List(fields.Nested(external_service_fields)),
+    'max_waiting_duration': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -234,24 +240,14 @@ user_fields = {
     'has_shape': HasShape,
     'shape': Shape,
     'default_coord': fields.Raw,
+    'shape_scope': fields.List(fields.String),
 }
 
-user_fields_full = {
-    'id': fields.Raw,
-    'login': fields.Raw,
-    'email': fields.Raw,
-    'block_until': FieldDate,
-    'type': fields.Raw(),
-    'keys': fields.List(fields.Nested(key_fields)),
-    'authorizations': fields.List(
-        fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
-    ),
-    'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields),
-    'has_shape': HasShape,
-    'shape': Shape,
-    'default_coord': fields.Raw,
-}
+user_fields_full = deepcopy(user_fields)
+user_fields_full["keys"] = fields.List(fields.Nested(key_fields))
+user_fields_full["authorizations"] = fields.List(
+    fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
+)
 
 dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
 

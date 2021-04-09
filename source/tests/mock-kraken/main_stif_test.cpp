@@ -40,41 +40,41 @@ using namespace navitia::georef;
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
-    ed::builder b = {"20140614"};
+    ed::builder b("20140614", [](ed::builder& b) {
+        b.vj("A")("stopA", "08:00"_t)("stopB", "10:00"_t);
+        b.vj("A")("stopA", "10:00"_t)("stopB", "12:00"_t);
+        b.vj("B")("stopA", "09:00"_t)("stopC", "10:00"_t);
+        b.vj("C")("stopC", "10:30"_t)("stopB", "11:00"_t);
+        b.connection("stopC", "stopC", 0);
 
-    b.vj("A")("stopA", "08:00"_t)("stopB", "10:00"_t);
-    b.vj("A")("stopA", "10:00"_t)("stopB", "12:00"_t);
-    b.vj("B")("stopA", "09:00"_t)("stopC", "10:00"_t);
-    b.vj("C")("stopC", "10:30"_t)("stopB", "11:00"_t);
-    b.connection("stopC", "stopC", 0);
+        b.vj("P", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopQ", "16:00"_t);
+        b.vj("Q", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopQ", "16:00"_t)("stopR", "17:00"_t);
+        b.vj("R", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopR", "17:00"_t)("stopS", "18:00"_t);
+        b.vj("S", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopS", "18:00"_t)("stopT", "19:00"_t);
+        b.vj("T", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopT", "20:00"_t);
+        b.connection("stopQ", "stopQ", 0);
+        b.connection("stopR", "stopR", 0);
+        b.connection("stopS", "stopS", 0);
 
-    b.vj("P", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopQ", "16:00"_t);
-    b.vj("Q", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopQ", "16:00"_t)("stopR", "17:00"_t);
-    b.vj("R", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopR", "17:00"_t)("stopS", "18:00"_t);
-    b.vj("S", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopS", "18:00"_t)("stopT", "19:00"_t);
-    b.vj("T", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopT", "20:00"_t);
-    b.connection("stopQ", "stopQ", 0);
-    b.connection("stopR", "stopR", 0);
-    b.connection("stopS", "stopS", 0);
+        b.connection("stopT", "stopT", 0);
+        b.vj("U", "11111111", "", true, "", "", "", "physical_mode:Tramway")("stopT", "19:00"_t)("stopU",
+                                                                                                 "19:30"_t);  // Tram
+        b.vj("V", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopU", "19:30"_t)("stopV",
+                                                                                             "20:00"_t);  // Bus
+        b.vj("W", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopV", "20:00"_t)("stopW",
+                                                                                             "20:30"_t);  // Bus
 
-    b.connection("stopT", "stopT", 0);
-    b.vj("U", "11111111", "", true, "", "", "", "physical_mode:Tramway")("stopT", "19:00"_t)("stopU",
-                                                                                             "19:30"_t);       // Tram
-    b.vj("V", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopU", "19:30"_t)("stopV", "20:00"_t);  // Bus
-    b.vj("W", "11111111", "", true, "", "", "", "physical_mode:Bus")("stopV", "20:00"_t)("stopW", "20:30"_t);  // Bus
+        b.connection("stopU", "stopU", 0);
+        b.connection("stopV", "stopV", 0);
+        b.vj("PW", "11111111", "", true, "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopW", "21:00"_t);  // Bus
 
-    b.connection("stopU", "stopU", 0);
-    b.connection("stopV", "stopV", 0);
-    b.vj("PW", "11111111", "", true, "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopW", "21:00"_t);  // Bus
-
-    // Add tickets
-    b.add_ticket("P-Ticket", "P", 100, "P-Ticket comment");
-    b.add_ticket("Q-Ticket", "Q", 100, "Q-Ticket comment");
-    b.add_ticket("R-Ticket", "R", 100, "R-Ticket comment");
-    b.add_ticket("S-Ticket", "S", 100, "S-Ticket comment");
-    b.add_ticket("T-Ticket", "T", 99, "T-Ticket comment");
-
-    b.make();
+        // Add tickets
+        b.add_ticket("P-Ticket", "P", 100, "P-Ticket comment");
+        b.add_ticket("Q-Ticket", "Q", 100, "Q-Ticket comment");
+        b.add_ticket("R-Ticket", "R", 100, "R-Ticket comment");
+        b.add_ticket("S-Ticket", "S", 100, "S-Ticket comment");
+        b.add_ticket("T-Ticket", "T", 99, "T-Ticket comment");
+    });
 
     mock_kraken kraken(b, argc, argv);
     return 0;

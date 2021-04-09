@@ -1,3 +1,16 @@
+navitia2 (10.7.0) unstable; urgency=low
+
+  * [Kraken] fix sort application_patterns of impact  <https://github.com/CanalTP/navitia/pull/3406>
+  * [Jormungandr] max_waiting added in instance object and /journeys API  <https://github.com/CanalTP/navitia/pull/3405>
+  * [Jormungandr] Users API added  <https://github.com/CanalTP/navitia/pull/3403>
+  * [Tyr] Add end point external services in tyr  <https://github.com/CanalTP/navitia/pull/3402>
+  * [Tyr, Jormungandr] Shape scope on user  <https://github.com/CanalTP/navitia/pull/3399>
+  * [Raptor] Simplify Label's API exposure  <https://github.com/CanalTP/navitia/pull/3400>
+  * [ed::builder] Refactorize tests to accomodate future work  <https://github.com/CanalTP/navitia/pull/3388>
+  * Ci: Create Github release  <https://github.com/CanalTP/navitia/pull/3398>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 09 Apr 2021 10:04:45 +0100
+
 navitia2 (10.6.0) unstable; urgency=low
 
   * [Jormungandr] Add "request_id" parameter to the Bragi call  <https://github.com/CanalTP/navitia/pull/3395>

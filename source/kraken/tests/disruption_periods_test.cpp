@@ -62,14 +62,9 @@ BOOST_GLOBAL_FIXTURE(logger_initialized);
  the impact is active (application period) from 03/2017 to 04/2017
  */
 struct disruption_periods_fixture {
-    disruption_periods_fixture() : b("20170101"), w(navitia::kraken::Configuration()) {
-        b.vj("1").valid_all_days()("A", "9:00"_t)("B", "10:00"_t);
-
-        b.finish();
-        b.data->build_uri();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
-
+    disruption_periods_fixture()
+        : w(navitia::kraken::Configuration()),
+          b("20170101", [](ed::builder& b) { b.vj("1").valid_all_days()("A", "9:00"_t)("B", "10:00"_t); }) {
         navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_1_closed")
                                       .severity(nt::disruption::Effect::UNKNOWN_EFFECT)  // just an information
                                       .application_periods(btp("20170301T100000"_dt, "20170401T100000"_dt))
@@ -89,8 +84,8 @@ struct disruption_periods_fixture {
         return res;
     }
 
-    ed::builder b;
     navitia::Worker w;
+    ed::builder b;
     uint64_t before_publish = "20170115T080000"_pts;
     uint64_t inside_publish_before_application = "20170215T080000"_pts;
     uint64_t inside_publish_inside_application = "20170315T080000"_pts;

@@ -32,7 +32,7 @@ from datetime import datetime
 import time
 from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, TimeType, DateTimeType, DateType
-from jormungandr.utils import timestamp_to_str, dt_to_str, timestamp_to_datetime
+from jormungandr.utils import timestamp_to_str, dt_to_str, DATETIME_FORMAT
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -59,6 +59,15 @@ class DateTimeField(PbField, DateTimeType):
 
     def to_value(self, value):
         return timestamp_to_str(value)
+
+
+class DateTimeDbField(Field, DateType):
+    """
+    custom date format from datetime db
+    """
+
+    def to_value(self, value):
+        return dt_to_str(value, _format=DATETIME_FORMAT)
 
 
 class DateField(PbField, DateType):

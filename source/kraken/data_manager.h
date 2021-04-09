@@ -136,9 +136,9 @@ public:
             }
         }
 
+        data->build_relations();
         // Build Raptor Data
         data->build_raptor(raptor_cache_size);
-        data->build_relations();
         // Build proximity list NN index
         data->build_proximity_list();
         data->loading = false;

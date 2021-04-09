@@ -27,9 +27,9 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from six.moves.urllib.parse import quote, quote_plus
-from .check_utils import journey_basic_query
 from six.moves.urllib.parse import urlencode
 from .tests_mechanism import dataset, AbstractTestFixture
 from .check_utils import *

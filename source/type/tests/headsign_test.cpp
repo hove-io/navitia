@@ -52,15 +52,14 @@ namespace nt = navitia::type;
 
 struct HeadsignFixture {
     ed::builder b;
-    HeadsignFixture() : b("20120614") {
-        b.vj("A").name("A1").meta_vj("metaVJA").vp("01")("stop00", 8000)("stop01", 8100);
-        b.vj("A").name("A2").meta_vj("metaVJA").vp("10")("stop10", 8000)("stop11", 8100)("stop12", 8200);
-        b.vj("C")("stop20", 8000)("stop21", 8100)("stop22", 8200);
-        b.vj("D")("stop30", 8000);
-        b.vj("E")("stop40", 8000);
-        b.data->pt_data->sort_and_index();
-        b.finish();
-    }
+    HeadsignFixture()
+        : b("20120614", [](ed::builder& b) {
+              b.vj("A").name("A1").meta_vj("metaVJA").vp("01")("stop00", 8000)("stop01", 8100);
+              b.vj("A").name("A2").meta_vj("metaVJA").vp("10")("stop10", 8000)("stop11", 8100)("stop12", 8200);
+              b.vj("C")("stop20", 8000)("stop21", 8100)("stop22", 8200);
+              b.vj("D")("stop30", 8000);
+              b.vj("E")("stop40", 8000);
+          }) {}
 };
 
 BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {

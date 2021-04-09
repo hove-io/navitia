@@ -957,11 +957,12 @@ static void add_isochrone_response(RAPTOR& raptor,
     pb_creator.fill(&origin, &pb_origin, 0);
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto best_lbl = raptor.best_labels.dt_pt(sp_idx);
+        const auto best_lbl = raptor.best_labels[sp_idx].dt_pt;
         if ((clockwise && best_lbl < bound) || (!clockwise && best_lbl > bound)) {
             int round = raptor.best_round(sp_idx);
+            const auto& best_round_label = raptor.labels[round][sp_idx];
 
-            if (round == -1 || !raptor.labels[round].pt_is_initialized(sp_idx)) {
+            if (round == -1 || !is_dt_initialized(best_round_label.dt_pt)) {
                 continue;
             }
 

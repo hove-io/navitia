@@ -199,22 +199,18 @@ static std::vector<navitia::routing::Path> compute(navitia::type::Data& data,
  *
  */
 BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
-    ed::builder b("20160101");
+    nt::VehicleJourney *vj1, *vj2, *vj3, *vj4, *vj5;
+    ed::builder b("20160101", [&](ed::builder& b) {
+        b.sa("S1")("S1");
+        b.sa("S2")("S2");
+        b.sa("S3")("S3");
 
-    b.sa("S1")("S1");
-    b.sa("S2")("S2");
-    b.sa("S3")("S3");
-
-    const auto* vj1 = b.vj("A").name("vj1")("S1", "08:00"_t)("S2", "09:00"_t)("S3", "10:00"_t).make();
-    const auto* vj2 = b.vj("A").name("vj2")("S1", "10:00"_t)("S2", "10:30"_t)("S3", "11:00"_t).make();
-    const auto* vj3 = b.vj("A").name("vj3")("S1", "10:00"_t)("S3", "11:00"_t).make();
-    const auto* vj4 = b.vj("A").name("vj4")("S1", "08:00"_t)("S2", "10:00"_t)("S3", "10:30"_t).make();
-    const auto* vj5 = b.vj("A").name("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
-
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+        vj1 = b.vj("A").name("vj1")("S1", "08:00"_t)("S2", "09:00"_t)("S3", "10:00"_t).make();
+        vj2 = b.vj("A").name("vj2")("S1", "10:00"_t)("S2", "10:30"_t)("S3", "11:00"_t).make();
+        vj3 = b.vj("A").name("vj3")("S1", "10:00"_t)("S3", "11:00"_t).make();
+        vj4 = b.vj("A").name("vj4")("S1", "08:00"_t)("S2", "10:00"_t)("S3", "10:30"_t).make();
+        vj5 = b.vj("A").name("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
+    });
 
     auto* s1 = b.data->pt_data->stop_points_map["S1"];
     auto* s2 = b.data->pt_data->stop_points_map["S2"];
@@ -268,13 +264,13 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
 }
 
 BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
-    ed::builder b("20120614");
-    b.vj("A", "000111")("stop_area:stop1", "08:10"_t, "08:11"_t)("stop_area:stop2", "08:20"_t, "08:21"_t)(
-        "stop_area:stop3", "08:30"_t, "08:31"_t);
-    b.vj("A", "000111")("stop_area:stop1", "09:10"_t, "09:11"_t)("stop_area:stop2", "09:20"_t, "09:21"_t)(
-        "stop_area:stop3", "09:30"_t, "09:31"_t);
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A", "000111")("stop_area:stop1", "08:10"_t, "08:11"_t)("stop_area:stop2", "08:20"_t, "08:21"_t)(
+            "stop_area:stop3", "08:30"_t, "08:31"_t);
+        b.vj("A", "000111")("stop_area:stop1", "09:10"_t, "09:11"_t)("stop_area:stop2", "09:20"_t, "09:21"_t)(
+            "stop_area:stop3", "09:30"_t, "09:31"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     // we delete the stop_area 1, two vjs are impacted, we create a new journey pattern without this stop_area
@@ -328,18 +324,17 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
  *          (VJ_A)
  * */
 BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
-    ed::builder b("20120614");
-    b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3");
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3");
 
-    b.vj("A", "111111")
-        .name("VjA")("A1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
-            "stop_area:stop2", "10:20"_t, "10:21"_t)("A2", "11:20"_t, "11:21"_t);
+        b.vj("A", "111111")
+            .name("VjA")("A1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
+                "stop_area:stop2", "10:20"_t, "10:21"_t)("A2", "11:20"_t, "11:21"_t);
 
-    b.vj("B", "111111")
-        .name("VjB")("B1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
-            "stop_area:stop3", "10:20"_t, "10:21"_t)("B2", "11:20"_t, "11:21"_t);
-
-    b.make();
+        b.vj("B", "111111")
+            .name("VjB")("B1", "08:10"_t, "08:11"_t)("stop_area:stop1", "09:10"_t, "09:11"_t)(
+                "stop_area:stop3", "10:20"_t, "10:21"_t)("B2", "11:20"_t, "11:21"_t);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     // we delete the stop_area 1, two vj are impacted, we create a new journey pattern without this stop_area
@@ -404,13 +399,12 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
  * Impact                |-----------------------------------------------|
  * */
 BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
-    ed::builder b("20120614");
-    b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3");
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3");
 
-    b.vj("A", "0111111")("A1", "23:10"_t, "23:11"_t)("stop_area:stop1", "24:10"_t, "24:11"_t)(
-        "stop_area:stop2", "25:20"_t, "25:21"_t)("A2", "26:20"_t, "26:21"_t);
-
-    b.make();
+        b.vj("A", "0111111")("A1", "23:10"_t, "23:11"_t)("stop_area:stop1", "24:10"_t, "24:11"_t)(
+            "stop_area:stop2", "25:20"_t, "25:21"_t)("A2", "26:20"_t, "26:21"_t);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     // we delete the stop_area 1, on vj passing midnight is impacted,
@@ -461,12 +455,11 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
  * starting for example at 9am on the first day, but ending at 8:59 on the last.
  */
 BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
-    ed::builder b("20160404");
-    b.vj("line:A", "111100")
-        .name("vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:20"_t, "08:21"_t)(
-            "stop_point:30", "08:30"_t, "08:31"_t)("stop_point:40", "08:40"_t, "08:41"_t);
-
-    b.make();
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.vj("line:A", "111100")
+            .name("vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:20"_t, "08:21"_t)(
+                "stop_point:30", "08:30"_t, "08:31"_t)("stop_point:40", "08:40"_t, "08:41"_t);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     // Close stop_point:20 from the 4h at 9am to the 6h at 8:59am
@@ -514,12 +507,11 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
  *        7:00                                            6:00      23:00  6:00                 8:30   9:30
  * */
 BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
-    ed::builder b("20120614");
-    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
-                                                                   "08:45"_t)  // <- Only stop3 will be impacted
-        ("stop4", "09:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                       "08:45"_t)  // <- Only stop3 will be impacted
+            ("stop4", "09:00"_t);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop3_closed")
@@ -572,12 +564,11 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 }
 
 BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
-    ed::builder b("20120614");
-    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
-                                                                   "08:45"_t)  // <- Only stop3 will be impacted
-        ("stop4", "09:00"_t);
-
-    b.make();
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                       "08:45"_t)  // <- Only stop3 will be impacted
+            ("stop4", "09:00"_t);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     const auto& disruption = b.impact(nt::RTLevel::Adapted, "stop3_closed")
@@ -617,10 +608,10 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
 }
 
 BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
-    ed::builder b("20120614");
-    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t);
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3", "08:45"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
@@ -679,10 +670,11 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 }
 
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
-    ed::builder b("20120614");
-    auto* vj1 = b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
+    nt::VehicleJourney* vj1 = nullptr;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj1 = b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     auto trip_update =
@@ -751,10 +743,10 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
  *                                                       0H05-1H
  * */
 BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
-    ed::builder b("20120614");
-    auto* vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
-
-    b.make();
+    nt::VehicleJourney* vj1 = nullptr;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
 
@@ -854,10 +846,11 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
  *                                                         0H15-1H
  * */
 BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
-    ed::builder b("20120614");
-    auto* vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
+    nt::VehicleJourney* vj1 = nullptr;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj1 = b.vj("A", "00100").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t).make();
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     // Stop1 is closed between 2012/06/16 22:00 and 2012/06/16 23:30
@@ -949,11 +942,13 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
  *
  * */
 BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
-    ed::builder b("20120614");
-    auto* vj =
-        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t)("stop3", "10:00"_t)("stop1", "11:00"_t).make();
+    nt::VehicleJourney* vj = nullptr;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj = b.vj("A")
+                 .name("vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t)("stop3", "10:00"_t)("stop1", "11:00"_t)
+                 .make();
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop1_closed")
@@ -1012,21 +1007,21 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
  *
  * */
 BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
-    ed::builder b("20120614");
-    b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3")("stop_area:stop4")(
-        "stop_area:stop5")("stop_area:stop6")("stop_area:stop7")("stop_area:stop8");
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.sa("stop_area", 0, 0, false, true)("stop_area:stop1")("stop_area:stop2")("stop_area:stop3")(
+            "stop_area:stop4")("stop_area:stop5")("stop_area:stop6")("stop_area:stop7")("stop_area:stop8");
 
-    b.vj("A", "111111")
-        .name("VjA")("A1", "08:10"_t)("stop_area:stop1", "09:10"_t)("stop_area:stop2", "10:20"_t)(
-            "stop_area:stop3", "11:10"_t)("stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)(
-            "stop_area:stop6", "14:20"_t)("stop_area:stop7", "15:10"_t)("stop_area:stop8", "16:20"_t)("A2", "17:20"_t);
+        b.vj("A", "111111")
+            .name("VjA")("A1", "08:10"_t)("stop_area:stop1", "09:10"_t)("stop_area:stop2", "10:20"_t)(
+                "stop_area:stop3", "11:10"_t)("stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)(
+                "stop_area:stop6", "14:20"_t)("stop_area:stop7", "15:10"_t)("stop_area:stop8", "16:20"_t)("A2",
+                                                                                                          "17:20"_t);
 
-    b.vj("B", "111111")
-        .name("VjB")("B1", "08:10"_t)("stop_area:stop2", "10:20"_t)("stop_area:stop3", "11:10"_t)(
-            "stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)("stop_area:stop6", "14:20"_t)(
-            "stop_area:stop7", "15:10"_t)("B2", "17:20"_t)("B3", "18:20"_t)("B4", "19:20"_t);
-
-    b.make();
+        b.vj("B", "111111")
+            .name("VjB")("B1", "08:10"_t)("stop_area:stop2", "10:20"_t)("stop_area:stop3", "11:10"_t)(
+                "stop_area:stop4", "12:20"_t)("stop_area:stop5", "13:10"_t)("stop_area:stop6", "14:20"_t)(
+                "stop_area:stop7", "15:10"_t)("B2", "17:20"_t)("B3", "18:20"_t)("B4", "19:20"_t);
+    });
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "stop_point_B2_closed_3")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
@@ -1090,23 +1085,23 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
 }
 
 BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
-    ed::builder b("20160404");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)("stop_point:40", "08:40"_t,
-                                                                                      "08:41"_t);
-    b.vj("line:A", "101010", "", true, "vj:2")("stop_point:10", "09:10"_t, "09:11"_t)(
-        "stop_point:20", "09:20"_t, "09:21"_t)("stop_point:30", "09:30"_t, "09:31"_t)("stop_point:40", "09:40"_t,
-                                                                                      "09:41"_t);
-    b.vj("line:A", "001100", "", true, "vj:3")("stop_point:10", "10:10"_t, "10:11"_t)(
-        "stop_point:20", "10:20"_t, "10:21"_t)("stop_point:30", "10:30"_t, "10:31"_t)("stop_point:40", "10:40"_t,
-                                                                                      "10:41"_t);
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)("stop_point:40", "08:40"_t,
+                                                                                          "08:41"_t);
+        b.vj("line:A", "101010", "", true, "vj:2")("stop_point:10", "09:10"_t, "09:11"_t)(
+            "stop_point:20", "09:20"_t, "09:21"_t)("stop_point:30", "09:30"_t, "09:31"_t)("stop_point:40", "09:40"_t,
+                                                                                          "09:41"_t);
+        b.vj("line:A", "001100", "", true, "vj:3")("stop_point:10", "10:10"_t, "10:11"_t)(
+            "stop_point:20", "10:20"_t, "10:21"_t)("stop_point:30", "10:30"_t, "10:31"_t)("stop_point:40", "10:40"_t,
+                                                                                          "10:41"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     navitia::apply_disruption(
@@ -1195,11 +1190,11 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
 }
 
 BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
-    ed::builder b("20160404");
-    b.vj("line:1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t)("E", "08:50"_t)(
-        "F", "08:60"_t)("G", "08:70"_t);
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.vj("line:1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t)("E", "08:50"_t)(
+            "F", "08:60"_t)("G", "08:70"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     auto get_stops = [](const nt::VehicleJourney* vj) {
@@ -1335,17 +1330,17 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
 }
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
-    ed::builder b("20160404");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.vj("line:A", "001001")
-        .name("vj:1")("stop_point:10", "23:00"_t, "23:01"_t)("stop_point:20", "24:00"_t, "24:01"_t)(
-            "stop_point:30", "25:00"_t, "25:01"_t)("stop_point:40", "26:00"_t, "26:01"_t);
+        b.vj("line:A", "001001")
+            .name("vj:1")("stop_point:10", "23:00"_t, "23:01"_t)("stop_point:20", "24:00"_t, "24:01"_t)(
+                "stop_point:30", "25:00"_t, "25:01"_t)("stop_point:40", "26:00"_t, "26:01"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     navitia::apply_disruption(
@@ -1394,17 +1389,17 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
 }
 
 BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
-    ed::builder b("20160404");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "13:00"_t, "13:01"_t)(
-        "stop_point:20", "14:00"_t, "14:01"_t)("stop_point:30", "15:00"_t, "15:01"_t)("stop_point:40", "16:00"_t,
-                                                                                      "16:01"_t);
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "13:00"_t, "13:01"_t)(
+            "stop_point:20", "14:00"_t, "14:01"_t)("stop_point:30", "15:00"_t, "15:01"_t)("stop_point:40", "16:00"_t,
+                                                                                          "16:01"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     navitia::apply_disruption(
@@ -1476,35 +1471,35 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
  *
  */
 BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
-    ed::builder b("20160404");
-    b.sa("stop_area:1", 0, 0, false, true)("s1");
-    b.sa("stop_area:2", 0, 0, false, true)("s2");
-    b.sa("stop_area:3", 0, 0, false, true)("s3");
-    b.sa("stop_area:4", 0, 0, false, true)("s4");
-    b.sa("stop_area:5", 0, 0, false, true)("s5")("s5'");
-    b.sa("stop_area:6", 0, 0, false, true)("s6");
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("s1");
+        b.sa("stop_area:2", 0, 0, false, true)("s2");
+        b.sa("stop_area:3", 0, 0, false, true)("s3");
+        b.sa("stop_area:4", 0, 0, false, true)("s4");
+        b.sa("stop_area:5", 0, 0, false, true)("s5")("s5'");
+        b.sa("stop_area:6", 0, 0, false, true)("s6");
 
-    b.vj("line:A", "111111", "", true, "vj:1")
-        .route("route:A1")("s1", "08:00"_t, "08:00"_t)("s2", "08:01"_t, "08:01"_t)("s3", "08:02"_t, "08:02"_t)(
-            "s2", "08:03"_t, "08:03"_t)("s3", "08:04"_t, "08:04"_t)("s4", "08:05"_t, "08:05"_t)(
-            "s5", "08:06"_t, "08:06"_t)("s4", "08:07"_t, "08:07"_t)("s5", "08:08"_t, "08:08"_t)("s6", "08:09"_t,
-                                                                                                "08:09"_t);
+        b.vj("line:A", "111111", "", true, "vj:1")
+            .route("route:A1")("s1", "08:00"_t, "08:00"_t)("s2", "08:01"_t, "08:01"_t)("s3", "08:02"_t, "08:02"_t)(
+                "s2", "08:03"_t, "08:03"_t)("s3", "08:04"_t, "08:04"_t)("s4", "08:05"_t, "08:05"_t)(
+                "s5", "08:06"_t, "08:06"_t)("s4", "08:07"_t, "08:07"_t)("s5", "08:08"_t, "08:08"_t)("s6", "08:09"_t,
+                                                                                                    "08:09"_t);
 
-    b.vj("line:A", "111111", "", true, "vj:2")
-        .route("route:A2")("s1", "09:00"_t, "09:00"_t)("s5", "09:01"_t, "09:01"_t)("s4", "09:02"_t, "09:02"_t)(
-            "s3", "09:03"_t, "09:03"_t)("s2", "09:04"_t, "09:04"_t)("s5'", "09:05"_t, "09:05"_t)("s6", "09:06"_t,
-                                                                                                 "09:06"_t);
+        b.vj("line:A", "111111", "", true, "vj:2")
+            .route("route:A2")("s1", "09:00"_t, "09:00"_t)("s5", "09:01"_t, "09:01"_t)("s4", "09:02"_t, "09:02"_t)(
+                "s3", "09:03"_t, "09:03"_t)("s2", "09:04"_t, "09:04"_t)("s5'", "09:05"_t, "09:05"_t)("s6", "09:06"_t,
+                                                                                                     "09:06"_t);
 
-    b.vj("line:A", "111111", "", true, "vj:3")
-        .route("route:A3")("s1", "10:00"_t, "10:00"_t)("s3", "10:01"_t, "10:01"_t)("s4", "10:03"_t, "10:03"_t)(
-            "s5", "10:04"_t, "10:04"_t)("s4", "10:05"_t, "10:05"_t)("s5", "10:06"_t, "10:06"_t)("s6", "10:07"_t,
-                                                                                                "10:07"_t);
+        b.vj("line:A", "111111", "", true, "vj:3")
+            .route("route:A3")("s1", "10:00"_t, "10:00"_t)("s3", "10:01"_t, "10:01"_t)("s4", "10:03"_t, "10:03"_t)(
+                "s5", "10:04"_t, "10:04"_t)("s4", "10:05"_t, "10:05"_t)("s5", "10:06"_t, "10:06"_t)("s6", "10:07"_t,
+                                                                                                    "10:07"_t);
 
-    b.vj("line:A", "111111", "", true, "vj:4")
-        .route("route:A4")("s1", "11:00"_t, "10:00"_t)("s2", "11:01"_t, "10:01"_t)("s3", "11:02"_t, "10:02"_t)(
-            "s4", "11:03"_t, "10:03"_t)("s5", "11:04"_t, "10:04"_t)("s6", "11:05"_t, "10:05"_t);
+        b.vj("line:A", "111111", "", true, "vj:4")
+            .route("route:A4")("s1", "11:00"_t, "10:00"_t)("s2", "11:01"_t, "10:01"_t)("s3", "11:02"_t, "10:02"_t)(
+                "s4", "11:03"_t, "10:03"_t)("s5", "11:04"_t, "10:04"_t)("s6", "11:05"_t, "10:05"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_sa1_sa5_routesA1-2-3")
@@ -1679,24 +1674,24 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
  *  '-> 1 adapted vj created.
  */
 BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
-    ed::builder b("20160404");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
-    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
+    ed::builder b("20160404", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
-        "stop_point:40", "08:40"_t, "08:41"_t)("stop_point:50", "08:50"_t, "08:51"_t);
-    b.vj("line:A", "101110", "", true, "vj:2")("stop_point:10", "09:10"_t, "09:11"_t)(
-        "stop_point:20", "09:20"_t, "09:21"_t)("stop_point:30", "09:30"_t, "09:31"_t)(
-        "stop_point:40", "09:40"_t, "09:41"_t)("stop_point:50", "09:50"_t, "09:51"_t);
-    b.vj("line:A", "001100", "", true, "vj:3")("stop_point:10", "10:10"_t, "10:11"_t)(
-        "stop_point:20", "10:20"_t, "10:21"_t)("stop_point:30", "10:30"_t, "10:31"_t)(
-        "stop_point:40", "10:40"_t, "10:41"_t)("stop_point:50", "10:50"_t, "10:51"_t);
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
+            "stop_point:40", "08:40"_t, "08:41"_t)("stop_point:50", "08:50"_t, "08:51"_t);
+        b.vj("line:A", "101110", "", true, "vj:2")("stop_point:10", "09:10"_t, "09:11"_t)(
+            "stop_point:20", "09:20"_t, "09:21"_t)("stop_point:30", "09:30"_t, "09:31"_t)(
+            "stop_point:40", "09:40"_t, "09:41"_t)("stop_point:50", "09:50"_t, "09:51"_t);
+        b.vj("line:A", "001100", "", true, "vj:3")("stop_point:10", "10:10"_t, "10:11"_t)(
+            "stop_point:20", "10:20"_t, "10:21"_t)("stop_point:30", "10:30"_t, "10:31"_t)(
+            "stop_point:40", "10:40"_t, "10:41"_t)("stop_point:50", "10:50"_t, "10:51"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2016, 4, 4), bg::days(7));
 
     navitia::apply_disruption(
@@ -1781,12 +1776,12 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
  *
  * */
 BOOST_AUTO_TEST_CASE(update_impact) {
-    ed::builder b("20120614");
-    b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
-                                                                   "08:45"_t)  // <- Only stop3 will be impacted
-        ("stop4", "09:00"_t);
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A").name("vj:1")("stop1", "08:00"_t)("stop2", "08:15"_t)("stop3",
+                                                                       "08:45"_t)  // <- Only stop3 will be impacted
+            ("stop4", "09:00"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     auto original_disruption_text = "message disruption 1";
@@ -1837,19 +1832,18 @@ BOOST_AUTO_TEST_CASE(update_impact) {
 }
 
 BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
-    ed::builder b("20170101");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
-                                                std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-        "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
-        "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
-        "stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
-
-    b.make();
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
+                                                    std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
+            "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)(
+            "stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(7));
 
     navitia::apply_disruption(
@@ -1897,18 +1891,17 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
 }
 
 BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
-    ed::builder b("20170101");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
 
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
-                                                std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
-        "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)(
-        "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 300)(
-        "stop_point:10", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
-
-    b.make();
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t,
+                                                    std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
+            "stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)(
+            "stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 300)(
+            "stop_point:10", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+    });
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(7));
 
     navitia::apply_disruption(
@@ -1960,10 +1953,10 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
  * (as we do not have enough information to delay each vehicle_journeys)
  */
 BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
-    ed::builder b("20120614");
-    b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t);
+    ed::builder b("20120614", [](ed::builder& b) {
+        b.vj("A").name("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
@@ -1994,18 +1987,15 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
 BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     using btp = boost::posix_time::time_period;
 
-    ed::builder b("20170101");
-
-    b.vj("l1").name("vj:0")("A", "08:10"_t)("B", "08:20"_t);
-    b.vj("l1").name("vj:1")("A", "09:10"_t)("B", "09:20"_t);
-    b.vj("l1").name("vj:2")("A", "10:10"_t)("B", "10:20"_t)("C", "10:30"_t)("D", "10:40"_t);
-    b.vj("l1").name("vj:3")("A", "11:10"_t)("B", "11:20"_t)("C", "11:30"_t)("D", "11:40"_t)("E", "11:50"_t)("F",
-                                                                                                            "11:55"_t);
-
-    const auto it1 = b.sas.find("A");
-    b.data->pt_data->routes.front()->destination = it1->second;
-
-    b.make();
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("l1").name("vj:0")("A", "08:10"_t)("B", "08:20"_t);
+        b.vj("l1").name("vj:1")("A", "09:10"_t)("B", "09:20"_t);
+        b.vj("l1").name("vj:2")("A", "10:10"_t)("B", "10:20"_t)("C", "10:30"_t)("D", "10:40"_t);
+        b.vj("l1").name("vj:3")("A", "11:10"_t)("B", "11:20"_t)("C", "11:30"_t)("D", "11:40"_t)("E", "11:50"_t)(
+            "F", "11:55"_t);
+        const auto it1 = b.sas.find("A");
+        b.data->pt_data->routes.front()->destination = it1->second;
+    });
 
     // Only appliable on vj:2
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_C")
@@ -2063,10 +2053,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
 }
 
 BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
-    ed::builder b("20170101");
-    b.vj("l1")("A", "08:10"_t)("B", "08:20"_t);
-
-    b.make();
+    ed::builder b("20170101", [](ed::builder& b) { b.vj("l1")("A", "08:10"_t)("B", "08:20"_t); });
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "B_delayed")
                                   .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
@@ -2082,11 +2069,12 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 }
 
 BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
-    ed::builder b("20120614");
-    auto* vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
-    auto* vj2 = b.vj("B").name("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+    nt::VehicleJourney *vj1, *vj2;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+        vj2 = b.vj("B").name("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
 
     /*
@@ -2133,10 +2121,11 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
 }
 
 BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
-    ed::builder b("20120614");
-    auto* vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    nt::VehicleJourney* vj1 = nullptr;
+    ed::builder b("20120614", [&](ed::builder& b) {
+        vj1 = b.vj("A").name("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Penguins on fire at Montparnasse")
@@ -2181,18 +2170,17 @@ BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
 // We check that with a disruption with two impacts impacting the same vj the update is working.
 // It was failing before since after deleting each impact, we were reapplying the disruption.
 BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
-    ed::builder b("20190301");
+    ed::builder b("20190301", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
 
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
-    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "10:00"_t)("stop_point:20", "11:00"_t)(
+            "stop_point:30", "12:00"_t)("stop_point:40", "13:00"_t)("stop_point:50", "14:00"_t);
+    });
 
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "10:00"_t)("stop_point:20", "11:00"_t)(
-        "stop_point:30", "12:00"_t)("stop_point:40", "13:00"_t)("stop_point:50", "14:00"_t);
-
-    b.make();
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
@@ -2260,22 +2248,21 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_same_vj) {
 
 // Same kind of test but applying to two differents VJ
 BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
-    ed::builder b("20190301");
+    ed::builder b("20190301", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
 
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
-    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50");
+        b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "10:00"_t)("stop_point:20", "11:00"_t)(
+            "stop_point:30", "12:00"_t)("stop_point:40", "13:00"_t)("stop_point:50", "14:00"_t);
 
-    b.vj("line:A", "1111111", "", true, "vj:1")("stop_point:10", "10:00"_t)("stop_point:20", "11:00"_t)(
-        "stop_point:30", "12:00"_t)("stop_point:40", "13:00"_t)("stop_point:50", "14:00"_t);
+        b.vj("line:A", "1111111", "", true, "vj:2")
+            .route("line:A:1")("stop_point:50", "10:00"_t)("stop_point:40", "11:00"_t)("stop_point:30", "12:00"_t)(
+                "stop_point:20", "13:00"_t)("stop_point:10", "14:00"_t);
+    });
 
-    b.vj("line:A", "1111111", "", true, "vj:2")
-        .route("line:A:1")("stop_point:50", "10:00"_t)("stop_point:40", "11:00"_t)("stop_point:30", "12:00"_t)(
-            "stop_point:20", "13:00"_t)("stop_point:10", "14:00"_t);
-
-    b.make();
     b.data->meta->production_date = bg::date_period("20190301"_d, 7_days);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
@@ -2354,19 +2341,19 @@ BOOST_AUTO_TEST_CASE(update_disruption_with_multiple_impact_on_different_vj) {
  * Even if we work on the shortest line_section the section is defined by stop_areas.
  */
 BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_successive_stop_in_same_area) {
-    ed::builder b("20190901");
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30")("stop_point:31");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
-    b.sa("stop_area:5", 0, 0, false, true)("stop_point:50")("stop_point:51");
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30")("stop_point:31");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.sa("stop_area:5", 0, 0, false, true)("stop_point:50")("stop_point:51");
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
-        "stop_point:31", "08:31"_t, "08:32"_t)("stop_point:40", "08:40"_t, "08:41"_t)(
-        "stop_point:50", "08:50"_t, "08:51"_t)("stop_point:51", "08:51"_t, "08:52"_t);
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
+            "stop_point:31", "08:31"_t, "08:32"_t)("stop_point:40", "08:40"_t, "08:41"_t)(
+            "stop_point:50", "08:50"_t, "08:51"_t)("stop_point:51", "08:51"_t, "08:52"_t);
+    });
 
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
     navitia::apply_disruption(
@@ -2416,18 +2403,17 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_successive_stop_in_same_are
  * We have B since the second passage through B should not be impacted
  */
 BOOST_AUTO_TEST_CASE(add_impact_lollipop_vj_impact_stop_only_once) {
-    ed::builder b("20190901");
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
+            "stop_point:20", "08:40"_t, "08:41"_t)("stop_point:40", "08:50"_t, "08:51"_t);
+    });
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:20"_t, "08:21"_t)("stop_point:30", "08:30"_t, "08:31"_t)(
-        "stop_point:20", "08:40"_t, "08:41"_t)("stop_point:40", "08:50"_t, "08:51"_t);
-
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
     navitia::apply_disruption(
@@ -2469,18 +2455,17 @@ BOOST_AUTO_TEST_CASE(add_impact_lollipop_vj_impact_stop_only_once) {
 // Since get_base_stop_time is not perfect (we only check stop_point and departure_time)
 // there is some (dumb) cases where we impact some stops we should not.
 BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
-    ed::builder b("20190901");
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+        b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
+        b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
 
-    b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
-    b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
-    b.sa("stop_area:3", 0, 0, false, true)("stop_point:30");
-    b.sa("stop_area:4", 0, 0, false, true)("stop_point:40");
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:30", "08:10"_t, "08:11"_t)(
+            "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:40", "08:10"_t, "08:11"_t);
+    });
 
-    b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:30", "08:10"_t, "08:11"_t)(
-        "stop_point:20", "08:10"_t, "08:11"_t)("stop_point:40", "08:10"_t, "08:11"_t);
-
-    b.make();
     b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
 
     // Impact from 2 to 3 once
@@ -2557,4 +2542,550 @@ BOOST_AUTO_TEST_CASE(limitation_impact_repeated_stop_points_same_stop_time) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);  // Should be 3 [10, 20, 40]
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_start_date_application_patterns) {
+    /*
+     *                              20190901                                        20190910    20190912
+     application pattern 1              |----------------------------------------------|
+     application pattern 2              |----------------------------------------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "09:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190901"_d, "20190912"_d);
+    application_pattern2.add_time_slot("15:00"_t, "17:00"_t);
+    application_pattern2.week_pattern[navitia::Friday] = true;
+    application_pattern2.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+                                  .application_periods(btp("20190901T150000"_dt, "20190912T170000"_dt))
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    BOOST_REQUIRE_EQUAL(b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.size(), 2);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.begin(),
+        "20190901"_d);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.end(),
+        "20190910"_d);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_end_date_application_patterns) {
+    /*
+     *                          20190815   20190901                                        20190910
+     application pattern 1                     |----------------------------------------------|
+     application pattern 2          |---------------------------------------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "09:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190815"_d, "20190910"_d);
+    application_pattern2.add_time_slot("15:00"_t, "17:00"_t);
+    application_pattern2.week_pattern[navitia::Friday] = true;
+    application_pattern2.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T090000"_dt))
+                                  .application_periods(btp("20190815T150000"_dt, "20190910T170000"_dt))
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    BOOST_REQUIRE_EQUAL(b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.size(), 2);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.begin(),
+        "20190815"_d);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.end(),
+        "20190910"_d);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_start_date_and_end_date_application_patterns) {
+    // Same begin application pattrens
+    /*
+     *                        20190901                                        20190910
+     application pattern 1      |----------------------------------------------|
+     application pattern 2      |----------------------------------------------|
+
+                                    12:00       13:00       15:00       17:00
+                    time_slot 1        |----------|
+                    time_slot 2                                 |----------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "13:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern2.add_time_slot("15:00"_t, "17:00"_t);
+    application_pattern2.week_pattern[navitia::Friday] = true;
+    application_pattern2.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T130000"_dt))
+                                  .application_periods(btp("20190815T150000"_dt, "20190910T170000"_dt))
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    BOOST_REQUIRE_EQUAL(b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.size(), 2);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.begin(),
+        "20190901"_d);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.end(),
+        "20190910"_d);
+
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->begin,
+        "12:00"_t);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->end, "13:00"_t);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_start_date_and_end_date_and_start_time_application_patterns) {
+    /*
+     *                        20190901                                        20190910
+     application pattern 1      |----------------------------------------------|
+     application pattern 2      |----------------------------------------------|
+
+                                    12:00       13:00            17:00
+                    time_slot 1        |----------|
+                    time_slot 2        |----------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "13:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern2.add_time_slot("12:00"_t, "17:00"_t);
+    application_pattern2.week_pattern[navitia::Friday] = true;
+    application_pattern2.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T130000"_dt))
+                                  .application_periods(btp("20190801T120000"_dt, "20190910T170000"_dt))
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    BOOST_REQUIRE_EQUAL(b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.size(), 2);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.begin(),
+        "20190901"_d);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.end(),
+        "20190910"_d);
+
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->begin,
+        "12:00"_t);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->end, "13:00"_t);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_start_date_and_end_date_and_start_and_end_time_application_patterns) {
+    /*
+     *                        20190901                                        20190910
+     application pattern 1      |----------------------------------------------|
+     application pattern 2      |----------------------------------------------|
+
+                                    12:00                         17:00
+                    time_slot 1        |----------------------------|
+                    time_slot 2        |----------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "17:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern2.add_time_slot("12:00"_t, "17:00"_t);
+    application_pattern2.week_pattern[navitia::Sunday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T170000"_dt))
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T170000"_dt))
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    BOOST_REQUIRE_EQUAL(b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.size(), 2);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.begin(),
+        "20190901"_d);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->application_period.end(),
+        "20190910"_d);
+
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->begin,
+        "12:00"_t);
+    BOOST_REQUIRE_EQUAL(
+        b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns.begin()->time_slots.begin()->end, "17:00"_t);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_same_start_and_end_time_application_patterns) {
+    /*
+     *                        20190901                                        20190910
+     application pattern 1      |----------------------------------------------|
+
+                                    12:00              15:00      17:00      19:00
+                    time_slot 1        |-----------------|
+                    time_slot 2        |----------------------------|
+                    time_slot 3        |---------------------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "19:00"_t);
+    application_pattern1.add_time_slot("12:00"_t, "15:00"_t);
+    application_pattern1.add_time_slot("12:00"_t, "17:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T190000"_dt))
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    auto application_patterns = b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns;
+    BOOST_REQUIRE_EQUAL(application_patterns.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->application_period.begin(), "20190901"_d);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->application_period.end(), "20190910"_d);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->time_slots.size(), 3);
+
+    auto time_slot = *application_patterns.begin()->time_slots.begin();
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "15:00"_t);
+
+    time_slot = *std::next(application_patterns.begin()->time_slots.begin(), 1);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "17:00"_t);
+
+    time_slot = *std::next(application_patterns.begin()->time_slots.begin(), 2);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "19:00"_t);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_start_and_end_time_application_patterns) {
+    /*
+     *                        20190901                                        20190910
+     application pattern 1      |----------------------------------------------|
+
+                                    12:00    14:00     15:00      17:00      19:00
+                    time_slot 1        |-----------------|
+                    time_slot 2                |--------------------|
+                    time_slot 3        |---------------------------------------|
+     */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern1.add_time_slot("12:00"_t, "15:00"_t);
+    application_pattern1.add_time_slot("14:00"_t, "17:00"_t);
+    application_pattern1.add_time_slot("12:00"_t, "19:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T120000"_dt, "20190910T190000"_dt))
+                                  .application_patterns(application_pattern1)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+    auto application_patterns = b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns;
+    BOOST_REQUIRE_EQUAL(application_patterns.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->application_period.begin(), "20190901"_d);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->application_period.end(), "20190910"_d);
+    BOOST_REQUIRE_EQUAL(application_patterns.begin()->time_slots.size(), 3);
+
+    auto time_slot = *application_patterns.begin()->time_slots.begin();
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "15:00"_t);
+
+    time_slot = *std::next(application_patterns.begin()->time_slots.begin(), 1);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "12:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "19:00"_t);
+
+    time_slot = *std::next(application_patterns.begin()->time_slots.begin(), 2);
+    BOOST_REQUIRE_EQUAL(time_slot.begin, "14:00"_t);
+    BOOST_REQUIRE_EQUAL(time_slot.end, "17:00"_t);
+}
+
+BOOST_AUTO_TEST_CASE(impact_with_application_patterns) {
+    /*
+
+                              20190901  20190902    20190903        20190905    20190910    20190920    20190922
+     application pattern 1      |---------------------------------------|
+     application pattern 2      |---------------------------------------|
+     application pattern 3      |---------------------------------------------------|
+     application pattern 4                               |--------------------------------------------------|
+     application pattern 5                    |--------------------------------------------------|
+
+
+
+
+     TimeSlots                  7h      8h      9h     10h        12h
+     application pattern 1              |--------|
+     application pattern 2      |----------------|
+     application pattern 3              |---------------|
+     application pattern 4                       |-----------------|
+     application pattern 5              |--------------------------|
+
+
+                        Result after sort
+
+                application pattern 2
+                application pattern 1
+                application pattern 3
+                application pattern 5
+                application pattern 4
+
+      */
+    ed::builder b("20190901", [](ed::builder& b) {
+        b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");
+        b.sa("stop_area:2", 0, 0, false, true)("stop_point:20");
+
+        b.vj("line:A", "111111", "", true, "vj:1")("stop_point:10", "08:10"_t, "08:11"_t)("stop_point:20", "08:10"_t,
+                                                                                          "08:11"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2019, 9, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+    nt::disruption::ApplicationPattern application_pattern1;
+    application_pattern1.application_period = boost::gregorian::date_period("20190901"_d, "20190905"_d);
+    application_pattern1.add_time_slot("08:00"_t, "09:00"_t);
+    application_pattern1.week_pattern[navitia::Friday] = true;
+    application_pattern1.week_pattern[navitia::Saturday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern2;
+    application_pattern2.application_period = boost::gregorian::date_period("20190901"_d, "20190905"_d);
+    application_pattern2.add_time_slot("07:00"_t, "09:00"_t);
+    application_pattern2.week_pattern[navitia::Monday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern3;
+    application_pattern3.application_period = boost::gregorian::date_period("20190901"_d, "20190910"_d);
+    application_pattern3.add_time_slot("08:00"_t, "10:00"_t);
+    application_pattern3.week_pattern[navitia::Thursday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern4;
+    application_pattern4.application_period = boost::gregorian::date_period("20190903"_d, "20190922"_d);
+    application_pattern4.add_time_slot("09:00"_t, "12:00"_t);
+    application_pattern4.week_pattern[navitia::Thursday] = true;
+
+    nt::disruption::ApplicationPattern application_pattern5;
+    application_pattern5.application_period = boost::gregorian::date_period("20190902"_d, "20190920"_d);
+    application_pattern5.add_time_slot("08:00"_t, "12:00"_t);
+    application_pattern5.week_pattern[navitia::Thursday] = true;
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line A")
+                                  .severity(nt::disruption::Effect::UNKNOWN_EFFECT)
+                                  .application_periods(btp("20190901T070000"_dt, "20190922T120000"_dt))
+                                  .application_patterns(application_pattern1)
+                                  .application_patterns(application_pattern2)
+                                  .application_patterns(application_pattern3)
+                                  .application_patterns(application_pattern4)
+                                  .application_patterns(application_pattern5)
+                                  .on(nt::Type_e::Line, "line:A", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("line:A")->get_impacts().size(), 1);  // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);  // we should not have created a VJ
+
+    auto application_patterns = b.get<nt::Line>("line:A")->get_impacts()[0]->application_patterns;
+    BOOST_REQUIRE_EQUAL(application_patterns.size(), 5);
+
+    // application pattern 2
+    auto application_pattern = *application_patterns.begin();
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.begin(), "20190901"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.end(), "20190905"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->begin, "07:00"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->end, "09:00"_t);
+
+    // application pattern 1
+    application_pattern = *std::next(application_patterns.begin(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.begin(), "20190901"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.end(), "20190905"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->begin, "08:00"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->end, "09:00"_t);
+
+    // application pattern 3
+    application_pattern = *std::next(application_patterns.begin(), 2);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.begin(), "20190901"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.end(), "20190910"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->begin, "08:00"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->end, "10:00"_t);
+
+    // application pattern 5
+    application_pattern = *std::next(application_patterns.begin(), 3);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.begin(), "20190902"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.end(), "20190920"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->begin, "08:00"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->end, "12:00"_t);
+
+    // application pattern 4
+    application_pattern = *std::next(application_patterns.begin(), 4);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.begin(), "20190903"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.application_period.end(), "20190922"_d);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.size(), 1);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->begin, "09:00"_t);
+    BOOST_REQUIRE_EQUAL(application_pattern.time_slots.begin()->end, "12:00"_t);
 }

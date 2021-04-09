@@ -81,6 +81,7 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
 
     // a clone and set
     auto data_cloned = data_manager.get_data_clone();
+    data_cloned->build_relations();
     data_cloned->build_raptor();
     data_cloned->build_proximity_list();
     data_manager.set_data(data_cloned);

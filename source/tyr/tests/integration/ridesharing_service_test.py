@@ -181,7 +181,7 @@ def test_ridesharing_service_put_without_id():
     assert resp["message"] == "id is required"
 
 
-def test_equipments_provider_delete(default_ridesharing_service_config):
+def test_ridesharing_service_delete(default_ridesharing_service_config):
     """
     Test that a 'deleted' service isn't returned when querying all services,
     and that its 'discarded' parameter is set to True
