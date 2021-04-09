@@ -61,7 +61,7 @@ namespace routing {
 DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, const DateTime bound);
 
 struct StartingPointSndPhase {
-    SpIdx sp_idx;
+    JppIdx jpp_idx;
     unsigned count;
     DateTime end_dt;
     unsigned walking_dur;
@@ -99,7 +99,7 @@ struct RAPTOR {
 
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
-          best_labels(data.pt_data->stop_points),
+          best_labels(data.dataRaptor->jp_container.get_jpps_values()),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
@@ -112,13 +112,14 @@ struct RAPTOR {
     void clear(const bool clockwise, const DateTime bound);
 
     /// Initialize starting points
-    void init(const map_stop_point_duration& dep,
+    void init(const map_jpp_duration& dep,
               const DateTime bound,
               const bool clockwise,
               const type::Properties& properties);
 
     // pt_data object getters by typed idx
     const type::StopPoint* get_sp(SpIdx idx) const { return data.pt_data->stop_points[idx.val]; }
+    const JourneyPatternPoint& get_jpp(JppIdx idx) const { return data.dataRaptor->jp_container.get(idx); }
 
     /// Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path> compute(const type::StopArea* departure,
@@ -228,7 +229,7 @@ struct RAPTOR {
 
     /// First raptor loop
     /// externalized for testing purposes
-    void first_raptor_loop(const map_stop_point_duration& departures,
+    void first_raptor_loop(const map_jpp_duration& departures,
                            const DateTime& departure_datetime,
                            const nt::RTLevel rt_level,
                            const DateTime& bound_limit,
