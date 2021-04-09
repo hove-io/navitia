@@ -344,6 +344,9 @@ bool Impact::is_line_section_of(const Line& line) const {
 }
 
 bool TimeSlot::operator<(const TimeSlot& other) const {
+    if (this->begin == other.begin) {
+        return this->end <= other.end;
+    }
     return this->begin < other.begin;
 }
 
@@ -352,6 +355,16 @@ void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
 }
 
 bool ApplicationPattern::operator<(const ApplicationPattern& other) const {
+    if ((this->application_period.begin() == other.application_period.begin())
+        && (this->application_period.end() == other.application_period.end())) {
+        if (this->time_slots.begin()->begin == other.time_slots.begin()->begin) {
+            return this->time_slots.begin()->end <= other.time_slots.begin()->end;
+        }
+        return this->time_slots.begin()->begin < other.time_slots.begin()->begin;
+    }
+    if (this->application_period.begin() == other.application_period.begin()) {
+        return this->application_period.end() <= other.application_period.end();
+    }
     return this->application_period.begin() < other.application_period.begin();
 }
 
