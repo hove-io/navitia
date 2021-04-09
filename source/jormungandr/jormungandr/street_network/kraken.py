@@ -247,11 +247,29 @@ class Kraken(AbstractStreetNetworkService):
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
 
+        req.sn_routing_matrix.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(
+            street_network_mode
+        )
+        req.sn_routing_matrix.streetnetwork_params.walking_speed = speed_switcher.get(
+            "walking", kwargs.get("walking")
+        )
+        req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
+        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car")
+        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get("car_no_park")
+
+        req.sn_routing_matrix.streetnetwork_params.bss_rent_cost = 120
+        req.sn_routing_matrix.streetnetwork_params.bss_rent_penalty = 0
+
+        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 120
+        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 0
+
         return req
 
     def _check_for_error_and_raise(self, res):
-        if res.HasField('error'):
-            logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
+        if res is None or res.HasField('error'):
+            logging.getLogger(__name__).error(
+                'routing matrix query error {}'.format(res.error if res else "Unknown")
+            )
             raise TechnicalError('routing matrix fail')
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
