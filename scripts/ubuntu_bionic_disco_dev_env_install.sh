@@ -39,7 +39,7 @@ OS_VERSION="$(lsb_release -rs| cut -d '.' -f 1)"
 echo "-- OS found: $(lsb_release -ds)"
 if [ ${OS_VERSION} -eq 20 ]; then
     sudo apt-get install -y python2-dev
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
     sudo python2 get-pip.py
     rm get-pip.py
 else
