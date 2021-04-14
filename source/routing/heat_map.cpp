@@ -267,16 +267,18 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels[sp_idx].dt_pt;
-        if (in_bound(best_lbl, bound, clockwise)) {
-            const auto& projections = worker.projected_stop_points[sp->idx];
-            const auto& proj = projections[mode];
-            if (proj.found) {
-                const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
-                distances[proj[source_e]] = std::min(
-                    distances[proj[source_e]], time_duration(seconds(duration + proj.distances[source_e] / speed)));
-                distances[proj[target_e]] = std::min(
-                    distances[proj[target_e]], time_duration(seconds(duration + proj.distances[target_e] / speed)));
+        for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+            const auto& best_lbl = raptor.best_labels[jpp.idx].dt_pt;
+            if (in_bound(best_lbl, bound, clockwise)) {
+                const auto& projections = worker.projected_stop_points[sp->idx];
+                const auto& proj = projections[mode];
+                if (proj.found) {
+                    const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
+                    distances[proj[source_e]] = std::min(
+                        distances[proj[source_e]], time_duration(seconds(duration + proj.distances[source_e] / speed)));
+                    distances[proj[target_e]] = std::min(
+                        distances[proj[target_e]], time_duration(seconds(duration + proj.distances[target_e] / speed)));
+                }
             }
         }
     }
@@ -298,13 +300,15 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels[sp_idx].dt_pt;
-        if (in_bound(best_lbl, bound, clockwise)) {
-            const auto& projections = worker.projected_stop_points[sp->idx];
-            const auto& proj = projections[mode];
-            if (proj.found) {
-                initialized_points.push_back(proj[source_e]);
-                initialized_points.push_back(proj[target_e]);
+        for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+            const auto& best_lbl = raptor.best_labels[jpp.idx].dt_pt;
+            if (in_bound(best_lbl, bound, clockwise)) {
+                const auto& projections = worker.projected_stop_points[sp->idx];
+                const auto& proj = projections[mode];
+                if (proj.found) {
+                    initialized_points.push_back(proj[source_e]);
+                    initialized_points.push_back(proj[target_e]);
+                }
             }
         }
     }
@@ -329,13 +333,15 @@ static BoundBox find_boundary_box(const georef::GeoRef& worker,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto& best_lbl = raptor.best_labels[sp_idx].dt_pt;
-        if (in_bound(best_lbl, bound, clockwise)) {
-            const auto& projections = worker.projected_stop_points[sp->idx];
-            const auto& proj = projections[mode];
-            if (proj.found) {
-                const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
-                box.set_box(sp->coord, walking_distance(max_duration, duration, speed) + distance_500m);
+        for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+            const auto& best_lbl = raptor.best_labels[jpp.idx].dt_pt;
+            if (in_bound(best_lbl, bound, clockwise)) {
+                const auto& projections = worker.projected_stop_points[sp->idx];
+                const auto& proj = projections[mode];
+                if (proj.found) {
+                    const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
+                    box.set_box(sp->coord, walking_distance(max_duration, duration, speed) + distance_500m);
+                }
             }
         }
     }
