@@ -29,13 +29,14 @@ www.navitia.io
 */
 
 #include "routing/labels.h"
+#include "routing/journey_pattern_container.h"
 #include "utils/boost_patched/range/combine.hpp"
 
 namespace navitia {
 namespace routing {
 
 Labels::Labels() {}
-Labels::Labels(const std::vector<type::StopPoint*> stop_points) : labels(stop_points) {}
+Labels::Labels(const std::vector<JourneyPatternPoint> jpps) : labels(jpps) {}
 
 Labels::Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers) {
     const auto& zip = boost::combine(dt_pts, dt_transfers.values(), walkings.values(), walking_transfers.values());
@@ -70,9 +71,9 @@ void Labels::fill_values(DateTime pts, DateTime transfert, DateTime walking, Dat
     boost::fill(labels.values(), default_label);
 }
 
-void Labels::init(const std::vector<type::StopPoint*>& stops, DateTime val) {
+void Labels::init(const std::vector<JourneyPatternPoint>& jpps, DateTime val) {
     Label init_label{val, val, DateTimeUtils::not_valid, DateTimeUtils::not_valid};
-    labels.assign(stops, init_label);
+    labels.assign(jpps, init_label);
 }
 
 }  // namespace routing

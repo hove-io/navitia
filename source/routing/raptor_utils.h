@@ -50,6 +50,7 @@ using MvjIdx = Idx<type::MetaVehicleJourney>;
 using PhyModeIdx = Idx<type::PhysicalMode>;
 
 using map_stop_point_duration = boost::container::flat_map<SpIdx, navitia::time_duration>;
+using map_jpp_duration = boost::container::flat_map<JppIdx, navitia::time_duration>;
 
 inline bool is_dt_initialized(const DateTime dt) {
     return dt != DateTimeUtils::inf && dt != DateTimeUtils::min;
