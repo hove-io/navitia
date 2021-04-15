@@ -220,10 +220,10 @@ void RAPTOR::init(const map_jpp_duration& dep,
         best_label.dt_transfer = begin_dt;
         best_label.walking_duration_transfer = begin_dt;
 
-        if (clockwise && Q[jpp.jp_idx] > jpp.order) {
-            Q[jpp.jp_idx] = jpp.order;
-        } else if (!clockwise && Q[jpp.jp_idx] < jpp.order) {
-            Q[jpp.jp_idx] = jpp.order;
+        if (clockwise && Q[jpp.jp_idx] > jpp.order.val) {
+            Q[jpp.jp_idx] = jpp.order.val;
+        } else if (!clockwise && Q[jpp.jp_idx] < jpp.order.val) {
+            Q[jpp.jp_idx] = jpp.order.val;
         }
     }
 }
