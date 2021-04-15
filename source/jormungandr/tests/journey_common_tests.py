@@ -81,6 +81,10 @@ class JourneyCommon(object):
 
     def test_address_in_stop_points_on_journeys(self):
         response = self.query_region(journey_basic_query)
+        assert (
+            len([0 for j in response['journeys'] for s in j['sections'] if 'stop_point' in s['from'] or s['to']])
+            > 0
+        )
         for j in response['journeys']:
             for s in j['sections']:
                 if 'stop_point' in s['from']:
