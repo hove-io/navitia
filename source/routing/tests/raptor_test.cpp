@@ -3225,7 +3225,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     auto res = raptor.compute(d.stop_areas_map.at("Stade"), d.stop_areas_map.at("LaJacquotte"), "09:30:00"_t, 0,
                               DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
 
-    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
     using boost::posix_time::time_from_string;
 
     auto j = res[0];
@@ -3269,7 +3269,7 @@ BOOST_AUTO_TEST_CASE(test_jira1686_should_arrive_at_earliest) {
 
     auto res = RAPTOR(b.get_data()).compute_all(departures, arrivals, DateTimeUtils::set(2, "00:00"_t));
 
-    BOOST_REQUIRE_EQUAL(res.size(), 1);  // should be 2 ??
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
     BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "A");
 }
 
@@ -3297,8 +3297,8 @@ BOOST_AUTO_TEST_CASE(test_jira1686_should_arrive_at_earliest_with_direct_path) {
                                 5_min    // direct path duration <---------
                    );
 
-    BOOST_REQUIRE_EQUAL(res.size(), 0);  // should be 1 ??
-    // BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_REQUIRE_EQUAL(res[0].items[0].stop_points[0]->uri, "B");
 }
 
 BOOST_AUTO_TEST_CASE(test_jira1686_should_take_journey_with_minimum_walking_) {
