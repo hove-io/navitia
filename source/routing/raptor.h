@@ -243,5 +243,7 @@ struct RAPTOR {
     std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
 };
 
+map_jpp_duration make_map_jpp_duration_from(const map_stop_point_duration& sps_dur, const RAPTOR& raptor);
+
 }  // namespace routing
 }  // namespace navitia
