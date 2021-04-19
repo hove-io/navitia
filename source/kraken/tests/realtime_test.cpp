@@ -1428,7 +1428,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {});
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, boost::none);
     const auto resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.traffic_reports(0).vehicle_journeys_size(), 1);
@@ -1447,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data, true, true);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {});
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, boost::none);
     const auto resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 0);
 }

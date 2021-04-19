@@ -407,8 +407,12 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest& request) {
     for (int i = 0; i < request.forbidden_uris_size(); ++i) {
         forbidden_uris.push_back(request.forbidden_uris(i));
     }
-    navitia::disruption::traffic_reports(this->pb_creator, *data, request.depth(), request.count(),
-                                         request.start_page(), request.filter(), forbidden_uris);
+    navitia::disruption::traffic_reports(
+        this->pb_creator, *data, request.depth(), request.count(), request.start_page(), request.filter(),
+        forbidden_uris,
+        boost::make_optional(request.has_application_period_begin(),
+                             bt::from_time_t(request.application_period_begin())),
+        boost::make_optional(request.has_application_period_end(), bt::from_time_t(request.application_period_end())));
 }
 
 void Worker::line_reports(const pbnavitia::LineReportsRequest& request) {

@@ -88,7 +88,8 @@ void disrupt(ed::builder& b,
              const std::string& pertub_name,
              nt::Type_e pt_obj_type,
              const std::string& pt_obj_name,
-             time_period period,
+             time_period publish_period,
+             time_period application_period,
              const std::string& pertub_tag = "",
              const nt::disruption::Effect effect = nt::disruption::Effect::NO_SERVICE) {
     auto& disruption = b.disrupt(nt::RTLevel::Adapted, pertub_name)
@@ -96,8 +97,8 @@ void disrupt(ed::builder& b,
                            .impact()
                            .severity(effect)
                            .on(pt_obj_type, pt_obj_name, *b.data->pt_data)
-                           .application_periods(period)
-                           .publish(period)
+                           .application_periods(application_period)
+                           .publish(publish_period)
                            .get_disruption();
 
     navitia::apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
@@ -192,7 +193,8 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     auto dt = "20131219T155000"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:R", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:R", forbidden_uris,
+                                         boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -241,7 +243,8 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     auto dt = "20131224T125000"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:K", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:K", forbidden_uris,
+                                         boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -285,7 +288,8 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     auto dt = "20131221T085000"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "line.uri=line:S", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "line.uri=line:S", forbidden_uris,
+                                         boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -333,7 +337,7 @@ BOOST_FIXTURE_TEST_CASE(Test1, Params) {
     auto dt = "20140101T0900"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris, boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -343,7 +347,7 @@ BOOST_FIXTURE_TEST_CASE(Test2, Params) {
     auto dt = "20131226T0900"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris, boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
 
@@ -365,7 +369,7 @@ BOOST_FIXTURE_TEST_CASE(Test4, Params) {
     auto dt = "20130203T0900"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris, boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -375,7 +379,7 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
     auto dt = "20130212T0900"_dt;
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris, boost::none, boost::none);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -397,18 +401,18 @@ struct DisruptedNetwork {
 
         // Let's create a disruption for all the different pt_objects related to
         // the line 'line_1'
-        disrupt(b, "disrup_line_1", nt::Type_e::Line, "line_1", period, "TAG_LINE_1");
-        disrupt(b, "disrup_network_1", nt::Type_e::Network, "network_1", period, "TAG_NETWORK_1");
-        disrupt(b, "disrup_route_1", nt::Type_e::Route, "route_1", period, "TAG_ROUTE_1");
-        disrupt(b, "disrup_sa_1", nt::Type_e::StopArea, "sp1_1", period, "TAG_SA_1");
-        disrupt(b, "disrup_sp_1", nt::Type_e::StopPoint, "sp1_1", period, "TAG_SP_1");
+        disrupt(b, "disrup_line_1", nt::Type_e::Line, "line_1", period, period, "TAG_LINE_1");
+        disrupt(b, "disrup_network_1", nt::Type_e::Network, "network_1", period, period, "TAG_NETWORK_1");
+        disrupt(b, "disrup_route_1", nt::Type_e::Route, "route_1", period, period, "TAG_ROUTE_1");
+        disrupt(b, "disrup_sa_1", nt::Type_e::StopArea, "sp1_1", period, period, "TAG_SA_1");
+        disrupt(b, "disrup_sp_1", nt::Type_e::StopPoint, "sp1_1", period, period, "TAG_SP_1");
 
         // Let's do the same for all pt_objets from 'line_2'
-        disrupt(b, "disrup_line_2", nt::Type_e::Line, "line_2", period, "TAG_LINE_2");
-        disrupt(b, "disrup_network_2", nt::Type_e::Network, "network_2", period, "TAG_NETWORK_2");
-        disrupt(b, "disrup_route_2", nt::Type_e::Route, "route_2", period, "TAG_ROUTE_2");
-        disrupt(b, "disrup_sa_2", nt::Type_e::StopArea, "sp2_1", period, "TAG_SA_2");
-        disrupt(b, "disrup_sp_2", nt::Type_e::StopPoint, "sp2_1", period, "TAG_SP_2");
+        disrupt(b, "disrup_line_2", nt::Type_e::Line, "line_2", period, period, "TAG_LINE_2");
+        disrupt(b, "disrup_network_2", nt::Type_e::Network, "network_2", period, period, "TAG_NETWORK_2");
+        disrupt(b, "disrup_route_2", nt::Type_e::Route, "route_2", period, period, "TAG_ROUTE_2");
+        disrupt(b, "disrup_sa_2", nt::Type_e::StopArea, "sp2_1", period, period, "TAG_SA_2");
+        disrupt(b, "disrup_sp_2", nt::Type_e::StopPoint, "sp2_1", period, period, "TAG_SP_2");
 
         // now applying disruption on a 'Line Section'
         navitia::apply_disruption(b.disrupt(nt::RTLevel::Adapted, "disrup_line_section")
@@ -435,7 +439,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_all_disruptions, DisruptedNetw
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_all_disruptions, DisruptedNetwork) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {});
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 11);
 }
 
@@ -464,7 +468,8 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_networ
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_disruption, DisruptedNetwork) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_NETWORK_1 name\")", {});
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_NETWORK_1 name\")", {},
+                                boost::none, boost::none);
 
     auto& impacts = pb_creator.impacts;
     BOOST_CHECK_EQUAL(impacts.size(), 1);
@@ -475,7 +480,8 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_dis
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_line, DisruptedNetwork) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_LINE_1 name\")", {});
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_LINE_1 name\")", {}, boost::none,
+                                boost::none);
 
     auto& impacts = pb_creator.impacts;
     BOOST_CHECK_EQUAL(impacts.size(), 0);
@@ -492,7 +498,8 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_not_return_disruptions_from_non_tagge
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_not_return_disruptions_from_non_tagged_network, DisruptedNetwork) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_ROUTE_1 name\")", {});
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_ROUTE_1 name\")", {}, boost::none,
+                                boost::none);
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
 }
@@ -513,7 +520,8 @@ BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_line_section, DisruptedNetwork) 
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_line_section, DisruptedNetwork) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_LINE_SECTION name\")", {});
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "disruption.tag(\"TAG_LINE_SECTION name\")", {},
+                                boost::none, boost::none);
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
