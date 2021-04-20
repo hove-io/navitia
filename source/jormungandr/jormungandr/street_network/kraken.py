@@ -152,7 +152,7 @@ class Kraken(AbstractStreetNetworkService):
 
         if response.journeys:
             # Note that: the journey returned by Kraken is a direct path. A direct path of walking/bike/car/car_no_park/
-            # contains only one section. But for bss, there may be one or three sections.
+            # contains only one section. But for bss, there may be one or five sections.
             # For bss,we only need attribute the mode to the first section. The most significant mode will be chosen
             # later
             if has_bss_rent_before_put_back_section(response.journeys[0]):
@@ -200,6 +200,11 @@ class Kraken(AbstractStreetNetworkService):
             req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
                 'max_{}_duration_to_pt'.format(mode)
             ]
+        req.sn_routing_matrix.streetnetwork_params.bss_rent_cost = 120
+        req.sn_routing_matrix.streetnetwork_params.bss_rent_penalty = 0
+
+        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 120
+        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 0
 
         req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
 
