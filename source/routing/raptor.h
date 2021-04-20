@@ -225,7 +225,7 @@ struct RAPTOR {
 
     /// Return the round that has found the best solution for this stop point
     /// Return -1 if no solution found
-    int best_round(SpIdx sp_idx);
+    int best_round(JppIdx jpp_idx);
 
     /// First raptor loop
     /// externalized for testing purposes

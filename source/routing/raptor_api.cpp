@@ -960,7 +960,7 @@ static void add_isochrone_response(RAPTOR& raptor,
         for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
             const auto best_lbl = raptor.best_labels[jpp.idx].dt_pt;
             if ((clockwise && best_lbl < bound) || (!clockwise && best_lbl > bound)) {
-                int round = raptor.best_round(sp_idx);
+                int round = raptor.best_round(jpp.idx);
                 const auto& best_round_label = raptor.labels[round][jpp.idx];
 
                 if (round == -1 || !is_dt_initialized(best_round_label.dt_pt)) {

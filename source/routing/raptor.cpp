@@ -951,20 +951,11 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                        direct_path_dur);
 }
 
-int RAPTOR::best_round(SpIdx sp_idx) {
+int RAPTOR::best_round(JppIdx jpp_idx) {
+    const Label& best_label = best_labels[jpp_idx];
     for (size_t i = 0; i <= this->count; ++i) {
-        const auto& jpps = jpps_from_sp[sp_idx];
-        bool is_same_label = true;
-        for (const auto& jpp : jpps) {
-            const Label& label = labels[i][jpp.idx];
-            const Label& best_label = best_labels[jpp.idx];
-            if (label.dt_pt != best_label.dt_pt) {
-                is_same_label = false;
-                break;
-            }
-        }
-
-        if (is_same_label) {
+        const Label& label = labels[i][jpp_idx];
+        if (label.dt_pt == best_label.dt_pt) {
             return i;
         }
     }
