@@ -44,7 +44,6 @@ www.navitia.io
 
 #include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/range/algorithm/transform.hpp>
 
 /*
 
@@ -102,14 +101,6 @@ void disrupt(ed::builder& b,
                            .get_disruption();
 
     navitia::apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
-}
-
-std::set<std::string> get_impacts_uris(const std::set<Impact::SharedImpact, Less>& impacts) {
-    std::set<std::string> uris;
-    boost::range::transform(impacts, std::inserter(uris, uris.begin()),
-                            [](const Impact::SharedImpact& i) { return i->disruption->uri; });
-
-    return uris;
 }
 }  // namespace
 
@@ -455,7 +446,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_disrup
     auto& impacts = pb_creator.impacts;
     BOOST_CHECK_EQUAL(impacts.size(), 1);
 
-    std::set<std::string> uris = get_impacts_uris(impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(impacts);
     std::set<std::string> res = {"disrup_line_1"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
@@ -474,7 +465,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_dis
     auto& impacts = pb_creator.impacts;
     BOOST_CHECK_EQUAL(impacts.size(), 1);
 
-    std::set<std::string> uris = get_impacts_uris(impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(impacts);
     std::set<std::string> res = {"disrup_network_1"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
@@ -514,7 +505,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_line_section, DisruptedNetwork) 
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     std::set<std::string> res = {"disrup_line_section"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
@@ -525,7 +516,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_line_section, DisruptedNetwor
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     std::set<std::string> res = {"disrup_line_section"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
@@ -620,7 +611,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     std::set<std::string> res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
                                  "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -631,7 +622,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -642,7 +633,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -662,7 +653,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180404T060000"_dt, "20180406T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -671,7 +662,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180406T060000"_dt, "20180407T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -680,7 +671,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180407T060000"_dt, "20180410T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -689,7 +680,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180410T060000"_dt, "20180411T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -698,7 +689,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180411T060000"_dt, "20180413T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -707,7 +698,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180413T060000"_dt, "20180414T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -715,7 +706,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     pb_creator.init(b.data.get(), start_date, published_period);
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180417T060000"_dt, "20180418T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -729,7 +720,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_netowrk_since_until, NetowrkTrafficReport
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180421T060000"_dt, "20180424T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -830,7 +821,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     std::set<std::string> res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
                                  "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -841,7 +832,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -852,7 +843,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -872,7 +863,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180404T060000"_dt, "20180406T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -881,7 +872,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180406T060000"_dt, "20180407T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -890,7 +881,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180407T060000"_dt, "20180410T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -899,7 +890,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180410T060000"_dt, "20180411T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -908,7 +899,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180411T060000"_dt, "20180413T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -917,7 +908,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180413T060000"_dt, "20180414T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -926,7 +917,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180417T060000"_dt, "20180418T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -940,7 +931,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_since_until, LineTrafficReport) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180421T060000"_dt, "20180424T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1041,7 +1032,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     std::set<std::string> res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
                                  "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -1052,7 +1043,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -1063,7 +1054,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_2", "disrup_impact_3",
            "disrup_impact_4", "disrup_impact_5", "disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
@@ -1083,7 +1074,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180404T060000"_dt, "20180406T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1092,7 +1083,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180406T060000"_dt, "20180407T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1101,7 +1092,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180407T060000"_dt, "20180410T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_1", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1110,7 +1101,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180410T060000"_dt, "20180411T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1119,7 +1110,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180411T060000"_dt, "20180413T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_3", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1128,7 +1119,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180413T060000"_dt, "20180414T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_2", "disrup_impact_4", "disrup_impact_5"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1137,7 +1128,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180417T060000"_dt, "20180418T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_4"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
@@ -1151,7 +1142,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180421T060000"_dt, "20180424T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
-    uris = get_impacts_uris(pb_creator.impacts);
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     res = {"disrup_impact_6"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
