@@ -81,7 +81,8 @@ private:
                               const std::string& filter,
                               const std::vector<std::string>& forbidden_uris,
                               const type::Data& d,
-                              const boost::posix_time::ptime& now);
+                              const boost::posix_time::ptime& now,
+                              const boost::posix_time::time_period& filter_period);
     void sort_disruptions();
 
 public:
@@ -207,7 +208,8 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
                                          const std::string& filter,
                                          const std::vector<std::string>& forbidden_uris,
                                          const type::Data& d,
-                                         const boost::posix_time::ptime& now) {
+                                         const boost::posix_time::ptime& now,
+                                         const boost::posix_time::time_period& filter_period) {
     for (const auto idx : network_idx) {
         const auto* network = d.pt_data->networks[idx];
         std::string new_filter = "network.uri=" + network->uri + " and vehicle_journey.has_disruption()";
@@ -225,7 +227,7 @@ void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
             const auto* vj = d.pt_data->vehicle_journeys[vj_idx];
             auto impacts = vj->get_impacts();
             boost::remove_erase_if(impacts, [&](const boost::shared_ptr<type::disruption::Impact>& impact) {
-                if (!impact->disruption->is_publishable(now)) {
+                if (!impact->is_valid(now, filter_period)) {
                     return true;
                 }
                 if (impact->severity->effect != type::disruption::Effect::NO_SERVICE) {
@@ -335,7 +337,7 @@ void TrafficReport::disruptions_list(const std::string& filter,
     add_networks(network_idx, d, now, filter_period);
     add_lines(filter, forbidden_uris, d, now, filter_period);
     add_stop_areas(network_idx, filter, forbidden_uris, d, now, filter_period);
-    add_vehicle_journeys(network_idx, filter, forbidden_uris, d, now);
+    add_vehicle_journeys(network_idx, filter, forbidden_uris, d, now, filter_period);
     sort_disruptions();
 }
 
@@ -351,7 +353,6 @@ void traffic_reports(navitia::PbCreator& pb_creator,
                      const boost::optional<boost::posix_time::ptime>& since,
                      const boost::optional<boost::posix_time::ptime>& until) {
     TrafficReport result;
-    // pb_creator.action_period = bt::time_period(pb_creator.now, bt::seconds(1));
     const auto start = get_optional_value_or(since, bt::ptime(bt::neg_infin));
     const auto end = get_optional_value_or(until, bt::ptime(bt::pos_infin));
     pb_creator.action_period = bt::time_period(start, end);
