@@ -130,7 +130,7 @@ class TrafficReport(ResourceUri, ResourceUtc):
         since = args.get('since')
         until = args.get('until')
         if since and until and since > until:
-            abort(400, message='until must be > since')
+            abort(400, message='until must be >= since')
 
         if since:
             args['since'] = date_to_timestamp(self.convert_to_utc(since))

@@ -875,7 +875,7 @@ class TestDisruptions(AbstractTestFixture):
         )
 
         assert code == 400
-        assert response["message"] == u'until must be > since'
+        assert response["message"] == u'until must be >= since'
 
 
 @dataset({"line_sections_test": {}})
