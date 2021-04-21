@@ -84,6 +84,8 @@ struct RAPTOR {
     /// Contains the best arrival (or departure time) for each stoppoint
     Labels best_labels;
 
+    Labels best_labels_for_snd_pass;
+
     /// Number of transfers done for the moment
     unsigned int count;
     /// Are the journey pattern valid
@@ -100,6 +102,7 @@ struct RAPTOR {
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
           best_labels(data.dataRaptor->jp_container.get_jpps_values()),
+          best_labels_for_snd_pass(data.dataRaptor->jp_container.get_jpps_values()),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
           Q(data.dataRaptor->jp_container.get_jps_values()),
@@ -240,6 +243,7 @@ struct RAPTOR {
     ~RAPTOR() = default;
 
     std::string print_all_labels();
+    std::string print_labels(Labels&);
     std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
 };
 

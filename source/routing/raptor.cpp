@@ -197,7 +197,8 @@ void RAPTOR::clear(const bool clockwise, const DateTime bound) {
         lbl_list = clean_labels;
     }
 
-    best_labels.fill_values(bound, bound, DateTimeUtils::not_valid, DateTimeUtils::not_valid);
+    best_labels.init(data.dataRaptor->jp_container.get_jpps_values(), bound);
+    best_labels_for_snd_pass.init(data.dataRaptor->jp_container.get_jpps_values(), bound);
 }
 
 void RAPTOR::init(const map_jpp_duration& dep,
@@ -473,14 +474,16 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto starting_points = make_starting_points_snd_phase(*this, jpps_dest, accessibilite_params, clockwise);
     swap(labels, first_pass_labels);
 
-    const auto inrows_labels = best_labels.inrow_labels();
-
-    auto best_labels_for_snd_pass = Labels(
-        // durations and transfers are swapped for the 2nd pass as we are going backward in time
-        inrows_labels[1],   // dt transfers as pts
-        inrows_labels[0],   // dt pts as transfers
-        inrows_labels[3],   // walking duration transfers as walking duration
-        inrows_labels[2]);  // walking duration pts as walking duration transfers
+    for (const auto* sp : data.pt_data->stop_points) {
+        for (const auto& jpp : jpps_from_sp[SpIdx(*sp)]) {
+            const Label& label = best_labels[jpp.idx];
+            Label& new_label = best_labels_for_snd_pass[jpp.idx];
+            new_label.dt_pt = label.dt_transfer;
+            new_label.dt_transfer = label.dt_pt;
+            new_label.walking_duration_pt = label.walking_duration_transfer;
+            new_label.walking_duration_transfer = label.walking_duration_pt;
+        }
+    }
 
     snd_pass_best_labels(clockwise, best_labels_for_snd_pass);
     init_best_pts_snd_pass(jpps_dep, departure_datetime, clockwise, best_labels_for_snd_pass);
@@ -519,7 +522,18 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         clear(!clockwise, departure_datetime + (clockwise ? -1 : 1));
         map_jpp_duration init_map;
         init_map[start.jpp_idx] = 0_s;
-        best_labels = best_labels_for_snd_pass;
+
+        // best_labels <- best_labels_for_snd_pass;
+        for (const auto* sp : data.pt_data->stop_points) {
+            for (const auto& jpp : jpps_from_sp[SpIdx(*sp)]) {
+                const Label& label = best_labels_for_snd_pass[jpp.idx];
+                Label& new_label = best_labels[jpp.idx];
+                new_label.dt_pt = label.dt_pt;
+                new_label.dt_transfer = label.dt_transfer;
+                new_label.walking_duration_pt = label.walking_duration_pt;
+                new_label.walking_duration_transfer = label.walking_duration_transfer;
+            }
+        }
         const Label& working_label = working_labels[start.jpp_idx];
         init(init_map, working_label.dt_pt, !clockwise, accessibilite_params.properties);
         boucleRAPTOR(!clockwise, rt_level, max_transfers);
@@ -762,9 +776,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                         Label& best_label = best_labels[jpp.idx];
                         Label& working_label = working_labels[jpp.idx];
 
-                        const bool has_better_label = visitor.comp(workingDt, best_label.dt_pt)
-                                                      || (workingDt == best_label.dt_pt
-                                                          && working_walking_duration < best_label.walking_duration_pt);
+                        const bool has_better_label =
+                            (!is_dt_initialized(best_label.dt_pt) && is_dt_initialized(workingDt))
+                            || visitor.comp(workingDt, best_label.dt_pt)
+                            || (workingDt == best_label.dt_pt
+                                && working_walking_duration < best_label.walking_duration_pt);
 
                         if (st.valid_end(visitor.clockwise())
                             && (l_zone == std::numeric_limits<uint16_t>::max() || l_zone != st.local_traffic_zone)
@@ -880,8 +896,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                             //     LOG4CPLUS_TRACE(raptor_logger,
                             //                     "Switching boarding stop point : "
                             //                         << " from "
-                            //                         << data.pt_data->stop_points[boarding_stop_point.val]->uri << "
-                            //                         to "
+                            //                         << data.pt_data->stop_points[boarding_stop_point.val]->uri
+                            //                         << "to "
                             //                         << data.pt_data->stop_points[jpp.sp_idx.val]->uri
                             //                         << " working dt before : " << iso_string(workingDt, data)
                             //                         << " working dt after : " << iso_string(tmp_st_dt.second, data)
@@ -1006,6 +1022,42 @@ std::string RAPTOR::print_all_labels() {
                     output << std::endl;
                 }
             }
+        }
+    }
+    return output.str();
+}
+
+std::string RAPTOR::print_labels(Labels& labels_to_print) {
+    std::ostringstream output;
+
+    for (const auto* sp : data.pt_data->stop_points) {
+        for (const auto& jpp : jpps_from_sp[SpIdx(*sp)]) {
+            output << "" << sp->uri << " : "
+                   << " jpp : " << jpp.idx.val << std::endl;
+
+            const Label& label = labels_to_print[jpp.idx];
+            // if (!is_dt_initialized(label.dt_pt) && !is_dt_initialized(label.dt_transfer)) {
+            //     continue;
+            // }
+            output << " dt_pt : ";
+
+            if (is_dt_initialized(label.dt_pt)) {
+                output << iso_string(label.dt_pt, data);
+                output << ", " << navitia::str(label.walking_duration_pt);
+            } else {
+                output << "not init";
+            }
+
+            output << " transfer_dt : ";
+
+            if (is_dt_initialized(label.dt_transfer)) {
+                output << iso_string(label.dt_transfer, data);
+                output << ", " << navitia::str(label.walking_duration_transfer);
+            } else {
+                output << "not init";
+            }
+
+            output << std::endl;
         }
     }
     return output.str();

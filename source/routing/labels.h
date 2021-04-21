@@ -64,12 +64,10 @@ struct Label {
 };
 
 struct Labels {
-    using Map = IdxMap<JourneyPatternPoint, DateTime>;
     using LabelsMap = IdxMap<JourneyPatternPoint, Label>;
 
     Labels();
     Labels(const std::vector<JourneyPatternPoint> jpps);
-    Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers);
 
     // initialize the structure according to the number of jpp
     void init_inf(const std::vector<JourneyPatternPoint>& jpps) { init(jpps, DateTimeUtils::inf); }
@@ -80,19 +78,11 @@ struct Labels {
 
     LabelsMap::range values() { return labels.values(); }
 
-    /* Split each label's field in a specific vector, and return them individually in an array of :
-     *  1. stop point arrival datetime
-     *  2. stop point transfer datime
-     *  3. stop point waling duration
-     *  4. stop point walking transfer duration
-     */
-    std::array<Labels::Map, 4> inrow_labels();
-
     void fill_values(DateTime pts, DateTime transfert, DateTime walking, DateTime walking_transfert);
 
-private:
     void init(const std::vector<JourneyPatternPoint>& jpps, DateTime val);
 
+private:
     LabelsMap labels;
 };
 
