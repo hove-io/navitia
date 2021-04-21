@@ -380,7 +380,7 @@ class MixedSchedule(object):
                 # Not done now as it's only a POC and our WS Forseti/vehicle_occupancies will only have fewer
                 # elements (less than 5000 for line 40 and 45). The Cache with 1 hour duration works well
                 occupancy = vo_service.get_response(args)
-                if occupancy:
+                if occupancy is not None:
                     date_time.occupancy = vo_service.get_response(args)
 
     def terminus_schedules(self, request):
