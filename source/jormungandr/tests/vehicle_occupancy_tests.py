@@ -92,7 +92,7 @@ class TestFreeFloating(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         assert len(stop_schedules) == 1
-        assert stop_schedules[0]['occupancy'] == 0
+        assert 'occupancy' not in stop_schedules[0]
 
         # With data_freshness=realtime, api vehicle_occupancies is called and occupancy value is updated
         query = self.query_template_scs.format(
