@@ -200,11 +200,8 @@ class Kraken(AbstractStreetNetworkService):
             req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
                 'max_{}_duration_to_pt'.format(mode)
             ]
-        req.sn_routing_matrix.streetnetwork_params.bss_rent_cost = 120
-        req.sn_routing_matrix.streetnetwork_params.bss_rent_penalty = 0
-
-        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 120
-        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 0
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.direct_path.streetnetwork_params, attr, request[attr])
 
         req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
 
@@ -228,7 +225,7 @@ class Kraken(AbstractStreetNetworkService):
                 origins, destinations = destinations, origins
 
         req = self._create_sn_routing_matrix_request(
-            origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+            origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
         )
 
         res = instance.send_and_receive(req, request_id=request_id)
@@ -240,7 +237,7 @@ class Kraken(AbstractStreetNetworkService):
         return type_pb2.LocationContext(place=self.get_uri_pt_object(obj), access_duration=0)
 
     def _create_sn_routing_matrix_request(
-        self, origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+        self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
@@ -262,11 +259,8 @@ class Kraken(AbstractStreetNetworkService):
         req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car")
         req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get("car_no_park")
 
-        req.sn_routing_matrix.streetnetwork_params.bss_rent_cost = 120
-        req.sn_routing_matrix.streetnetwork_params.bss_rent_penalty = 0
-
-        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 120
-        req.sn_routing_matrix.streetnetwork_params.bss_return_cost = 0
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
 
         return req
 
