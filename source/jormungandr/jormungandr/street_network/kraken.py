@@ -107,6 +107,10 @@ class Kraken(AbstractStreetNetworkService):
             'max_taxi_duration_to_pt',
             'ridesharing_speed',
             'max_ridesharing_duration_to_pt',
+            'bss_rent_duration',
+            'bss_rent_penalty',
+            'bss_return_duration',
+            'bss_return_penalty',
             '_enable_instructions',
         ]:
             direct_path_request[attr] = request[attr]
