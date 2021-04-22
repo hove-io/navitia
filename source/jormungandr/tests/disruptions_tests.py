@@ -842,6 +842,41 @@ class TestDisruptions(AbstractTestFixture):
         disruptions = response['disruptions']
         assert len(disruptions) == 2
 
+    def test_traffic_report_with_since_until(self):
+        response = self.query_region(
+            'traffic_reports?since=20120801T000000&until=20121002T000000&_current_datetime=20120801T000000'
+        )
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 3
+        for impact_id in list(impacts.keys()):
+            assert impact_id in ['too_bad', 'later_impact', 'too_bad_again']
+
+    def test_traffic_report_without_since(self):
+        response = self.query_region('traffic_reports?until=20121002T000000&_current_datetime=20120801T000000')
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 3
+        for impact_id in list(impacts.keys()):
+            assert impact_id in ['too_bad', 'later_impact', 'too_bad_again']
+
+    def test_traffic_report_without_until(self):
+        response = self.query_region('traffic_reports?since=20120801T000000&_current_datetime=20120801T000000')
+
+        impacts = get_impacts(response)
+        assert len(impacts) == 4
+        for impact_id in list(impacts.keys()):
+            assert impact_id in ['too_bad_future', 'too_bad', 'later_impact', 'too_bad_again']
+
+    def test_traffic_report_since_gt_until(self):
+        response, code = self.query_region(
+            'traffic_reports?since=20121002T000000&until=20120801T000000&_current_datetime=20120801T000000',
+            check=False,
+        )
+
+        assert code == 400
+        assert response["message"] == u'until must be >= since'
+
 
 @dataset({"line_sections_test": {}})
 class TestDisruptionsLineSections(AbstractTestFixture):

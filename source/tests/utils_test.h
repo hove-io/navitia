@@ -10,6 +10,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <boost/range/algorithm/transform.hpp>
 
 /*
  * Utilities for tests
@@ -25,6 +26,16 @@ inline void handle_realtime_test(const std::string& id,
     navitia::handle_realtime(id, timestamp, trip_update, data, true, true);
     data.dataRaptor->load(*data.pt_data);
     raptor = std::make_unique<navitia::routing::RAPTOR>(data);
+}
+
+inline std::set<std::string> get_impacts_uris(
+    const std::set<navitia::type::disruption::Impact::SharedImpact, Less>& impacts) {
+    std::set<std::string> uris;
+    boost::range::transform(
+        impacts, std::inserter(uris, uris.begin()),
+        [](const navitia::type::disruption::Impact::SharedImpact& i) { return i->disruption->uri; });
+
+    return uris;
 }
 
 inline uint64_t to_posix_timestamp(const std::string& str) {
