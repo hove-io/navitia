@@ -15,7 +15,7 @@ pipeline {
                 '''
             }
         }
-        stage ('Install gcov and SonarCloud's dependencies for C++ analysis') {
+        stage ('Install gcov and SonarCloud dependencies for C++ analysis') {
             steps {
                 sh '''
                   cd build_package
