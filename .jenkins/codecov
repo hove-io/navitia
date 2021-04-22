@@ -81,6 +81,7 @@ pipeline {
         stage ('Coverage') {
             steps {
                 sh '''
+                    cd build_package
                     gcovr -k -r . -f source -e source/third_party --sonarqube coverage.xml
                 '''
             }
