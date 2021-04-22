@@ -15,13 +15,25 @@ pipeline {
                 '''
             }
         }
+        stage ('Install gcov and SonarCloud's dependencies for C++ analysis') {
+            steps {
+                sh '''
+                  cd build_package
+                  apt install -y gcovr
+                  apt install -y unzip wget
+                  wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
+                  unzip -u build-wrapper-linux-x86.zip
+                  unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
+                '''
+            }
+        }
         stage ('Compilation') {
             steps {
                 sh '''
                   cd build_package
                   # we set a custom instance timeout because jenkins can be very slow
                   CUSTOM_INSTANCE_TIMEOUT=1500 cmake -DCMAKE_BUILD_TYPE=Profile ../source
-                  make -j1
+                  build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j1
                 '''
             }
         }
@@ -66,12 +78,31 @@ pipeline {
                 '''
             }
         }
+        stage ('Coverage') {
+            steps {
+                sh '''
+                    gcovr -k -r . -f source -e source/third_party --sonarqube coverage.xml
+                '''
+            }
+        }
         stage ('PublishCodeCov') {
             steps {
-                withCredentials([string(credentialsId: 'codecov_token', variable: 'CODE_COV_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonar_token', variable: 'SONAR_TOKEN')]) {
                 sh '''
-                    export CODECOV_TOKEN=$CODE_COV_TOKEN
-                    bash -c "bash <(curl -s https://codecov.io/bash)"
+                    cd build_package
+                    export SONAR_TOKEN=$SONAR_TOKEN
+                    sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+                    -Dsonar.host.url=https://sonarcloud.io \
+                    -Dsonar.sources=source \
+                    -Dsonar.login=$SONAR_TOKEN \
+                    -Dsonar.organization=canaltp \
+                    -Dsonar.projectKey=CanalTP_navitia \
+                    -Dsonar.projectName=Navitia \
+                    -Dsonar.python.coverage.reportPaths=jormungandr_serpy_integration_coverage.xml,jormungandr_coverage_serpy.xml \
+                    -Dsonar.cfamily.gcov.reportsPath=. \
+                    -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
+                    -Dsonar.cfamily.cache.enabled=false \
+                    -Dsonar.cfamily.threads=$(nproc)
                 '''
             }
          }
