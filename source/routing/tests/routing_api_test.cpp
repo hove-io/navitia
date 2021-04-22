@@ -194,6 +194,10 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
 
   Testing that crow fly feature with no street network works
   for origin and destination, and with coordinates and stop areas.
+
+  Since PR #3413 JPP based Raptor's Labels,
+  we have two journeys proposed as results instead of one.
+  We get the earliest arrival journey for each route (with 2 as stop_point) (0 -> 2 and 1 -> 2)
  */
 BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     std::vector<std::string> forbidden;
@@ -229,8 +233,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
+    pbnavitia::Journey journey = resp.journeys(1);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(1);
@@ -260,8 +264,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
+    journey = resp.journeys(1);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
