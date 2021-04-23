@@ -32,6 +32,63 @@ jobs:
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
+  static_analysis:
+    runs-on: ubuntu-latest
+    container:
+        image: navitia/debian8_dev
+    services:
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
+    - name: Install Gcov and SonarCloud's dependencies for C++ analysis
+      run : |
+        rm -rf "$AGENT_TOOLSDIRECTORY"
+        apt update -y
+        apt install -y gcovr
+        apt install -y unzip wget
+        wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
+        unzip -u build-wrapper-linux-x86.zip
+        unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
+    - name: Install dependencies for python2
+      run: pip install -r source/jormungandr/requirements_dev.txt
+    - name: configure for Profile
+      run: cmake -DCMAKE_BUILD_TYPE=Coverage  -DSTRIP_SYMBOLS=ON source
+    - name: run
+      run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
+    - name: Tests python2
+      run: |
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+    - name: GCov
+      run: gcovr -k -r . -f source -e source/third_party
+    - name: SonarCloud Scan
+      # We only want 1 scan as it would bloat sonarcube otherwise
+      # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+          sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+                -Dsonar.host.url=https://sonarcloud.io \
+                -Dsonar.sources=../source \
+                -Dsonar.login=$SONAR_TOKEN \
+                -Dsonar.organization=canaltp \
+                -Dsonar.projectKey=CanalTP_navitia \
+                -Dsonar.projectName=Navitia \
+                -Dsonar.python.coverage.reportPaths=jormungandr_serpy_integration_coverage.xml,jormungandr_coverage_serpy.xml \
+                -Dsonar.cfamily.gcov.reportsPath=. \
+                -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
+                -Dsonar.pullrequest.key=${{ github.event.number }} \
+                -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
+                -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
+                -Dsonar.cfamily.cache.enabled=false \
+                -Dsonar.cfamily.threads=$(nproc)
 
   build:
     runs-on: ubuntu-latest
@@ -112,26 +169,6 @@ jobs:
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
-    - name: SonarCloud Scan
-      # We only want 1 scan as it would bloat sonarcube otherwise
-      # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
-      if: matrix.docker_image == 'navitia/debian10_dev' && github.event_name == 'push'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: |
-          sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
-                -Dsonar.host.url=https://sonarcloud.io \
-                -Dsonar.login=$SONAR_TOKEN \
-                -Dsonar.organization=canaltp \
-                -Dsonar.projectKey=CanalTP_navitia \
-                -Dsonar.projectName=Navitia \
-                -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
-                -Dsonar.pullrequest.key=${{ github.event.number }} \
-                -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
-                -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
-                -Dsonar.cfamily.cache.enabled=false \
-                -Dsonar.cfamily.threads=$(nproc)
 
   precommit:
     runs-on: ubuntu-latest
