@@ -1,3 +1,17 @@
+navitia2 (10.8.0) unstable; urgency=low
+
+  * [Kraken & Jormungandr] Since until params added in /traffic_reports API  <https://github.com/CanalTP/navitia/pull/3415>
+  * [Jormungandr] Fix empty vehicle  <https://github.com/CanalTP/navitia/pull/3419>
+  * [Jormungandr] Not return occupancy if undefined  <https://github.com/CanalTP/navitia/pull/3418>
+  * Send slack message only for failures on push event and not for pull request  <https://github.com/CanalTP/navitia/pull/3411>
+  * [TYR][DOC]billing_plan_id parameter for users  <https://github.com/CanalTP/navitia/pull/3396>
+  * [Slack] add address node into stop_points for any depth  <https://github.com/CanalTP/navitia/pull/3414>
+  * [Kraken] add addess node into stop_points for any depth  <https://github.com/CanalTP/navitia/pull/3408>
+  * [Kraken] fix unit test with boost version > 1.66  <https://github.com/CanalTP/navitia/pull/3410>
+  * [Kraken] fix link to get pip for pyhton 2.7  <https://github.com/CanalTP/navitia/pull/3409>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 23 Apr 2021 13:04:33 +0100
+
 navitia2 (10.7.0) unstable; urgency=low
 
   * [Kraken] fix sort application_patterns of impact  <https://github.com/CanalTP/navitia/pull/3406>
