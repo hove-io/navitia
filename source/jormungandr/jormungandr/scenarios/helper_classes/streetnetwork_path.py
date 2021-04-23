@@ -92,8 +92,7 @@ class StreetNetworkPath:
                     self._request_id,
                 )
             except Exception as e:
-                logging.getLogger(__name__).error("Exception':{}\n".format(str(e)))
-
+                logging.getLogger(__name__).exception('')
                 return None
 
     def _do_request(self):

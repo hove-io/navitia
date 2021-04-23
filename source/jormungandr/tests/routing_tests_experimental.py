@@ -242,6 +242,10 @@ class TestJourneysDistributed(
             "bss_speed": instance.bss_speed,
             "car_no_park_speed": instance.car_no_park_speed,
             "taxi_speed": instance.taxi_speed,
+            "bss_rent_duration": instance.bss_rent_duration,
+            "bss_rent_penalty": instance.bss_rent_penalty,
+            "bss_return_duration": instance.bss_return_duration,
+            "bss_return_penalty": instance.bss_return_penalty,
         }
         service = instance.get_street_network(mode, request)
         request_id = None

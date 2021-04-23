@@ -107,6 +107,10 @@ class Kraken(AbstractStreetNetworkService):
             'max_taxi_duration_to_pt',
             'ridesharing_speed',
             'max_ridesharing_duration_to_pt',
+            'bss_rent_duration',
+            'bss_rent_penalty',
+            'bss_return_duration',
+            'bss_return_penalty',
             '_enable_instructions',
         ]:
             direct_path_request[attr] = request[attr]
@@ -152,7 +156,7 @@ class Kraken(AbstractStreetNetworkService):
 
         if response.journeys:
             # Note that: the journey returned by Kraken is a direct path. A direct path of walking/bike/car/car_no_park/
-            # contains only one section. But for bss, there may be one or three sections.
+            # contains only one section. But for bss, there may be one or five sections.
             # For bss,we only need attribute the mode to the first section. The most significant mode will be chosen
             # later
             if has_bss_rent_before_put_back_section(response.journeys[0]):
@@ -200,6 +204,8 @@ class Kraken(AbstractStreetNetworkService):
             req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
                 'max_{}_duration_to_pt'.format(mode)
             ]
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.direct_path.streetnetwork_params, attr, request[attr])
 
         req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
 
@@ -223,7 +229,7 @@ class Kraken(AbstractStreetNetworkService):
                 origins, destinations = destinations, origins
 
         req = self._create_sn_routing_matrix_request(
-            origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+            origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
         )
 
         res = instance.send_and_receive(req, request_id=request_id)
@@ -235,7 +241,7 @@ class Kraken(AbstractStreetNetworkService):
         return type_pb2.LocationContext(place=self.get_uri_pt_object(obj), access_duration=0)
 
     def _create_sn_routing_matrix_request(
-        self, origins, destinations, street_network_mode, max_duration, speed_switcher, **kwargs
+        self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
@@ -247,11 +253,28 @@ class Kraken(AbstractStreetNetworkService):
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
 
+        req.sn_routing_matrix.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(
+            street_network_mode
+        )
+        req.sn_routing_matrix.streetnetwork_params.walking_speed = speed_switcher.get(
+            "walking", kwargs.get("walking")
+        )
+        req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
+        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car", kwargs.get("car"))
+        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
+            "car_no_park", kwargs.get("car_no_park")
+        )
+
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
+
         return req
 
     def _check_for_error_and_raise(self, res):
-        if res.HasField('error'):
-            logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
+        if res is None or res.HasField('error'):
+            logging.getLogger(__name__).error(
+                'routing matrix query error {}'.format(res.error if res else "Unknown")
+            )
             raise TechnicalError('routing matrix fail')
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):

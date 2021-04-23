@@ -127,8 +127,84 @@ def route_response(mode):
     return response
 
 
+def bss_route_response(request):
+    response = response_pb2.Response()
+    response.response_type = response_pb2.ITINERARY_FOUND
+    journey = response.journeys.add()
+    journey.nb_transfers = 0
+    journey.nb_sections = 5
+
+    bss_rent_duration = int(request.direct_path.streetnetwork_params.bss_rent_duration)
+    bss_return_duration = int(request.direct_path.streetnetwork_params.bss_return_duration)
+
+    # 200 + bss_rent_duration + 1600 + bss_return_duration + 200
+    duration = int(2000 + bss_rent_duration + bss_return_duration)
+
+    journey.requested_date_time = journey.departure_date_time = int(1548669936)
+    journey.arrival_date_time = int(journey.departure_date_time + duration)
+
+    journey.duration = duration
+    journey.durations.total = duration
+
+    journey.durations.walking = int(400)
+    journey.distances.walking = int(400)
+    journey.durations.bike = int(1600)
+    journey.distances.bike = int(1600)
+
+    # Walking
+    section = journey.sections.add()
+    section.street_network.mode = response_pb2.Walking
+    section.type = response_pb2.STREET_NETWORK
+    section.duration = int(200)
+    section.length = int(200)
+    section.id = "section_0"
+    section.begin_date_time = int(1548669936)
+    section.end_date_time = int(section.begin_date_time + 200)
+
+    # Rent
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_RENT
+    section.duration = bss_rent_duration
+    section.id = "section_1"
+    section.begin_date_time = journey.sections[-2].duration
+    section.end_date_time = section.begin_date_time + bss_rent_duration
+
+    # Bike
+    section = journey.sections.add()
+    section.street_network.mode = response_pb2.Bike
+    section.type = response_pb2.STREET_NETWORK
+    section.duration = int(1600)
+    section.length = int(1600)
+    section.id = "section_2"
+    section.begin_date_time = journey.sections[-2].duration
+    section.end_date_time = section.begin_date_time + 1600
+    add_cycle_path_type_in_section(section)
+
+    # Put back
+    section = journey.sections.add()
+    section.type = response_pb2.BSS_PUT_BACK
+    section.duration = bss_return_duration
+    section.id = "section_3"
+    section.begin_date_time = journey.sections[-2].duration
+    section.end_date_time = section.begin_date_time + bss_return_duration
+
+    # Walking
+    section = journey.sections.add()
+    section.street_network.mode = response_pb2.Walking
+    section.type = response_pb2.STREET_NETWORK
+    section.duration = int(200)
+    section.length = int(200)
+    section.id = "section_4"
+    section.begin_date_time = journey.sections[-2].duration
+    section.end_date_time = section.begin_date_time + 200
+
+    return response
+
+
 def valid_response(request):
     if request.requested_api == type_pb2.direct_path:
+        if request.direct_path.streetnetwork_params.origin_mode == "bss":
+            return bss_route_response(request)
         return route_response(request.direct_path.streetnetwork_params.origin_mode)
     else:
         return response_pb2.Response()
@@ -188,7 +264,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert len(response['journeys']) == 3
 
         # car direct path from asgard
-        assert 'car' in response['journeys'][0]['tags']
+        assert 'car_no_park' in response['journeys'][0]['tags']
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['duration'] == 500
         assert response['journeys'][0]['durations']['car'] == 500
@@ -218,6 +294,46 @@ class TestAsgardDirectPath(AbstractTestFixture):
 
         assert not response.get('feed_publishers')
 
+    def test_journey_bss_with_direct_path(self):
+        """
+        we only want direct path
+        """
+        bss_rent_duration = 42
+        bss_return_duration = 24
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=bss"
+            + "&last_section_mode[]=bss"
+            + "&bss_rent_duration={}".format(bss_rent_duration)
+            + "&bss_return_duration={}".format(bss_return_duration)
+            + "&forbidden_uris[]=stop_point:stopA"
+            + "&forbidden_uris[]=stop_point:stopB"
+        )
+        response = self.query_region(query)
+        check_journeys(response)
+
+        assert len(response['journeys']) == 1
+
+        # bss direct path from asgard
+        assert 'bss' in response['journeys'][0]['tags']
+        assert len(response['journeys'][0]['sections']) == 5
+        assert response['journeys'][0]['duration'] == 2000 + bss_rent_duration + bss_return_duration
+        assert response['journeys'][0]['durations']['walking'] == 400
+        assert response['journeys'][0]['durations']['bike'] == 1600
+        assert response['journeys'][0]['durations']['total'] == 2000 + bss_rent_duration + bss_return_duration
+        assert response['journeys'][0]['distances']['walking'] == 400
+        assert response['journeys'][0]['distances']['bike'] == 1600
+
+        sections = response['journeys'][0]['sections']
+
+        assert sections[1]['duration'] == bss_rent_duration
+        assert sections[3]['duration'] == bss_return_duration
+
+        # bike section
+        assert sections[2].get('cycle_lane_length')
+        # all other sections
+        assert all((not sections[i].get('cycle_lane_length') for i in [0, 1, 3, 4]))
+
 
 @dataset(
     {
@@ -227,7 +343,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         }
     }
 )
-class TestAsgardDirectPath(AbstractTestFixture):
+class TestAsgardBadDirectPath(AbstractTestFixture):
     def test_crowfly_replaces_section_if_street_network_failed(self):
         """
         Topic: This case arrives when the street network computation has failed.

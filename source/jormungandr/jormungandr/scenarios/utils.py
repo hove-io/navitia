@@ -245,6 +245,10 @@ def updated_common_journey_request_with_default(request, instance):
     if request['taxi_speed'] is None:
         request['taxi_speed'] = instance.taxi_speed
 
+    for attr in ('bss_rent_duration', 'bss_rent_penalty', 'bss_return_duration', 'bss_return_penalty'):
+        attr_value = request.get(attr)
+        request[attr] = getattr(instance, attr, None) if attr_value is None else attr_value
+
 
 def updated_request_with_default(request, instance):
     updated_common_journey_request_with_default(request, instance)
