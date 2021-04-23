@@ -260,8 +260,10 @@ class Kraken(AbstractStreetNetworkService):
             "walking", kwargs.get("walking")
         )
         req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
-        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car")
-        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get("car_no_park")
+        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car", kwargs.get("car"))
+        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
+            "car_no_park", kwargs.get("car_no_park")
+        )
 
         for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
             setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
