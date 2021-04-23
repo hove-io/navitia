@@ -19,6 +19,7 @@ pipeline {
             steps {
                 sh '''
                   cd build_package
+                  apt update
                   apt install -y gcovr
                   apt install -y unzip wget
                   wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
@@ -41,12 +42,12 @@ pipeline {
             steps {
                 sh '''
                     # cleaning test xml files
-                    find build_package/ -name results*.xml -exec rm {} \\;
-                    find build_package/ -name nosetest*.xml -exec rm {} \\;
-                    find build_package/ -name '*.gcda' -exec rm {} \\;
-                    find build_package/ -name '*.gdata' -exec rm {} \\;
-                    rm -rf tmp/
-                    rm -rf venv/
+                    #  find build_package/ -name results*.xml -exec rm {} \\;
+                    #  find build_package/ -name nosetest*.xml -exec rm {} \\;
+                    #  find build_package/ -name '*.gcda' -exec rm {} \\;
+                    #  find build_package/ -name '*.gdata' -exec rm {} \\;
+                    #  rm -rf tmp/
+                    #  rm -rf venv/
                 '''
             }
         }
