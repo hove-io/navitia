@@ -379,7 +379,9 @@ class MixedSchedule(object):
                 # TODO: this call may be parallelized with gevent
                 # Not done now as it's only a POC and our WS Forseti/vehicle_occupancies will only have fewer
                 # elements (less than 5000 for line 40 and 45). The Cache with 1 hour duration works well
-                date_time.occupancy = vo_service.get_response(args)
+                occupancy = vo_service.get_response(args)
+                if occupancy is not None:
+                    date_time.occupancy = vo_service.get_response(args)
 
     def terminus_schedules(self, request):
         resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])

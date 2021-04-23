@@ -102,6 +102,13 @@ class Scenario(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.traffic_reports.forbidden_uris.append(forbidden_uri)
 
+        since = request.get('since')
+        if since:
+            req.traffic_reports.application_period_begin = since
+        until = request.get('until')
+        if request['until']:
+            req.traffic_reports.application_period_end = until
+
         resp = instance.send_and_receive(req)
         return resp
 

@@ -32,7 +32,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
@@ -40,14 +39,18 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
+from jormungandr.utils import date_to_timestamp
+from jormungandr.resources_utils import ResourceUtc
 from flask.globals import g
+from flask_restful import abort
 from datetime import datetime
 import six
 
 
-class TrafficReport(ResourceUri):
+class TrafficReport(ResourceUri, ResourceUtc):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.TrafficReportsSerializer)
+        ResourceUtc.__init__(self)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=DepthArgument(), default=1, help="The depth of your object")
         parser_get.add_argument(
@@ -99,6 +102,10 @@ class TrafficReport(ResourceUri):
             action="append",
             help="If filled, will restrain the search within the given disruption tags",
         )
+
+        parser_get.add_argument("since", type=DateTimeFormat(), help="use disruptions valid after this date")
+        parser_get.add_argument("until", type=DateTimeFormat(), help="use disruptions valid before this date")
+
         self.collection = 'traffic_reports'
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
@@ -119,6 +126,16 @@ class TrafficReport(ResourceUri):
             args['forbidden_uris[]'].append(forbid_id)
 
         args["filter"] = self.get_filter(split_uri(uri), args)
+
+        since = args.get('since')
+        until = args.get('until')
+        if since and until and since > until:
+            abort(400, message='until must be >= since')
+
+        if since:
+            args['since'] = date_to_timestamp(self.convert_to_utc(since))
+        if until:
+            args['until'] = date_to_timestamp(self.convert_to_utc(until))
 
         response = i_manager.dispatch(args, "traffic_reports", instance_name=self.region)
 

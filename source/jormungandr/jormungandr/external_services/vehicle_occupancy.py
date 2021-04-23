@@ -58,7 +58,10 @@ class VehicleOccupancyProvider(AbstractExternalService):
         raw_response = self._call_webservice(arguments)
         resp = self.response_marshaller(raw_response)
         vehicle_occupancies = resp.get('vehicle_occupancies', [])
-        return vehicle_occupancies[0].get('occupancy', 0) if vehicle_occupancies else 0
+        if not vehicle_occupancies:
+            return None
+        first_occupancy = vehicle_occupancies[0]
+        return first_occupancy["occupancy"] if "occupancy" in first_occupancy else None
 
     @classmethod
     def response_marshaller(cls, response):

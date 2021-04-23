@@ -30,8 +30,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
-import pytest
-from jormungandr.tests.utils_test import MockResponse
+from jormungandr.external_services.vehicle_occupancy import VehicleOccupancyProvider
+from mock import MagicMock
 
 MOCKED_INSTANCE_CONF = {
     'scenario': 'new_default',
@@ -46,7 +46,7 @@ MOCKED_INSTANCE_CONF = {
                     "circuit_breaker_max_fail": 4,
                     "circuit_breaker_reset_timeout": 60,
                 },
-                "class": "jormungandr.external_services.vehicle_occupancy.VehicleOccupancyProvider",
+                "class": "tests.vehicle_occupancy_tests.MockVehicleOccupancyProvider",
             }
         ]
     },
@@ -64,16 +64,47 @@ VEHICLE_OCCUPANCIES_RESPONSE = {
 }
 
 
-def mock_free_floating(_, params):
-    return MockResponse(VEHICLE_OCCUPANCIES_RESPONSE, 200)
+class MockObj:
+    pass
 
 
-@pytest.fixture(scope="function", autouse=True)
-def mock_http_free_floating(monkeypatch):
-    monkeypatch.setattr(
-        'jormungandr.external_services.vehicle_occupancy.VehicleOccupancyProvider._call_webservice',
-        mock_free_floating,
-    )
+class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
+    def __init__(self, service_url, timeout=2, **kwargs):
+        VehicleOccupancyProvider.__init__(self, service_url, timeout, **kwargs)
+
+    def _call_webservice(self, arguments):
+        resp = MockObj()
+        resp.status_code = 200
+        json = {}
+        vehicle_journey_id = arguments.get("vehiclejourney_id")
+        stop_id = arguments.get("stop_id")
+        if stop_id == "C:S0" and vehicle_journey_id == 'vehicle_journey:C:vj1':
+            json = {
+                "vehicle_occupancies": [
+                    {
+                        "vehiclejourney_id": "vehicle_journey:0:123714928-1",
+                        "stop_id": "stop_point:0:SP:80:4165",
+                        "date_time": "2021-03-03T08:56:00+01:00",
+                        "occupancy": 55,
+                    }
+                ]
+            }
+        if stop_id == "S11" and vehicle_journey_id == 'vehicle_journey:M:14':
+            json = {
+                "vehicle_occupancies": [
+                    {
+                        "vehiclejourney_id": "vehicle_journey:M:14",
+                        "stop_id": "S11",
+                        "date_time": "2021-03-03T08:56:00+01:00",
+                        "occupancy": 0,
+                    }
+                ]
+            }
+        if stop_id == "stopP2" and vehicle_journey_id == 'vehicle_journey:vjP:1:modified:0:bib':
+            json = {"vehicle_occupancies": []}
+
+        resp.json = MagicMock(return_value=json)
+        return resp
 
 
 @dataset({'basic_schedule_test': MOCKED_INSTANCE_CONF})
@@ -92,7 +123,7 @@ class TestFreeFloating(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         assert len(stop_schedules) == 1
-        assert stop_schedules[0]['occupancy'] == 0
+        assert 'occupancy' not in stop_schedules[0]
 
         # With data_freshness=realtime, api vehicle_occupancies is called and occupancy value is updated
         query = self.query_template_scs.format(
@@ -102,3 +133,21 @@ class TestFreeFloating(AbstractTestFixture):
         stop_schedules = response['stop_schedules'][0]['date_times']
         assert len(stop_schedules) == 1
         assert stop_schedules[0]['occupancy'] == 55
+
+    def test_occupancy_empty_vehicle(self):
+        query = self.query_template_scs.format(
+            sp='S11', dt='20160101T080000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+        assert len(stop_schedules) == 1
+        assert stop_schedules[0]['occupancy'] == 0
+
+    def test_occupancy_empty_list_occupancies(self):
+        query = self.query_template_scs.format(
+            sp='stopP2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+        assert len(stop_schedules) == 1
+        assert "occupancy" not in stop_schedules[0]

@@ -1428,11 +1428,139 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
 
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {});
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, boost::none);
     const auto resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
     BOOST_REQUIRE_EQUAL(resp.traffic_reports(0).vehicle_journeys_size(), 1);
     BOOST_CHECK_EQUAL(resp.traffic_reports(0).vehicle_journeys(0).uri(), "vehicle_journey:vj:3");
+}
+
+BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_without_since_until) {
+    /*
+    vj:1                                20150930
+    vj:2                                                20151002
+    vj:3             20150928
+
+    */
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
+    });
+
+    transit_realtime::TripUpdate trip_update_vj1 = make_cancellation_message("vj:1", "20150930");
+    navitia::handle_realtime("trip_update_vj1", timestamp, trip_update_vj1, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj2 = make_cancellation_message("vj:2", "20151002");
+    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
+    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
+
+    auto* data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, boost::none);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"trip_update_vj1", "trip_update_vj2", "trip_update_vj3"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+}
+
+BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_without_since) {
+    /*
+    vj:1                                20150930
+    vj:2                                                20151002
+    vj:3             20150928
+
+    */
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
+    });
+
+    transit_realtime::TripUpdate trip_update_vj1 = make_cancellation_message("vj:1", "20150930");
+    navitia::handle_realtime("trip_update_vj1", timestamp, trip_update_vj1, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj2 = make_cancellation_message("vj:2", "20151002");
+    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
+    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
+
+    auto* data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, "20150929T0830"_dt);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"trip_update_vj3"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+}
+
+BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_without_until) {
+    /*
+    vj:1                                20150930
+    vj:2                                                20151002
+    vj:3             20150928
+
+    */
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
+    });
+
+    transit_realtime::TripUpdate trip_update_vj1 = make_cancellation_message("vj:1", "20150930");
+    navitia::handle_realtime("trip_update_vj1", timestamp, trip_update_vj1, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj2 = make_cancellation_message("vj:2", "20151002");
+    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
+    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
+
+    auto* data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, "20150930T0830"_dt, boost::none);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"trip_update_vj1", "trip_update_vj2"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+}
+
+BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_with_since_until) {
+    /*
+    vj:1                                20150930
+    vj:2                                                20151002
+    vj:3             20150928
+
+    */
+    ed::builder b("20150928", [](ed::builder& b) {
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
+        b.vj_with_network("nt", "A", "111111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
+    });
+
+    transit_realtime::TripUpdate trip_update_vj1 = make_cancellation_message("vj:1", "20150930");
+    navitia::handle_realtime("trip_update_vj1", timestamp, trip_update_vj1, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj2 = make_cancellation_message("vj:2", "20151002");
+    navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data, true, true);
+
+    transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
+    navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data, true, true);
+
+    auto* data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, "20150930T0830"_dt, "20150930T1230"_dt);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"trip_update_vj1"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
 
 BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
@@ -1447,7 +1575,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data, true, true);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {});
+    navitia::disruption::traffic_reports(pb_creator, *b.data, 1, 10, 0, "", {}, boost::none, boost::none);
     const auto resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 0);
 }

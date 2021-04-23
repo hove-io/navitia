@@ -33,7 +33,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
@@ -42,7 +41,6 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
-from flask_restful import reqparse
 from flask.globals import g
 from datetime import datetime
 import six
