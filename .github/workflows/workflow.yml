@@ -58,7 +58,7 @@ jobs:
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: configure for Profile
-      run: cmake -DCMAKE_BUILD_TYPE=Coverage  -DSTRIP_SYMBOLS=ON source
+      run: cmake -DCMAKE_BUILD_TYPE=Profile  -DSTRIP_SYMBOLS=ON source
     - name: run
       run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
     - name: Tests python2
@@ -66,7 +66,7 @@ jobs:
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: GCov
+    - name: Run coverage
       run: gcovr -k -r . -f source -e source/third_party --sonarqube cov.xml
     - name: SonarCloud Scan
       # We only want 1 scan as it would bloat sonarcube otherwise
@@ -77,9 +77,6 @@ jobs:
       run: |
           sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
-                -Dsonar.pullrequest.key=${{ github.event.number }} \
-                -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
-                -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
                 -Dsonar.cfamily.threads=$(nproc)
 
   build:
