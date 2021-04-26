@@ -123,7 +123,7 @@ class TestIsochrone(AbstractTestFixture):
         )
         normal_response = self.query(q, display=True)
         is_valid_isochrone_response(normal_response, self.tester, q)
-        assert len(normal_response["journeys"]) == 2
+        assert len(normal_response["journeys"]) == 5
 
     def test_reverse_isochrone_coord_clockwise(self):
         q = "v1/coverage/basic_routing_test/journeys?datetime=20120614T080000&to=A"

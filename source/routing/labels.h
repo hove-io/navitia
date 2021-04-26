@@ -64,38 +64,25 @@ struct Label {
 };
 
 struct Labels {
-    using Map = IdxMap<type::StopPoint, DateTime>;
-    using LabelsMap = IdxMap<type::StopPoint, Label>;
+    using LabelsMap = IdxMap<JourneyPatternPoint, Label>;
 
     Labels();
-    Labels(const std::vector<type::StopPoint*> stop_points);
-    Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers);
+    Labels(const std::vector<JourneyPatternPoint> jpps);
 
     // initialize the structure according to the number of jpp
-    void init_inf(const std::vector<type::StopPoint*>& stops) { init(stops, DateTimeUtils::inf); }
-    void init_min(const std::vector<type::StopPoint*>& stops) { init(stops, DateTimeUtils::min); }
+    void init_inf(const std::vector<JourneyPatternPoint>& jpps) { init(jpps, DateTimeUtils::inf); }
+    void init_min(const std::vector<JourneyPatternPoint>& jpps) { init(jpps, DateTimeUtils::min); }
 
-    const Label& operator[](SpIdx sp_idx) const { return labels[sp_idx]; }
-    Label& operator[](SpIdx sp_idx) { return labels[sp_idx]; }
+    const Label& operator[](JppIdx jpp_idx) const { return labels[jpp_idx]; }
+    Label& operator[](JppIdx jpp_idx) { return labels[jpp_idx]; }
 
     LabelsMap::range values() { return labels.values(); }
 
-    /* Split each label's field in a specific vector, and return them individually in an array of :
-     *  1. stop point arrival datetime
-     *  2. stop point transfer datime
-     *  3. stop point waling duration
-     *  4. stop point walking transfer duration
-     */
-    std::array<Labels::Map, 4> inrow_labels();
-
     void fill_values(DateTime pts, DateTime transfert, DateTime walking, DateTime walking_transfert);
 
+    void init(const std::vector<JourneyPatternPoint>& jpps, DateTime val);
+
 private:
-    void init(const std::vector<type::StopPoint*>& stops, DateTime val);
-
-    const DateTime& dt_pt(SpIdx sp_idx) const { return labels[sp_idx].dt_pt; }
-    DateTime& mut_dt_pt(SpIdx sp_idx) { return labels[sp_idx].dt_pt; }
-
     LabelsMap labels;
 };
 

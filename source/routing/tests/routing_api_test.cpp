@@ -194,6 +194,10 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
 
   Testing that crow fly feature with no street network works
   for origin and destination, and with coordinates and stop areas.
+
+  Since PR #3413 JPP based Raptor's Labels,
+  we have two journeys proposed as results instead of one.
+  We get the earliest arrival journey for each route (with 2 as stop_point) (0 -> 2 and 1 -> 2)
  */
 BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     std::vector<std::string> forbidden;
@@ -229,8 +233,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
+    pbnavitia::Journey journey = resp.journeys(1);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(1);
@@ -260,8 +264,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
-    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
+    journey = resp.journeys(1);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
@@ -1824,7 +1828,7 @@ struct isochrone_fixture {
 };
 
 /**
- * classic isochrone from A, we should find 2 journeys
+ * classic isochrone from A, we should find 4 journeys
  */
 BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     nr::RAPTOR raptor(*(b.data));
@@ -1836,18 +1840,30 @@ BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts, true, {}, {}, {}, sn_worker, nt::RTLevel::Base,
                        3 * 60 * 60);
     auto result = pb_creator.get_response();
-    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 4);
 
-    std::cout << "1/ dep " << navitia::from_posix_timestamp(result.journeys(0).departure_date_time()) << std::endl;
-    std::cout << "1/ arr " << navitia::from_posix_timestamp(result.journeys(0).arrival_date_time()) << std::endl;
-    std::cout << "2/ dep " << navitia::from_posix_timestamp(result.journeys(1).departure_date_time()) << std::endl;
-    std::cout << "2/ arr " << navitia::from_posix_timestamp(result.journeys(1).arrival_date_time()) << std::endl;
+    for (int i(0); i < result.journeys_size(); ++i) {
+        std::cout << i << "/ dep " << navitia::from_posix_timestamp(result.journeys(i).departure_date_time())
+                  << std::endl;
+        std::cout << i << "/ arr " << navitia::from_posix_timestamp(result.journeys(i).arrival_date_time())
+                  << std::endl;
+    }
 
     // Note: since there is no 2nd pass for the isochrone, the departure dt is the requested dt
     BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
-    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T093500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T084500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(2).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(2).arrival_date_time(), "20150615T093500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(3).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(3).arrival_date_time(), "20150615T095000"_pts);
+
+    // DIff Results before / after  PR #3413 JPP based Raptor's Labels
+    // Before this PR, results journeys are only the one with earliest arrival time at each stops points (B and C here)
+    // So we expect 2 journeys for 2 stop points
+    // After this PR, results journeys are all the one with earliest arival for each couple (stop point, line)
+    // In this example with have 2 lines for each stop points B and C, so we expect 4 journeys as results
 
     {
         // We ask the same request with stop_point == center
@@ -1871,7 +1887,7 @@ BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
 
 /**
  * reverse isochrone test, we want to arrive in B before 11:00,
- * we should find 2 journeys
+ * we should find 3 journeys
  */
 BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
     nr::RAPTOR raptor(*(b.data));
@@ -1883,12 +1899,14 @@ BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
     nr::make_isochrone(pb_creator, raptor, ep, "20150615T110000"_pts, false, {}, {}, {}, sn_worker, nt::RTLevel::Base,
                        3 * 60 * 60);
     auto result = pb_creator.get_response();
-    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 3);
 
     BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082900"_pts);
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T110000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082600"_pts);
     BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T110000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(2).departure_date_time(), "20150615T082500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(2).arrival_date_time(), "20150615T110000"_pts);
 
     {
         // We ask the same request with stop_point == center
@@ -1924,10 +1942,12 @@ BOOST_FIXTURE_TEST_CASE(isochrone_duration_limit, isochrone_fixture) {
     nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts, true, {}, {}, {}, sn_worker, nt::RTLevel::Base,
                        1 * 60 * 60);
     auto result = pb_creator.get_response();
-    BOOST_REQUIRE_EQUAL(result.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 
     BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
     BOOST_CHECK_EQUAL(result.journeys(0).arrival_date_time(), "20150615T083500"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).departure_date_time(), "20150615T082000"_pts);
+    BOOST_CHECK_EQUAL(result.journeys(1).arrival_date_time(), "20150615T084500"_pts);
 }
 
 // test with disruption active
