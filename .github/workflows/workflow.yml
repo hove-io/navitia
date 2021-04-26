@@ -36,7 +36,7 @@ jobs:
     #if: github.event_name == 'push'
     runs-on: ubuntu-latest
     container:
-        image: navitia/debian8_dev
+        image: navitia/debian10_dev
     services:
       rabbitmq:
         image: rabbitmq:3-alpine
@@ -50,7 +50,7 @@ jobs:
       run : |
         rm -rf "$AGENT_TOOLSDIRECTORY"
         apt update -y
-        apt install -y gcovr
+        pip install gcovr
         apt install -y unzip wget
         wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
         unzip -u build-wrapper-linux-x86.zip
