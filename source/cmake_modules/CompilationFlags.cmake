@@ -24,9 +24,9 @@ endif(NOT SKIP_TESTS)
 # Gcc Release flags
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_GNUCXX_WARN_FLAGS "-Wall -Wextra -Woverloaded-virtual -Wundef -pedantic")
-    set(CMAKE_GNUCXX_COMMON_FLAGS "-std=c++14 -rdynamic -g -fno-omit-frame-pointer")
+    set(CMAKE_GNUCXX_COMMON_FLAGS "-std=c++14 -rdynamic -fno-omit-frame-pointer")
     set(CMAKE_CXX_FLAGS "${CMAKE_GNUCXX_COMMON_FLAGS} ${CMAKE_GNUCXX_WARN_FLAGS}")
-    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -fprofile-arcs -ftest-coverage  -g")
+    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -fprofile-arcs -ftest-coverage -O0 -g0")
     set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 

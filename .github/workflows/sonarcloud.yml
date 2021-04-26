@@ -1,0 +1,81 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+  release:
+    types:
+      - created
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Dump GitHub context
+      env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: checkout submodules
+      shell: bash
+      run: |
+        sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
+        git submodule update --init --recursive
+    - name: check submodules
+      run: ./source/scripts/check_submodules.sh
+
+  static_analyse:
+    runs-on: ubuntu-latest
+
+    container:
+        image: navitia/debian10_dev
+
+    services:
+      rabbitmq:
+        image: rabbitmq:3-alpine
+        ports:
+          - 5672:5672
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
+    - name: Install Gcov and SonarCloud's dependencies for C++ analysis
+      run : |
+        rm -rf "$AGENT_TOOLSDIRECTORY"
+        apt update -y
+        pip install gcovr
+        gcovr --version
+        apt install -y unzip wget
+        wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
+        unzip -u build-wrapper-linux-x86.zip
+        unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
+    - name: Install dependencies for python2
+      run: pip install -r source/jormungandr/requirements_dev.txt
+    - name: Configure
+      run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
+    - name: run
+      run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
+    - name: Tests python2
+      run: |
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+    - name: Run coverage
+      run: gcovr -k -r . -f source -e source/third_party --sonarqube cov.xml
+    - name: SonarCloud Scan
+      # We only want 1 scan as it would bloat sonarcube otherwise
+      # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+          sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+                -Dsonar.login=$SONAR_TOKEN \
+                -Dsonar.cfamily.threads=$(nproc)
