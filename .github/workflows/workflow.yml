@@ -33,6 +33,7 @@ jobs:
       run: ./source/scripts/check_submodules.sh
 
   static_analysis:
+    #if: github.event_name == 'push'
     runs-on: ubuntu-latest
     container:
         image: navitia/debian8_dev
@@ -66,7 +67,7 @@ jobs:
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
     - name: GCov
-      run: gcovr -k -r . -f source -e source/third_party
+      run: gcovr -k -r . -f source -e source/third_party --sonarqube cov.xml
     - name: SonarCloud Scan
       # We only want 1 scan as it would bloat sonarcube otherwise
       # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
@@ -75,19 +76,10 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
           sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
-                -Dsonar.host.url=https://sonarcloud.io \
-                -Dsonar.sources=../source \
                 -Dsonar.login=$SONAR_TOKEN \
-                -Dsonar.organization=canaltp \
-                -Dsonar.projectKey=CanalTP_navitia \
-                -Dsonar.projectName=Navitia \
-                -Dsonar.python.coverage.reportPaths=jormungandr_serpy_integration_coverage.xml,jormungandr_coverage_serpy.xml \
-                -Dsonar.cfamily.gcov.reportsPath=. \
-                -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
                 -Dsonar.pullrequest.key=${{ github.event.number }} \
                 -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
                 -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
-                -Dsonar.cfamily.cache.enabled=false \
                 -Dsonar.cfamily.threads=$(nproc)
 
   build:
