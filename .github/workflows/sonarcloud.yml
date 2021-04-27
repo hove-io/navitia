@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+    pull_request:
 
 jobs:
   info:
@@ -15,7 +16,6 @@ jobs:
       run: echo "$GITHUB_CONTEXT"
 
   static_analysis:
-    #if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     container:
