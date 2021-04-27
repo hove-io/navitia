@@ -373,12 +373,7 @@ bool ApplicationPattern::operator<(const ApplicationPattern& other) const {
         }
     }
     if (this->time_slots.size() != other.time_slots.size()) {
-        //        if (this->time_slots.empty() || other.time_slots.empty()) {
-        //            return this->time_slots.empty() ? false : true;
-        //        }
         return this->time_slots.size() < other.time_slots.size();
-        // return this->time_slots.size() > other.time_slots.size() ? false : true;
-        // this->time_slots.size() < other.time_slots.size()
     }
 
     return this->week_pattern.to_ulong() < other.week_pattern.to_ulong();
