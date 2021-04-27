@@ -80,7 +80,16 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
           sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+                -Dsonar.host.url=https://sonarcloud.io \
                 -Dsonar.login=$SONAR_TOKEN \
+                -Dsonar.organization=canaltp \
+                -Dsonar.projectKey=CanalTP_navitia \
+                -Dsonar.projectName=Navitia \
+                -Dsonar.cfamily.build-wrapper-output=build-wrapper-output-dir \
+                -Dsonar.pullrequest.key=${{ github.event.number }} \
+                -Dsonar.pullrequest.branch=$GITHUB_HEAD_REF \
+                -Dsonar.pullrequest.base=$GITHUB_BASE_REF \
+                -Dsonar.cfamily.cache.enabled=false \
                 -Dsonar.cfamily.threads=$(nproc)
 
   build:
