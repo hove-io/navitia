@@ -2062,3 +2062,34 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert len(stop_schedules[1]['date_times']) == 0
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
+
+    def test_duration_default_value(self):
+        # Query with duration=86400
+        # Here we have 4 date_times with the last one at 20170102T235000 + 86400 (24 hours)
+        from_datetime = "20170102T235000"
+        response = self.query_region(
+            "stop_points/X_S3/stop_schedules?from_datetime={}"
+            "&data_freshness=base_schedule&duration=86400".format(from_datetime)
+        )
+
+        stop_schedules = response['stop_schedules']
+        assert len(stop_schedules) == 2
+        assert len(stop_schedules[0]['date_times']) == 4
+        assert stop_schedules[0]['date_times'][0]['date_time'] == "20170102T235000"
+        assert stop_schedules[0]['date_times'][1]['date_time'] == "20170103T000000"
+        assert stop_schedules[0]['date_times'][2]['date_time'] == "20170103T001000"
+        assert stop_schedules[0]['date_times'][3]['date_time'] == "20170103T235000"
+
+        # Query without parameter duration (default value = 86399)
+        # Here we have exclude the last date_time at 20170102T235000 + 86400 (24 hours)
+        response = self.query_region(
+            "stop_points/X_S3/stop_schedules?from_datetime={}"
+            "&data_freshness=base_schedule".format(from_datetime)
+        )
+
+        stop_schedules = response['stop_schedules']
+        assert len(stop_schedules) == 2
+        assert len(stop_schedules[0]['date_times']) == 3
+        assert stop_schedules[0]['date_times'][0]['date_time'] == "20170102T235000"
+        assert stop_schedules[0]['date_times'][1]['date_time'] == "20170103T000000"
+        assert stop_schedules[0]['date_times'][2]['date_time'] == "20170103T001000"
