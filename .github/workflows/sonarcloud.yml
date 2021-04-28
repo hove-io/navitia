@@ -6,14 +6,6 @@ on:
       - dev
 
 jobs:
-  info:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Dump GitHub context
-      env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-
   static_analysis:
     runs-on: ubuntu-latest
 
