@@ -210,14 +210,16 @@ type::MultiPolygon build_single_isochrone(RAPTOR& raptor,
     }
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto best_lbl = raptor.best_labels[sp_idx].dt_pt;
-        if (in_bound(best_lbl, bound, clockwise)) {
-            uint duration_left = abs(int(best_lbl) - int(bound));
-            if (duration_left * speed < MIN_RADIUS) {
-                continue;
+        for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+            const auto best_lbl = raptor.best_labels[jpp.idx].dt_pt;
+            if (in_bound(best_lbl, bound, clockwise)) {
+                uint duration_left = abs(int(best_lbl) - int(bound));
+                if (duration_left * speed < MIN_RADIUS) {
+                    continue;
+                }
+                const auto& center = sp->coord;
+                circles_classed.emplace_back(center, duration_left);
             }
-            const auto& center = sp->coord;
-            circles_classed.emplace_back(center, duration_left);
         }
     }
     std::vector<InfoCircle> circles_check = delete_useless_circle(std::move(circles_classed), speed);

@@ -476,22 +476,24 @@ struct RaptorSolutionReader {
                 continue;
             }
             const SpIdx end_sp_idx = SpIdx(*end_st.stop_point);
-            const auto& prev_label = raptor.labels[count - 1][end_sp_idx];
-            const DateTime end_limit = prev_label.dt_transfer;
-            if (v.comp(end_limit, cur_dt)) {
-                continue;
-            }
             if (!raptor.valid_stop_points[end_sp_idx.val]) {
                 continue;
             }
+            for (const auto& jpp : raptor.jpps_from_sp[end_sp_idx]) {
+                const auto& prev_label = raptor.labels[count - 1][jpp.idx];
+                const DateTime end_limit = prev_label.dt_transfer;
+                if (v.comp(end_limit, cur_dt)) {
+                    continue;
+                }
 
-            // great, we can end
-            if (count == 1) {
-                // we've finished, and it's a valid end as it is initialized
-                const PathElt new_path(*begin_st_dt.first, begin_st_dt.second, end_st, cur_dt, path);
-                handle_solution(new_path);
-            } else {
-                try_transfer(count - 1, end_sp_idx, StDt(&end_st, cur_dt), nb_stay_in, transfers);
+                // great, we can end
+                if (count == 1) {
+                    // we've finished, and it's a valid end as it is initialized
+                    const PathElt new_path(*begin_st_dt.first, begin_st_dt.second, end_st, cur_dt, path);
+                    handle_solution(new_path);
+                } else {
+                    try_transfer(count - 1, end_sp_idx, StDt(&end_st, cur_dt), nb_stay_in, transfers);
+                }
             }
         }
         return cur_dt;
@@ -506,14 +508,16 @@ struct RaptorSolutionReader {
                                              : raptor.data.dataRaptor->connections.backward_connections;
 
         for (const auto& conn : cnx_list[sp_idx]) {
-            const DateTime transfer_limit = raptor.labels[count][conn.sp_idx].dt_pt;
-            const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
-            if (v.comp(transfer_limit, transfer_end)) {
-                continue;
-            }
+            for (const auto& jpp : raptor.jpps_from_sp[conn.sp_idx]) {
+                const DateTime transfer_limit = raptor.labels[count][jpp.idx].dt_pt;
+                const DateTime transfer_end = v.combine(end_st_dt.second, conn.duration);
+                if (v.comp(transfer_limit, transfer_end)) {
+                    continue;
+                }
 
-            // transfer is OK
-            try_begin_pt(count, conn.sp_idx, transfer_end, end_st_dt, nb_stay_in, transfers);
+                // transfer is OK
+                try_begin_pt(count, jpp, transfer_end, end_st_dt, nb_stay_in, transfers);
+            }
         }
     }
 
@@ -531,32 +535,32 @@ struct RaptorSolutionReader {
     }
 
     void try_begin_pt(const unsigned count,
-                      const SpIdx begin_sp_idx,
+                      const dataRAPTOR::JppsFromSp::Jpp& jpp,
                       const DateTime begin_dt,
                       const StDt& end_st_dt,
                       const unsigned nb_stay_in,
                       Transfers& transfers) {
         const unsigned transfer_t = v.clockwise() ? begin_dt - end_st_dt.second : end_st_dt.second - begin_dt;
-        const DateTime begin_limit = raptor.labels[count][begin_sp_idx].dt_pt;
-        for (const auto& jpp : raptor.jpps_from_sp[begin_sp_idx]) {
-            // trying to begin
-            const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
-            if (begin_st_dt.first == nullptr) {
-                continue;
-            }
-            if (v.comp(begin_limit, begin_st_dt.second)) {
-                continue;
-            }
-            if (!raptor.valid_stop_points[begin_sp_idx.val]) {
-                continue;
-            }
+        const DateTime begin_limit = raptor.labels[count][jpp.idx].dt_pt;
 
-            // great, we can begin
-            const Transfer tr(get_vj_end(begin_st_dt), nb_stay_in,
-                              v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second, transfer_t,
-                              end_st_dt, begin_st_dt);
-            transfers[jpp.jp_idx].add(tr);
+        // trying to begin
+        const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
+        if (begin_st_dt.first == nullptr) {
+            return;
         }
+        if (v.comp(begin_limit, begin_st_dt.second)) {
+            return;
+        }
+        const SpIdx& begin_sp_idx = raptor.get_jpp(jpp.idx).sp_idx;
+        if (!raptor.valid_stop_points[begin_sp_idx.val]) {
+            return;
+        }
+
+        // great, we can begin
+        const Transfer tr(get_vj_end(begin_st_dt), nb_stay_in,
+                          v.clockwise() ? begin_st_dt.second - begin_dt : begin_dt - begin_st_dt.second, transfer_t,
+                          end_st_dt, begin_st_dt);
+        transfers[jpp.jp_idx].add(tr);
     }
 
     void step(const unsigned count, const PathElt* path, const StDt& begin_st_dt) {
@@ -570,21 +574,20 @@ struct RaptorSolutionReader {
         }
     }
 
-    void begin_pt(const unsigned count, const SpIdx begin_sp_idx, const DateTime begin_dt) {
-        const DateTime begin_limit = raptor.labels[count][begin_sp_idx].dt_pt;
-        for (const auto& jpp : raptor.jpps_from_sp[begin_sp_idx]) {
-            // trying to begin
-            const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
-            if (begin_st_dt.first == nullptr) {
-                continue;
-            }
-            if (v.comp(begin_limit, begin_st_dt.second)) {
-                continue;
-            }
+    void begin_pt(const unsigned count, const dataRAPTOR::JppsFromSp::Jpp& jpp, const DateTime begin_dt) {
+        const DateTime begin_limit = raptor.labels[count][jpp.idx].dt_pt;
 
-            // great, we can begin
-            step(count, nullptr, begin_st_dt);
+        // trying to begin
+        const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
+        if (begin_st_dt.first == nullptr) {
+            return;
         }
+        if (v.comp(begin_limit, begin_st_dt.second)) {
+            return;
+        }
+
+        // great, we can begin
+        step(count, nullptr, begin_st_dt);
     }
 };
 
@@ -601,41 +604,47 @@ void read_solutions(const RAPTOR& raptor,
                     const StartingPointSndPhase& end_point) {
     auto reader = RaptorSolutionReader<Visitor>(raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
                                                 accessibilite_params, transfer_penalty, end_point);
-    const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_point.sp_idx);
+
+    const JppIdx& end_jpp_idx = end_point.jpp_idx;
+    const JourneyPatternPoint& end_jpp = raptor.get_jpp(end_jpp_idx);
+    const SpIdx& end_stop_point_idx = end_jpp.sp_idx;
+    const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_stop_point_idx);
     for (unsigned count = 1; count <= raptor.count; ++count) {
         const auto& working_labels = raptor.labels[count];
-        const auto& first_endpoint_label = raptor.labels[0][end_point.sp_idx];
+        const auto& first_endpoint_label = raptor.labels[0][end_point.jpp_idx];
 
         for (const auto& a : v.clockwise() ? deps : arrs) {
             SpIdx sp_idx = a.first;
-            const auto& working_label = working_labels[sp_idx];
             navitia::type::StopPoint* stop_point = raptor.data.pt_data->stop_points[sp_idx.val];
+            for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+                const auto& working_label = working_labels[jpp.idx];
 
-            if (!is_dt_initialized(working_label.dt_pt)) {
-                continue;
-            }
-            if (!raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) {
-                continue;
-            }
-            reader.nb_sol_added = 0;
-            // we check that it's worth to explore this possible journey
-            auto transfer_duration = working_label.walking_duration_pt - end_point_street_network_duration;
-            auto j = make_bound_journey(working_label.dt_pt, a.second, first_endpoint_label.dt_transfer,
-                                        end_point_street_network_duration, count, navitia::seconds(transfer_duration),
-                                        v.clockwise());
-            LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
-                                                                  << std::endl
-                                                                  << j);
+                if (!is_dt_initialized(working_label.dt_pt)) {
+                    continue;
+                }
+                if (!raptor.get_sp(a.first)->accessible(accessibilite_params.properties)) {
+                    continue;
+                }
+                reader.nb_sol_added = 0;
+                // we check that it's worth to explore this possible journey
+                auto transfer_duration = working_label.walking_duration_pt - end_point_street_network_duration;
+                auto j = make_bound_journey(working_label.dt_pt, a.second, first_endpoint_label.dt_transfer,
+                                            end_point_street_network_duration, count,
+                                            navitia::seconds(transfer_duration), v.clockwise());
+                LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
+                                                                      << std::endl
+                                                                      << j);
 
-            if (reader.solutions.contains_better_than(j)) {
-                LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
+                if (reader.solutions.contains_better_than(j)) {
+                    LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
 
-                continue;
-            }
-            try {
-                LOG4CPLUS_DEBUG(raptor.raptor_logger, "try to build journey ");
-                reader.begin_pt(count, a.first, working_label.dt_pt);
-            } catch (stop_search&) {
+                    continue;
+                }
+                try {
+                    LOG4CPLUS_DEBUG(raptor.raptor_logger, "try to build journey ");
+                    reader.begin_pt(count, jpp, working_label.dt_pt);
+                } catch (stop_search&) {
+                }
             }
         }
     }

@@ -957,48 +957,51 @@ static void add_isochrone_response(RAPTOR& raptor,
     pb_creator.fill(&origin, &pb_origin, 0);
     for (const type::StopPoint* sp : stop_points) {
         SpIdx sp_idx(*sp);
-        const auto best_lbl = raptor.best_labels[sp_idx].dt_pt;
-        if ((clockwise && best_lbl < bound) || (!clockwise && best_lbl > bound)) {
-            int round = raptor.best_round(sp_idx);
-            const auto& best_round_label = raptor.labels[round][sp_idx];
+        for (const auto& jpp : raptor.jpps_from_sp[sp_idx]) {
+            const auto best_lbl = raptor.best_labels[jpp.idx].dt_pt;
+            if ((clockwise && best_lbl < bound) || (!clockwise && best_lbl > bound)) {
+                int round = raptor.best_round(jpp.idx);
+                const auto& best_round_label = raptor.labels[round][jpp.idx];
 
-            if (round == -1 || !is_dt_initialized(best_round_label.dt_pt)) {
-                continue;
-            }
+                if (round == -1 || !is_dt_initialized(best_round_label.dt_pt)) {
+                    continue;
+                }
 
-            // get absolute value
-            int duration = best_lbl > init_dt ? best_lbl - init_dt : init_dt - best_lbl;
+                // get absolute value
+                int duration = best_lbl > init_dt ? best_lbl - init_dt : init_dt - best_lbl;
 
-            if (duration > max_duration) {
-                continue;
-            }
-            auto pb_journey = pb_creator.add_journeys();
+                if (duration > max_duration) {
+                    continue;
+                }
+                auto pb_journey = pb_creator.add_journeys();
 
-            uint64_t departure;
-            uint64_t arrival;
-            // Note: since there is no 2nd pass for the isochrone, the departure dt
-            // is the requested dt (or the arrival dt for non clockwise)
-            if (clockwise) {
-                departure = to_posix_timestamp(init_dt, raptor.data);
-                arrival = to_posix_timestamp(best_lbl, raptor.data);
-            } else {
-                departure = to_posix_timestamp(best_lbl, raptor.data);
-                arrival = to_posix_timestamp(init_dt, raptor.data);
-            }
-            const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
-            pb_journey->set_arrival_date_time(arrival);
-            pb_journey->set_departure_date_time(departure);
-            pb_journey->set_requested_date_time(str_requested);
-            pb_journey->set_duration(duration);
-            pb_journey->set_nb_transfers(round - 1);
-            pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl - duration, raptor.data),
-                                                       navitia::to_posix_time(best_lbl, raptor.data) + bt::seconds(1));
-            if (clockwise) {
-                *pb_journey->mutable_origin() = pb_origin;
-                pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
-            } else {
-                pb_creator.fill(sp, pb_journey->mutable_origin(), 0);
-                *pb_journey->mutable_destination() = pb_origin;
+                uint64_t departure;
+                uint64_t arrival;
+                // Note: since there is no 2nd pass for the isochrone, the departure dt
+                // is the requested dt (or the arrival dt for non clockwise)
+                if (clockwise) {
+                    departure = to_posix_timestamp(init_dt, raptor.data);
+                    arrival = to_posix_timestamp(best_lbl, raptor.data);
+                } else {
+                    departure = to_posix_timestamp(best_lbl, raptor.data);
+                    arrival = to_posix_timestamp(init_dt, raptor.data);
+                }
+                const auto str_requested = to_posix_timestamp(init_dt, raptor.data);
+                pb_journey->set_arrival_date_time(arrival);
+                pb_journey->set_departure_date_time(departure);
+                pb_journey->set_requested_date_time(str_requested);
+                pb_journey->set_duration(duration);
+                pb_journey->set_nb_transfers(round - 1);
+                pb_creator.action_period =
+                    bt::time_period(navitia::to_posix_time(best_lbl - duration, raptor.data),
+                                    navitia::to_posix_time(best_lbl, raptor.data) + bt::seconds(1));
+                if (clockwise) {
+                    *pb_journey->mutable_origin() = pb_origin;
+                    pb_creator.fill(sp, pb_journey->mutable_destination(), 0);
+                } else {
+                    pb_creator.fill(sp, pb_journey->mutable_origin(), 0);
+                    *pb_journey->mutable_destination() = pb_origin;
+                }
             }
         }
     }
