@@ -235,13 +235,13 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
     assert(data.dataRaptor->cached_next_st_manager);
-    next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
-                                                            accessibilite_params);
+    // next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
+    //                                                        accessibilite_params);
 
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(clockwise, rt_level, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
 }
 
 namespace {
@@ -501,7 +501,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         best_labels = best_labels_for_snd_pass;
         const Label& working_label = working_labels[start.sp_idx];
         init(init_map, working_label.dt_pt, !clockwise, accessibilite_params.properties);
-        boucleRAPTOR(!clockwise, rt_level, max_transfers);
+        boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
 
         read_solutions(*this, solutions, !clockwise, departure_datetime, departures, destinations, rt_level,
                        accessibilite_params, transfer_penalty, start);
@@ -680,7 +680,10 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date,
 }
 
 template <typename Visitor>
-void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t max_transfers) {
+void RAPTOR::raptor_loop(Visitor visitor,
+                         const type::AccessibiliteParams& accessibilite_params,
+                         const nt::RTLevel rt_level,
+                         uint32_t max_transfers) {
     bool continue_algorithm = true;
     count = 0;  //< Count iteration of raptor algorithm
 
@@ -790,8 +793,12 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                     ///   tmp_st_dt.second
                     /// the corresponding StopTime is
                     ///    tmp_st_dt.first
-                    const auto tmp_st_dt =
-                        next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
+
+                    const auto tmp_st_dt = uncached_next_st.next_stop_time(
+                        visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(), rt_level,
+                        accessibilite_params.vehicle_properties, jpp.has_freq);
+                    // const auto tmp_st_dt =
+                    //    next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
 
                     /// if there is no vehicle arriving after previous_dt, nothing to do
                     if (tmp_st_dt.first == nullptr) {
@@ -894,11 +901,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
     }
 }
 
-void RAPTOR::boucleRAPTOR(const bool clockwise, const nt::RTLevel rt_level, uint32_t max_transfers) {
+void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
+                          const bool clockwise,
+                          const nt::RTLevel rt_level,
+                          uint32_t max_transfers) {
     if (clockwise) {
-        raptor_loop(raptor_visitor(), rt_level, max_transfers);
+        raptor_loop(raptor_visitor(), accessibilite_params, rt_level, max_transfers);
     } else {
-        raptor_loop(raptor_reverse_visitor(), rt_level, max_transfers);
+        raptor_loop(raptor_reverse_visitor(), accessibilite_params, rt_level, max_transfers);
     }
 }
 
