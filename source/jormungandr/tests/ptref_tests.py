@@ -997,14 +997,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert len(stops) == 2
         assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
-    def test_address_in_stop_points(self):
-        """test presence of address node in stop_points"""
-        response = self.query_region("stop_points")
-        stops = get_not_null(response, 'stop_points')
-        for s in stops:
-            address = get_not_null(s, 'address')
-            is_valid_address(address, depth_check=0)
-
     def test_all_lines(self):
         """test with all lines in the pt call"""
         response = self.query_region('lines')

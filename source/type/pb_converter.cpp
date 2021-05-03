@@ -618,7 +618,9 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(sp->admin_list, stop_point->mutable_administrative_regions());
     }
 
-    fill(&sp->coord, stop_point);
+    if (depth > 2) {
+        fill(&sp->coord, stop_point);
+    }
 
     if (depth > 0) {
         fill(sp->stop_area, stop_point);
