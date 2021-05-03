@@ -122,6 +122,7 @@ target_link_libraries(data
     fill_disruption_from_database
     routing
     fare
+    pb_converter
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}

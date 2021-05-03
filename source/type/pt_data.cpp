@@ -44,6 +44,7 @@ www.navitia.io
 #include "type/multi_polygon_map.h"
 #include "type/commercial_mode.h"
 #include "type/physical_mode.h"
+#include "type/pb_converter.h"
 #include "utils/functions.h"
 
 #include <boost/range/algorithm/find_if.hpp>
@@ -489,6 +490,14 @@ const StopPointConnection* PT_Data::get_stop_point_connection(const StopPoint& f
         return nullptr;
     }
     return *search;
+}
+
+void PT_Data::fill_stop_point_address(PbCreator* pb_creator) {
+    for (StopPoint* stop_point : stop_points) {
+        const nt::GeographicalCoord* coord = &(stop_point->coord);
+        pbnavitia::Address* address = &(stop_point->address);
+        pb_creator->fill(coord, address, 3);
+    }
 }
 
 std::vector<const StopPoint*> PT_Data::get_stop_points_by_area(const GeographicalCoord& coord) {

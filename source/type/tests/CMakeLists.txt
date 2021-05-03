@@ -1,5 +1,6 @@
 set(TYPES_TEST_LINK_LIBS
     ed
+    data
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
 

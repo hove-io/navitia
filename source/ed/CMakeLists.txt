@@ -5,7 +5,7 @@ SET(SOURCE_LIB
 )
 
 add_library(ed ${SOURCE_LIB})
-target_link_libraries(ed types fare)
+target_link_libraries(ed types fare data)
 
 FIND_LIBRARY(OSMPBF osmpbf)
 

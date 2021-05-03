@@ -22,7 +22,7 @@ target_link_libraries(osm_tags_reader_test ${ED_TESTS_LINK_LIBS})
 ADD_BOOST_TEST(osm_tags_reader_test)
 
 add_executable(associated_calendar_test associated_calendar_test.cpp)
-target_link_libraries(associated_calendar_test ed ${ED_TESTS_LINK_LIBS})
+target_link_libraries(associated_calendar_test ed data ${ED_TESTS_LINK_LIBS})
 ADD_BOOST_TEST(associated_calendar_test)
 
 add_executable(fare_parser_test fare_parser_test.cpp)
@@ -49,7 +49,7 @@ add_executable(fare2ed_test fare2ed_test.cpp)
 target_link_libraries(fare2ed_test fare2ed_lib ${ED_TESTS_LINK_LIBS})
 
 add_executable(ed2nav_test ed2nav_test.cpp)
-target_link_libraries(ed2nav_test ed2nav_lib ${ED_TESTS_LINK_LIBS})
+target_link_libraries(ed2nav_test ed2nav_lib data ${ED_TESTS_LINK_LIBS})
 ADD_BOOST_TEST(ed2nav_test)
 
 add_executable(route_main_destination_test route_main_destination_test.cpp)

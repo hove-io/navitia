@@ -47,6 +47,7 @@ www.navitia.io
 #include "type/meta_vehicle_journey.h"
 #include "type/physical_mode.h"
 #include "type/commercial_mode.h"
+#include "type/pb_converter.h"
 #include "utils/functions.h"
 #include "utils/serialization_atomic.h"
 #include "utils/serialization_unique_ptr.h"
@@ -354,7 +355,7 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
 void Data::complete() {
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    int admin, sort, autocomplete;
+    int admin, sort, autocomplete, fill_stop_point_address;
 
     build_grid_validity_pattern();
 
@@ -382,9 +383,15 @@ void Data::complete() {
     build_autocomplete();
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    start = pt::microsec_clock::local_time();
+    PbCreator pb_creator(this, meta->publication_date, null_time_period, true, true, true);
+    pt_data->fill_stop_point_address(&pb_creator);
+    fill_stop_point_address = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
     LOG4CPLUS_INFO(logger, "\t Building admins: " << admin << "ms");
     LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
+    LOG4CPLUS_INFO(logger, "\t Fill stop points addresses" << fill_stop_point_address << "ms");
 }
 
 /*

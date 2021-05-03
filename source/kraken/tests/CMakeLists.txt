@@ -13,7 +13,7 @@ target_link_libraries(data_manager_with_type_data_test make_disruption_from_chao
 ADD_BOOST_TEST(data_manager_with_type_data_test)
 
 add_executable(disruption_reader_test disruption_reader_test.cpp)
-target_link_libraries(disruption_reader_test ${KRAKEN_TEST_LINK_LIBS})
+target_link_libraries(disruption_reader_test data types fare ${KRAKEN_TEST_LINK_LIBS})
 ADD_BOOST_TEST(disruption_reader_test)
 
 add_executable(fill_disruption_from_chaos_tests fill_disruption_from_chaos_tests.cpp)

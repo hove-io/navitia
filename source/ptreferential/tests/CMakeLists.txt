@@ -1,5 +1,6 @@
 set(PTREF_TEST_LINK_LIBS
     ed
+    data
     ptreferential
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )

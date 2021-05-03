@@ -1,5 +1,5 @@
 add_library(apply_disruption apply_disruption.cpp)
-target_link_libraries(apply_disruption types config)
+target_link_libraries(apply_disruption types data config)
 
 add_library(make_disruption_from_chaos make_disruption_from_chaos.cpp)
 target_link_libraries(make_disruption_from_chaos apply_disruption )

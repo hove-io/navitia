@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 #include "type/geographical_coord.h"
 #include "type/fwd_type.h"
+#include "type/type.pb.h"
 
 #include <boost/container/flat_set.hpp>
 
@@ -56,11 +57,12 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     std::vector<StopPointConnection*> stop_point_connection_list;
     std::set<Dataset*> dataset_list;
     boost::container::flat_set<Route*> route_list;
+    pbnavitia::Address address;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
+    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr), address() {}
 
     Indexes get(Type_e type, const PT_Data& data) const;
     bool operator<(const StopPoint& other) const;

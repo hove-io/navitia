@@ -42,7 +42,13 @@ www.navitia.io
 #include "code_container.h"
 #include "headsign_handler.h"
 #include "type/timezone_manager.h"
+
 #include <memory>
+
+// forward declare
+namespace navitia {
+struct PbCreator;
+}
 
 namespace navitia {
 template <>
@@ -130,6 +136,8 @@ public:
     void build_admins_stop_areas();
     /// sort the collections and set the corresponding idx field
     void sort_and_index();
+
+    void fill_stop_point_address(navitia::PbCreator* pb_creator);
 
     size_t nb_stop_times() const;
 

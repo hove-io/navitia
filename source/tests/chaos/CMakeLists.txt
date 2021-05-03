@@ -3,8 +3,9 @@
 #
 add_executable(chaos_db_tests chaos_db_tests.cpp)
 target_link_libraries(chaos_db_tests
-    make_disruption_from_chaos
     ed
+    data
+    make_disruption_from_chaos
     workers
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 )
