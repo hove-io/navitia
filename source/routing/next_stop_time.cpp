@@ -466,9 +466,13 @@ boost::iterator_range<CachedNextStopTime::vDtSt::const_iterator> CachedNextStopT
 }
 
 std::pair<const type::StopTime*, DateTime> CachedNextStopTime::next_stop_time(const StopEvent stop_event,
-                                                                              const JppIdx jpp_idx,
-                                                                              const DateTime dt,
-                                                                              const bool clockwise) const {
+        const JppIdx jpp_idx,
+        const DateTime dt,
+        const bool clockwise,
+        const type::RTLevel ,
+        const type::VehicleProperties& ,
+        const bool check_freq ,
+        const boost::optional<DateTime>&) const {
     const auto& v = (stop_event == StopEvent::pick_up ? departure[jpp_idx] : arrival[jpp_idx]);
     const type::StopTime* null_st = nullptr;
     decltype(v.begin()) search;

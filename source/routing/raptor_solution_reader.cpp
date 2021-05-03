@@ -133,8 +133,8 @@ void align_left(const RaptorSolutionReader<Visitor>& reader, Journey& j) {
         assert(conn != nullptr);
         // const auto new_st_dt = reader.raptor.next_st->next_stop_time(StopEvent::pick_up, cur_jpp_idx,
         //                                                             prev_s->get_out_dt + conn->duration, true);
-        const auto new_st_dt = reader.raptor.uncached_next_st.earliest_stop_time(
-            StopEvent::pick_up, cur_jpp_idx, prev_s->get_out_dt + conn->duration, reader.rt_level,
+        const auto new_st_dt = reader.raptor.next_st->next_stop_time(
+            StopEvent::pick_up, cur_jpp_idx, prev_s->get_out_dt + conn->duration, true, reader.rt_level,
             reader.accessibilite_params.vehicle_properties);
 
         if (new_st_dt.first && new_st_dt.second < cur_s.get_in_dt) {
@@ -547,7 +547,7 @@ struct RaptorSolutionReader {
             // const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt,
             // v.clockwise());
             const auto begin_st_dt =
-                raptor.uncached_next_st.next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
+                raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
                                                        accessibilite_params.vehicle_properties, true, begin_limit);
             if (begin_st_dt.first == nullptr) {
                 continue;
@@ -584,7 +584,7 @@ struct RaptorSolutionReader {
             // trying to begin
             // const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt,
             // v.clockwise());
-            const auto begin_st_dt = raptor.uncached_next_st.next_stop_time(
+            const auto begin_st_dt = raptor.next_st->next_stop_time(
                 v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level, accessibilite_params.vehicle_properties);
             if (begin_st_dt.first == nullptr) {
                 continue;

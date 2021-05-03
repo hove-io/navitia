@@ -225,6 +225,11 @@ void RAPTOR::init(const map_stop_point_duration& dep,
     }
 }
 
+std::shared_ptr<const NextStopTimeInterface> RAPTOR::choose_next_stop_time(const DateTime& departure_datetime) const {
+	return uncached_next_st;
+};
+
+
 void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& departure_datetime,
                                const nt::RTLevel rt_level,
@@ -235,6 +240,9 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
     assert(data.dataRaptor->cached_next_st_manager);
+
+    next_st = choose_next_stop_time(departure_datetime);
+
     // next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
     //                                                        accessibilite_params);
 
@@ -794,7 +802,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     /// the corresponding StopTime is
                     ///    tmp_st_dt.first
 
-                    const auto tmp_st_dt = uncached_next_st.next_stop_time(
+                    const auto tmp_st_dt = next_st->next_stop_time(
                         visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(), rt_level,
                         accessibilite_params.vehicle_properties, jpp.has_freq);
                     // const auto tmp_st_dt =
