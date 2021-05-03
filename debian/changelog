@@ -1,3 +1,9 @@
+navitia2 (10.8.1) unstable; urgency=low
+
+  * [Kraken] Revert "add address node into stop_points for any depth"  <https://github.com/CanalTP/navitia/pull/3430>
+
+ -- xlqian <patrick.qian@kisio.com>  Mon, 03 May 2021 18:05:44 +0100
+
 navitia2 (10.8.0) unstable; urgency=low
 
   * [Kraken & Jormungandr] Since until params added in /traffic_reports API  <https://github.com/CanalTP/navitia/pull/3415>
