@@ -61,18 +61,17 @@ struct JourneyPatternContainer;
 struct dataRAPTOR;
 
 struct NextStopTimeInterface {
-	virtual std::pair<const type::StopTime*, DateTime>
-	next_stop_time(const StopEvent stop_event,
-				   const JppIdx jpp_idx,
-	                const DateTime dt,
-	        const bool clockwise,
-	        const type::RTLevel rt_level,
-	        const type::VehicleProperties& vehicle_props,
-	        const bool check_freq = true,
-	        const boost::optional<DateTime>& bound = boost::none) const = 0;
-	virtual ~NextStopTimeInterface() {};
+    virtual std::pair<const type::StopTime*, DateTime> next_stop_time(
+        const StopEvent stop_event,
+        const JppIdx jpp_idx,
+        const DateTime dt,
+        const bool clockwise,
+        const type::RTLevel rt_level,
+        const type::VehicleProperties& vehicle_props,
+        const bool check_freq = true,
+        const boost::optional<DateTime>& bound = boost::none) const = 0;
+    virtual ~NextStopTimeInterface(){};
 };
-
 
 struct NextStopTimeData {
     typedef boost::iterator_range<std::vector<const type::StopTime*>::const_iterator> StopTimeIter;
@@ -161,7 +160,7 @@ private:
     IdxMap<JourneyPatternPoint, TimesStopTimes<Arrival>> arrival;
 };
 
-struct NextStopTime: public NextStopTimeInterface {
+struct NextStopTime : public NextStopTimeInterface {
     explicit NextStopTime(const type::Data& d) : data(d) {}
     virtual ~NextStopTime() = default;
     // Returns the next stop time at given journey pattern point
@@ -228,7 +227,7 @@ struct CachedNextStopTimeKey {
     bool operator<(const CachedNextStopTimeKey& other) const;
 };
 
-struct CachedNextStopTime: public NextStopTimeInterface {
+struct CachedNextStopTime : public NextStopTimeInterface {
     using DtSt = std::pair<DateTime, const type::StopTime*>;
     using vDtSt = std::vector<DtSt>;
     using vDtStByJpp = IdxMap<JourneyPatternPoint, vDtSt>;
@@ -237,16 +236,14 @@ struct CachedNextStopTime: public NextStopTimeInterface {
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
     // clockwise.
-    std::pair<const type::StopTime*, DateTime> next_stop_time(
-        const StopEvent stop_event,
-        const JppIdx jpp_idx,
-        const DateTime dt,
-        const bool clockwise,
-        const type::RTLevel ,
-        const type::VehicleProperties& ,
-        const bool check_freq ,
-        const boost::optional<DateTime>&) const override;
-
+    std::pair<const type::StopTime*, DateTime> next_stop_time(const StopEvent stop_event,
+                                                              const JppIdx jpp_idx,
+                                                              const DateTime dt,
+                                                              const bool clockwise,
+                                                              const type::RTLevel,
+                                                              const type::VehicleProperties&,
+                                                              const bool check_freq,
+                                                              const boost::optional<DateTime>&) const override;
 
 private:
     // This structure provide the same interface as a vDtStByJpp, but
@@ -296,6 +293,7 @@ struct CachedNextStopTimeManager {
                                                    const type::AccessibiliteParams& accessibilite_params);
 
     void warmup(const CachedNextStopTimeManager& other) { this->lru.warmup(other.lru); }
+    size_t get_max_size() const { return lru.get_max_size(); }
 
 private:
     struct CacheCreator {

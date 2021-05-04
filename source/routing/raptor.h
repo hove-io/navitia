@@ -102,7 +102,7 @@ struct RAPTOR {
 
     explicit RAPTOR(const navitia::type::Data& data)
         : data(data),
-		  uncached_next_st(std::make_shared<const NextStopTime>(data)),
+          uncached_next_st(std::make_shared<const NextStopTime>(data)),
           best_labels(data.pt_data->stop_points),
           count(0),
           valid_journey_patterns(data.dataRaptor->jp_container.nb_jps()),
@@ -248,8 +248,13 @@ struct RAPTOR {
 
     std::string print_all_labels();
     std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
+
 private:
-    std::shared_ptr<const NextStopTimeInterface> choose_next_stop_time(const DateTime& departure_datetime) const;
+    enum class NEXT_STOPTIME_TYPE {
+        UNCACHED,
+        CACHED,
+    };
+    NEXT_STOPTIME_TYPE choose_next_stop_time(const DateTime& departure_datetime) const;
 };
 
 }  // namespace routing

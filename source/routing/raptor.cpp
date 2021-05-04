@@ -31,6 +31,8 @@ www.navitia.io
 #include "raptor.h"
 
 #include "raptor_visitors.h"
+#include "type/meta_data.h"
+
 #include "utils/logger.h"
 
 #include <boost/functional/hash.hpp>
@@ -225,10 +227,18 @@ void RAPTOR::init(const map_stop_point_duration& dep,
     }
 }
 
-std::shared_ptr<const NextStopTimeInterface> RAPTOR::choose_next_stop_time(const DateTime& departure_datetime) const {
-	return uncached_next_st;
-};
+RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time(const DateTime& departure_datetime) const {
+    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+    size_t now_days = static_cast<size_t>((now.date() - data.meta->production_date.begin()).days());
+    size_t requested_days = static_cast<size_t>(departure_datetime / navitia::DateTimeUtils::SECONDS_PER_DAY);
 
+    size_t cache_size = data.dataRaptor->cached_next_st_manager->get_max_size();
+    if (now_days <= requested_days && requested_days < (now_days + cache_size)) {
+        return NEXT_STOPTIME_TYPE::CACHED;
+    }
+    return NEXT_STOPTIME_TYPE::UNCACHED;
+    ;
+}
 
 void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& departure_datetime,
@@ -241,10 +251,22 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
 
     assert(data.dataRaptor->cached_next_st_manager);
 
-    next_st = choose_next_stop_time(departure_datetime);
+    auto next_st_type = choose_next_stop_time(clockwise ? departure_datetime : bound);
 
-    // next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
-    //                                                        accessibilite_params);
+    switch (next_st_type) {
+        case RAPTOR::NEXT_STOPTIME_TYPE::CACHED:
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using cached next_stop_time");
+            next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
+                                                                    accessibilite_params);
+            break;
+        case RAPTOR::NEXT_STOPTIME_TYPE::UNCACHED:
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using uncached next_stop_time");
+            next_st = uncached_next_st;
+            break;
+        default:
+            throw std::runtime_error("Raptor Unknown next stop time type");
+            break;
+    }
 
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
@@ -802,9 +824,9 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     /// the corresponding StopTime is
                     ///    tmp_st_dt.first
 
-                    const auto tmp_st_dt = next_st->next_stop_time(
-                        visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(), rt_level,
-                        accessibilite_params.vehicle_properties, jpp.has_freq);
+                    const auto tmp_st_dt =
+                        next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(),
+                                                rt_level, accessibilite_params.vehicle_properties, jpp.has_freq);
                     // const auto tmp_st_dt =
                     //    next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
 
