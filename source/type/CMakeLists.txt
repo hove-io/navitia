@@ -99,6 +99,7 @@ target_link_libraries(pb_lib ${PROTOBUF_LIBRARY})
 
 add_library(pb_converter pb_converter.cpp)
 target_link_libraries(pb_converter thermometer vptranslator pthread pb_lib)
+add_dependencies(pb_converter protobuf_files)
 
 add_library(types message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
     validity_pattern.cpp type_utils.cpp stop_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
