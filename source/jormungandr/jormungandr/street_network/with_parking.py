@@ -129,7 +129,7 @@ class WithParking(AbstractStreetNetworkService):
             journey.sections.extend([parking_section])
             journey.nb_sections += 1
 
-    def get_street_network_routing_matrix(
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         response = self.street_network.get_street_network_routing_matrix(

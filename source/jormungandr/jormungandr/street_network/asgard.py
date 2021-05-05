@@ -99,7 +99,7 @@ class Asgard(TransientSocket, Kraken):
             place="", access_duration=0, lon=round(coord.lon, 6), lat=round(coord.lat, 6)
         )
 
-    def get_street_network_routing_matrix(
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         speed_switcher = make_speed_switcher(request)

@@ -56,8 +56,18 @@ StreetNetworkPathKey = namedtuple(
 
 
 class AbstractStreetNetworkService(ABC):  # type: ignore
-    @abc.abstractmethod
     def get_street_network_routing_matrix(
+        self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
+    ):
+        with new_relic.record_streetnetwork_call(
+            "routing_matrix", type(self).__name__, street_network_mode, instance.name
+        ):
+            return self._get_street_network_routing_matrix(
+                instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
+            )
+
+    @abc.abstractmethod
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         pass
@@ -77,16 +87,17 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         direct_path_type,
         request_id,
     ):
-        resp = self._direct_path(
-            instance,
-            mode,
-            pt_object_origin,
-            pt_object_destination,
-            fallback_extremity,
-            request,
-            direct_path_type,
-            request_id,
-        )
+        with new_relic.record_streetnetwork_call("direct_path", type(self).__name__, mode, instance.name):
+            resp = self._direct_path(
+                instance,
+                mode,
+                pt_object_origin,
+                pt_object_destination,
+                fallback_extremity,
+                request,
+                direct_path_type,
+                request_id,
+            )
 
         return resp
 
