@@ -167,9 +167,9 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
     event_params = {
         "service": newrelic_service_name,
         "call": call_name,
-        "connector_name": connector_name,
+        "connector": connector_name,
         "mode": mode,
-        "coverage_name": coverage_name,
+        "coverage": coverage_name,
         "status": "ok",
     }
     start_time = timeit.default_timer()
