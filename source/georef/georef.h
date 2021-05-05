@@ -133,6 +133,21 @@ private:
     nt::GeographicalCoord extrapol_geographical_coord(int, const Graph&) const;
 };
 
+struct Address {
+public:
+    const Way* way;
+    nt::GeographicalCoord coord;
+    int number;
+    Address() {}
+    Address(const Way* way, const nt::GeographicalCoord& coord, const int number)
+        : way(way), coord(coord), number(number) {}
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar& way& coord& number;
+    }
+};
+
 /** Un bout d'itinéraire :
         un nom de voie et une liste de segments */
 struct PathItem {

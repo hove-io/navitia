@@ -514,6 +514,7 @@ private:
         void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);
+        void fill_pb_object(const ng::Address*, pbnavitia::Address*);
         void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
 
         // Used for place

@@ -300,6 +300,7 @@ NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointConnection>(p
 pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_administrative_region();
 }
+
 pbnavitia::Calendar* get_sub_object(const nt::Calendar* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_calendar();
 }
@@ -319,6 +320,11 @@ template <typename PB>
 pbnavitia::Address* get_sub_object(const nt::GeographicalCoord* /*unused*/, PB* pt_object) {
     return pt_object->mutable_address();
 }
+template <typename PB>
+pbnavitia::Address* get_sub_object(const ng::Address* /*unused*/, PB* pt_object) {
+    return pt_object->mutable_address();
+}
+
 template <typename PB>
 pbnavitia::JourneyPattern* get_sub_object(const jp_pair* /*unused*/, PB* pt_object) {
     return pt_object->mutable_journey_pattern();
@@ -618,9 +624,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(sp->admin_list, stop_point->mutable_administrative_regions());
     }
 
-    if (depth > 2) {
-        fill(&sp->coord, stop_point);
-    }
+    fill(sp->address, stop_point);
 
     if (depth > 0) {
         fill(sp->stop_area, stop_point);
@@ -920,6 +924,33 @@ void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord, pbnav
     } catch (const navitia::proximitylist::NotFound&) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                         "unable to find a way from coord [" << coord->lon() << "-" << coord->lat() << "]");
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const ng::Address* ng_address, pbnavitia::Address* address) {
+    if (ng_address->way == nullptr) {
+        return;
+    }
+
+    address->set_name(ng_address->way->name);
+    std::string label;
+    if (ng_address->number >= 1) {
+        address->set_house_number(ng_address->number);
+        label += std::to_string(ng_address->number) + " ";
+    }
+    label += get_label(ng_address->way);
+    address->set_label(label);
+
+    if (ng_address->coord.is_initialized()) {
+        address->mutable_coord()->set_lon(ng_address->coord.lon());
+        address->mutable_coord()->set_lat(ng_address->coord.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << ng_address->coord.lon() << ";" << ng_address->coord.lat();
+        address->set_uri(ss.str());
+    }
+
+    if (depth > 0) {
+        fill(ng_address->way->admin_list, address->mutable_administrative_regions());
     }
 }
 
