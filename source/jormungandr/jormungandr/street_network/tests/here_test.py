@@ -121,7 +121,7 @@ def test_matrix(valid_here_matrix):
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     with requests_mock.Mocker() as req:
         req.get(requests_mock.ANY, json=valid_here_matrix, status_code=200)
-        response = here.get_street_network_routing_matrix(
+        response = here._get_street_network_routing_matrix(
             instance,
             [origin],
             [destination, destination, destination],
@@ -148,7 +148,7 @@ def test_matrix_timeout():
         # a HERE timeout should raise a TechnicalError
         req.get(requests_mock.ANY, exc=requests.exceptions.Timeout)
         with pytest.raises(TechnicalError):
-            here.get_street_network_routing_matrix(
+            here._get_street_network_routing_matrix(
                 instance,
                 [origin],
                 [destination, destination, destination],
