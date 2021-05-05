@@ -73,9 +73,9 @@ static void create_place_pb(const std::vector<AutocompleteResult>& result,
                 pb_creator.fill(data.pt_data->stop_points[r.fl_result.idx], place, depth);
                 break;
             case nt::Type_e::Address: {
-                const auto& way_coord =
-                    navitia::WayCoord(data.geo_ref->ways[r.fl_result.idx], r.fl_result.coord, r.fl_result.house_number);
-                pb_creator.fill(&way_coord, place, depth);
+                const auto& ng_address = navitia::georef::Address(data.geo_ref->ways[r.fl_result.idx],
+                                                                  r.fl_result.coord, r.fl_result.house_number);
+                pb_creator.fill(&ng_address, place, depth);
                 break;
             }
             case nt::Type_e::POI:

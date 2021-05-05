@@ -118,14 +118,6 @@ struct StopTimeCalendar {
         : stop_time(stop_time), date_time(date_time), calendar_id(calendar_id) {}
 };
 
-struct WayCoord {
-    const ng::Way* way;
-    const nt::GeographicalCoord& coord;
-    const int number;
-    WayCoord(const ng::Way* way, const nt::GeographicalCoord& coord, const int number)
-        : way(way), coord(coord), number(number) {}
-};
-
 /**
  * get_label() is a function that returns:
  * * the label (or a function get_label()) if the object has it
@@ -512,8 +504,7 @@ private:
         void fill_pb_object(const nt::VehicleJourney*, pbnavitia::hasEquipments*);
         void fill_pb_object(const StopTimeCalendar*, pbnavitia::ScheduleStopTime*);
         void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
-        void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
-        void fill_pb_object(const WayCoord*, pbnavitia::Address*);
+        void fill_pb_object(const ng::Address*, pbnavitia::PtObject*);
         void fill_pb_object(const ng::Address*, pbnavitia::Address*);
         void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
 

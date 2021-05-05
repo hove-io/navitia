@@ -577,8 +577,8 @@ void Worker::place_uri(const pbnavitia::PlaceUriRequest& request) {
 
         try {
             auto address = this->pb_creator.data->geo_ref->nearest_addr(coord);
-            const auto& way_coord = WayCoord(address.second, coord, address.first);
-            pb_creator.fill(&way_coord, pb_creator.add_places(), request.depth());
+            const auto& ng_address = navitia::georef::Address(address.second, coord, address.first);
+            pb_creator.fill(&ng_address, pb_creator.add_places(), request.depth());
         } catch (const proximitylist::NotFound&) {
             pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unable to find place: " + request.uri());
         }
