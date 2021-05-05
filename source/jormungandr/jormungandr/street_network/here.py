@@ -664,7 +664,7 @@ class Here(AbstractStreetNetworkService):
                 self._create_matrix_response_with_direct_path(r.json(), row)
         return sn_routing_matrix
 
-    def get_street_network_routing_matrix(
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
         realtime_traffic = self.get_realtime_traffic_parameter(request)

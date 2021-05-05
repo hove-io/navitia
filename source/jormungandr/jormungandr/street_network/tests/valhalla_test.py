@@ -432,7 +432,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path_with_fp(None, None, None, None, None, None, None, None)
+        valhalla._direct_path(None, None, None, None, None, None, None, None)
     assert '500 Internal Server Error' in str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -556,7 +556,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         # it changes nothing for walking
-        valhalla_response = valhalla.get_street_network_routing_matrix(
+        valhalla_response = valhalla._get_street_network_routing_matrix(
             instance,
             [origin],
             [destination, destination, destination],
@@ -573,7 +573,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
 
         # for bike every reached point have an additional 30s
-        valhalla_response = valhalla.get_street_network_routing_matrix(
+        valhalla_response = valhalla._get_street_network_routing_matrix(
             instance,
             [origin],
             [destination, destination, destination],
@@ -590,7 +590,7 @@ def sources_to_targets_valhalla_with_park_cost_test():
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
 
         # for car every reached point have an additional 5mn
-        valhalla_response = valhalla.get_street_network_routing_matrix(
+        valhalla_response = valhalla._get_street_network_routing_matrix(
             instance,
             [origin],
             [destination, destination, destination],

@@ -91,7 +91,7 @@ class Ridesharing(AbstractStreetNetworkService):
 
         return response
 
-    def get_street_network_routing_matrix(
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         # TODO: the ridesharing_speed is stored in car_no_park_speed
