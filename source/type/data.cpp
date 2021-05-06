@@ -490,7 +490,7 @@ void Data::aggregate_odt() {
 }
 
 void Data::fill_stop_point_address() {
-    size_t without_address = 0;
+    idx_t without_address = 0;
     for (auto sp : pt_data->stop_points) {
         if (!sp->coord.is_initialized()) {
             ++without_address;
