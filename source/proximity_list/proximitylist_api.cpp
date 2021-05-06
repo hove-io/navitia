@@ -71,9 +71,9 @@ static void make_pb(navitia::PbCreator& pb_creator,
                 place->set_distance(distance);
                 break;
             case nt::Type_e::Address: {
-                const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[idx], coord,
-                                                          data.geo_ref->ways[idx]->nearest_number(coord).first);
-                pb_creator.fill(&way_coord, place, depth);
+                const auto& ng_address = navitia::georef::Address(data.geo_ref->ways[idx], coord,
+                                                                  data.geo_ref->ways[idx]->nearest_number(coord).first);
+                pb_creator.fill(&ng_address, place, depth);
                 place->set_distance(coord.distance_to(coord_item));
                 break;
             }

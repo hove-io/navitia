@@ -300,6 +300,7 @@ NavToProtoCollec<nt::StopPointConnection> get_mutable<nt::StopPointConnection>(p
 pbnavitia::AdministrativeRegion* get_sub_object(const ng::Admin* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_administrative_region();
 }
+
 pbnavitia::Calendar* get_sub_object(const nt::Calendar* /*unused*/, pbnavitia::PtObject* pt_object) {
     return pt_object->mutable_calendar();
 }
@@ -319,6 +320,11 @@ template <typename PB>
 pbnavitia::Address* get_sub_object(const nt::GeographicalCoord* /*unused*/, PB* pt_object) {
     return pt_object->mutable_address();
 }
+template <typename PB>
+pbnavitia::Address* get_sub_object(const ng::Address* /*unused*/, PB* pt_object) {
+    return pt_object->mutable_address();
+}
+
 template <typename PB>
 pbnavitia::JourneyPattern* get_sub_object(const jp_pair* /*unused*/, PB* pt_object) {
     return pt_object->mutable_journey_pattern();
@@ -618,9 +624,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(sp->admin_list, stop_point->mutable_administrative_regions());
     }
 
-    if (depth > 2) {
-        fill(&sp->coord, stop_point);
-    }
+    fill(sp->address, stop_point);
 
     if (depth > 0) {
         fill(sp->stop_area, stop_point);
@@ -915,11 +919,38 @@ void PbCreator::Filler::fill_pb_object(const nt::GeographicalCoord* coord, pbnav
 
     try {
         const auto nb_way = pb_creator.data->geo_ref->nearest_addr(*coord);
-        const auto& way_coord = WayCoord(nb_way.second, *coord, nb_way.first);
-        fill_pb_object(&way_coord, address);
+        const auto& ng_address = navitia::georef::Address(nb_way.second, *coord, nb_way.first);
+        fill_pb_object(&ng_address, address);
     } catch (const navitia::proximitylist::NotFound&) {
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                         "unable to find a way from coord [" << coord->lon() << "-" << coord->lat() << "]");
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const ng::Address* ng_address, pbnavitia::Address* address) {
+    if (ng_address->way == nullptr) {
+        return;
+    }
+
+    address->set_name(ng_address->way->name);
+    std::string label;
+    if (ng_address->number >= 1) {
+        address->set_house_number(ng_address->number);
+        label += std::to_string(ng_address->number) + " ";
+    }
+    label += get_label(ng_address->way);
+    address->set_label(label);
+
+    if (ng_address->coord.is_initialized()) {
+        address->mutable_coord()->set_lon(ng_address->coord.lon());
+        address->mutable_coord()->set_lat(ng_address->coord.lat());
+        std::stringstream ss;
+        ss << std::setprecision(16) << ng_address->coord.lon() << ";" << ng_address->coord.lat();
+        address->set_uri(ss.str());
+    }
+
+    if (depth > 0) {
+        fill(ng_address->way->admin_list, address->mutable_administrative_regions());
     }
 }
 
@@ -1594,8 +1625,8 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
     } else if (point->type == nt::Type_e::Coord) {
         try {
             auto address = pb_creator.data->geo_ref->nearest_addr(point->coordinates);
-            const auto& way_coord = WayCoord(address.second, point->coordinates, address.first);
-            fill_pb_object(&way_coord, place);
+            const auto& ng_address = navitia::georef::Address(address.second, point->coordinates, address.first);
+            fill_pb_object(&ng_address, place);
         } catch (const navitia::proximitylist::NotFound&) {
             // we didn't find a address at this coordinate, we fill the address manually with the coord, so we have a
             // valid output
@@ -1610,44 +1641,17 @@ void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::P
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::PtObject* place) {
-    if (way_coord->way == nullptr) {
+void PbCreator::Filler::fill_pb_object(const navitia::georef::Address* ng_address, pbnavitia::PtObject* place) {
+    if (ng_address->way == nullptr) {
         return;
     }
 
-    copy(depth, dump_message_options).fill_pb_object(way_coord, place->mutable_address());
+    copy(depth, dump_message_options).fill_pb_object(ng_address, place->mutable_address());
 
     place->set_name(place->address().label());
 
     place->set_uri(place->address().uri());
     place->set_embedded_type(pbnavitia::ADDRESS);
-}
-
-void PbCreator::Filler::fill_pb_object(const WayCoord* way_coord, pbnavitia::Address* address) {
-    if (way_coord->way == nullptr) {
-        return;
-    }
-
-    address->set_name(way_coord->way->name);
-    std::string label;
-    if (way_coord->number >= 1) {
-        address->set_house_number(way_coord->number);
-        label += std::to_string(way_coord->number) + " ";
-    }
-    label += get_label(way_coord->way);
-    address->set_label(label);
-
-    if (way_coord->coord.is_initialized()) {
-        address->mutable_coord()->set_lon(way_coord->coord.lon());
-        address->mutable_coord()->set_lat(way_coord->coord.lat());
-        std::stringstream ss;
-        ss << std::setprecision(16) << way_coord->coord.lon() << ";" << way_coord->coord.lat();
-        address->set_uri(ss.str());
-    }
-
-    if (depth > 0) {
-        fill(way_coord->way->admin_list, address->mutable_administrative_regions());
-    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::FeedPublisher* fp) {
@@ -1932,8 +1936,9 @@ pbnavitia::Section* PbCreator::create_section(pbnavitia::Journey* pb_journey,
     } else if (first_item.way_idx != nt::invalid_idx) {
         auto way = data->geo_ref->ways[first_item.way_idx];
         type::GeographicalCoord departure_coord = first_item.coordinates.front();
-        auto const& way_coord = navitia::WayCoord(way, departure_coord, way->nearest_number(departure_coord).first);
-        fill(&way_coord, orig_place, depth);
+        auto const& ng_address =
+            navitia::georef::Address(way, departure_coord, way->nearest_number(departure_coord).first);
+        fill(&ng_address, orig_place, depth);
     }
 
     // NOTE: do we want to add a placemark for crow fly sections (they won't have a proper way) ?
@@ -2004,8 +2009,8 @@ void PbCreator::finalize_section(pbnavitia::Section* section,
     if (!dest_place->IsInitialized()) {
         auto way = data->geo_ref->ways[last_item.way_idx];
         type::GeographicalCoord coord = last_item.coordinates.back();
-        const auto& way_coord = navitia::WayCoord(way, coord, way->nearest_number(coord).first);
-        fill(&way_coord, dest_place, depth);
+        const auto& ng_address = navitia::georef::Address(way, coord, way->nearest_number(coord).first);
+        fill(&ng_address, dest_place, depth);
     }
 
     switch (last_item.transportation) {

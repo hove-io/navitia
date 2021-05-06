@@ -72,7 +72,7 @@ namespace pt = boost::posix_time;
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 10;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 11;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -354,7 +354,7 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
 void Data::complete() {
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    int admin, sort, autocomplete;
+    int admin, sort, autocomplete, address;
 
     build_grid_validity_pattern();
 
@@ -366,6 +366,10 @@ void Data::complete() {
     aggregate_odt();
 
     build_relations();
+
+    start = pt::microsec_clock::local_time();
+    fill_stop_point_address();
+    address = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     compute_labels();
 
@@ -385,6 +389,7 @@ void Data::complete() {
     LOG4CPLUS_INFO(logger, "\t Building admins: " << admin << "ms");
     LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
+    LOG4CPLUS_INFO(logger, "\t Building address " << address << "ms");
 }
 
 /*
@@ -484,6 +489,26 @@ void Data::aggregate_odt() {
     }
 }
 
+void Data::fill_stop_point_address() {
+    size_t without_address = 0;
+    for (auto sp : pt_data->stop_points) {
+        if (!sp->coord.is_initialized()) {
+            ++without_address;
+            continue;
+        }
+        try {
+            auto nb_way = geo_ref->nearest_addr(sp->coord);
+            sp->address = new navitia::georef::Address(nb_way.second, sp->coord, nb_way.first);
+        } catch (const navitia::proximitylist::NotFound&) {
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                            "unable to find a way from coord [" << sp->coord.lon() << "-" << sp->coord.lat() << "]");
+            ++without_address;
+        }
+    }
+    if (without_address) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), without_address << " StopPoints without address");
+    }
+}
 void Data::build_grid_validity_pattern() {
     for (Calendar* cal : this->pt_data->calendars) {
         cal->build_validity_pattern(meta->production_date);
