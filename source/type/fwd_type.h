@@ -42,6 +42,7 @@ struct GeoRef;
 struct POI;
 struct POIType;
 struct Admin;
+struct Address;
 using AdminRtree = class RTree<Admin*, double, 2, double, 8, 4>;
 }  // namespace georef
 namespace fare {

@@ -226,7 +226,7 @@ class CarWithPark(AbstractStreetNetworkService):
             request_id,
         )
 
-    def get_street_network_routing_matrix(self, *args, **kwargs):
+    def _get_street_network_routing_matrix(self, *args, **kwargs):
         return self._car_service.get_street_network_routing_matrix(*args, **kwargs)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):

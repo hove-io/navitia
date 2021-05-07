@@ -269,6 +269,7 @@ struct TimeSlot {
     TimeSlot(uint32_t begin = 0, uint32_t end = 0) : begin{begin}, end{end} {}
 
     bool operator<(const TimeSlot& other) const;
+    bool operator==(const TimeSlot& other) const;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

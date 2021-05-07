@@ -185,6 +185,12 @@ external_service = 'free_floatings'
 # max_waiting_duration default value 4h: 4*60*60 = 14400 secondes
 max_waiting_duration = 4 * 60 * 60
 
+# Bss parameters
+bss_rent_duration = 2 * 60
+bss_rent_penalty = 0
+bss_return_duration = 2 * 60
+bss_return_penalty = 0
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

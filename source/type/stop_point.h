@@ -56,6 +56,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     std::vector<StopPointConnection*> stop_point_connection_list;
     std::set<Dataset*> dataset_list;
     boost::container::flat_set<Route*> route_list;
+    navitia::georef::Address* address = nullptr;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

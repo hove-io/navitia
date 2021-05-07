@@ -42,7 +42,6 @@ www.navitia.io
 
 namespace navitia {
 namespace type {
-
 template <class Archive>
 void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
     // The *_list are not serialized here to avoid stack abuse
@@ -50,7 +49,7 @@ void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
     //
     // stop_point_connection_list is managed by StopPointConnection
     ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& idx& platform_code& admin_list& _properties& impacts&
-        dataset_list;
+        dataset_list& address;
 }
 SERIALIZABLE(StopPoint)
 

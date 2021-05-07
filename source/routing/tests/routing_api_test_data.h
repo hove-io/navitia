@@ -540,7 +540,7 @@ struct routing_api_data {
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 365_days);
         b.data->compute_labels();
-
+        b.data->fill_stop_point_address();
         // add bike sharing edges
         b.data->geo_ref->default_time_bss_pickup = 30_s;
         b.data->geo_ref->default_time_bss_putback = 40_s;

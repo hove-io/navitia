@@ -79,6 +79,18 @@ class JourneyCommon(object):
 
         self.check_context(response)
 
+    def test_address_in_stop_points_on_journeys(self):
+        response = self.query_region(journey_basic_query)
+        journeys = [journey for journey in response['journeys']]
+        assert len(journeys) == 2
+        sections = journeys[0]["sections"] + journeys[1]["sections"]
+        ft_func = lambda section_list, ft: [section[ft] for section in sections if "stop_point" in section[ft]]
+        from_to = ft_func(sections, "from") + ft_func(sections, "to")
+        assert len(from_to) == 4
+        for s in from_to:
+            address = get_not_null(s['stop_point'], 'address')
+            is_valid_address(address, depth_check=0)
+
     def test_error_on_journeys_out_of_bounds(self):
         """ if we got an error with kraken, an error should be returned"""
 

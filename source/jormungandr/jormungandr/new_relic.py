@@ -34,6 +34,7 @@ import os
 import timeit
 import functools
 from typing import Text, Callable
+from contextlib import contextmanager
 
 try:
     from newrelic import agent
@@ -154,3 +155,33 @@ def distributedEvent(call_name, group_name):
         return wrapper
 
     return wrap
+
+
+@contextmanager
+def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
+    """
+    Custom event that we publish to New Relic for external streetnetwork call such as:
+    Asgard, Kraken, Geovelo, Here, etc
+    """
+    newrelic_service_name = "streetnetwork_call"
+    event_params = {
+        "service": newrelic_service_name,
+        "call": call_name,
+        "connector": connector_name,
+        "mode": mode,
+        "coverage": coverage_name,
+        "status": "ok",
+    }
+    start_time = timeit.default_timer()
+    try:
+        yield
+    except Exception as e:
+        event_params["status"] = "failed"
+        event_params.update({"exception": e})
+        raise
+
+    duration = timeit.default_timer() - start_time
+    event_params.update({"duration": duration})
+
+    # Send the custom event to newrelic !
+    record_custom_event(newrelic_service_name, event_params)

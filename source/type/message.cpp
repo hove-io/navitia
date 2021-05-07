@@ -344,10 +344,11 @@ bool Impact::is_line_section_of(const Line& line) const {
 }
 
 bool TimeSlot::operator<(const TimeSlot& other) const {
-    if (this->begin == other.begin) {
-        return this->end <= other.end;
-    }
-    return this->begin < other.begin;
+    return std::tie(this->begin, this->end) < std::tie(other.begin, other.end);
+}
+
+bool TimeSlot::operator==(const TimeSlot& other) const {
+    return std::tie(this->begin, this->end) == std::tie(other.begin, other.end);
 }
 
 void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
@@ -355,17 +356,27 @@ void ApplicationPattern::add_time_slot(uint32_t begin, uint32_t end) {
 }
 
 bool ApplicationPattern::operator<(const ApplicationPattern& other) const {
-    if ((this->application_period.begin() == other.application_period.begin())
-        && (this->application_period.end() == other.application_period.end())) {
-        if (this->time_slots.begin()->begin == other.time_slots.begin()->begin) {
-            return this->time_slots.begin()->end <= other.time_slots.begin()->end;
+    auto start_this = navitia::to_int_date(this->application_period.begin());
+    auto end_this = navitia::to_int_date(this->application_period.end());
+    auto start_other = navitia::to_int_date(other.application_period.begin());
+    auto end_other = navitia::to_int_date(other.application_period.end());
+
+    if (std::tie(start_this, end_this) != std::tie(start_other, end_other)) {
+        return std::tie(start_this, end_this) < std::tie(start_other, end_other);
+    }
+
+    for (std::size_t n = 0; n < std::min(this->time_slots.size(), other.time_slots.size()); n++) {
+        const auto this_ts = *next(this->time_slots.begin(), n);
+        const auto other_ts = *next(other.time_slots.begin(), n);
+        if (!(this_ts == other_ts)) {
+            return this_ts < other_ts;
         }
-        return this->time_slots.begin()->begin < other.time_slots.begin()->begin;
     }
-    if (this->application_period.begin() == other.application_period.begin()) {
-        return this->application_period.end() <= other.application_period.end();
+    if (this->time_slots.size() != other.time_slots.size()) {
+        return this->time_slots.size() < other.time_slots.size();
     }
-    return this->application_period.begin() < other.application_period.begin();
+
+    return this->week_pattern.to_ulong() < other.week_pattern.to_ulong();
 }
 
 template <class Cont>

@@ -363,6 +363,14 @@ class Instance(db.Model):  # type: ignore
 
     bss_speed = db.Column(db.Float, default=default_values.bss_speed, nullable=False)
 
+    bss_rent_duration = db.Column(db.Integer, default=default_values.bss_rent_duration, nullable=False)
+
+    bss_rent_penalty = db.Column(db.Integer, default=default_values.bss_rent_penalty, nullable=False)
+
+    bss_return_duration = db.Column(db.Integer, default=default_values.bss_return_duration, nullable=False)
+
+    bss_return_penalty = db.Column(db.Integer, default=default_values.bss_return_penalty, nullable=False)
+
     car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
 
     car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)

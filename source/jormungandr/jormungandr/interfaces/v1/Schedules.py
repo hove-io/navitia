@@ -83,7 +83,7 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "duration",
             type=int,
-            default=3600 * 24,
+            default=3600 * 24 - 1,
             help="Maximum duration between datetime and the retrieved stop time",
         )
         parser_get.add_argument("depth", type=DepthArgument(), default=2, help="The depth of your object")

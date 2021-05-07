@@ -180,7 +180,7 @@ class Taxi(AbstractStreetNetworkService):
 
         journey.nb_sections += 1
 
-    def get_street_network_routing_matrix(
+    def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
 
