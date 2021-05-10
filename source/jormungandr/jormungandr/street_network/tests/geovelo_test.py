@@ -209,7 +209,7 @@ def pt_object_summary_test():
     summary = Geovelo._pt_object_summary_isochrone(
         make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
     )
-    assert summary == [13.15, 1.12, None]
+    assert summary == (13.15, 1.12, None)
 
 
 def make_data_test():

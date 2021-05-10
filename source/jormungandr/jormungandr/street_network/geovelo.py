@@ -93,7 +93,7 @@ class Geovelo(AbstractStreetNetworkService):
     @classmethod
     def _pt_object_summary_isochrone(cls, pt_object):
         coord = get_pt_object_coord(pt_object)
-        return [coord.lat, coord.lon, None]
+        return coord.lat, coord.lon, None
 
     @classmethod
     def _make_request_arguments_bike_details(cls, bike_speed_mps):
@@ -106,10 +106,59 @@ class Geovelo(AbstractStreetNetworkService):
         }
 
     @classmethod
+    def _keep_obj_for_mode(cls, obj, modes):
+        # This filter is only necessary for tests without any physical_modes.
+        # In real life data physical_modes is never empty with depth = 2
+        if len(obj.stop_point.physical_modes) == 0:
+            return True
+        for mode in obj.stop_point.physical_modes:
+            if mode.uri in modes:
+                return True
+
+    @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+        train_modes = ['physical_mode:Train', 'physical_mode:RapidTransit']
+        metro_modes = ['physical_mode:Metro']
+        tram_modes = ['physical_mode:Tramway']
+        bus_modes = ['physical_mode:Car', 'physical_mode:Bus']
+
+        origins_coord = set()
+        destinations_coord = set()
+        if len(origins) == 1:
+            origins_coord.update(cls._pt_object_summary_isochrone(o) for o in origins)
+
+            # Filter matrix points with modes having priority order:
+            # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
+            for modes in (train_modes, metro_modes, tram_modes, bus_modes):
+                if len(destinations_coord) < 50:
+                    destinations_coord.update(
+                        cls._pt_object_summary_isochrone(o)
+                        for o in destinations
+                        if cls._keep_obj_for_mode(o, modes)
+                    )
+                else:
+                    break
+
+            destinations_coord = list(destinations_coord)
+            del destinations_coord[50:]
+        else:
+            destinations_coord.update(cls._pt_object_summary_isochrone(o) for o in destinations)
+
+            # Filter matrix points with modes having priority order:
+            # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
+            for modes in (train_modes, metro_modes, tram_modes, bus_modes):
+                if len(origins_coord) < 50:
+                    origins_coord.update(
+                        cls._pt_object_summary_isochrone(o) for o in origins if cls._keep_obj_for_mode(o, modes)
+                    )
+                else:
+                    break
+
+            origins_coord = list(origins_coord)
+            del origins_coord[50:]
         return {
-            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
-            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
+            'starts': [o for o in origins_coord],
+            'ends': [o for o in destinations_coord],
             'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
             'transportMode': 'BIKE',
         }
@@ -209,7 +258,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._check_response(r)
         resp_json = ujson.loads(r.text)
 
-        if len(resp_json) - 1 != len(origins) * len(destinations):
+        if len(resp_json) - 1 != len(data['starts']) * len(data['ends']):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 

@@ -95,7 +95,7 @@ class Kraken(object):
         req.requested_api = type_pb2.places_nearby
         req.places_nearby.uri = origin
         req.places_nearby.distance = kwargs.get(streetnetwork_mode, kwargs.get("walking")) * max_duration
-        req.places_nearby.depth = 0
+        req.places_nearby.depth = 2
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
         req.disable_feedpublisher = True
