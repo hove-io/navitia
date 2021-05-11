@@ -252,12 +252,12 @@ void RAPTOR::set_next_stop_time(const DateTime& departure_datetime,
 
     switch (next_st_type) {
         case RAPTOR::NEXT_STOPTIME_TYPE::CACHED:
-            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using cached next_stop_time");
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using cached next_stop_time -------------");
             next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
                                                                     accessibilite_params);
             break;
         case RAPTOR::NEXT_STOPTIME_TYPE::UNCACHED:
-            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using uncached next_stop_time");
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using uncached next_stop_time------------------");
             next_st = uncached_next_st;
             break;
         default:
@@ -982,7 +982,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
 
     return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour), rt_level,
                        transfer_penalty, borne, max_transfers, accessibilite_params, forbidden_uri, {}, clockwise,
-                       direct_path_dur);
+                       direct_path_dur, 0, current_datetime);
 }
 
 int RAPTOR::best_round(SpIdx sp_idx) {
