@@ -231,7 +231,7 @@ RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time_type(
     const DateTime& departure_datetime,
     const boost::optional<boost::posix_time::ptime>& current_datetime) const {
     boost::posix_time::ptime now =
-        current_datetime ? *current_datetime : (boost::posix_time::second_clock::universal_time());
+        current_datetime ? *current_datetime : boost::posix_time::second_clock::universal_time();
     size_t now_days = static_cast<size_t>((now.date() - data.meta->production_date.begin()).days());
     size_t requested_days = static_cast<size_t>(departure_datetime / navitia::DateTimeUtils::SECONDS_PER_DAY);
 
