@@ -70,6 +70,11 @@ struct StartingPointSndPhase {
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR {
+    enum class NEXT_STOPTIME_TYPE {
+        UNCACHED,
+        CACHED,
+    };
+
     typedef std::list<Journey> Journeys;
 
     const navitia::type::Data& data;
@@ -136,7 +141,8 @@ struct RAPTOR {
                               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                               uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
                               const std::vector<std::string>& forbidden_uri = {},
-                              const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
+                              const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
+                              const boost::optional<boost::posix_time::ptime>& current_datetime = boost::none);
 
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
      * stop points de départs, vers plusieurs stoppoints d'arrivée,
@@ -154,7 +160,8 @@ struct RAPTOR {
                                   const std::vector<std::string>& allowed_ids = std::vector<std::string>(),
                                   bool clockwise = true,
                                   const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
-                                  const size_t max_extra_second_pass = 0);
+                                  const size_t max_extra_second_pass = 0,
+                                  const boost::optional<boost::posix_time::ptime>& current_datetime = boost::none);
 
     Journeys compute_all_journeys(const map_stop_point_duration& departures,
                                   const map_stop_point_duration& destinations,
@@ -166,7 +173,8 @@ struct RAPTOR {
                                   const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                                   bool clockwise = true,
                                   const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
-                                  const size_t max_extra_second_pass = 0);
+                                  const size_t max_extra_second_pass = 0,
+                                  const boost::optional<boost::posix_time::ptime>& current_datetime = boost::none);
 
     template <class T>
     std::vector<Path> from_journeys_to_path(const T& journeys) const {
@@ -242,7 +250,8 @@ struct RAPTOR {
                            const DateTime& bound_limit,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
-                           const bool clockwise);
+                           const bool clockwise,
+                           const boost::optional<boost::posix_time::ptime>& current_datetime = boost::none);
 
     ~RAPTOR() = default;
 
@@ -250,11 +259,15 @@ struct RAPTOR {
     std::string print_starting_points_snd_phase(std::vector<StartingPointSndPhase>& starting_points);
 
 private:
-    enum class NEXT_STOPTIME_TYPE {
-        UNCACHED,
-        CACHED,
-    };
-    NEXT_STOPTIME_TYPE choose_next_stop_time(const DateTime& departure_datetime) const;
+    NEXT_STOPTIME_TYPE choose_next_stop_time_type(
+        const DateTime& departure_datetime,
+        const boost::optional<boost::posix_time::ptime>& current_datetime) const;
+    void set_next_stop_time(const DateTime& departure_datetime,
+                            const nt::RTLevel rt_level,
+                            const DateTime& bound_limit,
+                            const type::AccessibiliteParams& accessibilite_params,
+                            const bool clockwise,
+                            const NEXT_STOPTIME_TYPE next_st_type);
 };
 
 }  // namespace routing

@@ -745,7 +745,9 @@ void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string&
     pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION, err_msg);
 }
 
-void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API api) {
+void Worker::journeys(const pbnavitia::JourneysRequest& request,
+                      pbnavitia::API api,
+                      const boost::posix_time::ptime& current_datetime) {
     try {
         navitia::JourneysArg arg = fill_journeys(request);
 
@@ -772,7 +774,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                     request.night_bus_filter_max_factor(), request.night_bus_filter_base_factor(),
                     request.has_timeframe_duration() ? boost::make_optional<uint32_t>(request.timeframe_duration())
                                                      : boost::none,
-                    request.depth());
+                    request.depth(), current_datetime);
                 break;
             default:
                 routing::make_response(
@@ -785,7 +787,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                     request.night_bus_filter_max_factor(), request.night_bus_filter_base_factor(),
                     request.has_timeframe_duration() ? boost::make_optional<uint32_t>(request.timeframe_duration())
                                                      : boost::none,
-                    request.depth());
+                    request.depth(), current_datetime);
         }
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
@@ -1085,7 +1087,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER:
-            journeys(request.journeys(), request.requested_api());
+            journeys(request.journeys(), request.requested_api(), current_datetime);
             break;
         case pbnavitia::ISOCHRONE:
             isochrone(request.journeys());
