@@ -548,7 +548,7 @@ struct RaptorSolutionReader {
             // v.clockwise());
             const auto begin_st_dt =
                 raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
-                                                       accessibilite_params.vehicle_properties, true, begin_limit);
+                                               accessibilite_params.vehicle_properties, true, begin_limit);
             if (begin_st_dt.first == nullptr) {
                 continue;
             }
@@ -584,8 +584,8 @@ struct RaptorSolutionReader {
             // trying to begin
             // const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt,
             // v.clockwise());
-            const auto begin_st_dt = raptor.next_st->next_stop_time(
-                v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level, accessibilite_params.vehicle_properties);
+            const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(),
+                                                                    rt_level, accessibilite_params.vehicle_properties);
             if (begin_st_dt.first == nullptr) {
                 continue;
             }
