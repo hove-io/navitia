@@ -33,6 +33,12 @@ jobs:
         unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
+    - name: Cache Sonar
+      id: cache-sonar
+      uses: actions/cache@v2
+      with:
+        path: sonar_cache
+        key: sonar-cache
     - name: Configure
       run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
     - name: Build
