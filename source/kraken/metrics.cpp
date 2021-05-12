@@ -108,6 +108,14 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                  .Register(*registry);
     this->in_flight = &in_flight_family.Add({});
 
+    auto& cache_miss_family = prometheus::BuildGauge()
+                                  .Name("kraken_next_stop_time_cache_miss")
+                                  .Help("Number of cache miss for the next stop_time in raptor")
+                                  .Labels({{"coverage", coverage}})
+                                  .Register(*registry);
+    ;
+    next_st_cache_miss = &cache_miss_family.Add({});
+
     this->data_loading_histogram = &prometheus::BuildHistogram()
                                         .Name("kraken_data_loading_duration_seconds")
                                         .Help("duration of loading data")
@@ -169,6 +177,13 @@ void Metrics::observe_handle_rt(double duration) const {
         return;
     }
     this->handle_rt_histogram->Observe(duration);
+}
+
+void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {
+    if (!registry) {
+        return;
+    }
+    next_st_cache_miss->Set(nb_cache_miss);
 }
 
 }  // namespace navitia

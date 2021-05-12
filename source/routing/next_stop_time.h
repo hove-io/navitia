@@ -275,6 +275,7 @@ struct CachedNextStopTimeManager {
                                                    const type::RTLevel rt_level,
                                                    const type::AccessibiliteParams& accessibilite_params);
 
+    size_t get_nb_cache_miss() const { return lru.get_nb_cache_miss(); }
     void warmup(const CachedNextStopTimeManager& other) { this->lru.warmup(other.lru); }
 
 private:

@@ -71,6 +71,7 @@ protected:
     prometheus::Histogram* data_loading_histogram;
     prometheus::Histogram* data_cloning_histogram;
     prometheus::Histogram* handle_rt_histogram;
+    prometheus::Gauge* next_st_cache_miss;
 
 public:
     Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
@@ -80,6 +81,7 @@ public:
     void observe_data_loading(double duration) const;
     void observe_data_cloning(double duration) const;
     void observe_handle_rt(double duration) const;
+    void set_raptor_cache_miss(size_t nb_cache_miss) const;
 };
 
 }  // namespace navitia
