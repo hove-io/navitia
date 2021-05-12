@@ -106,39 +106,37 @@ class Geovelo(AbstractStreetNetworkService):
         }
 
     @classmethod
-    def _keep_obj_for_mode(cls, obj, modes):
-        # This filter is only necessary for tests without any physical_modes.
-        # In real life data physical_modes is never empty with depth = 2
-        if len(obj.stop_point.physical_modes) == 0:
-            return True
-        return any((mode.uri in modes for mode in obj.stop_point.physical_modes))
-
-    @classmethod
-    def _filter_bike_matrix_by_modes(cls, points):
+    def sort_by_mode(cls, points):
         # Filter matrix points with modes having priority order:
         # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
-        train_modes = ['physical_mode:Train', 'physical_mode:RapidTransit']
-        metro_modes = ['physical_mode:Metro']
-        tram_modes = ['physical_mode:Tramway']
-        bus_modes = ['physical_mode:Car', 'physical_mode:Bus']
-        points_coord = []
-        for modes in (train_modes, metro_modes, tram_modes, bus_modes):
-            for o in points:
-                if cls._keep_obj_for_mode(o, modes):
-                    coord = cls._pt_object_summary_isochrone(o)
-                    if coord not in points_coord:
-                        points_coord.append(coord)
-                        if len(points_coord) >= 50:
-                            break
-        return points_coord
+        mode_weight = {
+            'physical_mode:Train': 1,
+            'physical_mode:RapidTransit': 2,
+            'physical_mode:Metro': 3,
+            'physical_mode:Tramway': 4,
+            'physical_mode:Car': 5,
+            'physical_mode:Bus': 6,
+        }
+
+        def key_func(point):
+            if len(point.stop_point.physical_modes) == 0:
+                return float('inf')
+            return min((mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes))
+
+        sorted_points = sorted(points, key=key_func)
+        if len(sorted_points) >= 50:
+            del sorted_points[50:]
+        return sorted_points
 
     @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
         if len(origins) == 1:
             origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
-            destinations_coord = cls._filter_bike_matrix_by_modes(destinations)
+            ord_destinations = cls.sort_by_mode(destinations)
+            destinations_coord = [cls._pt_object_summary_isochrone(o) for o in ord_destinations]
         else:
-            origins_coord = cls._filter_bike_matrix_by_modes(origins)
+            ord_origins = cls.sort_by_mode(origins)
+            origins_coord = [cls._pt_object_summary_isochrone(o) for o in ord_origins]
             destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
 
         return {
